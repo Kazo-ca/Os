@@ -156,7 +156,8 @@ public sealed class RenamedStorageMigrationTests
         return payload.ToJsonString();
     }
 
-    private sealed class FakeBrowser(IEnumerable<string> databases) : IRenamedStorageBrowser
+    /// <summary>The browser storage of a test; also used by <see cref="RenamedContentRepairTests"/>.</summary>
+    internal sealed class FakeBrowser(IEnumerable<string> databases) : IRenamedStorageBrowser
     {
         public HashSet<string> Databases { get; } = new(databases, StringComparer.Ordinal);
         public Dictionary<string, string> Local { get; } = new(StringComparer.Ordinal);
@@ -164,6 +165,8 @@ public sealed class RenamedStorageMigrationTests
         public List<string> Caches { get; } = [];
         public List<string> CopyTargets { get; } = [];
         public int Rewrites { get; private set; }
+        public int Repairs { get; private set; }
+        public IReadOnlyList<RenamedContentRepairItem> RepairResult { get; set; } = [];
         public int ListCalls { get; private set; }
         public string? FailCopyOf { get; set; }
 
@@ -223,6 +226,12 @@ public sealed class RenamedStorageMigrationTests
         {
             Rewrites++;
             return Task.FromResult(1);
+        }
+
+        public Task<IReadOnlyList<RenamedContentRepairItem>> RepairLostContentAsync(CancellationToken cancellationToken)
+        {
+            Repairs++;
+            return Task.FromResult(RepairResult);
         }
 
         private Dictionary<string, string> Area(string area) => area == "session" ? Session : Local;

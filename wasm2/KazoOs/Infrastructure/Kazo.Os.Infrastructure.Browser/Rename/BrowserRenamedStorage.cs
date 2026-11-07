@@ -35,6 +35,12 @@ internal interface IRenamedStorageBrowser
 
     /// <summary>Rewrites the records of the OS database; returns the number of record changes.</summary>
     Task<int> RewriteOsDatabaseAsync(CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Repairs the files of the OS database whose content is lost (<see cref="RenamedContentRepair"/>);
+    /// returns what was repaired.
+    /// </summary>
+    Task<IReadOnlyList<RenamedContentRepairItem>> RepairLostContentAsync(CancellationToken cancellationToken);
 }
 
 /// <summary>
@@ -121,6 +127,60 @@ internal sealed class BrowserRenamedStorage(IJSRuntime runtime) : IRenamedStorag
         return rewritten.Changes.Count;
     }
 
+    /// <summary>
+    /// Looks for file entries whose content hash has no chunk using the entries and the chunk keys
+    /// only (no file data is loaded); when one exists, reads the file system stores, plans the
+    /// repair and writes the repaired entries in one read-write transaction.
+    /// </summary>
+    public async Task<IReadOnlyList<RenamedContentRepairItem>> RepairLostContentAsync(CancellationToken cancellationToken)
+    {
+        await _adapter.OpenAsync(IndexedDbMigrationPlan.CreateCurrent(), cancellationToken).ConfigureAwait(false);
+        IReadOnlyList<JsonElement> scan = await _adapter.ExecuteAsync(
+            Boundary,
+            IndexedDbTransactionMode.ReadOnly,
+            [
+                new IndexedDbOperation("getAll", KazoOsIndexedDbSchema.FileSystemEntryStoreName),
+                new IndexedDbOperation("getAllKeys", KazoOsIndexedDbSchema.FileContentStoreName),
+            ],
+            cancellationToken).ConfigureAwait(false);
+        List<JsonObject> entries = Objects(scan[0]);
+        HashSet<string> storedHashes = new(
+            scan[1].EnumerateArray()
+                .Where(key => key.ValueKind == JsonValueKind.Array && key.GetArrayLength() > 0)
+                .Select(key => key[0].GetString())
+                .OfType<string>(),
+            StringComparer.Ordinal);
+        if (!RenamedContentRepair.HasLostContent(entries, storedHashes))
+        {
+            return [];
+        }
+
+        IReadOnlyList<JsonElement> stores = await _adapter.ExecuteAsync(
+            Boundary,
+            IndexedDbTransactionMode.ReadOnly,
+            [
+                new IndexedDbOperation("getAll", KazoOsIndexedDbSchema.FileSystemLinkStoreName),
+                new IndexedDbOperation("getAll", KazoOsIndexedDbSchema.FileContentStoreName),
+            ],
+            cancellationToken).ConfigureAwait(false);
+        RenamedContentRepairPlan plan = RenamedContentRepair.Plan(new Dictionary<string, IReadOnlyList<JsonObject>>(StringComparer.Ordinal)
+        {
+            [KazoOsIndexedDbSchema.FileSystemEntryStoreName] = entries,
+            [KazoOsIndexedDbSchema.FileSystemLinkStoreName] = Objects(stores[0]),
+            [KazoOsIndexedDbSchema.FileContentStoreName] = Objects(stores[1]),
+        });
+        if (plan.Entries.Count > 0)
+        {
+            await _adapter.ExecuteAsync(
+                Boundary,
+                IndexedDbTransactionMode.ReadWrite,
+                [.. plan.Entries.Select(entry => new IndexedDbOperation("put", KazoOsIndexedDbSchema.FileSystemEntryStoreName, Value: ToElement(entry)))],
+                cancellationToken).ConfigureAwait(false);
+        }
+
+        return plan.Items;
+    }
+
     public async ValueTask DisposeAsync()
     {
         if (_module is not null)
@@ -137,6 +197,9 @@ internal sealed class BrowserRenamedStorage(IJSRuntime runtime) : IRenamedStorag
 
         await _adapter.DisposeAsync().ConfigureAwait(false);
     }
+
+    private static List<JsonObject> Objects(JsonElement records) =>
+        [.. records.EnumerateArray().Select(record => JsonNode.Parse(record.GetRawText())!.AsObject())];
 
     private static JsonElement ToElement(JsonNode node)
     {

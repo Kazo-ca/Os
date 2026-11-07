@@ -71,6 +71,38 @@ public sealed partial class RenamedOsDatabaseRewriterTests
     }
 
     [Fact]
+    public void A_rewritten_configuration_file_entry_is_written_with_its_new_hash()
+    {
+        RenamedOsDatabase result = RenamedOsDatabaseRewriter.Rewrite(SmallDatabase());
+
+        // Until 3.2.1 the entry was changed in memory only: the browser kept the old hash while the
+        // old chunks were deleted, and the file could no longer be read or written.
+        RenamedRecordChange entry = Assert.Single(result.Changes, change =>
+            change.StoreName == KazoOsIndexedDbSchema.FileSystemEntryStoreName && (string?)change.Put?["id"] == "config");
+        Assert.Equal((string?)Entry(result, "config")["contentHash"], (string?)entry.Put!["contentHash"]);
+        Assert.Equal((int?)Entry(result, "config")["length"], (int?)entry.Put!["length"]);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(2)]
+    [InlineData(3)]
+    public void Writing_the_changes_to_the_stored_database_gives_the_rewritten_database(int version)
+    {
+        Dictionary<string, IReadOnlyList<JsonObject>> stores = version == 0 ? SmallDatabase() : ReadFixture(version);
+
+        RenamedOsDatabase result = RenamedOsDatabaseRewriter.Rewrite(stores);
+
+        Dictionary<string, IReadOnlyList<JsonObject>> written = ApplyChanges(stores, result.Changes);
+        foreach ((string store, IReadOnlyList<JsonObject> records) in result.Stores)
+        {
+            Assert.Equal(
+                records.Select(record => record.ToJsonString()).Order(StringComparer.Ordinal),
+                written[store].Select(record => record.ToJsonString()).Order(StringComparer.Ordinal));
+        }
+    }
+
+    [Fact]
     public void Documents_keep_their_names_and_words_and_shared_chunks_are_kept()
     {
         RenamedOsDatabase result = RenamedOsDatabaseRewriter.Rewrite(SmallDatabase());
@@ -138,7 +170,7 @@ public sealed partial class RenamedOsDatabaseRewriterTests
     /// <c>/etc/hackeros/apps.config</c>, <c>~/Documents/hackeros/note.txt</c> and
     /// <c>~/Documents/hackeros/copy.cfg</c> (same bytes as the configuration file).
     /// </summary>
-    private static Dictionary<string, IReadOnlyList<JsonObject>> SmallDatabase() => new(StringComparer.Ordinal)
+    internal static Dictionary<string, IReadOnlyList<JsonObject>> SmallDatabase() => new(StringComparer.Ordinal)
     {
         [KazoOsIndexedDbSchema.FileSystemLinkStoreName] =
         [
@@ -160,6 +192,39 @@ public sealed partial class RenamedOsDatabaseRewriterTests
         ],
         [KazoOsIndexedDbSchema.FileContentStoreName] = [Chunk(ConfigText), Chunk(DocumentText)],
     };
+
+    /// <summary>Writes <paramref name="changes"/> to a copy of <paramref name="stores"/> the way the browser does.</summary>
+    internal static Dictionary<string, IReadOnlyList<JsonObject>> ApplyChanges(
+        IReadOnlyDictionary<string, IReadOnlyList<JsonObject>> stores, IEnumerable<RenamedRecordChange> changes)
+    {
+        Dictionary<string, Dictionary<string, JsonObject>> keyed = stores.ToDictionary(
+            pair => pair.Key,
+            pair => pair.Value.ToDictionary(record => KeyOf(pair.Key, record), record => record.DeepClone().AsObject(), StringComparer.Ordinal),
+            StringComparer.Ordinal);
+        foreach (RenamedRecordChange change in changes)
+        {
+            Dictionary<string, JsonObject> records = keyed[change.StoreName];
+            if (change.DeleteKey is not null)
+            {
+                records.Remove(change.DeleteKey.ToJsonString());
+            }
+
+            if (change.Put is not null)
+            {
+                records[KeyOf(change.StoreName, change.Put)] = change.Put.DeepClone().AsObject();
+            }
+        }
+
+        return keyed.ToDictionary(pair => pair.Key, pair => (IReadOnlyList<JsonObject>)[.. pair.Value.Values], StringComparer.Ordinal);
+    }
+
+    private static string KeyOf(string storeName, JsonObject record)
+    {
+        IReadOnlyList<string> keyPath = KazoOsIndexedDbSchema.ObjectStores.Single(store => store.Name == storeName).KeyPath;
+        return keyPath.Count == 1
+            ? record[keyPath[0]]!.ToJsonString()
+            : new JsonArray([.. keyPath.Select(property => record[property]?.DeepClone())]).ToJsonString();
+    }
 
     private static JsonObject Link(string parent, string name, string entry) =>
         new() { ["parentId"] = parent, ["name"] = name, ["entryId"] = entry };

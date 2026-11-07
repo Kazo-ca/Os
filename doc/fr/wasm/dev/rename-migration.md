@@ -23,6 +23,7 @@ Tout est dans `Infrastructure/Kazo.Os.Infrastructure.Browser/Rename/` :
 | `RenamedNames` | La table des noms (règles du chantier 5, dans le même ordre) : « HackerOS » → « Kazo OS », `HackerOs.` → `Kazo.Os.`, `Hack*`/`Hacker*` → `Kazo*`, `hackeros` → `kazoos`, `hackweb` → `kazoweb`, `hack-paint` → `kazo-paint`, `hackpkg` → `kazopkg`, `.hackapp` → `.kazoapp`..., puis les noms courts du chantier 9 : `--hos-*` → `--kos-*`, `data-hos-*` → `data-kos-*`, classes `hos-*` → `kos-*`, `.hosbak` → `.kosbak` (un thème ou un réglage enregistré avec un jeton du système de design reste valable). Chaque règle est idempotente. Dit aussi si une base est ancienne (`hackeros`, `hackeros-*`, `hackweb.*`) et si une version précède 3.0.0. |
 | `RenamedOsDatabaseRewriter` | Réécrit les enregistrements de la base de l'OS (fonction pure, sur du JSON) et liste les écritures à faire. |
 | `RenamedStorageMigration` | Le déroulé au démarrage, sur une interface `IRenamedStorageBrowser` (un faux dans les tests). |
+| `RenamedContentRepair` | Depuis 3.2.1, répare une fois les fichiers que la migration de 3.0.0 à 3.2.0 a laissés sur un contenu supprimé (voir plus bas). |
 | `BrowserRenamedStorage` + `wwwroot/renamedStorage.js` | Le navigateur : liste et copie des bases, clés `localStorage`/`sessionStorage`, caches. Le JavaScript ne fait que ce que C# ne peut pas atteindre ; les décisions sont en C#. |
 
 L'appel est fait par `LoadInstalledAppsAsync` (`OS/Kazo.Os.Ecosystem.Host/InstalledAppsBoot.cs`),
@@ -97,6 +98,52 @@ nouveau nom que la migration n'a pas créée (faite par un autre build) n'est
 jamais écrasée, l'ancienne est alors gardée et un avertissement est journalisé.
 Toutes les réécritures sont idempotentes.
 
+## Réparation des fichiers abîmés par 3.0.0 à 3.2.0
+
+Jusqu'à 3.2.0, `RenamedOsDatabaseRewriter` enregistrait bien le texte réécrit
+d'un fichier de configuration sous son nouveau SHA-256 et supprimait les anciens
+morceaux, mais n'écrivait pas le nouveau hachage dans la fiche du fichier
+(`fsEntries`) : la fiche, changée en mémoire avant que `RewriteRecords` la
+compare à elle-même, ne figurait pas dans les écritures. Le fichier pointait donc
+vers un contenu supprimé. Sa lecture échouait en `ProviderFailure` (les réglages
+retombaient en silence sur leurs valeurs par défaut, avec un avertissement
+`settings: cannot read ...`) et toute écriture échouait, par exemple
+l'approbation d'une capacité dangereuse (« The decision could not be recorded:
+Settings operation on '/etc/kazoos/app-permissions.config' failed:
+ProviderFailure »). Presque tous les fichiers de `/etc/kazoos` et
+`~/.config/kazoos` d'avant 3.0.0 étaient touchés : leur en-tête nommait
+`/etc/hackeros/...`.
+
+Depuis 3.2.1 :
+
+- la réécriture renvoie aussi les fiches dont elle a changé le contenu, et
+  `RewriteRecords` les écrit ;
+- `RenamedContentRepair` répare une fois par navigateur, juste après la
+  migration, les profils déjà abîmés, comme `fsck` répare un inode dont les
+  blocs ont disparu. Il cherche d'abord, avec les seules fiches et les clés des
+  morceaux (aucune donnée de fichier chargée), une fiche de fichier dont le
+  hachage n'a aucun morceau. S'il en trouve, il lit les morceaux que plus
+  aucune fiche ne référence : le texte réécrit y est encore. Pour chaque
+  fichier abîmé, il relit chaque texte candidat à l'envers
+  (`RenamedNames.ReverseForms` : chaque nouvelle orthographe peut venir de
+  l'ancienne ou être déjà la nouvelle), garde les choix dont la taille en
+  octets égale celle que la fiche a gardée, et n'accepte qu'un texte d'origine
+  dont le SHA-256 est celui de la fiche et dont la réécriture redonne le texte
+  candidat. La fiche pointe alors vers ce texte (fichier récupéré). Sans preuve,
+  le fichier est vidé (état d'un fichier créé par `touch`) : les réglages qu'il
+  portait reprennent leurs valeurs par défaut, comme avant la réparation. La
+  recherche est bornée (2^14 étapes par paire fichier-candidat, 2^20 en tout)
+  pour ne jamais bloquer le démarrage ;
+- chaque fichier réparé est journalisé dans `/var/log/syslog`
+  (`fsck: <chemin>: content lost by the 3.0.0 rename migration, recovered` ou
+  `..., file emptied (defaults apply)`) ; la clé `localStorage`
+  `kazoos.renameContentRepair` note que la réparation a eu lieu. Un échec est
+  journalisé et la réparation recommence au démarrage suivant.
+
+Contournement sur une version 3.0.0 à 3.2.0 : supprimer le fichier abîmé
+(`sudo rm /etc/kazoos/app-permissions.config`) ; l'OS le recrée à la
+prochaine écriture.
+
 ## Serveur
 
 Un serveur installé avant 3.0.0 (volume Docker, dossier de données) a
@@ -121,7 +168,12 @@ Un serveur installé avant 3.0.0 (volume Docker, dossier de données) a
   idempotence, versions), `RenamedOsDatabaseRewriterTests` (fixtures v2 et v3
   sans ancien nom hors documents, configuration réécrite sous un nouveau
   hachage, documents gardés, morceaux partagés gardés, secrets et noms choisis
-  intacts, seconde passe sans changement), `RenamedStorageMigrationTests`
+  intacts, seconde passe sans changement, fiche réécrite écrite avec son
+  nouveau hachage, écritures qui redonnent la base réécrite),
+  `RenamedContentRepairTests` (fichier abîmé récupéré, vidé sans texte réécrit,
+  texte qui ressemble sans preuve jamais utilisé, base saine laissée telle
+  quelle, base abîmée par l'ancienne migration entièrement récupérée, une seule
+  fois par navigateur), `RenamedStorageMigrationTests`
   (bases, clés et caches, version enregistrée, arrêt immédiat après 3.0.0,
   reprise sans recopie, échec repris au démarrage suivant, base existante
   jamais écrasée, sauvegarde d'avant 3.0.0 migrée et sauvegarde falsifiée
@@ -141,3 +193,4 @@ Un serveur installé avant 3.0.0 (volume Docker, dossier de données) a
 - [x] Sauvegardes d'avant 3.0.0 migrées à la restauration ; `osVersion` dans les nouvelles sauvegardes.
 - [x] `hackeros.db` renommé par le serveur.
 - [x] Tests unitaires et E2E.
+- [x] 3.2.1 : nouveau hachage des fichiers de configuration écrit, réparation des profils abîmés (`RenamedContentRepair`).
