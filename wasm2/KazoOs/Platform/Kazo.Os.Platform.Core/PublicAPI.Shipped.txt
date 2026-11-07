@@ -2379,6 +2379,8 @@ Kazo.Os.Platform.Core.Policy.AppPermissionAdministration.ApplyMachineDecisionAsy
 Kazo.Os.Platform.Core.Policy.AppPermissionAdministration.ApplyPolicyAsync(Kazo.Os.Platform.Core.Policy.DangerousCapabilityPolicy policy, string! administratorLogin, Kazo.Os.Simulation.Abstractions.Sessions.AuthenticatedPrincipal! requestedBy, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 Kazo.Os.Platform.Core.Policy.AppPermissionAdministration.GetOverviewAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Kazo.Os.Platform.Core.Policy.AppPermissionOverview!>!>!
 Kazo.Os.Platform.Core.Policy.AppPermissionAdministration.GetPolicyAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.Platform.Core.Policy.DangerousCapabilityPolicy>
+Kazo.Os.Platform.Core.Policy.AppPermissionAdministration.RealNetworkGrants.get -> Kazo.Os.Platform.Core.ServerConnection.IRealNetworkGrantReconciler?
+Kazo.Os.Platform.Core.Policy.AppPermissionAdministration.RealNetworkGrants.init -> void
 Kazo.Os.Platform.Core.Policy.AppPermissionAdministration.RemoveOwnDenialAsync(string! appId, string! capability, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
 Kazo.Os.Platform.Core.Policy.AppPermissionAdministration.SetMachineDecisionAsync(string! appId, string! capability, Kazo.Os.Platform.Core.Policy.AppPermissionDecision? decision, string! adminLogin, string! password, Kazo.Os.Simulation.Abstractions.Sessions.AuthenticatedPrincipal! requestedBy, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Kazo.Os.Platform.Core.Policy.AppPermissionAdministrationResult!>!
 Kazo.Os.Platform.Core.Policy.AppPermissionAdministration.SetPolicyAsync(Kazo.Os.Platform.Core.Policy.DangerousCapabilityPolicy policy, string! adminLogin, string! password, Kazo.Os.Simulation.Abstractions.Sessions.AuthenticatedPrincipal! requestedBy, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Kazo.Os.Platform.Core.Policy.AppPermissionAdministrationResult!>!
@@ -2396,6 +2398,7 @@ Kazo.Os.Platform.Core.Policy.AppPermissionDecision
 Kazo.Os.Platform.Core.Policy.AppPermissionDecision.Allow = 0 -> Kazo.Os.Platform.Core.Policy.AppPermissionDecision
 Kazo.Os.Platform.Core.Policy.AppPermissionDecision.Deny = 1 -> Kazo.Os.Platform.Core.Policy.AppPermissionDecision
 Kazo.Os.Platform.Core.Policy.AppPermissionDecisions
+Kazo.Os.Platform.Core.Policy.AppPermissionDecisions.GetApprovedRealNetworkPorts(string! appId) -> System.Collections.Generic.IReadOnlySet<Kazo.Os.App.Abstractions.RealNetworkPort>!
 Kazo.Os.Platform.Core.Policy.AppPermissionDecisions.GetMachineDecision(string! appId, string! capability) -> Kazo.Os.Platform.Core.Policy.AppPermissionDecision?
 Kazo.Os.Platform.Core.Policy.AppPermissionDecisions.IsDeniedByUser(string! appId, string! capability) -> bool
 Kazo.Os.Platform.Core.Policy.AppPermissionDecisions.Warnings.get -> System.Collections.Generic.IReadOnlyList<string!>!
@@ -2414,6 +2417,7 @@ Kazo.Os.Platform.Core.Policy.AppPermissionStore
 Kazo.Os.Platform.Core.Policy.AppPermissionStore.AppPermissionStore(Kazo.Os.Platform.Core.Settings.IOsSettingsService! settings, Microsoft.Extensions.Logging.ILogger<Kazo.Os.Platform.Core.Policy.AppPermissionStore!>? logger = null) -> void
 Kazo.Os.Platform.Core.Policy.AppPermissionStore.ReadAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.Platform.Core.Policy.AppPermissionDecisions!>
 Kazo.Os.Platform.Core.Policy.AppPermissionStore.RemoveUserDenialAsync(string! appId, string! capability, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Kazo.Os.Platform.Core.Policy.AppPermissionStore.WriteApprovedRealNetworkPortsAsync(string! appId, System.Collections.Generic.IReadOnlyCollection<string!>? ports, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
 Kazo.Os.Platform.Core.Policy.AppPermissionStore.WriteMachineDecisionsAsync(string! appId, System.Collections.Generic.IReadOnlyCollection<string!>! capabilities, Kazo.Os.Platform.Core.Policy.AppPermissionDecision? decision, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
 Kazo.Os.Platform.Core.Policy.AppPermissionStore.WriteUserDenialsAsync(string! appId, System.Collections.Generic.IReadOnlyCollection<string!>! capabilities, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
 Kazo.Os.Platform.Core.Policy.AppPermissionsDocument
@@ -2461,6 +2465,8 @@ Kazo.Os.Platform.Core.Policy.DangerousCapabilityEvaluator
 Kazo.Os.Platform.Core.Policy.DangerousCapabilityGate
 Kazo.Os.Platform.Core.Policy.DangerousCapabilityGate.DangerousCapabilityGate(Kazo.Os.Platform.Core.AppCatalog! catalog, Kazo.Os.App.Abstractions.Policy.ICapabilityGrantRepository! grants, Kazo.Os.Platform.Core.Policy.IAppPermissionStore! permissions, Kazo.Os.Platform.Core.Settings.IOsSettingsService! settings, Kazo.Os.App.Abstractions.Policy.IAdminElevationVerifier! verifier, Kazo.Os.Simulation.Abstractions.Diagnostics.IAuditLog! auditLog, Kazo.Os.Platform.Core.Policy.IDangerousCapabilityApprovalPrompt? defaultPrompt = null, System.Func<System.DateTimeOffset>? clock = null) -> void
 Kazo.Os.Platform.Core.Policy.DangerousCapabilityGate.EnsureDecidedAsync(Kazo.Os.App.Abstractions.AppManifest! manifest, Kazo.Os.Simulation.Abstractions.Sessions.AuthenticatedPrincipal! principal, Kazo.Os.Platform.Core.Policy.IDangerousCapabilityApprovalPrompt? prompt = null, bool interactive = true, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Kazo.Os.Platform.Core.Policy.DangerousCapabilityGateResult!>!
+Kazo.Os.Platform.Core.Policy.DangerousCapabilityGate.RealNetworkGrants.get -> Kazo.Os.Platform.Core.ServerConnection.IRealNetworkGrantReconciler?
+Kazo.Os.Platform.Core.Policy.DangerousCapabilityGate.RealNetworkGrants.init -> void
 Kazo.Os.Platform.Core.Policy.DangerousCapabilityGateResult
 Kazo.Os.Platform.Core.Policy.DangerousCapabilityGateResult.<Clone>$() -> Kazo.Os.Platform.Core.Policy.DangerousCapabilityGateResult!
 Kazo.Os.Platform.Core.Policy.DangerousCapabilityGateResult.BlocksOneShotApproval.get -> bool
@@ -2499,6 +2505,7 @@ Kazo.Os.Platform.Core.Policy.DangerousCapabilityStatus.State.init -> void
 Kazo.Os.Platform.Core.Policy.IAppPermissionStore
 Kazo.Os.Platform.Core.Policy.IAppPermissionStore.ReadAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.Platform.Core.Policy.AppPermissionDecisions!>
 Kazo.Os.Platform.Core.Policy.IAppPermissionStore.RemoveUserDenialAsync(string! appId, string! capability, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Kazo.Os.Platform.Core.Policy.IAppPermissionStore.WriteApprovedRealNetworkPortsAsync(string! appId, System.Collections.Generic.IReadOnlyCollection<string!>? ports, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
 Kazo.Os.Platform.Core.Policy.IAppPermissionStore.WriteMachineDecisionsAsync(string! appId, System.Collections.Generic.IReadOnlyCollection<string!>! capabilities, Kazo.Os.Platform.Core.Policy.AppPermissionDecision? decision, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
 Kazo.Os.Platform.Core.Policy.IAppPermissionStore.WriteUserDenialsAsync(string! appId, System.Collections.Generic.IReadOnlyCollection<string!>! capabilities, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
 Kazo.Os.Platform.Core.Policy.IDangerousCapabilityApprovalPrompt
@@ -2783,8 +2790,12 @@ Kazo.Os.Platform.Core.ServerConnection.FileSystemSyncService.PullAsync(System.Th
 Kazo.Os.Platform.Core.ServerConnection.FileSystemSyncService.PushAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Kazo.Os.Platform.Core.ServerConnection.SyncPassResult!>!
 Kazo.Os.Platform.Core.ServerConnection.FileSystemSyncService.ResolveConflictAsync(System.Guid recordId, Kazo.Os.Platform.Core.ServerConnection.SyncConflictChoice choice, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 Kazo.Os.Platform.Core.ServerConnection.GrantsSyncService
+Kazo.Os.Platform.Core.ServerConnection.GrantsSyncService.CurrentUserId.get -> System.Func<string?>?
+Kazo.Os.Platform.Core.ServerConnection.GrantsSyncService.CurrentUserId.init -> void
 Kazo.Os.Platform.Core.ServerConnection.GrantsSyncService.GrantsSyncService(Kazo.Os.App.Abstractions.Policy.IPersistentCapabilityGrantRepository! grants, Kazo.Os.Platform.Core.ServerConnection.IServerConnectionService! connection, Kazo.Os.Platform.Core.ServerConnection.ISyncClient! syncClient, Kazo.Os.Simulation.Abstractions.Sync.ISyncCursorRepository! cursors) -> void
 Kazo.Os.Platform.Core.ServerConnection.GrantsSyncService.PullAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Kazo.Os.Platform.Core.ServerConnection.GrantsSyncService.RealNetworkGrants.get -> Kazo.Os.Platform.Core.ServerConnection.IRealNetworkGrantReconciler?
+Kazo.Os.Platform.Core.ServerConnection.GrantsSyncService.RealNetworkGrants.init -> void
 Kazo.Os.Platform.Core.ServerConnection.HttpAccountClient
 Kazo.Os.Platform.Core.ServerConnection.HttpAccountClient.CreateAccountAsync(System.Uri! serverBaseUrl, Kazo.Os.Server.Contracts.Identity.CreateAccountRequest! request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Kazo.Os.Server.Contracts.Identity.CreateAccountResponse!>!
 Kazo.Os.Platform.Core.ServerConnection.HttpAccountClient.HttpAccountClient(System.Net.Http.HttpClient! httpClient) -> void
@@ -2808,6 +2819,7 @@ Kazo.Os.Platform.Core.ServerConnection.HttpProxyClient.ExecuteTcpProbeAsync(Syst
 Kazo.Os.Platform.Core.ServerConnection.HttpProxyClient.GetPolicyAsync(System.Uri! serverBaseUrl, string! accessToken, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Kazo.Os.Server.Contracts.Proxy.ProxyPolicyResponse!>!
 Kazo.Os.Platform.Core.ServerConnection.HttpProxyClient.HttpProxyClient(System.Net.Http.HttpClient! httpClient) -> void
 Kazo.Os.Platform.Core.ServerConnection.HttpProxyClient.HttpProxyClient(System.Net.Http.HttpClient! httpClient, System.Func<System.Uri!, System.Threading.CancellationToken, System.Threading.Tasks.Task<System.Net.WebSockets.WebSocket!>!>? webSocketConnector = null) -> void
+Kazo.Os.Platform.Core.ServerConnection.HttpProxyClient.IssueGrantAsync(System.Uri! serverBaseUrl, string! accessToken, Kazo.Os.Server.Contracts.Proxy.ProxyGrantIssueRequest! request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Kazo.Os.Server.Contracts.Proxy.ProxyGrantIssued!>!
 Kazo.Os.Platform.Core.ServerConnection.HttpProxyClient.OpenStreamAsync(System.Uri! serverBaseUrl, string! accessToken, Kazo.Os.Server.Contracts.Proxy.ProxyProtocol protocol, Kazo.Os.Server.Contracts.Proxy.ProxyStreamRequest! request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Kazo.Os.Server.Contracts.Proxy.IProxyStreamChannel!>!
 Kazo.Os.Platform.Core.ServerConnection.HttpSyncClient
 Kazo.Os.Platform.Core.ServerConnection.HttpSyncClient.HttpSyncClient(System.Net.Http.HttpClient! httpClient) -> void
@@ -2845,7 +2857,10 @@ Kazo.Os.Platform.Core.ServerConnection.IProxyClient
 Kazo.Os.Platform.Core.ServerConnection.IProxyClient.ExecuteHttpRequestAsync(System.Uri! serverBaseUrl, string! accessToken, Kazo.Os.Server.Contracts.Proxy.ProxyHttpRequest! request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Kazo.Os.Server.Contracts.Proxy.ProxyHttpResponse!>!
 Kazo.Os.Platform.Core.ServerConnection.IProxyClient.ExecuteTcpProbeAsync(System.Uri! serverBaseUrl, string! accessToken, Kazo.Os.Server.Contracts.Proxy.ProxyTcpProbeRequest! request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Kazo.Os.Server.Contracts.Proxy.ProxyTcpProbeResponse!>!
 Kazo.Os.Platform.Core.ServerConnection.IProxyClient.GetPolicyAsync(System.Uri! serverBaseUrl, string! accessToken, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Kazo.Os.Server.Contracts.Proxy.ProxyPolicyResponse!>!
+Kazo.Os.Platform.Core.ServerConnection.IProxyClient.IssueGrantAsync(System.Uri! serverBaseUrl, string! accessToken, Kazo.Os.Server.Contracts.Proxy.ProxyGrantIssueRequest! request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Kazo.Os.Server.Contracts.Proxy.ProxyGrantIssued!>!
 Kazo.Os.Platform.Core.ServerConnection.IProxyClient.OpenStreamAsync(System.Uri! serverBaseUrl, string! accessToken, Kazo.Os.Server.Contracts.Proxy.ProxyProtocol protocol, Kazo.Os.Server.Contracts.Proxy.ProxyStreamRequest! request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Kazo.Os.Server.Contracts.Proxy.IProxyStreamChannel!>!
+Kazo.Os.Platform.Core.ServerConnection.IRealNetworkGrantReconciler
+Kazo.Os.Platform.Core.ServerConnection.IRealNetworkGrantReconciler.ReconcileAsync(string! userId, string? appId = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 Kazo.Os.Platform.Core.ServerConnection.IServerConnectionService
 Kazo.Os.Platform.Core.ServerConnection.IServerConnectionService.ConnectWithExistingAccountAsync(System.Uri! serverBaseUrl, string! username, string! password, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Kazo.Os.Simulation.Abstractions.ServerConnection.ServerConnectionState!>!
 Kazo.Os.Platform.Core.ServerConnection.IServerConnectionService.ConnectWithNewAccountAsync(System.Uri! serverBaseUrl, string! username, string! password, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Kazo.Os.Simulation.Abstractions.ServerConnection.ServerConnectionState!>!
@@ -2857,6 +2872,9 @@ Kazo.Os.Platform.Core.ServerConnection.ISyncClient
 Kazo.Os.Platform.Core.ServerConnection.ISyncClient.PullAsync(System.Uri! serverBaseUrl, string! accessToken, Kazo.Os.Server.Contracts.Sync.PullRequest! request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Kazo.Os.Server.Contracts.Sync.PullResponse!>!
 Kazo.Os.Platform.Core.ServerConnection.ISyncClient.PushAsync(System.Uri! serverBaseUrl, string! accessToken, Kazo.Os.Server.Contracts.Sync.PushRequest! request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Kazo.Os.Server.Contracts.Sync.PushResponse!>!
 Kazo.Os.Platform.Core.ServerConnection.ISyncClient.ResolveConflictAsync(System.Uri! serverBaseUrl, string! accessToken, Kazo.Os.Server.Contracts.Sync.ResolveSyncConflictRequest! request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Kazo.Os.Server.Contracts.Sync.ResolveSyncConflictResponse!>!
+Kazo.Os.Platform.Core.ServerConnection.RealNetworkGrantReconciler
+Kazo.Os.Platform.Core.ServerConnection.RealNetworkGrantReconciler.RealNetworkGrantReconciler(Kazo.Os.Platform.Core.AppCatalog! catalog, Kazo.Os.Platform.Core.Policy.IAppPermissionStore! permissions, Kazo.Os.Platform.Core.Settings.IOsSettingsService! settings, Kazo.Os.Platform.Core.ServerConnection.IServerConnectionService! connection, Kazo.Os.Platform.Core.ServerConnection.IProxyClient! proxy, Microsoft.Extensions.Logging.ILogger<Kazo.Os.Platform.Core.ServerConnection.RealNetworkGrantReconciler!>? logger = null) -> void
+Kazo.Os.Platform.Core.ServerConnection.RealNetworkGrantReconciler.ReconcileAsync(string! userId, string? appId = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 Kazo.Os.Platform.Core.ServerConnection.ServerConnectionException
 Kazo.Os.Platform.Core.ServerConnection.ServerConnectionException.ProxyErrorCode.get -> string?
 Kazo.Os.Platform.Core.ServerConnection.ServerConnectionException.ServerBody.get -> string?
@@ -4134,6 +4152,7 @@ const Kazo.Os.Platform.Core.Notifications.NotificationSettingsDocuments.Document
 const Kazo.Os.Platform.Core.Policy.AppPermissionsDocument.AllowValue = "allow" -> string!
 const Kazo.Os.Platform.Core.Policy.AppPermissionsDocument.DenyValue = "deny" -> string!
 const Kazo.Os.Platform.Core.Policy.AppPermissionsDocument.FileName = "app-permissions.config" -> string!
+const Kazo.Os.Platform.Core.Policy.AppPermissionsDocument.RealNetworkPortsSection = "real-network-ports" -> string!
 const Kazo.Os.Platform.Core.Policy.AppPermissionsDocument.Section = "permissions" -> string!
 const Kazo.Os.Platform.Core.Policy.DangerousCapabilityApprovalRequest.MaxAttempts = 3 -> int
 const Kazo.Os.Platform.Core.Policy.PolicySettingsDocuments.DocumentId = "policy" -> string!
@@ -5146,7 +5165,9 @@ static Kazo.Os.Platform.Core.Policy.AppPermissionsDocument.DefaultUserContent.ge
 static Kazo.Os.Platform.Core.Policy.AppPermissionsDocument.FormatKey(string! appId, string! capability) -> string!
 static Kazo.Os.Platform.Core.Policy.AppPermissionsDocument.MachineFile.get -> Kazo.Os.Platform.Core.Settings.OsSettingsFile!
 static Kazo.Os.Platform.Core.Policy.AppPermissionsDocument.RemoveDecision(string? content, string! appId, string! capability) -> string!
+static Kazo.Os.Platform.Core.Policy.AppPermissionsDocument.RemoveRealNetworkPorts(string? content, string! appId) -> string!
 static Kazo.Os.Platform.Core.Policy.AppPermissionsDocument.SetDecision(string? content, string! defaultContent, string! appId, string! capability, Kazo.Os.Platform.Core.Policy.AppPermissionDecision decision) -> string!
+static Kazo.Os.Platform.Core.Policy.AppPermissionsDocument.SetRealNetworkPorts(string? content, string! appId, System.Collections.Generic.IEnumerable<string!>? ports) -> string!
 static Kazo.Os.Platform.Core.Policy.AppPermissionsDocument.ToValue(Kazo.Os.Platform.Core.Policy.AppPermissionDecision decision) -> string!
 static Kazo.Os.Platform.Core.Policy.AppPermissionsDocument.UserFile.get -> Kazo.Os.Platform.Core.Settings.OsSettingsFile!
 static Kazo.Os.Platform.Core.Policy.CapabilityText.Describe(string! capability, System.Globalization.CultureInfo? language) -> Kazo.Os.App.Abstractions.CapabilityDescription!
@@ -5158,6 +5179,7 @@ static Kazo.Os.Platform.Core.Policy.DangerousCapabilityApprovalRequest.operator 
 static Kazo.Os.Platform.Core.Policy.DangerousCapabilityApprovalRequest.operator ==(Kazo.Os.Platform.Core.Policy.DangerousCapabilityApprovalRequest? left, Kazo.Os.Platform.Core.Policy.DangerousCapabilityApprovalRequest? right) -> bool
 static Kazo.Os.Platform.Core.Policy.DangerousCapabilityEvaluator.DeclaresDangerousCapabilities(Kazo.Os.App.Abstractions.AppManifest! manifest) -> bool
 static Kazo.Os.Platform.Core.Policy.DangerousCapabilityEvaluator.Evaluate(Kazo.Os.App.Abstractions.AppManifest! manifest, bool isSystemApp, Kazo.Os.Platform.Core.Policy.DangerousCapabilityPolicy policy, Kazo.Os.Platform.Core.Policy.AppPermissionDecisions! decisions) -> System.Collections.Generic.IReadOnlyList<Kazo.Os.Platform.Core.Policy.DangerousCapabilityStatus!>!
+static Kazo.Os.Platform.Core.Policy.DangerousCapabilityEvaluator.UnapprovedRealNetworkPorts(Kazo.Os.App.Abstractions.AppManifest! manifest, Kazo.Os.Platform.Core.Policy.AppPermissionDecisions! decisions) -> System.Collections.Generic.IReadOnlyList<Kazo.Os.App.Abstractions.RealNetworkPort>!
 static Kazo.Os.Platform.Core.Policy.DangerousCapabilityGateResult.NotApplicable(bool isSystemApp) -> Kazo.Os.Platform.Core.Policy.DangerousCapabilityGateResult!
 static Kazo.Os.Platform.Core.Policy.DangerousCapabilityGateResult.operator !=(Kazo.Os.Platform.Core.Policy.DangerousCapabilityGateResult? left, Kazo.Os.Platform.Core.Policy.DangerousCapabilityGateResult? right) -> bool
 static Kazo.Os.Platform.Core.Policy.DangerousCapabilityGateResult.operator ==(Kazo.Os.Platform.Core.Policy.DangerousCapabilityGateResult? left, Kazo.Os.Platform.Core.Policy.DangerousCapabilityGateResult? right) -> bool
@@ -5210,6 +5232,7 @@ static Kazo.Os.Platform.Core.Processes.SystemMemorySnapshot.operator !=(Kazo.Os.
 static Kazo.Os.Platform.Core.Processes.SystemMemorySnapshot.operator ==(Kazo.Os.Platform.Core.Processes.SystemMemorySnapshot left, Kazo.Os.Platform.Core.Processes.SystemMemorySnapshot right) -> bool
 static Kazo.Os.Platform.Core.ServerConnection.FileSystemSyncService.BuildConflictCopyName(string! fileName, string! stamp, string! device) -> string!
 static Kazo.Os.Platform.Core.ServerConnection.FileSystemSyncService.IsDeviceLocal(string! relativePath) -> bool
+static Kazo.Os.Platform.Core.ServerConnection.RealNetworkGrantReconciler.RequestFor(Kazo.Os.App.Abstractions.AppManifest! manifest, string! userId, Kazo.Os.Platform.Core.Policy.DangerousCapabilityPolicy policy, Kazo.Os.Platform.Core.Policy.AppPermissionDecisions! decisions) -> Kazo.Os.Server.Contracts.Proxy.ProxyGrantIssueRequest!
 static Kazo.Os.Platform.Core.ServerConnection.ServerPresence.NotConfigured.get -> Kazo.Os.Platform.Core.ServerConnection.ServerPresence!
 static Kazo.Os.Platform.Core.ServerConnection.ServerPresence.operator !=(Kazo.Os.Platform.Core.ServerConnection.ServerPresence? left, Kazo.Os.Platform.Core.ServerConnection.ServerPresence? right) -> bool
 static Kazo.Os.Platform.Core.ServerConnection.ServerPresence.operator ==(Kazo.Os.Platform.Core.ServerConnection.ServerPresence? left, Kazo.Os.Platform.Core.ServerConnection.ServerPresence? right) -> bool

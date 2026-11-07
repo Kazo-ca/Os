@@ -43,11 +43,14 @@
     folder, capabilities of an app installed during the session, network drives readable by apps
     (ADR 0231), illustrated app icons (ADR 0232) and the real network for chat apps (WebSocket,
     relay TLS, declared ports, ADR 0235), all folded into PublicAPI.Shipped.txt.
+    3.2.0 (ADR 0233): the server issues the real-network grant approved in the OS, with the ports
+    the app declares, so a third-party app (the IRC app) reaches its ports through the relay;
+    Platform Core and Server Contracts API folded into PublicAPI.Shipped.txt.
 
     The App SDK version an app is compiled against comes from this number (KazoOsSdk.Version), and
     the manifest generator writes it as the app's sdkCompatibility.minimumVersion (ADR 0098 §3).
   -->
   <PropertyGroup>
-    <KazoOsVersion>3.1.0</KazoOsVersion>
+    <KazoOsVersion>3.2.0</KazoOsVersion>
   </PropertyGroup>
 </Project>
