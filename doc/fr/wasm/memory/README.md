@@ -12,7 +12,12 @@ jour à la fin de chaque série ou quand une convention change.
 - **Code actif** : `wasm2/KazoOs/` (OS simulé en Blazor WebAssembly, .NET 10,
   solution `Kazo.Os.sln`). `src/` est l'ancienne version, gardée comme
   référence.
-- **Version** : Kazo OS et le SDK passent en **3.1.0** (`build/Versions.props`),
+- **Version** : Kazo OS et le SDK passent en **3.2.0** (branche `release/3-2-0`,
+  2026-11-07) : l'accord du vrai réseau émis par le serveur avec ses ports
+  (ADR 0233), 68 lignes d'API de Platform Core et Server Contracts repliées,
+  1 entrée dans `changes/3.2.0.json` ; publiée quand la PR arrive dans `main`.
+  Elle débloque le chantier IRC-3 de l'app IRC.
+- **Version précédente** : Kazo OS et le SDK passent en **3.1.0** (`build/Versions.props`),
   préparée le 2026-11-07 par le chantier `os-3-1/7-release-3-1-0` de la série
   `os-3-1/base` ; elle est publiée (tag `v3.1.0`, GitHub Release, nuget.org)
   quand `os-3-1/base` arrive dans `main`. Elle replie 366 lignes d'API dans
