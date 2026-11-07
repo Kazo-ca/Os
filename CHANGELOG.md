@@ -6,6 +6,12 @@ The changes of Kazo OS, by version. This file is generated from `wasm2/KazoOs/ch
 `wasm2/KazoOs/build/tools/collect-changes.sh` (ADR 0186): do not edit it by hand. Changes already
 deployed but not released yet are in the Settings ▸ What's new page of the OS.
 
+## 3.2.0 (2026-11-07)
+
+### New
+
+- **The server issues the real-network grant approved in the OS, with its ports.** Once an administrator approves network.real.access, the OS asks the connected server to issue the grant (POST /api/proxy/grants) with the approved ports, kept in the new [real-network-ports] section of /etc/kazoos/app-permissions.config, and checks it again at each sync. An app update that declares a new port asks for approval again. The operator can refuse these grants with KazoOs:Proxy:AcceptOsGrants = false. ([server-network-relay.md](doc/en/wasm/dev/server-network-relay.md), [0233-server-issued-real-network-grants.md](doc/en/wasm/dev/adr/0233-server-issued-real-network-grants.md))
+
 ## 3.1.0 (2026-11-07)
 
 ### New
