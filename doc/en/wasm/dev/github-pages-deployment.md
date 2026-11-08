@@ -32,6 +32,13 @@ output, even without a new modification of that part. Build files shared with
 the legacy also count as changes of that version. Changing the `v1` prefix of
 a key deliberately invalidates its cache.
 
+The WASM build gets its build number from `build/build-number.sh` (commit
+count, full clone `fetch-depth: 0`) and the `KazoOsBuildNumber` variable
+([ADR 0236](adr/0236-build-number-and-version-status-at-sign-in.md)). A reused
+WASM cache keeps the number of the publish that produced it. An expired cache
+that rebuilds the same source after other commits (legacy, docs) gives a
+larger number: open sessions then see an update.
+
 `deploy-wasm.yml` keeps the compilation, the Razor scan, the dependency audit,
 the non-browser tests and the downloadable WASM artifact. It does not deploy
 Pages and does not request the Pages/OIDC permissions. Its triggers are

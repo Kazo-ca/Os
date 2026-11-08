@@ -393,7 +393,12 @@
                 StartUpdateDownload();
             }
 
+            ReleaseMonitor.StatusChanged += OnReleaseStatusChanged;
             ReleaseMonitor.Start(Kazo.Os.Platform.Blazor.LazyLoading.HostReleaseMonitor.DefaultInterval);
+            // ADR 0236: the sign-in screen says at once whether this is the served version,
+            // instead of waiting for the first five-minute tick. CheckAsync turns every probe
+            // failure into the « unreachable » status, so the discarded task cannot fault.
+            _ = ReleaseMonitor.CheckAsync();
         }
 
         // ADR 0187 section 5: Settings ▸ Users and the Start menu ask from inside the guest session.
@@ -435,6 +440,21 @@
     {
         IsRestartingForUpdate = true;
         await RestartMachineAsync(static () => Task.CompletedTask);
+    });
+
+    /// <summary>
+    /// ADR 0236: a newer build of the same version is an update too; the banner then shows
+    /// without a version number, like a build changed under the page (ADR 0162).
+    /// </summary>
+    private void OnReleaseStatusChanged() => InvokeAsync(() =>
+    {
+        if (ReleaseMonitor?.Status == Kazo.Os.Platform.Blazor.LazyLoading.HostReleaseStatus.UpdateAvailable
+            && !State.UpdateAvailable)
+        {
+            State.SetUpdateAvailable(true);
+            StartUpdateDownload();
+            StateHasChanged();
+        }
     });
 
     private void OnReleaseAvailable(string version) => InvokeAsync(() =>
@@ -533,6 +553,7 @@
         if (ReleaseMonitor is not null)
         {
             ReleaseMonitor.ReleaseAvailable -= OnReleaseAvailable;
+            ReleaseMonitor.StatusChanged -= OnReleaseStatusChanged;
         }
 
         if (GuestRequests is not null)

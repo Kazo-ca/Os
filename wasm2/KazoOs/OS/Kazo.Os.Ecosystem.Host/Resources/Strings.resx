@@ -114,6 +114,15 @@
   <data name="Project.LegacyMoved" xml:space="preserve"><value>The original version has moved to</value></data>
   <data name="Project.Author" xml:space="preserve"><value>Author:</value></data>
   <data name="Project.GitHub" xml:space="preserve"><value>GitHub project:</value></data>
+  <data name="Project.Build" xml:space="preserve"><value>build {0}</value></data>
+  <data name="Project.BuildLocal" xml:space="preserve"><value>build dev</value></data>
+  <data name="Project.Status.Checking" xml:space="preserve"><value>Checking…</value></data>
+  <data name="Project.Status.UpToDate" xml:space="preserve"><value>Up to date</value></data>
+  <data name="Project.Status.Outdated" xml:space="preserve"><value>Outdated: update available</value></data>
+  <data name="Project.Status.OutdatedVersion" xml:space="preserve"><value>Outdated: {0} available</value></data>
+  <data name="Project.Status.OutdatedVersionBuild" xml:space="preserve"><value>Outdated: {0} (build {1}) available</value></data>
+  <data name="Project.Status.OutdatedBuild" xml:space="preserve"><value>Outdated: build {0} available</value></data>
+  <data name="Project.Status.Unreachable" xml:space="preserve"><value>Status unknown (offline)</value></data>
   <data name="Login.UsePasskey" xml:space="preserve">
     <value>Sign in with a passkey</value>
   </data>

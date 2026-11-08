@@ -34,6 +34,9 @@ resource fingerprints, ADR 0098 §3 to §5) are described in
   The generator writes it as the `sdkCompatibility.minimumVersion` of each app;
   `AppCatalog` refuses an app whose range does not accept the host's SDK (same
   major as the minimum, minimum ≤ SDK ≤ maximum).
+- `KazoOsSdk.BuildNumber` is the build number of the running OS (commit count
+  written by the CI on the host's entry assembly), `null` for a local build
+  ([ADR 0236](../dev/adr/0236-build-number-and-version-status-at-sign-in.md)).
 
 ## Packages
 

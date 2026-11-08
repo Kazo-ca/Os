@@ -3,6 +3,7 @@ using System.Text.RegularExpressions;
 using Kazo.Os.App.Abstractions;
 using Kazo.Os.AppSdk.Globalization;
 using Kazo.Os.Ecosystem;
+using Kazo.Os.Platform.Blazor.LazyLoading;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.DependencyInjection;
@@ -56,6 +57,61 @@ public sealed class ProjectInformationTests
         Assert.Contains("aria-hidden=\"true\"", html);
         // The "GitHub project" line replaces the raw URL as link text (ADR 0187, section 7).
         Assert.DoesNotContain(">https://github.com/Kazo-ca/Os<", html);
+    }
+
+    [Fact]
+    public async Task Without_a_release_monitor_the_footer_shows_a_local_build_and_no_status()
+    {
+        string html = await RenderAsync("https://os.kazo.ca/", CultureInfo.GetCultureInfo("en"));
+
+        Assert.Contains("build dev", html);
+        Assert.DoesNotContain("project-release-status", html);
+    }
+
+    [Theory]
+    [InlineData("en", null, "Checking…", "is-checking")]
+    [InlineData("en", """{ "version": "@running", "build": 12 }""", "Up to date", "is-up-to-date")]
+    [InlineData("fr", """{ "version": "@running", "build": 12 }""", "À jour", "is-up-to-date")]
+    [InlineData("en", """{ "version": "@running", "build": 15 }""", "Outdated: build 15 available", "is-outdated")]
+    [InlineData("fr", """{ "version": "99.0.0", "build": 20 }""", "Obsolète : 99.0.0 (build 20) disponible", "is-outdated")]
+    [InlineData("en", """{ "version": "99.0.0" }""", "Outdated: 99.0.0 available", "is-outdated")]
+    [InlineData("fr", "", "État inconnu (hors ligne)", "is-unreachable")]
+    public async Task The_status_next_to_the_version_says_whether_it_is_the_served_one(string culture, string? served, string text, string cssClass)
+    {
+        var monitor = new HostReleaseMonitor(new FixedReleaseProbe(served?.Replace("@running", KazoOsSdk.Version, StringComparison.Ordinal)), KazoOsSdk.Version, runningBuild: 12);
+        if (served is not null)
+        {
+            await monitor.CheckAsync();
+        }
+
+        // The renderer encodes « é » and « … » as entities.
+        string html = System.Net.WebUtility.HtmlDecode(await RenderAsync("https://os.kazo.ca/", CultureInfo.GetCultureInfo(culture), monitor));
+
+        Assert.Contains($"Kazo OS {KazoOsSdk.Version}", html);
+        Assert.Contains("build 12", html);
+        Assert.Matches($@"<span class=""project-release-status {cssClass}"" role=""status""[^>]*>{Regex.Escape(text)}</span>", html);
+    }
+
+    private static async Task<string> RenderAsync(string url, CultureInfo culture, HostReleaseMonitor monitor)
+    {
+        ServiceCollection services = new();
+        services.AddLogging();
+        services.AddSingleton<NavigationManager>(new TestNavigation(url));
+        services.AddSingleton(new TestCulture(culture));
+        services.AddSingleton(typeof(IStringLocalizer<>), typeof(TestCultureLocalizer<>));
+        services.AddSingleton(monitor);
+        await using ServiceProvider provider = services.BuildServiceProvider();
+        await using HtmlRenderer renderer = new(provider, provider.GetRequiredService<ILoggerFactory>());
+        return await renderer.Dispatcher.InvokeAsync(async () =>
+        {
+            var result = await renderer.RenderComponentAsync<ProjectInformation>(ParameterView.Empty);
+            return result.ToHtmlString();
+        });
+    }
+
+    private sealed class FixedReleaseProbe(string? document) : IHostReleaseProbe
+    {
+        public ValueTask<string?> GetServedVersionDocumentAsync(CancellationToken cancellationToken) => ValueTask.FromResult(document);
     }
 
     private static async Task<string> RenderAsync(string url, CultureInfo culture)

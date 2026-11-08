@@ -34,6 +34,9 @@ empreintes des ressources, ADR 0098 §3 à §5) sont décrites dans
   Le générateur l'écrit comme `sdkCompatibility.minimumVersion` de chaque app ;
   `AppCatalog` refuse une app dont la plage n'accepte pas le SDK de l'hôte (même
   majeure que le minimum, minimum ≤ SDK ≤ maximum).
+- `KazoOsSdk.BuildNumber` est le numéro de build de l'OS en cours (nombre de
+  commits écrit par la CI sur l'assembly d'entrée de l'hôte), `null` pour une
+  build locale ([ADR 0236](../dev/adr/0236-build-number-and-version-status-at-sign-in.md)).
 
 ## Paquets
 

@@ -63,4 +63,12 @@ public sealed class KazoOsSdkTests
 
         return directory?.FullName ?? throw new InvalidOperationException("Kazo.Os.sln not found above the test output.");
     }
+
+    [Fact]
+    public void A_build_number_is_read_only_from_a_positive_KazoOsBuildNumber_metadata()
+    {
+        // ADR 0236: the test assembly carries no such metadata, like a local build.
+        Assert.Null(KazoOsSdk.ReadBuildNumber(typeof(KazoOsSdkTests).Assembly));
+        Assert.Null(KazoOsSdk.ReadBuildNumber(null));
+    }
 }

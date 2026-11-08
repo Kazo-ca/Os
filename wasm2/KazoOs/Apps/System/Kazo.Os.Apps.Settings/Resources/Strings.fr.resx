@@ -30,6 +30,12 @@
   <data name="About.Authority.User" xml:space="preserve">
     <value>Utilisateur</value>
   </data>
+  <data name="About.Build" xml:space="preserve">
+    <value>build {0}</value>
+  </data>
+  <data name="About.BuildLocal" xml:space="preserve">
+    <value>build dev</value>
+  </data>
   <data name="About.OsVersion" xml:space="preserve">
     <value>Version du système :</value>
   </data>

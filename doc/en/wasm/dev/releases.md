@@ -78,6 +78,20 @@ again every 5 minutes; when the site serves another version, a banner says
 "Kazo OS <version> is available" with "Restart to update"
 ([ADR 0174](adr/0174-announce-a-new-version-to-open-sessions.md)).
 
+### Build number
+
+The "Deploy to GitHub Pages" and "Release Kazo OS" workflows compute a build
+number with `build/build-number.sh` (commit count of `HEAD`, full clone
+required) and pass it to MSBuild through the `KazoOsBuildNumber` environment
+variable. It is written on the `OS/Kazo.Os.Ecosystem` assembly and in
+`version.json` (`"build": 1234`). The sign-in screen shows
+"Kazo OS 3.2.1 · build 1234" and a badge "Up to date", "Outdated: …" or
+"Status unknown (offline)", checked at boot; the same version with another
+number is an update too. A local build says "build dev"
+([ADR 0236](adr/0236-build-number-and-version-status-at-sign-in.md)). To
+reproduce the CI build locally:
+`KazoOsBuildNumber="$(build/build-number.sh)" dotnet publish OS/Kazo.Os.Ecosystem/Kazo.Os.Ecosystem.csproj -c Release`.
+
 ## Setting up publishing to nuget.org
 
 Two options; the first is recommended (no key to store or renew).

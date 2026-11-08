@@ -115,9 +115,12 @@ public static partial class KazoOsBrowserHostExtensions
         // a newer release next to the restart offer.
         builder.Services.AddSingleton<IHostReleaseProbe>(new BrowserHostReleaseProbe(
             new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) }));
+        // ADR 0236: with the build number the CI wrote on the host's entry assembly, so a new
+        // build of the same version is an update too, and the sign-in screen shows « build N ».
         builder.Services.AddSingleton(provider => new HostReleaseMonitor(
             provider.GetRequiredService<IHostReleaseProbe>(),
             KazoOsSdk.Version,
+            HostBuildNumber.Read(System.Reflection.Assembly.GetEntryAssembly()),
             provider.GetRequiredService<HostBuildUpdateMonitor>()));
         // ADR 0223: the restart activates the new service worker, downloaded as soon as a new
         // version is announced, instead of reloading under the old one.
