@@ -6,6 +6,13 @@ The changes of Kazo OS, by version. This file is generated from `wasm2/KazoOs/ch
 `wasm2/KazoOs/build/tools/collect-changes.sh` (ADR 0186): do not edit it by hand. Changes already
 deployed but not released yet are in the Settings ▸ What's new page of the OS.
 
+## 3.2.1 (2026-11-08)
+
+### Fixed
+
+- **Settings kept from before 3.0.0 can be read and saved again.** The rename migration of 3.0.0 left most configuration files written before 3.0.0 (/etc/kazoos, ~/.config/kazoos) pointing at deleted content: their settings fell back to the defaults and saving one failed with ProviderFailure, for example when approving an app's access to the real network. The migration now writes those files correctly, and at the first start a one-time repair gives each damaged file its migrated content back, or empties it when that content cannot be proven, and lists each file in /var/log/syslog. ([rename-migration.md](doc/en/wasm/dev/rename-migration.md))
+- **The Store reads the official catalog again on a profile from before 3.0.0.** The rename migration of 3.0.0 changed the address of the official catalog in /etc/kazoos/app-sources.config to a repository that does not exist (KazoOs-AppMarketPlace), so the Store showed "The catalog 'official' could not be read" and no app. The OS now reads the old names of Kazo-ca's app repositories as their current ones (Os-AppMarketPlace, Os-App-*), for catalogs and for apps installed from their repository. ([rename-migration.md](doc/en/wasm/dev/rename-migration.md))
+
 ## 3.2.0 (2026-11-07)
 
 ### New

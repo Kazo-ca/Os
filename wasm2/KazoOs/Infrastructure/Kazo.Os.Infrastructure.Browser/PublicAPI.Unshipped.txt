@@ -1,18 +1,1 @@
 #nullable enable
-Kazo.Os.Infrastructure.Browser.Rename.RenamedContentRepair
-Kazo.Os.Infrastructure.Browser.Rename.RenamedContentRepairItem
-Kazo.Os.Infrastructure.Browser.Rename.RenamedContentRepairItem.<Clone>$() -> Kazo.Os.Infrastructure.Browser.Rename.RenamedContentRepairItem!
-Kazo.Os.Infrastructure.Browser.Rename.RenamedContentRepairItem.Deconstruct(out string! Path, out bool Recovered) -> void
-Kazo.Os.Infrastructure.Browser.Rename.RenamedContentRepairItem.Equals(Kazo.Os.Infrastructure.Browser.Rename.RenamedContentRepairItem? other) -> bool
-Kazo.Os.Infrastructure.Browser.Rename.RenamedContentRepairItem.Path.get -> string!
-Kazo.Os.Infrastructure.Browser.Rename.RenamedContentRepairItem.Path.init -> void
-Kazo.Os.Infrastructure.Browser.Rename.RenamedContentRepairItem.Recovered.get -> bool
-Kazo.Os.Infrastructure.Browser.Rename.RenamedContentRepairItem.Recovered.init -> void
-Kazo.Os.Infrastructure.Browser.Rename.RenamedContentRepairItem.RenamedContentRepairItem(string! Path, bool Recovered) -> void
-const Kazo.Os.Infrastructure.Browser.Rename.RenamedContentRepair.DoneKey = "kazoos.renameContentRepair" -> string!
-override Kazo.Os.Infrastructure.Browser.Rename.RenamedContentRepairItem.Equals(object? obj) -> bool
-override Kazo.Os.Infrastructure.Browser.Rename.RenamedContentRepairItem.GetHashCode() -> int
-override Kazo.Os.Infrastructure.Browser.Rename.RenamedContentRepairItem.ToString() -> string!
-static Kazo.Os.Infrastructure.Browser.Rename.RenamedContentRepair.RunAsync(Microsoft.JSInterop.IJSRuntime! runtime, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Kazo.Os.Infrastructure.Browser.Rename.RenamedContentRepairItem!>!>!
-static Kazo.Os.Infrastructure.Browser.Rename.RenamedContentRepairItem.operator !=(Kazo.Os.Infrastructure.Browser.Rename.RenamedContentRepairItem? left, Kazo.Os.Infrastructure.Browser.Rename.RenamedContentRepairItem? right) -> bool
-static Kazo.Os.Infrastructure.Browser.Rename.RenamedContentRepairItem.operator ==(Kazo.Os.Infrastructure.Browser.Rename.RenamedContentRepairItem? left, Kazo.Os.Infrastructure.Browser.Rename.RenamedContentRepairItem? right) -> bool

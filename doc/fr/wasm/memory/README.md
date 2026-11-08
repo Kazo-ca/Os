@@ -12,23 +12,20 @@ jour à la fin de chaque série ou quand une convention change.
 - **Code actif** : `wasm2/KazoOs/` (OS simulé en Blazor WebAssembly, .NET 10,
   solution `Kazo.Os.sln`). `src/` est l'ancienne version, gardée comme
   référence.
-- **Version** : Kazo OS et le SDK passent en **3.2.0** (branche `release/3-2-0`,
-  2026-11-07) : l'accord du vrai réseau émis par le serveur avec ses ports
-  (ADR 0233), 68 lignes d'API de Platform Core et Server Contracts repliées,
-  1 entrée dans `changes/3.2.0.json` ; publiée quand la PR arrive dans `main`.
-  Elle débloque le chantier IRC-3 de l'app IRC.
-- **Correctif en attente** (2026-11-07, branche `fix/rename-damaged-config-files`) : la
-  migration du renommage de 3.0.0 laissait les fichiers de configuration d'avant
-  3.0.0 sur un contenu supprimé (`ProviderFailure`, approbation d'IRC bloquée) ;
-  corrigée, avec une réparation unique au démarrage (`RenamedContentRepair`,
-  [`rename-migration.md`](../dev/rename-migration.md)). Il faudra une version
-  corrective (3.2.1) une fois la PR dans `main`.
-- **Correctif en attente** (2026-11-08, branche `fix/store-official-catalog-address`) :
-  une fois `/etc/kazoos/app-sources.config` de nouveau lisible grâce à cette
-  réparation, le Store affichait « The catalog "official" could not be read » :
-  la migration avait réécrit `HackerOs-AppMarketPlace` en `KazoOs-AppMarketPlace`
-  (404). `RenamedAppRepositories` corrige à la lecture les anciens noms des
-  dépôts d'apps de Kazo-ca ; à livrer dans la même 3.2.1.
+- **Version** : Kazo OS et le SDK passent en **3.2.1** (branche `release/3-2-1`,
+  2026-11-08), une version corrective : la migration du renommage de 3.0.0 écrit
+  le nouveau hash des fichiers de configuration réécrits, et une réparation unique
+  au démarrage (`RenamedContentRepair`, [`rename-migration.md`](../dev/rename-migration.md))
+  rend les fichiers que 3.0.0 à 3.2.0 laissaient sur un contenu supprimé
+  (`ProviderFailure`, approbation d'IRC bloquée ; PR #422), et le Store relit le
+  catalogue officiel dont la migration avait réécrit l'adresse en
+  `KazoOs-AppMarketPlace` (`RenamedAppRepositories`, PR #424). 17 lignes d'API
+  d'Infrastructure.Browser repliées, aucun changement du SDK, 2 entrées dans
+  `changes/3.2.1.json` ; publiée quand la PR arrive dans `main`.
+- **Version 3.2.0** (2026-11-07, publiée) : l'accord du vrai réseau émis par le
+  serveur avec ses ports (ADR 0233), 68 lignes d'API de Platform Core et Server
+  Contracts repliées, 1 entrée dans `changes/3.2.0.json`. Elle a débloqué le
+  chantier IRC-3 de l'app IRC.
 - **Version précédente** : Kazo OS et le SDK passent en **3.1.0** (`build/Versions.props`),
   préparée le 2026-11-07 par le chantier `os-3-1/7-release-3-1-0` de la série
   `os-3-1/base` ; elle est publiée (tag `v3.1.0`, GitHub Release, nuget.org)
