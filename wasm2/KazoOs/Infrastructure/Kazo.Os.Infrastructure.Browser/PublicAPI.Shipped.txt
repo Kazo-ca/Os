@@ -164,6 +164,16 @@ Kazo.Os.Infrastructure.Browser.Policy.IndexedDbCapabilityGrantRepository.ImportA
 Kazo.Os.Infrastructure.Browser.Policy.IndexedDbCapabilityGrantRepository.IndexedDbCapabilityGrantRepository(Microsoft.JSInterop.IJSRuntime! runtime, System.TimeProvider? timeProvider = null, System.Func<System.Guid>? guidFactory = null) -> void
 Kazo.Os.Infrastructure.Browser.Policy.IndexedDbCapabilityGrantRepository.RevokeAsync(Kazo.Os.App.Abstractions.Policy.CapabilityGrantId grantId, Kazo.Os.App.Abstractions.AppAuthority actingAuthority, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.App.Abstractions.Policy.CapabilityGrantMutationResult!>
 Kazo.Os.Infrastructure.Browser.Recovery.BrowserStorageRecoveryClassifier
+Kazo.Os.Infrastructure.Browser.Rename.RenamedContentRepair
+Kazo.Os.Infrastructure.Browser.Rename.RenamedContentRepairItem
+Kazo.Os.Infrastructure.Browser.Rename.RenamedContentRepairItem.<Clone>$() -> Kazo.Os.Infrastructure.Browser.Rename.RenamedContentRepairItem!
+Kazo.Os.Infrastructure.Browser.Rename.RenamedContentRepairItem.Deconstruct(out string! Path, out bool Recovered) -> void
+Kazo.Os.Infrastructure.Browser.Rename.RenamedContentRepairItem.Equals(Kazo.Os.Infrastructure.Browser.Rename.RenamedContentRepairItem? other) -> bool
+Kazo.Os.Infrastructure.Browser.Rename.RenamedContentRepairItem.Path.get -> string!
+Kazo.Os.Infrastructure.Browser.Rename.RenamedContentRepairItem.Path.init -> void
+Kazo.Os.Infrastructure.Browser.Rename.RenamedContentRepairItem.Recovered.get -> bool
+Kazo.Os.Infrastructure.Browser.Rename.RenamedContentRepairItem.Recovered.init -> void
+Kazo.Os.Infrastructure.Browser.Rename.RenamedContentRepairItem.RenamedContentRepairItem(string! Path, bool Recovered) -> void
 Kazo.Os.Infrastructure.Browser.Rename.RenamedStorageMigration
 Kazo.Os.Infrastructure.Browser.Rename.RenamedStorageMigrationResult
 Kazo.Os.Infrastructure.Browser.Rename.RenamedStorageMigrationResult.<Clone>$() -> Kazo.Os.Infrastructure.Browser.Rename.RenamedStorageMigrationResult!
@@ -303,6 +313,7 @@ Kazo.Os.Infrastructure.Browser.Workers.BrowserWebWorkerRuntime.StartAsync(Kazo.O
 Kazo.Os.Infrastructure.Browser.Workers.BrowserWebWorkerRuntime.WhenIdleAsync(System.TimeSpan timeout, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 const Kazo.Os.Infrastructure.Browser.Backup.IndexedDbBackupService.ArchiveExtension = ".kosbak" -> string!
 const Kazo.Os.Infrastructure.Browser.Backup.IndexedDbBackupService.LegacyArchiveExtension = ".hosbak" -> string!
+const Kazo.Os.Infrastructure.Browser.Rename.RenamedContentRepair.DoneKey = "kazoos.renameContentRepair" -> string!
 const Kazo.Os.Infrastructure.Browser.Rename.RenamedStorageMigration.ProgressKey = "kazoos.renameMigration" -> string!
 const Kazo.Os.Infrastructure.Browser.Rename.RenamedStorageMigration.VersionKey = "kazoos.osVersion" -> string!
 const Kazo.Os.Infrastructure.Browser.Schema.FileContentStoragePolicy.DefaultContentHashAlgorithm = "SHA-256" -> string!
@@ -343,6 +354,9 @@ override Kazo.Os.Infrastructure.Browser.Diagnostics.IndexedDbStoreSnapshot.ToStr
 override Kazo.Os.Infrastructure.Browser.FileSystem.IndexedDbFileContentCleanupResult.Equals(object? obj) -> bool
 override Kazo.Os.Infrastructure.Browser.FileSystem.IndexedDbFileContentCleanupResult.GetHashCode() -> int
 override Kazo.Os.Infrastructure.Browser.FileSystem.IndexedDbFileContentCleanupResult.ToString() -> string!
+override Kazo.Os.Infrastructure.Browser.Rename.RenamedContentRepairItem.Equals(object? obj) -> bool
+override Kazo.Os.Infrastructure.Browser.Rename.RenamedContentRepairItem.GetHashCode() -> int
+override Kazo.Os.Infrastructure.Browser.Rename.RenamedContentRepairItem.ToString() -> string!
 override Kazo.Os.Infrastructure.Browser.Rename.RenamedStorageMigrationResult.Equals(object? obj) -> bool
 override Kazo.Os.Infrastructure.Browser.Rename.RenamedStorageMigrationResult.GetHashCode() -> int
 override Kazo.Os.Infrastructure.Browser.Rename.RenamedStorageMigrationResult.ToString() -> string!
@@ -382,6 +396,9 @@ static Kazo.Os.Infrastructure.Browser.Globalization.BrowserSatelliteAssemblies.L
 static Kazo.Os.Infrastructure.Browser.Isolation.BrowserCrossOriginIsolation.ProbeAsync(bool wanted) -> System.Threading.Tasks.Task<string?>!
 static Kazo.Os.Infrastructure.Browser.Recovery.BrowserStorageRecoveryClassifier.AwaitDestructiveConfirmation(Kazo.Os.Simulation.Abstractions.Recovery.StorageRecoveryActions action, string! affectedData, System.Guid correlationId) -> Kazo.Os.Simulation.Abstractions.Recovery.StorageRecoveryPresentation!
 static Kazo.Os.Infrastructure.Browser.Recovery.BrowserStorageRecoveryClassifier.Classify(System.Exception! exception, Kazo.Os.Simulation.Abstractions.Recovery.StorageRecoveryContext context, System.Guid correlationId) -> Kazo.Os.Simulation.Abstractions.Recovery.StorageRecoveryPresentation!
+static Kazo.Os.Infrastructure.Browser.Rename.RenamedContentRepair.RunAsync(Microsoft.JSInterop.IJSRuntime! runtime, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Kazo.Os.Infrastructure.Browser.Rename.RenamedContentRepairItem!>!>!
+static Kazo.Os.Infrastructure.Browser.Rename.RenamedContentRepairItem.operator !=(Kazo.Os.Infrastructure.Browser.Rename.RenamedContentRepairItem? left, Kazo.Os.Infrastructure.Browser.Rename.RenamedContentRepairItem? right) -> bool
+static Kazo.Os.Infrastructure.Browser.Rename.RenamedContentRepairItem.operator ==(Kazo.Os.Infrastructure.Browser.Rename.RenamedContentRepairItem? left, Kazo.Os.Infrastructure.Browser.Rename.RenamedContentRepairItem? right) -> bool
 static Kazo.Os.Infrastructure.Browser.Rename.RenamedStorageMigration.RunAsync(Microsoft.JSInterop.IJSRuntime! runtime, string! currentVersion, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Kazo.Os.Infrastructure.Browser.Rename.RenamedStorageMigrationResult!>!
 static Kazo.Os.Infrastructure.Browser.Rename.RenamedStorageMigrationResult.NotNeeded.get -> Kazo.Os.Infrastructure.Browser.Rename.RenamedStorageMigrationResult!
 static Kazo.Os.Infrastructure.Browser.Rename.RenamedStorageMigrationResult.operator !=(Kazo.Os.Infrastructure.Browser.Rename.RenamedStorageMigrationResult? left, Kazo.Os.Infrastructure.Browser.Rename.RenamedStorageMigrationResult? right) -> bool

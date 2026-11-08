@@ -46,11 +46,15 @@
     3.2.0 (ADR 0233): the server issues the real-network grant approved in the OS, with the ports
     the app declares, so a third-party app (the IRC app) reaches its ports through the relay;
     Platform Core and Server Contracts API folded into PublicAPI.Shipped.txt.
+    3.2.1 (2026-11-08, patch): the rename migration of 3.0.0 writes the new hash of the rewritten
+    configuration files, and a one-time boot repair gives back the files 3.0.0 to 3.2.0 left on
+    deleted content (ProviderFailure on /etc/kazoos/app-permissions.config). No SDK change: only
+    the Infrastructure.Browser repair entry points move in the API files.
 
     The App SDK version an app is compiled against comes from this number (KazoOsSdk.Version), and
     the manifest generator writes it as the app's sdkCompatibility.minimumVersion (ADR 0098 §3).
   -->
   <PropertyGroup>
-    <KazoOsVersion>3.2.0</KazoOsVersion>
+    <KazoOsVersion>3.2.1</KazoOsVersion>
   </PropertyGroup>
 </Project>

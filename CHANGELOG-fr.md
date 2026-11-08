@@ -6,6 +6,12 @@ Les changements de Kazo OS, par version. Ce fichier est généré à partir de `
 `wasm2/KazoOs/build/tools/collect-changes.sh` (ADR 0186) : ne pas le modifier à la main. Les changements
 déjà déployés mais pas encore publiés sont dans la page Paramètres ▸ Nouveautés de l'OS.
 
+## 3.2.1 (2026-11-08)
+
+### Corrigé
+
+- **Les réglages gardés d'avant 3.0.0 se lisent et s'enregistrent de nouveau.** La migration du renommage de 3.0.0 laissait la plupart des fichiers de configuration écrits avant 3.0.0 (/etc/kazoos, ~/.config/kazoos) pointer vers un contenu supprimé : leurs réglages retombaient sur les valeurs par défaut et en enregistrer un échouait avec ProviderFailure, par exemple en approuvant l'accès d'une app au vrai réseau. La migration écrit maintenant ces fichiers correctement, et au premier démarrage une réparation unique rend à chaque fichier abîmé son contenu migré, ou le vide quand ce contenu ne peut pas être prouvé, et note chaque fichier dans /var/log/syslog. ([rename-migration.md](doc/fr/wasm/dev/rename-migration.md))
+
 ## 3.2.0 (2026-11-07)
 
 ### Nouveau
