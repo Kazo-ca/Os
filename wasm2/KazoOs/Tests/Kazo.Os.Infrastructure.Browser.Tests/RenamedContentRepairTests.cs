@@ -31,6 +31,41 @@ public sealed class RenamedContentRepairTests
     }
 
     [Fact]
+    public void Two_files_with_the_same_old_bytes_are_both_recovered_from_their_shared_rewritten_text()
+    {
+        // Content is addressed by its SHA-256: two files with the same old bytes had one set of old
+        // chunks (deleted by the old migration) and now share one rewritten text.
+        Dictionary<string, IReadOnlyList<JsonObject>> stores = DamagedDatabase(withRewrittenText: true);
+        stores[KazoOsIndexedDbSchema.FileSystemLinkStoreName] =
+        [
+            .. stores[KazoOsIndexedDbSchema.FileSystemLinkStoreName],
+            Link(Root, "home", "home-id"),
+            Link("home-id", "ada", "ada-id"),
+            Link("ada-id", ".config", "ada-config-id"),
+            Link("ada-config-id", "kazoos", "ada-kazoos-id"),
+            Link("ada-kazoos-id", "app-permissions.config", "permissions-copy"),
+        ];
+        JsonObject copy = stores[KazoOsIndexedDbSchema.FileSystemEntryStoreName][0].DeepClone().AsObject();
+        copy["id"] = "permissions-copy";
+        stores[KazoOsIndexedDbSchema.FileSystemEntryStoreName] = [.. stores[KazoOsIndexedDbSchema.FileSystemEntryStoreName], copy];
+
+        RenamedContentRepairPlan plan = RenamedContentRepair.Plan(stores);
+
+        Assert.Equal(
+            [
+                new RenamedContentRepairItem("/etc/kazoos/app-permissions.config", Recovered: true),
+                new RenamedContentRepairItem("/home/ada/.config/kazoos/app-permissions.config", Recovered: true),
+            ],
+            plan.Items);
+        Assert.Equal(2, plan.Entries.Count);
+        Assert.All(plan.Entries, entry =>
+        {
+            Assert.Equal(Hash(NewPermissions), (string?)entry["contentHash"]);
+            Assert.Equal(Encoding.UTF8.GetByteCount(NewPermissions), (long?)entry["length"]);
+        });
+    }
+
+    [Fact]
     public void A_file_whose_rewritten_text_is_gone_is_emptied()
     {
         Dictionary<string, IReadOnlyList<JsonObject>> stores = DamagedDatabase(withRewrittenText: false);

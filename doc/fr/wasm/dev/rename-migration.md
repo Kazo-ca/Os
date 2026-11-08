@@ -129,7 +129,9 @@ Depuis 3.2.1 :
   l'ancienne ou être déjà la nouvelle), garde les choix dont la taille en
   octets égale celle que la fiche a gardée, et n'accepte qu'un texte d'origine
   dont le SHA-256 est celui de la fiche et dont la réécriture redonne le texte
-  candidat. La fiche pointe alors vers ce texte (fichier récupéré). Sans preuve,
+  candidat. La fiche pointe alors vers ce texte (fichier récupéré). Deux
+  fichiers qui avaient les mêmes octets partagent le même texte réécrit : un
+  texte prouvé reste disponible pour le suivant. Sans preuve,
   le fichier est vidé (état d'un fichier créé par `touch`) : les réglages qu'il
   portait reprennent leurs valeurs par défaut, comme avant la réparation. La
   recherche est bornée (2^14 étapes par paire fichier-candidat, 2^20 en tout)
@@ -171,7 +173,8 @@ Un serveur installé avant 3.0.0 (volume Docker, dossier de données) a
   intacts, seconde passe sans changement, fiche réécrite écrite avec son
   nouveau hachage, écritures qui redonnent la base réécrite),
   `RenamedContentRepairTests` (fichier abîmé récupéré, vidé sans texte réécrit,
-  texte qui ressemble sans preuve jamais utilisé, base saine laissée telle
+  deux fichiers aux mêmes anciens octets tous deux récupérés, texte qui ressemble
+  sans preuve jamais utilisé, base saine laissée telle
   quelle, base abîmée par l'ancienne migration entièrement récupérée, une seule
   fois par navigateur), `RenamedStorageMigrationTests`
   (bases, clés et caches, version enregistrée, arrêt immédiat après 3.0.0,

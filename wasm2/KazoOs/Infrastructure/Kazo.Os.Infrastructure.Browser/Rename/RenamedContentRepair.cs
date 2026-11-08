@@ -129,17 +129,25 @@ public static class RenamedContentRepair
             .OrderBy(pair => pair.Key, StringComparer.Ordinal)];
 
         SearchBudget budget = new(MaxSteps);
+        // Content is addressed by its SHA-256: files that had the same old bytes share one rewritten
+        // text. A proven candidate therefore stays available, and the answer for an old hash and
+        // length is kept so the next file with the same bytes is not searched again.
+        Dictionary<(string Hash, long Length), (string Hash, string Text)?> proven = [];
         List<JsonObject> written = [];
         List<RenamedContentRepairItem> items = [];
         foreach ((JsonObject entry, string hash, string path) in damaged)
         {
             JsonObject repaired = entry.DeepClone().AsObject();
             long expectedLength = Number(entry["length"]) ?? -1;
-            int match = candidates.FindIndex(candidate => IsRewriteOf(candidate.Text, hash, expectedLength, budget));
-            if (match >= 0)
+            if (!proven.TryGetValue((hash, expectedLength), out (string Hash, string Text)? match))
             {
-                (string newHash, string text) = candidates[match];
-                candidates.RemoveAt(match);
+                int index = candidates.FindIndex(candidate => IsRewriteOf(candidate.Text, hash, expectedLength, budget));
+                match = index >= 0 ? candidates[index] : null;
+                proven[(hash, expectedLength)] = match;
+            }
+
+            if (match is (string newHash, string text))
+            {
                 repaired["contentHash"] = newHash;
                 repaired["length"] = (long)Encoding.UTF8.GetByteCount(text);
             }
@@ -156,7 +164,7 @@ public static class RenamedContentRepair
             }
 
             written.Add(repaired);
-            items.Add(new RenamedContentRepairItem(path, match >= 0));
+            items.Add(new RenamedContentRepairItem(path, match is not null));
         }
 
         return new RenamedContentRepairPlan(written, items);

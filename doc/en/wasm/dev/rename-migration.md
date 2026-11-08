@@ -119,7 +119,8 @@ Since 3.2.1:
   already be the new one), keeps the choices whose byte length equals the one
   the entry kept, and accepts only an original text whose SHA-256 is the
   entry's and whose rewrite gives back the candidate text. The entry then
-  points at that text (file recovered). Without a proof, the file is emptied
+  points at that text (file recovered). Two files that had the same bytes share
+  the same rewritten text: a proven text stays available for the next one. Without a proof, the file is emptied
   (the state of a file created by `touch`): the settings it held take their
   default values, as before the repair. The search is bounded (2^14 steps per
   file-candidate pair, 2^20 in all) so it never stalls the boot;
@@ -159,7 +160,8 @@ when the configured database is named `kazoos.db`, does not exist yet and
   documents kept, shared chunks kept, secrets and chosen names untouched, second
   pass without changes, rewritten entry written with its new hash, writes that
   give back the rewritten database), `RenamedContentRepairTests` (damaged file
-  recovered, emptied without rewritten text, look-alike text without proof
+  recovered, two files with the same old bytes both recovered, emptied without
+  rewritten text, look-alike text without proof
   never used, sound database left as it is, database damaged by the old
   migration fully recovered, once per browser), `RenamedStorageMigrationTests` (databases, keys and
   caches, version recorded, immediate stop from 3.0.0 on, resume without a
