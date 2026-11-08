@@ -70,6 +70,44 @@ internal static partial class RenamedNames
         (new Regex(@"\.hosbak\b", RegexOptions.CultureInvariant), ".kosbak"),
     ];
 
+    /// <summary>
+    /// Each spelling <see cref="Rewrite"/> writes, with an old spelling it replaces: the rules above
+    /// read backwards. <see cref="RenamedContentRepair"/> uses them to find a file's original text
+    /// from its rewritten text; every candidate is then proven by its SHA-256 and by
+    /// <see cref="Rewrite"/>, so a missing or extra pair here can only miss a repair, never make a
+    /// wrong one.
+    /// </summary>
+    public static IReadOnlyList<(string NewForm, string OldForm)> ReverseForms { get; } =
+    [
+        ("Kazo OS", "HackerOS"),
+        ("Kazo.Os.", "HackerOs."),
+        ("KazoOs__", "HackerOs__"),
+        ("IKazo", "IHack"),
+        ("Kazo", "Hacker"),
+        ("Kazo", "Hack"),
+        ("KAZOOS", "HACKEROS"),
+        ("Kazoos", "Hackeros"),
+        ("kazoOs", "hackerOs"),
+        ("kazoos", "hackeros"),
+        ("KazoOs", "HackerOs"),
+        ("Kazoweb", "Hackweb"),
+        ("kazoweb", "hackweb"),
+        ("kazo-paint", "hack-paint"),
+        ("kazopaint", "hackpaint"),
+        ("kazoos-store", "hack-store"),
+        ("kazopkg", "hackpkg"),
+        ("kazobackup", "hackbackup"),
+        ("kazofileview", "hackfileview"),
+        ("kazobackground", "hackbackground"),
+        ("kazosettings", "hacksettings"),
+        (".kazoapp", ".hackapp"),
+        (".kazotheme", ".hacktheme"),
+        ("--kos-", "--hos-"),
+        ("data-kos-", "data-hos-"),
+        ("kos-", "hos-"),
+        (".kosbak", ".hosbak"),
+    ];
+
     /// <summary>Gets whether <paramref name="value"/> holds a name the rename replaced.</summary>
     /// <param name="value">Any stored text.</param>
     public static bool ContainsOldName(string? value) =>

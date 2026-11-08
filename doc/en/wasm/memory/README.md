@@ -17,6 +17,12 @@ at the end of each series or when a convention changes.
   (ADR 0233), 68 API lines of Platform Core and Server Contracts folded,
   1 entry in `changes/3.2.0.json`; published when the PR lands in `main`.
   It unblocks work item IRC-3 of the IRC app.
+- **Pending fix** (2026-11-07, branch `fix/rename-damaged-config-files`): the
+  rename migration of 3.0.0 left the configuration files from before 3.0.0 on
+  deleted content (`ProviderFailure`, IRC approval blocked); fixed, with a
+  one-time repair at boot (`RenamedContentRepair`,
+  [`rename-migration.md`](../dev/rename-migration.md)). A patch version (3.2.1)
+  is needed once the PR is in `main`.
 - **Previous version**: Kazo OS and the SDK move to **3.1.0** (`build/Versions.props`),
   prepared on 2026-11-07 by the `os-3-1/7-release-3-1-0` work item of the
   `os-3-1/base` series; it is published (`v3.1.0` tag, GitHub Release,

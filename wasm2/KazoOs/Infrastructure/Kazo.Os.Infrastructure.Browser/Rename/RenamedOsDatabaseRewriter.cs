@@ -69,7 +69,7 @@ internal static class RenamedOsDatabaseRewriter
 
         List<JsonObject> links = Store(result, KazoOsIndexedDbSchema.FileSystemLinkStoreName);
         Dictionary<string, string> paths = EntryPaths(links);
-        RewriteContents(result, paths, changes);
+        HashSet<JsonObject> rewrittenEntries = RewriteContents(result, paths, changes);
         RewriteLinks(links, paths, changes);
 
         foreach ((string storeName, List<JsonObject> records) in result)
@@ -79,7 +79,7 @@ internal static class RenamedOsDatabaseRewriter
                 continue;
             }
 
-            RewriteRecords(storeName, records, changes);
+            RewriteRecords(storeName, records, rewrittenEntries, changes);
         }
 
         return new RenamedOsDatabase(
@@ -160,7 +160,8 @@ internal static class RenamedOsDatabaseRewriter
     }
 
     /// <summary>Gets the path of every linked entry (its first link wins for a hard-linked file).</summary>
-    private static Dictionary<string, string> EntryPaths(List<JsonObject> links)
+    /// <param name="links">The records of the <c>fsLinks</c> store.</param>
+    internal static Dictionary<string, string> EntryPaths(IEnumerable<JsonObject> links)
     {
         Dictionary<string, (string Parent, string Name)> parents = new(StringComparer.Ordinal);
         foreach (JsonObject link in links)
@@ -236,8 +237,18 @@ internal static class RenamedOsDatabaseRewriter
         }
     }
 
-    private static void RewriteContents(Dictionary<string, List<JsonObject>> stores, Dictionary<string, string> paths, List<RenamedRecordChange> changes)
+    /// <summary>
+    /// Rewrites the text of the configuration files and returns the file entries that now point at
+    /// their new content: those entries must be written even when nothing else in them changed.
+    /// </summary>
+    /// <remarks>
+    /// Until 3.2.1 the entries were changed here in place and <see cref="RewriteRecords"/> compared
+    /// them with themselves, so the new hash was never written while the old chunks were deleted:
+    /// the file pointed at content that no longer existed (see <see cref="RenamedContentRepair"/>).
+    /// </remarks>
+    private static HashSet<JsonObject> RewriteContents(Dictionary<string, List<JsonObject>> stores, Dictionary<string, string> paths, List<RenamedRecordChange> changes)
     {
+        HashSet<JsonObject> rewrittenEntries = new(ReferenceEqualityComparer.Instance);
         List<JsonObject> entries = Store(stores, KazoOsIndexedDbSchema.FileSystemEntryStoreName);
         List<JsonObject> chunks = Store(stores, KazoOsIndexedDbSchema.FileContentStoreName);
         Dictionary<string, List<JsonObject>> chunksByHash = chunks
@@ -277,6 +288,7 @@ internal static class RenamedOsDatabaseRewriter
 
             entry["contentHash"] = newHash;
             entry["length"] = bytes.Length;
+            rewrittenEntries.Add(entry);
             replacedHashes.Add(hash);
         }
 
@@ -290,10 +302,12 @@ internal static class RenamedOsDatabaseRewriter
                 changes.Add(new RenamedRecordChange(KazoOsIndexedDbSchema.FileContentStoreName, new JsonArray(hash, (int?)chunk["chunkIndex"] ?? 0), null));
             }
         }
+
+        return rewrittenEntries;
     }
 
     /// <summary>Joins a file's chunks and decodes them as strict UTF-8; <see langword="null"/> for binary content.</summary>
-    private static string? ReadText(List<JsonObject> chunks)
+    internal static string? ReadText(List<JsonObject> chunks)
     {
         try
         {
@@ -330,7 +344,11 @@ internal static class RenamedOsDatabaseRewriter
         return chunks;
     }
 
-    private static void RewriteRecords(string storeName, List<JsonObject> records, List<RenamedRecordChange> changes)
+    private static void RewriteRecords(
+        string storeName,
+        List<JsonObject> records,
+        HashSet<JsonObject> alreadyChanged,
+        List<RenamedRecordChange> changes)
     {
         IReadOnlyList<string>? keyPath = KazoOsIndexedDbSchema.ObjectStores
             .FirstOrDefault(store => store.Name == storeName)?.KeyPath;
@@ -344,7 +362,8 @@ internal static class RenamedOsDatabaseRewriter
                 record["symbolicLinkTarget"] = RewriteSystemPath(target);
             }
 
-            if (record.ToJsonString() == before)
+            // A file entry whose content was rewritten changed before this snapshot was taken.
+            if (record.ToJsonString() == before && !alreadyChanged.Contains(record))
             {
                 continue;
             }

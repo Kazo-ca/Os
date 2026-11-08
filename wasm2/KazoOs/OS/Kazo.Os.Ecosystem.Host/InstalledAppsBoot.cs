@@ -420,6 +420,36 @@ public static class InstalledAppsBootExtensions
         catch (Exception exception) when (exception is JSException or InvalidOperationException or TaskCanceledException or System.Text.Json.JsonException)
         {
             logger?.LogWarning(exception, "rename: the data of a version before 3.0.0 could not be migrated; it will be tried again at the next start");
+            return;
+        }
+
+        await RepairRenamedContentAsync(runtime, logger).ConfigureAwait(true);
+    }
+
+    /// <summary>
+    /// Repairs, once per browser, the files the rename migration of 3.0.0 to 3.2.0 left pointing at
+    /// deleted content (<see cref="RenamedContentRepair"/>). Each repaired file is logged; a failure
+    /// is logged and the repair runs again at the next boot.
+    /// </summary>
+    private static async Task RepairRenamedContentAsync(IJSRuntime runtime, ILogger? logger)
+    {
+        try
+        {
+            foreach (RenamedContentRepairItem item in await RenamedContentRepair.RunAsync(runtime).ConfigureAwait(true))
+            {
+                if (item.Recovered)
+                {
+                    logger?.LogWarning("fsck: {Path}: content lost by the 3.0.0 rename migration, recovered", item.Path);
+                }
+                else
+                {
+                    logger?.LogWarning("fsck: {Path}: content lost by the 3.0.0 rename migration, file emptied (defaults apply)", item.Path);
+                }
+            }
+        }
+        catch (Exception exception) when (exception is JSException or InvalidOperationException or TaskCanceledException or System.Text.Json.JsonException or InvalidDataException)
+        {
+            logger?.LogWarning(exception, "fsck: the files damaged by the 3.0.0 rename migration could not be repaired; it will be tried again at the next start");
         }
     }
 }

@@ -1,0 +1,18 @@
+{
+  "id": "5ff3fa21-caac-41b0-828e-406ef45a4b33",
+  "category": "fixed",
+  "audience": [
+    "user"
+  ],
+  "title": {
+    "en": "Settings kept from before 3.0.0 can be read and saved again",
+    "fr": "Les réglages gardés d'avant 3.0.0 se lisent et s'enregistrent de nouveau"
+  },
+  "description": {
+    "en": "The rename migration of 3.0.0 left most configuration files written before 3.0.0 (/etc/kazoos, ~/.config/kazoos) pointing at deleted content: their settings fell back to the defaults and saving one failed with ProviderFailure, for example when approving an app's access to the real network. The migration now writes those files correctly, and at the first start a one-time repair gives each damaged file its migrated content back, or empties it when that content cannot be proven, and lists each file in /var/log/syslog.",
+    "fr": "La migration du renommage de 3.0.0 laissait la plupart des fichiers de configuration écrits avant 3.0.0 (/etc/kazoos, ~/.config/kazoos) pointer vers un contenu supprimé : leurs réglages retombaient sur les valeurs par défaut et en enregistrer un échouait avec ProviderFailure, par exemple en approuvant l'accès d'une app au vrai réseau. La migration écrit maintenant ces fichiers correctement, et au premier démarrage une réparation unique rend à chaque fichier abîmé son contenu migré, ou le vide quand ce contenu ne peut pas être prouvé, et note chaque fichier dans /var/log/syslog."
+  },
+  "links": [
+    "doc/en/wasm/dev/rename-migration.md"
+  ]
+}
