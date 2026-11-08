@@ -1,0 +1,18 @@
+{
+  "id": "b7d2c1e4-5a8f-4f3e-9c61-2e0d7a4b9f13",
+  "category": "fixed",
+  "audience": [
+    "user"
+  ],
+  "title": {
+    "en": "The Store reads the official catalog again on a profile from before 3.0.0",
+    "fr": "Le Store lit de nouveau le catalogue officiel sur un profil d'avant 3.0.0"
+  },
+  "description": {
+    "en": "The rename migration of 3.0.0 changed the address of the official catalog in /etc/kazoos/app-sources.config to a repository that does not exist (KazoOs-AppMarketPlace), so the Store showed \"The catalog 'official' could not be read\" and no app. The OS now reads the old names of Kazo-ca's app repositories as their current ones (Os-AppMarketPlace, Os-App-*), for catalogs and for apps installed from their repository.",
+    "fr": "La migration du renommage de 3.0.0 avait changé l'adresse du catalogue officiel dans /etc/kazoos/app-sources.config vers un dépôt qui n'existe pas (KazoOs-AppMarketPlace) : le Store affichait « The catalog 'official' could not be read » et aucune app. L'OS lit maintenant les anciens noms des dépôts d'apps de Kazo-ca comme leurs noms actuels (Os-AppMarketPlace, Os-App-*), pour les catalogues et pour les apps installées depuis leur dépôt."
+  },
+  "links": [
+    "doc/en/wasm/dev/rename-migration.md"
+  ]
+}

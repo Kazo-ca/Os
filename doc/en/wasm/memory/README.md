@@ -23,6 +23,12 @@ at the end of each series or when a convention changes.
   one-time repair at boot (`RenamedContentRepair`,
   [`rename-migration.md`](../dev/rename-migration.md)). A patch version (3.2.1)
   is needed once the PR is in `main`.
+- **Pending fix** (2026-11-08, branch `fix/store-official-catalog-address`):
+  once that repair made `/etc/kazoos/app-sources.config` readable again, the
+  Store showed "The catalog 'official' could not be read": the migration had
+  rewritten `HackerOs-AppMarketPlace` as `KazoOs-AppMarketPlace` (404).
+  `RenamedAppRepositories` corrects Kazo-ca's old app repository names when
+  read; to ship in the same 3.2.1.
 - **Previous version**: Kazo OS and the SDK move to **3.1.0** (`build/Versions.props`),
   prepared on 2026-11-07 by the `os-3-1/7-release-3-1-0` work item of the
   `os-3-1/base` series; it is published (`v3.1.0` tag, GitHub Release,
