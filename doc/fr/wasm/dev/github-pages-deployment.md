@@ -32,6 +32,13 @@ la sortie absente, même sans nouvelle modification de cette partie. Les fichier
 de build communs au legacy comptent aussi comme changements de cette version.
 Modifier le préfixe `v1` d'une clé permet d'invalider volontairement son cache.
 
+Le build WASM reçoit son numéro de build par `build/build-number.sh` (nombre de
+commits, clone complet `fetch-depth: 0`) et la variable `KazoOsBuildNumber`
+([ADR 0236](adr/0236-build-number-and-version-status-at-sign-in.md)). Un cache
+WASM réutilisé garde le numéro de la publication qui l'a produit. Un cache
+expiré qui reconstruit la même source après d'autres commits (legacy, docs)
+donne un numéro plus grand : les sessions ouvertes voient alors une mise à jour.
+
 `deploy-wasm.yml` conserve la compilation, le scan Razor, l'audit des dépendances,
 les tests sans navigateur et l'artefact WASM téléchargeable. Il ne déploie pas
 Pages et ne demande pas les droits Pages/OIDC. Ses déclencheurs sont limités

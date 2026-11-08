@@ -1,1 +1,3 @@
 #nullable enable
+static Kazo.Os.App.Abstractions.KazoOsSdk.BuildNumber.get -> int?
+static Kazo.Os.App.Abstractions.KazoOsSdk.ReadBuildNumber(System.Reflection.Assembly? assembly) -> int?

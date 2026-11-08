@@ -1,5 +1,4 @@
 .project-information { display: grid; gap: .5rem; padding: 1rem 0; border-top: 1px solid var(--kos-border-subtle, #314247); font-size: .8rem; line-height: 1.6; color: var(--kos-text-secondary, #a8bac4); }
-.project-release { font-weight: 650; color: var(--kos-text-primary, #e5f4f0); }
 a { color: var(--kos-accent, #42d392); overflow-wrap: anywhere; text-underline-offset: .2em; }
 .project-credit { display: flex; flex-wrap: wrap; align-items: center; gap: .35rem; }
 a.project-repository { display: inline-flex; align-items: center; gap: .35rem; }

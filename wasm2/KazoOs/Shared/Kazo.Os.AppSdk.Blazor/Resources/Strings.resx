@@ -90,4 +90,31 @@
   <data name="SettingOrigin.User.Title" xml:space="preserve">
     <value>Set in your ~/.config file.</value>
   </data>
+  <data name="Version.Build" xml:space="preserve">
+    <value>build {0}</value>
+  </data>
+  <data name="Version.BuildLocal" xml:space="preserve">
+    <value>build dev</value>
+  </data>
+  <data name="Version.Checking" xml:space="preserve">
+    <value>Checking…</value>
+  </data>
+  <data name="Version.UpToDate" xml:space="preserve">
+    <value>Up to date</value>
+  </data>
+  <data name="Version.Outdated" xml:space="preserve">
+    <value>Outdated: update available</value>
+  </data>
+  <data name="Version.OutdatedVersion" xml:space="preserve">
+    <value>Outdated: {0} available</value>
+  </data>
+  <data name="Version.OutdatedVersionBuild" xml:space="preserve">
+    <value>Outdated: {0} (build {1}) available</value>
+  </data>
+  <data name="Version.OutdatedBuild" xml:space="preserve">
+    <value>Outdated: build {0} available</value>
+  </data>
+  <data name="Version.Unreachable" xml:space="preserve">
+    <value>Status unknown (offline)</value>
+  </data>
 </root>

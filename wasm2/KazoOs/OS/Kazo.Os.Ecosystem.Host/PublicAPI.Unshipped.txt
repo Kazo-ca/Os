@@ -1,1 +1,3 @@
 #nullable enable
+Kazo.Os.Ecosystem.ProjectInformation.Dispose() -> void
+override Kazo.Os.Ecosystem.ProjectInformation.OnInitialized() -> void

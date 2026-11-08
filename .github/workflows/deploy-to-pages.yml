@@ -39,6 +39,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+        with:
+          # ADR 0236: the build number counts the commits, so the whole history is needed.
+          fetch-depth: 0
 
       # Exact content keys keep the builds independent. No prefix restore: stale
       # releases must never be mistaken for the output of changed source files.
@@ -79,6 +82,12 @@ jobs:
         if: steps.wasm.outputs.cache-hit != 'true'
         working-directory: wasm2/KazoOs
         run: dotnet workload install wasm-tools
+
+      # ADR 0236: the build number shown on the sign-in screen and written in version.json.
+      - name: Compute the build number
+        if: steps.wasm.outputs.cache-hit != 'true'
+        shell: bash
+        run: echo "KazoOsBuildNumber=$(wasm2/KazoOs/build/build-number.sh)" >> "$GITHUB_ENV"
 
       - name: Publish standalone WASM for /
         if: steps.wasm.outputs.cache-hit != 'true'

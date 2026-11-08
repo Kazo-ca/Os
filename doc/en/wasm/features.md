@@ -258,6 +258,11 @@ This section lists what is released in the `main` branch and online.
   available; it downloads in the background and "Restart to update" opens it in
   every tab. ([ADR 0174](dev/adr/0174-announce-a-new-version-to-open-sessions.md),
   [ADR 0223](dev/adr/0223-restart-onto-the-new-version.md))
+- **Build number and version status on the sign-in screen**: next to
+  "Kazo OS 3.2.1", the build number (commit count, the same for the site, the
+  Release and the server) and a badge "Up to date", "Outdated: …" or "Status
+  unknown (offline)", checked at boot.
+  ([ADR 0236](dev/adr/0236-build-number-and-version-status-at-sign-in.md))
 - **What's new since your last visit**: the Settings ▸ What's new page lists the
   changes by version with a **New** badge; a notification after sign-in points out
   what has not been seen. The same list writes the

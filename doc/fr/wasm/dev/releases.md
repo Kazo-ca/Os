@@ -79,6 +79,20 @@ toutes les 5 minutes ; quand le site sert une autre version, un bandeau dit
 « Kazo OS <version> est disponible » avec « Redémarrer pour mettre à jour »
 ([ADR 0174](adr/0174-announce-a-new-version-to-open-sessions.md)).
 
+### Numéro de build
+
+Les workflows « Deploy to GitHub Pages » et « Release Kazo OS » calculent un
+numéro de build avec `build/build-number.sh` (nombre de commits de `HEAD`, clone
+complet obligatoire) et le passent à MSBuild par la variable d'environnement
+`KazoOsBuildNumber`. Il est écrit dans l'assemblage de `OS/Kazo.Os.Ecosystem` et
+dans `version.json` (`"build": 1234`). L'écran de connexion affiche
+« Kazo OS 3.2.1 · build 1234 » et une pastille « À jour », « Obsolète : … » ou
+« État inconnu (hors ligne) », vérifiée dès le démarrage ; une même version avec
+un autre numéro est aussi une mise à jour. Une build locale dit « build dev »
+([ADR 0236](adr/0236-build-number-and-version-status-at-sign-in.md)). Pour
+reproduire la build de la CI en local :
+`KazoOsBuildNumber="$(build/build-number.sh)" dotnet publish OS/Kazo.Os.Ecosystem/Kazo.Os.Ecosystem.csproj -c Release`.
+
 ## Configurer la publication sur nuget.org
 
 Deux possibilités ; la première est recommandée (aucune clé à stocker ni à

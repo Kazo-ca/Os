@@ -1,1 +1,16 @@
 #nullable enable
+const Kazo.Os.Platform.Blazor.LazyLoading.HostBuildNumber.MetadataKey = "KazoOsBuildNumber" -> string!
+Kazo.Os.Platform.Blazor.LazyLoading.HostBuildNumber
+Kazo.Os.Platform.Blazor.LazyLoading.HostReleaseMonitor.AvailableBuild.get -> int?
+Kazo.Os.Platform.Blazor.LazyLoading.HostReleaseMonitor.HostReleaseMonitor(Kazo.Os.Platform.Blazor.LazyLoading.IHostReleaseProbe! probe, string! runningVersion, int? runningBuild, Kazo.Os.Platform.Blazor.LazyLoading.HostBuildUpdateMonitor? buildMonitor = null) -> void
+Kazo.Os.Platform.Blazor.LazyLoading.HostReleaseMonitor.RunningBuild.get -> int?
+Kazo.Os.Platform.Blazor.LazyLoading.HostReleaseMonitor.Status.get -> Kazo.Os.Platform.Blazor.LazyLoading.HostReleaseStatus
+Kazo.Os.Platform.Blazor.LazyLoading.HostReleaseMonitor.StatusChanged -> System.Action?
+Kazo.Os.Platform.Blazor.LazyLoading.HostReleaseStatus
+Kazo.Os.Platform.Blazor.LazyLoading.HostReleaseStatus.NotChecked = 0 -> Kazo.Os.Platform.Blazor.LazyLoading.HostReleaseStatus
+Kazo.Os.Platform.Blazor.LazyLoading.HostReleaseStatus.Unreachable = 3 -> Kazo.Os.Platform.Blazor.LazyLoading.HostReleaseStatus
+Kazo.Os.Platform.Blazor.LazyLoading.HostReleaseStatus.UpdateAvailable = 2 -> Kazo.Os.Platform.Blazor.LazyLoading.HostReleaseStatus
+Kazo.Os.Platform.Blazor.LazyLoading.HostReleaseStatus.UpToDate = 1 -> Kazo.Os.Platform.Blazor.LazyLoading.HostReleaseStatus
+static Kazo.Os.Platform.Blazor.LazyLoading.HostBuildNumber.Parse(string? value) -> int?
+static Kazo.Os.Platform.Blazor.LazyLoading.HostBuildNumber.Read(System.Reflection.Assembly? assembly) -> int?
+static Kazo.Os.Platform.Blazor.LazyLoading.HostReleaseMonitor.ParseBuild(string? document) -> int?

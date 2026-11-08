@@ -29,6 +29,40 @@ public static class KazoOsSdk
     /// </summary>
     public static string Version { get; } = ReadVersion(typeof(KazoOsSdk).Assembly);
 
+    /// <summary>
+    /// Gets the build number of the running OS (ADR 0236): the number of commits of <c>main</c>
+    /// that the CI writes on the host's entry assembly (<c>KazoOsBuildNumber</c> metadata), or
+    /// <see langword="null"/> for a local build, shown as « dev ».
+    /// </summary>
+    public static int? BuildNumber { get; } = ReadBuildNumber(Assembly.GetEntryAssembly());
+
+    /// <summary>
+    /// Reads the <c>KazoOsBuildNumber</c> <see cref="AssemblyMetadataAttribute"/> of
+    /// <paramref name="assembly"/> (ADR 0236): a positive integer, or <see langword="null"/> when the
+    /// assembly has none, or zero, or text.
+    /// </summary>
+    /// <param name="assembly">The host's entry assembly.</param>
+    /// <returns>The build number, or <see langword="null"/>.</returns>
+    public static int? ReadBuildNumber(Assembly? assembly)
+    {
+        if (assembly is null)
+        {
+            return null;
+        }
+
+        foreach (AssemblyMetadataAttribute metadata in assembly.GetCustomAttributes<AssemblyMetadataAttribute>())
+        {
+            if (string.Equals(metadata.Key, "KazoOsBuildNumber", StringComparison.Ordinal)
+                && int.TryParse(metadata.Value, System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out int number)
+                && number > 0)
+            {
+                return number;
+            }
+        }
+
+        return null;
+    }
+
     /// <summary>Gets <see cref="Version"/> parsed.</summary>
     public static SemanticVersion SemanticVersion { get; } = SemanticVersion.Parse(Version);
 

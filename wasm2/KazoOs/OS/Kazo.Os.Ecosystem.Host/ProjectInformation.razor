@@ -1,9 +1,12 @@
 @using Kazo.Os.App.Abstractions
+@using Kazo.Os.AppSdk.Blazor.Components
 @inject NavigationManager Navigation
 @inject IStringLocalizer<Strings> L
+@implements IDisposable
 
 <footer class="project-information">
-    <span class="project-release">Kazo OS @KazoOsSdk.Version</span>
+    @* ADR 0236: the shared version label, with the badge this host knows (HostReleaseMonitor). *@
+    <KazoOsVersionLabel BuildNumber="@BuildNumber" Status="@Status" AvailableVersion="@_monitor?.AvailableVersion" AvailableBuild="@_monitor?.AvailableBuild" />
     <span class="project-credit">@L["Project.Author"] <a class="project-author" href="https://kazo.ca" target="_blank" rel="noopener noreferrer">Benoit Robin</a></span>
     <span class="project-credit">
         @L["Project.GitHub"]
@@ -18,11 +21,3 @@
         <p class="legacy-notice">@L["Project.LegacyMoved"] <a href="https://os.kazo.ca/legacy/">https://os.kazo.ca/legacy</a></p>
     }
 </footer>
-
-@code {
-    /// <summary>Shows the original-version notice on authentication pages, on the public domain only.</summary>
-    [Parameter] public bool ShowLegacyNotice { get; set; } = true;
-
-    // Compare the actual host, never a substring: a query string or lookalike domain is insufficient.
-    private bool IsPublicDomain => string.Equals(new Uri(Navigation.Uri).Host, "os.kazo.ca", StringComparison.OrdinalIgnoreCase);
-}

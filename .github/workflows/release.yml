@@ -137,6 +137,11 @@ jobs:
             for package in "${packages[@]}"; do echo "- $(basename "$package")"; done
           } >> "$GITHUB_STEP_SUMMARY"
 
+      # ADR 0236: the build number shown on the sign-in screen and written in version.json.
+      - name: Compute the build number
+        shell: bash
+        run: echo "KazoOsBuildNumber=$(wasm2/KazoOs/build/build-number.sh)" >> "$GITHUB_ENV"
+
       - name: Publish the WASM site
         if: steps.plan.outputs.mode == 'release'
         working-directory: ${{ env.KAZOOS_SOLUTION_DIR }}
@@ -226,12 +231,19 @@ jobs:
         uses: actions/checkout@v6
         with:
           ref: ${{ needs.release.outputs.sha }}
+          # ADR 0236: the build number counts the commits, so the whole history is needed.
+          fetch-depth: 0
 
       - name: Setup .NET 10
         uses: ./.github/actions/setup-dotnet-sdk
 
       - name: Install WASM workload
         run: dotnet workload install wasm-tools
+
+      # ADR 0236: the build number shown on the sign-in screen and written in version.json.
+      - name: Compute the build number
+        shell: bash
+        run: echo "KazoOsBuildNumber=$(wasm2/KazoOs/build/build-number.sh)" >> "$GITHUB_ENV"
 
       - name: Publish and pack the server
         id: pack

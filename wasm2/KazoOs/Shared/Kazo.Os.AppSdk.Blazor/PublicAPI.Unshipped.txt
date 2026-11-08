@@ -1,1 +1,20 @@
 #nullable enable
+Kazo.Os.AppSdk.Blazor.Components.KazoOsVersionLabel
+Kazo.Os.AppSdk.Blazor.Components.KazoOsVersionLabel.AvailableBuild.get -> int?
+Kazo.Os.AppSdk.Blazor.Components.KazoOsVersionLabel.AvailableBuild.set -> void
+Kazo.Os.AppSdk.Blazor.Components.KazoOsVersionLabel.AvailableVersion.get -> string?
+Kazo.Os.AppSdk.Blazor.Components.KazoOsVersionLabel.AvailableVersion.set -> void
+Kazo.Os.AppSdk.Blazor.Components.KazoOsVersionLabel.BuildNumber.get -> int?
+Kazo.Os.AppSdk.Blazor.Components.KazoOsVersionLabel.BuildNumber.set -> void
+Kazo.Os.AppSdk.Blazor.Components.KazoOsVersionLabel.KazoOsVersionLabel() -> void
+Kazo.Os.AppSdk.Blazor.Components.KazoOsVersionLabel.Status.get -> Kazo.Os.AppSdk.Blazor.Components.KazoOsVersionStatus
+Kazo.Os.AppSdk.Blazor.Components.KazoOsVersionLabel.Status.set -> void
+Kazo.Os.AppSdk.Blazor.Components.KazoOsVersionLabel.Version.get -> string!
+Kazo.Os.AppSdk.Blazor.Components.KazoOsVersionLabel.Version.set -> void
+Kazo.Os.AppSdk.Blazor.Components.KazoOsVersionStatus
+Kazo.Os.AppSdk.Blazor.Components.KazoOsVersionStatus.Checking = 1 -> Kazo.Os.AppSdk.Blazor.Components.KazoOsVersionStatus
+Kazo.Os.AppSdk.Blazor.Components.KazoOsVersionStatus.None = 0 -> Kazo.Os.AppSdk.Blazor.Components.KazoOsVersionStatus
+Kazo.Os.AppSdk.Blazor.Components.KazoOsVersionStatus.Outdated = 3 -> Kazo.Os.AppSdk.Blazor.Components.KazoOsVersionStatus
+Kazo.Os.AppSdk.Blazor.Components.KazoOsVersionStatus.Unreachable = 4 -> Kazo.Os.AppSdk.Blazor.Components.KazoOsVersionStatus
+Kazo.Os.AppSdk.Blazor.Components.KazoOsVersionStatus.UpToDate = 2 -> Kazo.Os.AppSdk.Blazor.Components.KazoOsVersionStatus
+~override Kazo.Os.AppSdk.Blazor.Components.KazoOsVersionLabel.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
