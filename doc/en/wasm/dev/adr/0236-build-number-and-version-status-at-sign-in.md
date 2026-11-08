@@ -60,7 +60,11 @@ version; we can build it in the publish action with a counter".
      becomes unreachable: its files do not change.
 4. The browser host **checks at boot** (`CheckAsync` on top of the 5-minute
    loop), so before or while the sign-in screen shows.
-5. **Display** in `ProjectInformation`, on one line that wraps on a phone:
+5. **Display** by one component, `KazoOsVersionLabel`
+   (`Kazo.Os.AppSdk.Blazor.Components`, at Benoit's request: "one component
+   that shows the version, so the logic is not in several places"), used by
+   the `ProjectInformation` footer and by Settings ▸ About; one line that wraps
+   on a phone:
    "Kazo OS 3.2.1" · "build 1234" · a badge (`role="status"`):
    - "Up to date" (green, `--kos-success`);
    - "Outdated: 3.2.2 (build 1240) available", "Outdated: build 1240
@@ -68,7 +72,9 @@ version; we can build it in the publish action with a counter".
    - "Checking…" before the first answer (pulsing dot, still with reduced
      motion);
    - "Status unknown (offline)".
-   Without a monitor (a host without a browser), the badge does not show. The
+   The component receives the status (`KazoOsVersionStatus`,
+   `AvailableVersion`, `AvailableBuild`) from the host that knows it; without
+   a status (Settings, a host without a browser), the badge does not show. The
    "Restart to update" banner stays the way to update.
 
 ## Consequences
@@ -106,8 +112,8 @@ Asked in the thread "Afficher l'état de la version au login" on 2026-11-08:
 4. Where to show it: **A sign-in screen and Settings ▸ About (recommended)**, B
    sign-in screen only. Settings is a public-SDK app that cannot see
    `HostReleaseMonitor`: it reads the number through `KazoOsSdk.BuildNumber`
-   (an SDK addition) and shows "build 1234" next to the version, without a
-   badge.
+   (an SDK addition); the same component shows "build 1234" there next to
+   the version, without a badge.
 
 ## Implementation
 
@@ -116,8 +122,10 @@ Asked in the thread "Afficher l'état de la version au login" on 2026-11-08:
   `Status`, `StatusChanged`, `ParseBuild`).
 - `OS/Kazo.Os.Ecosystem/Kazo.Os.Ecosystem.csproj`: metadata and
   `version.json`.
-- `OS/Kazo.Os.Ecosystem.Host/`: `ProjectInformation.razor(.cs, .css)`,
-  `Project.Build*` and `Project.Status.*` texts, boot check in `App.razor`,
+- `Shared/Kazo.Os.AppSdk.Blazor/Components/`: `KazoOsVersionLabel`
+  (`.razor`, `.razor.cs`, `.razor.css`), `KazoOsVersionStatus`, `Version.*`
+  texts.
+- `OS/Kazo.Os.Ecosystem.Host/`: `ProjectInformation.razor(.cs)`, boot check in `App.razor`,
   number given to the monitor in `KazoOsBrowserHostExtensions`.
 - `Shared/Kazo.Os.App.Abstractions/KazoOsSdk.cs`: `BuildNumber`,
   `ReadBuildNumber`; Settings ▸ About (`SettingsWindow.razor`).

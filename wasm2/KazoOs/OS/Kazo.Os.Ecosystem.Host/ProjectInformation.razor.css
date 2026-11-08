@@ -1,19 +1,7 @@
 .project-information { display: grid; gap: .5rem; padding: 1rem 0; border-top: 1px solid var(--kos-border-subtle, #314247); font-size: .8rem; line-height: 1.6; color: var(--kos-text-secondary, #a8bac4); }
-.project-release { font-weight: 650; color: var(--kos-text-primary, #e5f4f0); }
 a { color: var(--kos-accent, #42d392); overflow-wrap: anywhere; text-underline-offset: .2em; }
 .project-credit { display: flex; flex-wrap: wrap; align-items: center; gap: .35rem; }
 a.project-repository { display: inline-flex; align-items: center; gap: .35rem; }
 .github-mark { flex: none; }
 a:focus-visible { outline: 2px solid var(--kos-focus-ring, #42d392); outline-offset: 3px; }
 .legacy-notice { margin: .35rem 0 0; padding: .8rem; border: 1px solid var(--kos-border-subtle, #314247); border-radius: var(--kos-radius-md, .75rem); background: var(--kos-bg-surface, #172025); }
-/* ADR 0236: version, build and the status badge on one line, wrapping on a phone. */
-.project-version-line { display: flex; flex-wrap: wrap; align-items: center; gap: .35rem .6rem; }
-.project-build { font-family: var(--kos-font-mono, ui-monospace, "Cascadia Code", monospace); font-size: .75rem; color: var(--kos-text-secondary, #a8bac4); }
-.project-release-status { display: inline-flex; align-items: center; gap: .35rem; padding: .05rem .55rem; border: 1px solid currentColor; border-radius: 999px; font-size: .72rem; font-weight: 600; letter-spacing: .02em; }
-.project-release-status::before { content: ""; width: .45rem; height: .45rem; border-radius: 50%; background: currentColor; }
-.project-release-status.is-up-to-date { color: var(--kos-success, #42d392); }
-.project-release-status.is-outdated { color: var(--kos-warning, #f0b429); }
-.project-release-status.is-unreachable, .project-release-status.is-checking { color: var(--kos-text-secondary, #a8bac4); }
-.project-release-status.is-checking::before { animation: project-status-pulse 1.2s ease-in-out infinite; }
-@keyframes project-status-pulse { 50% { opacity: .25; } }
-@media (prefers-reduced-motion: reduce) { .project-release-status.is-checking::before { animation: none; } }

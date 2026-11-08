@@ -1,0 +1,12 @@
+/* ADR 0236: version, build and the status badge on one line, wrapping on a phone. */
+.kos-version { display: inline-flex; flex-wrap: wrap; align-items: center; gap: .35rem .6rem; }
+.kos-version-name { font-weight: 650; color: var(--kos-text-primary, #e5f4f0); }
+.kos-version-build { font-family: var(--kos-font-mono, ui-monospace, "Cascadia Code", monospace); font-size: .8em; color: var(--kos-text-secondary, #a8bac4); }
+.kos-version-status { display: inline-flex; align-items: center; gap: .35rem; padding: .05rem .55rem; border: 1px solid currentColor; border-radius: 999px; font-size: .78em; font-weight: 600; letter-spacing: .02em; }
+.kos-version-status::before { content: ""; width: .45rem; height: .45rem; border-radius: 50%; background: currentColor; }
+.kos-version-status.is-up-to-date { color: var(--kos-success, #42d392); }
+.kos-version-status.is-outdated { color: var(--kos-warning, #f0b429); }
+.kos-version-status.is-unreachable, .kos-version-status.is-checking { color: var(--kos-text-secondary, #a8bac4); }
+.kos-version-status.is-checking::before { animation: kos-version-pulse 1.2s ease-in-out infinite; }
+@keyframes kos-version-pulse { 50% { opacity: .25; } }
+@media (prefers-reduced-motion: reduce) { .kos-version-status.is-checking::before { animation: none; } }

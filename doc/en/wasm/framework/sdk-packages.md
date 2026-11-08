@@ -36,7 +36,9 @@ resource fingerprints, ADR 0098 §3 to §5) are described in
   major as the minimum, minimum ≤ SDK ≤ maximum).
 - `KazoOsSdk.BuildNumber` is the build number of the running OS (commit count
   written by the CI on the host's entry assembly), `null` for a local build
-  ([ADR 0236](../dev/adr/0236-build-number-and-version-status-at-sign-in.md)).
+  ([ADR 0236](../dev/adr/0236-build-number-and-version-status-at-sign-in.md));
+  the `KazoOsVersionLabel` component (`Kazo.Os.AppSdk.Blazor.Components`) shows
+  "Kazo OS <version> build <n>" wherever the version is named.
 
 ## Packages
 

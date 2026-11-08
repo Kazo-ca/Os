@@ -1,3 +1,5 @@
+using Kazo.Os.App.Abstractions;
+using Kazo.Os.AppSdk.Blazor.Components;
 using Kazo.Os.Platform.Blazor.LazyLoading;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
@@ -21,17 +23,21 @@ public partial class ProjectInformation : IDisposable
     // Compare the actual host, never a substring: a query string or lookalike domain is insufficient.
     private bool IsPublicDomain => string.Equals(new Uri(Navigation.Uri).Host, "os.kazo.ca", StringComparison.OrdinalIgnoreCase);
 
-    /// <summary>« build 1234 », or « build dev » for a local build (no number from the CI).</summary>
-    private string BuildText =>
-        (_monitor?.RunningBuild ?? HostBuildNumber.Read(System.Reflection.Assembly.GetEntryAssembly())) is { } build
-            ? L["Project.Build", build]
-            : L["Project.BuildLocal"];
+    /// <summary>The running build: the monitor's, or the one written on the entry assembly without a monitor.</summary>
+    private int? BuildNumber => _monitor?.RunningBuild ?? KazoOsSdk.BuildNumber;
 
     /// <summary>
-    /// The text and style of the status badge, or <see langword="null"/> when the host has no
-    /// release monitor (a server prerender, a host without <c>version.json</c>).
+    /// The badge next to the version: none when the host has no release monitor (a server
+    /// prerender, a host without <c>version.json</c>).
     /// </summary>
-    private (string Text, string CssClass)? Status => _monitor is null ? null : Describe(_monitor);
+    private KazoOsVersionStatus Status => _monitor?.Status switch
+    {
+        null => KazoOsVersionStatus.None,
+        HostReleaseStatus.UpToDate => KazoOsVersionStatus.UpToDate,
+        HostReleaseStatus.UpdateAvailable => KazoOsVersionStatus.Outdated,
+        HostReleaseStatus.Unreachable => KazoOsVersionStatus.Unreachable,
+        _ => KazoOsVersionStatus.Checking,
+    };
 
     /// <inheritdoc />
     protected override void OnInitialized()
@@ -56,20 +62,4 @@ public partial class ProjectInformation : IDisposable
     }
 
     private void OnStatusChanged() => InvokeAsync(StateHasChanged);
-
-    private (string Text, string CssClass) Describe(HostReleaseMonitor monitor) => monitor.Status switch
-    {
-        HostReleaseStatus.UpToDate => (L["Project.Status.UpToDate"], "is-up-to-date"),
-        HostReleaseStatus.UpdateAvailable => (DescribeUpdate(monitor.AvailableVersion, monitor.AvailableBuild), "is-outdated"),
-        HostReleaseStatus.Unreachable => (L["Project.Status.Unreachable"], "is-unreachable"),
-        _ => (L["Project.Status.Checking"], "is-checking"),
-    };
-
-    private string DescribeUpdate(string? version, int? build) => (version, build) switch
-    {
-        ({ } v, { } b) => L["Project.Status.OutdatedVersionBuild", v, b],
-        ({ } v, null) => L["Project.Status.OutdatedVersion", v],
-        (null, { } b) => L["Project.Status.OutdatedBuild", b],
-        _ => L["Project.Status.Outdated"],
-    };
 }

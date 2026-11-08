@@ -64,8 +64,11 @@ l'action de publication avec un compteur ».
      injoignable : ses fichiers ne changent pas.
 4. L'hôte navigateur **vérifie dès le démarrage** (`CheckAsync` en plus de la
    boucle de 5 minutes), donc avant ou pendant l'écran de connexion.
-5. **Affichage** dans `ProjectInformation`, sur une ligne qui passe à la ligne
-   sur un téléphone : « Kazo OS 3.2.1 » · « build 1234 » · une pastille
+5. **Affichage** par un seul composant, `KazoOsVersionLabel`
+   (`Kazo.Os.AppSdk.Blazor.Components`, à la demande de Benoit : « un seul
+   component qui affiche la version, pour ne pas avoir la logique à plusieurs
+   endroits »), utilisé par le pied de page `ProjectInformation` et par
+   Paramètres ▸ À propos ; une ligne qui passe à la ligne sur un téléphone : « Kazo OS 3.2.1 » · « build 1234 » · une pastille
    (`role="status"`) :
    - « À jour » (vert, `--kos-success`) ;
    - « Obsolète : 3.2.2 (build 1240) disponible », « Obsolète : build 1240
@@ -74,7 +77,9 @@ l'action de publication avec un compteur ».
    - « Vérification… » avant la première réponse (point qui pulse, immobile
      avec mouvement réduit) ;
    - « État inconnu (hors ligne) ».
-   Sans moniteur (hôte sans navigateur), la pastille n'apparaît pas. Le
+   Le composant reçoit l'état (`KazoOsVersionStatus`, `AvailableVersion`,
+   `AvailableBuild`) de l'hôte qui le connaît ; sans état (Paramètres, hôte
+   sans navigateur), la pastille n'apparaît pas. Le
    bandeau « Redémarrer pour mettre à jour » reste le moyen de mettre à jour.
 
 ## Conséquences
@@ -113,8 +118,8 @@ Posées dans le fil « Afficher l'état de la version au login » le 2026-11-08 
 4. Où l'afficher : **A écran de connexion et Paramètres ▸ À propos
    (recommandé)**, B écran de connexion seulement. Paramètres est une app du
    SDK public, qui ne voit pas `HostReleaseMonitor` : elle lit le numéro par
-   `KazoOsSdk.BuildNumber` (ajout au SDK) et affiche « build 1234 » à côté de
-   la version, sans pastille.
+   `KazoOsSdk.BuildNumber` (ajout au SDK) ; le même composant y affiche
+   « build 1234 » à côté de la version, sans pastille.
 
 ## Mise en œuvre
 
@@ -123,8 +128,10 @@ Posées dans le fil « Afficher l'état de la version au login » le 2026-11-08 
   `Status`, `StatusChanged`, `ParseBuild`).
 - `OS/Kazo.Os.Ecosystem/Kazo.Os.Ecosystem.csproj` : métadonnée et
   `version.json`.
-- `OS/Kazo.Os.Ecosystem.Host/` : `ProjectInformation.razor(.cs, .css)`,
-  textes `Project.Build*` et `Project.Status.*`, vérification au démarrage
+- `Shared/Kazo.Os.AppSdk.Blazor/Components/` : `KazoOsVersionLabel`
+  (`.razor`, `.razor.cs`, `.razor.css`), `KazoOsVersionStatus`, textes
+  `Version.*`.
+- `OS/Kazo.Os.Ecosystem.Host/` : `ProjectInformation.razor(.cs)`, vérification au démarrage
   dans `App.razor`, numéro passé au moniteur dans
   `KazoOsBrowserHostExtensions`.
 - `Shared/Kazo.Os.App.Abstractions/KazoOsSdk.cs` : `BuildNumber`,

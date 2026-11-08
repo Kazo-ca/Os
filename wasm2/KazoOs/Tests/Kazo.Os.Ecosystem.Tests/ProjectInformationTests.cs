@@ -65,7 +65,7 @@ public sealed class ProjectInformationTests
         string html = await RenderAsync("https://os.kazo.ca/", CultureInfo.GetCultureInfo("en"));
 
         Assert.Contains("build dev", html);
-        Assert.DoesNotContain("project-release-status", html);
+        Assert.DoesNotContain("kos-version-status", html);
     }
 
     [Theory]
@@ -89,7 +89,7 @@ public sealed class ProjectInformationTests
 
         Assert.Contains($"Kazo OS {KazoOsSdk.Version}", html);
         Assert.Contains("build 12", html);
-        Assert.Matches($@"<span class=""project-release-status {cssClass}"" role=""status""[^>]*>{Regex.Escape(text)}</span>", html);
+        Assert.Matches($@"<span class=""kos-version-status {cssClass}"" role=""status""[^>]*>{Regex.Escape(text)}</span>", html);
     }
 
     private static async Task<string> RenderAsync(string url, CultureInfo culture, HostReleaseMonitor monitor)

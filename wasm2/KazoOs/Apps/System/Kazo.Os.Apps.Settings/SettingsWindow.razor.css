@@ -752,5 +752,3 @@
 .theme-warnings {
     color: var(--kos-warning, #e0ad50);
 }
-/* ADR 0236: the build number next to the version. */
-.about-build { font-family: var(--kos-font-mono, ui-monospace, monospace); font-size: .8rem; color: var(--kos-text-secondary, #a8bac4); }

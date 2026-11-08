@@ -24,7 +24,7 @@ public sealed class PublishedPagesTests
         await PwaTestSupport.NavigateWhenReadyAsync(page, host.Address);
         await PwaTestSupport.WaitForServiceWorkerControllerAsync(page);
         await PwaTestSupport.WaitForOnboardingAsync(page);
-        await Assertions.Expect(page.Locator(".project-release")).ToContainTextAsync(KazoOsVersion);
+        await Assertions.Expect(page.Locator(".kos-version-name")).ToContainTextAsync(KazoOsVersion);
         await Assertions.Expect(page.Locator(".project-information a.project-repository")).ToHaveAttributeAsync("href", "https://github.com/Kazo-ca/Os");
         await Assertions.Expect(page.Locator(".project-information a.project-author")).ToHaveAttributeAsync("href", "https://kazo.ca");
         await Assertions.Expect(page.Locator(".legacy-notice")).ToHaveCountAsync(0);

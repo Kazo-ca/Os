@@ -1,18 +1,12 @@
 @using Kazo.Os.App.Abstractions
+@using Kazo.Os.AppSdk.Blazor.Components
 @inject NavigationManager Navigation
 @inject IStringLocalizer<Strings> L
 @implements IDisposable
 
 <footer class="project-information">
-    @* ADR 0236: the build number, then whether this is the version the origin serves now. *@
-    <span class="project-version-line">
-        <span class="project-release">Kazo OS @KazoOsSdk.Version</span>
-        <span class="project-build">@BuildText</span>
-        @if (Status is { } status)
-        {
-            <span class="project-release-status @status.CssClass" role="status">@status.Text</span>
-        }
-    </span>
+    @* ADR 0236: the shared version label, with the badge this host knows (HostReleaseMonitor). *@
+    <KazoOsVersionLabel BuildNumber="@BuildNumber" Status="@Status" AvailableVersion="@_monitor?.AvailableVersion" AvailableBuild="@_monitor?.AvailableBuild" />
     <span class="project-credit">@L["Project.Author"] <a class="project-author" href="https://kazo.ca" target="_blank" rel="noopener noreferrer">Benoit Robin</a></span>
     <span class="project-credit">
         @L["Project.GitHub"]
