@@ -18,7 +18,6 @@
 @inject GuestAccountService GuestAccounts
 @inject ISessionService SessionService
 @inject EcosystemBootCoordinator BootCoordinator
-@inject IEcosystemHostEnvironment HostEnvironment
 @inject WebCryptoPasswordHasher PasswordHasher
 @inject UiPlatformPreferenceService PlatformPreference
 @inject ThemePreferenceService ThemePreference
@@ -231,12 +230,7 @@
             <section class="fatal-surface" aria-labelledby="boundary-fatal-title">
                 <div class="boot-mark" aria-hidden="true">H_</div>
                 <h1 id="boundary-fatal-title">@L["Fatal.BoundaryTitle"]</h1>
-                <p>@L["Fatal.Recorded"]</p>
-                <code>@L["Correlation", ErrorBoundary?.CorrelationId?.ToString() ?? string.Empty]</code>
-                @if (HostEnvironment.IsDevelopment)
-                {
-                    <pre class="fatal-details">@exception.ToString()</pre>
-                }
+                <HostFailurePanel Failure="@ErrorBoundary?.Failure" />
                 <ProjectInformation ShowLegacyNotice="false" />
             </section>
         </ErrorContent>

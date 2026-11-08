@@ -1,0 +1,107 @@
+/* ADR 0240: the error page's failure summary, details and actions, in the host's hacker palette. */
+.host-failure {
+    display: grid;
+    gap: 1rem;
+    min-width: 0;
+}
+
+.host-failure p {
+    margin: 0;
+}
+
+code {
+    overflow-wrap: anywhere;
+    color: var(--kos-text-secondary, #a8bac4);
+}
+
+.failure-summary {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    gap: 0.4rem 1rem;
+    margin: 0;
+    font-size: 0.9rem;
+}
+
+.failure-summary dt {
+    color: var(--kos-text-secondary, #a8bac4);
+}
+
+.failure-summary dd {
+    margin: 0;
+    overflow-wrap: anywhere;
+}
+
+.failure-message {
+    color: var(--kos-error, #ff9a91);
+}
+
+.failure-correlation {
+    user-select: all;
+}
+
+.failure-details {
+    border: 1px solid var(--kos-border, #34444c);
+    border-radius: var(--kos-radius-sm, 0.25rem);
+    background: var(--kos-bg-surface, #151c20);
+}
+
+.failure-details summary {
+    padding: 0.5rem 0.75rem;
+    cursor: pointer;
+    color: var(--kos-accent, #42d392);
+}
+
+.failure-details pre {
+    max-height: 22rem;
+    margin: 0;
+    padding: 0.75rem;
+    overflow: auto;
+    border-top: 1px solid var(--kos-border, #34444c);
+    color: var(--kos-error, #ff9a91);
+    font-size: 0.78rem;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.failure-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.failure-actions button {
+    padding: 0.45rem 0.9rem;
+    border: 1px solid var(--kos-accent, #42d392);
+    border-radius: var(--kos-radius-sm, 0.25rem);
+    background: transparent;
+    color: var(--kos-accent, #42d392);
+    font: inherit;
+    cursor: pointer;
+}
+
+.failure-actions button:hover,
+.failure-actions button:focus-visible {
+    background: var(--kos-accent, #42d392);
+    color: var(--kos-bg-base, #101417);
+}
+
+.failure-copy-status {
+    color: var(--kos-text-secondary, #a8bac4);
+    font-size: 0.85rem;
+}
+
+.failure-hint {
+    color: var(--kos-text-secondary, #a8bac4);
+    font-size: 0.85rem;
+}
+
+@media (max-width: 30rem) {
+    .failure-summary {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .failure-summary dd {
+        margin-bottom: 0.4rem;
+    }
+}
