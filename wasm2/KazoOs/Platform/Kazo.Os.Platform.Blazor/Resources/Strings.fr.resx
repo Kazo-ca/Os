@@ -12,6 +12,24 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="AppFailure.Title" xml:space="preserve">
+    <value>« {0} » a rencontré un problème.</value>
+  </data>
+  <data name="AppFailure.Message" xml:space="preserve">
+    <value>Une erreur a arrêté cette fenêtre. Le reste de Kazo OS continue de fonctionner.</value>
+  </data>
+  <data name="AppFailure.Details" xml:space="preserve">
+    <value>Erreur</value>
+  </data>
+  <data name="AppFailure.Retry" xml:space="preserve">
+    <value>Réessayer</value>
+  </data>
+  <data name="AppFailure.Close" xml:space="preserve">
+    <value>Fermer l'application</value>
+  </data>
+  <data name="UpdateRequired.Message" xml:space="preserve">
+    <value>Une nouvelle version de Kazo OS est disponible. Redémarrez pour ouvrir « {0} ».</value>
+  </data>
   <data name="Approval.Allow" xml:space="preserve">
     <value>Autoriser</value>
   </data>

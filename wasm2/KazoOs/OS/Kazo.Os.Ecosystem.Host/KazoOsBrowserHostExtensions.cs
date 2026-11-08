@@ -122,6 +122,11 @@ public static partial class KazoOsBrowserHostExtensions
             KazoOsSdk.Version,
             HostBuildNumber.Read(System.Reflection.Assembly.GetEntryAssembly()),
             provider.GetRequiredService<HostBuildUpdateMonitor>()));
+        // ADR 0239 §2: an app the user opens starts only on the version the origin serves.
+        builder.Services.AddScoped(provider => new HostUpdateLaunchGate(
+            provider.GetRequiredService<HostReleaseMonitor>(),
+            () => provider.GetRequiredService<Kazo.Os.Platform.Core.Globalization.SessionLocaleService>().Culture));
+        builder.Services.AddScoped<Kazo.Os.Platform.Core.Lifecycle.IAppLaunchGate>(provider => provider.GetRequiredService<HostUpdateLaunchGate>());
         // ADR 0223: the restart activates the new service worker, downloaded as soon as a new
         // version is announced, instead of reloading under the old one.
         builder.Services.AddSingleton<IHostUpdateWorker>(provider => new BrowserHostUpdateWorker(

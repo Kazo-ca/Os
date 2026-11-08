@@ -193,6 +193,21 @@ public sealed class DesktopSurfaceHost : ComponentBase, IDisposable
             return;
         }
 
+        // ADR 0238: a failure of the desktop surface app stays in the surface, as in a window.
+        builder.OpenComponent<AppErrorBoundary>(0);
+        builder.AddComponentParameter(1, nameof(AppErrorBoundary.AppName), _descriptor.Manifest.Name);
+        builder.AddComponentParameter(2, nameof(AppErrorBoundary.AppContext), _context);
+        builder.AddComponentParameter(3, nameof(AppErrorBoundary.ChildContent), (RenderFragment)RenderSurfaceApp);
+        builder.CloseComponent();
+    }
+
+    private void RenderSurfaceApp(RenderTreeBuilder builder)
+    {
+        if (_descriptor is null || _context is null)
+        {
+            return;
+        }
+
         builder.OpenComponent(0, _descriptor.EntryPointType);
         builder.AddComponentParameter(1, nameof(WindowAppBase.AppContext), _context);
         builder.CloseComponent();

@@ -106,5 +106,27 @@ self.kazoOsInstalledAppAssets = (() => {
             .then(result => port && port.postMessage(result)));
     });
 
+    // ADR 0237: the page runs a newer release than the active worker, and this worker (waiting) caches
+    // that release. It activates at once; its activate handler claims every page of the site, and the
+    // pages of the previous release restart onto this one (ADR 0223). Same version check as above:
+    // a worker of another release never activates for this reason.
+    self.addEventListener('message', event => {
+        if (!event.data || event.data.type !== 'KAZOOS_ACTIVATE_FOR_INSTALLED_APPS') {
+            return;
+        }
+
+        const port = event.ports && event.ports[0];
+        const workerVersion = (self.assetsManifest && self.assetsManifest.version) || null;
+        if (!mayClaim(event.data.version)) {
+            if (port) port.postMessage({ activating: false, workerVersion });
+            return;
+        }
+
+        event.waitUntil(self.skipWaiting()
+            .then(() => ({ activating: true, workerVersion }))
+            .catch(error => ({ activating: false, workerVersion, message: String(error) }))
+            .then(result => port && port.postMessage(result)));
+    });
+
     return { cacheName, installedAppsOnly, handles, match, respond, mayClaim };
 })();

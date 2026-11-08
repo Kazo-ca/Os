@@ -150,6 +150,27 @@ public sealed class AppLifecycleOrchestrator
         _eventBus?.Subscribe<ProcessStateChangedEvent>(OnProcessStateChanged);
     }
 
+    // ADR 0239: interactive launches of window and web apps not already running ask the host's
+    // gate, when it has one (services and commands are part of the running system).
+    private async ValueTask<AppLaunchRefusal?> CheckLaunchGateAsync(AppLaunchRequest request, CancellationToken cancellationToken)
+    {
+        if (!request.Interactive
+            || _services?.GetService(typeof(IAppLaunchGate)) is not IAppLaunchGate gate
+            || !_catalog.Manifests.TryGetValue(request.AppId, out AppManifest? manifest)
+            || manifest.Kind is not (AppKind.Window or AppKind.Web))
+        {
+            return null;
+        }
+
+        bool singleton = manifest.Kind == AppKind.Web || manifest.SingleInstancePerUser;
+        if (singleton && _processManager.TryGetSingleton(request.AppId, out _))
+        {
+            return null;
+        }
+
+        return await gate.CheckAsync(manifest, cancellationToken).ConfigureAwait(false);
+    }
+
     /// <summary>
     /// Error code of a launch refused by the <c>nproc</c> limit (ADR 0125): <c>fork</c> failed with
     /// <c>EAGAIN</c>, "Resource temporarily unavailable".
@@ -371,6 +392,13 @@ public sealed class AppLifecycleOrchestrator
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
+
+        // ADR 0239: an app the user opens starts only on the latest Kazo OS, checked before its
+        // assemblies load (they would come from the outdated copy).
+        if (await CheckLaunchGateAsync(request, cancellationToken).ConfigureAwait(false) is { } refusal)
+        {
+            return new AppLaunchResult(AppLaunchStatus.UpdateRequired, ErrorCode: refusal.ErrorCode, ErrorMessage: refusal.Message);
+        }
 
         if (!_descriptors.TryGetValue(request.AppId, out AppDescriptor? descriptor)
             && _descriptorLoader is not null)

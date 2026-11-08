@@ -44,6 +44,25 @@ internal static class BrowserHostRestart
         await ClearCachesAsync(services.GetService<IJSRuntime>());
     }
 
+    /// <summary>
+    /// ADR 0239 §1: records an update attempt at boot to <paramref name="target"/>; <see langword="false"/>
+    /// when this tab already tried it (or cannot remember it), so the boot does not loop.
+    /// </summary>
+    /// <param name="runtime">The JS runtime.</param>
+    /// <param name="target">The version and build the restart should land on.</param>
+    public static async ValueTask<bool> ClaimBootUpdateAsync(IJSRuntime runtime, string target)
+    {
+        try
+        {
+            await using IJSObjectReference module = await runtime.InvokeAsync<IJSObjectReference>("import", ModulePath);
+            return await module.InvokeAsync<bool>("claimBootUpdate", target);
+        }
+        catch (Exception exception) when (exception is JSException or InvalidOperationException or TaskCanceledException)
+        {
+            return false;
+        }
+    }
+
     private static async Task ClearCachesAsync(IJSRuntime? runtime)
     {
         if (runtime is null)

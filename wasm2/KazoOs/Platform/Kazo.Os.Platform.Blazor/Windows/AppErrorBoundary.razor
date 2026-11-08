@@ -1,0 +1,53 @@
+@namespace Kazo.Os.Platform.Blazor.Windows
+@inherits ErrorBoundaryBase
+
+@*
+    ADR 0238: an app's failure stays in its own window, as a crashed program on a real OS. The other
+    windows, the taskbar and the session keep running; this window shows what happened and lets the
+    user try again or close the app.
+*@
+@if (CurrentException is null)
+{
+    @ChildContent
+}
+else
+{
+    <div class="app-failure" data-testid="app-failure">
+        <section class="app-failure-panel"
+                 role="alert"
+                 aria-labelledby="@TitleId">
+            <div class="app-failure-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" focusable="false">
+                    <path d="M12 3 22 20H2Z" />
+                    <line x1="12" y1="9.5" x2="12" y2="14" />
+                    <line x1="12" y1="17" x2="12" y2="17.01" />
+                </svg>
+            </div>
+            <div class="app-failure-text">
+                <h2 id="@TitleId">@string.Format(L["AppFailure.Title"], DisplayName)</h2>
+                <p>@L["AppFailure.Message"]</p>
+                <p class="app-failure-details">
+                    <span>@L["AppFailure.Details"]</span>
+                    <code data-testid="app-failure-error">@ErrorSummary</code>
+                </p>
+            </div>
+            <div class="app-failure-actions">
+                <button type="button"
+                        class="app-failure-button app-failure-retry"
+                        data-testid="app-failure-retry"
+                        @onclick="RetryAsync">
+                    @L["AppFailure.Retry"]
+                </button>
+                @if (CanClose)
+                {
+                    <button type="button"
+                            class="app-failure-button app-failure-close"
+                            data-testid="app-failure-close"
+                            @onclick="CloseAsync">
+                        @L["AppFailure.Close"]
+                    </button>
+                }
+            </div>
+        </section>
+    </div>
+}

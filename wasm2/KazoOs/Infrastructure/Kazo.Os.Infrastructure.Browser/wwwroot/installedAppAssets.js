@@ -11,6 +11,8 @@ const cacheName = 'kazoos-installed-apps';
 // index.html registers no service worker on these hosts (development); the OS then registers one
 // that only serves installed apps (no release cache), recognised by this query.
 const installedAppsOnlyQuery = 'mode=installed-apps';
+// ADR 0237: a worker downloads and checks the whole release before it is installed (P2-PWA-003).
+const backgroundInstallTimeoutMs = 180000;
 
 function isDevelopmentHost() {
     const host = window.location.hostname;
@@ -28,7 +30,9 @@ function absolute(url) {
  *
  * A page loaded with Ctrl+F5 is not controlled even though a worker is active (the browser bypasses
  * it for that load). The page then asks that worker to take control (ADR 0225), which it does only
- * when it caches the release the page runs.
+ * when it caches the release the page runs. When it caches an older release (a version was deployed
+ * since), the worker of the page's release is activated instead (ADR 0237): the pages of the older
+ * release restart onto it, as when the user restarts to update (ADR 0223).
  */
 export async function prepare(timeoutMs) {
     if (!('serviceWorker' in navigator) || !('caches' in window)) {
@@ -58,14 +62,113 @@ export async function prepare(timeoutMs) {
 
     // An active worker never activates again, so nothing else would make it claim this page.
     if (registration && registration.active && !container.controller) {
-        const answer = await askToClaim(registration.active, isDevelopmentHost() ? null : await serverReleaseVersion(), timeoutMs);
+        const version = isDevelopmentHost() ? null : await serverReleaseVersion();
+        const answer = await askToClaim(registration.active, version, timeoutMs);
         if (!answer.claimed) {
-            console.warn('Kazo OS: the service worker does not serve this page, installed apps keep their wwwroot/ files until the next restart', answer);
-            return !!container.controller;
+            // ADR 0237: the active worker caches an older release than this page. The worker of this
+            // page's release takes over now; the pages of the older release restart onto it.
+            const activated = await activateNewerWorker(registration, version, timeoutMs);
+            if (!activated.activating) {
+                console.warn('Kazo OS: the service worker does not serve this page yet, installed apps get their wwwroot/ files once it does', { claim: answer, activation: activated });
+                return !!container.controller;
+            }
         }
     }
 
     return await controlled;
+}
+
+/**
+ * ADR 0237: finds the worker of this page's release (waiting, installing, or fetched now), and once
+ * it is installed asks it to activate. Resolves to its answer; { activating: false, reason } when there
+ * is none in time. A worker still installing after timeoutMs is asked when it has installed, so a
+ * later launch finds the page controlled.
+ */
+async function activateNewerWorker(registration, version, timeoutMs) {
+    if (!version) {
+        return { activating: false, reason: 'no-version' };
+    }
+
+    if (!registration.waiting && !registration.installing) {
+        try {
+            await registration.update();
+        } catch (error) {
+            return { activating: false, reason: 'update-failed', message: String(error) };
+        }
+    }
+
+    const installed = await waitUntilInstalled(registration, timeoutMs);
+    if (!installed) {
+        if (registration.installing) {
+            waitUntilInstalled(registration, backgroundInstallTimeoutMs)
+                .then(worker => worker && askToActivate(worker, version, timeoutMs))
+                .catch(() => { });
+        }
+
+        return { activating: false, reason: registration.installing ? 'installing' : 'no-newer-worker' };
+    }
+
+    const answer = await askToActivate(installed, version, timeoutMs);
+    if (!answer.activating) {
+        return answer;
+    }
+
+    // The new worker claims every page when it activates (onActivate): wait for this one.
+    const container = navigator.serviceWorker;
+    if (!container.controller) {
+        await new Promise(resolve => {
+            const timer = setTimeout(resolve, timeoutMs);
+            container.addEventListener('controllerchange', () => { clearTimeout(timer); resolve(); }, { once: true });
+        });
+    }
+
+    return { ...answer, activating: !!container.controller };
+}
+
+/** Resolves to the registration's waiting worker once there is one, or null after timeoutMs. */
+function waitUntilInstalled(registration, timeoutMs) {
+    if (registration.waiting) {
+        return Promise.resolve(registration.waiting);
+    }
+
+    const worker = registration.installing;
+    if (!worker) {
+        return Promise.resolve(null);
+    }
+
+    return new Promise(resolve => {
+        const timer = setTimeout(() => finish(null), timeoutMs);
+        function finish(result) {
+            clearTimeout(timer);
+            worker.removeEventListener('statechange', check);
+            resolve(result);
+        }
+        function check() {
+            if (registration.waiting) return finish(registration.waiting);
+            if (worker.state === 'redundant' || worker.state === 'activated') return finish(null);
+        }
+        worker.addEventListener('statechange', check);
+        check();
+    });
+}
+
+/** Asks a waiting worker of this page's release to activate; resolves to its answer. */
+function askToActivate(worker, version, timeoutMs) {
+    return new Promise(resolve => {
+        const channel = new MessageChannel();
+        const timer = setTimeout(() => resolve({ activating: false, reason: 'no-answer' }), timeoutMs);
+        channel.port1.onmessage = event => {
+            clearTimeout(timer);
+            const answer = event.data || { activating: false };
+            if (!answer.activating && window.kazoOsClaimForInstalledApps === 'pending') {
+                window.kazoOsClaimForInstalledApps = undefined;
+            }
+            resolve(answer);
+        };
+        // index.html reloads a page whose controller changes; this page already runs that release.
+        window.kazoOsClaimForInstalledApps = 'pending';
+        worker.postMessage({ type: 'KAZOOS_ACTIVATE_FOR_INSTALLED_APPS', version }, [channel.port2]);
+    });
 }
 
 /** The version of the release the server delivers now, the one a page loaded with Ctrl+F5 runs (ADR 0225). */

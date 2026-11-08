@@ -1,0 +1,120 @@
+/* ADR 0238: the panel fills the failed window's content area only; the title bar (close, move),
+   the other windows and the taskbar stay as they were. */
+.app-failure {
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
+    min-height: 12rem;
+    display: grid;
+    place-items: center;
+    padding: 1rem;
+    background:
+        repeating-linear-gradient(135deg, rgb(229 72 77 / 6%) 0 0.6rem, transparent 0.6rem 1.2rem),
+        var(--kos-window-background, #0c1516);
+    color: var(--kos-window-text, #e7f7f1);
+    overflow: auto;
+}
+
+.app-failure-panel {
+    width: min(100%, 30rem);
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 0.85rem 0.9rem;
+    padding: 1rem 1.1rem;
+    border: 1px solid #e5484d;
+    border-radius: 0.45rem;
+    background: var(--kos-window-background, #0c1516);
+    box-shadow:
+        0 0 0 1px rgb(229 72 77 / 25%),
+        0 14px 32px rgb(0 0 0 / 55%);
+    font-family: var(--kos-font-ui, system-ui, sans-serif);
+}
+
+.app-failure-icon svg {
+    width: 2rem;
+    height: 2rem;
+    fill: none;
+    stroke: #ff8a8d;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.app-failure-text h2 {
+    margin: 0 0 0.35rem;
+    font-size: 1rem;
+    font-weight: 650;
+    overflow-wrap: anywhere;
+}
+
+.app-failure-text p {
+    margin: 0 0 0.5rem;
+    font-size: 0.875rem;
+    line-height: 1.4;
+    opacity: 0.85;
+}
+
+.app-failure-details {
+    display: grid;
+    gap: 0.2rem;
+}
+
+.app-failure-details span {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    opacity: 0.7;
+}
+
+.app-failure-details code {
+    display: block;
+    max-height: 6rem;
+    overflow: auto;
+    padding: 0.4rem 0.5rem;
+    border-radius: 0.3rem;
+    background: rgb(0 0 0 / 35%);
+    font-family: var(--kos-font-mono, ui-monospace, monospace);
+    font-size: 0.78rem;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    user-select: text;
+}
+
+.app-failure-actions {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.5rem;
+}
+
+.app-failure-button {
+    min-height: 2.1rem;
+    padding: 0.35rem 0.95rem;
+    border: 1px solid var(--kos-window-border-color, #315249);
+    border-radius: 0.3rem;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    font-size: 0.875rem;
+    cursor: pointer;
+}
+
+.app-failure-retry {
+    border-color: var(--kos-window-focused-border, #55d6a1);
+    background: rgb(85 214 161 / 16%);
+}
+
+.app-failure-close {
+    border-color: #e5484d;
+    color: #ff8a8d;
+}
+
+.app-failure-button:hover {
+    filter: brightness(1.2);
+}
+
+.app-failure-button:focus-visible {
+    outline: 2px solid var(--kos-focus-ring, #7fe7c4);
+    outline-offset: 2px;
+}

@@ -334,8 +334,11 @@ approval:
   `localhost`, the OS registers `service-worker.js?mode=installed-apps`, which
   serves only those files. A page loaded with Ctrl+F5 is not controlled: the OS
   asks the active worker to claim it, which it does when the page runs its
-  release; otherwise the files are not served (line in `/var/log/syslog`) and
-  the OS asks again at the next launch. Cleaning the cache, shared by every tab,
+  release; when the page runs a newer release (a deployment since), the OS
+  activates the worker of that release, and the tabs of the older one restart
+  onto it ([ADR 0237](adr/0237-activate-the-worker-of-a-newer-page.md));
+  otherwise (offline, install too long) the files are not served (line in
+  `/var/log/syslog`) and the OS asks again at the next launch. Cleaning the cache, shared by every tab,
   also keeps the files of apps another tab installed on disk
   ([ADR 0225](adr/0225-serve-installed-app-files-to-every-page.md)).
 - **Scoped CSS** ([ADR 0221](adr/0221-pack-all-static-web-assets-of-an-app.md)):
