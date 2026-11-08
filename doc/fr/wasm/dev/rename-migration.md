@@ -146,6 +146,31 @@ Contournement sur une version 3.0.0 à 3.2.0 : supprimer le fichier abîmé
 (`sudo rm /etc/kazoos/app-permissions.config`) ; l'OS le recrée à la
 prochaine écriture.
 
+## Anciennes adresses des dépôts d'apps
+
+Avec 3.0.0 (ADR 0228), les dépôts d'apps de Kazo-ca ont été renommés
+`HackerOs-AppMarketPlace` → `Os-AppMarketPlace` et `HackerOs-App-*` →
+`Os-App-*`. La table des noms de la migration réécrit chaque `HackerOs` en
+`KazoOs` : l'adresse du catalogue officiel qu'un profil créé avant 3.0.0 garde
+dans `/etc/kazoos/app-sources.config` est donc devenue
+`https://raw.githubusercontent.com/Kazo-ca/KazoOs-AppMarketPlace/packages/catalog.json`,
+qui répond 404. Tant que le fichier ne se lisait pas (dommage ci-dessus), l'OS
+prenait l'adresse intégrée et le Store marchait ; une fois le fichier réparé par
+3.2.1, le Store affichait « The catalog "official" could not be read » et
+aucune app.
+
+Depuis 3.2.1, `RenamedAppRepositories` corrige ces noms à la lecture, sans
+réécrire le fichier : une adresse de catalogue sur `raw.githubusercontent.com`
+ou `github.com` (`AppSourcesConfigDocument`) et une source `github:`
+(`AppPackageSource.TryParse`, par exemple la source de mise à jour d'une app
+installée depuis son dépôt) dont le propriétaire est `Kazo-ca` et dont le dépôt
+commence par `HackerOs-App` ou `KazoOs-App` nomment le dépôt `Os-App...`. Un
+autre propriétaire, ou un autre dépôt de Kazo-ca, garde son nom. Tests :
+`RenamedAppRepositoriesTests`.
+
+Contournement en 3.2.0 : dans `/etc/kazoos/app-sources.config`, remplacer
+`KazoOs-AppMarketPlace` par `Os-AppMarketPlace` (`sudo nano`).
+
 ## Serveur
 
 Un serveur installé avant 3.0.0 (volume Docker, dossier de données) a

@@ -134,6 +134,30 @@ Workaround on a version 3.0.0 to 3.2.0: delete the damaged file
 (`sudo rm /etc/kazoos/app-permissions.config`); the OS creates it again at the
 next write.
 
+## Old addresses of the app repositories
+
+With 3.0.0 (ADR 0228), the app repositories of Kazo-ca were renamed
+`HackerOs-AppMarketPlace` → `Os-AppMarketPlace` and `HackerOs-App-*` →
+`Os-App-*`. The migration's name table rewrites every `HackerOs` as `KazoOs`,
+so the address of the official catalog that a profile created before 3.0.0
+keeps in `/etc/kazoos/app-sources.config` became
+`https://raw.githubusercontent.com/Kazo-ca/KazoOs-AppMarketPlace/packages/catalog.json`,
+which answers 404. As long as the file could not be read (damage above), the OS
+used the built-in address and the Store worked; once 3.2.1 repaired the file,
+the Store showed "The catalog 'official' could not be read" and no app.
+
+Since 3.2.1, `RenamedAppRepositories` corrects these names when they are read,
+without rewriting the file: a catalog address on `raw.githubusercontent.com`
+or `github.com` (`AppSourcesConfigDocument`) and a `github:` source
+(`AppPackageSource.TryParse`, for example the update source of an app
+installed from its repository) whose owner is `Kazo-ca` and whose repository
+starts with `HackerOs-App` or `KazoOs-App` name the `Os-App...` repository.
+Another owner, or another Kazo-ca repository, keeps its name. Tests:
+`RenamedAppRepositoriesTests`.
+
+Workaround on 3.2.0: in `/etc/kazoos/app-sources.config`, replace
+`KazoOs-AppMarketPlace` by `Os-AppMarketPlace` (`sudo nano`).
+
 ## Server
 
 A server installed before 3.0.0 (Docker volume, data folder) has `hackeros.db`.
