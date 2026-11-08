@@ -164,7 +164,8 @@ public sealed record AppPackageSource(string Owner, string Repository, SemanticV
             return false;
         }
 
-        source = new AppPackageSource(parts[0], parts[1], version);
+        // A source recorded before 3.0.0 names the app's old repository (ADR 0228).
+        source = new AppPackageSource(parts[0], RenamedAppRepositories.Correct(parts[0], parts[1]), version);
         return true;
     }
 

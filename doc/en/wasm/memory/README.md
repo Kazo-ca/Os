@@ -17,8 +17,10 @@ at the end of each series or when a convention changes.
   rewritten configuration files, and a one-time repair at boot
   (`RenamedContentRepair`, [`rename-migration.md`](../dev/rename-migration.md))
   gives back the files 3.0.0 to 3.2.0 left on deleted content (`ProviderFailure`,
-  IRC approval blocked; PR #422). 17 API lines of Infrastructure.Browser folded,
-  no SDK change, 1 entry in `changes/3.2.1.json`; published when the PR lands in `main`.
+  IRC approval blocked; PR #422), and the Store reads again the official catalog
+  whose address the migration had rewritten as `KazoOs-AppMarketPlace`
+  (`RenamedAppRepositories`, PR #424). 17 API lines of Infrastructure.Browser
+  folded, no SDK change, 2 entries in `changes/3.2.1.json`; published when the PR lands in `main`.
 - **Version 3.2.0** (2026-11-07, published): the real-network grant issued by
   the server with its ports (ADR 0233), 68 API lines of Platform Core and Server
   Contracts folded, 1 entry in `changes/3.2.0.json`. It unblocked work item IRC-3

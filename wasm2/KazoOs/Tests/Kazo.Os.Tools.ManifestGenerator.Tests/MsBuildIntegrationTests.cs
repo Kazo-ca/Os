@@ -132,6 +132,9 @@ public sealed class MsBuildIntegrationTests
 
     private static Task<(int ExitCode, string Output)> BuildFixtureAsync(string name) => BuildFixtureAsync(name, null);
 
+    /// <summary>Longest wait for a fixture build and for the end of its output.</summary>
+    private static readonly TimeSpan BuildTimeout = TimeSpan.FromMinutes(3);
+
     private static async Task<(int ExitCode, string Output)> BuildFixtureAsync(
         string name, IReadOnlyDictionary<string, string>? environment, params string[] arguments)
     {
@@ -148,6 +151,10 @@ public sealed class MsBuildIntegrationTests
         startInfo.ArgumentList.Add(Path.Combine(FixtureDirectory(name), $"ManifestGenerator.Fixtures.{name}.csproj"));
         startInfo.ArgumentList.Add("--nologo");
         startInfo.ArgumentList.Add("-p:NuGetAudit=false");
+        // Without these, the MSBuild worker nodes and the compiler server outlive the build and keep
+        // the redirected output open: reading it to the end then never finishes and the run hangs.
+        startInfo.ArgumentList.Add("-nodeReuse:false");
+        startInfo.ArgumentList.Add("-p:UseSharedCompilation=false");
         foreach (string argument in arguments)
         {
             startInfo.ArgumentList.Add(argument);
@@ -162,8 +169,8 @@ public sealed class MsBuildIntegrationTests
             ?? throw new InvalidOperationException($"Could not start the {name} fixture build.");
         Task<string> stdout = process.StandardOutput.ReadToEndAsync();
         Task<string> stderr = process.StandardError.ReadToEndAsync();
-        await process.WaitForExitAsync().WaitAsync(TimeSpan.FromMinutes(3));
-        return (process.ExitCode, await stdout + await stderr);
+        await process.WaitForExitAsync().WaitAsync(BuildTimeout);
+        return (process.ExitCode, await stdout.WaitAsync(BuildTimeout) + await stderr.WaitAsync(BuildTimeout));
     }
 
     private static string FindSolutionDirectory()

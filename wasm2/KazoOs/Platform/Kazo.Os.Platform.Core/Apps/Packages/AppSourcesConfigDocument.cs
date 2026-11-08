@@ -324,7 +324,8 @@ public static class AppSourcesConfigDocument
             return false;
         }
 
-        address = parsed;
+        // A profile created before 3.0.0 names the official catalog's old repository (ADR 0228).
+        address = RenamedAppRepositories.Correct(parsed);
         return true;
     }
 
