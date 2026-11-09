@@ -21,11 +21,47 @@
   <data name="Correlation" xml:space="preserve">
     <value>Corrélation : {0}</value>
   </data>
+  <data name="Failure.Module" xml:space="preserve">
+    <value>Module</value>
+  </data>
+  <data name="Failure.Source" xml:space="preserve">
+    <value>Source</value>
+  </data>
+  <data name="Failure.Type" xml:space="preserve">
+    <value>Exception</value>
+  </data>
+  <data name="Failure.Message" xml:space="preserve">
+    <value>Message</value>
+  </data>
+  <data name="Failure.Time" xml:space="preserve">
+    <value>Heure</value>
+  </data>
+  <data name="Failure.Correlation" xml:space="preserve">
+    <value>Corrélation</value>
+  </data>
+  <data name="Failure.TechnicalDetails" xml:space="preserve">
+    <value>Détails techniques</value>
+  </data>
+  <data name="Failure.Copy" xml:space="preserve">
+    <value>Copier les détails</value>
+  </data>
+  <data name="Failure.Reload" xml:space="preserve">
+    <value>Recharger</value>
+  </data>
+  <data name="Failure.Copied" xml:space="preserve">
+    <value>Détails copiés dans le presse-papiers.</value>
+  </data>
+  <data name="Failure.CopyFailed" xml:space="preserve">
+    <value>Le navigateur a refusé la copie : sélectionne les détails techniques à la main.</value>
+  </data>
+  <data name="Failure.Hint" xml:space="preserve">
+    <value>Pour le signaler, colle les détails copiés dans une issue sur github.com/Kazo-ca/Os. Relis-les avant : ils peuvent nommer tes propres fichiers.</value>
+  </data>
   <data name="Fatal.BoundaryTitle" xml:space="preserve">
     <value>Kazo OS a rencontré une erreur</value>
   </data>
   <data name="Fatal.Recorded" xml:space="preserve">
-    <value>L'échec a été enregistré sans exposer de détails sensibles.</value>
+    <value>L'erreur a été enregistrée dans /var/log/syslog. Les mots de passe et les jetons sont masqués.</value>
   </data>
   <data name="Fatal.Title" xml:space="preserve">
     <value>Kazo OS n'a pas pu démarrer</value>

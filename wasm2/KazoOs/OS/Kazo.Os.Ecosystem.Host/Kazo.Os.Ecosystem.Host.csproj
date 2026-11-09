@@ -28,6 +28,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- ADR 0240: HostFailureDetails stack parsing is tested directly. -->
+    <InternalsVisibleTo Include="Kazo.Os.Ecosystem.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <SupportedPlatform Include="browser" />
   </ItemGroup>
 

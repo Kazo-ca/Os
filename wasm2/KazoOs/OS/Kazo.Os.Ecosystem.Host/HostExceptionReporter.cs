@@ -4,7 +4,7 @@ using Kazo.Os.Simulation.Abstractions.Diagnostics;
 namespace Kazo.Os.Ecosystem;
 
 /// <summary>
-/// Records host failures with a user-safe correlation ID and redacted structured metadata, in the
+/// Records host failures with a correlation ID and masked structured metadata (ADR 0240), in the
 /// in-memory buffer of recent entries and as a <c>CRIT</c> line in <c>/var/log/syslog</c> (ADR 0045).
 /// </summary>
 public sealed class HostExceptionReporter
@@ -27,30 +27,63 @@ public sealed class HostExceptionReporter
     }
 
     /// <summary>
-    /// Records one failure without writing its potentially sensitive message or stack trace, then
-    /// asks the writer to flush so the line survives a tab that is about to crash.
+    /// Describes and records one failure (ADR 0240): see <see cref="Describe"/> and
+    /// <see cref="ReportAsync(HostFailureDetails, CancellationToken)"/>.
     /// </summary>
     public async ValueTask<Guid> ReportAsync(
         Exception exception,
         string phase,
         CancellationToken cancellationToken = default)
     {
-        ArgumentNullException.ThrowIfNull(exception);
-        ArgumentException.ThrowIfNullOrWhiteSpace(phase);
+        HostFailureDetails failure = Describe(exception, phase);
+        await ReportAsync(failure, cancellationToken).ConfigureAwait(false);
+        return failure.CorrelationId;
+    }
 
-        Guid correlationId = Guid.NewGuid();
+    /// <summary>
+    /// Describes <paramref name="exception"/> without writing anything, so the caller has the
+    /// correlation ID before the error page renders (ADR 0240). Message and stack are masked by
+    /// <see cref="SensitiveTextRedactor"/>.
+    /// </summary>
+    public HostFailureDetails Describe(Exception exception, string phase) =>
+        HostFailureDetails.Create(exception, phase, _timeProvider.GetUtcNow());
+
+    /// <summary>
+    /// Records one described failure, its masked message and stack included (ADR 0240), then asks
+    /// the writer to flush so the line survives a tab that is about to crash.
+    /// </summary>
+    public async ValueTask ReportAsync(
+        HostFailureDetails failure,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(failure);
+
+        Guid correlationId = failure.CorrelationId;
+        Dictionary<string, string> properties = new(StringComparer.Ordinal)
+        {
+            ["correlationId"] = correlationId.ToString("D"),
+            ["exceptionType"] = failure.ExceptionType,
+            ["phase"] = failure.Phase,
+            ["message"] = failure.Message,
+            ["stack"] = failure.Details
+        };
+        if (failure.SourceModule is not null)
+        {
+            properties["module"] = failure.SourceModule;
+        }
+
+        if (failure.SourceMethod is not null)
+        {
+            properties["source"] = failure.SourceMethod;
+        }
+
         DiagnosticEntry entry = new(
-            _timeProvider.GetUtcNow(),
+            failure.OccurredAtUtc,
             DiagnosticSeverity.Critical,
             Category,
             "An unexpected host failure interrupted the current surface.",
             correlationId,
-            new Dictionary<string, string>(StringComparer.Ordinal)
-            {
-                ["correlationId"] = correlationId.ToString("D"),
-                ["exceptionType"] = exception.GetType().FullName ?? exception.GetType().Name,
-                ["phase"] = phase
-            });
+            properties);
 
         _sink.Record(entry);
         _writer.Enqueue(LogFileTarget.Syslog, LogLineFormat.Format(entry));
@@ -73,7 +106,5 @@ public sealed class HostExceptionReporter
                     ["phase"] = "diagnostic-persistence"
                 }));
         }
-
-        return correlationId;
     }
 }

@@ -57,6 +57,12 @@ HostExceptionReporter ───────────────────�
     fois par fichier (catégorie `logging`) dans le tampon mémoire.
 - `FileAuditLog` remplace `BoundedAuditLog` dans la composition ; `Entries` reste
   servi par un tampon de 512 entrées.
+- `HostExceptionReporter` (ADR 0240) écrit une ligne `CRIT ecosystem-host` par
+  erreur non gérée, avec `correlationId`, `phase`, `exceptionType`, `module`,
+  `source`, `message` et `stack`. Message et pile passent d'abord par
+  `SensitiveTextRedactor` (mots de passe d'adresse, `token=`, `password=`,
+  `Bearer`, IRC `PASS`... remplacés par `***redacted***`) ; la page d'erreur
+  affiche les mêmes valeurs ([ADR 0240](adr/0240-detailed-error-page.md)).
 - `SimulationClockDriver` (`Platform.Core/Time/`) : l'adaptateur de production
   prévu par l'ADR 0012, qui n'existait pas. Il fait avancer `ManualSimulationClock`
   depuis un minuteur de la plateforme (au plus 50 tics par battement, le reste

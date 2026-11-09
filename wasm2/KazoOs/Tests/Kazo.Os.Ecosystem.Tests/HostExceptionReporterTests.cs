@@ -25,7 +25,31 @@ public sealed class HostExceptionReporterTests
         Assert.Equal("test-phase", entry.Properties["phase"]);
         Assert.Equal(correlationId.ToString("D"), entry.Properties["correlationId"]);
 
+        // ADR 0240: the message and the stack are kept, with the secret masked.
+        Assert.Equal("password=***redacted***", entry.Properties["message"]);
+        Assert.Contains("InvalidOperationException: password=***redacted***", entry.Properties["stack"], StringComparison.Ordinal);
+        Assert.DoesNotContain("secret", entry.Properties["stack"], StringComparison.Ordinal);
+
         // No filesystem is attached in this test, so the CRIT line waits in the writer's queue.
         Assert.Equal(1, writer.PendingCount);
+    }
+
+    [Fact]
+    public async Task Describe_gives_the_correlation_before_the_log_is_written()
+    {
+        // Arrange
+        BoundedDiagnosticSink sink = new(10);
+        LogFileWriter writer = new(new ManualSimulationClock(DateTimeOffset.UnixEpoch, TimeSpan.FromMilliseconds(100)));
+        HostExceptionReporter reporter = new(sink, writer, TimeProvider.System);
+
+        // Act: the error boundary describes first (the page renders now), then reports.
+        HostFailureDetails failure = reporter.Describe(new InvalidOperationException("boom"), "component-render");
+        Assert.Empty(sink.Entries);
+        await reporter.ReportAsync(failure);
+
+        // Assert
+        DiagnosticEntry entry = Assert.Single(sink.Entries);
+        Assert.Equal(failure.CorrelationId, entry.CorrelationId);
+        Assert.Equal("boom", entry.Properties["message"]);
     }
 }

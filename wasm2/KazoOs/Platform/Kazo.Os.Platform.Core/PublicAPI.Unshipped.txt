@@ -1,1 +1,4 @@
 #nullable enable
+Kazo.Os.Platform.Core.Diagnostics.SensitiveTextRedactor
+const Kazo.Os.Platform.Core.Diagnostics.SensitiveTextRedactor.Placeholder = "***redacted***" -> string!
+static Kazo.Os.Platform.Core.Diagnostics.SensitiveTextRedactor.Redact(string? text) -> string!
