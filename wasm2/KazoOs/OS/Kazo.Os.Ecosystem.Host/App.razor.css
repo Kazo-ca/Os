@@ -155,6 +155,49 @@ code {
     margin: 0;
 }
 
+/* ADR 0239 §2: the restart dialog of an app not opened on an outdated copy, above the desktop. */
+.update-required-veil {
+    position: fixed;
+    z-index: 6000;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    padding: 1rem;
+    background: rgb(4 8 10 / 60%);
+    backdrop-filter: blur(2px);
+}
+
+.update-required {
+    width: min(100%, 28rem);
+    padding: 1.1rem 1.25rem;
+    border: 1px solid var(--kos-accent, #42d392);
+    border-radius: var(--kos-radius-sm, 0.25rem);
+    background: var(--kos-bg-surface, #151c20);
+    box-shadow: 0 0 0 1px rgb(66 211 146 / 20%), 0 16px 36px rgb(0 0 0 / 60%);
+}
+
+.update-required h2 {
+    margin: 0 0 0.5rem;
+    font-size: 1.05rem;
+}
+
+.update-required p {
+    margin: 0 0 0.75rem;
+    line-height: 1.4;
+}
+
+.update-required-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.5rem;
+}
+
+.update-required-actions button {
+    min-height: 2.25rem;
+    margin: 0;
+}
+
 /* ADR 0223: the new version could not be downloaded; the current one keeps running. */
 .update-failed {
     color: var(--kos-warning, #d5a84f);

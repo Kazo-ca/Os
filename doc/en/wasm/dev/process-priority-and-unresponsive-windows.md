@@ -135,6 +135,17 @@ The detached windows of ADR 0078 currently host only browser tabs
 component, and a future detached surface that hosted an app
 will render it in its own surface with the same layer.
 
+## 3. App that crashes
+
+An exception thrown by an app component (rendering, lifecycle including
+`OnAfterRenderAsync`, event handler) stops at `AppErrorBoundary`, placed around
+each window's entry point by `WindowAppRenderer` and `DesktopSurfaceHost`. Only
+the window's content becomes ""App" ran into a problem.", with the error's type
+and message, *Try again* (creates the app's components again) and *Close the
+app* (stops its process, reason `Fault`). The full exception goes to
+`/var/log/syslog`. The other windows and the taskbar keep running
+([ADR 0238](adr/0238-an-app-failure-stays-in-its-window.md)).
+
 ## Implementation decisions
 
 - **No quantum**: niceness orders a queue, nothing more

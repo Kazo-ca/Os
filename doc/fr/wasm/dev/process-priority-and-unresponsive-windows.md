@@ -135,6 +135,18 @@ du navigateur (iframes), pas des fenêtres d'app : la boîte vit dans le
 composant de la fenêtre, et une future surface détachée qui hébergerait une app
 la rendra dans sa propre surface avec le même calque.
 
+## 3. App qui plante
+
+Une exception levée par un composant d'une app (rendu, cycle de vie dont
+`OnAfterRenderAsync`, gestionnaire d'événement) s'arrête à `AppErrorBoundary`,
+placé autour du point d'entrée de chaque fenêtre par `WindowAppRenderer` et
+`DesktopSurfaceHost`. Le contenu de la fenêtre seul devient « « App » a
+rencontré un problème. », avec le type et le message de l'erreur, *Réessayer*
+(recrée les composants de l'app) et *Fermer l'application* (arrête son processus,
+raison `Fault`). L'exception complète va dans `/var/log/syslog`. Les autres
+fenêtres et la barre des tâches continuent
+([ADR 0238](adr/0238-an-app-failure-stays-in-its-window.md)).
+
 ## Décisions de mise en œuvre
 
 - **Pas de quantum** : la gentillesse ordonne une file, rien de plus

@@ -250,6 +250,10 @@ This section lists what is released in the `main` branch and online.
   runs low. ([`resource-accounting.md`](dev/resource-accounting.md),
   [`oom-killer.md`](dev/oom-killer.md))
 - **Unresponsive windows** detected, with an offer to close them.
+- **An app that crashes stays in its window**: the window shows "App ran into
+  a problem" with the error, *Try again* and *Close the app*; the rest of the
+  OS keeps running.
+  ([ADR 0238](dev/adr/0238-an-app-failure-stays-in-its-window.md))
   ([`process-priority-and-unresponsive-windows.md`](dev/process-priority-and-unresponsive-windows.md))
 - **Detailed error page**: the app and method at fault, the exception, its
   message, the folded stack, "Copy details" and "Reload", with passwords and
@@ -266,6 +270,12 @@ This section lists what is released in the `main` branch and online.
   Release and the server) and a badge "Up to date", "Outdated: …" or "Status
   unknown (offline)", checked at boot.
   ([ADR 0236](dev/adr/0236-build-number-and-version-status-at-sign-in.md))
+- **Always on the latest version**: when a newer version is deployed, Kazo OS
+  shows "Updating Kazo OS" at start and restarts onto it; an app is not opened
+  on an outdated copy (an "Update required" dialog offers the restart); an
+  installed app finds its files right after a deployment, even after Ctrl+F5.
+  ([ADR 0237](dev/adr/0237-activate-the-worker-of-a-newer-page.md),
+  [ADR 0239](dev/adr/0239-start-on-the-latest-version.md))
 - **What's new since your last visit**: the Settings ▸ What's new page lists the
   changes by version with a **New** badge; a notification after sign-in points out
   what has not been seen. The same list writes the

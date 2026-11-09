@@ -62,6 +62,29 @@
         </aside>
     }
 
+    @* ADR 0239 §2: an app was not opened because a newer Kazo OS waits; offer the restart. *@
+    @if (UpdateRequiredApp is { } blockedApp)
+    {
+        <div class="update-required-veil">
+            <section class="update-required"
+                     role="alertdialog"
+                     aria-labelledby="update-required-title"
+                     aria-describedby="update-required-text"
+                     data-testid="update-required">
+                <h2 id="update-required-title">@L["UpdateRequired.Title"]</h2>
+                <p id="update-required-text">@L["UpdateRequired.Text", blockedApp]</p>
+                @if (UpdateDownloadFailed)
+                {
+                    <p class="update-failed">@L["Update.DownloadFailed"]</p>
+                }
+                <div class="update-required-actions">
+                    <button type="button" class="update-required-later" @onclick="CloseUpdateRequired">@L["UpdateRequired.Later"]</button>
+                    <button type="button" class="update-required-restart" disabled="@IsRestartingForUpdate" @onclick="RestartForUpdateAsync">@L["Update.Restart"]</button>
+                </div>
+            </section>
+        </div>
+    }
+
     <HostErrorBoundary @ref="ErrorBoundary">
         <ChildContent>
         @switch (State.View)
@@ -70,7 +93,7 @@
             <section class="boot-surface" aria-busy="true">
                 <div class="boot-mark" aria-hidden="true">H_</div>
                 <h1>Kazo OS</h1>
-                <p role="status">@L["Boot.Validating"]</p>
+                <p role="status">@(IsUpdatingAtBoot ? L["Boot.Updating"] : L["Boot.Validating"])</p>
             </section>
             break;
         case EcosystemHostView.FirstRun:
@@ -295,6 +318,14 @@
     private GuestAccountRequests? GuestRequests { get; set; }
     private bool IsRestartingForUpdate { get; set; }
 
+    /// <summary>ADR 0239 §1: the boot found a newer version and restarts onto it.</summary>
+    private bool IsUpdatingAtBoot { get; set; }
+
+    /// <summary>ADR 0239 §2: the name of the app not opened because a newer version waits, while the dialog shows.</summary>
+    private string? UpdateRequiredApp { get; set; }
+
+    private Kazo.Os.Platform.Blazor.LazyLoading.HostUpdateLaunchGate? LaunchGate { get; set; }
+
     // ADR 0223: the last restart for an update found no downloadable new version.
     private bool UpdateDownloadFailed { get; set; }
 
@@ -389,10 +420,20 @@
 
             ReleaseMonitor.StatusChanged += OnReleaseStatusChanged;
             ReleaseMonitor.Start(Kazo.Os.Platform.Blazor.LazyLoading.HostReleaseMonitor.DefaultInterval);
-            // ADR 0236: the sign-in screen says at once whether this is the served version,
-            // instead of waiting for the first five-minute tick. CheckAsync turns every probe
-            // failure into the « unreachable » status, so the discarded task cannot fault.
-            _ = ReleaseMonitor.CheckAsync();
+        }
+
+        // ADR 0239 §2: a launch refused because a newer version waits shows the restart dialog.
+        LaunchGate = Services.GetService<Kazo.Os.Platform.Blazor.LazyLoading.HostUpdateLaunchGate>();
+        if (LaunchGate is not null)
+        {
+            LaunchGate.UpdateRequired += OnUpdateRequired;
+        }
+
+        // ADR 0239 §1 (and ADR 0236: the sign-in screen knows at once whether this is the served
+        // version): an outdated copy restarts onto the served version before the first screen.
+        if (await UpdateAtBootAsync())
+        {
+            return;
         }
 
         // ADR 0187 section 5: Settings ▸ Users and the Start menu ask from inside the guest session.
@@ -406,6 +447,51 @@
         // a user can reach a desktop, so the saved theme never depends on opening Settings first.
         await InitializeHostAsync();
     }
+
+    /// <summary>
+    /// ADR 0239 §1: reads the served version before the first screen; when it is newer (and this tab
+    /// did not try it yet), shows « Mise à jour de Kazo OS », downloads it and restarts onto it.
+    /// </summary>
+    /// <returns><see langword="true"/> when the page is restarting.</returns>
+    private async Task<bool> UpdateAtBootAsync()
+    {
+        if (ReleaseMonitor is null)
+        {
+            return false;
+        }
+
+        Microsoft.JSInterop.IJSRuntime? runtime = Services.GetService<Microsoft.JSInterop.IJSRuntime>();
+        Kazo.Os.Platform.Blazor.LazyLoading.HostBootUpdateCheck check = new(
+            ReleaseMonitor,
+            target => runtime is null ? ValueTask.FromResult(false) : BrowserHostRestart.ClaimBootUpdateAsync(runtime, target));
+        if (!await check.ShouldUpdateAsync())
+        {
+            return false;
+        }
+
+        IsUpdatingAtBoot = true;
+        StateHasChanged();
+        if (UpdateInstaller is not null
+            && await UpdateInstaller.DownloadAsync() == Kazo.Os.Platform.Blazor.LazyLoading.HostUpdateDownloadResult.Unavailable)
+        {
+            // Offline or a deployment in progress: start this version, the notice offers the restart later.
+            IsUpdatingAtBoot = false;
+            return false;
+        }
+
+        await BrowserHostRestart.RestartAsync(Services);
+        return true;
+    }
+
+    private void OnUpdateRequired(string appName) => InvokeAsync(() =>
+    {
+        UpdateRequiredApp = appName;
+        State.SetUpdateAvailable(true);
+        StartUpdateDownload();
+        StateHasChanged();
+    });
+
+    private void CloseUpdateRequired() => UpdateRequiredApp = null;
 
     private void OnPlatformPreferenceChanged() => InvokeAsync(StateHasChanged);
 
@@ -537,6 +623,11 @@
         if (UpdateInstaller is not null)
         {
             UpdateInstaller.ActivatedElsewhere -= OnUpdateActivatedElsewhere;
+        }
+
+        if (LaunchGate is not null)
+        {
+            LaunchGate.UpdateRequired -= OnUpdateRequired;
         }
 
         if (BuildMonitor is not null)

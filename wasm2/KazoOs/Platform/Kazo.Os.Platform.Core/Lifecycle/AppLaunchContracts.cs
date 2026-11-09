@@ -117,7 +117,10 @@ public enum AppLaunchStatus
     EntryPointFault,
 
     /// <summary>The supplied elevation token was missing, expired, wrong-scope, or already consumed (`ADR 0042`).</summary>
-    ElevationDenied
+    ElevationDenied,
+
+    /// <summary>A newer Kazo OS waits for a restart; the app starts once the OS runs it (ADR 0239).</summary>
+    UpdateRequired
 }
 
 /// <summary>Contains the result of one launch attempt, including any fault, per `P1-APP-004`.</summary>

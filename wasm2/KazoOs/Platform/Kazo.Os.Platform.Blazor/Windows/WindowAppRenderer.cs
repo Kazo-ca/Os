@@ -136,7 +136,25 @@ public sealed class WindowAppRenderer : ComponentBase, IDisposable
         builder.CloseComponent();
     }
 
+    // ADR 0238: the app's failure stays in this window. The boundary is the innermost wrapper, so
+    // "Réessayer" creates the app's components again under the same context, menus and gateway.
     private void RenderEntryPoint(RenderTreeBuilder builder)
+    {
+        builder.OpenComponent<AppErrorBoundary>(0);
+        builder.AddComponentParameter(1, nameof(AppErrorBoundary.AppName), AppName);
+        builder.AddComponentParameter(2, nameof(AppErrorBoundary.AppContext), AppContext);
+        builder.AddComponentParameter(3, nameof(AppErrorBoundary.ChildContent), (RenderFragment)RenderAppComponent);
+        builder.CloseComponent();
+    }
+
+    /// <summary>The app's localized manifest name (ADR 0104) when the catalog is available, else its manifest name.</summary>
+    private string AppName =>
+        Services.GetService(typeof(Kazo.Os.Platform.Core.AppCatalog)) is Kazo.Os.Platform.Core.AppCatalog catalog
+        && Services.GetService(typeof(Kazo.Os.Platform.Core.Globalization.SessionLocaleService)) is Kazo.Os.Platform.Core.Globalization.SessionLocaleService locale
+            ? catalog.Localize(Descriptor.Manifest, locale.Culture).Name
+            : Descriptor.Manifest.Name;
+
+    private void RenderAppComponent(RenderTreeBuilder builder)
     {
         // ADR 0129 trial: when the host turned it on for this app, a page-side host shows the content
         // the app renders in its worker; the app component is not created on the page.

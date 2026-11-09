@@ -256,6 +256,10 @@ Cette section liste ce qui est publié dans la branche `main` et en ligne.
   la mémoire manque. ([`resource-accounting.md`](dev/resource-accounting.md),
   [`oom-killer.md`](dev/oom-killer.md))
 - **Fenêtres qui ne répondent plus** détectées, avec l'offre de les fermer.
+- **Une app qui plante reste dans sa fenêtre** : la fenêtre affiche « « App » a
+  rencontré un problème » avec l'erreur, *Réessayer* et *Fermer l'application* ;
+  le reste de l'OS continue.
+  ([ADR 0238](dev/adr/0238-an-app-failure-stays-in-its-window.md))
   ([`process-priority-and-unresponsive-windows.md`](dev/process-priority-and-unresponsive-windows.md))
 - **Page d'erreur détaillée** : l'app et la méthode en cause, l'exception, son
   message, la pile repliable, « Copier les détails » et « Recharger », avec
@@ -274,6 +278,13 @@ Cette section liste ce qui est publié dans la branche `main` et en ligne.
   site, la Release et le serveur) et une pastille « À jour », « Obsolète : … »
   ou « État inconnu (hors ligne) », vérifiée dès le démarrage.
   ([ADR 0236](dev/adr/0236-build-number-and-version-status-at-sign-in.md))
+- **Toujours sur la dernière version** : quand une nouvelle version est
+  déployée, Kazo OS affiche « Mise à jour de Kazo OS » au démarrage et redémarre
+  dessus ; une app ne s'ouvre pas sur une copie obsolète (une boîte « Mise à
+  jour requise » propose le redémarrage) ; une app installée trouve ses fichiers
+  juste après un déploiement, même après Ctrl+F5.
+  ([ADR 0237](dev/adr/0237-activate-the-worker-of-a-newer-page.md),
+  [ADR 0239](dev/adr/0239-start-on-the-latest-version.md))
 - **Nouveautés depuis la dernière visite** : la page Paramètres ▸ Nouveautés liste
   les changements par version avec un badge **Nouveau** ; une notification après la
   connexion signale ce qui n'a pas été vu.

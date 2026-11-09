@@ -41,3 +41,24 @@ function resetWorkerCache(worker) {
         worker.postMessage({ type: 'RESET_CACHE' }, [channel.port2]);
     });
 }
+
+/**
+ * ADR 0239 §1: records that this tab restarts to update to target (for example 3.3.0+812). Answers
+ * false when it already tried that target, so a restart that did not land on it does not loop.
+ * @param {string} target The version and build the restart should land on.
+ * @returns {boolean} true for the first attempt in this tab.
+ */
+export function claimBootUpdate(target) {
+    const key = 'kazoos-boot-update';
+    try {
+        if (sessionStorage.getItem(key) === target) {
+            return false;
+        }
+
+        sessionStorage.setItem(key, target);
+        return true;
+    } catch {
+        // No session storage (private mode limits): never restart, a loop would be worse.
+        return false;
+    }
+}

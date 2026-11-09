@@ -12,6 +12,18 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="Boot.Updating" xml:space="preserve">
+    <value>Mise à jour de Kazo OS</value>
+  </data>
+  <data name="UpdateRequired.Title" xml:space="preserve">
+    <value>Mise à jour requise</value>
+  </data>
+  <data name="UpdateRequired.Text" xml:space="preserve">
+    <value>Une nouvelle version de Kazo OS est disponible. Redémarrez pour ouvrir « {0} » : la copie en cours est obsolète.</value>
+  </data>
+  <data name="UpdateRequired.Later" xml:space="preserve">
+    <value>Plus tard</value>
+  </data>
   <data name="Boot.Validating" xml:space="preserve">
     <value>Validation de l'écosystème local</value>
   </data>

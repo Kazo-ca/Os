@@ -336,8 +336,11 @@ validation en deux étapes :
   `localhost`, l'OS enregistre `service-worker.js?mode=installed-apps`, qui ne
   sert que ces fichiers. Une page chargée avec Ctrl+F5 n'est pas contrôlée : l'OS
   demande au worker actif de la réclamer, ce qu'il fait si elle a sa version ;
-  sinon, les fichiers ne sont pas servis (ligne dans `/var/log/syslog`) et l'OS
-  redemande au lancement suivant. Le ménage du cache, partagé par tous les
+  si elle tourne sur une version plus récente (un déploiement depuis), l'OS
+  active le worker de cette version, et les onglets de l'ancienne redémarrent
+  dessus ([ADR 0237](adr/0237-activate-the-worker-of-a-newer-page.md)) ; sinon
+  (hors ligne, installation trop longue), les fichiers ne sont pas servis (ligne
+  dans `/var/log/syslog`) et l'OS redemande au lancement suivant. Le ménage du cache, partagé par tous les
   onglets, garde aussi les fichiers des apps installées sur le disque par un
   autre onglet ([ADR 0225](adr/0225-serve-installed-app-files-to-every-page.md)).
 - **CSS isolé** ([ADR 0221](adr/0221-pack-all-static-web-assets-of-an-app.md)) :
