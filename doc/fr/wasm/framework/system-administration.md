@@ -53,7 +53,7 @@ Voir [`settings-files.md`](settings-files.md#documents-de-los-kazosettingsopensy
 |---|---|---|
 | `GetPolicyAsync`, `GetOverviewAsync` | politique et état de chaque capacité dangereuse de chaque app | non |
 | `SetPolicyAsync(Prompt / Block)` | écrit `/etc/kazoos/security.config`, journal `capability.policy` | oui (`permissions.policy`) |
-| `SetMachineDecisionAsync(app, capacité, Allow / Deny / Ask)` | écrit `/etc/kazoos/app-permissions.config`, journal `capability.approve` / `capability.revoke` | oui (`permissions.machine-decision`) |
+| `SetMachineDecisionAsync(app, capacité, Allow / Deny / Ask)` | écrit `/etc/kazoos/app-permissions.config`, journal `capability.approve` / `capability.revoke` ; `Allow` retire aussi le refus de l'utilisateur de la session | oui (`permissions.machine-decision`) |
 | `RemoveOwnDenialAsync(app, capacité)` | retire le refus de l'utilisateur, la question revient au lancement | non |
 
 Une app système ou une capacité non déclarée par l'app est refusée **avant**

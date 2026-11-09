@@ -210,6 +210,12 @@ app qui déclare une capacité dangereuse et l'état de chaque capacité
   ligne) une capacité pour la machine ;
 - de retirer son propre refus (sans administrateur).
 
+Un refus de l'utilisateur l'emporte sur un `allow` machine (ADR 0049, section 6).
+Quand l'utilisateur de la session choisit **Autoriser pour la machine** et que
+l'administrateur est vérifié, son propre refus de cette capacité est donc
+retiré du même coup : sans cela, l'état resterait *Refusée par vous* après
+l'approbation. Les refus des autres utilisateurs restent dans leurs fichiers.
+
 Chaque action machine ouvre l'invite d'identifiants de l'ADR 0042 ;
 `AppPermissionAdministration` vérifie l'administrateur, écrit en contexte
 système audité et journalise. Le panneau résout ce service de façon optionnelle :
