@@ -29,6 +29,20 @@ public static partial class BrowserInstalledAppAssets
         return await Prepare((int)timeout.TotalMilliseconds).ConfigureAwait(true);
     }
 
+    /// <summary>
+    /// ADR 0241: once the OS starts, makes the site's service worker the one of this page's release
+    /// when the page was loaded with Ctrl+F5 while an older worker is still active, so the next
+    /// reload does not go back to the older release. Does nothing on a development host, on a first
+    /// visit, or when a worker already controls the page.
+    /// </summary>
+    /// <param name="timeout">How long each step waits for the workers.</param>
+    /// <returns>Whether a worker controls the page afterwards.</returns>
+    public static async Task<bool> AdoptAtBootAsync(TimeSpan timeout)
+    {
+        await ImportAsync().ConfigureAwait(true);
+        return await AdoptAtBoot((int)timeout.TotalMilliseconds).ConfigureAwait(true);
+    }
+
     /// <summary>Lists the cached addresses.</summary>
     public static async Task<IReadOnlyList<string>> ListAsync()
     {
@@ -75,6 +89,9 @@ public static partial class BrowserInstalledAppAssets
 
     [JSImport("prepare", ModuleName)]
     private static partial Task<bool> Prepare(int timeoutMs);
+
+    [JSImport("adoptAtBoot", ModuleName)]
+    private static partial Task<bool> AdoptAtBoot(int timeoutMs);
 
     [JSImport("list", ModuleName)]
     private static partial Task<string> List();

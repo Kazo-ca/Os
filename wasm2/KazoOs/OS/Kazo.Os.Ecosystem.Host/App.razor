@@ -436,6 +436,9 @@
             return;
         }
 
+        // ADR 0241: this page runs the latest version; the site's worker must become its own.
+        AdoptServiceWorkerInBackground();
+
         // ADR 0187 section 5: Settings ▸ Users and the Start menu ask from inside the guest session.
         GuestRequests = Services.GetService<GuestAccountRequests>();
         if (GuestRequests is not null)
@@ -481,6 +484,39 @@
 
         await BrowserHostRestart.RestartAsync(Services);
         return true;
+    }
+
+    /// <summary>
+    /// ADR 0241: a page loaded with Ctrl+F5 is not served by the site's service worker. When that
+    /// worker caches an older version, it would serve that older version again at the next F5 (its
+    /// successor waits for every tab of the site to close). Asks it to take this page, or activates
+    /// the worker of this page's version, in the background: the boot does not wait for it.
+    /// </summary>
+    private void AdoptServiceWorkerInBackground()
+    {
+        if (!OperatingSystem.IsBrowser())
+        {
+            return;
+        }
+
+        _ = AdoptServiceWorkerAsync();
+    }
+
+    [System.Runtime.Versioning.SupportedOSPlatform("browser")]
+    private async Task AdoptServiceWorkerAsync()
+    {
+        try
+        {
+            await Kazo.Os.Infrastructure.Browser.Apps.BrowserInstalledAppAssets.AdoptAtBootAsync(BrowserInstalledAppAssetCache.ServiceWorkerTimeout);
+        }
+        catch (Exception exception)
+        {
+            // The worker is replaced at the next restart to update (ADR 0223) instead; nothing to show.
+            if (Services.GetService<Microsoft.Extensions.Logging.ILogger<App>>() is { } logger)
+            {
+                Microsoft.Extensions.Logging.LoggerExtensions.LogWarning(logger, exception, "boot: the service worker of this version could not take this page");
+            }
+        }
     }
 
     private void OnUpdateRequired(string appName) => InvokeAsync(() =>

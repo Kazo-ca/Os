@@ -79,6 +79,34 @@ export async function prepare(timeoutMs) {
 }
 
 /**
+ * ADR 0241: called once the OS starts. A page loaded with Ctrl+F5 runs the release the server
+ * delivers now, while the site's active worker may still cache an older one (its successor waits
+ * until no tab of the site is left, which a reload never achieves). Without this, the next F5 lands
+ * on the older release again. The page asks the active worker to take it, or activates the worker of
+ * its own release, exactly as for an installed app's files (prepare). Nothing on a development host
+ * (no release cache there) or when a worker already controls the page.
+ * @param {number} timeoutMs How long each step waits for the workers.
+ * @returns {Promise<boolean>} Whether a worker controls the page afterwards.
+ */
+export async function adoptAtBoot(timeoutMs) {
+    if (!('serviceWorker' in navigator) || !('caches' in window) || isDevelopmentHost()) {
+        return false;
+    }
+
+    if (navigator.serviceWorker.controller) {
+        return true;
+    }
+
+    const registration = await navigator.serviceWorker.getRegistration().catch(() => null);
+    if (!registration || !registration.active) {
+        // First visit: index.html registers the worker, which claims the page when it activates.
+        return false;
+    }
+
+    return await prepare(timeoutMs);
+}
+
+/**
  * ADR 0237: finds the worker of this page's release (waiting, installing, or fetched now), and once
  * it is installed asks it to activate. Resolves to its answer; { activating: false, reason } when there
  * is none in time. A worker still installing after timeoutMs is asked when it has installed, so a
