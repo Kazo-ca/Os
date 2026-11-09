@@ -17,3 +17,6 @@ override Kazo.Os.Platform.Core.Lifecycle.AppLaunchRefusal.GetHashCode() -> int
 override Kazo.Os.Platform.Core.Lifecycle.AppLaunchRefusal.ToString() -> string!
 static Kazo.Os.Platform.Core.Lifecycle.AppLaunchRefusal.operator !=(Kazo.Os.Platform.Core.Lifecycle.AppLaunchRefusal? left, Kazo.Os.Platform.Core.Lifecycle.AppLaunchRefusal? right) -> bool
 static Kazo.Os.Platform.Core.Lifecycle.AppLaunchRefusal.operator ==(Kazo.Os.Platform.Core.Lifecycle.AppLaunchRefusal? left, Kazo.Os.Platform.Core.Lifecycle.AppLaunchRefusal? right) -> bool
+Kazo.Os.Platform.Core.Diagnostics.SensitiveTextRedactor
+const Kazo.Os.Platform.Core.Diagnostics.SensitiveTextRedactor.Placeholder = "***redacted***" -> string!
+static Kazo.Os.Platform.Core.Diagnostics.SensitiveTextRedactor.Redact(string? text) -> string!

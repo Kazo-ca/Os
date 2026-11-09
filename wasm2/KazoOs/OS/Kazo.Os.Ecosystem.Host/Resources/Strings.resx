@@ -33,11 +33,47 @@
   <data name="Correlation" xml:space="preserve">
     <value>Correlation: {0}</value>
   </data>
+  <data name="Failure.Module" xml:space="preserve">
+    <value>Module</value>
+  </data>
+  <data name="Failure.Source" xml:space="preserve">
+    <value>Source</value>
+  </data>
+  <data name="Failure.Type" xml:space="preserve">
+    <value>Exception</value>
+  </data>
+  <data name="Failure.Message" xml:space="preserve">
+    <value>Message</value>
+  </data>
+  <data name="Failure.Time" xml:space="preserve">
+    <value>Time</value>
+  </data>
+  <data name="Failure.Correlation" xml:space="preserve">
+    <value>Correlation</value>
+  </data>
+  <data name="Failure.TechnicalDetails" xml:space="preserve">
+    <value>Technical details</value>
+  </data>
+  <data name="Failure.Copy" xml:space="preserve">
+    <value>Copy details</value>
+  </data>
+  <data name="Failure.Reload" xml:space="preserve">
+    <value>Reload</value>
+  </data>
+  <data name="Failure.Copied" xml:space="preserve">
+    <value>Details copied to the clipboard.</value>
+  </data>
+  <data name="Failure.CopyFailed" xml:space="preserve">
+    <value>The browser refused the copy: select the technical details by hand.</value>
+  </data>
+  <data name="Failure.Hint" xml:space="preserve">
+    <value>To report it, paste the copied details in an issue on github.com/Kazo-ca/Os. Read them first: they can name your own files.</value>
+  </data>
   <data name="Fatal.BoundaryTitle" xml:space="preserve">
     <value>Kazo OS encountered an error</value>
   </data>
   <data name="Fatal.Recorded" xml:space="preserve">
-    <value>The failure was recorded without exposing sensitive details.</value>
+    <value>The failure was recorded in /var/log/syslog. Passwords and tokens are masked.</value>
   </data>
   <data name="Fatal.Title" xml:space="preserve">
     <value>Kazo OS could not start</value>

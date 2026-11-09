@@ -123,24 +123,14 @@ button:disabled {
 
 .fatal-surface {
     border-left-color: var(--kos-error, #ff9a91);
+    /* ADR 0240: wide enough for the failure summary and its stack trace. */
+    width: min(100% - 2rem, 46rem);
+    padding-block: 2rem;
 }
 
 code {
     overflow-wrap: anywhere;
     color: var(--kos-text-secondary, #a8bac4);
-}
-
-.fatal-details {
-    max-height: 20rem;
-    overflow-y: auto;
-    padding: 0.75rem;
-    border: 1px solid var(--kos-border, #34444c);
-    border-radius: var(--kos-radius-sm, 0.25rem);
-    background: var(--kos-bg-surface, #151c20);
-    color: var(--kos-error, #ff9a91);
-    font-size: 0.8rem;
-    white-space: pre-wrap;
-    word-break: break-word;
 }
 
 /* The sign-in screens' « Update ready » (ADR 0197 §5: a session shows a notification instead),

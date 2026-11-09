@@ -255,6 +255,9 @@ This section lists what is released in the `main` branch and online.
   OS keeps running.
   ([ADR 0238](dev/adr/0238-an-app-failure-stays-in-its-window.md))
   ([`process-priority-and-unresponsive-windows.md`](dev/process-priority-and-unresponsive-windows.md))
+- **Detailed error page**: the app and method at fault, the exception, its
+  message, the folded stack, "Copy details" and "Reload", with passwords and
+  tokens masked. ([ADR 0240](dev/adr/0240-detailed-error-page.md))
 - **Virtual `/proc` and `/dev`**, logs in `/var/log`.
   ([`virtual-proc-and-dev.md`](dev/virtual-proc-and-dev.md),
   [`logging.md`](dev/logging.md))

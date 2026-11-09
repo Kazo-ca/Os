@@ -261,6 +261,10 @@ Cette section liste ce qui est publié dans la branche `main` et en ligne.
   le reste de l'OS continue.
   ([ADR 0238](dev/adr/0238-an-app-failure-stays-in-its-window.md))
   ([`process-priority-and-unresponsive-windows.md`](dev/process-priority-and-unresponsive-windows.md))
+- **Page d'erreur détaillée** : l'app et la méthode en cause, l'exception, son
+  message, la pile repliable, « Copier les détails » et « Recharger », avec
+  mots de passe et jetons masqués.
+  ([ADR 0240](dev/adr/0240-detailed-error-page.md))
 - **`/proc` et `/dev`** virtuels, journaux dans `/var/log`.
   ([`virtual-proc-and-dev.md`](dev/virtual-proc-and-dev.md),
   [`logging.md`](dev/logging.md))

@@ -1,3 +1,40 @@
 #nullable enable
 Kazo.Os.Ecosystem.ProjectInformation.Dispose() -> void
 override Kazo.Os.Ecosystem.ProjectInformation.OnInitialized() -> void
+Kazo.Os.Ecosystem.HostErrorBoundary.Failure.get -> Kazo.Os.Ecosystem.HostFailureDetails?
+Kazo.Os.Ecosystem.HostExceptionReporter.Describe(System.Exception! exception, string! phase) -> Kazo.Os.Ecosystem.HostFailureDetails!
+Kazo.Os.Ecosystem.HostExceptionReporter.ReportAsync(Kazo.Os.Ecosystem.HostFailureDetails! failure, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Kazo.Os.Ecosystem.HostFailureDetails
+Kazo.Os.Ecosystem.HostFailureDetails.<Clone>$() -> Kazo.Os.Ecosystem.HostFailureDetails!
+Kazo.Os.Ecosystem.HostFailureDetails.CorrelationId.get -> System.Guid
+Kazo.Os.Ecosystem.HostFailureDetails.CorrelationId.init -> void
+Kazo.Os.Ecosystem.HostFailureDetails.Deconstruct(out System.Guid CorrelationId, out System.DateTimeOffset OccurredAtUtc, out string! Phase, out string! ExceptionType, out string! Message, out string? SourceModule, out string? SourceMethod, out string! Details) -> void
+Kazo.Os.Ecosystem.HostFailureDetails.Details.get -> string!
+Kazo.Os.Ecosystem.HostFailureDetails.Details.init -> void
+Kazo.Os.Ecosystem.HostFailureDetails.Equals(Kazo.Os.Ecosystem.HostFailureDetails? other) -> bool
+Kazo.Os.Ecosystem.HostFailureDetails.ExceptionType.get -> string!
+Kazo.Os.Ecosystem.HostFailureDetails.ExceptionType.init -> void
+Kazo.Os.Ecosystem.HostFailureDetails.HostFailureDetails(System.Guid CorrelationId, System.DateTimeOffset OccurredAtUtc, string! Phase, string! ExceptionType, string! Message, string? SourceModule, string? SourceMethod, string! Details) -> void
+Kazo.Os.Ecosystem.HostFailureDetails.Message.get -> string!
+Kazo.Os.Ecosystem.HostFailureDetails.Message.init -> void
+Kazo.Os.Ecosystem.HostFailureDetails.OccurredAtUtc.get -> System.DateTimeOffset
+Kazo.Os.Ecosystem.HostFailureDetails.OccurredAtUtc.init -> void
+Kazo.Os.Ecosystem.HostFailureDetails.Phase.get -> string!
+Kazo.Os.Ecosystem.HostFailureDetails.Phase.init -> void
+Kazo.Os.Ecosystem.HostFailureDetails.SourceMethod.get -> string?
+Kazo.Os.Ecosystem.HostFailureDetails.SourceMethod.init -> void
+Kazo.Os.Ecosystem.HostFailureDetails.SourceModule.get -> string?
+Kazo.Os.Ecosystem.HostFailureDetails.SourceModule.init -> void
+Kazo.Os.Ecosystem.HostFailureDetails.ToReportText(string? osVersion) -> string!
+Kazo.Os.Ecosystem.HostFailurePanel
+Kazo.Os.Ecosystem.HostFailurePanel.DisposeAsync() -> System.Threading.Tasks.ValueTask
+Kazo.Os.Ecosystem.HostFailurePanel.Failure.get -> Kazo.Os.Ecosystem.HostFailureDetails?
+Kazo.Os.Ecosystem.HostFailurePanel.Failure.set -> void
+Kazo.Os.Ecosystem.HostFailurePanel.HostFailurePanel() -> void
+override Kazo.Os.Ecosystem.HostFailureDetails.Equals(object? obj) -> bool
+override Kazo.Os.Ecosystem.HostFailureDetails.GetHashCode() -> int
+override Kazo.Os.Ecosystem.HostFailureDetails.ToString() -> string!
+static Kazo.Os.Ecosystem.HostFailureDetails.Create(System.Exception! exception, string! phase, System.DateTimeOffset occurredAtUtc, System.Collections.Generic.IEnumerable<string!>? loadedAssemblyNames = null) -> Kazo.Os.Ecosystem.HostFailureDetails!
+static Kazo.Os.Ecosystem.HostFailureDetails.operator !=(Kazo.Os.Ecosystem.HostFailureDetails? left, Kazo.Os.Ecosystem.HostFailureDetails? right) -> bool
+static Kazo.Os.Ecosystem.HostFailureDetails.operator ==(Kazo.Os.Ecosystem.HostFailureDetails? left, Kazo.Os.Ecosystem.HostFailureDetails? right) -> bool
+~override Kazo.Os.Ecosystem.HostFailurePanel.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void

@@ -236,5 +236,6 @@ next free number is given in
 | [`0237-activate-the-worker-of-a-newer-page.md`](0237-activate-the-worker-of-a-newer-page.md) | ADR 0237: when a page runs a newer release than the active service worker, the OS activates the worker of its release to serve the installed apps' files; the tabs of the older release restart onto it. |
 | [`0238-an-app-failure-stays-in-its-window.md`](0238-an-app-failure-stays-in-its-window.md) | ADR 0238: an app's failure stays in its window (`AppErrorBoundary`, ""App" ran into a problem", *Try again*, *Close the app*) instead of stopping the whole OS. |
 | [`0239-start-on-the-latest-version.md`](0239-start-on-the-latest-version.md) | ADR 0239: the OS starts on the latest version ("Updating Kazo OS" then a restart) and an app does not open on an outdated copy (`IAppLaunchGate`, "Update required" dialog). |
+| [`0240-detailed-error-page.md`](0240-detailed-error-page.md) | ADR 0240: detailed error page (module, source, exception, message, time, correlation finally filled, folded stack, "Copy details", "Reload") with passwords and tokens masked by `SensitiveTextRedactor`, on screen and in `/var/log/syslog`. |
 
 Parent folder index: [`../README.md`](../README.md).

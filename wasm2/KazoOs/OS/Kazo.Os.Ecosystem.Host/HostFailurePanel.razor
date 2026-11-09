@@ -1,0 +1,43 @@
+@inject IStringLocalizer<Strings> L
+
+@* ADR 0240: what an unhandled failure shows, masked by SensitiveTextRedactor. *@
+<div class="host-failure">
+    <p>@L["Fatal.Recorded"]</p>
+    @if (Failure is null)
+    {
+        <code>@L["Correlation", string.Empty]</code>
+    }
+    else
+    {
+        <dl class="failure-summary">
+            @if (Failure.SourceModule is not null)
+            {
+                <dt>@L["Failure.Module"]</dt>
+                <dd><code>@Failure.SourceModule</code></dd>
+            }
+            @if (Failure.SourceMethod is not null)
+            {
+                <dt>@L["Failure.Source"]</dt>
+                <dd><code>@Failure.SourceMethod</code></dd>
+            }
+            <dt>@L["Failure.Type"]</dt>
+            <dd><code>@Failure.ExceptionType</code></dd>
+            <dt>@L["Failure.Message"]</dt>
+            <dd class="failure-message">@Failure.Message</dd>
+            <dt>@L["Failure.Time"]</dt>
+            <dd><time datetime="@Failure.OccurredAtUtc.UtcDateTime.ToString("O")">@Failure.OccurredAtUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")</time></dd>
+            <dt>@L["Failure.Correlation"]</dt>
+            <dd><code class="failure-correlation">@Failure.CorrelationId.ToString("D")</code></dd>
+        </dl>
+        <details class="failure-details">
+            <summary>@L["Failure.TechnicalDetails"]</summary>
+            <pre>@Failure.Details</pre>
+        </details>
+        <div class="failure-actions">
+            <button type="button" class="failure-copy" @onclick="CopyAsync">@L["Failure.Copy"]</button>
+            <button type="button" class="failure-reload" @onclick="Reload">@L["Failure.Reload"]</button>
+            <span class="failure-copy-status" role="status" aria-live="polite">@CopyStatus</span>
+        </div>
+        <p class="failure-hint">@L["Failure.Hint"]</p>
+    }
+</div>
