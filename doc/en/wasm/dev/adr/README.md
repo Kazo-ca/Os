@@ -247,7 +247,7 @@ next free number is given in
 | `0248-store-and-kazopkg-dependency-resolution.md` (reserved, PR in progress to `feature/base`) | ADR 0248: Dependency resolution |
 | `0249-settings-features-section.md` (reserved, PR in progress to `feature/base`) | ADR 0249: “Features” section of Settings |
 | `0250-storage-persistence-and-eviction.md` (reserved, PR in progress to `feature/base`) | ADR 0250: Storage persistence and eviction |
-| `0251-shell-route-to-associations-and-binfmt.md` (reserved, PR in progress to `feature/base`) | ADR 0251: Shell route to associations and binfmt |
+| [`0251-shell-route-to-associations-and-binfmt.md`](0251-shell-route-to-associations-and-binfmt.md) | ADR 0251: shell route to the file association and header binfmt: a file launched by its path goes to a Feature's binfmt (header) or to the app associated with its extension declared executable, before the execute bit and the script reading; child of the shell, new instance, shell streams; Terminal app exception |
 | `0252-terminal-shows-a-guest-program.md` (reserved, PR in progress to `feature/base`) | ADR 0252: The Terminal shows a guest program |
 | `0253-marked-sender-on-launch-and-open.md` (reserved, PR in progress to `feature/base`) | ADR 0253: Marked sender |
 | `0254-per-user-events.md` (reserved, PR in progress to `feature/base`) | ADR 0254: Per-user events |

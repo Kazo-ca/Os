@@ -247,7 +247,7 @@ prochain numéro libre est indiqué dans
 | `0248-store-and-kazopkg-dependency-resolution.md` (réservé, PR en cours vers `feature/base`) | ADR 0248 : Résolution des dépendances |
 | `0249-settings-features-section.md` (réservé, PR en cours vers `feature/base`) | ADR 0249 : Section « Fonctionnalités » des Paramètres |
 | `0250-storage-persistence-and-eviction.md` (réservé, PR en cours vers `feature/base`) | ADR 0250 : Persistance et éviction du stockage |
-| `0251-shell-route-to-associations-and-binfmt.md` (réservé, PR en cours vers `feature/base`) | ADR 0251 : Route du shell vers l'association et binfmt |
+| [`0251-shell-route-to-associations-and-binfmt.md`](0251-shell-route-to-associations-and-binfmt.md) | ADR 0251 : route du shell vers l'association et binfmt par en-tête : un fichier lancé par son chemin va au binfmt d'une Feature (en-tête) ou à l'app associée à son extension déclarée exécutable, avant le bit d'exécution et la lecture comme script ; enfant du shell, nouvelle instance, flux du shell ; exception de l'app Terminal |
 | `0252-terminal-shows-a-guest-program.md` (réservé, PR en cours vers `feature/base`) | ADR 0252 : Le Terminal affiche un programme invité |
 | `0253-marked-sender-on-launch-and-open.md` (réservé, PR en cours vers `feature/base`) | ADR 0253 : Expéditeur marqué |
 | `0254-per-user-events.md` (réservé, PR en cours vers `feature/base`) | ADR 0254 : Événements par usager |
