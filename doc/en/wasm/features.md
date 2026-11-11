@@ -448,7 +448,7 @@ one row per ADR).
 | The Terminal shows a guest program | A Feature's console program (Linux shell, text-mode DOS program) shows in the Kazo Terminal: per-cell colors, function keys, Ctrl+C to the program. | [0252](dev/adr/0252-terminal-shows-a-guest-program.md) | — |
 | Marked sender | An app launched or a file opened by another app knows the sender, marked by the OS, for its journal. | [0253](dev/adr/0253-marked-sender-on-launch-and-open.md) | — |
 | Per-user events | A per-user events journal (permission granted, update, conflict resolved), visible by the user and the administrators. | [0254](dev/adr/0254-per-user-events.md) | — |
-| Relay: identities and decisions of a Feature | The server relay accepts from a Feature an identity per flow, a decision and limits, and logs per identity. | 0255 reserved (PR in progress) | — |
+| Relay: identities and decisions of a Feature | The server relay accepts from a Feature an identity per flow, a decision and limits, and logs per identity. | [0255](dev/adr/0255-relay-identities-and-decisions-of-a-feature.md) | — |
 
 ### Optional ported applications
 

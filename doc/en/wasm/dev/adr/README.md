@@ -251,6 +251,6 @@ next free number is given in
 | [`0252-terminal-shows-a-guest-program.md`](0252-terminal-shows-a-guest-program.md) | ADR 0252: the Terminal shows a guest program: `IFullScreenTerminalSession` gains per-cell color attributes, the F1 to F12 keys, the Esc+letter / Esc+digit chord translated to Alt+letter / F1-F12, and Ctrl+C passed to the program (kill by Ctrl+Pause or a button) |
 | [`0253-marked-sender-on-launch-and-open.md`](0253-marked-sender-on-launch-and-open.md) | ADR 0253: OS-marked sender on `LaunchAsync` and file open: the target app receives the identity of the app and user who asked, for the journal only, never as a permission ceiling |
 | [`0254-per-user-events.md`](0254-per-user-events.md) | ADR 0254: per-user events: journal `/var/log/users/<id>/events.log` written by apps through `KazoEvents`, attached to a subject (VM, program), readable by the user and the administrators; "My events" tab of the Error Log Viewer |
-| `0255-relay-identities-and-decisions-of-a-feature.md` (reserved, PR in progress to `feature/base`) | ADR 0255: Relay: identities and decisions of a Feature |
+| [`0255-relay-identities-and-decisions-of-a-feature.md`](0255-relay-identities-and-decisions-of-a-feature.md) | ADR 0255: relay: a Feature with `network.real.access` gives each flow an opaque identity, a decision and per-identity limits; the server enforces and logs per identity (`POST /api/proxy/grants` extended) |
 
 Parent folder index: [`../README.md`](../README.md).
