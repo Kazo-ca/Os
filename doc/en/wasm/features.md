@@ -273,9 +273,12 @@ This section lists what is released in the `main` branch and online.
 - **Always on the latest version**: when a newer version is deployed, Kazo OS
   shows "Updating Kazo OS" at start and restarts onto it; an app is not opened
   on an outdated copy (an "Update required" dialog offers the restart); an
-  installed app finds its files right after a deployment, even after Ctrl+F5.
+  installed app finds its files right after a deployment, even after Ctrl+F5;
+  a Ctrl+F5 also replaces the service worker of an older version, and the next
+  F5 stays on the latest one.
   ([ADR 0237](dev/adr/0237-activate-the-worker-of-a-newer-page.md),
-  [ADR 0239](dev/adr/0239-start-on-the-latest-version.md))
+  [ADR 0239](dev/adr/0239-start-on-the-latest-version.md),
+  [ADR 0241](dev/adr/0241-replace-an-older-worker-at-boot.md))
 - **What's new since your last visit**: the Settings ▸ What's new page lists the
   changes by version with a **New** badge; a notification after sign-in points out
   what has not been seen. The same list writes the

@@ -1,1 +1,2 @@
 #nullable enable
+static Kazo.Os.Infrastructure.Browser.Apps.BrowserInstalledAppAssets.AdoptAtBootAsync(System.TimeSpan timeout) -> System.Threading.Tasks.Task<bool>!

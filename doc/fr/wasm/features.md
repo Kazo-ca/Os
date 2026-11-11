@@ -282,9 +282,12 @@ Cette section liste ce qui est publié dans la branche `main` et en ligne.
   déployée, Kazo OS affiche « Mise à jour de Kazo OS » au démarrage et redémarre
   dessus ; une app ne s'ouvre pas sur une copie obsolète (une boîte « Mise à
   jour requise » propose le redémarrage) ; une app installée trouve ses fichiers
-  juste après un déploiement, même après Ctrl+F5.
+  juste après un déploiement, même après Ctrl+F5 ; un Ctrl+F5 remplace aussi
+  le service worker d'une ancienne version, et le F5 suivant reste sur la
+  dernière.
   ([ADR 0237](dev/adr/0237-activate-the-worker-of-a-newer-page.md),
-  [ADR 0239](dev/adr/0239-start-on-the-latest-version.md))
+  [ADR 0239](dev/adr/0239-start-on-the-latest-version.md),
+  [ADR 0241](dev/adr/0241-replace-an-older-worker-at-boot.md))
 - **Nouveautés depuis la dernière visite** : la page Paramètres ▸ Nouveautés liste
   les changements par version avec un badge **Nouveau** ; une notification après la
   connexion signale ce qui n'a pas été vu.
