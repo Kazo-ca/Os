@@ -6,12 +6,13 @@
 
 Proposed on 2026-11-11, for the Os-x86 feature
 ([Kazo-ca/Os-x86](https://github.com/Kazo-ca/Os-x86)), lot 1 of the
-`feature/base` series. The recommendation of each question asked to Benoit
-is applied while waiting for his answer. Source decisions: D32 (series 3),
-143 ("the same rules as Kazo: administrator approval, refusal by the user,
-never a silent grant", 2026-11-11), 176 A (names and levels of the Os-x86
-permissions, 2026-11-11) and 160 A ("manage the subsystems" disappears in
-favor of the role of ADR 0247).
+`feature/base` series. The questions asked to Benoit got their answers on
+2026-11-11 (series 15 of the Os-x86 design); they are recorded at the end of
+this ADR and the decision applies them. Source decisions: D32 (series 3), 143
+("the same rules as Kazo: administrator approval, refusal by the user, never a
+silent grant", 2026-11-11), 176 A (names and levels of the Os-x86 permissions,
+2026-11-11) and 160 A ("manage the subsystems" disappears in favor of the role
+of ADR 0247).
 
 - **Completes:** [ADR 0049](0049-dangerous-capabilities-and-admin-approval.md)
   (catalog, machine approval, per-user refusal) and
@@ -201,4 +202,4 @@ favor of the role of ADR 0247).
    - C) The secure window for every dangerous permission, Feature or not
      (changes ADR 0049 §5 for every command).
 
-Applied while waiting: 1 A, 2 A, 3 A.
+Maintainer's answers (2026-11-11): 1 A, 2 A, 3 A.
