@@ -98,7 +98,8 @@ public sealed class AppPermissionAdministration
     /// <summary>
     /// Records a machine decision for one capability of one non-system app, after verifying an
     /// administrator: <c>allow</c>, <c>deny</c>, or <see langword="null"/> to remove the line (the
-    /// capability becomes pending again).
+    /// capability becomes pending again). An <c>allow</c> also withdraws the session user's own
+    /// refusal of that capability, since a user refusal beats a machine allow.
     /// </summary>
     /// <param name="appId">Non-system app identifier.</param>
     /// <param name="capability">Dangerous capability it declares.</param>
@@ -286,13 +287,23 @@ public sealed class AppPermissionAdministration
     }
 
     /// <summary>
-    /// For <c>network.real.access</c> (ADR 0233 §3, §4): an <c>allow</c> approves the ports the
+    /// After a machine decision is written: an <c>allow</c> withdraws the session user's own
+    /// refusal of that capability. For <c>network.real.access</c> (ADR 0233 §3, §4): an <c>allow</c> approves the ports the
     /// manifest declares now, any other decision removes them, and the server is told without
     /// waiting for it.
     /// </summary>
     private async Task AfterMachineDecisionAsync(
         string appId, string capability, AppPermissionDecision? decision, AuthenticatedPrincipal requestedBy, CancellationToken cancellationToken)
     {
+        // A user deny beats a machine allow (ADR 0049 section 6). The session user who asks to
+        // allow the capability for the machine has changed their mind: their own refusal goes,
+        // otherwise Settings keeps showing "Refused by you" after the approval. Other users'
+        // refusals stay in their own files.
+        if (decision == AppPermissionDecision.Allow)
+        {
+            await _permissions.RemoveUserDenialAsync(appId, capability, cancellationToken).ConfigureAwait(false);
+        }
+
         if (!string.Equals(capability, AppCapabilities.NetworkRealAccess, StringComparison.Ordinal))
         {
             return;

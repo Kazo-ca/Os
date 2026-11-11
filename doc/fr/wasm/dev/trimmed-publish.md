@@ -32,7 +32,8 @@ Ecosystem.csproj            PublishTrimmed=true, TrimMode=partial
               chaque Kazo.Os.*.dll publiée ──► TrimmerRootAssembly
                                     │
                               ILLink (publish)
-            framework et bibliothèques élaguables : élagués
+            System.Private.CoreLib : entière (ADR 0242)
+            reste du framework et bibliothèques élaguables : élagués
             assemblies Kazo OS et apps : entières
             paquets non élaguables (MudBlazor…) : entiers (partial)
 ```
@@ -52,6 +53,16 @@ Ecosystem.csproj            PublishTrimmed=true, TrimMode=partial
   assembly que nomme un manifeste (point d'entrée, entrées par plateforme,
   composants, `web.blazor`). Il couvre les apps installées en paquets, même
   quand leur nom ne commence pas par `Kazo.Os.`.
+- **Apps installées après la publication (ADR 0242).** Une app du Store ou de
+  GitHub n'est pas une racine : elle trouve le framework que l'OS a gardé.
+  `System.Private.CoreLib` reste donc entière (`TrimmerRootAssembly` de
+  `_KazoOsRootKazoOsAssemblies`, +0,6 Mio en Brotli ; `KazoOsKeepCoreLib=false`
+  l'élague comme avant). Pour le reste du framework, `kazopkg` compare la
+  signature complète de chaque méthode référencée par le paquet au runtime
+  chargé, et refuse le paquet avec la surcharge manquante
+  (`apps.package.missing-api`). Avant l'ADR 0242, seul le nombre de paramètres
+  était comparé : IRC 1.0.0 passait la vérification et s'arrêtait sur
+  `Int32.Parse(ReadOnlySpan<char>, IFormatProvider)`.
 - **Suppressions d'avertissements.** Les attributs `UnconditionalSuppressMessage`
   restants (découverte des apps, workers, composants intégrables, routeur des
   sites Blazor, liaison de modèle MVC) citent la racine qui les rend sûrs.
@@ -76,7 +87,7 @@ alerte `IL…`, sert la publication sur `127.0.0.1` et `127.0.0.2`, puis lance
 | `Trimmed_publish_boots_offline_after_the_first_load` | sur `127.0.0.2` (le service worker n'est pas enregistré sur `127.0.0.1`) : mise en cache de la version, rechargement sans réseau, connexion, lancement d'une app jamais chargée |
 | `The_calculator_rendered_in_a_worker_works_like_on_the_page` | essai de l'ADR 0133, réglage activé par une réécriture d'`appsettings.json` : la Calculatrice dans un worker calcule à la souris et au clavier, garde son CSS, `Tab`, axe, `Alt+F7`/`Alt+Q`, worker dédié libéré à la fermeture ([`remote-window-rendering.md`](remote-window-rendering.md)) |
 | `Measures_the_calculator_on_the_page_and_in_a_worker` | mesures de l'ADR 0133 (ouverture, latence, mémoire, lots), écrites dans `remote-window-measurements.json` du dossier des artefacts |
-| `An_installed_app_finds_its_wwwroot_files_and_its_worker_scripts` | ADR 0206 : le paquet de test `Tests/fixtures/installed-app` (emballé par le script avec `KazoOsPack`, servi par Playwright à la place de `raw.githubusercontent.com`) est installé par `sudo kazopkg install`, l'OS redémarre, l'app importe son module, lance son Web Worker (`importScripts` relatif) et affiche son image ; sur `127.0.0.1`, par le service worker du mode `installed-apps` |
+| `An_installed_app_finds_its_wwwroot_files_and_its_worker_scripts` | ADR 0206 : le paquet de test `Tests/fixtures/installed-app` (emballé par le script avec `KazoOsPack`, servi par Playwright à la place de `raw.githubusercontent.com`) est installé par `sudo kazopkg install`, l'OS redémarre, l'app importe son module, lance son Web Worker (`importScripts` relatif), affiche son image et appelle des surcharges de CoreLib que l'OS n'utilise pas lui-même (ADR 0242) ; sur `127.0.0.1`, par le service worker du mode `installed-apps` |
 | `The_published_service_worker_serves_installed_app_files_to_a_worker` | ADR 0206 sur `127.0.0.2` : le service worker publié sert les fichiers du cache `kazoos-installed-apps` à un Web Worker sous isolation cross-origin |
 | `Trimmed_publish_shows_a_new_notification_as_a_bubble_above_the_taskbar` | ADR 0197 : la notification des nouveautés postée à la connexion d'un nouveau compte apparaît en bulle au-dessus de la barre (source « Kazo OS », titre, bouton « Voir »), part seule après environ 6 s et reste dans le panneau de l'horloge ([`notification-toasts.md`](notification-toasts.md)) |
 | `Trimmed_publish_shows_unread_notifications_next_to_the_clock` | ADR 0196 : un nouveau compte reçoit la notification des nouveautés (`whats-new.json` servi) ; point et infobulle de l'horloge, aucun point sur Applications, panneau ouvert = lu, **Voir** ouvre Paramètres ▸ Nouveautés et ferme la notification ; captures `trimmed-clock-dot.png` et `trimmed-whats-new-page.png` |
@@ -110,7 +121,8 @@ Avant de comparer, supprimer `OS/Kazo.Os.Ecosystem/obj/Release/net10.0/linked`,
 - `TrimMode=partial` (ADR 0106 §1) : les paquets qui ne se déclarent pas
   élaguables restent entiers.
 - Assemblies Kazo OS et apps gardées entières ; seul le framework est élagué
-  (ADR 0113 §1-2).
+  (ADR 0113 §1-2), sauf `System.Private.CoreLib`, gardée entière pour les apps
+  installées (ADR 0242).
 - Pas de table générée pour les pages `[Route]` d'un site Blazor : l'assembly du
   site est entière (ADR 0113 §3).
 - Test hors ligne sur `127.0.0.2` plutôt que `[::1]` (ADR 0113 §4).
@@ -125,3 +137,4 @@ Avant de comparer, supprimer `OS/Kazo.Os.Ecosystem/obj/Release/net10.0/linked`,
 - [x] `build/publish-trimmed.sh` et `Tests/Kazo.Os.TrimmedPublish.E2E.Tests`.
 - [x] Tailles avant et après mesurées (ici et dans `building-and-testing.md`).
 - [x] ADR 0113.
+- [x] ADR 0242 : CoreLib entière, vérification exacte des signatures, paquet de test qui appelle des surcharges de CoreLib.

@@ -1,0 +1,18 @@
+{
+  "id": "41a0cc4f-a5c5-490b-9f5a-9e0abecd2824",
+  "category": "fixed",
+  "audience": [
+    "user"
+  ],
+  "title": {
+    "en": "Allowing a permission you had refused now takes effect",
+    "fr": "Autoriser une permission que vous aviez refusée fonctionne"
+  },
+  "description": {
+    "en": "In Settings > Permissions, Allow for the machine on a capability marked Refused by you also withdraws your refusal, so the capability becomes allowed instead of staying refused.",
+    "fr": "Dans Paramètres > Permissions, Autoriser pour la machine sur une capacité marquée Refusée par vous retire aussi votre refus : la capacité devient autorisée au lieu de rester refusée."
+  },
+  "links": [
+    "doc/en/wasm/dev/dangerous-capability-approval.md"
+  ]
+}

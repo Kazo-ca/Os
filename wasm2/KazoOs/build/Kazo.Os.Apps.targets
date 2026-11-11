@@ -560,6 +560,15 @@
     <ItemGroup>
       <TrimmerRootAssembly Include="@(ManagedAssemblyToLink->'%(Filename)')"
                            Condition="$([System.String]::Copy('%(Filename)').StartsWith('Kazo.Os.', StringComparison.Ordinal))" />
+      <!--
+        ADR 0242: an app installed after the publish (Store, GitHub) calls the framework the OS kept.
+        System.Private.CoreLib (int, string, spans, collections of the core) stays whole, for about
+        0.6 MiB Brotli: trimming had removed overloads apps use (Int32.Parse of a span,
+        String.Compare with offsets, String.Split of strings). The other framework assemblies stay
+        trimmed; the install check (ADR 0182 §5.3, exact signatures since ADR 0242) refuses an app
+        that needs a member they lost. KazoOsKeepCoreLib=false trims CoreLib as before.
+      -->
+      <TrimmerRootAssembly Include="System.Private.CoreLib" Condition="'$(KazoOsKeepCoreLib)' != 'false'" />
     </ItemGroup>
   </Target>
 

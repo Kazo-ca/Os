@@ -428,6 +428,55 @@ public sealed class DangerousCapabilityApprovalTests
         Assert.True(decisions.IsDeniedByUser(ScannerId, AppCapabilities.ProcessManage));
     }
 
+    [Fact]
+    public async Task Allowing_for_the_machine_withdraws_the_requesting_users_own_denial()
+    {
+        // A user denial beats a machine allow (ADR 0049 section 6). Before this fix, a user who
+        // had refused at launch and then chose "Allow for the machine" in Settings kept seeing
+        // "Refused by you": the machine line was written but their own deny stayed.
+        GateHarness harness = await GateHarness.CreateAsync();
+        harness.Prompt.Script = (_, _) => Task.FromResult(DangerousCapabilityApprovalOutcome.Refused);
+        await harness.Gate.EnsureDecidedAsync(harness.Scanner, harness.Principal, harness.Prompt);
+        AppPermissionAdministration administration = new(
+            harness.Catalog, harness.Store, harness.Files.Settings, harness.Verifier, harness.Audit);
+
+        AppPermissionAdministrationResult allowed = await administration.SetMachineDecisionAsync(
+            ScannerId, AppCapabilities.NetworkRealAccess, AppPermissionDecision.Allow, "admin", AdminPassword, harness.Principal);
+
+        Assert.True(allowed.Succeeded);
+        Assert.Equal(DangerousCapabilityState.Allowed, await StateAsync(administration, AppCapabilities.NetworkRealAccess));
+        // Only the capability that was allowed loses its denial.
+        Assert.Equal(DangerousCapabilityState.DeniedByUser, await StateAsync(administration, AppCapabilities.ProcessManage));
+
+        // Same rule on the path used once the OS authentication agent already verified the administrator.
+        await administration.ApplyMachineDecisionAsync(
+            ScannerId, AppCapabilities.ProcessManage, AppPermissionDecision.Allow, "root", harness.Principal);
+
+        Assert.Equal(DangerousCapabilityState.Allowed, await StateAsync(administration, AppCapabilities.ProcessManage));
+    }
+
+    [Fact]
+    public async Task A_failed_machine_allow_keeps_the_users_own_denial()
+    {
+        GateHarness harness = await GateHarness.CreateAsync();
+        harness.Prompt.Script = (_, _) => Task.FromResult(DangerousCapabilityApprovalOutcome.Refused);
+        await harness.Gate.EnsureDecidedAsync(harness.Scanner, harness.Principal, harness.Prompt);
+        AppPermissionAdministration administration = new(
+            harness.Catalog, harness.Store, harness.Files.Settings, harness.Verifier, harness.Audit);
+
+        AppPermissionAdministrationResult allowed = await administration.SetMachineDecisionAsync(
+            ScannerId, AppCapabilities.NetworkRealAccess, AppPermissionDecision.Allow, "admin", "wrong password", harness.Principal);
+
+        Assert.False(allowed.Succeeded);
+        Assert.Equal(DangerousCapabilityState.DeniedByUser, await StateAsync(administration, AppCapabilities.NetworkRealAccess));
+    }
+
+    private static async Task<DangerousCapabilityState> StateAsync(AppPermissionAdministration administration, string capability)
+    {
+        AppPermissionOverview scanner = Assert.Single(await administration.GetOverviewAsync(), app => !app.IsSystemApp);
+        return scanner.Capabilities.Single(status => status.Capability == capability).State;
+    }
+
     private static AppManifest Manifest(string id, params string[] capabilities) => new()
     {
         Id = id,

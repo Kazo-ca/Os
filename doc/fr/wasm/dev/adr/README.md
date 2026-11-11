@@ -238,5 +238,6 @@ prochain numéro libre est indiqué dans
 | [`0239-start-on-the-latest-version.md`](0239-start-on-the-latest-version.md) | ADR 0239 : l'OS démarre sur la dernière version (« Mise à jour de Kazo OS » puis redémarrage) et une app ne s'ouvre pas sur une copie obsolète (`IAppLaunchGate`, boîte « Mise à jour requise »). |
 | [`0240-detailed-error-page.md`](0240-detailed-error-page.md) | ADR 0240 : page d'erreur détaillée (module, source, exception, message, heure, corrélation enfin remplie, pile repliable, « Copier les détails », « Recharger ») avec mots de passe et jetons masqués par `SensitiveTextRedactor`, à l'écran et dans `/var/log/syslog`. |
 | [`0241-replace-an-older-worker-at-boot.md`](0241-replace-an-older-worker-at-boot.md) | ADR 0241 : au démarrage, une page chargée avec Ctrl+F5 remplace un service worker d'une version plus ancienne, pour que le F5 suivant ne revienne pas à cette version. |
+| [`0242-framework-api-for-installed-apps.md`](0242-framework-api-for-installed-apps.md) | ADR 0242 : l'API .NET qu'une app installée trouve dans l'OS publié : `System.Private.CoreLib` reste entière à la publication trimmée (+0,6 Mio Brotli) et la vérification d'installation compare les signatures complètes des méthodes, plus seulement leur nombre de paramètres (IRC 1.0.0 et `Int32.Parse` d'un span). |
 
 Index du dossier parent : [`../README.md`](../README.md).

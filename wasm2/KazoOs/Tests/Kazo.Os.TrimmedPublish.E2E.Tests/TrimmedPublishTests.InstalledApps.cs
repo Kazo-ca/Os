@@ -60,6 +60,9 @@ public sealed partial class TrimmedPublishTests
             Log("the installed app opened without a restart.");
             await Assertions.Expect(page.Locator("[data-probe-french]")).ToHaveTextAsync(FrenchGreeting, new() { Timeout = StepTimeoutMs });
             Log("its French satellite assembly loaded without a restart.");
+            // ADR 0242: CoreLib stays whole, so overloads the OS does not use itself still run.
+            await Assertions.Expect(page.Locator("[data-probe-corelib]")).ToHaveTextAsync("corelib 42 0 2", new() { Timeout = StepTimeoutMs });
+            Log("CoreLib overloads the OS does not use itself ran (Int32.Parse of a span, String.Compare with offsets, String.Split of strings).");
 
             // --- Restart (ADR 0182, Q5 C): the app joins the catalog at boot ---
             await page.ReloadAsync(new PageReloadOptions { WaitUntil = WaitUntilState.DOMContentLoaded });
