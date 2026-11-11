@@ -248,7 +248,7 @@ next free number is given in
 | `0249-settings-features-section.md` (reserved, PR in progress to `feature/base`) | ADR 0249: “Features” section of Settings |
 | `0250-storage-persistence-and-eviction.md` (reserved, PR in progress to `feature/base`) | ADR 0250: Storage persistence and eviction |
 | `0251-shell-route-to-associations-and-binfmt.md` (reserved, PR in progress to `feature/base`) | ADR 0251: Shell route to associations and binfmt |
-| `0252-terminal-shows-a-guest-program.md` (reserved, PR in progress to `feature/base`) | ADR 0252: The Terminal shows a guest program |
+| [`0252-terminal-shows-a-guest-program.md`](0252-terminal-shows-a-guest-program.md) | ADR 0252: the Terminal shows a guest program: `IFullScreenTerminalSession` gains per-cell color attributes, the F1 to F12 keys, the Esc+letter / Esc+digit chord translated to Alt+letter / F1-F12, and Ctrl+C passed to the program (kill by Ctrl+Pause or a button) |
 | `0253-marked-sender-on-launch-and-open.md` (reserved, PR in progress to `feature/base`) | ADR 0253: Marked sender |
 | `0254-per-user-events.md` (reserved, PR in progress to `feature/base`) | ADR 0254: Per-user events |
 | `0255-relay-identities-and-decisions-of-a-feature.md` (reserved, PR in progress to `feature/base`) | ADR 0255: Relay: identities and decisions of a Feature |

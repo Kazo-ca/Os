@@ -248,7 +248,7 @@ prochain numéro libre est indiqué dans
 | `0249-settings-features-section.md` (réservé, PR en cours vers `feature/base`) | ADR 0249 : Section « Fonctionnalités » des Paramètres |
 | `0250-storage-persistence-and-eviction.md` (réservé, PR en cours vers `feature/base`) | ADR 0250 : Persistance et éviction du stockage |
 | `0251-shell-route-to-associations-and-binfmt.md` (réservé, PR en cours vers `feature/base`) | ADR 0251 : Route du shell vers l'association et binfmt |
-| `0252-terminal-shows-a-guest-program.md` (réservé, PR en cours vers `feature/base`) | ADR 0252 : Le Terminal affiche un programme invité |
+| [`0252-terminal-shows-a-guest-program.md`](0252-terminal-shows-a-guest-program.md) | ADR 0252 : le Terminal affiche un programme invité : `IFullScreenTerminalSession` gagne les attributs de couleur par cellule, les touches F1 à F12, l'accord Échap+lettre / Échap+chiffre traduit en Alt+lettre / F1-F12, et Ctrl+C transmis au programme (tuer par Ctrl+Pause ou un bouton) |
 | `0253-marked-sender-on-launch-and-open.md` (réservé, PR en cours vers `feature/base`) | ADR 0253 : Expéditeur marqué |
 | `0254-per-user-events.md` (réservé, PR en cours vers `feature/base`) | ADR 0254 : Événements par usager |
 | `0255-relay-identities-and-decisions-of-a-feature.md` (réservé, PR en cours vers `feature/base`) | ADR 0255 : Relais : identités et décisions d'une Feature |
