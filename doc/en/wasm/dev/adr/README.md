@@ -242,7 +242,7 @@ next free number is given in
 | `0243-feature-app-type.md` (reserved, PR in progress to `feature/base`) | ADR 0243: “Feature” app type |
 | `0244-app-libraries-and-shared-versions.md` (reserved, PR in progress to `feature/base`) | ADR 0244: App libraries and shared versions |
 | `0245-feature-service-registry-and-async-resolution.md` (reserved, PR in progress to `feature/base`) | ADR 0245: Service registry and asynchronous resolution |
-| `0246-provider-declared-permissions.md` (reserved, PR in progress to `feature/base`) | ADR 0246: Permissions declared by a Feature |
+| [`0246-provider-declared-permissions.md`](0246-provider-declared-permissions.md) | ADR 0246: permissions declared by a Feature, dangerous ones included, treated like the catalog (administrator approval for the machine, refusal per user, never granted silently), checked by the OS secure screen even for a command; fixes the root of issue #432 |
 | `0247-feature-declared-roles.md` (reserved, PR in progress to `feature/base`) | ADR 0247: Roles declared by a Feature |
 | `0248-store-and-kazopkg-dependency-resolution.md` (reserved, PR in progress to `feature/base`) | ADR 0248: Dependency resolution |
 | `0249-settings-features-section.md` (reserved, PR in progress to `feature/base`) | ADR 0249: “Features” section of Settings |

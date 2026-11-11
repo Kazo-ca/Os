@@ -242,7 +242,7 @@ prochain numéro libre est indiqué dans
 | `0243-feature-app-type.md` (réservé, PR en cours vers `feature/base`) | ADR 0243 : Type d'app « Feature » |
 | `0244-app-libraries-and-shared-versions.md` (réservé, PR en cours vers `feature/base`) | ADR 0244 : Bibliothèques d'app et versions partagées |
 | `0245-feature-service-registry-and-async-resolution.md` (réservé, PR en cours vers `feature/base`) | ADR 0245 : Registre d'interfaces et résolution asynchrone |
-| `0246-provider-declared-permissions.md` (réservé, PR en cours vers `feature/base`) | ADR 0246 : Permissions déclarées par une Feature |
+| [`0246-provider-declared-permissions.md`](0246-provider-declared-permissions.md) | ADR 0246 : permissions déclarées par une Feature, dangereuses comprises, traitées comme le catalogue (approbation d'un administrateur pour la machine, refus par usager, jamais accordées en silence), vérifiées par l'écran sécurisé de l'OS même pour une commande ; corrige le fond de l'issue #432 |
 | `0247-feature-declared-roles.md` (réservé, PR en cours vers `feature/base`) | ADR 0247 : Rôles déclarés par une Feature |
 | `0248-store-and-kazopkg-dependency-resolution.md` (réservé, PR en cours vers `feature/base`) | ADR 0248 : Résolution des dépendances |
 | `0249-settings-features-section.md` (réservé, PR en cours vers `feature/base`) | ADR 0249 : Section « Fonctionnalités » des Paramètres |
