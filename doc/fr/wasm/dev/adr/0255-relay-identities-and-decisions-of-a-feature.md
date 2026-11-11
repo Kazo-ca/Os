@@ -6,19 +6,20 @@
 
 Proposée le 2026-11-11, pour la fonctionnalité Os-x86
 ([Kazo-ca/Os-x86](https://github.com/Kazo-ca/Os-x86)), lot 1 de la série
-`feature/base`. La recommandation de chaque question posée à Benoit est
-appliquée en attendant sa réponse. Décisions d'origine : D20 (une bouteille,
-« préfixe », par programme, avec son espace réseau et son adresse ; une
-décision réseau par préfixe), 161 A (réseau Ethernet privé d'Os-x86 entre
+`feature/base`. Les questions posées à Benoit ont reçu leur réponse le
+2026-11-11 (série 15 de la conception d'Os-x86) ; elles sont consignées à la
+fin de cette ADR et la décision les applique. Décisions d'origine : D20 (une
+bouteille, « préfixe », par programme, avec son espace réseau et son adresse ;
+une décision réseau par préfixe), 161 A (réseau Ethernet privé d'Os-x86 entre
 VM, une adresse par VM et par préfixe sans NAT, sortie réelle par le relais ;
-aucune liaison avec le réseau simulé de Kazo en V1), 174 A (« la décision,
-les limites (4 flux, 300 s, 80/443) et le journal vivent au relais côté
-Kazo, source de vérité ; nftables dans l'invité en défense en profondeur ;
+aucune liaison avec le réseau simulé de Kazo en V1), 174 A (« la décision, les
+limites (4 flux, 300 s, 80/443) et le journal vivent au relais côté Kazo,
+source de vérité ; nftables dans l'invité en défense en profondeur ;
 `relay_url` fixé par la Feature, jamais exposé à l'invité ; UDP 53 et IPv6
 bloqués par règle explicite ») et 181 A (Os-x86 déclare `network.real.access`,
-BoxedWine aucune permission réseau), 2026-11-11 ; essai E6 d'Os-x86
-(l'adresse source par préfixe est une étiquette fiable jusqu'au relais ; deux
-décisions appliquées et journalisées).
+BoxedWine aucune permission réseau), 2026-11-11 ; essai E6 d'Os-x86 (l'adresse
+source par préfixe est une étiquette fiable jusqu'au relais ; deux décisions
+appliquées et journalisées).
 
 - **Complète :** l'[ADR 0102](0102-server-network-relay-tcp-udp-and-policy.md)
   et l'[ADR 0108](0108-server-relay-implementation-adjustments.md) (relais
@@ -52,7 +53,7 @@ décisions appliquées et journalisées).
 - Le journal du relais (`ProxyService.cs:328-329 PROXY_TCP_OPEN` : hôte,
   adresse, port, appId, tls ; `:377-378 CLOSE` : hôte, port, code, octets,
   **sans appId**) ne connaît ni l'usager ni le programme : pour Os-x86,
-  toutes les bouteilles de tous les usagers seraient « org.kazoos.x86 ».
+  toutes les bouteilles de tous les usagers seraient « ca.kazo.x86 ».
 - Os-x86 donne à chaque préfixe (bouteille) une adresse sur son réseau
   Ethernet privé (E6 : l'adresse source est une étiquette fiable jusqu'au
   relais) et prend une **décision par préfixe** (fenêtre de permission :
@@ -145,7 +146,7 @@ décisions appliquées et journalisées).
 - **B. Décision dans l'invité seulement (nftables)** (174 C) : un invité
   compromis contourne.
 - **C. Un accord d'app par préfixe** (chaque bouteille = un `AppId`
-  distinct, `org.kazoos.x86.prefix.<guid>`) : des centaines d'apps fictives
+  distinct, `ca.kazo.x86.prefix.<guid>`) : des centaines d'apps fictives
   dans les accords, dans Paramètres ▸ Permissions et dans `GrantedApps` ;
   et une approbation d'administrateur par bouteille.
 - **D. Un usager dans l'identité** : le serveur ne connaît pas les usagers
@@ -197,4 +198,4 @@ décisions appliquées et journalisées).
      garde `Session` et `ProgramEnd` en mémoire (contredit « source de vérité
      au relais » pour ces deux durées).
 
-Appliquées en attendant : 1 A, 2 A.
+Réponses du mainteneur (2026-11-11) : 1 A, 2 A.

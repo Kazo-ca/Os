@@ -6,19 +6,19 @@
 
 Proposed on 2026-11-11, for the Os-x86 feature
 ([Kazo-ca/Os-x86](https://github.com/Kazo-ca/Os-x86)), lot 1 of the
-`feature/base` series. The recommendation of each question asked to Benoit
-is applied while waiting for his answer. Source decisions: D20 (one bottle,
-"prefix", per program, with its network namespace and its address; one
-network decision per prefix), 161 A (private Ethernet network of Os-x86
-between VMs, one address per VM and per prefix without NAT, real exit
-through the relay; no link with Kazo's simulated network in V1), 174 A ("the
-decision, the limits (4 streams, 300 s, 80/443) and the log live at the relay
-on the Kazo side, source of truth; nftables in the guest as defense in depth;
-`relay_url` set by the Feature, never exposed to the guest; UDP 53 and IPv6
-blocked by an explicit rule") and 181 A (Os-x86 declares
-`network.real.access`, BoxedWine no network permission), 2026-11-11; Os-x86
-trial E6 (the per-prefix source address is a reliable label up to the relay;
-two decisions enforced and logged).
+`feature/base` series. The questions asked to Benoit got their answers on
+2026-11-11 (series 15 of the Os-x86 design); they are recorded at the end of
+this ADR and the decision applies them. Source decisions: D20 (one bottle,
+"prefix", per program, with its network namespace and its address; one network
+decision per prefix), 161 A (private Ethernet network of Os-x86 between VMs,
+one address per VM and per prefix without NAT, real exit through the relay; no
+link with Kazo's simulated network in V1), 174 A ("the decision, the limits (4
+streams, 300 s, 80/443) and the log live at the relay on the Kazo side, source
+of truth; nftables in the guest as defense in depth; `relay_url` set by the
+Feature, never exposed to the guest; UDP 53 and IPv6 blocked by an explicit
+rule") and 181 A (Os-x86 declares `network.real.access`, BoxedWine no network
+permission), 2026-11-11; Os-x86 trial E6 (the per-prefix source address is a
+reliable label up to the relay; two decisions enforced and logged).
 
 - **Completes:** [ADR 0102](0102-server-network-relay-tcp-udp-and-policy.md)
   and [ADR 0108](0108-server-relay-implementation-adjustments.md) (TCP and
@@ -52,7 +52,7 @@ two decisions enforced and logged).
 - The relay log (`ProxyService.cs:328-329 PROXY_TCP_OPEN`: host, address,
   port, appId, tls; `:377-378 CLOSE`: host, port, code, bytes, **without
   appId**) knows neither the user nor the program: for Os-x86, every bottle
-  of every user would be "org.kazoos.x86".
+  of every user would be "ca.kazo.x86".
 - Os-x86 gives each prefix (bottle) an address on its private Ethernet
   network (E6: the source address is a reliable label up to the relay) and
   takes **one decision per prefix** (permission window: allow or deny, once,
@@ -142,7 +142,7 @@ two decisions enforced and logged).
 - **B. Decision in the guest only (nftables)** (174 C): a compromised guest
   bypasses it.
 - **C. One app grant per prefix** (each bottle = a distinct `AppId`,
-  `org.kazoos.x86.prefix.<guid>`): hundreds of fictitious apps in the grants,
+  `ca.kazo.x86.prefix.<guid>`): hundreds of fictitious apps in the grants,
   in Settings ▸ Permissions and in `GrantedApps`; and one administrator
   approval per bottle.
 - **D. A user in the identity**: the server does not know OS users (ADR 0028
@@ -192,4 +192,4 @@ two decisions enforced and logged).
      keeps `Session` and `ProgramEnd` in memory (contradicts "source of truth
      at the relay" for those two durations).
 
-Applied while waiting: 1 A, 2 A.
+Maintainer's answers (2026-11-11): 1 A, 2 A.
