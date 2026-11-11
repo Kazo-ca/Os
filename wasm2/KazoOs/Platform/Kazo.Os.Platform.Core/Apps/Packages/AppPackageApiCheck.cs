@@ -21,6 +21,15 @@ public interface IRuntimeApiSurface
     /// <summary>Gets whether a type declares or inherits a method with this name, generic arity and parameter count.</summary>
     bool HasMethod(string assemblyName, string typeName, string methodName, int genericArity, int parameterCount);
 
+    /// <summary>
+    /// Gets whether a type declares or inherits a method with this name, generic arity and exact
+    /// parameter types (ADR 0242). The types use the text form of the metadata decoder, e.g.
+    /// <c>System.ReadOnlySpan`1&lt;System.Char&gt;</c>, <c>!0</c> for a type's generic parameter and
+    /// <c>!!0</c> for a method's. The default only compares the parameter count, as before.
+    /// </summary>
+    bool HasMethod(string assemblyName, string typeName, string methodName, int genericArity, IReadOnlyList<string> parameterTypes) =>
+        HasMethod(assemblyName, typeName, methodName, genericArity, parameterTypes.Count);
+
     /// <summary>Gets whether a type declares or inherits a field with this name.</summary>
     bool HasField(string assemblyName, string typeName, string fieldName);
 }
@@ -47,7 +56,19 @@ public sealed class LoadedRuntimeApiSurface : IRuntimeApiSurface
     public bool HasType(string assemblyName, string typeName) => FindType(assemblyName, typeName) is not null;
 
     /// <inheritdoc />
-    public bool HasMethod(string assemblyName, string typeName, string methodName, int genericArity, int parameterCount)
+    public bool HasMethod(string assemblyName, string typeName, string methodName, int genericArity, int parameterCount) =>
+        HasMethod(assemblyName, typeName, methodName, genericArity, parameters => parameters.Length == parameterCount);
+
+    /// <inheritdoc />
+    public bool HasMethod(string assemblyName, string typeName, string methodName, int genericArity, IReadOnlyList<string> parameterTypes)
+    {
+        ArgumentNullException.ThrowIfNull(parameterTypes);
+        return HasMethod(assemblyName, typeName, methodName, genericArity, parameters =>
+            parameters.Length == parameterTypes.Count
+            && parameters.Select(static parameter => RuntimeTypeNames.Of(parameter.ParameterType)).SequenceEqual(parameterTypes, StringComparer.Ordinal));
+    }
+
+    private bool HasMethod(string assemblyName, string typeName, string methodName, int genericArity, Func<ParameterInfo[], bool> parametersMatch)
     {
         Type? type = FindType(assemblyName, typeName);
         if (type is null)
@@ -58,14 +79,14 @@ public sealed class LoadedRuntimeApiSurface : IRuntimeApiSurface
         if (methodName is ".ctor" or ".cctor")
         {
             return type.GetConstructors(AllMembers & ~BindingFlags.FlattenHierarchy).Any(ctor =>
-                ctor.IsStatic == (methodName == ".cctor") && ctor.GetParameters().Length == parameterCount)
-                || (type.IsValueType && methodName == ".ctor" && parameterCount == 0);
+                ctor.IsStatic == (methodName == ".cctor") && parametersMatch(ctor.GetParameters()))
+                || (type.IsValueType && methodName == ".ctor" && parametersMatch([]));
         }
 
         return AllTypes(type).Any(candidate => candidate.GetMethods(AllMembers).Any(method =>
             method.Name == methodName
             && (method.IsGenericMethodDefinition ? method.GetGenericArguments().Length : 0) == genericArity
-            && method.GetParameters().Length == parameterCount));
+            && parametersMatch(method.GetParameters())));
     }
 
     /// <inheritdoc />
@@ -103,9 +124,9 @@ public sealed record MissingRuntimeApi(string Assembly, string Member);
 /// instead of failing when the app runs.
 /// </summary>
 /// <remarks>
-/// Methods are matched by name, generic arity and parameter count, not by full signature: trimming
-/// removes whole members, so this finds what it removed without decoding every type in a signature.
-/// References between the package's own assemblies are not checked.
+/// Methods are matched by name, generic arity and exact parameter types (ADR 0242; ADR 0182 compared
+/// only the parameter count, which let a removed overload of the same length through). Return types
+/// are not compared. References between the package's own assemblies are not checked.
 /// </remarks>
 public static class AppPackageApiCheck
 {
@@ -187,12 +208,14 @@ public static class AppPackageApiCheck
                 }
                 else if (header.Kind == SignatureKind.Method)
                 {
-                    int arity = header.IsGeneric ? signature.ReadCompressedInteger() : 0;
-                    int parameters = signature.ReadCompressedInteger();
-                    if (!runtime.HasMethod(type.Assembly, type.Name, name, arity, parameters))
+                    // ADR 0242: the exact parameter types, not their count. Trimming keeps one overload
+                    // and removes another of the same length, e.g. Int32.Parse(string, IFormatProvider)
+                    // kept, Int32.Parse(ReadOnlySpan<char>, IFormatProvider) removed.
+                    MethodSignature<string> decoded = member.DecodeMethodSignature(RuntimeTypeNames.MetadataProvider.Instance, null);
+                    if (!runtime.HasMethod(type.Assembly, type.Name, name, decoded.GenericParameterCount, decoded.ParameterTypes))
                     {
-                        string generic = arity > 0 ? $"`{arity}" : string.Empty;
-                        Report($"{type.Name}.{name}{generic}({parameters}) in {type.Assembly}");
+                        string generic = decoded.GenericParameterCount > 0 ? $"`{decoded.GenericParameterCount}" : string.Empty;
+                        Report($"{type.Name}.{name}{generic}{RuntimeTypeNames.Parameters(decoded.ParameterTypes)} in {type.Assembly}");
                     }
                 }
             }

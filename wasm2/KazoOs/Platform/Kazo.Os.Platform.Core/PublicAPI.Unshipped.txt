@@ -20,3 +20,5 @@ static Kazo.Os.Platform.Core.Lifecycle.AppLaunchRefusal.operator ==(Kazo.Os.Plat
 Kazo.Os.Platform.Core.Diagnostics.SensitiveTextRedactor
 const Kazo.Os.Platform.Core.Diagnostics.SensitiveTextRedactor.Placeholder = "***redacted***" -> string!
 static Kazo.Os.Platform.Core.Diagnostics.SensitiveTextRedactor.Redact(string? text) -> string!
+Kazo.Os.Platform.Core.Apps.Packages.IRuntimeApiSurface.HasMethod(string! assemblyName, string! typeName, string! methodName, int genericArity, System.Collections.Generic.IReadOnlyList<string!>! parameterTypes) -> bool
+Kazo.Os.Platform.Core.Apps.Packages.LoadedRuntimeApiSurface.HasMethod(string! assemblyName, string! typeName, string! methodName, int genericArity, System.Collections.Generic.IReadOnlyList<string!>! parameterTypes) -> bool
