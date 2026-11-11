@@ -251,6 +251,6 @@ next free number is given in
 | `0252-terminal-shows-a-guest-program.md` (reserved, PR in progress to `feature/base`) | ADR 0252: The Terminal shows a guest program |
 | `0253-marked-sender-on-launch-and-open.md` (reserved, PR in progress to `feature/base`) | ADR 0253: Marked sender |
 | `0254-per-user-events.md` (reserved, PR in progress to `feature/base`) | ADR 0254: Per-user events |
-| `0255-relay-identities-and-decisions-of-a-feature.md` (reserved, PR in progress to `feature/base`) | ADR 0255: Relay: identities and decisions of a Feature |
+| [`0255-relay-identities-and-decisions-of-a-feature.md`](0255-relay-identities-and-decisions-of-a-feature.md) | ADR 0255: relay: a Feature with `network.real.access` gives each flow an opaque identity, a decision and per-identity limits; the server enforces and logs per identity (`POST /api/proxy/grants` extended) |
 
 Parent folder index: [`../README.md`](../README.md).

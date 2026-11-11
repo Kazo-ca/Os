@@ -460,7 +460,7 @@ demande à l'OS le type d'app « Feature » et les points d'extension ci-dessous
 | Le Terminal affiche un programme invité | Un programme console d'une Feature (shell Linux, programme DOS texte) s'affiche dans le Terminal de Kazo : couleurs par cellule, touches de fonction, Ctrl+C au programme. | 0252 réservée (PR en cours) | — |
 | Expéditeur marqué | Une app lancée ou un fichier ouvert par une autre app connaît l'expéditeur, marqué par l'OS, pour son journal. | 0253 réservée (PR en cours) | — |
 | Événements par usager | Un journal d'événements par usager (permission accordée, mise à jour, conflit résolu), visible par l'usager et les administrateurs. | 0254 réservée (PR en cours) | — |
-| Relais : identités et décisions d'une Feature | Le relais du serveur accepte d'une Feature une identité par flux, une décision et des limites, et journalise par identité. | 0255 réservée (PR en cours) | — |
+| Relais : identités et décisions d'une Feature | Le relais du serveur accepte d'une Feature une identité par flux, une décision et des limites, et journalise par identité. | [0255](dev/adr/0255-relay-identities-and-decisions-of-a-feature.md) | — |
 
 ### Applications optionnelles portées
 

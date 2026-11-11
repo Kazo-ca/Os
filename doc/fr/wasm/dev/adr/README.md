@@ -251,6 +251,6 @@ prochain numéro libre est indiqué dans
 | `0252-terminal-shows-a-guest-program.md` (réservé, PR en cours vers `feature/base`) | ADR 0252 : Le Terminal affiche un programme invité |
 | `0253-marked-sender-on-launch-and-open.md` (réservé, PR en cours vers `feature/base`) | ADR 0253 : Expéditeur marqué |
 | `0254-per-user-events.md` (réservé, PR en cours vers `feature/base`) | ADR 0254 : Événements par usager |
-| `0255-relay-identities-and-decisions-of-a-feature.md` (réservé, PR en cours vers `feature/base`) | ADR 0255 : Relais : identités et décisions d'une Feature |
+| [`0255-relay-identities-and-decisions-of-a-feature.md`](0255-relay-identities-and-decisions-of-a-feature.md) | ADR 0255 : relais : une Feature avec `network.real.access` donne à chaque flux une identité opaque, une décision, des limites par identité ; le serveur applique et journalise par identité (`POST /api/proxy/grants` étendu) |
 
 Index du dossier parent : [`../README.md`](../README.md).
