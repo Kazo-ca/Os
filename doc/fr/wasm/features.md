@@ -448,8 +448,8 @@ demande à l'OS le type d'app « Feature » et les points d'extension ci-dessous
 
 | Fonctionnalité | Description | ADR | Issue |
 | --- | --- | --- | --- |
-| Type d'app « Feature » | Une fonctionnalité facultative de l'OS (à la manière de WSL) installée au niveau système par un administrateur : une identité, des points d'entrée enfants (commande, fenêtres, pages), des permissions en bloc. | 0243 réservée (PR en cours) | — |
-| Bibliothèques d'app et versions partagées | Un paquet embarque les bibliothèques propres de l'app (#419) ; une seule copie d'une bibliothèque partagée (contrats d'une Feature) est chargée par page, la plus récente compatible. | 0244 réservée (PR en cours) | — |
+| Type d'app « Feature » | Une fonctionnalité facultative de l'OS (à la manière de WSL) installée au niveau système par un administrateur : une identité, des points d'entrée enfants (commande, fenêtres, pages), des permissions en bloc. | [0243](dev/adr/0243-feature-app-type.md) | — |
+| Bibliothèques d'app et versions partagées | Un paquet embarque les bibliothèques propres de l'app (#419) ; une seule copie d'une bibliothèque partagée (contrats d'une Feature) est chargée par page, la plus récente compatible. | [0244](dev/adr/0244-app-libraries-and-shared-versions.md) | — |
 | Registre d'interfaces et résolution asynchrone | Une app demande à l'OS l'interface qu'une Feature fournit, sans dépendance dans son binaire ; null si la Feature est absente. | [0245](dev/adr/0245-feature-service-registry-and-async-resolution.md) | — |
 | Permissions déclarées par une Feature | Une Feature déclare ses propres permissions, dangereuses comprises ; elles suivent les règles du catalogue de l'OS et ne sont jamais accordées en silence. | 0246 réservée (PR en cours) | — |
 | Rôles déclarés par une Feature | Une Feature déclare des rôles qu'un administrateur attribue ; chaque opération sensible passe par l'authentification de l'OS. | 0247 réservée (PR en cours) | — |
