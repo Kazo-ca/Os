@@ -6,14 +6,15 @@
 
 Proposed on 2026-11-11, for the Os-x86 feature
 ([Kazo-ca/Os-x86](https://github.com/Kazo-ca/Os-x86)), lot 1 of the
-`feature/base` series. The recommendation of each question asked to Benoit
-is applied while waiting for his answer. Source decisions: 140 B (graphical
+`feature/base` series. The questions asked to Benoit got their answers on
+2026-11-11 (series 15 of the Os-x86 design); they are recorded at the end of
+this ADR and the decision applies them. Source decisions: 140 B (graphical
 administration from the first milestone, "a role that allows managing the
 VMs"), 156 B (his words: "a real Kazo role. The feature must be able to
 declare roles") and 160 A (the role opens the pages and the commands; every
-sensitive operation also asks for the OS administrator authentication;
-"manage the subsystems" disappears), 2026-11-11; maintainer's answer of
-2026-11-11: an administrator holds every declared role, implicitly (§1).
+sensitive operation also asks for the OS administrator authentication; "manage
+the subsystems" disappears), 2026-11-11; maintainer's answer of 2026-11-11: an
+administrator holds every declared role, implicitly (§1).
 
 - **Completes:** [ADR 0013](0013-local-user-session.md) (users and sessions),
   [ADR 0042](0042-sudo-root-elevation.md) (`sudo` elevation),
@@ -213,7 +214,7 @@ public interface IKazoFeatureAuthentication
      but a standard user can never manage the common VMs, which 140 B wanted
      to allow through the role.
 
-Applied while waiting: 1 A.
+Maintainer's answer (2026-11-11): 1 A.
 
 Settled on 2026-11-11: does an administrator hold every role by default →
 yes, implicitly; the explicit assignment only concerns ordinary users (§1).

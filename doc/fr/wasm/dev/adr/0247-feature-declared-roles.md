@@ -6,12 +6,13 @@
 
 Proposée le 2026-11-11, pour la fonctionnalité Os-x86
 ([Kazo-ca/Os-x86](https://github.com/Kazo-ca/Os-x86)), lot 1 de la série
-`feature/base`. La recommandation de chaque question posée à Benoit est
-appliquée en attendant sa réponse. Décisions d'origine : 140 B
-(administration graphique dès le premier jalon, « un rôle qui permet de
-gérer les VM »), 156 B (tes mots : « un vrai rôle Kazo. La fonctionnalité
-devra avoir la possibilité de déclarer des rôles ») et 160 A (le rôle ouvre
-les pages et les commandes ; chaque opération sensible demande en plus
+`feature/base`. Les questions posées à Benoit ont reçu leur réponse le
+2026-11-11 (série 15 de la conception d'Os-x86) ; elles sont consignées à la
+fin de cette ADR et la décision les applique. Décisions d'origine : 140 B
+(administration graphique dès le premier jalon, « un rôle qui permet de gérer
+les VM »), 156 B (tes mots : « un vrai rôle Kazo. La fonctionnalité devra
+avoir la possibilité de déclarer des rôles ») et 160 A (le rôle ouvre les
+pages et les commandes ; chaque opération sensible demande en plus
 l'authentification d'admin de l'OS ; « gérer les sous-systèmes » disparaît),
 2026-11-11 ; réponse du mainteneur du 2026-11-11 : un administrateur porte
 tous les rôles déclarés, implicitement (§1).
@@ -219,7 +220,7 @@ public interface IKazoFeatureAuthentication
      d'admin) ; plus simple, mais un usager standard ne peut jamais gérer les
      VM communes, ce que 140 B voulait permettre par le rôle.
 
-Appliquée en attendant : 1 A.
+Réponse du mainteneur (2026-11-11) : 1 A.
 
 Question réglée le 2026-11-11 : un administrateur porte-t-il tous les rôles
 d'office → oui, implicitement ; l'attribution explicite ne concerne que les
