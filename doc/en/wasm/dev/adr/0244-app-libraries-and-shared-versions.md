@@ -6,10 +6,10 @@
 
 Proposed on 2026-11-11, for the Os-x86 feature
 ([Kazo-ca/Os-x86](https://github.com/Kazo-ca/Os-x86)), lot 1 of the
-`feature/base` series. The recommendation of each question asked to Benoit
-is applied while waiting for his answer; the question "who marks a library as
-shared" got its answer on 2026-11-11 (A, §2). Source decisions: D30 and D36
-of the Os-x86 design (series 3 and 4, 2026-11-09); issue
+`feature/base` series. Both questions asked to Benoit got their answers on
+2026-11-11: "who marks a library as shared" (A, §2) and "two majors without a
+Feature" (A, both coexist); the decision applies them. Source decisions: D30
+and D36 of the Os-x86 design (series 3 and 4, 2026-11-09); issue
 [#419](https://github.com/Kazo-ca/Os/issues/419) (`TODO`).
 
 - **Completes:** [ADR 0182](0182-install-apps-from-github.md) §5 (packages,
@@ -110,7 +110,7 @@ of the Os-x86 design (series 3 and 4, 2026-11-09); issue
   (ADR 0238), never the whole OS.
 - The OS writes the chosen copy and the reason to `/var/log/syslog`
   (`libraries: Os-x86.Interface 1.2.0 loaded for ca.kazo.boxedwine (feature
-  org.kazoos.x86)`).
+  ca.kazo.x86)`).
 
 ### 4. What does not change
 
@@ -162,7 +162,7 @@ of the Os-x86 design (series 3 and 4, 2026-11-09); issue
      links them as long as no provider exists.
    - B) Refuse the second installation: one major per machine.
 
-Applied while waiting: 1 A.
+Maintainer's answer (2026-11-11): 1 A.
 
 Settled on 2026-11-11: who marks a library as shared → its author, through
 the MSBuild property of its package, imposing nothing on the app that uses it

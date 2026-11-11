@@ -6,12 +6,11 @@
 
 Proposée le 2026-11-11, pour la fonctionnalité Os-x86
 ([Kazo-ca/Os-x86](https://github.com/Kazo-ca/Os-x86)), lot 1 de la série
-`feature/base`. La recommandation de chaque question posée à Benoit est
-appliquée en attendant sa réponse ; la question « qui marque une
-bibliothèque comme partagée » a reçu sa réponse le 2026-11-11 (A, §2).
+`feature/base`. Les deux questions posées à Benoit ont reçu leur réponse le
+2026-11-11 : « qui marque une bibliothèque comme partagée » (A, §2) et « deux
+majeures sans Feature » (A, les deux coexistent) ; la décision les applique.
 Décisions d'origine : D30 et D36 de la conception d'Os-x86 (séries 3 et 4,
-2026-11-09) ; issue [#419](https://github.com/Kazo-ca/Os/issues/419)
-(`TODO`).
+2026-11-09) ; issue [#419](https://github.com/Kazo-ca/Os/issues/419) (`TODO`).
 
 - **Complète :** l'[ADR 0182](0182-install-apps-from-github.md) §5 (paquets,
   `lib/`, vérification des API), l'[ADR 0222](0222-installed-app-satellite-assemblies.md)
@@ -119,7 +118,7 @@ Décisions d'origine : D30 et D36 de la conception d'Os-x86 (séries 3 et 4,
   `MissingMethodException` dans sa fenêtre (ADR 0238), jamais l'OS entier.
 - L'OS écrit dans `/var/log/syslog` la copie choisie et la raison
   (`libraries: Os-x86.Interface 1.2.0 loaded for ca.kazo.boxedwine (feature
-  org.kazoos.x86)`).
+  ca.kazo.x86)`).
 
 ### 4. Ce qui ne change pas
 
@@ -173,7 +172,7 @@ Décisions d'origine : D30 et D36 de la conception d'Os-x86 (séries 3 et 4,
      : rien ne les relie tant qu'aucun fournisseur n'existe.
    - B) Refuser la seconde installation : une seule majeure par machine.
 
-Appliquée en attendant : 1 A.
+Réponse du mainteneur (2026-11-11) : 1 A.
 
 Question réglée le 2026-11-11 : qui marque une bibliothèque comme partagée →
 l'auteur, par la propriété MSBuild de son paquet, sans rien imposer à l'app
