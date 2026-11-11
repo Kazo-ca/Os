@@ -6,14 +6,16 @@
 
 Proposée le 2026-11-11, pour la fonctionnalité Os-x86
 ([Kazo-ca/Os-x86](https://github.com/Kazo-ca/Os-x86)), lot 1 de la série
-`feature/base`. La recommandation de chaque question posée à Benoit est
-appliquée en attendant sa réponse. Décisions d'origine : 149 (images disque
-dans l'OPFS, petites images dans IndexedDB) et 177 A (« `persist()` demandé
-après le premier geste dans BoxedWine ou `x86` ; éviction détectée =
-avertissement et proposition d'export ; les disques comptent dans l'espace
-du navigateur, affiché »), 2026-11-11 ; essais E2 et E10 d'Os-x86 (OPFS
-55 à 185 fois plus rapide par bloc qu'IndexedDB ; Firefox limite à 10 Gio
-sans `persist()` ; Safari efface après 7 jours sans interaction).
+`feature/base`. Les questions posées à Benoit ont reçu leur réponse le
+2026-11-11 (série 15 de la conception d'Os-x86) ; elles sont consignées à la
+fin de cette ADR et la décision les applique. Décisions d'origine : 149
+(images disque dans l'OPFS, petites images dans IndexedDB) et 177 A
+(« `persist()` demandé après le premier geste dans BoxedWine ou `x86` ;
+éviction détectée = avertissement et proposition d'export ; les disques
+comptent dans l'espace du navigateur, affiché »), 2026-11-11 ; essais E2 et
+E10 d'Os-x86 (OPFS 55 à 185 fois plus rapide par bloc qu'IndexedDB ; Firefox
+limite à 10 Gio sans `persist()` ; Safari efface après 7 jours sans
+interaction).
 
 - **Complète :** l'[ADR 0015](0015-browser-storage-and-indexeddb-adapter.md)
   (socle du stockage ; `estimate()` et `persist()` nommés comme prérequis),
@@ -171,4 +173,4 @@ public static class KazoStorage
      « Mémoire ».
    - B) Une section de la page « Mémoire » existante.
 
-Appliquées en attendant : 1 A, 2 A.
+Réponses du mainteneur (2026-11-11) : 1 A, 2 A.

@@ -6,14 +6,15 @@
 
 Proposed on 2026-11-11, for the Os-x86 feature
 ([Kazo-ca/Os-x86](https://github.com/Kazo-ca/Os-x86)), lot 1 of the
-`feature/base` series. The recommendation of each question asked to Benoit
-is applied while waiting for his answer. Source decisions: 149 (disk images
-in OPFS, small images in IndexedDB) and 177 A ("`persist()` requested after
-the first gesture in BoxedWine or `x86`; eviction detected = warning and
-export offered; the disks count in the browser's space, shown"), 2026-11-11;
-Os-x86 trials E2 and E10 (OPFS 55 to 185 times faster per block than
-IndexedDB; Firefox limits to 10 GiB without `persist()`; Safari erases after
-7 days without interaction).
+`feature/base` series. The questions asked to Benoit got their answers on
+2026-11-11 (series 15 of the Os-x86 design); they are recorded at the end of
+this ADR and the decision applies them. Source decisions: 149 (disk images in
+OPFS, small images in IndexedDB) and 177 A ("`persist()` requested after the
+first gesture in BoxedWine or `x86`; eviction detected = warning and export
+offered; the disks count in the browser's space, shown"), 2026-11-11; Os-x86
+trials E2 and E10 (OPFS 55 to 185 times faster per block than IndexedDB;
+Firefox limits to 10 GiB without `persist()`; Safari erases after 7 days
+without interaction).
 
 - **Completes:** [ADR 0015](0015-browser-storage-and-indexeddb-adapter.md)
   (storage baseline; `estimate()` and `persist()` named as prerequisites),
@@ -163,4 +164,4 @@ public static class KazoStorage
    - A) **(Recommended)** A "Storage" page under System, next to "Memory".
    - B) A section of the existing "Memory" page.
 
-Applied while waiting: 1 A, 2 A.
+Maintainer's answers (2026-11-11): 1 A, 2 A.
