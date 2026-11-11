@@ -245,7 +245,7 @@ next free number is given in
 | `0246-provider-declared-permissions.md` (reserved, PR in progress to `feature/base`) | ADR 0246: Permissions declared by a Feature |
 | `0247-feature-declared-roles.md` (reserved, PR in progress to `feature/base`) | ADR 0247: Roles declared by a Feature |
 | `0248-store-and-kazopkg-dependency-resolution.md` (reserved, PR in progress to `feature/base`) | ADR 0248: Dependency resolution |
-| `0249-settings-features-section.md` (reserved, PR in progress to `feature/base`) | ADR 0249: “Features” section of Settings |
+| [`0249-settings-features-section.md`](0249-settings-features-section.md) | ADR 0249: "Features" section of Settings: list of the installed Features (version, permissions, roles, entry points) and pages provided by a Feature (`SettingsPage` entry point, rendered in Settings with the Feature's rights, visible by role) |
 | `0250-storage-persistence-and-eviction.md` (reserved, PR in progress to `feature/base`) | ADR 0250: Storage persistence and eviction |
 | `0251-shell-route-to-associations-and-binfmt.md` (reserved, PR in progress to `feature/base`) | ADR 0251: Shell route to associations and binfmt |
 | `0252-terminal-shows-a-guest-program.md` (reserved, PR in progress to `feature/base`) | ADR 0252: The Terminal shows a guest program |
