@@ -211,6 +211,12 @@ policy*, *Pending*), and allows:
   a capability for the machine;
 - removing one's own denial (without an administrator).
 
+A user denial beats a machine `allow` (ADR 0049, section 6). So when the
+session user chooses **Allow for the machine** and the administrator is
+verified, their own denial of that capability is withdrawn at the same time:
+otherwise the state would stay *Denied by you* after the approval. Other
+users' denials stay in their own files.
+
 Each machine action opens the credentials prompt of ADR 0042;
 `AppPermissionAdministration` verifies the administrator, writes in an audited
 system context and logs. The panel resolves this service optionally: on a

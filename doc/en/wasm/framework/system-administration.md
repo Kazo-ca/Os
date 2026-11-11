@@ -53,7 +53,7 @@ See [`settings-files.md`](settings-files.md#os-documents-kazosettingsopensystema
 |---|---|---|
 | `GetPolicyAsync`, `GetOverviewAsync` | policy and state of each dangerous capability of each app | no |
 | `SetPolicyAsync(Prompt / Block)` | writes `/etc/kazoos/security.config`, log `capability.policy` | yes (`permissions.policy`) |
-| `SetMachineDecisionAsync(app, capability, Allow / Deny / Ask)` | writes `/etc/kazoos/app-permissions.config`, log `capability.approve` / `capability.revoke` | yes (`permissions.machine-decision`) |
+| `SetMachineDecisionAsync(app, capability, Allow / Deny / Ask)` | writes `/etc/kazoos/app-permissions.config`, log `capability.approve` / `capability.revoke`; `Allow` also removes the session user's own denial | yes (`permissions.machine-decision`) |
 | `RemoveOwnDenialAsync(app, capability)` | removes the user's denial, the question comes back at launch | no |
 
 A system app or a capability not declared by the app is refused **before**
