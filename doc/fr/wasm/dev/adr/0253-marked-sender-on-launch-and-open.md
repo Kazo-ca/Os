@@ -6,11 +6,12 @@
 
 Proposée le 2026-11-11, pour la fonctionnalité Os-x86
 ([Kazo-ca/Os-x86](https://github.com/Kazo-ca/Os-x86)), lot 1 de la série
-`feature/base`. La recommandation de chaque question posée à Benoit est
-appliquée en attendant sa réponse. Décisions d'origine : 52 (« l'OS marque
-l'expéditeur (petit ADR) »), 108 (« pas de nouvelle demande et pas de
-plafond de permission fondé sur le lanceur ») et 186 A (« l'expéditeur
-marqué sert au journal seulement »), 2026-11-11.
+`feature/base`. Les questions posées à Benoit ont reçu leur réponse le
+2026-11-11 (série 15 de la conception d'Os-x86) ; elles sont consignées à la
+fin de cette ADR et la décision les applique. Décisions d'origine : 52 (« l'OS
+marque l'expéditeur (petit ADR) »), 108 (« pas de nouvelle demande et pas de
+plafond de permission fondé sur le lanceur ») et 186 A (« l'expéditeur marqué
+sert au journal seulement »), 2026-11-11.
 
 - **Complète :** l'[ADR 0096](0096-added-intents-and-app-defined-intents.md)
   (intents, `AppIntentDelivery.SenderAppId` pour les intents définis par une
@@ -121,4 +122,4 @@ marqué sert au journal seulement »), 2026-11-11.
    - B) `Desktop` et `Notification` sans `AppId` (l'OS seulement) : plus
      simple, moins d'information dans le journal.
 
-Appliquée en attendant : 1 A.
+Réponse du mainteneur (2026-11-11) : 1 A.

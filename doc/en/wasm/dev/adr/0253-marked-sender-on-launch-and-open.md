@@ -6,11 +6,12 @@
 
 Proposed on 2026-11-11, for the Os-x86 feature
 ([Kazo-ca/Os-x86](https://github.com/Kazo-ca/Os-x86)), lot 1 of the
-`feature/base` series. The recommendation of each question asked to Benoit
-is applied while waiting for his answer. Source decisions: 52 ("the OS marks
-the sender (small ADR)"), 108 ("no new request and no permission ceiling
-based on the launcher") and 186 A ("the marked sender serves the journal
-only"), 2026-11-11.
+`feature/base` series. The questions asked to Benoit got their answers on
+2026-11-11 (series 15 of the Os-x86 design); they are recorded at the end of
+this ADR and the decision applies them. Source decisions: 52 ("the OS marks
+the sender (small ADR)"), 108 ("no new request and no permission ceiling based
+on the launcher") and 186 A ("the marked sender serves the journal only"),
+2026-11-11.
 
 - **Completes:** [ADR 0096](0096-added-intents-and-app-defined-intents.md)
   (intents, `AppIntentDelivery.SenderAppId` for app-defined intents),
@@ -120,4 +121,4 @@ only"), 2026-11-11.
    - B) `Desktop` and `Notification` without an `AppId` (the OS only):
      simpler, less information in the journal.
 
-Applied while waiting: 1 A.
+Maintainer's answer (2026-11-11): 1 A.
