@@ -244,7 +244,7 @@ next free number is given in
 | `0245-feature-service-registry-and-async-resolution.md` (reserved, PR in progress to `feature/base`) | ADR 0245: Service registry and asynchronous resolution |
 | `0246-provider-declared-permissions.md` (reserved, PR in progress to `feature/base`) | ADR 0246: Permissions declared by a Feature |
 | `0247-feature-declared-roles.md` (reserved, PR in progress to `feature/base`) | ADR 0247: Roles declared by a Feature |
-| `0248-store-and-kazopkg-dependency-resolution.md` (reserved, PR in progress to `feature/base`) | ADR 0248: Dependency resolution |
+| [`0248-store-and-kazopkg-dependency-resolution.md`](0248-store-and-kazopkg-dependency-resolution.md) | ADR 0248: dependency resolution by the Store and `kazopkg`: missing mandatory dependencies are installed with the app, one consent screen, refusal = installation stopped; an optional dependency installs on request (`KazoApps.RequestInstallAsync`); removing a package warns and disables the apps that depend on it, data kept |
 | `0249-settings-features-section.md` (reserved, PR in progress to `feature/base`) | ADR 0249: “Features” section of Settings |
 | `0250-storage-persistence-and-eviction.md` (reserved, PR in progress to `feature/base`) | ADR 0250: Storage persistence and eviction |
 | `0251-shell-route-to-associations-and-binfmt.md` (reserved, PR in progress to `feature/base`) | ADR 0251: Shell route to associations and binfmt |
