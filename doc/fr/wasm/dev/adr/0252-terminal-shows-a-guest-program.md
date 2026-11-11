@@ -6,37 +6,40 @@
 
 Proposée le 2026-11-11, pour la fonctionnalité Os-x86
 ([Kazo-ca/Os-x86](https://github.com/Kazo-ca/Os-x86)), lot 1 de la série
-`feature/base`. La recommandation de chaque question posée à Benoit est
-appliquée en attendant sa réponse. Décisions d'origine : 154 B (« le
-terminal de Kazo affiche » la console d'un programme Windows et un programme
-DOS texte ; Os-x86 n'ouvre aucune fenêtre), 162 A (exception de l'app
-Terminal : le Terminal exécute lui-même un programme console par Os-x86,
-en-tête lu par lui), 215 A (contenu demandé au Terminal : surface « écran plein » à
-largeur fixe, 80 colonnes et 25 lignes ou plus, attributs de couleur par
-cellule et curseur, rafraîchie à ~30 Hz ; entrée touche par touche avec
-Ctrl+lettre ; accord Échap+lettre / Échap+chiffre traduit en Alt+lettre /
-F1-F12 ; Home, End, Suppr, Page ; taille connue à l'ouverture ;
-redimensionnement à chaud en V2) et 216 A (Ctrl+C va au programme invité ;
-tuer par Ctrl+Pause si Kazo l'a, sinon un bouton du Terminal ou `x86 kill`),
-2026-11-11 ; réponse du mainteneur du 2026-11-11 sur la dépendance du
-Terminal (B, §1), en ses mots : « pour pouvoir host éventuellement les
-sessions terminal. Il deviendra le seul application système à utiliser la
-feature. Il l'utilise pareil que boxedWine » ; essai E14 d'Os-x86 (`cmd` de Wine et FreeDOS utilisables dans
-une grille de ce type sous 100 ms ; sans Alt ni F-touches, EDIT ne quitte
-pas par son menu, `nano` perd Méta, `mc` ses F-touches).
+`feature/base`. Les questions posées à Benoit ont reçu leur réponse le
+2026-11-11 (1 A, 2 A ; dépendance du Terminal : B, §1 ; hôte de programmes du
+shell `ProgramHost` : A, 251 A) ; la décision les applique. Décisions
+d'origine : 154 B (« le terminal de Kazo affiche » la console d'un programme
+Windows et un programme DOS texte ; Os-x86 n'ouvre aucune fenêtre), 162 A
+(exception de l'app Terminal : le Terminal exécute lui-même un programme
+console par Os-x86, en-tête lu par lui), 215 A (contenu demandé au Terminal :
+surface « écran plein » à largeur fixe, 80 colonnes et 25 lignes ou plus,
+attributs de couleur par cellule et curseur, rafraîchie à ~30 Hz ; entrée
+touche par touche avec Ctrl+lettre ; accord Échap+lettre / Échap+chiffre
+traduit en Alt+lettre / F1-F12 ; Home, End, Suppr, Page ; taille connue à
+l'ouverture ; redimensionnement à chaud en V2) et 216 A (Ctrl+C va au
+programme invité ; tuer par Ctrl+Pause si Kazo l'a, sinon un bouton du
+Terminal ou `x86 kill`), 2026-11-11 ; réponse du mainteneur du 2026-11-11 sur
+la dépendance du Terminal (B, §1), en ses mots : « pour pouvoir host
+éventuellement les sessions terminal. Il deviendra le seul application système
+à utiliser la feature. Il l'utilise pareil que boxedWine » ; essai E14
+d'Os-x86 (`cmd` de Wine et FreeDOS utilisables dans une grille de ce type sous
+100 ms ; sans Alt ni F-touches, EDIT ne quitte pas par son menu, `nano` perd
+Méta, `mc` ses F-touches).
 
 - **Complète :** l'[ADR 0061](0061-xterm-terminal-emulator.md) (xterm.js
   comme écran et clavier), l'[ADR 0064](0064-posix-shell-scripts-jobs-and-app-commands.md)
   §6-7 (entrée standard, `nano`, commandes plein écran), l'[ADR 0245](0245-feature-service-registry-and-async-resolution.md)
-  (le Terminal résout `Ix86` par le registre) et l'[ADR 0251](0251-shell-route-to-associations-and-binfmt.md)
+  (le Terminal résout `Ix86` par le registre) et l'[ADR 0251](0251-shell-route-to-execute-capable-apps.md)
   (route du shell hors du Terminal).
 - **Ne change pas :** `IKazoTerminal`, la discipline de ligne, le mode brut
   complet (D27 : V2 d'Os-x86).
 - **Pour :** l'app Terminal de Kazo, qui **appelle Os-x86 par `Ix86`** comme
   BoxedWine le fait (§1) : un programme console Windows, un programme DOS en
   mode texte, un shell Linux dans l'onglet du terminal ; et tout handler de
-  commande plein écran, dont le handler binfmt d'Os-x86 (ADR 0251) et
-  `x86 shell`, qui reçoivent le même contrat étendu (§2 à §5).
+  commande plein écran, dont la commande `x86` d'Os-x86 lancée par la route de
+  l'ADR 0251 (MZ pur, ELF) et `x86 shell`, qui reçoivent le même contrat
+  étendu (§2 à §5).
 
 ## Contexte
 
@@ -110,10 +113,12 @@ pas par son menu, `nano` perd Méta, `mc` ses F-touches).
   `TryRunAsync(path, header, arguments, session)`), que le Terminal fournit
   au démarrage du shell : la route 2 de l'ADR 0251 demande d'abord à l'hôte
   du shell (`ShellSession.Host`) s'il prend le fichier ; « non » (hôte sans
-  `ProgramHost`, `Ix86` absent, en-tête inconnu) → le handler binfmt de la
-  Feature, puis l'association, comme l'ADR 0251 l'écrit. Hors du Terminal
-  (script lancé par une autre app, `hsh` sans hôte de programmes), le
-  handler binfmt reste la route.
+  `ProgramHost`, `Ix86` absent, en-tête inconnu) → la suite de la route de
+  l'ADR 0251 : détection du type par les détecteurs de format de la Feature,
+  apps à capacité d'exécution, association par défaut de l'usager. Hors du
+  Terminal (script lancé par une autre app, `hsh` sans hôte de programmes),
+  cette route est la seule : un PE console va à BoxedWine comme un PE
+  graphique, un MZ pur ou un ELF à la commande `x86`.
 - **Héberger des sessions** : le Terminal peut ouvrir un onglet qui est une
   session d'Os-x86 (shell Linux par pty, invite DOS) offerte par `Ix86`,
   sans passer par la commande `x86 shell` (qui reste pour le script et le
@@ -241,8 +246,9 @@ pas par son menu, `nano` perd Méta, `mc` ses F-touches).
 - Docs : [`terminal-api.md`](../../framework/terminal-api.md),
   [`terminal-emulator.md`](../terminal-emulator.md) (commandes plein écran,
   touches), `features.md`, entrée `changes/unreleased`.
-- Tests : `ProgramHost` : fichier pris par l'hôte → pas de handler binfmt ;
-  hôte sans `ProgramHost` ou `Ix86` null → route de l'ADR 0251 inchangée ;
+- Tests : `ProgramHost` : fichier pris par l'hôte → ni détection ni
+  candidat ; hôte sans `ProgramHost` ou `Ix86` null → route de l'ADR 0251
+  inchangée ;
   OS rogné sans Os-x86 → le Terminal démarre et `./x.exe` rend le message de
   l'ADR 0251 ; décodage de chaque F-touche et d'Insert ; accord Échap+e → Alt+e,
   Échap+3 → F3, Échap+Échap → Échap, Échap seul après 500 ms ; Ctrl+C livré
@@ -262,7 +268,8 @@ pas par son menu, `nano` perd Méta, `mc` ses F-touches).
      formes pendant une version, puis `Tab` seul (ADR 0019, dépréciation).
    - B) Garder `Character "\t"` seulement.
 
-Appliquées en attendant : 1 A, 2 A.
+Réponses du mainteneur (2026-11-11) : 1 A, 2 A ; hôte de programmes du shell
+(`KazoShellOptions.ProgramHost`, §1) : A (251 A), consulté en premier.
 
 Point réglé le 2026-11-11 : le Terminal dépend-il d'`Os-x86.Interface` → oui,
 en dépendance facultative, utilisée comme BoxedWine le fait (§1).

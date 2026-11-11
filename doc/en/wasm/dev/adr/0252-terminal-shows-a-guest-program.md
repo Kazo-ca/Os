@@ -6,36 +6,37 @@
 
 Proposed on 2026-11-11, for the Os-x86 feature
 ([Kazo-ca/Os-x86](https://github.com/Kazo-ca/Os-x86)), lot 1 of the
-`feature/base` series. The recommendation of each question asked to Benoit
-is applied while waiting for his answer. Source decisions: 154 B ("the Kazo
-terminal shows" the console of a Windows program and a text-mode DOS
-program; Os-x86 opens no window), 162 A (Terminal app exception: the
-Terminal runs a console program itself through Os-x86, with the header read
-by it), 215 A (what is asked of the Terminal: a fixed-width "full screen" surface, 80 columns
-and 25 rows or more, per-cell color attributes and cursor, refreshed at
-~30 Hz; key-by-key input with Ctrl+letter; Esc+letter / Esc+digit chord
-translated to Alt+letter / F1-F12; Home, End, Delete, Page; size known at
-opening; hot resize in V2) and 216 A (Ctrl+C goes to the guest program;
-kill by Ctrl+Pause when Kazo has it, otherwise a Terminal button or
-`x86 kill`), 2026-11-11; maintainer's answer of 2026-11-11 on the Terminal's
+`feature/base` series. The questions asked to Benoit got their answers on
+2026-11-11 (1 A, 2 A; the Terminal's dependency: B, §1; the shell's program
+host `ProgramHost`: A, 251 A); the decision applies them. Source decisions:
+154 B ("the Kazo terminal shows" the console of a Windows program and a
+text-mode DOS program; Os-x86 opens no window), 162 A (Terminal app exception:
+the Terminal runs a console program itself through Os-x86, with the header
+read by it), 215 A (what is asked of the Terminal: a fixed-width "full screen"
+surface, 80 columns and 25 rows or more, per-cell color attributes and cursor,
+refreshed at ~30 Hz; key-by-key input with Ctrl+letter; Esc+letter / Esc+digit
+chord translated to Alt+letter / F1-F12; Home, End, Delete, Page; size known
+at opening; hot resize in V2) and 216 A (Ctrl+C goes to the guest program;
+kill by Ctrl+Pause when Kazo has it, otherwise a Terminal button or `x86
+kill`), 2026-11-11; maintainer's answer of 2026-11-11 on the Terminal's
 dependency (B, §1), in his words (translated): "to be able to host terminal
-sessions eventually. It will become the only system application that uses
-the feature. It uses it the same way as BoxedWine"; Os-x86 trial E14 (Wine's `cmd` and FreeDOS usable
-in such a grid under 100 ms; without Alt nor F-keys, EDIT cannot quit
-through its menu, `nano` loses Meta, `mc` its F-keys).
+sessions eventually. It will become the only system application that uses the
+feature. It uses it the same way as BoxedWine"; Os-x86 trial E14 (Wine's `cmd`
+and FreeDOS usable in such a grid under 100 ms; without Alt nor F-keys, EDIT
+cannot quit through its menu, `nano` loses Meta, `mc` its F-keys).
 
 - **Completes:** [ADR 0061](0061-xterm-terminal-emulator.md) (xterm.js as
   screen and keyboard), [ADR 0064](0064-posix-shell-scripts-jobs-and-app-commands.md)
   §6-7 (standard input, `nano`, full-screen commands), [ADR 0245](0245-feature-service-registry-and-async-resolution.md)
-  (the Terminal resolves `Ix86` through the registry) and [ADR 0251](0251-shell-route-to-associations-and-binfmt.md)
+  (the Terminal resolves `Ix86` through the registry) and [ADR 0251](0251-shell-route-to-execute-capable-apps.md)
   (shell route outside the Terminal).
 - **Does not change:** `IKazoTerminal`, the line discipline, the full raw
   mode (D27: Os-x86's V2).
 - **For:** Kazo's Terminal app, which **calls Os-x86 through `Ix86`** as
   BoxedWine does (§1): a Windows console program, a text-mode DOS program, a
   Linux shell in the terminal tab; and every full-screen command handler,
-  including the Os-x86 binfmt handler (ADR 0251) and `x86 shell`, which get
-  the same extended contract (§2 to §5).
+  including the Os-x86 `x86` command launched by the ADR 0251 route (pure MZ,
+  ELF) and `x86 shell`, which get the same extended contract (§2 to §5).
 
 ## Context
 
@@ -107,10 +108,12 @@ through its menu, `nano` loses Meta, `mc` its F-keys).
   `TryRunAsync(path, header, arguments, session)`), which the Terminal
   provides when starting the shell: route 2 of ADR 0251 first asks the
   shell's host (`ShellSession.Host`) whether it takes the file; "no" (host
-  without `ProgramHost`, `Ix86` absent, unknown header) → the Feature's
-  binfmt handler, then the association, as ADR 0251 writes. Outside the
-  Terminal (script run by another app, `hsh` without a program host), the
-  binfmt handler stays the route.
+  without `ProgramHost`, `Ix86` absent, unknown header) → the rest of the ADR
+  0251 route: type detection by the Feature's format detectors,
+  execute-capable apps, the user's default association. Outside the Terminal
+  (script run by another app, `hsh` without a program host), that route is the
+  only one: a console PE goes to BoxedWine like a graphical PE, a pure MZ or
+  an ELF to the `x86` command.
 - **Hosting sessions**: the Terminal can open a tab that is an Os-x86
   session (Linux shell through a pty, DOS prompt) offered by `Ix86`, without
   going through the `x86 shell` command (which stays for scripts and
@@ -233,10 +236,10 @@ through its menu, `nano` loses Meta, `mc` its F-keys).
 - Docs: [`terminal-api.md`](../../framework/terminal-api.md),
   [`terminal-emulator.md`](../terminal-emulator.md) (full-screen commands,
   keys), `features.md`, `changes/unreleased` entry.
-- Tests: `ProgramHost`: file taken by the host → no binfmt handler; host
-  without `ProgramHost` or `Ix86` null → ADR 0251 route unchanged; trimmed OS
-  without Os-x86 → the Terminal starts and `./x.exe` gives the ADR 0251
-  message; decoding of each F-key and Insert; chord Esc+e → Alt+e, Esc+3 → F3,
+- Tests: `ProgramHost`: file taken by the host → no detection, no
+  candidate; host without `ProgramHost` or `Ix86` null → ADR 0251 route
+  unchanged; trimmed OS without Os-x86 → the Terminal starts and `./x.exe`
+  gives the ADR 0251 message; decoding of each F-key and Insert; chord Esc+e → Alt+e, Esc+3 → F3,
   Esc+Esc → Esc, lone Esc after 500 ms; Ctrl+C delivered in full screen even
   with a selection; Ctrl+Pause and the button → 130; cell frame rendered,
   unchanged rows not rewritten; `htop` and `nano` unchanged.
@@ -253,7 +256,8 @@ through its menu, `nano` loses Meta, `mc` its F-keys).
      one version, then `Tab` only (ADR 0019, deprecation).
    - B) Keep `Character "\t"` only.
 
-Applied while waiting: 1 A, 2 A.
+Maintainer's answers (2026-11-11): 1 A, 2 A; the shell's program host
+(`KazoShellOptions.ProgramHost`, §1): A (251 A), consulted first.
 
 Settled on 2026-11-11: does the Terminal depend on `Os-x86.Interface` → yes,
 as an optional dependency, used like BoxedWine does (§1).
