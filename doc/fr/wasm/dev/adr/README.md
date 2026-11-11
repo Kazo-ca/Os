@@ -249,7 +249,7 @@ prochain numéro libre est indiqué dans
 | `0250-storage-persistence-and-eviction.md` (réservé, PR en cours vers `feature/base`) | ADR 0250 : Persistance et éviction du stockage |
 | `0251-shell-route-to-associations-and-binfmt.md` (réservé, PR en cours vers `feature/base`) | ADR 0251 : Route du shell vers l'association et binfmt |
 | `0252-terminal-shows-a-guest-program.md` (réservé, PR en cours vers `feature/base`) | ADR 0252 : Le Terminal affiche un programme invité |
-| `0253-marked-sender-on-launch-and-open.md` (réservé, PR en cours vers `feature/base`) | ADR 0253 : Expéditeur marqué |
+| [`0253-marked-sender-on-launch-and-open.md`](0253-marked-sender-on-launch-and-open.md) | ADR 0253 : expéditeur marqué par l'OS sur `LaunchAsync` et l'ouverture de fichier : l'app cible reçoit l'identité de l'app et de l'usager qui ont demandé, pour le journal seulement, jamais comme plafond de permission |
 | `0254-per-user-events.md` (réservé, PR en cours vers `feature/base`) | ADR 0254 : Événements par usager |
 | `0255-relay-identities-and-decisions-of-a-feature.md` (réservé, PR en cours vers `feature/base`) | ADR 0255 : Relais : identités et décisions d'une Feature |
 
