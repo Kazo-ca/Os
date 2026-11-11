@@ -19,8 +19,9 @@ instance) of the Os-x86 design.
 - **Does not change:** component contracts (ADR 0063, 0148, 0156), which
   remain the way to provide a **rendering**; this ADR covers a **service**
   without a user interface.
-- **For:** `Ix86`; BoxedWine and `BoxedWine.Lib` which call it; the Terminal
-  does not need it (ADR 0251, 0252).
+- **For:** `Ix86`; BoxedWine and `BoxedWine.Lib` which call it; Kazo's
+  Terminal app, the only system app that resolves a Feature interface
+  (ADR 0252 §1), through the same facade.
 
 ## Context
 
@@ -65,7 +66,8 @@ instance) of the Os-x86 design.
   `ServiceEntryPoint` if there is one), never in the caller's. It receives
   an `IFeatureServiceContext` (the Feature's context, the caller's identity
   for ADR 0253, the page's stop token).
-- An ordinary app can provide nothing (ADR 0243 §5).
+- An ordinary app can provide nothing (ADR 0243 §5); any app, system apps
+  included, can consume (§2; the Terminal app, ADR 0252 §1).
 
 ### 2. An app consumes through `KazoFeatures`
 
