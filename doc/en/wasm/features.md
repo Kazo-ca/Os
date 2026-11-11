@@ -446,7 +446,7 @@ one row per ADR).
 | Storage persistence and eviction | The OS asks the browser not to erase its storage, shows the quota and warns when the browser erased data anyway. | [0250](dev/adr/0250-storage-persistence-and-eviction.md) | — |
 | Shell route to execute-capable apps | `./program.exe` in the terminal is typed by a Feature's format detector, then handed to the app that declares `execute` for that MIME type, without an execute bit nor a script reading. | [0251](dev/adr/0251-shell-route-to-execute-capable-apps.md) | — |
 | The Terminal shows a guest program | A Feature's console program (Linux shell, text-mode DOS program) shows in the Kazo Terminal: per-cell colors, function keys, Ctrl+C to the program. | [0252](dev/adr/0252-terminal-shows-a-guest-program.md) | — |
-| Marked sender | An app launched or a file opened by another app knows the sender, marked by the OS, for its journal. | 0253 reserved (PR in progress) | — |
+| Marked sender | An app launched or a file opened by another app knows the sender, marked by the OS, for its journal. | [0253](dev/adr/0253-marked-sender-on-launch-and-open.md) | — |
 | Per-user events | A per-user events journal (permission granted, update, conflict resolved), visible by the user and the administrators. | 0254 reserved (PR in progress) | — |
 | Relay: identities and decisions of a Feature | The server relay accepts from a Feature an identity per flow, a decision and limits, and logs per identity. | 0255 reserved (PR in progress) | — |
 
