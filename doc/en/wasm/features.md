@@ -441,7 +441,7 @@ one row per ADR).
 | Service registry and asynchronous resolution | An app asks the OS for the interface a Feature provides, without a binary dependency; null when the Feature is absent. | [0245](dev/adr/0245-feature-service-registry-and-async-resolution.md) | — |
 | Permissions declared by a Feature | A Feature declares its own permissions, dangerous ones included; they follow the rules of the OS catalog and are never granted silently. | [0246](dev/adr/0246-provider-declared-permissions.md) | — |
 | Roles declared by a Feature | A Feature declares roles an administrator assigns; every sensitive operation goes through the OS authentication. | [0247](dev/adr/0247-feature-declared-roles.md) | — |
-| Dependency resolution | The Store and `kazopkg` install the dependencies declared in the manifest, with one consent; removing a package warns and disables the dependent apps. | 0248 reserved (PR in progress) | — |
+| Dependency resolution | The Store and `kazopkg` install the dependencies declared in the manifest, with one consent; removing a package warns and disables the dependent apps. | [0248](dev/adr/0248-store-and-kazopkg-dependency-resolution.md) | — |
 | “Features” section of Settings | Settings lists the installed Features and shows the pages they provide, by the user's role. | 0249 reserved (PR in progress) | — |
 | Storage persistence and eviction | The OS asks the browser not to erase its storage, shows the quota and warns when the browser erased data anyway. | 0250 reserved (PR in progress) | — |
 | Shell route to associations and binfmt | `./program.exe` in the terminal goes to the associated app or to a Feature's binfmt by the file header, without an execute bit nor a script reading. | 0251 reserved (PR in progress) | — |
