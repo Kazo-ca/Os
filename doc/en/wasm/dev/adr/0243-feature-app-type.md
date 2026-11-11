@@ -6,10 +6,12 @@
 
 Proposed on 2026-11-11, for the Os-x86 feature
 ([Kazo-ca/Os-x86](https://github.com/Kazo-ca/Os-x86)), first ADR of lot 1 of
-the `feature/base` series. The recommendation of each question asked to
-Benoit is applied while waiting for his answer. Source decisions, taken by
-Benoit during the design of Os-x86: D33, D37, D38, D39 (series 3 and 4,
-2026-11-09) and 172 A (identifiers, 2026-11-11).
+the `feature/base` series. The questions asked to Benoit got their answers on
+2026-11-11 (series 15 of the Os-x86 design); they are recorded at the end of
+this ADR and the decision applies them. Source decisions, taken by Benoit
+during the design of Os-x86: D33, D37, D38, D39 (series 3 and 4, 2026-11-09),
+172 A then 222 A (identifiers `ca.kazo.x86` and `ca.kazo.boxedwine`,
+2026-11-11).
 
 - **Completes:** [ADR 0047](0047-app-definition-and-generated-manifests.md)
   (`AppDefinition`, generated manifests), [ADR 0048](0048-system-apps-and-uninstall.md)
@@ -17,8 +19,8 @@ Benoit during the design of Os-x86: D33, D37, D38, D39 (series 3 and 4,
   [ADR 0182](0182-install-apps-from-github.md) (installing a package).
 - **Opens:** ADRs 0244 to 0255 of the same series, which give a Feature its
   shared libraries, its service registry, its permissions, its roles, its
-  dependencies, its Settings pages, its binfmt and its relay.
-- **For:** Os-x86 (`org.kazoos.x86`), which runs x86 virtual machines in the
+  dependencies, its Settings pages, its format detectors and its relay.
+- **For:** Os-x86 (`ca.kazo.x86`), which runs x86 virtual machines in the
   browser, and any feature of the same kind.
 
 ## Context
@@ -58,7 +60,7 @@ Benoit during the design of Os-x86: D33, D37, D38, D39 (series 3 and 4,
 
 - `AppKind` gains `Feature` (JSON value `feature`). A Feature is a **unit of
   installation, update, removal, Store presentation and permission approval**,
-  with a single identity (`Id`, for example `org.kazoos.x86`), a single
+  with a single identity (`Id`, for example `ca.kazo.x86`), a single
   manifest, a single package.
 - A Feature has no entry point of its own (`EntryPoint` is ignored; the
   generator emits `KOSAPP0032` when it is declared): it has neither a window
@@ -72,7 +74,7 @@ Benoit during the design of Os-x86: D33, D37, D38, D39 (series 3 and 4,
 ### 2. Typed child entry points
 
 - `FeatureDefinition.EntryPoints` lists **children**, each with an identifier
-  `<feature>.<suffix>` (`org.kazoos.x86.cli`, `.permission`, `.rules`,
+  `<feature>.<suffix>` (`ca.kazo.x86.cli`, `.permission`, `.rules`,
   `.admin`), an ordinary `Kind` (`Terminal`, `Window`, `Service`, or
   `SettingsPage` introduced by ADR 0249), its entry point (Blazor type or
   command), its own options (`Terminal`, `Window`, `ServiceStartup`), and its
@@ -137,7 +139,7 @@ Benoit during the design of Os-x86: D33, D37, D38, D39 (series 3 and 4,
 | Declare provider permissions, dangerous ones included | 0246 | `manifest.feature.only` |
 | Declare roles | 0247 | `manifest.feature.only` |
 | Provide pages to Settings ▸ Features | 0249 | `manifest.feature.only` |
-| Register an executable format by header (binfmt) | 0251 | `manifest.feature.only` |
+| Declare format detectors (a program's type from its header) | 0251 | `manifest.feature.only` |
 | Give a per-flow identity to the relay | 0255 | refused at run time |
 | Depend on another Feature (`Dependencies` to a `Feature`) | 0248 | an ordinary app may too (mandatory or optional dependency) |
 
@@ -158,14 +160,16 @@ An ordinary app that declares one of these is refused by the generator
 ### 7. Identifiers
 
 - A Feature identifier has the same form as apps (`a.b.c` in lower case).
-  Os-x86 takes `org.kazoos.x86` and its children `org.kazoos.x86.cli` (`x86`
-  command), `org.kazoos.x86.permission` (network permission window),
-  `org.kazoos.x86.rules` (rules page), `org.kazoos.x86.admin` (Settings
-  pages); the BoxedWine app takes `org.kazoos.boxedwine` (172 A).
+  Os-x86 takes `ca.kazo.x86` and its children `ca.kazo.x86.cli` (`x86`
+  command), `ca.kazo.x86.permission` (network permission window),
+  `ca.kazo.x86.rules` (rules page), `ca.kazo.x86.admin` (Settings
+  pages); the BoxedWine app takes `ca.kazo.boxedwine` (172 A, `ca.kazo.`
+  prefix set by 222 A, like `ca.kazo.irc`).
 - No Kazo code reserves the `org.kazoos.` prefix to system apps (checked in
   `AppManifestValidator.cs` and `AppCatalog.cs`: the system-app status comes
-  from the trust list of ADR 0048 §1, not from the prefix). Question 1 below
-  confirms or changes this.
+  from the trust list of ADR 0048 §1, not from the prefix). The maintainer
+  keeps it so (222 A): `org.kazoos.` stays with the built-in apps of this
+  repository, with no reservation in the validator (222 C not retained).
 
 ## Rejected options
 
@@ -181,9 +185,9 @@ An ordinary app that declares one of these is refused by the generator
   everything: a component runs with the rights of the host app (ADR 0148 §4),
   which is the opposite of what a security feature (network permission
   window) requires; and a terminal command is not a component.
-- **D. Personal installation allowed**: a feature that registers a binfmt,
-  permissions or a role acts on the whole machine; two users with two
-  versions would give two behaviors of the shell.
+- **D. Personal installation allowed**: a feature that declares a format
+  detector, permissions or a role acts on the whole machine; two users with
+  two versions would give two behaviors of the shell.
 
 ## Consequences
 
@@ -239,6 +243,7 @@ An ordinary app that declares one of these is refused by the generator
    - B) A single manifest with an array: fewer files, but a new schema and a
      validator to rewrite.
 
-Applied while waiting: 1 A (the identifiers of §7 become `ca.kazo.x86` and
-`ca.kazo.boxedwine` if Benoit confirms A; `org.kazoos.x86` stays in this ADR
-until his answer), 2 A, 3 A.
+Maintainer's answers (2026-11-11): 1 A (222 A: `ca.kazo.x86` and
+`ca.kazo.boxedwine`, applied across the series; `org.kazoos.` stays with the
+built-in apps of this repository, with no reservation in the validator, C not
+retained), 2 A, 3 A.

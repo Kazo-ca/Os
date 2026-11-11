@@ -6,10 +6,12 @@
 
 Proposée le 2026-11-11, pour la fonctionnalité Os-x86
 ([Kazo-ca/Os-x86](https://github.com/Kazo-ca/Os-x86)), première ADR du lot 1
-de la série `feature/base`. La recommandation de chaque question posée à
-Benoit est appliquée en attendant sa réponse. Décisions d'origine, prises par
-Benoit dans la conception d'Os-x86 : D33, D37, D38, D39 (séries 3 et 4,
-2026-11-09) et 172 A (identifiants, 2026-11-11).
+de la série `feature/base`. Les questions posées à Benoit ont reçu leur
+réponse le 2026-11-11 (série 15 de la conception d'Os-x86) ; elles sont
+consignées à la fin de cette ADR et la décision les applique. Décisions
+d'origine, prises par Benoit dans la conception d'Os-x86 : D33, D37, D38, D39
+(séries 3 et 4, 2026-11-09), 172 A puis 222 A (identifiants `ca.kazo.x86` et
+`ca.kazo.boxedwine`, 2026-11-11).
 
 - **Complète :** l'[ADR 0047](0047-app-definition-and-generated-manifests.md)
   (`AppDefinition`, manifestes générés), l'[ADR 0048](0048-system-apps-and-uninstall.md)
@@ -17,9 +19,9 @@ Benoit dans la conception d'Os-x86 : D33, D37, D38, D39 (séries 3 et 4,
   l'[ADR 0182](0182-install-apps-from-github.md) (installation d'un paquet).
 - **Ouvre :** les ADR 0244 à 0255 de la même série, qui donnent à une Feature
   ses bibliothèques partagées, son registre d'interfaces, ses permissions,
-  ses rôles, ses dépendances, ses pages des Paramètres, son binfmt et son
-  relais.
-- **Pour :** Os-x86 (`org.kazoos.x86`), qui fait tourner des machines
+  ses rôles, ses dépendances, ses pages des Paramètres, ses détecteurs de
+  format et son relais.
+- **Pour :** Os-x86 (`ca.kazo.x86`), qui fait tourner des machines
   virtuelles x86 dans le navigateur, et toute fonctionnalité du même genre.
 
 ## Contexte
@@ -62,7 +64,7 @@ Benoit dans la conception d'Os-x86 : D33, D37, D38, D39 (séries 3 et 4,
 - `AppKind` gagne `Feature` (valeur JSON `feature`). Une Feature est une
   **unité d'installation, de mise à jour, de retrait, de présentation dans le
   Store et d'approbation des permissions**, avec une seule identité
-  (`Id`, par exemple `org.kazoos.x86`), un seul manifeste, un seul paquet.
+  (`Id`, par exemple `ca.kazo.x86`), un seul manifeste, un seul paquet.
 - Une Feature n'a pas de point d'entrée propre (`EntryPoint` est ignoré ; le
   générateur produit `KOSAPP0032` s'il est déclaré) : elle n'a ni fenêtre ni
   processus à elle. Ce qu'elle exécute, ce sont ses points d'entrée enfants.
@@ -75,7 +77,7 @@ Benoit dans la conception d'Os-x86 : D33, D37, D38, D39 (séries 3 et 4,
 ### 2. Des points d'entrée enfants typés
 
 - `FeatureDefinition.EntryPoints` liste des **enfants**, chacun avec un
-  identifiant `<feature>.<suffixe>` (`org.kazoos.x86.cli`, `.permission`,
+  identifiant `<feature>.<suffixe>` (`ca.kazo.x86.cli`, `.permission`,
   `.rules`, `.admin`), un `Kind` ordinaire (`Terminal`, `Window`, `Service`,
   ou `SettingsPage` introduit par l'ADR 0249), son point d'entrée (type
   Blazor ou commande), ses options propres (`Terminal`, `Window`,
@@ -144,7 +146,7 @@ Benoit dans la conception d'Os-x86 : D33, D37, D38, D39 (séries 3 et 4,
 | Déclarer des permissions de fournisseur, dangereuses comprises | 0246 | `manifest.feature.only` |
 | Déclarer des rôles | 0247 | `manifest.feature.only` |
 | Fournir des pages à Paramètres ▸ Fonctionnalités | 0249 | `manifest.feature.only` |
-| Enregistrer un format exécutable par en-tête (binfmt) | 0251 | `manifest.feature.only` |
+| Déclarer des détecteurs de format (type d'un programme par son en-tête) | 0251 | `manifest.feature.only` |
 | Donner une identité par flux au relais | 0255 | refusé à l'exécution |
 | Dépendre d'une autre Feature (`Dependencies` vers un `Feature`) | 0248 | une app ordinaire le peut aussi (dépendance obligatoire ou facultative) |
 
@@ -165,14 +167,17 @@ générateur (diagnostic `KOSAPP0033`) et par le validateur à l'installation.
 ### 7. Identifiants
 
 - Identifiant d'une Feature : même forme que les apps (`a.b.c` en minuscules).
-  Os-x86 prend `org.kazoos.x86` et ses enfants `org.kazoos.x86.cli` (commande
-  `x86`), `org.kazoos.x86.permission` (fenêtre de permission réseau),
-  `org.kazoos.x86.rules` (page des règles), `org.kazoos.x86.admin` (pages des
-  Paramètres) ; l'app BoxedWine prend `org.kazoos.boxedwine` (172 A).
+  Os-x86 prend `ca.kazo.x86` et ses enfants `ca.kazo.x86.cli` (commande
+  `x86`), `ca.kazo.x86.permission` (fenêtre de permission réseau),
+  `ca.kazo.x86.rules` (page des règles), `ca.kazo.x86.admin` (pages des
+  Paramètres) ; l'app BoxedWine prend `ca.kazo.boxedwine` (172 A, préfixe
+  `ca.kazo.` fixé par 222 A, comme `ca.kazo.irc`).
 - Aucun code de Kazo ne réserve le préfixe `org.kazoos.` aux apps système
   (vérifié dans `AppManifestValidator.cs` et `AppCatalog.cs` : la qualité
   d'app système vient de la liste de confiance de l'ADR 0048 §1, pas du
-  préfixe). La question 1 ci-dessous le confirme ou le change.
+  préfixe). Le mainteneur le garde ainsi (222 A) : `org.kazoos.` reste aux
+  apps intégrées de ce dépôt, sans réservation dans le validateur (222 C non
+  retenue).
 
 ## Options écartées
 
@@ -190,9 +195,9 @@ générateur (diagnostic `KOSAPP0033`) et par le validateur à l'installation.
   ce qui est l'inverse de ce qu'une fonctionnalité de sécurité (fenêtre de
   permission réseau) exige ; et une commande de terminal n'est pas un
   composant.
-- **D. Installation personnelle permise** : une fonctionnalité qui enregistre
-  un binfmt, des permissions ou un rôle agit sur toute la machine ; deux
-  usagers avec deux versions donneraient deux comportements du shell.
+- **D. Installation personnelle permise** : une fonctionnalité qui déclare un
+  détecteur de format, des permissions ou un rôle agit sur toute la machine ;
+  deux usagers avec deux versions donneraient deux comportements du shell.
 
 ## Conséquences
 
@@ -249,6 +254,7 @@ générateur (diagnostic `KOSAPP0033`) et par le validateur à l'installation.
    - B) Un seul manifeste avec un tableau : moins de fichiers, mais un schéma
      nouveau et un validateur à réécrire.
 
-Appliquées en attendant : 1 A (les identifiants du §7 deviennent
-`ca.kazo.x86` et `ca.kazo.boxedwine` si Benoit confirme A ; `org.kazoos.x86`
-reste dans cette ADR jusqu'à sa réponse), 2 A, 3 A.
+Réponses du mainteneur (2026-11-11) : 1 A (222 A : `ca.kazo.x86` et
+`ca.kazo.boxedwine`, appliqués dans toute la série ; `org.kazoos.` reste aux
+apps intégrées de ce dépôt, sans réservation dans le validateur, C non
+retenue), 2 A, 3 A.
