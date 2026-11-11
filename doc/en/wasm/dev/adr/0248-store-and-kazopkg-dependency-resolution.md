@@ -6,15 +6,16 @@
 
 Proposed on 2026-11-11, for the Os-x86 feature
 ([Kazo-ca/Os-x86](https://github.com/Kazo-ca/Os-x86)), lot 1 of the
-`feature/base` series. The recommendation of each question asked to Benoit
-is applied while waiting for his answer. Source decisions: decision 7
-("installing BoxedWine installs Os-x86 at the same time"), D12 ("the Store
-and kazopkg resolve the dependencies, one consent screen, an SDK call
-'request the installation' for an optional dependency; uninstalling Os-x86
-warns and disables the dependent apps") and 72.10 (guidelines of 2026-11-10:
-"installing BoxedWine must offer to install Os-x86 when needed, with an
-administrator's consent; on refusal, the installation of BoxedWine stops with
-a clear message").
+`feature/base` series. The questions asked to Benoit got their answers on
+2026-11-11 (series 15 of the Os-x86 design); they are recorded at the end of
+this ADR and the decision applies them. Source decisions: decision 7
+("installing BoxedWine installs Os-x86 at the same time"), D12 ("the Store and
+kazopkg resolve the dependencies, one consent screen, an SDK call 'request the
+installation' for an optional dependency; uninstalling Os-x86 warns and
+disables the dependent apps") and 72.10 (guidelines of 2026-11-10: "installing
+BoxedWine must offer to install Os-x86 when needed, with an administrator's
+consent; on refusal, the installation of BoxedWine stops with a clear
+message").
 
 - **Completes:** [ADR 0005](0005-deterministic-app-dependency-order.md)
   (dependency order), [ADR 0048](0048-system-apps-and-uninstall.md) §4
@@ -171,4 +172,4 @@ a clear message").
      system-wide with an administrator's authentication in the same consent.
    - B) Refused: an app that depends on a Feature installs system-wide.
 
-Applied while waiting: 1 A, 2 A.
+Maintainer's answers (2026-11-11): 1 A, 2 A.

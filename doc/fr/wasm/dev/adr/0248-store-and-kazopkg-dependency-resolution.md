@@ -6,14 +6,15 @@
 
 Proposée le 2026-11-11, pour la fonctionnalité Os-x86
 ([Kazo-ca/Os-x86](https://github.com/Kazo-ca/Os-x86)), lot 1 de la série
-`feature/base`. La recommandation de chaque question posée à Benoit est
-appliquée en attendant sa réponse. Décisions d'origine : décision 7
+`feature/base`. Les questions posées à Benoit ont reçu leur réponse le
+2026-11-11 (série 15 de la conception d'Os-x86) ; elles sont consignées à la
+fin de cette ADR et la décision les applique. Décisions d'origine : décision 7
 (« installer BoxedWine installe Os-x86 en même temps »), D12 (« le Store et
-kazopkg résolvent les dépendances, un seul écran de consentement, un appel
-du SDK “demander l'installation” pour une dépendance facultative ;
-désinstaller Os-x86 avertit et désactive les apps dépendantes ») et 72.10
-(consignes du 2026-11-10 : « installer BoxedWine doit proposer d'installer
-Os-x86 si nécessaire, avec l'accord d'un administrateur ; en cas de refus,
+kazopkg résolvent les dépendances, un seul écran de consentement, un appel du
+SDK “demander l'installation” pour une dépendance facultative ; désinstaller
+Os-x86 avertit et désactive les apps dépendantes ») et 72.10 (consignes du
+2026-11-10 : « installer BoxedWine doit proposer d'installer Os-x86 si
+nécessaire, avec l'accord d'un administrateur ; en cas de refus,
 l'installation de BoxedWine s'arrête avec un message clair »).
 
 - **Complète :** l'[ADR 0005](0005-deterministic-app-dependency-order.md)
@@ -176,4 +177,4 @@ l'installation de BoxedWine s'arrête avec un message clair »).
    - B) Refusée : une app qui dépend d'une Feature s'installe au niveau
      système.
 
-Appliquées en attendant : 1 A, 2 A.
+Réponses du mainteneur (2026-11-11) : 1 A, 2 A.
