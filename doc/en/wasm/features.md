@@ -436,9 +436,9 @@ one row per ADR).
 
 | Feature | Description | ADR | Issue |
 | --- | --- | --- | --- |
-| “Feature” app type | An optional OS feature (WSL-like) installed system-wide by an administrator: one identity, child entry points (command, windows, pages), permissions as a block. | 0243 reserved (PR in progress) | — |
-| App libraries and shared versions | A package carries the app's own libraries (#419); one copy of a shared library (a Feature's contracts) is loaded per page, the most recent compatible one. | 0244 reserved (PR in progress) | — |
-| Service registry and asynchronous resolution | An app asks the OS for the interface a Feature provides, without a binary dependency; null when the Feature is absent. | 0245 reserved (PR in progress) | — |
+| “Feature” app type | An optional OS feature (WSL-like) installed system-wide by an administrator: one identity, child entry points (command, windows, pages), permissions as a block. | [0243](dev/adr/0243-feature-app-type.md) | — |
+| App libraries and shared versions | A package carries the app's own libraries (#419); one copy of a shared library (a Feature's contracts) is loaded per page, the most recent compatible one. | [0244](dev/adr/0244-app-libraries-and-shared-versions.md) | — |
+| Service registry and asynchronous resolution | An app asks the OS for the interface a Feature provides, without a binary dependency; null when the Feature is absent. | [0245](dev/adr/0245-feature-service-registry-and-async-resolution.md) | — |
 | Permissions declared by a Feature | A Feature declares its own permissions, dangerous ones included; they follow the rules of the OS catalog and are never granted silently. | [0246](dev/adr/0246-provider-declared-permissions.md) | — |
 | Roles declared by a Feature | A Feature declares roles an administrator assigns; every sensitive operation goes through the OS authentication. | 0247 reserved (PR in progress) | — |
 | Dependency resolution | The Store and `kazopkg` install the dependencies declared in the manifest, with one consent; removing a package warns and disables the dependent apps. | 0248 reserved (PR in progress) | — |
