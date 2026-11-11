@@ -6,13 +6,13 @@
 
 Proposed on 2026-11-11, for the Os-x86 feature
 ([Kazo-ca/Os-x86](https://github.com/Kazo-ca/Os-x86)), lot 1 of the
-`feature/base` series. The recommendation of each question asked to Benoit
-is applied while waiting for his answer. Source decisions: D38 ("a
-'Features' section in Settings"), 122 ("an Os-x86 admin page in Settings →
-Features plus an equivalent terminal command"), 140 B (his words: "two
-sections, one for the VMs, then a section for the users", "graphical
-administration from the first milestone") and 160 A (the role opens the
-pages).
+`feature/base` series. The questions asked to Benoit got their answers on
+2026-11-11 (series 15 of the Os-x86 design); they are recorded at the end of
+this ADR and the decision applies them. Source decisions: D38 ("a 'Features'
+section in Settings"), 122 ("an Os-x86 admin page in Settings → Features plus
+an equivalent terminal command"), 140 B (his words: "two sections, one for the
+VMs, then a section for the users", "graphical administration from the first
+milestone") and 160 A (the role opens the pages).
 
 - **Completes:** [ADR 0096](0096-added-intents-and-app-defined-intents.md) §4 ("app
   settings"), [ADR 0148](0148-sdk-contracts-and-os-provided-controls.md)
@@ -82,7 +82,7 @@ pages).
 - The page is rendered **in the Settings window** (same frame, same
   navigation, same theme: `--kos-*` styles, no MudBlazor in the SDK), but
   runs in the **execution context of the child**: its identity
-  (`org.kazoos.x86.admin`), its permissions, its process visible in `ps`
+  (`ca.kazo.x86.admin`), its permissions, its process visible in `ps`
   (ADR 0243 §2), its gateways. The page receives **no** gateway of Settings;
   Settings receives nothing from the page. The OS enters the child's context
   for the rendering (`KazoExecutionContext.Enter`, like a component rendered
@@ -110,7 +110,7 @@ pages).
 
 ### 4. Opening a page from elsewhere
 
-- `KazoApps.ShowSettingsPageAsync("org.kazoos.x86.admin")` (permission
+- `KazoApps.ShowSettingsPageAsync("ca.kazo.x86.admin")` (permission
   `apps.launch`) opens Settings on that page: that is what BoxedWine does for
   "Administer the VMs" (160 A: BoxedWine opens the page, it does not act
   itself) and what `sudo x86 admin` suggests in the terminal ("see also
@@ -169,4 +169,4 @@ pages).
    - C) One group per Feature ("Os-x86", "Other feature"), with no "Installed
      features" page.
 
-Applied while waiting: 1 A, 2 A.
+Maintainer's answers (2026-11-11): 1 A, 2 A.

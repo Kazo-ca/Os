@@ -6,13 +6,14 @@
 
 Proposée le 2026-11-11, pour la fonctionnalité Os-x86
 ([Kazo-ca/Os-x86](https://github.com/Kazo-ca/Os-x86)), lot 1 de la série
-`feature/base`. La recommandation de chaque question posée à Benoit est
-appliquée en attendant sa réponse. Décisions d'origine : D38 (« section
-“Fonctionnalités” dans les Paramètres »), 122 (« page admin d'Os-x86 dans
-Paramètres → Fonctionnalités plus une commande équivalente au terminal »),
-140 B (tes mots : « deux sections, une pour les VM, puis une section pour
-les utilisateurs », « administration graphique dès le premier jalon ») et
-160 A (le rôle ouvre les pages).
+`feature/base`. Les questions posées à Benoit ont reçu leur réponse le
+2026-11-11 (série 15 de la conception d'Os-x86) ; elles sont consignées à la
+fin de cette ADR et la décision les applique. Décisions d'origine : D38
+(« section “Fonctionnalités” dans les Paramètres »), 122 (« page admin
+d'Os-x86 dans Paramètres → Fonctionnalités plus une commande équivalente au
+terminal »), 140 B (tes mots : « deux sections, une pour les VM, puis une
+section pour les utilisateurs », « administration graphique dès le premier
+jalon ») et 160 A (le rôle ouvre les pages).
 
 - **Complète :** l'[ADR 0096](0096-added-intents-and-app-defined-intents.md) §4
   (« Paramètres de l'app »), l'[ADR 0148](0148-sdk-contracts-and-os-provided-controls.md)
@@ -83,7 +84,7 @@ les utilisateurs », « administration graphique dès le premier jalon ») et
 - La page est rendue **dans la fenêtre de Paramètres** (même cadre, même
   navigation, même thème : styles `--kos-*`, pas de MudBlazor dans le SDK),
   mais s'exécute dans le **contexte d'exécution de l'enfant** : son
-  identité (`org.kazoos.x86.admin`), ses permissions, son processus visible
+  identité (`ca.kazo.x86.admin`), ses permissions, son processus visible
   dans `ps` (ADR 0243 §2), ses passerelles. La page ne reçoit **aucune**
   passerelle de Paramètres ; Paramètres ne reçoit rien de la page. L'OS
   entre dans le contexte de l'enfant pour le rendu (`KazoExecutionContext.Enter`,
@@ -113,7 +114,7 @@ les utilisateurs », « administration graphique dès le premier jalon ») et
 
 ### 4. Ouvrir une page depuis ailleurs
 
-- `KazoApps.ShowSettingsPageAsync("org.kazoos.x86.admin")` (permission
+- `KazoApps.ShowSettingsPageAsync("ca.kazo.x86.admin")` (permission
   `apps.launch`) ouvre Paramètres sur cette page : c'est ce que BoxedWine
   fait pour « Administrer les VM » (160 A : BoxedWine ouvre la page, il
   n'agit pas lui-même) et ce que `sudo x86 admin` propose au terminal
@@ -173,4 +174,4 @@ les utilisateurs », « administration graphique dès le premier jalon ») et
    - C) Un groupe par Feature (« Os-x86 », « Autre feature »), sans page
      « Fonctionnalités installées ».
 
-Appliquées en attendant : 1 A, 2 A.
+Réponses du mainteneur (2026-11-11) : 1 A, 2 A.
