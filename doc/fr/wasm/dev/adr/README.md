@@ -239,5 +239,18 @@ prochain numéro libre est indiqué dans
 | [`0240-detailed-error-page.md`](0240-detailed-error-page.md) | ADR 0240 : page d'erreur détaillée (module, source, exception, message, heure, corrélation enfin remplie, pile repliable, « Copier les détails », « Recharger ») avec mots de passe et jetons masqués par `SensitiveTextRedactor`, à l'écran et dans `/var/log/syslog`. |
 | [`0241-replace-an-older-worker-at-boot.md`](0241-replace-an-older-worker-at-boot.md) | ADR 0241 : au démarrage, une page chargée avec Ctrl+F5 remplace un service worker d'une version plus ancienne, pour que le F5 suivant ne revienne pas à cette version. |
 | [`0242-framework-api-for-installed-apps.md`](0242-framework-api-for-installed-apps.md) | ADR 0242 : l'API .NET qu'une app installée trouve dans l'OS publié : `System.Private.CoreLib` reste entière à la publication trimmée (+0,6 Mio Brotli) et la vérification d'installation compare les signatures complètes des méthodes, plus seulement leur nombre de paramètres (IRC 1.0.0 et `Int32.Parse` d'un span). |
+| `0243-feature-app-type.md` (réservé, PR en cours vers `feature/base`) | ADR 0243 : Type d'app « Feature » |
+| `0244-app-libraries-and-shared-versions.md` (réservé, PR en cours vers `feature/base`) | ADR 0244 : Bibliothèques d'app et versions partagées |
+| `0245-feature-service-registry-and-async-resolution.md` (réservé, PR en cours vers `feature/base`) | ADR 0245 : Registre d'interfaces et résolution asynchrone |
+| `0246-provider-declared-permissions.md` (réservé, PR en cours vers `feature/base`) | ADR 0246 : Permissions déclarées par une Feature |
+| `0247-feature-declared-roles.md` (réservé, PR en cours vers `feature/base`) | ADR 0247 : Rôles déclarés par une Feature |
+| `0248-store-and-kazopkg-dependency-resolution.md` (réservé, PR en cours vers `feature/base`) | ADR 0248 : Résolution des dépendances |
+| `0249-settings-features-section.md` (réservé, PR en cours vers `feature/base`) | ADR 0249 : Section « Fonctionnalités » des Paramètres |
+| `0250-storage-persistence-and-eviction.md` (réservé, PR en cours vers `feature/base`) | ADR 0250 : Persistance et éviction du stockage |
+| `0251-shell-route-to-associations-and-binfmt.md` (réservé, PR en cours vers `feature/base`) | ADR 0251 : Route du shell vers l'association et binfmt |
+| `0252-terminal-shows-a-guest-program.md` (réservé, PR en cours vers `feature/base`) | ADR 0252 : Le Terminal affiche un programme invité |
+| `0253-marked-sender-on-launch-and-open.md` (réservé, PR en cours vers `feature/base`) | ADR 0253 : Expéditeur marqué |
+| `0254-per-user-events.md` (réservé, PR en cours vers `feature/base`) | ADR 0254 : Événements par usager |
+| `0255-relay-identities-and-decisions-of-a-feature.md` (réservé, PR en cours vers `feature/base`) | ADR 0255 : Relais : identités et décisions d'une Feature |
 
 Index du dossier parent : [`../README.md`](../README.md).
