@@ -250,7 +250,7 @@ next free number is given in
 | `0251-shell-route-to-associations-and-binfmt.md` (reserved, PR in progress to `feature/base`) | ADR 0251: Shell route to associations and binfmt |
 | `0252-terminal-shows-a-guest-program.md` (reserved, PR in progress to `feature/base`) | ADR 0252: The Terminal shows a guest program |
 | `0253-marked-sender-on-launch-and-open.md` (reserved, PR in progress to `feature/base`) | ADR 0253: Marked sender |
-| `0254-per-user-events.md` (reserved, PR in progress to `feature/base`) | ADR 0254: Per-user events |
+| [`0254-per-user-events.md`](0254-per-user-events.md) | ADR 0254: per-user events: journal `/var/log/users/<id>/events.log` written by apps through `KazoEvents`, attached to a subject (VM, program), readable by the user and the administrators; "My events" tab of the Error Log Viewer |
 | `0255-relay-identities-and-decisions-of-a-feature.md` (reserved, PR in progress to `feature/base`) | ADR 0255: Relay: identities and decisions of a Feature |
 
 Parent folder index: [`../README.md`](../README.md).

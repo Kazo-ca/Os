@@ -250,7 +250,7 @@ prochain numéro libre est indiqué dans
 | `0251-shell-route-to-associations-and-binfmt.md` (réservé, PR en cours vers `feature/base`) | ADR 0251 : Route du shell vers l'association et binfmt |
 | `0252-terminal-shows-a-guest-program.md` (réservé, PR en cours vers `feature/base`) | ADR 0252 : Le Terminal affiche un programme invité |
 | `0253-marked-sender-on-launch-and-open.md` (réservé, PR en cours vers `feature/base`) | ADR 0253 : Expéditeur marqué |
-| `0254-per-user-events.md` (réservé, PR en cours vers `feature/base`) | ADR 0254 : Événements par usager |
+| [`0254-per-user-events.md`](0254-per-user-events.md) | ADR 0254 : événements par usager : journal `/var/log/users/<id>/events.log` écrit par les apps par `KazoEvents`, rattaché à un sujet (VM, programme), lisible par l'usager et les administrateurs ; onglet « Mes événements » de l'Error Log Viewer |
 | `0255-relay-identities-and-decisions-of-a-feature.md` (réservé, PR en cours vers `feature/base`) | ADR 0255 : Relais : identités et décisions d'une Feature |
 
 Index du dossier parent : [`../README.md`](../README.md).
