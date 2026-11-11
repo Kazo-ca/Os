@@ -7,8 +7,9 @@
 Proposed on 2026-11-11, for the Os-x86 feature
 ([Kazo-ca/Os-x86](https://github.com/Kazo-ca/Os-x86)), lot 1 of the
 `feature/base` series. The recommendation of each question asked to Benoit
-is applied while waiting for his answer. Source decisions: D30 and D36 of the
-Os-x86 design (series 3 and 4, 2026-11-09); issue
+is applied while waiting for his answer; the question "who marks a library as
+shared" got its answer on 2026-11-11 (A, §2). Source decisions: D30 and D36
+of the Os-x86 design (series 3 and 4, 2026-11-09); issue
 [#419](https://github.com/Kazo-ca/Os/issues/419) (`TODO`).
 
 - **Completes:** [ADR 0182](0182-install-apps-from-github.md) §5 (packages,
@@ -66,10 +67,20 @@ Os-x86 design (series 3 and 4, 2026-11-09); issue
 
 ### 2. Shared libraries: one copy per simple name and per page
 
-- A library marked `shared` (its author marks it in the project:
-  `<KazoOsSharedLibrary>true</KazoOsSharedLibrary>` on the reference, which
-  the `Os-x86.Interface` NuGet package does through its `buildTransitive`) is
-  a **shared contract**: several apps embed it, a single copy is loaded.
+- A library marked `shared` is a **shared contract**: several apps embed it,
+  a single copy is loaded. **The library's author marks it** (maintainer's
+  answer, 2026-11-11), through an MSBuild property of its NuGet package
+  (`buildTransitive` that sets `<KazoOsSharedLibrary>true</KazoOsSharedLibrary>`
+  on the reference), which `Os-x86.Interface` does; an app cannot make shared
+  a library that is not.
+- The marking **imposes nothing on the app** that uses the library, in the
+  maintainer's words (translated): "no restriction requires providing it when
+  it is used in an app through a project reference, a DLL or NuGet (when it is
+  included in the application's package)". The app references it as it
+  wishes (`ProjectReference`, DLL, `PackageReference`), `KazoOsPack` embeds
+  it in `lib/` like any library (§1), with no extra declaration nor
+  restriction; the `shared` flag of the package manifest is copied from the
+  property and only serves Kazo, to load a single copy per major version.
 - Choice rule, applied **at first need** (first launch of an app that needs
   it, or first resolution of ADR 0245):
   1. if an **installed Feature provides** an interface of that library
@@ -132,7 +143,8 @@ Os-x86 design (series 3 and 4, 2026-11-09); issue
   `InstalledAppsBoot` (copy choice, log, restart offered).
 - The `kazoos-solution` template and [`app-repository.md`](../../framework/app-repository.md)
   document the `KazoOsSharedLibrary` property; `Os-x86.Interface` sets it in
-  its package.
+  its package. An app has **nothing to declare** to use a shared library:
+  referencing it is enough; `KazoOsPack` copies the flag.
 - The IRC app removes its workaround (#419, "Unblocks").
 - Docs: [`app-installation.md`](../app-installation.md) (package format),
   [`sdk-packages.md`](../../framework/sdk-packages.md), `features.md`,
@@ -144,16 +156,14 @@ Os-x86 design (series 3 and 4, 2026-11-09); issue
 
 ## Questions asked to Benoit
 
-1. **Who marks a library as shared?**
-   - A) **(Recommended)** The library's author, through an MSBuild property
-     in its NuGet package (`buildTransitive`); `Os-x86.Interface` does it; an
-     app cannot make shared a library that is not.
-   - B) The app, in its definition (`SharedLibraries = ["Os-x86.Interface"]`).
-   - C) Every library in `lib/` is shared by default.
-2. **With no Feature installed, two apps with two different majors of a
+1. **With no Feature installed, two apps with two different majors of a
    shared contract?**
    - A) **(Recommended)** Both coexist (each loaded for its apps): nothing
      links them as long as no provider exists.
    - B) Refuse the second installation: one major per machine.
 
-Applied while waiting: 1 A, 2 A.
+Applied while waiting: 1 A.
+
+Settled on 2026-11-11: who marks a library as shared → its author, through
+the MSBuild property of its package, imposing nothing on the app that uses it
+(§2).

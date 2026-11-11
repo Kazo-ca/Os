@@ -7,9 +7,11 @@
 Proposée le 2026-11-11, pour la fonctionnalité Os-x86
 ([Kazo-ca/Os-x86](https://github.com/Kazo-ca/Os-x86)), lot 1 de la série
 `feature/base`. La recommandation de chaque question posée à Benoit est
-appliquée en attendant sa réponse. Décisions d'origine : D30 et D36 de la
-conception d'Os-x86 (séries 3 et 4, 2026-11-09) ; issue
-[#419](https://github.com/Kazo-ca/Os/issues/419) (`TODO`).
+appliquée en attendant sa réponse ; la question « qui marque une
+bibliothèque comme partagée » a reçu sa réponse le 2026-11-11 (A, §2).
+Décisions d'origine : D30 et D36 de la conception d'Os-x86 (séries 3 et 4,
+2026-11-09) ; issue [#419](https://github.com/Kazo-ca/Os/issues/419)
+(`TODO`).
 
 - **Complète :** l'[ADR 0182](0182-install-apps-from-github.md) §5 (paquets,
   `lib/`, vérification des API), l'[ADR 0222](0222-installed-app-satellite-assemblies.md)
@@ -70,11 +72,22 @@ conception d'Os-x86 (séries 3 et 4, 2026-11-09) ; issue
 
 ### 2. Bibliothèques partagées : une copie par nom simple et par page
 
-- Une bibliothèque marquée `shared` (l'auteur la marque dans son projet :
-  `<KazoOsSharedLibrary>true</KazoOsSharedLibrary>` sur la référence, ce que
-  le paquet NuGet `Os-x86.Interface` fait par ses `buildTransitive`) est un
-  **contrat partagé** : plusieurs apps l'embarquent, une seule copie est
-  chargée.
+- Une bibliothèque marquée `shared` est un **contrat partagé** : plusieurs
+  apps l'embarquent, une seule copie est chargée. **C'est l'auteur de la
+  bibliothèque qui la marque** (réponse du mainteneur, 2026-11-11), par une
+  propriété MSBuild de son paquet NuGet (`buildTransitive` qui pose
+  `<KazoOsSharedLibrary>true</KazoOsSharedLibrary>` sur la référence), ce
+  qu'`Os-x86.Interface` fait ; une app ne peut pas rendre partagée une
+  bibliothèque qui ne l'est pas.
+- Le marquage **n'impose rien à l'app** qui utilise la bibliothèque, en ses
+  mots : « aucune restriction n'oblige de la fournir si elle est utilisée dans
+  une app par référence de projet, dll ou nuget (si elle est incluse dans le
+  package de l'application) ». L'app la référence comme elle veut
+  (`ProjectReference`, DLL, `PackageReference`), `KazoOsPack` l'embarque dans
+  `lib/` comme toute bibliothèque (§1), sans déclaration ni restriction
+  supplémentaire ; le drapeau `shared` du manifeste du paquet est recopié de
+  la propriété et ne sert qu'à Kazo, pour ne charger qu'une copie par
+  version majeure.
 - Règle de choix, appliquée **au premier besoin** (premier lancement d'une
   app qui en a besoin, ou première résolution de l'ADR 0245) :
   1. s'il existe une **Feature installée qui fournit** une interface de cette
@@ -140,7 +153,9 @@ conception d'Os-x86 (séries 3 et 4, 2026-11-09) ; issue
   `InstalledAppsBoot` (choix de la copie, journal, redémarrage proposé).
 - Le modèle `kazoos-solution` et [`app-repository.md`](../../framework/app-repository.md)
   documentent la propriété `KazoOsSharedLibrary` ; `Os-x86.Interface` la
-  pose dans son paquet.
+  pose dans son paquet. Une app n'a **rien à déclarer** pour utiliser une
+  bibliothèque partagée : la référencer suffit ; `KazoOsPack` recopie le
+  drapeau.
 - L'app IRC retire son contournement (#419, « Débloque »).
 - Docs : [`app-installation.md`](../app-installation.md) (format du paquet),
   [`sdk-packages.md`](../../framework/sdk-packages.md), `features.md`, entrée
@@ -152,17 +167,14 @@ conception d'Os-x86 (séries 3 et 4, 2026-11-09) ; issue
 
 ## Questions posées à Benoit
 
-1. **Qui marque une bibliothèque comme partagée ?**
-   - A) **(Recommandé)** L'auteur de la bibliothèque, par une propriété
-     MSBuild dans son paquet NuGet (`buildTransitive`) ; `Os-x86.Interface` le
-     fait ; une app ne peut pas rendre partagée une bibliothèque qui ne l'est
-     pas.
-   - B) L'app, dans sa définition (`SharedLibraries = ["Os-x86.Interface"]`).
-   - C) Toute bibliothèque de `lib/` est partagée par défaut.
-2. **Sans Feature installée, deux apps avec deux majeures différentes d'un
+1. **Sans Feature installée, deux apps avec deux majeures différentes d'un
    contrat partagé ?**
    - A) **(Recommandé)** Les deux coexistent (chacune chargée pour ses apps)
      : rien ne les relie tant qu'aucun fournisseur n'existe.
    - B) Refuser la seconde installation : une seule majeure par machine.
 
-Appliquées en attendant : 1 A, 2 A.
+Appliquée en attendant : 1 A.
+
+Question réglée le 2026-11-11 : qui marque une bibliothèque comme partagée →
+l'auteur, par la propriété MSBuild de son paquet, sans rien imposer à l'app
+qui l'utilise (§2).
