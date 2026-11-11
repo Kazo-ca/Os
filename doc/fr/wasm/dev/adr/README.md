@@ -241,7 +241,7 @@ prochain numéro libre est indiqué dans
 | [`0242-framework-api-for-installed-apps.md`](0242-framework-api-for-installed-apps.md) | ADR 0242 : l'API .NET qu'une app installée trouve dans l'OS publié : `System.Private.CoreLib` reste entière à la publication trimmée (+0,6 Mio Brotli) et la vérification d'installation compare les signatures complètes des méthodes, plus seulement leur nombre de paramètres (IRC 1.0.0 et `Int32.Parse` d'un span). |
 | `0243-feature-app-type.md` (réservé, PR en cours vers `feature/base`) | ADR 0243 : Type d'app « Feature » |
 | `0244-app-libraries-and-shared-versions.md` (réservé, PR en cours vers `feature/base`) | ADR 0244 : Bibliothèques d'app et versions partagées |
-| `0245-feature-service-registry-and-async-resolution.md` (réservé, PR en cours vers `feature/base`) | ADR 0245 : Registre d'interfaces et résolution asynchrone |
+| [`0245-feature-service-registry-and-async-resolution.md`](0245-feature-service-registry-and-async-resolution.md) | ADR 0245 : registre d'interfaces des Features et résolution asynchrone : `await KazoFeatures.GetServiceAsync<T>()` rend null si aucun fournisseur utilisable (jamais mis en cache), `IsAvailable<T>()`, `GetStatusAsync<T>()` ; un fournisseur par contrat, chargé au premier besoin |
 | `0246-provider-declared-permissions.md` (réservé, PR en cours vers `feature/base`) | ADR 0246 : Permissions déclarées par une Feature |
 | `0247-feature-declared-roles.md` (réservé, PR en cours vers `feature/base`) | ADR 0247 : Rôles déclarés par une Feature |
 | `0248-store-and-kazopkg-dependency-resolution.md` (réservé, PR en cours vers `feature/base`) | ADR 0248 : Résolution des dépendances |

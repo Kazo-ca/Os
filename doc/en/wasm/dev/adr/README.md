@@ -241,7 +241,7 @@ next free number is given in
 | [`0242-framework-api-for-installed-apps.md`](0242-framework-api-for-installed-apps.md) | ADR 0242: the .NET API an installed app finds in the published OS: `System.Private.CoreLib` stays whole in the trimmed publish (+0.6 MiB Brotli) and the install check compares full method signatures, no longer only their parameter count (IRC 1.0.0 and `Int32.Parse` of a span). |
 | `0243-feature-app-type.md` (reserved, PR in progress to `feature/base`) | ADR 0243: “Feature” app type |
 | `0244-app-libraries-and-shared-versions.md` (reserved, PR in progress to `feature/base`) | ADR 0244: App libraries and shared versions |
-| `0245-feature-service-registry-and-async-resolution.md` (reserved, PR in progress to `feature/base`) | ADR 0245: Service registry and asynchronous resolution |
+| [`0245-feature-service-registry-and-async-resolution.md`](0245-feature-service-registry-and-async-resolution.md) | ADR 0245: feature service registry and asynchronous resolution: `await KazoFeatures.GetServiceAsync<T>()` returns null when no usable provider exists (never cached), `IsAvailable<T>()`, `GetStatusAsync<T>()`; one provider per contract, loaded at first need |
 | `0246-provider-declared-permissions.md` (reserved, PR in progress to `feature/base`) | ADR 0246: Permissions declared by a Feature |
 | `0247-feature-declared-roles.md` (reserved, PR in progress to `feature/base`) | ADR 0247: Roles declared by a Feature |
 | `0248-store-and-kazopkg-dependency-resolution.md` (reserved, PR in progress to `feature/base`) | ADR 0248: Dependency resolution |
