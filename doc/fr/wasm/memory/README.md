@@ -12,8 +12,16 @@ jour à la fin de chaque série ou quand une convention change.
 - **Code actif** : `wasm2/KazoOs/` (OS simulé en Blazor WebAssembly, .NET 10,
   solution `Kazo.Os.sln`). `src/` est l'ancienne version, gardée comme
   référence.
-- **Version** : Kazo OS et le SDK passent en **3.2.1** (branche `release/3-2-1`,
-  2026-11-08), une version corrective : la migration du renommage de 3.0.0 écrit
+- **Version** : Kazo OS et le SDK passent en **3.3.0** (branche `release/3.3.0`,
+  2026-11-11) : numéro de build et état de la version à la connexion (ADR 0236),
+  démarrage sur la dernière version et remplacement d'un worker plus ancien
+  (ADR 0237, 0239, 0241), la panne d'une app reste dans sa fenêtre (ADR 0238),
+  page d'erreur détaillée (ADR 0240), « Autoriser pour la machine » retire le
+  refus de l'utilisateur (PR #428), CoreLib entière et contrôle exact des API
+  pour les apps installées (ADR 0242). 115 lignes d'API repliées (ajouts au SDK
+  dans App Abstractions et AppSdk.Blazor, d'où la version mineure), 7 entrées
+  dans `changes/3.3.0.json` ; publiée quand la PR arrive dans `main`.
+- **Version 3.2.1** (2026-11-08, publiée), une version corrective : la migration du renommage de 3.0.0 écrit
   le nouveau hash des fichiers de configuration réécrits, et une réparation unique
   au démarrage (`RenamedContentRepair`, [`rename-migration.md`](../dev/rename-migration.md))
   rend les fichiers que 3.0.0 à 3.2.0 laissaient sur un contenu supprimé
@@ -21,7 +29,7 @@ jour à la fin de chaque série ou quand une convention change.
   catalogue officiel dont la migration avait réécrit l'adresse en
   `KazoOs-AppMarketPlace` (`RenamedAppRepositories`, PR #424). 17 lignes d'API
   d'Infrastructure.Browser repliées, aucun changement du SDK, 2 entrées dans
-  `changes/3.2.1.json` ; publiée quand la PR arrive dans `main`.
+  `changes/3.2.1.json`.
 - **Version 3.2.0** (2026-11-07, publiée) : l'accord du vrai réseau émis par le
   serveur avec ses ports (ADR 0233), 68 lignes d'API de Platform Core et Server
   Contracts repliées, 1 entrée dans `changes/3.2.0.json`. Elle a débloqué le

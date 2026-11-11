@@ -494,20 +494,34 @@ Kazo.Os.Platform.Blazor.LazyLoading.BuildKnownLazyAppDescriptorRegistry
 Kazo.Os.Platform.Blazor.LazyLoading.BuildKnownLazyAppDescriptorRegistry.BuildKnownLazyAppDescriptorRegistry(Kazo.Os.Platform.Core.AppCatalog! catalog, Kazo.Os.Platform.Blazor.LazyLoading.BuildKnownAssemblyLoaderRegistry! assemblies) -> void
 Kazo.Os.Platform.Blazor.LazyLoading.BuildKnownLazyAppDescriptorRegistry.Descriptors.get -> System.Collections.Generic.IReadOnlyDictionary<string!, Kazo.Os.Platform.Core.Discovery.AppDescriptor!>!
 Kazo.Os.Platform.Blazor.LazyLoading.BuildKnownLazyAppDescriptorRegistry.EnsureAvailableAsync(string! appId, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Kazo.Os.Platform.Core.Lifecycle.AppDescriptorLoadResult!>
+Kazo.Os.Platform.Blazor.LazyLoading.HostBootUpdateCheck
+Kazo.Os.Platform.Blazor.LazyLoading.HostBootUpdateCheck.HostBootUpdateCheck(Kazo.Os.Platform.Blazor.LazyLoading.HostReleaseMonitor! monitor, System.Func<string!, System.Threading.Tasks.ValueTask<bool>>! claimAttempt, System.TimeSpan? timeout = null) -> void
+Kazo.Os.Platform.Blazor.LazyLoading.HostBootUpdateCheck.ShouldUpdateAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<bool>!
 Kazo.Os.Platform.Blazor.LazyLoading.HostBuildIdentity
+Kazo.Os.Platform.Blazor.LazyLoading.HostBuildNumber
 Kazo.Os.Platform.Blazor.LazyLoading.HostBuildUpdateMonitor
 Kazo.Os.Platform.Blazor.LazyLoading.HostBuildUpdateMonitor.CheckAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<bool>!
 Kazo.Os.Platform.Blazor.LazyLoading.HostBuildUpdateMonitor.HostBuildUpdateMonitor(Kazo.Os.Platform.Blazor.LazyLoading.IHostBuildProbe! probe) -> void
 Kazo.Os.Platform.Blazor.LazyLoading.HostBuildUpdateMonitor.IsUpdatePending.get -> bool
 Kazo.Os.Platform.Blazor.LazyLoading.HostBuildUpdateMonitor.UpdatePending -> System.Action?
 Kazo.Os.Platform.Blazor.LazyLoading.HostReleaseMonitor
+Kazo.Os.Platform.Blazor.LazyLoading.HostReleaseMonitor.AvailableBuild.get -> int?
 Kazo.Os.Platform.Blazor.LazyLoading.HostReleaseMonitor.AvailableVersion.get -> string?
 Kazo.Os.Platform.Blazor.LazyLoading.HostReleaseMonitor.CheckAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<bool>!
 Kazo.Os.Platform.Blazor.LazyLoading.HostReleaseMonitor.DisposeAsync() -> System.Threading.Tasks.ValueTask
 Kazo.Os.Platform.Blazor.LazyLoading.HostReleaseMonitor.HostReleaseMonitor(Kazo.Os.Platform.Blazor.LazyLoading.IHostReleaseProbe! probe, string! runningVersion, Kazo.Os.Platform.Blazor.LazyLoading.HostBuildUpdateMonitor? buildMonitor = null) -> void
+Kazo.Os.Platform.Blazor.LazyLoading.HostReleaseMonitor.HostReleaseMonitor(Kazo.Os.Platform.Blazor.LazyLoading.IHostReleaseProbe! probe, string! runningVersion, int? runningBuild, Kazo.Os.Platform.Blazor.LazyLoading.HostBuildUpdateMonitor? buildMonitor = null) -> void
 Kazo.Os.Platform.Blazor.LazyLoading.HostReleaseMonitor.ReleaseAvailable -> System.Action<string!>?
+Kazo.Os.Platform.Blazor.LazyLoading.HostReleaseMonitor.RunningBuild.get -> int?
 Kazo.Os.Platform.Blazor.LazyLoading.HostReleaseMonitor.RunningVersion.get -> string!
 Kazo.Os.Platform.Blazor.LazyLoading.HostReleaseMonitor.Start(System.TimeSpan interval) -> void
+Kazo.Os.Platform.Blazor.LazyLoading.HostReleaseMonitor.Status.get -> Kazo.Os.Platform.Blazor.LazyLoading.HostReleaseStatus
+Kazo.Os.Platform.Blazor.LazyLoading.HostReleaseMonitor.StatusChanged -> System.Action?
+Kazo.Os.Platform.Blazor.LazyLoading.HostReleaseStatus
+Kazo.Os.Platform.Blazor.LazyLoading.HostReleaseStatus.NotChecked = 0 -> Kazo.Os.Platform.Blazor.LazyLoading.HostReleaseStatus
+Kazo.Os.Platform.Blazor.LazyLoading.HostReleaseStatus.Unreachable = 3 -> Kazo.Os.Platform.Blazor.LazyLoading.HostReleaseStatus
+Kazo.Os.Platform.Blazor.LazyLoading.HostReleaseStatus.UpToDate = 1 -> Kazo.Os.Platform.Blazor.LazyLoading.HostReleaseStatus
+Kazo.Os.Platform.Blazor.LazyLoading.HostReleaseStatus.UpdateAvailable = 2 -> Kazo.Os.Platform.Blazor.LazyLoading.HostReleaseStatus
 Kazo.Os.Platform.Blazor.LazyLoading.HostUpdateDownloadResult
 Kazo.Os.Platform.Blazor.LazyLoading.HostUpdateDownloadResult.NoWorker = 0 -> Kazo.Os.Platform.Blazor.LazyLoading.HostUpdateDownloadResult
 Kazo.Os.Platform.Blazor.LazyLoading.HostUpdateDownloadResult.Ready = 2 -> Kazo.Os.Platform.Blazor.LazyLoading.HostUpdateDownloadResult
@@ -519,6 +533,10 @@ Kazo.Os.Platform.Blazor.LazyLoading.HostUpdateInstaller.ActivatedElsewhere -> Sy
 Kazo.Os.Platform.Blazor.LazyLoading.HostUpdateInstaller.DownloadAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Kazo.Os.Platform.Blazor.LazyLoading.HostUpdateDownloadResult>!
 Kazo.Os.Platform.Blazor.LazyLoading.HostUpdateInstaller.HostUpdateInstaller(Kazo.Os.Platform.Blazor.LazyLoading.IHostUpdateWorker! worker) -> void
 Kazo.Os.Platform.Blazor.LazyLoading.HostUpdateInstaller.StartAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Kazo.Os.Platform.Blazor.LazyLoading.HostUpdateLaunchGate
+Kazo.Os.Platform.Blazor.LazyLoading.HostUpdateLaunchGate.CheckAsync(Kazo.Os.App.Abstractions.AppManifest! manifest, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Kazo.Os.Platform.Core.Lifecycle.AppLaunchRefusal?>
+Kazo.Os.Platform.Blazor.LazyLoading.HostUpdateLaunchGate.HostUpdateLaunchGate(Kazo.Os.Platform.Blazor.LazyLoading.HostReleaseMonitor! monitor, System.Func<System.Globalization.CultureInfo!>! culture, System.TimeProvider? time = null) -> void
+Kazo.Os.Platform.Blazor.LazyLoading.HostUpdateLaunchGate.UpdateRequired -> System.Action<string!>?
 Kazo.Os.Platform.Blazor.LazyLoading.IBuildKnownAssemblyTransport
 Kazo.Os.Platform.Blazor.LazyLoading.IBuildKnownAssemblyTransport.LoadAsync(System.Collections.Generic.IReadOnlyList<string!>! assemblyNames, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<System.Reflection.Assembly!>!>!
 Kazo.Os.Platform.Blazor.LazyLoading.IHostBuildProbe
@@ -846,6 +864,12 @@ Kazo.Os.Platform.Blazor.Windows.AppBackHandlerRegistry.NavigateBackAsync(Kazo.Os
 Kazo.Os.Platform.Blazor.Windows.AppBackHandlerRegistry.NavigateForwardAsync(Kazo.Os.Windowing.Abstractions.WindowId windowId, Kazo.Os.AppSdk.Blazor.AppForwardRequest! request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.Blazor.AppBackResult!>
 Kazo.Os.Platform.Blazor.Windows.AppBackHandlerRegistry.Register(Kazo.Os.Windowing.Abstractions.WindowId windowId, Kazo.Os.AppSdk.Blazor.IAppBackHandler! handler) -> System.IDisposable!
 Kazo.Os.Platform.Blazor.Windows.AppBackHandlerRegistry.RegisterForward(Kazo.Os.Windowing.Abstractions.WindowId windowId, Kazo.Os.AppSdk.Blazor.IAppForwardHandler! handler) -> System.IDisposable!
+Kazo.Os.Platform.Blazor.Windows.AppErrorBoundary
+Kazo.Os.Platform.Blazor.Windows.AppErrorBoundary.AppContext.get -> Kazo.Os.AppSdk.IAppExecutionContext?
+Kazo.Os.Platform.Blazor.Windows.AppErrorBoundary.AppContext.set -> void
+Kazo.Os.Platform.Blazor.Windows.AppErrorBoundary.AppErrorBoundary() -> void
+Kazo.Os.Platform.Blazor.Windows.AppErrorBoundary.AppName.get -> string?
+Kazo.Os.Platform.Blazor.Windows.AppErrorBoundary.AppName.set -> void
 Kazo.Os.Platform.Blazor.Windows.AppWindowGatewayFactory
 Kazo.Os.Platform.Blazor.Windows.AppWindowGatewayFactory.AppWindowGatewayFactory(Kazo.Os.Windowing.Core.WindowRuntime! runtime) -> void
 Kazo.Os.Platform.Blazor.Windows.AppWindowGatewayFactory.AppWindowGatewayFactory(Kazo.Os.Windowing.Core.WindowRuntime! runtime, Kazo.Os.Platform.Blazor.Windows.WindowLaunchCoordinator! launchCoordinator) -> void
@@ -1074,6 +1098,7 @@ Kazo.Os.Platform.Blazor._Imports._Imports() -> void
 abstract Kazo.Os.Platform.Blazor.Dialogs.DialogPresentation.<Clone>$() -> Kazo.Os.Platform.Blazor.Dialogs.DialogPresentation!
 abstract Kazo.Os.Platform.Blazor.Dialogs.FileDialogPresentation.<Clone>$() -> Kazo.Os.Platform.Blazor.Dialogs.FileDialogPresentation!
 const Kazo.Os.Platform.Blazor.Display.DisplaySurfaceService.NotificationSource = "org.kazoos.display" -> string!
+const Kazo.Os.Platform.Blazor.LazyLoading.HostBuildNumber.MetadataKey = "KazoOsBuildNumber" -> string!
 const Kazo.Os.Platform.Blazor.Shell.DesktopSurfaceHost.DesktopAppId = "org.kazoos.desktop" -> string!
 const Kazo.Os.Platform.Blazor.Shell.UpdateReadyNotification.RestartActionId = "kazoos.update.restart" -> string!
 const Kazo.Os.Platform.Blazor.Shell.UpdateReadyNotification.SourceAppId = "org.kazoos.update" -> string!
@@ -1242,6 +1267,9 @@ static Kazo.Os.Platform.Blazor.LazyLoading.BuildKnownAssemblyLoadOutcome.NotDecl
 static Kazo.Os.Platform.Blazor.LazyLoading.BuildKnownAssemblyLoadOutcome.operator !=(Kazo.Os.Platform.Blazor.LazyLoading.BuildKnownAssemblyLoadOutcome? left, Kazo.Os.Platform.Blazor.LazyLoading.BuildKnownAssemblyLoadOutcome? right) -> bool
 static Kazo.Os.Platform.Blazor.LazyLoading.BuildKnownAssemblyLoadOutcome.operator ==(Kazo.Os.Platform.Blazor.LazyLoading.BuildKnownAssemblyLoadOutcome? left, Kazo.Os.Platform.Blazor.LazyLoading.BuildKnownAssemblyLoadOutcome? right) -> bool
 static Kazo.Os.Platform.Blazor.LazyLoading.HostBuildIdentity.FromMarkup(string? markup) -> string?
+static Kazo.Os.Platform.Blazor.LazyLoading.HostBuildNumber.Parse(string? value) -> int?
+static Kazo.Os.Platform.Blazor.LazyLoading.HostBuildNumber.Read(System.Reflection.Assembly? assembly) -> int?
+static Kazo.Os.Platform.Blazor.LazyLoading.HostReleaseMonitor.ParseBuild(string? document) -> int?
 static Kazo.Os.Platform.Blazor.LazyLoading.HostReleaseMonitor.ParseVersion(string? document) -> string?
 static Kazo.Os.Platform.Blazor.LazyLoading.StaticWebAssetAppAssetSource.RelativeUrl(Kazo.Os.App.Abstractions.AppManifest! manifest, string! assetPath) -> string!
 static Kazo.Os.Platform.Blazor.Navigation.HardwareNavigationRequest.operator !=(Kazo.Os.Platform.Blazor.Navigation.HardwareNavigationRequest? left, Kazo.Os.Platform.Blazor.Navigation.HardwareNavigationRequest? right) -> bool
@@ -1276,7 +1304,10 @@ static Kazo.Os.Platform.Blazor.Windows.WindowMenuState.operator ==(Kazo.Os.Platf
 static Kazo.Os.Platform.Blazor.Windows.WindowScreenMenuItem.operator !=(Kazo.Os.Platform.Blazor.Windows.WindowScreenMenuItem? left, Kazo.Os.Platform.Blazor.Windows.WindowScreenMenuItem? right) -> bool
 static Kazo.Os.Platform.Blazor.Windows.WindowScreenMenuItem.operator ==(Kazo.Os.Platform.Blazor.Windows.WindowScreenMenuItem? left, Kazo.Os.Platform.Blazor.Windows.WindowScreenMenuItem? right) -> bool
 static readonly Kazo.Os.Platform.Blazor.ContextMenus.ContextMenuRow.Separator -> Kazo.Os.Platform.Blazor.ContextMenus.ContextMenuRow!
+static readonly Kazo.Os.Platform.Blazor.LazyLoading.HostBootUpdateCheck.DefaultTimeout -> System.TimeSpan
 static readonly Kazo.Os.Platform.Blazor.LazyLoading.HostReleaseMonitor.DefaultInterval -> System.TimeSpan
+static readonly Kazo.Os.Platform.Blazor.LazyLoading.HostUpdateLaunchGate.CheckTimeout -> System.TimeSpan
+static readonly Kazo.Os.Platform.Blazor.LazyLoading.HostUpdateLaunchGate.RecheckInterval -> System.TimeSpan
 static readonly Kazo.Os.Platform.Blazor.Windows.WindowGeometryRecorder.DefaultDebounce -> System.TimeSpan
 static readonly Kazo.Os.Platform.Blazor.Windows.WindowResponsivenessHost.SampleInterval -> System.TimeSpan
 static readonly Kazo.Os.Platform.Blazor.Windows.WindowResponsivenessMonitor.LongInputDelay -> System.TimeSpan

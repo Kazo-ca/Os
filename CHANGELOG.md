@@ -6,6 +6,24 @@ The changes of Kazo OS, by version. This file is generated from `wasm2/KazoOs/ch
 `wasm2/KazoOs/build/tools/collect-changes.sh` (ADR 0186): do not edit it by hand. Changes already
 deployed but not released yet are in the Settings ▸ What's new page of the OS.
 
+## 3.3.0 (2026-11-11)
+
+### New
+
+- **The sign-in screen shows the build number and whether Kazo OS is up to date.** Next to the version, the sign-in screen shows the build number and a badge: up to date, outdated (with the version or build available), or status unknown when offline. A new build of the same version is now announced as an update too. ([0236-build-number-and-version-status-at-sign-in.md](doc/en/wasm/dev/adr/0236-build-number-and-version-status-at-sign-in.md))
+
+### Improved
+
+- **Kazo OS and its apps start on the latest version.** When a newer version is available, Kazo OS shows Updating Kazo OS at start and restarts onto it. An app opened on an outdated copy does not start: a dialog offers to restart to update. ([0239-start-on-the-latest-version.md](doc/en/wasm/dev/adr/0239-start-on-the-latest-version.md))
+- **The error page shows what failed, with passwords and tokens masked.** When Kazo OS meets an unexpected error, the page now shows the app and method at fault, the exception and its message, the time and the correlation ID (which used to be empty), with the full stack under "Technical details". "Copy details" puts a report ready to paste in an issue on the clipboard, and "Reload" starts Kazo OS again. Passwords and tokens are masked, on the page and in /var/log/syslog. ([0240-detailed-error-page.md](doc/en/wasm/dev/adr/0240-detailed-error-page.md))
+
+### Fixed
+
+- **A crashing app no longer takes the whole OS down.** When an app fails, only its window shows what happened, with Try again and Close the app; the other windows and the taskbar keep running. An installed app also finds its files right after a new version of Kazo OS was deployed, even on a page opened with Ctrl+F5. ([0238-an-app-failure-stays-in-its-window.md](doc/en/wasm/dev/adr/0238-an-app-failure-stays-in-its-window.md), [0237-activate-the-worker-of-a-newer-page.md](doc/en/wasm/dev/adr/0237-activate-the-worker-of-a-newer-page.md))
+- **Allowing a permission you had refused now takes effect.** In Settings > Permissions, Allow for the machine on a capability marked Refused by you also withdraws your refusal, so the capability becomes allowed instead of staying refused. ([dangerous-capability-approval.md](doc/en/wasm/dev/dangerous-capability-approval.md))
+- **F5 no longer goes back to an older version.** A page loaded with Ctrl+F5 now replaces the service worker of an older version, so the next F5 stays on the latest version instead of the first one seen in this browser. ([0241-replace-an-older-worker-at-boot.md](doc/en/wasm/dev/adr/0241-replace-an-older-worker-at-boot.md))
+- **Installed apps find the .NET methods they need.** The published Kazo OS keeps the whole .NET core library, so an app installed from the Store, such as IRC, no longer stops on a method the OS removed. The install check now compares exact method signatures and names the missing one. ([0242-framework-api-for-installed-apps.md](doc/en/wasm/dev/adr/0242-framework-api-for-installed-apps.md))
+
 ## 3.2.1 (2026-11-08)
 
 ### Fixed
