@@ -6,12 +6,13 @@
 
 Proposed on 2026-11-11, for the Os-x86 feature
 ([Kazo-ca/Os-x86](https://github.com/Kazo-ca/Os-x86)), lot 1 of the
-`feature/base` series. The recommendation of each question asked to Benoit
-is applied while waiting for his answer. Source decisions: decision 7 ("the
-OS returns null when the feature is not installed"), 15 ("like
-`GetService<T>()` with ASP.NET DI"), D10, D31, D36 and 158 A (`Ix86` in
-`Os-x86.Interface`, `x86-Lib` implements it, the Feature registers the
-instance) of the Os-x86 design.
+`feature/base` series. The questions asked to Benoit got their answers on
+2026-11-11 (series 15 of the Os-x86 design); they are recorded at the end of
+this ADR and the decision applies them. Source decisions: decision 7 ("the OS
+returns null when the feature is not installed"), 15 ("like `GetService<T>()`
+with ASP.NET DI"), D10, D31, D36 and 158 A (`Ix86` in `Os-x86.Interface`,
+`x86-Lib` implements it, the Feature registers the instance) of the Os-x86
+design.
 
 - **Completes:** [ADR 0243](0243-feature-app-type.md) (only a Feature
   provides an interface) and [ADR 0244](0244-app-libraries-and-shared-versions.md)
@@ -184,4 +185,4 @@ public static class KazoFeatures
    - B) The caller's (like a component, ADR 0148 §4): simple, but a security
      feature cannot trust it.
 
-Applied while waiting: 1 A, 2 A.
+Maintainer's answers (2026-11-11): 1 A, 2 A.

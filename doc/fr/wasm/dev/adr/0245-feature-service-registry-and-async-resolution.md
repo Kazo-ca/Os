@@ -6,12 +6,13 @@
 
 Proposée le 2026-11-11, pour la fonctionnalité Os-x86
 ([Kazo-ca/Os-x86](https://github.com/Kazo-ca/Os-x86)), lot 1 de la série
-`feature/base`. La recommandation de chaque question posée à Benoit est
-appliquée en attendant sa réponse. Décisions d'origine : décision 7 (« l'OS
-retourne null si la fonctionnalité n'est pas installée »), 15 (« comme
-`GetService<T>()` avec le DI d'ASP.NET »), D10, D31, D36 et 158 A
-(`Ix86` dans `Os-x86.Interface`, `x86-Lib` l'implémente, la Feature
-enregistre l'instance) de la conception d'Os-x86.
+`feature/base`. Les questions posées à Benoit ont reçu leur réponse le
+2026-11-11 (série 15 de la conception d'Os-x86) ; elles sont consignées à la
+fin de cette ADR et la décision les applique. Décisions d'origine : décision 7
+(« l'OS retourne null si la fonctionnalité n'est pas installée »), 15 (« comme
+`GetService<T>()` avec le DI d'ASP.NET »), D10, D31, D36 et 158 A (`Ix86` dans
+`Os-x86.Interface`, `x86-Lib` l'implémente, la Feature enregistre l'instance)
+de la conception d'Os-x86.
 
 - **Complète :** l'[ADR 0243](0243-feature-app-type.md) (seule une Feature
   fournit une interface) et l'[ADR 0244](0244-app-libraries-and-shared-versions.md)
@@ -184,4 +185,4 @@ public static class KazoFeatures
    - B) Celui de l'appelant (comme un composant, ADR 0148 §4) : simple, mais
      une Feature de sécurité ne peut pas y faire confiance.
 
-Appliquées en attendant : 1 A, 2 A.
+Réponses du mainteneur (2026-11-11) : 1 A, 2 A.
