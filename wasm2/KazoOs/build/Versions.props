@@ -50,11 +50,17 @@
     configuration files, and a one-time boot repair gives back the files 3.0.0 to 3.2.0 left on
     deleted content (ProviderFailure on /etc/kazoos/app-permissions.config). No SDK change: only
     the Infrastructure.Browser repair entry points move in the API files.
+    3.3.0 (2026-11-11): build number and version status at sign-in (ADR 0236), the OS and its apps
+    start on the latest version (ADR 0237, 0239, 0241), an app failure stays in its window
+    (ADR 0238), a detailed error page with secrets masked (ADR 0240), allowing a capability for the
+    machine withdraws the user's own refusal, and installed apps find System.Private.CoreLib whole
+    with an exact install check (ADR 0242). SDK additions (App Abstractions, AppSdk.Blazor) and the
+    host, platform and browser API folded into PublicAPI.Shipped.txt.
 
     The App SDK version an app is compiled against comes from this number (KazoOsSdk.Version), and
     the manifest generator writes it as the app's sdkCompatibility.minimumVersion (ADR 0098 §3).
   -->
   <PropertyGroup>
-    <KazoOsVersion>3.2.1</KazoOsVersion>
+    <KazoOsVersion>3.3.0</KazoOsVersion>
   </PropertyGroup>
 </Project>

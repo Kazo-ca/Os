@@ -375,6 +375,7 @@ override Kazo.Os.Infrastructure.Browser.Schema.IndexedDbTransactionBoundary.ToSt
 override Kazo.Os.Infrastructure.Browser.Storage.BrowserStorageStatus.Equals(object? obj) -> bool
 override Kazo.Os.Infrastructure.Browser.Storage.BrowserStorageStatus.GetHashCode() -> int
 override Kazo.Os.Infrastructure.Browser.Storage.BrowserStorageStatus.ToString() -> string!
+static Kazo.Os.Infrastructure.Browser.Apps.BrowserInstalledAppAssets.AdoptAtBootAsync(System.TimeSpan timeout) -> System.Threading.Tasks.Task<bool>!
 static Kazo.Os.Infrastructure.Browser.Apps.BrowserInstalledAppAssets.LinkStyleSheetAsync(string! url) -> System.Threading.Tasks.Task<bool>!
 static Kazo.Os.Infrastructure.Browser.Apps.BrowserInstalledAppAssets.ListAsync() -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<string!>!>!
 static Kazo.Os.Infrastructure.Browser.Apps.BrowserInstalledAppAssets.PrepareAsync(System.TimeSpan timeout) -> System.Threading.Tasks.Task<bool>!

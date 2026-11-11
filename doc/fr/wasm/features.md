@@ -274,7 +274,7 @@ Cette section liste ce qui est publié dans la branche `main` et en ligne.
   ([ADR 0174](dev/adr/0174-announce-a-new-version-to-open-sessions.md),
   [ADR 0223](dev/adr/0223-restart-onto-the-new-version.md))
 - **Numéro de build et état de la version sur l'écran de connexion** : à côté
-  de « Kazo OS 3.2.1 », le numéro de build (nombre de commits, le même pour le
+  de « Kazo OS 3.3.0 », le numéro de build (nombre de commits, le même pour le
   site, la Release et le serveur) et une pastille « À jour », « Obsolète : … »
   ou « État inconnu (hors ligne) », vérifiée dès le démarrage.
   ([ADR 0236](dev/adr/0236-build-number-and-version-status-at-sign-in.md))
@@ -357,6 +357,10 @@ Cette section liste ce qui est publié dans la branche `main` et en ligne.
   Ses traductions (assemblages satellites des `.resx` par culture) sont dans son
   paquet et chargées par l'OS : installée, elle parle français comme compilée
   dans l'OS. ([ADR 0222](dev/adr/0222-installed-app-satellite-assemblies.md))
+  Elle trouve toute la bibliothèque de base de .NET (`System.Private.CoreLib`
+  n'est pas élaguée), et l'installation refuse avec la méthode exacte une app
+  qui appelle une méthode que l'OS publié n'a pas, au lieu de la laisser
+  planter. ([ADR 0242](dev/adr/0242-framework-api-for-installed-apps.md))
 - **Sources de confiance et installation pour soi** : une application d'une
   source de confiance s'installe pour soi sans administrateur ; une source non
   fiable, une application de la liste noire ou une installation pour tous
@@ -447,7 +451,7 @@ par `kazopkg` puis par le Kazo OS Store.
 | --- | --- | --- | --- |
 | Chess | Échecs, basés sur chess.js ; première application prévue du catalogue. | [Os-App-Chess](https://github.com/Kazo-ca/Os-App-Chess) | [#2](https://github.com/Kazo-ca/Os-App-Chess/issues/2), [#3](https://github.com/Kazo-ca/Os-App-Chess/issues/3) |
 | Webamp | Lecteur de musique dans le style de Winamp, associé aux fichiers audio, aux listes `.m3u`/`.pls` et aux skins `.wsz` ; ouvre aussi les fichiers des lecteurs réseau (ADR 0231). Plan en discussion. | [Os-App-Webamp](https://github.com/Kazo-ca/Os-App-Webamp) | [#1](https://github.com/Kazo-ca/Os-App-Webamp/issues/1), [#381](https://github.com/Kazo-ca/Os/issues/381) |
-| IRC | Client de discussion IRC natif (C# et Blazor) pour les vrais réseaux IRC, ordinateur et mobile : WebSocket sans serveur, et TCP avec TLS par le relais quand le serveur est connecté ([ADR 0235](dev/adr/0235-real-network-for-chat-apps.md)). **Disponible dans le Kazo OS Store** (version 1.0.0, Kazo OS 3.2.0 ou plus ; `kazopkg install Kazo-ca/Os-App-IRC`). | [Os-App-IRC](https://github.com/Kazo-ca/Os-App-IRC) | [#395](https://github.com/Kazo-ca/Os/issues/395), [#393](https://github.com/Kazo-ca/Os/issues/393), [#394](https://github.com/Kazo-ca/Os/issues/394) |
+| IRC | Client de discussion IRC natif (C# et Blazor) pour les vrais réseaux IRC, ordinateur et mobile : WebSocket sans serveur, et TCP avec TLS par le relais quand le serveur est connecté ([ADR 0235](dev/adr/0235-real-network-for-chat-apps.md)). **Disponible dans le Kazo OS Store** (version 1.0.1, Kazo OS 3.2.0 ou plus ; `kazopkg install Kazo-ca/Os-App-IRC`). | [Os-App-IRC](https://github.com/Kazo-ca/Os-App-IRC) | [#395](https://github.com/Kazo-ca/Os/issues/395), [#393](https://github.com/Kazo-ca/Os/issues/393), [#394](https://github.com/Kazo-ca/Os/issues/394) |
 | EmulatorJS | Émulateur de consoles rétro. | [Os-App-EmulatorJS](https://github.com/Kazo-ca/Os-App-EmulatorJS) | À venir |
 | BoxedWine | Exécuter d'anciens programmes Windows dans l'OS. | [Os-App-BoxedWine](https://github.com/Kazo-ca/Os-App-BoxedWine) | À venir |
 

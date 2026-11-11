@@ -12,15 +12,22 @@ at the end of each series or when a convention changes.
 - **Active code**: `wasm2/KazoOs/` (simulated OS in Blazor WebAssembly, .NET 10,
   solution `Kazo.Os.sln`). `src/` is the old version, kept as a
   reference.
-- **Version**: Kazo OS and the SDK move to **3.2.1** (branch `release/3-2-1`,
-  2026-11-08), a patch: the rename migration of 3.0.0 writes the new hash of the
+- **Version**: Kazo OS and the SDK move to **3.3.0** (branch `release/3.3.0`,
+  2026-11-11): build number and version status at sign-in (ADR 0236), start on
+  the latest version and replace an older worker (ADR 0237, 0239, 0241), an
+  app failure stays in its window (ADR 0238), detailed error page (ADR 0240),
+  "Allow for the machine" withdraws the user's own refusal (PR #428), whole
+  CoreLib and exact API check for installed apps (ADR 0242). 115 API lines
+  folded (SDK additions in App Abstractions and AppSdk.Blazor, hence the minor
+  version), 7 entries in `changes/3.3.0.json`; published when the PR lands in `main`.
+- **Version 3.2.1** (2026-11-08, published), a patch: the rename migration of 3.0.0 writes the new hash of the
   rewritten configuration files, and a one-time repair at boot
   (`RenamedContentRepair`, [`rename-migration.md`](../dev/rename-migration.md))
   gives back the files 3.0.0 to 3.2.0 left on deleted content (`ProviderFailure`,
   IRC approval blocked; PR #422), and the Store reads again the official catalog
   whose address the migration had rewritten as `KazoOs-AppMarketPlace`
   (`RenamedAppRepositories`, PR #424). 17 API lines of Infrastructure.Browser
-  folded, no SDK change, 2 entries in `changes/3.2.1.json`; published when the PR lands in `main`.
+  folded, no SDK change, 2 entries in `changes/3.2.1.json`.
 - **Version 3.2.0** (2026-11-07, published): the real-network grant issued by
   the server with its ports (ADR 0233), 68 API lines of Platform Core and Server
   Contracts folded, 1 entry in `changes/3.2.0.json`. It unblocked work item IRC-3

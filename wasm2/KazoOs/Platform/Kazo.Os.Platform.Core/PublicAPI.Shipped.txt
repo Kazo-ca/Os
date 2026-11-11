@@ -713,6 +713,7 @@ Kazo.Os.Platform.Core.Apps.Packages.IInstalledAppsActivator.ActivateAsync(System
 Kazo.Os.Platform.Core.Apps.Packages.IRuntimeApiSurface
 Kazo.Os.Platform.Core.Apps.Packages.IRuntimeApiSurface.HasAssembly(string! assemblyName) -> bool
 Kazo.Os.Platform.Core.Apps.Packages.IRuntimeApiSurface.HasField(string! assemblyName, string! typeName, string! fieldName) -> bool
+Kazo.Os.Platform.Core.Apps.Packages.IRuntimeApiSurface.HasMethod(string! assemblyName, string! typeName, string! methodName, int genericArity, System.Collections.Generic.IReadOnlyList<string!>! parameterTypes) -> bool
 Kazo.Os.Platform.Core.Apps.Packages.IRuntimeApiSurface.HasMethod(string! assemblyName, string! typeName, string! methodName, int genericArity, int parameterCount) -> bool
 Kazo.Os.Platform.Core.Apps.Packages.IRuntimeApiSurface.HasType(string! assemblyName, string! typeName) -> bool
 Kazo.Os.Platform.Core.Apps.Packages.InstalledApp
@@ -789,6 +790,7 @@ Kazo.Os.Platform.Core.Apps.Packages.InstalledThemePack.Version.init -> void
 Kazo.Os.Platform.Core.Apps.Packages.LoadedRuntimeApiSurface
 Kazo.Os.Platform.Core.Apps.Packages.LoadedRuntimeApiSurface.HasAssembly(string! assemblyName) -> bool
 Kazo.Os.Platform.Core.Apps.Packages.LoadedRuntimeApiSurface.HasField(string! assemblyName, string! typeName, string! fieldName) -> bool
+Kazo.Os.Platform.Core.Apps.Packages.LoadedRuntimeApiSurface.HasMethod(string! assemblyName, string! typeName, string! methodName, int genericArity, System.Collections.Generic.IReadOnlyList<string!>! parameterTypes) -> bool
 Kazo.Os.Platform.Core.Apps.Packages.LoadedRuntimeApiSurface.HasMethod(string! assemblyName, string! typeName, string! methodName, int genericArity, int parameterCount) -> bool
 Kazo.Os.Platform.Core.Apps.Packages.LoadedRuntimeApiSurface.HasType(string! assemblyName, string! typeName) -> bool
 Kazo.Os.Platform.Core.Apps.Packages.ManagedAppPackageSignatureVerifier
@@ -1146,6 +1148,7 @@ Kazo.Os.Platform.Core.Diagnostics.LogRotationPolicy
 Kazo.Os.Platform.Core.Diagnostics.SensitiveKeyDiagnosticRedactor
 Kazo.Os.Platform.Core.Diagnostics.SensitiveKeyDiagnosticRedactor.Redact(string! propertyKey, string! value) -> string!
 Kazo.Os.Platform.Core.Diagnostics.SensitiveKeyDiagnosticRedactor.SensitiveKeyDiagnosticRedactor() -> void
+Kazo.Os.Platform.Core.Diagnostics.SensitiveTextRedactor
 Kazo.Os.Platform.Core.Discovery.AppDescriptor
 Kazo.Os.Platform.Core.Discovery.AppDescriptor.<Clone>$() -> Kazo.Os.Platform.Core.Discovery.AppDescriptor!
 Kazo.Os.Platform.Core.Discovery.AppDescriptor.AppDescriptor(Kazo.Os.App.Abstractions.AppManifest! Manifest, System.Type! EntryPointType, System.Reflection.Assembly! Assembly) -> void
@@ -2027,6 +2030,15 @@ Kazo.Os.Platform.Core.Lifecycle.AppEnablementRegistry.DisabledAppIds.get -> Syst
 Kazo.Os.Platform.Core.Lifecycle.AppEnablementRegistry.IsEnabled(string! appId) -> bool
 Kazo.Os.Platform.Core.Lifecycle.AppEnablementRegistry.MarkDisabled(System.Collections.Generic.IEnumerable<string!>! appIds) -> void
 Kazo.Os.Platform.Core.Lifecycle.AppEnablementRegistry.MarkEnabled(string! appId) -> void
+Kazo.Os.Platform.Core.Lifecycle.AppLaunchRefusal
+Kazo.Os.Platform.Core.Lifecycle.AppLaunchRefusal.<Clone>$() -> Kazo.Os.Platform.Core.Lifecycle.AppLaunchRefusal!
+Kazo.Os.Platform.Core.Lifecycle.AppLaunchRefusal.AppLaunchRefusal(string! ErrorCode, string! Message) -> void
+Kazo.Os.Platform.Core.Lifecycle.AppLaunchRefusal.Deconstruct(out string! ErrorCode, out string! Message) -> void
+Kazo.Os.Platform.Core.Lifecycle.AppLaunchRefusal.Equals(Kazo.Os.Platform.Core.Lifecycle.AppLaunchRefusal? other) -> bool
+Kazo.Os.Platform.Core.Lifecycle.AppLaunchRefusal.ErrorCode.get -> string!
+Kazo.Os.Platform.Core.Lifecycle.AppLaunchRefusal.ErrorCode.init -> void
+Kazo.Os.Platform.Core.Lifecycle.AppLaunchRefusal.Message.get -> string!
+Kazo.Os.Platform.Core.Lifecycle.AppLaunchRefusal.Message.init -> void
 Kazo.Os.Platform.Core.Lifecycle.AppLaunchRequest
 Kazo.Os.Platform.Core.Lifecycle.AppLaunchRequest.<Clone>$() -> Kazo.Os.Platform.Core.Lifecycle.AppLaunchRequest!
 Kazo.Os.Platform.Core.Lifecycle.AppLaunchRequest.AppId.get -> string!
@@ -2101,6 +2113,7 @@ Kazo.Os.Platform.Core.Lifecycle.AppLaunchStatus.EntryPointFault = 4 -> Kazo.Os.P
 Kazo.Os.Platform.Core.Lifecycle.AppLaunchStatus.FocusedExisting = 1 -> Kazo.Os.Platform.Core.Lifecycle.AppLaunchStatus
 Kazo.Os.Platform.Core.Lifecycle.AppLaunchStatus.Launched = 0 -> Kazo.Os.Platform.Core.Lifecycle.AppLaunchStatus
 Kazo.Os.Platform.Core.Lifecycle.AppLaunchStatus.NotFound = 2 -> Kazo.Os.Platform.Core.Lifecycle.AppLaunchStatus
+Kazo.Os.Platform.Core.Lifecycle.AppLaunchStatus.UpdateRequired = 6 -> Kazo.Os.Platform.Core.Lifecycle.AppLaunchStatus
 Kazo.Os.Platform.Core.Lifecycle.AppLifecycleOrchestrator
 Kazo.Os.Platform.Core.Lifecycle.AppLifecycleOrchestrator.AppLifecycleOrchestrator(Kazo.Os.Platform.Core.AppCatalog! catalog, System.Collections.Generic.IReadOnlyDictionary<string!, Kazo.Os.Platform.Core.Discovery.AppDescriptor!>! descriptors, Kazo.Os.Platform.Core.Lifecycle.AppEnablementRegistry! enablement, Kazo.Os.Simulation.Abstractions.Processes.IProcessManager! processManager, Kazo.Os.App.Abstractions.Policy.ICapabilityGrantRepository! grants, Kazo.Os.Platform.Core.Execution.AppExecutionContextFactory! contextFactory, Kazo.Os.Simulation.Abstractions.Events.IEventBus? eventBus = null, Kazo.Os.Platform.Core.Lifecycle.IAppDescriptorLoader? descriptorLoader = null, System.IServiceProvider? services = null, Kazo.Os.Simulation.Abstractions.FileSystem.IFileSystemService? fileSystem = null, Kazo.Os.App.Abstractions.Policy.IElevationTicketStore? elevationTickets = null, Kazo.Os.Platform.Core.Policy.IDangerousCapabilityGate? dangerousCapabilityGate = null, Kazo.Os.Platform.Core.Processes.LoginEnvironmentProvider? loginEnvironment = null, Kazo.Os.Platform.Core.Execution.IRemoteProcessHost? remoteHost = null, Kazo.Os.Simulation.Abstractions.Time.ISimulationClock? clock = null, Microsoft.Extensions.Logging.ILogger<Kazo.Os.Platform.Core.Lifecycle.AppLifecycleOrchestrator!>? logger = null) -> void
 Kazo.Os.Platform.Core.Lifecycle.AppLifecycleOrchestrator.CompleteShellProcess(Kazo.Os.Simulation.Abstractions.Processes.ProcessId pid, int exitCode) -> void
@@ -2153,6 +2166,8 @@ Kazo.Os.Platform.Core.Lifecycle.IAppEnablementRegistry
 Kazo.Os.Platform.Core.Lifecycle.IAppEnablementRegistry.Changed -> System.EventHandler?
 Kazo.Os.Platform.Core.Lifecycle.IAppEnablementRegistry.DisabledAppIds.get -> System.Collections.Generic.IReadOnlyCollection<string!>!
 Kazo.Os.Platform.Core.Lifecycle.IAppEnablementRegistry.IsEnabled(string! appId) -> bool
+Kazo.Os.Platform.Core.Lifecycle.IAppLaunchGate
+Kazo.Os.Platform.Core.Lifecycle.IAppLaunchGate.CheckAsync(Kazo.Os.App.Abstractions.AppManifest! manifest, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Kazo.Os.Platform.Core.Lifecycle.AppLaunchRefusal?>
 Kazo.Os.Platform.Core.Lifecycle.ServiceStartupCoordinator
 Kazo.Os.Platform.Core.Lifecycle.ServiceStartupCoordinator.Dispose() -> void
 Kazo.Os.Platform.Core.Lifecycle.ServiceStartupCoordinator.ServiceStartupCoordinator(Kazo.Os.Platform.Core.Lifecycle.AppLifecycleOrchestrator! orchestrator, Kazo.Os.Simulation.Abstractions.Events.IEventBus! eventBus, Kazo.Os.Simulation.Abstractions.Sessions.ISessionService! session, Kazo.Os.Simulation.Abstractions.Processes.IProcessManager! processManager, Kazo.Os.Platform.Core.Apps.AppInstallationService? installation = null, System.Func<System.DateTimeOffset>? clock = null, Microsoft.Extensions.Logging.ILogger<Kazo.Os.Platform.Core.Lifecycle.ServiceStartupCoordinator!>? logger = null) -> void
@@ -4101,6 +4116,7 @@ const Kazo.Os.Platform.Core.Diagnostics.LogFileWriter.LoggingCategory = "logging
 const Kazo.Os.Platform.Core.Diagnostics.LogFileWriter.QueueCapacity = 10000 -> int
 const Kazo.Os.Platform.Core.Diagnostics.LogRotationPolicy.MaxArchives = 5 -> int
 const Kazo.Os.Platform.Core.Diagnostics.LogRotationPolicy.MaxFileBytes = 1048576 -> long
+const Kazo.Os.Platform.Core.Diagnostics.SensitiveTextRedactor.Placeholder = "***redacted***" -> string!
 const Kazo.Os.Platform.Core.Elevation.AdministratorAuthenticationAgent.AuditAction = "admin.authenticate" -> string!
 const Kazo.Os.Platform.Core.Elevation.AdministratorAuthenticationPromptRequest.MaxAttempts = 3 -> int
 const Kazo.Os.Platform.Core.Events.KernelPublisherIdentity.AppId = "kernel" -> string!
@@ -4142,6 +4158,7 @@ const Kazo.Os.Platform.Core.Keyring.UserKeyringService.DefaultIterations = 21000
 const Kazo.Os.Platform.Core.Keyring.UserKeyringService.KeyringDirectory = ".local/share/keyrings" -> string!
 const Kazo.Os.Platform.Core.Keyring.UserKeyringService.LoginKeyringName = "login.keyring" -> string!
 const Kazo.Os.Platform.Core.Keyring.UserKeyringService.PrfKeyPrefix = "kazoos-keyring-prf-v1" -> string!
+const Kazo.Os.Platform.Core.Lifecycle.AppLaunchRefusal.UpdateRequiredCode = "lifecycle.os.update-required" -> string!
 const Kazo.Os.Platform.Core.Lifecycle.AppLifecycleOrchestrator.ProcessLimitErrorCode = "lifecycle.process.eagain" -> string!
 const Kazo.Os.Platform.Core.Metrics.BlockDeviceStatistics.SectorSize = 512 -> int
 const Kazo.Os.Platform.Core.Metrics.CpuTimeAccounting.UserHz = 100 -> int
@@ -4505,6 +4522,9 @@ override Kazo.Os.Platform.Core.Lifecycle.AppDisableResult.ToString() -> string!
 override Kazo.Os.Platform.Core.Lifecycle.AppEnableResult.Equals(object? obj) -> bool
 override Kazo.Os.Platform.Core.Lifecycle.AppEnableResult.GetHashCode() -> int
 override Kazo.Os.Platform.Core.Lifecycle.AppEnableResult.ToString() -> string!
+override Kazo.Os.Platform.Core.Lifecycle.AppLaunchRefusal.Equals(object? obj) -> bool
+override Kazo.Os.Platform.Core.Lifecycle.AppLaunchRefusal.GetHashCode() -> int
+override Kazo.Os.Platform.Core.Lifecycle.AppLaunchRefusal.ToString() -> string!
 override Kazo.Os.Platform.Core.Lifecycle.AppLaunchRequest.Equals(object? obj) -> bool
 override Kazo.Os.Platform.Core.Lifecycle.AppLaunchRequest.GetHashCode() -> int
 override Kazo.Os.Platform.Core.Lifecycle.AppLaunchRequest.ToString() -> string!
@@ -5030,6 +5050,7 @@ static Kazo.Os.Platform.Core.Diagnostics.LogFileTarget.ForDaemon(string! relativ
 static Kazo.Os.Platform.Core.Diagnostics.LogFileTarget.operator !=(Kazo.Os.Platform.Core.Diagnostics.LogFileTarget? left, Kazo.Os.Platform.Core.Diagnostics.LogFileTarget? right) -> bool
 static Kazo.Os.Platform.Core.Diagnostics.LogFileTarget.operator ==(Kazo.Os.Platform.Core.Diagnostics.LogFileTarget? left, Kazo.Os.Platform.Core.Diagnostics.LogFileTarget? right) -> bool
 static Kazo.Os.Platform.Core.Diagnostics.LogRotationPolicy.ShouldRotate(long currentBytes, long batchBytes) -> bool
+static Kazo.Os.Platform.Core.Diagnostics.SensitiveTextRedactor.Redact(string? text) -> string!
 static Kazo.Os.Platform.Core.Discovery.AppDescriptor.operator !=(Kazo.Os.Platform.Core.Discovery.AppDescriptor? left, Kazo.Os.Platform.Core.Discovery.AppDescriptor? right) -> bool
 static Kazo.Os.Platform.Core.Discovery.AppDescriptor.operator ==(Kazo.Os.Platform.Core.Discovery.AppDescriptor? left, Kazo.Os.Platform.Core.Discovery.AppDescriptor? right) -> bool
 static Kazo.Os.Platform.Core.Discovery.AppDiscoveryError.operator !=(Kazo.Os.Platform.Core.Discovery.AppDiscoveryError? left, Kazo.Os.Platform.Core.Discovery.AppDiscoveryError? right) -> bool
@@ -5124,6 +5145,8 @@ static Kazo.Os.Platform.Core.Lifecycle.AppDisableResult.operator !=(Kazo.Os.Plat
 static Kazo.Os.Platform.Core.Lifecycle.AppDisableResult.operator ==(Kazo.Os.Platform.Core.Lifecycle.AppDisableResult? left, Kazo.Os.Platform.Core.Lifecycle.AppDisableResult? right) -> bool
 static Kazo.Os.Platform.Core.Lifecycle.AppEnableResult.operator !=(Kazo.Os.Platform.Core.Lifecycle.AppEnableResult? left, Kazo.Os.Platform.Core.Lifecycle.AppEnableResult? right) -> bool
 static Kazo.Os.Platform.Core.Lifecycle.AppEnableResult.operator ==(Kazo.Os.Platform.Core.Lifecycle.AppEnableResult? left, Kazo.Os.Platform.Core.Lifecycle.AppEnableResult? right) -> bool
+static Kazo.Os.Platform.Core.Lifecycle.AppLaunchRefusal.operator !=(Kazo.Os.Platform.Core.Lifecycle.AppLaunchRefusal? left, Kazo.Os.Platform.Core.Lifecycle.AppLaunchRefusal? right) -> bool
+static Kazo.Os.Platform.Core.Lifecycle.AppLaunchRefusal.operator ==(Kazo.Os.Platform.Core.Lifecycle.AppLaunchRefusal? left, Kazo.Os.Platform.Core.Lifecycle.AppLaunchRefusal? right) -> bool
 static Kazo.Os.Platform.Core.Lifecycle.AppLaunchRequest.operator !=(Kazo.Os.Platform.Core.Lifecycle.AppLaunchRequest? left, Kazo.Os.Platform.Core.Lifecycle.AppLaunchRequest? right) -> bool
 static Kazo.Os.Platform.Core.Lifecycle.AppLaunchRequest.operator ==(Kazo.Os.Platform.Core.Lifecycle.AppLaunchRequest? left, Kazo.Os.Platform.Core.Lifecycle.AppLaunchRequest? right) -> bool
 static Kazo.Os.Platform.Core.Lifecycle.AppLaunchResult.operator !=(Kazo.Os.Platform.Core.Lifecycle.AppLaunchResult? left, Kazo.Os.Platform.Core.Lifecycle.AppLaunchResult? right) -> bool
