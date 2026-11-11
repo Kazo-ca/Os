@@ -83,7 +83,11 @@ Before the execute-bit test and before any reading as text:
 
 1. **The file exists and is not a directory** (as today, 126/127).
 2. **Header**: the shell reads the first bytes (64 at most, through
-   `KazoFile.OpenRead`, without loading the file). When they match the
+   `KazoFile.OpenRead`, without loading the file). **The shell's host
+   first**: when the app that started the shell provided a `ProgramHost`
+   (`KazoShellOptions`, ADR 0252 §1: the Terminal app, which runs a console
+   program itself through `Ix86`) and it takes the file, the exit code is
+   its own and the route stops there. Otherwise, when they match the
    `Magic` of a binfmt of an **installed and enabled** Feature: the shell
    launches that Feature's `Handler` like a catalog command (child of the
    shell, shell streams, `IFullScreenTerminalSession` available, ADR 0252),
@@ -122,20 +126,24 @@ Before the execute-bit test and before any reading as text:
 
 ### 3. The Terminal app exception (162, Benoit's precision)
 
-- Route 2 gives the handler of a Feature the terminal session: that is where
-  "the Terminal runs the console program itself through Os-x86". The Os-x86
-  handler decides, for a **console** MZ+PE: run in the terminal (ADR 0252)
-  when it can; otherwise, and for every **graphical** program, hand over to
-  the associated app (route 3, BoxedWine). The shell needs to know nothing
-  about Wine nor DOS: the rule lives in the handler.
+- "The Terminal runs the console program itself through Os-x86": it is the
+  Terminal app, through `Ix86` (ADR 0252 §1), that takes the file at step 2
+  when it hosts the shell; it decides for a **console** MZ+PE (run in the
+  tab) and hands every **graphical** program over to the associated app
+  (route 3, BoxedWine). The shell needs to know nothing about Wine nor DOS:
+  the rule lives in the Terminal (through `Ix86`) and in the handler.
+- **Outside the Terminal** (shell started by another app without a
+  `ProgramHost`, script), the Feature's binfmt handler stays the route: the
+  same rule, held by the Feature's `x86` command.
 - On double-click, `xdg-open` and `OpenFileAsync`, **nothing changes**: the
   file goes to the association (BoxedWine), which calls Os-x86 through
   `Ix86`.
 
 ### 4. What the shell logs
 
-`/var/log/syslog`, source `shell`: `exec route=binfmt format=ELF
-handler=org.kazoos.x86.cli path=…` or `route=association app=… ext=.exe`,
+`/var/log/syslog`, source `shell`: `exec route=host app=org.kazoos.terminal
+path=…`, `route=binfmt format=ELF handler=org.kazoos.x86.cli path=…` or
+`route=association app=… ext=.exe`,
 and the refusals (`route=refused reason=header-extension-mismatch`).
 
 ## Rejected options
@@ -145,8 +153,9 @@ and the refusals (`route=refused reason=header-extension-mismatch`).
   terminal would wait; contrary to POSIX shell usage.
 - **B. A generic binfmt in the OS** (the shell itself recognizes MZ, PE, ELF,
   original 13 A): the OS would hold rules about formats it does not run; the
-  162 precision (console in the terminal, DOS without BoxedWine) lives better
-  in the Feature.
+  162 precision (console in the terminal, DOS without BoxedWine) lives in
+  the Terminal app and in the Feature's handler (ADR 0252 §1), not in the
+  shell.
 - **C. The binfmt before the association, always, with `.exe` → Os-x86**:
   62 B decided for BoxedWine; the handler delegates.
 - **D. A single BoxedWine instance that receives successive launches**
@@ -161,14 +170,15 @@ and the refusals (`route=refused reason=header-extension-mismatch`).
   (SDK, `PublicAPI.Unshipped.txt`); validator (well-formed `Magic`, binfmt
   reserved to Features); `AppCatalog` (binfmt registry,
   `catalog.binfmt.duplicate`).
-- `ShellInterpreter.RunPathAsync`: header read, binfmt route, association
-  route (window launched as a child with a separate instance), message
+- `ShellInterpreter.RunPathAsync`: header read, shell's host first
+  (`ProgramHost`, ADR 0252 §1), binfmt route, association route (window launched as a child with a separate instance), message
   without a handler; `ShellCommandResolver` for the handler; log.
 - Docs: [`shell-commands.md`](../shell-commands.md),
   [`file-associations-api.md`](../../framework/file-associations-api.md),
   [`app-model.md`](../../framework/app-model.md), `features.md`,
   `changes/unreleased` entry.
-- Tests: `./x` ELF without the bit → handler launched with the path; PE
+- Tests: `./x` ELF without the bit → handler launched with the path; host
+  with a `ProgramHost` that takes the file → no handler, the host's code; PE
   `.exe` → handler then association (child, waits, 0 at close, 130 on
   Ctrl+C); `.bat` → association, never `hsh`; `photo.png` with a PE header →
   126 and log; without BoxedWine → message 126; directory and missing
@@ -181,7 +191,8 @@ and the refusals (`route=refused reason=header-extension-mismatch`).
    - A) **(Recommended)** The shell recognizes the `Magic` declared by the
      Feature and launches its handler; the fine rule (PE, NE, pure MZ,
      console or graphical, delegation to BoxedWine) lives in the Os-x86
-     handler (72.2: central service of Os-x86).
+     handler (72.2: central service of Os-x86) and in the Terminal app
+     (ADR 0252 §1).
    - B) The shell applies the whole rule (PE → association, pure MZ → DOS,
      ELF → Linux) from a table declared by the Feature: more logic in the OS,
      less in the Feature.
