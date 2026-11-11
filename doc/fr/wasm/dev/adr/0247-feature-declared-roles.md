@@ -13,7 +13,8 @@ gérer les VM »), 156 B (tes mots : « un vrai rôle Kazo. La fonctionnalité
 devra avoir la possibilité de déclarer des rôles ») et 160 A (le rôle ouvre
 les pages et les commandes ; chaque opération sensible demande en plus
 l'authentification d'admin de l'OS ; « gérer les sous-systèmes » disparaît),
-2026-11-11.
+2026-11-11 ; réponse du mainteneur du 2026-11-11 : un administrateur porte
+tous les rôles déclarés, implicitement (§1).
 
 - **Complète :** l'[ADR 0013](0013-local-user-session.md) (usagers et
   sessions), l'[ADR 0042](0042-sudo-root-elevation.md) (élévation `sudo`),
@@ -76,11 +77,19 @@ l'authentification d'admin de l'OS ; « gérer les sous-systèmes » disparaît)
   `/etc/kazoos/roles.config` (`[roles]`, `x86.vm-admin=<guid>,<guid>` ;
   identifiants stables d'usager, jamais des noms, ADR 0169) et synchronisée
   comme les autres documents système.
-- Un administrateur **n'a pas** les rôles d'office : il s'attribue le rôle
-  s'il veut les pages (comme un admin Linux se met dans `docker`). Le mode
-  invité (ADR 0187) attribue tous les rôles déclarés à `guest`.
+- Un administrateur **porte tous les rôles déclarés, implicitement**
+  (réponse du mainteneur, 2026-11-11) : l'attribution explicite ne concerne
+  que les usagers ordinaires. `roles.config` ne liste jamais un
+  administrateur ; Paramètres ▸ Utilisateurs montre ses rôles comme
+  « implicites (administrateur) », sans case à cocher ; `kazorole grant` sur
+  un administrateur ne change rien et le dit (code 0). Un compte qui perd
+  l'autorité `Administrator` perd les rôles implicites et doit se les faire
+  attribuer comme un usager ordinaire. Le mode invité (ADR 0187) : `guest`
+  est administrateur, donc porte tous les rôles.
 - Le rôle est lu par `IAppExecutionContext.Roles` (liste d'identifiants) et
-  `KazoUser.Current.HasRole("x86.vm-admin")`. Retirer la Feature retire le
+  `KazoUser.Current.HasRole("x86.vm-admin")` ; pour un administrateur,
+  `Roles` liste tous les rôles des Features installées et `HasRole` rend
+  vrai pour chacun. Retirer la Feature retire le
   rôle de l'affichage ; les lignes restent dans `roles.config` et reviennent
   avec la Feature.
 
@@ -168,6 +177,11 @@ public interface IKazoFeatureAuthentication
   points d'entrée ni des opérations, et aucune page ne les affiche.
 - **E. Le dialogue de l'app (`WindowAppBase`) pour une Feature** : la Feature
   verrait le mot de passe ; D61 l'interdit.
+- **F. Un administrateur sans rôle d'office**, qui se l'attribue comme un
+  admin Linux se met dans `docker` (recommandation d'origine de cette ADR) :
+  écarté par le mainteneur le 2026-11-11 ; un administrateur de Kazo
+  administre déjà tout, et la fenêtre d'authentification du §2 protège
+  chaque opération sensible, pas la visibilité des pages.
 
 ## Conséquences
 
@@ -176,16 +190,21 @@ public interface IKazoFeatureAuthentication
   `IKazoFeatureAuthentication`, `KazoAuthenticationTicket`,
   `KazoAuthenticationScope` ; `PublicAPI.Unshipped.txt`, fixture `sdk-compat`.
 - Plateforme : `roles.config` (document système, synchronisé), lecture des
-  rôles à la construction du contexte (`AppExecutionContextFactory`),
+  rôles à la construction du contexte (`AppExecutionContextFactory` ; tous
+  les rôles déclarés pour un administrateur, sans ligne),
   `AdministratorGate` étendu (`RoleHolder`), billets à portée Feature +
   opération, entrées `feature.*` et `role.*` d'`auth.log`.
 - Paramètres ▸ Utilisateurs : colonne « Rôles », attribution avec
-  authentification ; commande `kazorole` (`grant`, `revoke`, `list`).
+  authentification pour les usagers ordinaires, « implicites
+  (administrateur) » pour les administrateurs ; commande `kazorole`
+  (`grant`, `revoke`, `list` ; `grant` sur un administrateur ne change rien).
 - Docs : [`system-administration.md`](../../framework/system-administration.md)
   (section « Rôles des Features »), [`sensitive-settings.md`](../sensitive-settings.md),
   [`logging.md`](../logging.md), `features.md`, entrée `changes/unreleased`.
 - Tests : rôle attribué → page visible, sous-commande acceptée ; non attribué
-  → page absente, 126 ; opération sensible → fenêtre de l'OS, billet lié à
+  → page absente, 126 ; administrateur sans ligne dans `roles.config` → page
+  visible, `HasRole` vrai ; compte rétrogradé en `User` → page absente ;
+  opération sensible → fenêtre de l'OS, billet lié à
   l'opération, refus d'un billet d'une autre opération ; `auth.log` complet ;
   app ordinaire → exception ; mode invité → confirmation ; `sudo x86` sans
   seconde fenêtre.
@@ -199,9 +218,9 @@ public interface IKazoFeatureAuthentication
    - B) Aux administrateurs seulement (un rôle = un sous-ensemble des droits
      d'admin) ; plus simple, mais un usager standard ne peut jamais gérer les
      VM communes, ce que 140 B voulait permettre par le rôle.
-2. **Un administrateur porte-t-il tous les rôles d'office ?**
-   - A) **(Recommandé)** Non : il se l'attribue (une ligne de `roles.config`) ;
-     les pages d'administration des VM n'encombrent pas chaque admin.
-   - B) Oui, implicitement.
 
-Appliquées en attendant : 1 A, 2 A.
+Appliquée en attendant : 1 A.
+
+Question réglée le 2026-11-11 : un administrateur porte-t-il tous les rôles
+d'office → oui, implicitement ; l'attribution explicite ne concerne que les
+usagers ordinaires (§1).

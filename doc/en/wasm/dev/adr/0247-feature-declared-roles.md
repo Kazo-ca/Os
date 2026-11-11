@@ -12,7 +12,8 @@ administration from the first milestone, "a role that allows managing the
 VMs"), 156 B (his words: "a real Kazo role. The feature must be able to
 declare roles") and 160 A (the role opens the pages and the commands; every
 sensitive operation also asks for the OS administrator authentication;
-"manage the subsystems" disappears), 2026-11-11.
+"manage the subsystems" disappears), 2026-11-11; maintainer's answer of
+2026-11-11: an administrator holds every declared role, implicitly (§1).
 
 - **Completes:** [ADR 0013](0013-local-user-session.md) (users and sessions),
   [ADR 0042](0042-sudo-root-elevation.md) (`sudo` elevation),
@@ -73,13 +74,20 @@ sensitive operation also asks for the OS administrator authentication;
   assignment is written to `/etc/kazoos/roles.config` (`[roles]`,
   `x86.vm-admin=<guid>,<guid>`; stable user identifiers, never names,
   ADR 0169) and synchronized like the other system documents.
-- An administrator **does not** hold the roles by default: they assign the
-  role to themselves when they want the pages (as a Linux admin joins
-  `docker`). Guest mode (ADR 0187) assigns every declared role to `guest`.
+- An administrator **holds every declared role, implicitly** (maintainer's
+  answer, 2026-11-11): the explicit assignment only concerns ordinary users.
+  `roles.config` never lists an administrator; Settings ▸ Users shows their
+  roles as "implicit (administrator)", without a checkbox; `kazorole grant`
+  on an administrator changes nothing and says so (code 0). An account that
+  loses the `Administrator` authority loses the implicit roles and must be
+  assigned them like an ordinary user. Guest mode (ADR 0187): `guest` is an
+  administrator, so holds every role.
 - The role is read through `IAppExecutionContext.Roles` (list of
-  identifiers) and `KazoUser.Current.HasRole("x86.vm-admin")`. Removing the
-  Feature removes the role from the display; the lines stay in
-  `roles.config` and come back with the Feature.
+  identifiers) and `KazoUser.Current.HasRole("x86.vm-admin")`; for an
+  administrator, `Roles` lists every role of the installed Features and
+  `HasRole` returns true for each. Removing the Feature removes the role from
+  the display; the lines stay in `roles.config` and come back with the
+  Feature.
 
 ### 2. The role opens; the OS authenticates every sensitive operation
 
@@ -163,6 +171,11 @@ public interface IKazoFeatureAuthentication
   operations, and no page shows them.
 - **E. The app dialog (`WindowAppBase`) for a Feature**: the Feature would see
   the password; D61 forbids it.
+- **F. An administrator without the roles by default**, who assigns them to
+  themselves as a Linux admin joins `docker` (original recommendation of this
+  ADR): rejected by the maintainer on 2026-11-11; a Kazo administrator
+  already administers everything, and the authentication window of §2
+  protects every sensitive operation, not the visibility of the pages.
 
 ## Consequences
 
@@ -171,16 +184,21 @@ public interface IKazoFeatureAuthentication
   `IKazoFeatureAuthentication`, `KazoAuthenticationTicket`,
   `KazoAuthenticationScope`; `PublicAPI.Unshipped.txt`, `sdk-compat` fixture.
 - Platform: `roles.config` (system document, synchronized), roles read when
-  building the context (`AppExecutionContextFactory`), `AdministratorGate`
-  extended (`RoleHolder`), tickets scoped to Feature + operation, `feature.*`
-  and `role.*` entries in `auth.log`.
-- Settings ▸ Users: "Roles" column, assignment with authentication;
-  `kazorole` command (`grant`, `revoke`, `list`).
+  building the context (`AppExecutionContextFactory`; every declared role for
+  an administrator, without a line), `AdministratorGate` extended
+  (`RoleHolder`), tickets scoped to Feature + operation, `feature.*` and
+  `role.*` entries in `auth.log`.
+- Settings ▸ Users: "Roles" column, assignment with authentication for
+  ordinary users, "implicit (administrator)" for administrators; `kazorole`
+  command (`grant`, `revoke`, `list`; `grant` on an administrator changes
+  nothing).
 - Docs: [`system-administration.md`](../../framework/system-administration.md)
   ("Feature roles" section), [`sensitive-settings.md`](../sensitive-settings.md),
   [`logging.md`](../logging.md), `features.md`, `changes/unreleased` entry.
 - Tests: role assigned → page visible, subcommand accepted; not assigned →
-  page absent, 126; sensitive operation → OS window, ticket bound to the
+  page absent, 126; administrator without a line in `roles.config` → page
+  visible, `HasRole` true; account demoted to `User` → page absent;
+  sensitive operation → OS window, ticket bound to the
   operation, refusal of a ticket of another operation; complete `auth.log`;
   ordinary app → exception; guest mode → confirmation; `sudo x86` without a
   second window.
@@ -194,9 +212,8 @@ public interface IKazoFeatureAuthentication
    - B) To administrators only (a role = a subset of admin rights); simpler,
      but a standard user can never manage the common VMs, which 140 B wanted
      to allow through the role.
-2. **Does an administrator hold every role by default?**
-   - A) **(Recommended)** No: they assign it to themselves (one line of
-     `roles.config`); the VM administration pages do not clutter every admin.
-   - B) Yes, implicitly.
 
-Applied while waiting: 1 A, 2 A.
+Applied while waiting: 1 A.
+
+Settled on 2026-11-11: does an administrator hold every role by default →
+yes, implicitly; the explicit assignment only concerns ordinary users (§1).
