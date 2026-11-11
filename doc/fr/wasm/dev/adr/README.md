@@ -243,7 +243,7 @@ prochain numéro libre est indiqué dans
 | `0244-app-libraries-and-shared-versions.md` (réservé, PR en cours vers `feature/base`) | ADR 0244 : Bibliothèques d'app et versions partagées |
 | `0245-feature-service-registry-and-async-resolution.md` (réservé, PR en cours vers `feature/base`) | ADR 0245 : Registre d'interfaces et résolution asynchrone |
 | `0246-provider-declared-permissions.md` (réservé, PR en cours vers `feature/base`) | ADR 0246 : Permissions déclarées par une Feature |
-| `0247-feature-declared-roles.md` (réservé, PR en cours vers `feature/base`) | ADR 0247 : Rôles déclarés par une Feature |
+| [`0247-feature-declared-roles.md`](0247-feature-declared-roles.md) | ADR 0247 : rôles déclarés par une Feature : attribués par un administrateur dans Paramètres ▸ Utilisateurs, ouvrent ses pages et ses commandes ; chaque opération sensible demande en plus l'authentification de l'OS, journalisée avec l'app, l'opération et le demandeur |
 | `0248-store-and-kazopkg-dependency-resolution.md` (réservé, PR en cours vers `feature/base`) | ADR 0248 : Résolution des dépendances |
 | `0249-settings-features-section.md` (réservé, PR en cours vers `feature/base`) | ADR 0249 : Section « Fonctionnalités » des Paramètres |
 | `0250-storage-persistence-and-eviction.md` (réservé, PR en cours vers `feature/base`) | ADR 0250 : Persistance et éviction du stockage |

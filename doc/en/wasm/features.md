@@ -440,7 +440,7 @@ one row per ADR).
 | App libraries and shared versions | A package carries the app's own libraries (#419); one copy of a shared library (a Feature's contracts) is loaded per page, the most recent compatible one. | 0244 reserved (PR in progress) | — |
 | Service registry and asynchronous resolution | An app asks the OS for the interface a Feature provides, without a binary dependency; null when the Feature is absent. | 0245 reserved (PR in progress) | — |
 | Permissions declared by a Feature | A Feature declares its own permissions, dangerous ones included; they follow the rules of the OS catalog and are never granted silently. | 0246 reserved (PR in progress) | — |
-| Roles declared by a Feature | A Feature declares roles an administrator assigns; every sensitive operation goes through the OS authentication. | 0247 reserved (PR in progress) | — |
+| Roles declared by a Feature | A Feature declares roles an administrator assigns; every sensitive operation goes through the OS authentication. | [0247](dev/adr/0247-feature-declared-roles.md) | — |
 | Dependency resolution | The Store and `kazopkg` install the dependencies declared in the manifest, with one consent; removing a package warns and disables the dependent apps. | 0248 reserved (PR in progress) | — |
 | “Features” section of Settings | Settings lists the installed Features and shows the pages they provide, by the user's role. | 0249 reserved (PR in progress) | — |
 | Storage persistence and eviction | The OS asks the browser not to erase its storage, shows the quota and warns when the browser erased data anyway. | 0250 reserved (PR in progress) | — |
