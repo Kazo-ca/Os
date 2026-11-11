@@ -437,6 +437,31 @@ dans `main`, le lien mène à sa PR.
 | --- | --- | --- | --- |
 | HackerOS devient Kazo OS | Le nom HackerOS est déjà pris par une distribution Linux. Tout est renommé : nom affiché, espaces de noms et paquets `Kazo.Os.*` (SDK 3.0.0), préfixe `Kazo` au lieu de `Hack`, commandes, extensions et chemins ; les données des utilisateurs sont migrées au premier démarrage. | [0228](dev/adr/0228-rename-to-kazoos.md), [0229](dev/adr/0229-kazo-os-display-name-and-new-address.md), [0230](dev/adr/0230-rename-migration-by-previous-version.md) | Série `rename/base` |
 
+### Fonctionnalités installables (Features) et Os-x86
+
+Os-x86 ([Os-x86](https://github.com/Kazo-ca/Os-x86)) est une fonctionnalité
+facultative de l'OS, installée au niveau système par un administrateur, qui
+fait tourner des machines virtuelles x86 dans le navigateur (Linux, FreeDOS,
+programmes Windows par Wine) ; l'app BoxedWine en est l'interface. Elle
+demande à l'OS le type d'app « Feature » et les points d'extension ci-dessous
+(lot 1, série `feature/base`, ADR 0243 à 0255 ; une ligne par ADR).
+
+| Fonctionnalité | Description | ADR | Issue |
+| --- | --- | --- | --- |
+| Type d'app « Feature » | Une fonctionnalité facultative de l'OS (à la manière de WSL) installée au niveau système par un administrateur : une identité, des points d'entrée enfants (commande, fenêtres, pages), des permissions en bloc. | 0243 réservée (PR en cours) | — |
+| Bibliothèques d'app et versions partagées | Un paquet embarque les bibliothèques propres de l'app (#419) ; une seule copie d'une bibliothèque partagée (contrats d'une Feature) est chargée par page, la plus récente compatible. | 0244 réservée (PR en cours) | — |
+| Registre d'interfaces et résolution asynchrone | Une app demande à l'OS l'interface qu'une Feature fournit, sans dépendance dans son binaire ; null si la Feature est absente. | 0245 réservée (PR en cours) | — |
+| Permissions déclarées par une Feature | Une Feature déclare ses propres permissions, dangereuses comprises ; elles suivent les règles du catalogue de l'OS et ne sont jamais accordées en silence. | 0246 réservée (PR en cours) | — |
+| Rôles déclarés par une Feature | Une Feature déclare des rôles qu'un administrateur attribue ; chaque opération sensible passe par l'authentification de l'OS. | 0247 réservée (PR en cours) | — |
+| Résolution des dépendances | Le Store et `kazopkg` installent les dépendances déclarées dans le manifeste, avec un seul consentement ; retirer un paquet avertit et désactive les apps dépendantes. | 0248 réservée (PR en cours) | — |
+| Section « Fonctionnalités » des Paramètres | Paramètres liste les Features installées et affiche les pages qu'elles fournissent, selon le rôle de l'usager. | 0249 réservée (PR en cours) | — |
+| Persistance et éviction du stockage | L'OS demande au navigateur de ne pas effacer son stockage, affiche le quota et avertit quand le navigateur a tout de même effacé des données. | 0250 réservée (PR en cours) | — |
+| Route du shell vers l'association et binfmt | `./programme.exe` au terminal va à l'app associée ou au binfmt d'une Feature selon l'en-tête du fichier, sans bit d'exécution ni lecture comme script. | 0251 réservée (PR en cours) | — |
+| Le Terminal affiche un programme invité | Un programme console d'une Feature (shell Linux, programme DOS texte) s'affiche dans le Terminal de Kazo : couleurs par cellule, touches de fonction, Ctrl+C au programme. | 0252 réservée (PR en cours) | — |
+| Expéditeur marqué | Une app lancée ou un fichier ouvert par une autre app connaît l'expéditeur, marqué par l'OS, pour son journal. | 0253 réservée (PR en cours) | — |
+| Événements par usager | Un journal d'événements par usager (permission accordée, mise à jour, conflit résolu), visible par l'usager et les administrateurs. | 0254 réservée (PR en cours) | — |
+| Relais : identités et décisions d'une Feature | Le relais du serveur accepte d'une Feature une identité par flux, une décision et des limites, et journalise par identité. | 0255 réservée (PR en cours) | — |
+
 ### Applications optionnelles portées
 
 Des applications open source connues, adaptées à Kazo OS, chacune dans son

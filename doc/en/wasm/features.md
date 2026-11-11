@@ -425,6 +425,31 @@ points to its PR.
 | --- | --- | --- | --- |
 | HackerOS becomes Kazo OS | The name HackerOS is already taken by a Linux distribution. Everything is renamed: displayed name, `Kazo.Os.*` namespaces and packages (SDK 3.0.0), `Kazo` prefix instead of `Hack`, commands, extensions and paths; user data is migrated on the first boot. | [0228](dev/adr/0228-rename-to-kazoos.md), [0229](dev/adr/0229-kazo-os-display-name-and-new-address.md), [0230](dev/adr/0230-rename-migration-by-previous-version.md) | Series `rename/base` |
 
+### Installable features (Features) and Os-x86
+
+Os-x86 ([Os-x86](https://github.com/Kazo-ca/Os-x86)) is an optional OS
+feature, installed system-wide by an administrator, that runs x86 virtual
+machines in the browser (Linux, FreeDOS, Windows programs through Wine); the
+BoxedWine app is its interface. It asks the OS for the "Feature" app type and
+the extension points below (lot 1, `feature/base` series, ADR 0243 to 0255;
+one row per ADR).
+
+| Feature | Description | ADR | Issue |
+| --- | --- | --- | --- |
+| “Feature” app type | An optional OS feature (WSL-like) installed system-wide by an administrator: one identity, child entry points (command, windows, pages), permissions as a block. | 0243 reserved (PR in progress) | — |
+| App libraries and shared versions | A package carries the app's own libraries (#419); one copy of a shared library (a Feature's contracts) is loaded per page, the most recent compatible one. | 0244 reserved (PR in progress) | — |
+| Service registry and asynchronous resolution | An app asks the OS for the interface a Feature provides, without a binary dependency; null when the Feature is absent. | 0245 reserved (PR in progress) | — |
+| Permissions declared by a Feature | A Feature declares its own permissions, dangerous ones included; they follow the rules of the OS catalog and are never granted silently. | 0246 reserved (PR in progress) | — |
+| Roles declared by a Feature | A Feature declares roles an administrator assigns; every sensitive operation goes through the OS authentication. | 0247 reserved (PR in progress) | — |
+| Dependency resolution | The Store and `kazopkg` install the dependencies declared in the manifest, with one consent; removing a package warns and disables the dependent apps. | 0248 reserved (PR in progress) | — |
+| “Features” section of Settings | Settings lists the installed Features and shows the pages they provide, by the user's role. | 0249 reserved (PR in progress) | — |
+| Storage persistence and eviction | The OS asks the browser not to erase its storage, shows the quota and warns when the browser erased data anyway. | 0250 reserved (PR in progress) | — |
+| Shell route to associations and binfmt | `./program.exe` in the terminal goes to the associated app or to a Feature's binfmt by the file header, without an execute bit nor a script reading. | 0251 reserved (PR in progress) | — |
+| The Terminal shows a guest program | A Feature's console program (Linux shell, text-mode DOS program) shows in the Kazo Terminal: per-cell colors, function keys, Ctrl+C to the program. | 0252 reserved (PR in progress) | — |
+| Marked sender | An app launched or a file opened by another app knows the sender, marked by the OS, for its journal. | 0253 reserved (PR in progress) | — |
+| Per-user events | A per-user events journal (permission granted, update, conflict resolved), visible by the user and the administrators. | 0254 reserved (PR in progress) | — |
+| Relay: identities and decisions of a Feature | The server relay accepts from a Feature an identity per flow, a decision and limits, and logs per identity. | 0255 reserved (PR in progress) | — |
+
 ### Optional ported applications
 
 Well-known open source applications adapted to Kazo OS, each in its own
