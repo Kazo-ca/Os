@@ -6,11 +6,12 @@
 
 Proposed on 2026-11-11, for the Os-x86 feature
 ([Kazo-ca/Os-x86](https://github.com/Kazo-ca/Os-x86)), lot 1 of the
-`feature/base` series. The recommendation of each question asked to Benoit
-is applied while waiting for his answer. Source decisions: 137 ("the user's
+`feature/base` series. The questions asked to Benoit got their answers on
+2026-11-11 (series 15 of the Os-x86 design); they are recorded at the end of
+this ADR and the decision applies them. Source decisions: 137 ("the user's
 personal events, such as a granted permission or an update of their VM, are
-visible by them and by the administrators; system events without personal
-data go to the general log") and Os-x86 guidelines §16 ("update, permission
+visible by them and by the administrators; system events without personal data
+go to the general log") and Os-x86 guidelines §16 ("update, permission
 granted, file conflict resolved … attached to a VM or a program; neither a
 universal access to every user's details, nor a log reserved to
 administrators"), 2026-11-11. The personal journal is V1; only a complete
@@ -35,7 +36,7 @@ viewer may wait.
   (`AppGatewayContracts.cs:259-262`), with the app identifier and the pid,
   **without a user identifier** (`Execution/AppLoggingGateway.cs:66-74`).
 - There is **no per-user log**: what BoxedWine would write ("Alice launched
-  setup.exe") is readable by Bob in `/var/log/apps/org.kazoos.boxedwine.log`,
+  setup.exe") is readable by Bob in `/var/log/apps/ca.kazo.boxedwine.log`,
   and the Error Log Viewer, a system app with `filesystem.system.read`,
   reads everything for everyone
   (`Apps/System/Kazo.Os.Apps.ErrorLogViewer/LogFileReader.cs:42-64`).
@@ -174,4 +175,4 @@ public sealed record KazoUserEvent(
    - B) No capability at all (like `Logging` today): simpler, but Settings ▸
      Capabilities would not show which apps log.
 
-Applied while waiting: 1 A, 2 A.
+Maintainer's answers (2026-11-11): 1 A, 2 A.

@@ -6,15 +6,16 @@
 
 Proposée le 2026-11-11, pour la fonctionnalité Os-x86
 ([Kazo-ca/Os-x86](https://github.com/Kazo-ca/Os-x86)), lot 1 de la série
-`feature/base`. La recommandation de chaque question posée à Benoit est
-appliquée en attendant sa réponse. Décisions d'origine : 137 (« les
-événements personnels de l'usager, comme une permission accordée ou une
-mise à jour de sa VM, sont visibles par lui et par les administrateurs ;
-les événements système sans données personnelles vont dans le journal
-général ») et consignes §16 d'Os-x86 (« mise à jour, permission accordée,
-conflit de fichiers résolu … rattachés à une VM ou à un programme ; ni un
-accès universel aux détails de tous les utilisateurs, ni un journal réservé
-aux administrateurs »), 2026-11-11. Le journal personnel est V1 ; seule une
+`feature/base`. Les questions posées à Benoit ont reçu leur réponse le
+2026-11-11 (série 15 de la conception d'Os-x86) ; elles sont consignées à la
+fin de cette ADR et la décision les applique. Décisions d'origine : 137 (« les
+événements personnels de l'usager, comme une permission accordée ou une mise à
+jour de sa VM, sont visibles par lui et par les administrateurs ; les
+événements système sans données personnelles vont dans le journal général »)
+et consignes §16 d'Os-x86 (« mise à jour, permission accordée, conflit de
+fichiers résolu … rattachés à une VM ou à un programme ; ni un accès universel
+aux détails de tous les utilisateurs, ni un journal réservé aux
+administrateurs »), 2026-11-11. Le journal personnel est V1 ; seule une
 visionneuse complète peut attendre.
 
 - **Complète :** l'[ADR 0045](0045-logs-as-files.md) (journaux en fichiers,
@@ -37,7 +38,7 @@ visionneuse complète peut attendre.
   **sans identifiant d'usager** (`Execution/AppLoggingGateway.cs:66-74`).
 - Il n'existe **aucun journal par usager** : ce que BoxedWine écrirait
   (« Alice a lancé setup.exe ») est lisible par Bob dans
-  `/var/log/apps/org.kazoos.boxedwine.log`, et l'Error Log Viewer, app
+  `/var/log/apps/ca.kazo.boxedwine.log`, et l'Error Log Viewer, app
   système avec `filesystem.system.read`, lit tout pour tout le monde
   (`Apps/System/Kazo.Os.Apps.ErrorLogViewer/LogFileReader.cs:42-64`).
 - Les notifications (`AppNotificationGateway.cs:37-61`) sont par usager mais
@@ -181,4 +182,4 @@ public sealed record KazoUserEvent(
    - B) Pas de capacité du tout (comme `Logging` aujourd'hui) : plus simple,
      mais Paramètres ▸ Capacités ne montrerait pas quelles apps journalisent.
 
-Appliquées en attendant : 1 A, 2 A.
+Réponses du mainteneur (2026-11-11) : 1 A, 2 A.
