@@ -443,7 +443,7 @@ one row per ADR).
 | Roles declared by a Feature | A Feature declares roles an administrator assigns; every sensitive operation goes through the OS authentication. | 0247 reserved (PR in progress) | — |
 | Dependency resolution | The Store and `kazopkg` install the dependencies declared in the manifest, with one consent; removing a package warns and disables the dependent apps. | 0248 reserved (PR in progress) | — |
 | “Features” section of Settings | Settings lists the installed Features and shows the pages they provide, by the user's role. | 0249 reserved (PR in progress) | — |
-| Storage persistence and eviction | The OS asks the browser not to erase its storage, shows the quota and warns when the browser erased data anyway. | 0250 reserved (PR in progress) | — |
+| Storage persistence and eviction | The OS asks the browser not to erase its storage, shows the quota and warns when the browser erased data anyway. | [0250](dev/adr/0250-storage-persistence-and-eviction.md) | — |
 | Shell route to associations and binfmt | `./program.exe` in the terminal goes to the associated app or to a Feature's binfmt by the file header, without an execute bit nor a script reading. | 0251 reserved (PR in progress) | — |
 | The Terminal shows a guest program | A Feature's console program (Linux shell, text-mode DOS program) shows in the Kazo Terminal: per-cell colors, function keys, Ctrl+C to the program. | 0252 reserved (PR in progress) | — |
 | Marked sender | An app launched or a file opened by another app knows the sender, marked by the OS, for its journal. | 0253 reserved (PR in progress) | — |

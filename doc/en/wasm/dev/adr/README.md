@@ -246,7 +246,7 @@ next free number is given in
 | `0247-feature-declared-roles.md` (reserved, PR in progress to `feature/base`) | ADR 0247: Roles declared by a Feature |
 | `0248-store-and-kazopkg-dependency-resolution.md` (reserved, PR in progress to `feature/base`) | ADR 0248: Dependency resolution |
 | `0249-settings-features-section.md` (reserved, PR in progress to `feature/base`) | ADR 0249: “Features” section of Settings |
-| `0250-storage-persistence-and-eviction.md` (reserved, PR in progress to `feature/base`) | ADR 0250: Storage persistence and eviction |
+| [`0250-storage-persistence-and-eviction.md`](0250-storage-persistence-and-eviction.md) | ADR 0250: browser storage persistence and eviction: `navigator.storage.persist()` requested by the OS on a user gesture (SDK `KazoStorage` API), state and quota shown in Settings, eviction detected at boot with a warning |
 | `0251-shell-route-to-associations-and-binfmt.md` (reserved, PR in progress to `feature/base`) | ADR 0251: Shell route to associations and binfmt |
 | `0252-terminal-shows-a-guest-program.md` (reserved, PR in progress to `feature/base`) | ADR 0252: The Terminal shows a guest program |
 | `0253-marked-sender-on-launch-and-open.md` (reserved, PR in progress to `feature/base`) | ADR 0253: Marked sender |
