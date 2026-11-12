@@ -451,9 +451,18 @@ and `ManifestWriterTests` (Tools.ManifestGenerator), `AppCatalogTests`,
 
 ADR [0244](adr/0244-app-libraries-and-shared-versions.md) (issue #419) puts in
 the package the assemblies the app needs that the OS does not bring, and loads
-one copy per page of a **shared** library. For authors:
+one copy per page of a **shared** library. ADR
+[0256](adr/0256-app-libraries-implementation-adjustments.md) adjusts its
+implementation. For authors:
 [`app-repository.md`](../framework/app-repository.md#libraries-of-the-app).
 
+- **An ordinary library goes with the app, nothing more** (ADR 0256 §1): a
+  library its author did not mark as shared is managed neither by Kazo OS nor
+  by the Store. The OS checks the file like any file of the package and loads
+  it before the app; there is no catalog entry, no dependency resolution, no
+  version comparison between apps, no restart offer, no refusal based on its
+  version. The rules below about the single copy, the choice of the copy, the
+  major version and "Restart to finish" hold for a **shared** library only.
 - **In the package**: `KazoOsPack` puts in `lib/` the outputs of the
   `ProjectReference` items, the assemblies of the NuGet packages and the
   referenced DLLs the build copies next to the app, with their satellites
@@ -486,10 +495,11 @@ one copy per page of a **shared** library. For authors:
   assembly: the mark follows the library whatever way it is referenced
   (project, DLL, NuGet package), the app declares nothing, and a package
   cannot mark as shared a library that is not.
-- **Refused at installation**: `apps.package.library-reserved` when a library
-  has the name of an assembly of the OS, of the .NET runtime or of a built-in
-  app (a library already loaded from another package is not an assembly of the
-  OS); `apps.package.library-major-mismatch` when a shared library has another
+- **Refused at installation**: `apps.package.library-reserved` protects the
+  OS: a package does not replace an assembly of the OS, of the .NET runtime or
+  of a built-in app with a library of the same name (only the name counts,
+  never the version; a library already loaded from another package is not an
+  assembly of the OS); `apps.package.library-major-mismatch` when a shared library has another
   major version than the copy of an installed feature (the message gives both
   versions and the feature). Without a feature, two apps with two different
   major versions are both installed. Both refusals come before any
@@ -511,9 +521,10 @@ one copy per page of a **shared** library. For authors:
   `RestartRequired` in the install report) in the Store and `kazopkg list`.
   The same holds for a feature installed with a newer copy than the one
   already loaded.
-- **Limits**: every installed app shares the default load context. Two
-  libraries that are **not shared** with the same simple name in two apps: the
-  first one loaded serves both, the second is noted in the log. Two **major**
+- **One load context** (ADR 0256 §3 to §5): every installed app shares the
+  default load context. Two libraries that are **not shared** with the same
+  simple name in two apps: the first one loaded serves both, the second is
+  noted in the log, nothing else. Two **major**
   versions of a shared library are installed together, but only one is in the
   page at a time: the app of the other major version asks for a restart. Until
   features declare the services they provide (ADR 0245), a feature that

@@ -462,8 +462,18 @@ et `ManifestWriterTests` (Tools.ManifestGenerator), `AppCatalogTests`,
 L'ADR [0244](adr/0244-app-libraries-and-shared-versions.md) (issue #419) fait
 entrer dans le paquet les assemblages dont l'app a besoin et que l'OS
 n'apporte pas, et ne charge qu'une copie par page d'une bibliothèque
-**partagée**. Côté auteur : [`app-repository.md`](../framework/app-repository.md#bibliothèques-de-lapp).
+**partagée**. L'ADR [0256](adr/0256-app-libraries-implementation-adjustments.md)
+en ajuste la mise en œuvre. Côté auteur : [`app-repository.md`](../framework/app-repository.md#bibliothèques-de-lapp).
 
+- **Une bibliothèque ordinaire accompagne l'app, rien de plus** (ADR 0256 §1) :
+  une bibliothèque que son auteur n'a pas marquée partagée n'est gérée ni par
+  Kazo OS ni par le Store. L'OS vérifie le fichier comme tout fichier du
+  paquet et le charge avant l'app ; il n'y a pas d'entrée de catalogue, pas de
+  résolution de dépendance, pas de comparaison de versions entre apps, pas de
+  redémarrage proposé, pas de refus fondé sur sa version. Les règles
+  ci-dessous sur la copie unique, le choix de la copie, la version majeure et
+  « Redémarrer pour terminer » ne valent que pour une bibliothèque
+  **partagée**.
 - **Dans le paquet** : `KazoOsPack` met dans `lib/` les sorties des
   `ProjectReference`, les assemblages des paquets NuGet et les DLL référencées
   que le build copie à côté de l'app, avec leurs satellites
@@ -497,9 +507,10 @@ n'apporte pas, et ne charge qu'une copie par page d'une bibliothèque
   l'assemblage : la marque suit la bibliothèque quelle que soit la façon de la
   référencer (projet, DLL, paquet NuGet), l'app ne déclare rien, et un paquet
   ne peut pas marquer partagée une bibliothèque qui ne l'est pas.
-- **Refus à l'installation** : `apps.package.library-reserved` quand une
-  bibliothèque porte le nom d'un assemblage de l'OS, du runtime .NET ou d'une
-  app intégrée (une bibliothèque déjà chargée depuis un autre paquet n'est pas
+- **Refus à l'installation** : `apps.package.library-reserved` protège l'OS :
+  un paquet ne remplace pas un assemblage de l'OS, du runtime .NET ou d'une
+  app intégrée par une bibliothèque du même nom (seul le nom compte, jamais
+  la version ; une bibliothèque déjà chargée depuis un autre paquet n'est pas
   un assemblage de l'OS) ; `apps.package.library-major-mismatch` quand une
   bibliothèque partagée a une autre version majeure que la copie d'une
   fonctionnalité installée (le message donne les deux versions et la
@@ -524,15 +535,15 @@ n'apporte pas, et ne charge qu'une copie par page d'une bibliothèque
   (`KazoInstalledPackage.Loaded` à `false`, `RestartRequired` du rapport
   d'installation) dans le Store et `kazopkg list`. C'est aussi le cas d'une
   fonctionnalité installée avec une copie plus récente que celle déjà chargée.
-- **Limites** : toutes les apps installées partagent le contexte de
-  chargement par défaut. Deux bibliothèques **non partagées** de même nom
-  simple dans deux apps : la première chargée sert les deux, la seconde est
-  notée dans le journal. Deux versions **majeures** d'une bibliothèque
-  partagée sont installées ensemble, mais une seule est dans la page à la
-  fois : l'app de l'autre majeure demande un redémarrage. Tant que les
-  fonctionnalités ne déclarent pas les services qu'elles fournissent
-  (ADR 0245), une fonctionnalité qui embarque la bibliothèque partagée en est
-  le fournisseur.
+- **Un seul contexte de chargement** (ADR 0256 §3 à §5) : toutes les apps
+  installées partagent le contexte de chargement par défaut. Deux
+  bibliothèques **non partagées** de même nom simple dans deux apps : la
+  première chargée sert les deux, la seconde est notée dans le journal, rien
+  d'autre. Deux versions **majeures** d'une bibliothèque partagée sont
+  installées ensemble, mais une seule est dans la page à la fois : l'app de
+  l'autre majeure demande un redémarrage. Tant que les fonctionnalités ne
+  déclarent pas les services qu'elles fournissent (ADR 0245), une
+  fonctionnalité qui embarque la bibliothèque partagée en est le fournisseur.
 
 Tests : `AppPackageLibraryTests`, `InstalledLibrariesTests`,
 `InstalledAppsImageTests` et `AppPackageGatewayTests` (Platform.Core),

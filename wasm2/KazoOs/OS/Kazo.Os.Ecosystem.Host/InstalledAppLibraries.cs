@@ -58,10 +58,12 @@ public sealed class DefaultContextLibraryRuntime : IInstalledLibraryRuntime
 /// is shown as waiting for a restart.
 /// </summary>
 /// <remarks>
-/// A library that is not shared is loaded from the app's own package. Every installed app shares
-/// the default load context (ADR 0244, option A set aside), so when two apps carry a library of
-/// the same simple name that is not shared, the first one loaded serves both; the second is
-/// written to the log.
+/// A library that is not shared goes with its app (ADR 0256 §1): it is loaded from the app's own
+/// package and nothing else is decided about it. Every installed app shares the default load
+/// context (ADR 0244, option A set aside), so when two apps carry a library of the same simple name
+/// that is not shared, the first one loaded serves both and the second is written to the log
+/// (ADR 0256 §4). For the same reason one major version of a shared library is in the page at a
+/// time (ADR 0256 §3).
 /// </remarks>
 public sealed class InstalledAppLibraries : IInstalledLibraryState
 {

@@ -712,8 +712,10 @@ public sealed partial class AppPackageInstaller
     }
 
     /// <summary>
-    /// ADR 0244 §1 and §2: a library may not take the name of an assembly of the OS, and a shared
-    /// library may not have another major version than the copy an installed feature carries.
+    /// ADR 0244 §1 and §2, ADR 0256: the OS does not let a package replace one of its assemblies
+    /// (any library, by its name), and a <b>shared</b> library may not have another major version
+    /// than the copy an installed feature carries. A library that is not shared is not compared
+    /// with anything: it goes with its app.
     /// </summary>
     private void CheckLibraries(
         AppPackage package,

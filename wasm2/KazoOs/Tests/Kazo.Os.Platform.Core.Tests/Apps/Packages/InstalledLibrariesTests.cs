@@ -218,6 +218,26 @@ public sealed class InstalledLibrariesTests
             package, LoadedRuntimeApiSurface.Instance, new HashSet<string>(), new HashSet<string> { "System.Text.Json" });
     }
 
+    [Fact]
+    public void A_library_that_is_not_shared_is_never_compared_at_installation()
+    {
+        // ADR 0256 §1: an ordinary library goes with its app; neither the OS nor the Store manages it.
+        AppPackage package = Package("org.kazo.client", TestLibraries.Build(Contract, "2.0.0"));
+        AppPackageLibrary ordinary = new(Contract, new Version(1, 0, 0, 0), new string('0', 64), Shared: false);
+
+        InstalledLibraries.CheckMajorVersions(package, [Feature("org.kazo.x86", Shared("1.4.0.0")), App("org.kazo.other", ordinary)]);
+    }
+
+    [Fact]
+    public void A_library_that_is_not_shared_never_waits_for_a_restart()
+    {
+        // ADR 0256 §1 and §4: another copy in the page serves the app; no restart is offered for it.
+        AppPackageLibrary ordinary = new(Contract, new Version(2, 0, 0, 0), new string('0', 64), Shared: false);
+        InstalledApp app = App("org.kazo.app", ordinary);
+
+        Assert.Empty(InstalledLibraries.FindPendingRestarts([app], static _ => new Version(1, 0, 0, 0)));
+    }
+
     [Theory]
     [InlineData("1.2.0.0", "1.2.0")]
     [InlineData("1.2.3.4", "1.2.3.4")]

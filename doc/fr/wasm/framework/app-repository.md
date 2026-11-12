@@ -98,13 +98,16 @@ déclare déjà `KazoOsAppProject=true` ; ajoutez-la à l'hôte par
 
 ## Bibliothèques de l'app
 
-[ADR 0244](../dev/adr/0244-app-libraries-and-shared-versions.md). Une app
+[ADR 0244](../dev/adr/0244-app-libraries-and-shared-versions.md),
+[ADR 0256](../dev/adr/0256-app-libraries-implementation-adjustments.md). Une app
 peut avoir ses propres bibliothèques : un autre projet du dépôt
 (`ProjectReference`), un paquet NuGet (`PackageReference`) ou une DLL. Elle
 les référence comme dans tout projet .NET, **sans rien déclarer** :
 `KazoOsPack` met dans `lib/` du paquet chaque assemblage que le build copie à
 côté de l'app et que Kazo OS n'apporte pas, avec ses satellites, et l'OS les
-charge avant l'app.
+charge avant l'app. Une telle bibliothèque **accompagne simplement l'app** :
+ni Kazo OS ni le Store ne la gèrent (pas de fiche, pas de dépendance à
+résoudre, pas de version comparée entre apps).
 
 - **Ce que l'OS apporte reste hors du paquet**, par nom d'assemblage :
   `Kazo.Os.*` (le SDK ; ce nom est réservé à l'OS), `System*`, `Microsoft.*`,

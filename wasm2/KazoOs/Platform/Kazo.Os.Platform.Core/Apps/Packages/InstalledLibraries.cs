@@ -62,6 +62,11 @@ public interface IInstalledLibraryState
 /// The rules of ADR 0244 §2 and §3 over the installed apps: which copy of a shared library serves an
 /// app, what a package may not bring, and what waits for a restart. No loading happens here.
 /// </summary>
+/// <remarks>
+/// Only a library its author marked as shared enters these rules (ADR 0256 §1). A library that is
+/// not shared goes with its app and nothing more: it is never compared between apps, never a
+/// reason to refuse an installation on its version, never a reason to offer a restart.
+/// </remarks>
 public static class InstalledLibraries
 {
     /// <summary>Gets every installed copy of a shared library, by its simple name.</summary>
@@ -212,8 +217,10 @@ public static class InstalledLibraries
     }
 
     /// <summary>
-    /// Refuses a package whose library has the name of an assembly of the OS or of the .NET runtime
-    /// (ADR 0244 §1): the OS brings those, a package cannot replace them.
+    /// Protects the OS (ADR 0244 §1, ADR 0256 §6): refuses a package that would replace an assembly
+    /// of the OS, of the .NET runtime or of a built-in app with a library of the same name. Only
+    /// the name is looked at, never the version, and the library may be shared or not: this is not
+    /// a management of the library, which simply goes with its app.
     /// </summary>
     /// <param name="package">The package being installed.</param>
     /// <param name="runtime">What the running OS has.</param>
@@ -238,7 +245,7 @@ public static class InstalledLibraries
             {
                 throw new AppPackageException(
                     "apps.package.library-reserved",
-                    $"{package.AppId} carries the library {library.Name}, which is an assembly of this OS or of the .NET runtime; a package cannot bring its own copy.");
+                    $"{package.AppId} carries an assembly named {library.Name}, the name of an assembly of this OS or of the .NET runtime; a package cannot replace an assembly of the OS.");
             }
         }
     }

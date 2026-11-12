@@ -97,13 +97,16 @@ already declares `KazoOsAppProject=true`; add it to the host with
 
 ## Libraries of the app
 
-[ADR 0244](../dev/adr/0244-app-libraries-and-shared-versions.md). An app may
+[ADR 0244](../dev/adr/0244-app-libraries-and-shared-versions.md),
+[ADR 0256](../dev/adr/0256-app-libraries-implementation-adjustments.md). An app may
 have libraries of its own: another project of the repository
 (`ProjectReference`), a NuGet package (`PackageReference`) or a DLL. It
 references them as in any .NET project, **declaring nothing**: `KazoOsPack`
 puts in `lib/` of the package every assembly the build copies next to the app
 that Kazo OS does not bring, with its satellites, and the OS loads them before
-the app.
+the app. Such a library **simply goes with the app**: neither Kazo OS nor the
+Store manages it (no page, no dependency to resolve, no version compared
+between apps).
 
 - **What the OS brings stays out of the package**, by assembly name:
   `Kazo.Os.*` (the SDK; the OS keeps that name), `System*`, `Microsoft.*`,
