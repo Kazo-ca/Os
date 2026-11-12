@@ -124,6 +124,42 @@ public sealed class MsBuildIntegrationTests
         }
     }
 
+    [Fact]
+    public async Task KazoOsPack_packs_the_libraries_of_the_app_and_copies_the_shared_mark_of_their_author()
+    {
+        // ADR 0244 §1, §2 (issue #419): the app references two projects of its own and declares
+        // nothing; Contracts sets KazoOsSharedLibrary in its own project, Protocol does not.
+        string output = Directory.CreateTempSubdirectory("kazoos-pack-").FullName;
+        try
+        {
+            (int exitCode, string log) = await BuildFixtureAsync("WithLibrary", null, "-t:KazoOsPack", $"-p:KazoOsPackageOutput={output}");
+
+            Assert.True(exitCode == 0, log);
+            Platform.Core.Apps.Packages.AppPackageIndexEntry entry = Assert.Single(Platform.Core.Apps.Packages.AppPackageIndex.Parse(
+                await File.ReadAllBytesAsync(Path.Combine(output, "index.json"))).Versions);
+            Platform.Core.Apps.Packages.AppPackage package = Platform.Core.Apps.Packages.AppPackage.Read(
+                await File.ReadAllBytesAsync(Path.Combine(output, entry.Path)));
+            Assert.Equal(
+                [
+                    ("ManifestGenerator.Fixtures.WithLibrary.Contracts", 1, 2, true),
+                    ("ManifestGenerator.Fixtures.WithLibrary.Protocol", 1, 0, false),
+                ],
+                package.Libraries.Select(static library => (library.Name, library.Version.Major, library.Version.Minor, library.Shared)));
+            // Neither the SDK nor the .NET runtime is packed: the OS brings them.
+            Assert.Equal(
+                [
+                    "ManifestGenerator.Fixtures.WithLibrary.Contracts.dll",
+                    "ManifestGenerator.Fixtures.WithLibrary.Protocol.dll",
+                    "ManifestGenerator.Fixtures.WithLibrary.dll",
+                ],
+                package.Assemblies.Keys.Order(StringComparer.Ordinal));
+        }
+        finally
+        {
+            Directory.Delete(output, recursive: true);
+        }
+    }
+
     /// <summary>The author key variable of ADR 0219 before its 2026-11-07 amendment.</summary>
     private const string FormerAuthorKeyVariable = "HACKEROS_APP_SIGNING_KEY";
 

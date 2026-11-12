@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Build fixture (ADR 0244 §1). Not part of the solution. A library private to its app: no shared mark. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <Version>1.0.0</Version>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ManifestGenerator.Fixtures.WithLibrary.Contracts\ManifestGenerator.Fixtures.WithLibrary.Contracts.csproj" />
+  </ItemGroup>
+</Project>

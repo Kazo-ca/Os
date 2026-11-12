@@ -121,6 +121,9 @@ internal sealed partial class AppManagementGateway
             await packages.ReadPersonalInstalledAsync(user, _principal.HomePath, cancellationToken).ConfigureAwait(false))
         {
             PackagedAppIds = (_installedPackages?.Invoke()?.Apps.Keys ?? []).Concat(systemInstalled.Sources.Keys).ToHashSet(StringComparer.Ordinal),
+            // ADR 0244 §1, §2: the libraries the installed apps carry, and those already in the page.
+            InstalledApps = [.. (_installedPackages?.Invoke()?.Apps.Values ?? []).Distinct()],
+            LoadedPackageLibraries = InstalledLibraries?.Invoke()?.LoadedFromPackages ?? new HashSet<string>(StringComparer.OrdinalIgnoreCase),
         };
         // Download and every check first: no administrator is asked for a package that would be refused.
         AppPackagePlan plan = await Translate(() => packages.PrepareAsync(parsed, context, cancellationToken)).ConfigureAwait(false);
@@ -270,7 +273,7 @@ internal sealed partial class AppManagementGateway
                     () => packages.RemoveAsync(user, appId, _principal.LoginName.Value, cancellationToken, _principal.HomePath))
                 .ConfigureAwait(false);
             await ActivateInstalledAppsAsync(CancellationToken.None).ConfigureAwait(false);
-            return ToPublic(appId, removedForUser, systemWide: false);
+            return ToPublic(appId, removedForUser, systemWide: false, removed: true);
         }
 
         IAppFileSystemGateway system = CreateSystemWriter();
@@ -314,7 +317,7 @@ internal sealed partial class AppManagementGateway
 
         AppPackageSource removed = await Translate(() => packages.RemoveAsync(system, appId, by, cancellationToken)).ConfigureAwait(false);
         await ActivateInstalledAppsAsync(CancellationToken.None).ConfigureAwait(false);
-        return ToPublic(appId, removed, systemWide: true);
+        return ToPublic(appId, removed, systemWide: true, removed: true);
     }
 
     /// <inheritdoc />
@@ -495,13 +498,14 @@ internal sealed partial class AppManagementGateway
         return _packages?.Invoke() ?? throw new NotSupportedException("This host cannot install apps from a repository.");
     }
 
-    private KazoInstalledPackage ToPublic(string appId, AppPackageSource source, bool systemWide) => new(
+    // removed: the package was just removed; Loaded then says the app is still in the page,
+    // whatever its libraries wait for (ADR 0244 §3).
+    private KazoInstalledPackage ToPublic(string appId, AppPackageSource source, bool systemWide, bool removed = false) => new(
         appId,
         source.Name,
         source.Version?.ToString() ?? string.Empty,
-        _catalog.Manifests.TryGetValue(appId, out AppManifest? loaded)
-            && SemanticVersion.TryParse(loaded.Version, out SemanticVersion version)
-            && version == source.Version)
+        source.Version is { } installedVersion
+            && (removed ? IsInCatalogAt(appId, installedVersion) : RunsVersion(appId, installedVersion)))
     {
         SystemWide = systemWide,
     };

@@ -14,6 +14,8 @@ namespace Kazo.Os.Fixtures.InstalledAssets;
 /// <c>lib/fr/Kazo.Os.Fixtures.InstalledAssets.resources.dll</c> of the package (ADR 0222).
 /// Calls CoreLib overloads the OS itself does not use, which trimming removed before ADR 0242:
 /// without CoreLib kept whole, the install check refuses this package.
+/// Calls <c>Kazo.Fixtures.InstalledLibrary</c>, a library of the app the package carries in
+/// <c>lib/</c> (ADR 0244 §1): the OS loads it before this assembly.
 /// </summary>
 public partial class ProbeWindow : WindowAppBase
 {
@@ -26,6 +28,9 @@ public partial class ProbeWindow : WindowAppBase
     // ADR 0242: the overloads IRC 1.0.0 and Webamp 1.1.0 call (Int32.Parse of a span,
     // String.Compare with offsets, String.Split of strings).
     private readonly string _coreLib = CallCoreLibOverloads();
+
+    // ADR 0244 §1: a call into the second assembly of the package, a library of the app.
+    private readonly string _library = Kazo.Fixtures.InstalledLibrary.ProbeLibrary.Describe();
 
     [Inject]
     private IJSRuntime JS { get; set; } = null!;

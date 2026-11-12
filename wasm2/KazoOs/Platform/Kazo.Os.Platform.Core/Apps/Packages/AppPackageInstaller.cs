@@ -86,6 +86,19 @@ public sealed record AppPackageInstallContext(
 {
     /// <summary>Gets the catalog apps that came from a package rather than with the OS.</summary>
     public IReadOnlySet<string> PackagedAppIds { get; init; } = new HashSet<string>(StringComparer.Ordinal);
+
+    /// <summary>
+    /// Gets the apps installed from packages in the running catalog, with the libraries each one
+    /// carries (ADR 0244 §2): a shared library of the new package is compared with theirs.
+    /// </summary>
+    public IReadOnlyCollection<InstalledApp> InstalledApps { get; init; } = [];
+
+    /// <summary>
+    /// Gets the simple names of the libraries the page loaded from installed packages
+    /// (<see cref="IInstalledLibraryState.LoadedFromPackages"/>): the runtime has them, yet they are
+    /// not assemblies of the OS (ADR 0244 §1).
+    /// </summary>
+    public IReadOnlySet<string> LoadedPackageLibraries { get; init; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 }
 
 /// <summary>
@@ -307,7 +320,13 @@ public sealed partial class AppPackageInstaller
         AppBlockReason? blocked = request.Policy.FindBlock(package.Manifest);
         bool systemWide = ChooseSystemWide(package, trust, blocked, request);
         SemanticVersion? previous = Check(
-            package, pinned, request.Catalog, systemWide ? request.SystemInstalled : request.PersonalInstalled, request.PackagedAppIds);
+            package,
+            pinned,
+            request.Catalog,
+            systemWide ? request.SystemInstalled : request.PersonalInstalled,
+            request.PackagedAppIds,
+            request.InstalledApps,
+            request.LoadedPackageLibraries);
         return new AppPackagePlan(pinned, package, previous, trust != AppSourceTrust.Untrusted)
         {
             Trust = trust,
@@ -601,7 +620,17 @@ public sealed partial class AppPackageInstaller
     /// <exception cref="AppPackageException">The package is refused.</exception>
     /// <param name="packagedAppIds">Catalog apps that came from a package (another user's personal apps among them), not built in.</param>
     public SemanticVersion? Check(
-        AppPackage package, AppPackageSource source, AppCatalog catalog, InstalledAppsReadResult installed, IReadOnlySet<string>? packagedAppIds = null)
+        AppPackage package, AppPackageSource source, AppCatalog catalog, InstalledAppsReadResult installed, IReadOnlySet<string>? packagedAppIds = null) =>
+        Check(package, source, catalog, installed, packagedAppIds, [], new HashSet<string>(StringComparer.OrdinalIgnoreCase));
+
+    private SemanticVersion? Check(
+        AppPackage package,
+        AppPackageSource source,
+        AppCatalog catalog,
+        InstalledAppsReadResult installed,
+        IReadOnlySet<string>? packagedAppIds,
+        IReadOnlyCollection<InstalledApp> installedApps,
+        IReadOnlySet<string> loadedPackageLibraries)
     {
         ArgumentNullException.ThrowIfNull(package);
         ArgumentNullException.ThrowIfNull(source);
@@ -669,6 +698,7 @@ public sealed partial class AppPackageInstaller
             }
         }
 
+        CheckLibraries(package, catalog, packagedAppIds, installedApps, loadedPackageLibraries);
         IReadOnlyList<MissingRuntimeApi> missing = AppPackageApiCheck.FindMissing(package.Assemblies, _runtime);
         if (missing.Count > 0)
         {
@@ -679,6 +709,33 @@ public sealed partial class AppPackageInstaller
         }
 
         return previous;
+    }
+
+    /// <summary>
+    /// ADR 0244 §1 and §2, ADR 0256: the OS does not let a package replace one of its assemblies
+    /// (any library, by its name), and a <b>shared</b> library may not have another major version
+    /// than the copy an installed feature carries. A library that is not shared is not compared
+    /// with anything: it goes with its app.
+    /// </summary>
+    private void CheckLibraries(
+        AppPackage package,
+        AppCatalog catalog,
+        IReadOnlySet<string>? packagedAppIds,
+        IReadOnlyCollection<InstalledApp> installedApps,
+        IReadOnlySet<string> loadedPackageLibraries)
+    {
+        if (package.Libraries.Count == 0)
+        {
+            return;
+        }
+
+        // The assemblies of the apps the OS was built with; they may not be loaded yet, so the runtime cannot tell.
+        IReadOnlySet<string> osAssemblies = AppPackage.GetDeclaredAssemblies(
+            catalog.Manifests.Values.Where(manifest => packagedAppIds?.Contains(manifest.Id) != true));
+        HashSet<string> fromPackages = new(loadedPackageLibraries, StringComparer.OrdinalIgnoreCase);
+        fromPackages.UnionWith(installedApps.SelectMany(static app => app.Libraries).Select(static library => library.Name));
+        InstalledLibraries.CheckReservedNames(package, _runtime, osAssemblies, fromPackages);
+        InstalledLibraries.CheckMajorVersions(package, installedApps);
     }
 
     /// <summary>

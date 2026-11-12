@@ -830,6 +830,8 @@ public static class EcosystemServiceCollectionExtensions
                 RestartForPackages = () => provider.GetRequiredService<SystemPowerService>().RestartAfterAsync(static () => Task.CompletedTask),
                 // ADR 0214 §1: registered by the browser hosts; without it, changes wait for a restart.
                 InstalledAppsActivator = () => provider.GetService<IInstalledAppsActivator>(),
+                // ADR 0244 §3: an app whose shared library waits for a restart is shown as « Restart to finish ».
+                InstalledLibraries = () => provider.GetService<IInstalledLibraryState>(),
                 // ADR 0243 §3: the consent to a feature's installation is written as machine allow lines.
                 PermissionStore = () => provider.GetService<IAppPermissionStore>(),
             },

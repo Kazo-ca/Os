@@ -74,12 +74,23 @@ public sealed class AppPackageTests
         string version = "1.0.0",
         Dictionary<string, string>? listed = null,
         string descriptionFileName = AppPackage.DescriptionFileName,
-        IReadOnlyList<string>? manifests = null)
+        IReadOnlyList<string>? manifests = null,
+        IReadOnlyList<object>? libraries = null)
     {
         listed ??= files.ToDictionary(static pair => pair.Key, static pair => AppPackage.Sha256(pair.Value), StringComparer.Ordinal);
-        string description = manifests is null
-            ? JsonSerializer.Serialize(new { appId, version, files = listed })
-            : JsonSerializer.Serialize(new { appId, version, files = listed, manifests });
+        Dictionary<string, object> root = new(StringComparer.Ordinal) { ["appId"] = appId, ["version"] = version, ["files"] = listed };
+        if (manifests is not null)
+        {
+            root["manifests"] = manifests;
+        }
+
+        if (libraries is not null)
+        {
+            // ADR 0244 §1: the libraries of the app, as TestLibraries.Entry describes each one.
+            root["libraries"] = libraries;
+        }
+
+        string description = JsonSerializer.Serialize(root);
         using MemoryStream stream = new();
         using (ZipArchive zip = new(stream, ZipArchiveMode.Create, leaveOpen: true))
         {

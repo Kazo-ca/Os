@@ -50,6 +50,31 @@ un sous-module modifié ou hors de son tag.
 
 Forcez l'un ou l'autre avec `-p:KazoOsUseSource=true` ou `false`.
 
+## Bibliothèques de l'app
+
+L'app peut avoir ses propres bibliothèques : un autre projet de ce dépôt (`ProjectReference`), un
+paquet NuGet (`PackageReference`) ou une DLL. Référencez-les comme dans tout projet .NET ; il n'y a
+rien à déclarer. `KazoOsPack` met dans le paquet chaque assemblage dont l'app a besoin et que Kazo OS
+n'apporte pas (le SDK, le runtime .NET, les assemblages `Microsoft.*` et MudBlazor viennent avec
+l'OS), et l'OS les charge avant l'app. Une bibliothèque ne doit pas s'appeler `Kazo.Os.*`, nom que
+l'OS garde pour lui.
+
+Une bibliothèque que plusieurs apps embarquent et qui doit exister une seule fois dans l'OS (les
+contrats d'une fonctionnalité, par exemple) est marquée **partagée** par son auteur, dans le projet
+de la bibliothèque :
+
+```xml
+<PropertyGroup>
+  <KazoOsSharedLibrary>true</KazoOsSharedLibrary>
+</PropertyGroup>
+```
+
+Un projet de bibliothèque qui ne référence pas `Kazo.Os.App.Build` écrit la même marque lui-même :
+`<AssemblyMetadata Include="Kazo.Os.SharedLibrary" Value="true" />`. La marque est dans
+l'assemblage : une app qui utilise la bibliothèque n'a rien à ajouter. Kazo OS charge alors une
+seule copie pour toutes les apps de la même version majeure ; une version mineure d'une
+bibliothèque partagée ne fait qu'ajouter des membres.
+
 ## Publier dans le Kazo OS Store
 
 1. Remplissez `store/` (icône, descriptions courtes, descriptions, catégorie et étiquettes dans `store.json`).

@@ -33,6 +33,16 @@ internal sealed record StoreEntry(KazoCatalogApp? App, KazoInstalledPackage? Ins
     /// <summary>Gets the name to show.</summary>
     public string Name => App?.Name ?? Installed!.AppId;
 
+    /// <summary>
+    /// Gets whether its catalog says it is a feature of the OS (ADR 0243 §4): installed for the whole
+    /// machine only, so the Store offers no personal installation. The OS refuses one anyway
+    /// (<c>apps.package.feature-system-only</c>) when the catalog says nothing.
+    /// </summary>
+    public bool IsFeature => App?.Kind == KazoCatalogItemKind.Feature;
+
+    /// <summary>Gets whether the Store may offer « Install for me »: not for a feature.</summary>
+    public bool CanInstallForUser => !IsFeature;
+
     /// <summary>Gets the state of its buttons.</summary>
     public StoreAppState State =>
         Removed || Installed is { Loaded: false } ? StoreAppState.PendingRestart
@@ -84,8 +94,8 @@ internal sealed class StoreCatalog
         _entries = new Dictionary<string, StoreEntry>(StringComparer.Ordinal);
         foreach (KazoAppCatalog catalog in catalogs)
         {
-            // Theme packs have their own tab (ADR 0213 §5): StoreThemePacks.
-            foreach (KazoCatalogApp app in catalog.Apps.Where(static item => item.Kind == KazoCatalogItemKind.App))
+            // Theme packs have their own tab (ADR 0213 §5): StoreThemePacks. A feature (ADR 0243) is listed with the apps.
+            foreach (KazoCatalogApp app in catalog.Apps.Where(static item => item.Kind != KazoCatalogItemKind.ThemePack))
             {
                 byId.TryGetValue(app.AppId, out KazoInstalledPackage? package);
                 // The first catalog wins, except that an installed copy shows the page of the catalog it came from.

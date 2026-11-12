@@ -84,6 +84,23 @@ public sealed class StoreCatalogTests
     }
 
     [Fact]
+    public void A_feature_is_listed_with_the_apps_and_offers_no_personal_installation()
+    {
+        KazoCatalogApp feature = App("official", "org.example.x86", "x86", "utilities") with { Kind = KazoCatalogItemKind.Feature };
+        KazoCatalogApp pack = App("official", "org.example.theme", "Theme", "graphics") with { Kind = KazoCatalogItemKind.ThemePack };
+        StoreCatalog store = new(
+            [Catalog("official", App("official", "org.example.notes", "Notes", "utilities"), feature, pack)],
+            [], [], new HashSet<string>());
+
+        // ADR 0243 §4: a feature is an app of the Store (a theme pack has its own tab)...
+        Assert.Equal(["org.example.notes", "org.example.x86"], store.Available.Select(static entry => entry.AppId));
+        // ...installed for the whole machine only: no « Install for me ».
+        Assert.True(store.Find("org.example.x86")!.IsFeature);
+        Assert.False(store.Find("org.example.x86")!.CanInstallForUser);
+        Assert.True(store.Find("org.example.notes")!.CanInstallForUser);
+    }
+
+    [Fact]
     public void An_installed_app_no_catalog_lists_is_still_in_the_installed_tab()
     {
         StoreCatalog store = new(

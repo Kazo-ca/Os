@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Build fixture for Kazo.Os.Tools.ManifestGenerator.Tests (ADR 0244 §1). Not part of the solution.
+    An app with two libraries of its own: Protocol (private to the app) and Contracts, which its
+    author marked as shared. KazoOsPack packs both in lib/ and lists them in "libraries".
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <KazoOsAppProject>true</KazoOsAppProject>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Shared\Kazo.Os.App.Abstractions\Kazo.Os.App.Abstractions.csproj" />
+    <ProjectReference Include="..\..\Shared\Kazo.Os.AppSdk\Kazo.Os.AppSdk.csproj" />
+    <ProjectReference Include="..\ManifestGenerator.Fixtures.WithLibrary.Protocol\ManifestGenerator.Fixtures.WithLibrary.Protocol.csproj" />
+    <ProjectReference Include="..\ManifestGenerator.Fixtures.WithLibrary.Contracts\ManifestGenerator.Fixtures.WithLibrary.Contracts.csproj" />
+  </ItemGroup>
+</Project>

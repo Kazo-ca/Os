@@ -38,3 +38,22 @@ static Kazo.Os.Ecosystem.HostFailureDetails.Create(System.Exception! exception, 
 static Kazo.Os.Ecosystem.HostFailureDetails.operator !=(Kazo.Os.Ecosystem.HostFailureDetails? left, Kazo.Os.Ecosystem.HostFailureDetails? right) -> bool
 static Kazo.Os.Ecosystem.HostFailureDetails.operator ==(Kazo.Os.Ecosystem.HostFailureDetails? left, Kazo.Os.Ecosystem.HostFailureDetails? right) -> bool
 ~override Kazo.Os.Ecosystem.HostFailurePanel.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
+Kazo.Os.Ecosystem.DefaultContextLibraryRuntime
+Kazo.Os.Ecosystem.DefaultContextLibraryRuntime.FindLoaded(string! simpleName) -> System.Version?
+Kazo.Os.Ecosystem.DefaultContextLibraryRuntime.Load(byte[]! assembly) -> void
+Kazo.Os.Ecosystem.IInstalledLibraryRuntime
+Kazo.Os.Ecosystem.IInstalledLibraryRuntime.FindLoaded(string! simpleName) -> System.Version?
+Kazo.Os.Ecosystem.IInstalledLibraryRuntime.Load(byte[]! assembly) -> void
+Kazo.Os.Ecosystem.InstalledAppAssemblyTransport.Libraries.get -> Kazo.Os.Ecosystem.InstalledAppLibraries?
+Kazo.Os.Ecosystem.InstalledAppAssemblyTransport.Libraries.init -> void
+Kazo.Os.Ecosystem.InstalledAppLibraries
+Kazo.Os.Ecosystem.InstalledAppLibraries.GetPendingRestarts() -> System.Collections.Generic.IReadOnlyList<Kazo.Os.Platform.Core.Apps.Packages.LibraryRestart!>!
+Kazo.Os.Ecosystem.InstalledAppLibraries.InstalledAppLibraries(Kazo.Os.Ecosystem.InstalledAppsBoot! installed, Microsoft.Extensions.Logging.ILogger<Kazo.Os.Ecosystem.InstalledAppLibraries!>? logger = null, Kazo.Os.Ecosystem.IInstalledLibraryRuntime? runtime = null) -> void
+Kazo.Os.Ecosystem.InstalledAppLibraries.LoadForAsync(Kazo.Os.Platform.Core.Apps.Packages.InstalledApp! app, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+Kazo.Os.Ecosystem.InstalledAppLibraries.LoadedFromPackages.get -> System.Collections.Generic.IReadOnlySet<string!>!
+Kazo.Os.Ecosystem.InstalledAppLibraries.ReportPendingRestarts() -> System.Collections.Generic.IReadOnlyList<Kazo.Os.Platform.Core.Apps.Packages.LibraryRestart!>!
+Kazo.Os.Ecosystem.InstalledAppLibraries.Satellites.get -> Kazo.Os.Ecosystem.InstalledAppSatellites?
+Kazo.Os.Ecosystem.InstalledAppLibraries.Satellites.init -> void
+Kazo.Os.Ecosystem.InstalledAppsActivator.Libraries.get -> Kazo.Os.Ecosystem.InstalledAppLibraries?
+Kazo.Os.Ecosystem.InstalledAppsActivator.Libraries.init -> void
+static Kazo.Os.Ecosystem.DefaultContextLibraryRuntime.Instance.get -> Kazo.Os.Ecosystem.DefaultContextLibraryRuntime!

@@ -599,3 +599,13 @@
         min-height: 40px;
     }
 }
+
+/* A feature of the OS (ADR 0243 §4): installed for the whole machine only. */
+.store-feature-note {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 4px;
+    font-size: 0.78rem;
+    color: var(--kos-info, #58a6ff);
+}

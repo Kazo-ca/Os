@@ -100,6 +100,19 @@ unless it declares `KazoOsAppHost=true` (a host). Differences with the repositor
 - injection inspection (`KOSAPP0031`), the `KOSAPP*` codes and the resource
   fingerprints are identical.
 
+In both modes, `KazoOsPack` carries the **libraries of the app**
+([ADR 0244](../dev/adr/0244-app-libraries-and-shared-versions.md)): the
+assemblies copied next to the app (projects, NuGet packages, DLLs) that the OS
+does not bring (`KazoOsProvidedAssemblyPattern`), listed in `libraries` of
+`kazoos-package.json`. The SDK (`Kazo.Os.*`) is never carried, and
+`KOSAPP0030` still applies. The property
+`<KazoOsSharedLibrary>true</KazoOsSharedLibrary>`, set by the author in a
+library's project, writes the mark
+`AssemblyMetadata("Kazo.Os.SharedLibrary", "true")` into its assembly; a
+contracts package that does not reference `Kazo.Os.App.Build` writes that
+`AssemblyMetadata` item itself. See
+[`app-repository.md`](app-repository.md#libraries-of-the-app).
+
 ### App packages
 
 When an app project is packaged, the `_KazoOsPackageAppManifests` target

@@ -297,4 +297,7 @@
   <data name="Error.FeatureSystemOnly" xml:space="preserve">
     <value>A feature is installed for the whole machine, by an administrator.</value>
   </data>
+  <data name="Detail.Feature" xml:space="preserve">
+    <value>Feature of the OS: installed for the whole machine by an administrator, with its entry points.</value>
+  </data>
 </root>
