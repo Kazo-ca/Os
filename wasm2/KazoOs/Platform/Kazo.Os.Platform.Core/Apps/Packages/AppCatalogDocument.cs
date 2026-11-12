@@ -11,7 +11,13 @@ public enum AppCatalogEntryKind
     App = 0,
 
     /// <summary><c>theme-pack</c>: a <c>.kazotheme</c> pack, data only (ADR 0190, ADR 0213).</summary>
-    ThemePack = 1
+    ThemePack = 1,
+
+    /// <summary>
+    /// <c>feature</c>: a <c>.kazoapp</c> package that brings a feature of the OS with its entry
+    /// points, installed for the whole machine only (ADR 0243 §4).
+    /// </summary>
+    Feature = 2
 }
 
 /// <summary>A category of a catalog, with its label per language (<c>categories.json</c> of the catalog repository).</summary>
@@ -77,8 +83,11 @@ public sealed record AppCatalogEntry(
     SemanticVersion LatestVersion,
     IReadOnlyList<AppCatalogVersion> Versions)
 {
-    /// <summary>Gets what it installs; <see cref="AppCatalogEntryKind.App"/> unless the catalog says <c>theme-pack</c>.</summary>
+    /// <summary>Gets what it installs; <see cref="AppCatalogEntryKind.App"/> unless the catalog says <c>theme-pack</c> or <c>feature</c>.</summary>
     public AppCatalogEntryKind Kind { get; init; }
+
+    /// <summary>Gets whether it installs a <c>.kazoapp</c> package: an app or a feature (ADR 0243 §4), not a theme pack.</summary>
+    public bool IsPackage => Kind is AppCatalogEntryKind.App or AppCatalogEntryKind.Feature;
 
     /// <summary>Gets the version <see cref="LatestVersion"/> names, or the newest one.</summary>
     public AppCatalogVersion Latest => Versions.FirstOrDefault(entry => entry.Version == LatestVersion) ?? Versions[0];
@@ -107,8 +116,9 @@ public sealed record AppCatalogListing(
     IReadOnlyList<AppCatalogEntry> Apps,
     IReadOnlyList<string> Warnings)
 {
-    /// <summary>Gets one app (not a theme pack), or <see langword="null"/>.</summary>
-    public AppCatalogEntry? Find(string appId) => Find(appId, AppCatalogEntryKind.App);
+    /// <summary>Gets one app or feature (a <c>.kazoapp</c> package, not a theme pack), or <see langword="null"/>.</summary>
+    public AppCatalogEntry? Find(string appId) =>
+        Apps.FirstOrDefault(app => app.IsPackage && string.Equals(app.AppId, appId, StringComparison.Ordinal));
 
     /// <summary>Gets one entry of a kind, or <see langword="null"/>.</summary>
     /// <param name="id">App or pack id.</param>
@@ -139,8 +149,11 @@ public sealed record AppCatalogListing(
 /// <remarks>
 /// A file of a newer schema, or that is not JSON, is refused whole. One invalid app or version is
 /// skipped with a warning, so a single broken entry does not hide the rest of the catalog.
-/// <c>kind</c> is <c>app</c> (the default) or <c>theme-pack</c> (ADR 0213 §2), whose versions are
-/// <c>.kazotheme</c> files of at most 30 MiB; any other kind is skipped.
+/// <c>kind</c> is <c>app</c> (the default when absent), <c>feature</c> (ADR 0243 §4: a <c>.kazoapp</c>
+/// installed for the whole machine only) or <c>theme-pack</c> (ADR 0213 §2), whose versions are
+/// <c>.kazotheme</c> files of at most 30 MiB. A kind this OS does not know is read as an app with a
+/// warning, so a newer catalog does not hide its entries: the package itself says what it is at
+/// installation.
 /// </remarks>
 public static class AppCatalogDocument
 {
@@ -152,6 +165,9 @@ public static class AppCatalogDocument
 
     /// <summary>The <c>kind</c> of a theme pack (ADR 0213 §2).</summary>
     public const string ThemePackKind = "theme-pack";
+
+    /// <summary>The <c>kind</c> of a feature of the OS (ADR 0243 §4).</summary>
+    public const string FeatureKind = "feature";
 
     /// <summary>Largest <c>catalog.json</c> accepted, in bytes.</summary>
     public const int MaximumBytes = 8 * 1024 * 1024;
@@ -240,6 +256,9 @@ public static class AppCatalogDocument
             case AppKind:
                 kind = AppCatalogEntryKind.App;
                 break;
+            case FeatureKind:
+                kind = AppCatalogEntryKind.Feature;
+                break;
             case ThemePackKind when ThemePacks.ThemePack.IsValidId(appId):
                 kind = AppCatalogEntryKind.ThemePack;
                 break;
@@ -247,8 +266,10 @@ public static class AppCatalogDocument
                 warnings.Add($"{where}: invalid theme pack id, skipped");
                 return null;
             default:
-                warnings.Add($"{where}: kind '{kindText}' is not supported, skipped");
-                return null;
+                // A newer catalog: the entry stays visible as an app, and the package says what it is at installation.
+                warnings.Add($"{where}: kind '{kindText}' is unknown to this OS, read as an app");
+                kind = AppCatalogEntryKind.App;
+                break;
         }
 
         List<AppCatalogVersion> versions = [];

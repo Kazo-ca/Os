@@ -222,6 +222,30 @@ public sealed partial class AppPackageGatewayTests
     }
 
     [Fact]
+    public async Task A_feature_of_a_catalog_is_listed_with_its_kind_and_installed_for_the_system()
+    {
+        Harness harness = await Harness.CreateAsync();
+        harness.PublishFeatureCatalog("1.0.0");
+        FakeApproval approval = new(AppInstallApprovalOutcome.Approved);
+        AppManagementGateway gateway = await harness.CreateGatewayAsync(new CountingAgent(succeed: true), approval: approval);
+
+        KazoAppCatalog official = Assert.Single(await gateway.GetPackageCatalogsAsync());
+        KazoPackageException refused = await Assert.ThrowsAsync<KazoPackageException>(
+            () => gateway.InstallPackageAsync(AppPackageTests.FeatureId, KazoPackageScope.User).AsTask());
+        KazoPackageInstallReport report = await gateway.InstallPackageAsync(AppPackageTests.FeatureId);
+
+        // The Store reads the kind from the catalog (ADR 0243 §4, catalog.json `kind: feature`)...
+        KazoCatalogApp feature = Assert.Single(official.Apps);
+        Assert.Equal(KazoCatalogItemKind.Feature, feature.Kind);
+        Assert.Equal($"catalog:official/{AppPackageTests.FeatureId}", feature.Source);
+        // ...and the OS still refuses a personal copy when asked for one.
+        Assert.Equal("apps.package.feature-system-only", refused.Code);
+        Assert.True(report.IsFeature);
+        Assert.True(report.SystemWide);
+        Assert.Equal($"catalog:official/{AppPackageTests.FeatureId}@1.0.0", report.Source);
+    }
+
+    [Fact]
     public async Task A_system_install_replaces_the_personal_copies()
     {
         Harness harness = await Harness.CreateAsync();
@@ -789,7 +813,27 @@ public sealed partial class AppPackageGatewayTests
                 """);
         }
 
-        /// <summary>Publishes the sample app on the repository's package branch, newest version first.</summary>
+        /// <summary>Publishes a feature with three children (ADR 0243 §2) in the official catalog, with <c>kind: feature</c> (ADR 0243 §4).</summary>
+        internal void PublishFeatureCatalog(string version)
+        {
+            string address = AppPackageDefaults.OfficialCatalogAddress;
+            string root = address[..^"catalog.json".Length];
+            Dictionary<string, byte[]> files = AppPackageTests.FeatureFiles(version);
+            files["lib/Kazo.Feature.dll"] = File.ReadAllBytes(typeof(AppManifest).Assembly.Location);
+            byte[] package = AppPackageTests.Build(files, AppPackageTests.FeatureId, version, manifests: AppPackageTests.FeatureManifestPaths);
+            string folder = $"packages/{AppPackageTests.FeatureId}/{version}";
+            _downloader.Files[new Uri($"{root}{folder}/{AppPackageTests.FeatureId}-{version}.kazoapp")] = package;
+            _downloader.Files[new Uri(address)] = Encoding.UTF8.GetBytes($$$"""
+                {"schemaVersion":1,"categories":[{"id":"utilities","labels":{"en":"Utilities","fr":"Utilitaires"}}],
+                 "apps":[{"appId":"{{{AppPackageTests.FeatureId}}}","kind":"feature","name":"Feature","category":"utilities","tags":[],
+                          "shortDescriptions":{"en":"A feature"},"license":"MIT","repository":"https://github.com/Kazo-ca/Os-App-Feature",
+                          "latestVersion":"{{{version}}}","versions":[
+                            {"version":"{{{version}}}","commit":"abc","package":"{{{folder}}}/{{{AppPackageTests.FeatureId}}}-{{{version}}}.kazoapp",
+                             "sha256":"{{{AppPackage.Sha256(package)}}}","size":{{{package.Length}}},{{{Signature(package, true)}}}
+                             "capabilities":["clipboard.read","filesystem.system.read"],"sdkCompatibility":{"minimumVersion":"2.0.0"}}]}]}
+                """);
+        }
+
         /// <summary>Publishes a feature with three children (ADR 0243 §2) on a repository's package branch.</summary>
         internal void PublishFeature(string repository, string version)
         {
@@ -803,6 +847,7 @@ public sealed partial class AppPackageGatewayTests
                 $"{{\"appId\":\"{AppPackageTests.FeatureId}\",\"versions\":[{{\"version\":\"{version}\",\"path\":\"{path}\",\"sha256\":\"{AppPackage.Sha256(package)}\"}}]}}");
         }
 
+        /// <summary>Publishes the sample app on the repository's package branch, newest version first.</summary>
         internal void Publish(string repository, string latest, params string[] older) =>
             Publish(repository, latest, false, older);
 

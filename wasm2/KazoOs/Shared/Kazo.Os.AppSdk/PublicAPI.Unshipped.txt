@@ -5,3 +5,4 @@ Kazo.Os.AppSdk.Apps.KazoPackageInstallReport.EntryPoints.get -> System.Collectio
 Kazo.Os.AppSdk.Apps.KazoPackageInstallReport.EntryPoints.init -> void
 Kazo.Os.AppSdk.Apps.KazoPackageInstallReport.IsFeature.get -> bool
 Kazo.Os.AppSdk.Apps.KazoPackageInstallReport.IsFeature.init -> void
+Kazo.Os.AppSdk.Apps.KazoCatalogItemKind.Feature = 2 -> Kazo.Os.AppSdk.Apps.KazoCatalogItemKind

@@ -41,3 +41,6 @@ Kazo.Os.Platform.Core.Execution.AppCatalogGatewayServices.PermissionStore.init -
 const Kazo.Os.Platform.Core.Apps.Packages.AppPackage.EntryPointsFolder = "entrypoints/" -> string!
 static Kazo.Os.Platform.Core.Apps.Packages.AppPackage.GetDeclaredAssemblies(System.Collections.Generic.IEnumerable<Kazo.Os.App.Abstractions.AppManifest!>! manifests) -> System.Collections.Generic.IReadOnlySet<string!>!
 static Kazo.Os.Platform.Core.Apps.Packages.AppPackageWriter.Write(byte[]! manifestJson, System.Func<string!, byte[]!>! readAssembly, System.Func<string!, byte[]!>! readAsset, System.Collections.Generic.IReadOnlyDictionary<string!, byte[]!>? satellites, System.Collections.Generic.IReadOnlyList<System.Collections.Generic.KeyValuePair<string!, byte[]!>>? childManifests) -> byte[]!
+Kazo.Os.Platform.Core.Apps.Packages.AppCatalogEntry.IsPackage.get -> bool
+Kazo.Os.Platform.Core.Apps.Packages.AppCatalogEntryKind.Feature = 2 -> Kazo.Os.Platform.Core.Apps.Packages.AppCatalogEntryKind
+const Kazo.Os.Platform.Core.Apps.Packages.AppCatalogDocument.FeatureKind = "feature" -> string!

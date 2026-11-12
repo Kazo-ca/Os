@@ -388,10 +388,14 @@ SDK model (`FeatureDefinition`, `FeatureEntryPoint`, child manifests) is in
   (`apps.package.unexpected-file`), and so is a child manifest at the root (a
   child is never installed alone). `AppPackageWriter.Write` and `pack` write
   the children found in `entrypoints/` next to the project's `manifest.json`.
-- **System-wide only**: `kazopkg install --user` and the Store's "Install for
-  me" refuse a feature (`apps.package.feature-system-only`, "A feature is
-  installed for the whole machine, by an administrator"); without an option
-  it goes to everyone (`/usr/lib/kazoos/apps/<id>/<version>/`, the children
+- **System-wide only**: `kazopkg install --user` refuses a feature
+  (`apps.package.feature-system-only`, "A feature is installed for the whole
+  machine, by an administrator"). A catalog's `catalog.json` carries
+  `kind: "feature"` on its entry: the Store lists it with the apps, says on
+  its page that it is installed for the whole machine and offers "Install for
+  everyone" only; the refusal on click remains the safety net (a catalog
+  without `kind`, a package that turns out to be a feature when read).
+  Without an option it goes to everyone (`/usr/lib/kazoos/apps/<id>/<version>/`, the children
   under `entrypoints/`), with the two-step approval. The approval window says
   it is a feature, names its entry points and shows the **set** of
   permissions, once.
@@ -457,7 +461,11 @@ kazopkg info org.example.notes
   (`schemaVersion` 1, `packages` branch of the catalog repository). The file's
   paths (package, icon, screenshots, descriptions) are relative to
   `catalog.json`. The OS keeps it 5 minutes; an invalid app or version is
-  skipped with a warning in `/var/log/syslog`.
+  skipped with a warning in `/var/log/syslog`. Each entry carries a `kind`:
+  `app` when absent, `feature` (ADR 0243 §4: listed with the apps, installed
+  for the whole machine only) or `theme-pack` (ADR 0213); a value this OS does
+  not know is read as `app` with a warning, so a newer catalog hides nothing
+  (the package says what it is at installation).
 - **Source written**: `<appId>=catalog:<name>/<appId>@<version>` in
   `[installed]`. The trust is that of `catalog:<name>`; the official catalog
   is *verified*. The SHA-256 and the size come from the catalog; the other

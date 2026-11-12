@@ -44,6 +44,33 @@ public sealed class AppCatalogDocumentTests
     }
 
     [Theory]
+    [InlineData("", AppCatalogEntryKind.App)]
+    [InlineData("\"kind\":\"app\",", AppCatalogEntryKind.App)]
+    [InlineData("\"kind\":\"feature\",", AppCatalogEntryKind.Feature)]
+    public void The_kind_is_app_unless_the_catalog_says_feature(string kind, AppCatalogEntryKind expected)
+    {
+        AppCatalogListing listing = Parse(
+            $$$"""{"appId":"org.example.notes",{{{kind}}}"name":"Notes","versions":[{{{Version("1.0.0")}}}]}""");
+
+        AppCatalogEntry entry = Assert.Single(listing.Apps);
+        Assert.Equal(expected, entry.Kind);
+        Assert.True(entry.IsPackage);
+        // ADR 0243 §4: a feature is found like an app, since both are .kazoapp packages.
+        Assert.Same(entry, listing.Find("org.example.notes"));
+        Assert.Empty(listing.Warnings);
+    }
+
+    [Fact]
+    public void An_unknown_kind_is_read_as_an_app_with_a_warning()
+    {
+        AppCatalogListing listing = Parse(
+            $$$"""{"appId":"org.example.notes","kind":"driver","name":"Notes","versions":[{{{Version("1.0.0")}}}]}""");
+
+        Assert.Equal(AppCatalogEntryKind.App, Assert.Single(listing.Apps).Kind);
+        Assert.Contains(listing.Warnings, warning => warning.Contains("kind 'driver' is unknown", StringComparison.Ordinal));
+    }
+
+    [Theory]
     [InlineData("""{"appId":"Bad Id","name":"x","versions":[]}""")]
     [InlineData("""{"appId":"org.example.theme","kind":"theme","name":"x","versions":[]}""")]
     [InlineData("""{"appId":"org.example.empty","name":"x","versions":[]}""")]
