@@ -2052,4 +2052,13 @@
   <data name="SetWallpaper.Error.NotSaved" xml:space="preserve">
     <value>The wallpaper cannot be saved: {0}</value>
   </data>
+  <data name="Apps.Features" xml:space="preserve">
+    <value>Features ({0}) — installed for the whole machine by an administrator, with their entry points</value>
+  </data>
+  <data name="Apps.Feature.EntryPoint" xml:space="preserve">
+    <value>Entry point of {0}</value>
+  </data>
+  <data name="Details.Kind.Feature" xml:space="preserve">
+    <value>feature</value>
+  </data>
 </root>

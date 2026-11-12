@@ -22,3 +22,22 @@ const Kazo.Os.Platform.Core.Diagnostics.SensitiveTextRedactor.Placeholder = "***
 static Kazo.Os.Platform.Core.Diagnostics.SensitiveTextRedactor.Redact(string? text) -> string!
 Kazo.Os.Platform.Core.Apps.Packages.IRuntimeApiSurface.HasMethod(string! assemblyName, string! typeName, string! methodName, int genericArity, System.Collections.Generic.IReadOnlyList<string!>! parameterTypes) -> bool
 Kazo.Os.Platform.Core.Apps.Packages.LoadedRuntimeApiSurface.HasMethod(string! assemblyName, string! typeName, string! methodName, int genericArity, System.Collections.Generic.IReadOnlyList<string!>! parameterTypes) -> bool
+Kazo.Os.Platform.Core.AppCatalog.FeatureChildren.get -> System.Collections.Generic.IReadOnlyDictionary<string!, System.Collections.Generic.IReadOnlyList<string!>!>!
+Kazo.Os.Platform.Core.AppCatalog.GetFeatureChildren(string! featureId) -> System.Collections.Generic.IReadOnlyList<string!>!
+Kazo.Os.Platform.Core.AppCatalog.GetFeatureOf(string! appId) -> string?
+Kazo.Os.Platform.Core.Apps.Packages.AppPackage.Children.get -> System.Collections.Generic.IReadOnlyList<Kazo.Os.App.Abstractions.AppManifest!>!
+Kazo.Os.Platform.Core.Apps.Packages.AppPackage.IsFeature.get -> bool
+Kazo.Os.Platform.Core.Apps.Packages.AppPackage.Manifests.get -> System.Collections.Generic.IEnumerable<Kazo.Os.App.Abstractions.AppManifest!>!
+Kazo.Os.Platform.Core.Apps.Packages.InstalledApp.Children.get -> System.Collections.Generic.IReadOnlyList<Kazo.Os.App.Abstractions.AppManifest!>!
+Kazo.Os.Platform.Core.Apps.Packages.InstalledApp.Children.init -> void
+Kazo.Os.Platform.Core.Apps.Packages.InstalledApp.Manifests.get -> System.Collections.Generic.IEnumerable<Kazo.Os.App.Abstractions.AppManifest!>!
+Kazo.Os.Platform.Core.Apps.Packages.InstalledApp.Owns(string! appId) -> bool
+Kazo.Os.Platform.Core.Elevation.AppInstallApprovalRequest.FeatureEntryPoints.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Kazo.Os.Platform.Core.Elevation.AppInstallApprovalRequest.FeatureEntryPoints.init -> void
+Kazo.Os.Platform.Core.Elevation.AppInstallApprovalRequest.IsFeature.get -> bool
+Kazo.Os.Platform.Core.Elevation.AppInstallApprovalRequest.IsFeature.init -> void
+Kazo.Os.Platform.Core.Execution.AppCatalogGatewayServices.PermissionStore.get -> System.Func<Kazo.Os.Platform.Core.Policy.IAppPermissionStore?>?
+Kazo.Os.Platform.Core.Execution.AppCatalogGatewayServices.PermissionStore.init -> void
+const Kazo.Os.Platform.Core.Apps.Packages.AppPackage.EntryPointsFolder = "entrypoints/" -> string!
+static Kazo.Os.Platform.Core.Apps.Packages.AppPackage.GetDeclaredAssemblies(System.Collections.Generic.IEnumerable<Kazo.Os.App.Abstractions.AppManifest!>! manifests) -> System.Collections.Generic.IReadOnlySet<string!>!
+static Kazo.Os.Platform.Core.Apps.Packages.AppPackageWriter.Write(byte[]! manifestJson, System.Func<string!, byte[]!>! readAssembly, System.Func<string!, byte[]!>! readAsset, System.Collections.Generic.IReadOnlyDictionary<string!, byte[]!>? satellites, System.Collections.Generic.IReadOnlyList<System.Collections.Generic.KeyValuePair<string!, byte[]!>>? childManifests) -> byte[]!

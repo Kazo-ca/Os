@@ -448,7 +448,7 @@ demande à l'OS le type d'app « Feature » et les points d'extension ci-dessous
 
 | Fonctionnalité | Description | ADR | Issue |
 | --- | --- | --- | --- |
-| Type d'app « Feature » | Une fonctionnalité facultative de l'OS (à la manière de WSL) installée au niveau système par un administrateur : une identité, des points d'entrée enfants (commande, fenêtres, pages), des permissions en bloc. | [0243](dev/adr/0243-feature-app-type.md) | — |
+| Type d'app « Feature » | Une fonctionnalité facultative de l'OS (à la manière de WSL) installée au niveau système par un administrateur : une identité, des points d'entrée enfants (commande, fenêtres, pages), des permissions en bloc. Code livré par le chantier `feature/14` (`FeatureDefinition`, paquet à plusieurs manifestes, catalogue, `kazopkg`, Store, Paramètres ▸ Applications ; [`app-installation.md`](dev/app-installation.md#fonctionnalités-adr-0243)). | [0243](dev/adr/0243-feature-app-type.md) | — |
 | Bibliothèques d'app et versions partagées | Un paquet embarque les bibliothèques propres de l'app (#419) ; une seule copie d'une bibliothèque partagée (contrats d'une Feature) est chargée par page, la plus récente compatible. | [0244](dev/adr/0244-app-libraries-and-shared-versions.md) | — |
 | Registre d'interfaces et résolution asynchrone | Une app demande à l'OS l'interface qu'une Feature fournit, sans dépendance dans son binaire ; null si la Feature est absente. | [0245](dev/adr/0245-feature-service-registry-and-async-resolution.md) | — |
 | Permissions déclarées par une Feature | Une Feature déclare ses propres permissions, dangereuses comprises ; elles suivent les règles du catalogue de l'OS et ne sont jamais accordées en silence. | [0246](dev/adr/0246-provider-declared-permissions.md) | — |

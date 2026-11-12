@@ -1,1 +1,7 @@
 #nullable enable
+Kazo.Os.AppSdk.Apps.KazoAppInfo.ParentId.get -> string?
+Kazo.Os.AppSdk.Apps.KazoAppInfo.ParentId.init -> void
+Kazo.Os.AppSdk.Apps.KazoPackageInstallReport.EntryPoints.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Kazo.Os.AppSdk.Apps.KazoPackageInstallReport.EntryPoints.init -> void
+Kazo.Os.AppSdk.Apps.KazoPackageInstallReport.IsFeature.get -> bool
+Kazo.Os.AppSdk.Apps.KazoPackageInstallReport.IsFeature.init -> void

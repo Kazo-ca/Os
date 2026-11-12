@@ -1,3 +1,91 @@
 #nullable enable
 static Kazo.Os.App.Abstractions.KazoOsSdk.BuildNumber.get -> int?
 static Kazo.Os.App.Abstractions.KazoOsSdk.ReadBuildNumber(System.Reflection.Assembly? assembly) -> int?
+Kazo.Os.App.Abstractions.AppKind.Feature = 4 -> Kazo.Os.App.Abstractions.AppKind
+Kazo.Os.App.Abstractions.AppManifest.Parent.get -> string?
+Kazo.Os.App.Abstractions.AppManifest.Parent.init -> void
+Kazo.Os.App.Abstractions.FeatureDefinition
+Kazo.Os.App.Abstractions.FeatureDefinition.FeatureDefinition() -> void
+Kazo.Os.App.Abstractions.FeatureEntryPoint
+Kazo.Os.App.Abstractions.FeatureEntryPoint.<Clone>$() -> Kazo.Os.App.Abstractions.FeatureEntryPoint!
+Kazo.Os.App.Abstractions.FeatureEntryPoint.AutoStart.get -> bool
+Kazo.Os.App.Abstractions.FeatureEntryPoint.AutoStart.init -> void
+Kazo.Os.App.Abstractions.FeatureEntryPoint.Capabilities.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Kazo.Os.App.Abstractions.FeatureEntryPoint.Capabilities.init -> void
+Kazo.Os.App.Abstractions.FeatureEntryPoint.Category.get -> string?
+Kazo.Os.App.Abstractions.FeatureEntryPoint.Category.init -> void
+Kazo.Os.App.Abstractions.FeatureEntryPoint.Deconstruct(out string! Suffix, out string! Name, out Kazo.Os.App.Abstractions.AppKind Kind, out System.Type! EntryPoint) -> void
+Kazo.Os.App.Abstractions.FeatureEntryPoint.Description.get -> string?
+Kazo.Os.App.Abstractions.FeatureEntryPoint.Description.init -> void
+Kazo.Os.App.Abstractions.FeatureEntryPoint.EntryPoint.get -> System.Type!
+Kazo.Os.App.Abstractions.FeatureEntryPoint.EntryPoint.init -> void
+Kazo.Os.App.Abstractions.FeatureEntryPoint.Equals(Kazo.Os.App.Abstractions.FeatureEntryPoint? other) -> bool
+Kazo.Os.App.Abstractions.FeatureEntryPoint.Execution.get -> Kazo.Os.App.Abstractions.AppExecutionHost?
+Kazo.Os.App.Abstractions.FeatureEntryPoint.Execution.init -> void
+Kazo.Os.App.Abstractions.FeatureEntryPoint.FeatureEntryPoint(string! Suffix, string! Name, Kazo.Os.App.Abstractions.AppKind Kind, System.Type! EntryPoint) -> void
+Kazo.Os.App.Abstractions.FeatureEntryPoint.Icons.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Kazo.Os.App.Abstractions.FeatureEntryPoint.Icons.init -> void
+Kazo.Os.App.Abstractions.FeatureEntryPoint.Intents.get -> System.Collections.Generic.IReadOnlyList<Kazo.Os.App.Abstractions.AppIntentDeclarationManifest!>!
+Kazo.Os.App.Abstractions.FeatureEntryPoint.Intents.init -> void
+Kazo.Os.App.Abstractions.FeatureEntryPoint.Kind.get -> Kazo.Os.App.Abstractions.AppKind
+Kazo.Os.App.Abstractions.FeatureEntryPoint.Kind.init -> void
+Kazo.Os.App.Abstractions.FeatureEntryPoint.LaunchVisibility.get -> Kazo.Os.App.Abstractions.AppLaunchVisibility
+Kazo.Os.App.Abstractions.FeatureEntryPoint.LaunchVisibility.init -> void
+Kazo.Os.App.Abstractions.FeatureEntryPoint.MobileEntryPoint.get -> System.Type?
+Kazo.Os.App.Abstractions.FeatureEntryPoint.MobileEntryPoint.init -> void
+Kazo.Os.App.Abstractions.FeatureEntryPoint.Name.get -> string!
+Kazo.Os.App.Abstractions.FeatureEntryPoint.Name.init -> void
+Kazo.Os.App.Abstractions.FeatureEntryPoint.Resources.get -> Kazo.Os.App.Abstractions.AppResourceProfileManifest?
+Kazo.Os.App.Abstractions.FeatureEntryPoint.Resources.init -> void
+Kazo.Os.App.Abstractions.FeatureEntryPoint.ServiceStartup.get -> Kazo.Os.App.Abstractions.AppServiceStartup?
+Kazo.Os.App.Abstractions.FeatureEntryPoint.ServiceStartup.init -> void
+Kazo.Os.App.Abstractions.FeatureEntryPoint.Settings.get -> Kazo.Os.App.Abstractions.AppSettingsSchemaManifest?
+Kazo.Os.App.Abstractions.FeatureEntryPoint.Settings.init -> void
+Kazo.Os.App.Abstractions.FeatureEntryPoint.SingleInstancePerUser.get -> bool
+Kazo.Os.App.Abstractions.FeatureEntryPoint.SingleInstancePerUser.init -> void
+Kazo.Os.App.Abstractions.FeatureEntryPoint.Suffix.get -> string!
+Kazo.Os.App.Abstractions.FeatureEntryPoint.Suffix.init -> void
+Kazo.Os.App.Abstractions.FeatureEntryPoint.SupportsBack.get -> bool
+Kazo.Os.App.Abstractions.FeatureEntryPoint.SupportsBack.init -> void
+Kazo.Os.App.Abstractions.FeatureEntryPoint.Terminal.get -> Kazo.Os.App.Abstractions.TerminalCommand?
+Kazo.Os.App.Abstractions.FeatureEntryPoint.Terminal.init -> void
+Kazo.Os.App.Abstractions.FeatureEntryPoint.Window.get -> Kazo.Os.App.Abstractions.WindowOptions?
+Kazo.Os.App.Abstractions.FeatureEntryPoint.Window.init -> void
+Kazo.Os.App.Abstractions.FeatureManifests
+Kazo.Os.App.Abstractions.FeatureManifests.<Clone>$() -> Kazo.Os.App.Abstractions.FeatureManifests!
+Kazo.Os.App.Abstractions.FeatureManifests.All.get -> System.Collections.Generic.IEnumerable<Kazo.Os.App.Abstractions.AppManifest!>!
+Kazo.Os.App.Abstractions.FeatureManifests.Children.get -> System.Collections.Generic.IReadOnlyList<Kazo.Os.App.Abstractions.AppManifest!>!
+Kazo.Os.App.Abstractions.FeatureManifests.Children.init -> void
+Kazo.Os.App.Abstractions.FeatureManifests.Deconstruct(out Kazo.Os.App.Abstractions.AppManifest! Feature, out System.Collections.Generic.IReadOnlyList<Kazo.Os.App.Abstractions.AppManifest!>! Children) -> void
+Kazo.Os.App.Abstractions.FeatureManifests.Equals(Kazo.Os.App.Abstractions.FeatureManifests? other) -> bool
+Kazo.Os.App.Abstractions.FeatureManifests.Feature.get -> Kazo.Os.App.Abstractions.AppManifest!
+Kazo.Os.App.Abstractions.FeatureManifests.Feature.init -> void
+Kazo.Os.App.Abstractions.FeatureManifests.FeatureManifests(Kazo.Os.App.Abstractions.AppManifest! Feature, System.Collections.Generic.IReadOnlyList<Kazo.Os.App.Abstractions.AppManifest!>! Children) -> void
+abstract Kazo.Os.App.Abstractions.FeatureDefinition.EntryPoints.get -> System.Collections.Generic.IReadOnlyList<Kazo.Os.App.Abstractions.FeatureEntryPoint!>!
+override Kazo.Os.App.Abstractions.FeatureDefinition.EntryPoint.get -> System.Type!
+override Kazo.Os.App.Abstractions.FeatureDefinition.LaunchVisibility.get -> Kazo.Os.App.Abstractions.AppLaunchVisibility
+override Kazo.Os.App.Abstractions.FeatureEntryPoint.Equals(object? obj) -> bool
+override Kazo.Os.App.Abstractions.FeatureEntryPoint.GetHashCode() -> int
+override Kazo.Os.App.Abstractions.FeatureEntryPoint.ToString() -> string!
+override Kazo.Os.App.Abstractions.FeatureManifests.Equals(object? obj) -> bool
+override Kazo.Os.App.Abstractions.FeatureManifests.GetHashCode() -> int
+override Kazo.Os.App.Abstractions.FeatureManifests.ToString() -> string!
+override sealed Kazo.Os.App.Abstractions.FeatureDefinition.AutoStart.get -> bool
+override sealed Kazo.Os.App.Abstractions.FeatureDefinition.BlazorRoot.get -> System.Type?
+override sealed Kazo.Os.App.Abstractions.FeatureDefinition.Components.get -> System.Collections.Generic.IReadOnlyList<Kazo.Os.App.Abstractions.AppComponent!>!
+override sealed Kazo.Os.App.Abstractions.FeatureDefinition.FileHandlers.get -> System.Collections.Generic.IReadOnlyList<Kazo.Os.App.Abstractions.FileHandler!>!
+override sealed Kazo.Os.App.Abstractions.FeatureDefinition.Kind.get -> Kazo.Os.App.Abstractions.AppKind
+override sealed Kazo.Os.App.Abstractions.FeatureDefinition.MobileEntryPoint.get -> System.Type?
+override sealed Kazo.Os.App.Abstractions.FeatureDefinition.ServiceStartup.get -> Kazo.Os.App.Abstractions.AppServiceStartup?
+override sealed Kazo.Os.App.Abstractions.FeatureDefinition.SingleInstancePerUser.get -> bool
+override sealed Kazo.Os.App.Abstractions.FeatureDefinition.SupportsBack.get -> bool
+override sealed Kazo.Os.App.Abstractions.FeatureDefinition.Terminal.get -> Kazo.Os.App.Abstractions.TerminalCommand?
+override sealed Kazo.Os.App.Abstractions.FeatureDefinition.Urls.get -> System.Collections.Generic.IReadOnlyList<string!>!
+override sealed Kazo.Os.App.Abstractions.FeatureDefinition.Window.get -> Kazo.Os.App.Abstractions.WindowOptions?
+static Kazo.Os.App.Abstractions.AppDefinitionMapper.ToFeatureManifests(Kazo.Os.App.Abstractions.FeatureDefinition! definition) -> Kazo.Os.App.Abstractions.FeatureManifests!
+static Kazo.Os.App.Abstractions.AppDefinitionMapper.ToFeatureManifests(Kazo.Os.App.Abstractions.FeatureDefinition! definition, string! sdkMinimumVersion) -> Kazo.Os.App.Abstractions.FeatureManifests!
+static Kazo.Os.App.Abstractions.AppManifestValidator.ValidateFeature(Kazo.Os.App.Abstractions.AppManifest! feature, System.Collections.Generic.IReadOnlyList<Kazo.Os.App.Abstractions.AppManifest!>! children) -> Kazo.Os.App.Abstractions.ManifestValidationResult!
+static Kazo.Os.App.Abstractions.FeatureEntryPoint.operator !=(Kazo.Os.App.Abstractions.FeatureEntryPoint? left, Kazo.Os.App.Abstractions.FeatureEntryPoint? right) -> bool
+static Kazo.Os.App.Abstractions.FeatureEntryPoint.operator ==(Kazo.Os.App.Abstractions.FeatureEntryPoint? left, Kazo.Os.App.Abstractions.FeatureEntryPoint? right) -> bool
+static Kazo.Os.App.Abstractions.FeatureManifests.operator !=(Kazo.Os.App.Abstractions.FeatureManifests? left, Kazo.Os.App.Abstractions.FeatureManifests? right) -> bool
+static Kazo.Os.App.Abstractions.FeatureManifests.operator ==(Kazo.Os.App.Abstractions.FeatureManifests? left, Kazo.Os.App.Abstractions.FeatureManifests? right) -> bool

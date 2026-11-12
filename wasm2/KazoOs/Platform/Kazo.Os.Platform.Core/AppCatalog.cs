@@ -23,7 +23,8 @@ public sealed class AppCatalog
         IReadOnlyList<AppCatalogRejection> rejected,
         IReadOnlyDictionary<string, string> commandOwners,
         IReadOnlyDictionary<string, IReadOnlyList<AppComponentProvider>> componentProviders,
-        IReadOnlyList<AppCatalogError> warnings)
+        IReadOnlyList<AppCatalogError> warnings,
+        IReadOnlyDictionary<string, IReadOnlyList<string>> featureChildren)
     {
         _state = new CatalogState(
             manifests,
@@ -34,7 +35,8 @@ public sealed class AppCatalog
             commandOwners,
             componentProviders,
             warnings,
-            FrozenDictionary<string, IReadOnlyDictionary<string, AppManifestText>>.Empty);
+            FrozenDictionary<string, IReadOnlyDictionary<string, AppManifestText>>.Empty,
+            featureChildren);
     }
 
     /// <summary>
@@ -176,6 +178,49 @@ public sealed class AppCatalog
         return SystemAppIds.Contains(appId);
     }
 
+    /// <summary>
+    /// Gets the children of each <see cref="AppKind.Feature"/> of the catalog (ADR 0243 §2), by
+    /// feature id, each list in activation order. A feature without children has an empty list.
+    /// </summary>
+    public IReadOnlyDictionary<string, IReadOnlyList<string>> FeatureChildren => State.FeatureChildren;
+
+    /// <summary>
+    /// Gets the feature <paramref name="appId"/> is a child of (its manifest's <c>parent</c>, ADR
+    /// 0243 §2), or <see langword="null"/> for a stand-alone app or a feature itself.
+    /// </summary>
+    /// <param name="appId">Application identifier (ordinal comparison).</param>
+    public string? GetFeatureOf(string appId)
+    {
+        ArgumentNullException.ThrowIfNull(appId);
+        return Manifests.TryGetValue(appId, out AppManifest? manifest) ? manifest.Parent : null;
+    }
+
+    /// <summary>Gets the children of a feature, in activation order; empty for any other app.</summary>
+    /// <param name="featureId">The feature's identifier.</param>
+    public IReadOnlyList<string> GetFeatureChildren(string featureId)
+    {
+        ArgumentNullException.ThrowIfNull(featureId);
+        return FeatureChildren.TryGetValue(featureId, out IReadOnlyList<string>? children) ? children : [];
+    }
+
+    /// <summary>
+    /// Gets the ids an app needs to run: its required dependencies and, for a feature's child, its
+    /// feature (ADR 0243 §2: a child is activated, deactivated and removed with its parent).
+    /// </summary>
+    /// <param name="manifest">Any manifest.</param>
+    internal static IEnumerable<string> RequiredIds(AppManifest manifest)
+    {
+        foreach (AppDependencyManifest dependency in manifest.Dependencies.Where(static dependency => !dependency.Optional))
+        {
+            yield return dependency.AppId;
+        }
+
+        if (manifest.Parent is { } parent)
+        {
+            yield return parent;
+        }
+    }
+
     /// <summary>Builds a catalog without loading or executing app assemblies.</summary>
     /// <param name="manifests">Candidate manifests selected by the build or package policy.</param>
     /// <returns>A catalog with no system app, or every deterministic validation error.</returns>
@@ -283,6 +328,7 @@ public sealed class AppCatalog
         }
 
         ValidateWebHostNames(byId.Values, errors);
+        ValidateFeatures(byId, errors);
 
         HashSet<string> systemIds = new(StringComparer.Ordinal);
         foreach (string systemAppId in systemAppIds.Order(StringComparer.Ordinal))
@@ -329,16 +375,75 @@ public sealed class AppCatalog
                 rejected,
                 commandOwners,
                 componentProviders,
-                warnings),
+                warnings,
+                RegisterFeatures(byId, activationOrder)),
             []);
     }
 
     /// <summary>
+    /// ADR 0243 §2: a child names a feature of the catalog, of kind <see cref="AppKind.Feature"/>,
+    /// of the same version, and asks for no capability outside the feature's set (ADR 0243 §3).
+    /// Each manifest already passed <see cref="AppManifestValidator.Validate"/>, so the id prefix
+    /// and the kinds are known good.
+    /// </summary>
+    private static void ValidateFeatures(IReadOnlyDictionary<string, AppManifest> manifests, List<AppCatalogError> errors)
+    {
+        foreach (AppManifest feature in manifests.Values.Where(static item => item.Kind == AppKind.Feature).OrderBy(static item => item.Id, StringComparer.Ordinal))
+        {
+            AppManifest[] children = [.. manifests.Values.Where(item => string.Equals(item.Parent, feature.Id, StringComparison.Ordinal))];
+            foreach (ManifestValidationError error in AppManifestValidator.ValidateFeature(feature, children).Errors)
+            {
+                errors.Add(new AppCatalogError(error.Code.Replace("manifest.", "catalog.", StringComparison.Ordinal), feature.Id, error.Message));
+            }
+        }
+
+        foreach (AppManifest child in manifests.Values.Where(static item => item.Parent is not null).OrderBy(static item => item.Id, StringComparer.Ordinal))
+        {
+            if (!manifests.TryGetValue(child.Parent!, out AppManifest? parent))
+            {
+                errors.Add(new AppCatalogError(
+                    "catalog.feature.parent.missing",
+                    child.Id,
+                    $"'{child.Id}' is a child of '{child.Parent}', which is not in the catalog: a child is installed with its feature."));
+            }
+            else if (parent.Kind != AppKind.Feature)
+            {
+                errors.Add(new AppCatalogError(
+                    "catalog.feature.parent.kind",
+                    child.Id,
+                    $"'{child.Id}' names '{child.Parent}' as its feature, but '{child.Parent}' is a {parent.Kind.ToString().ToLowerInvariant()} app."));
+            }
+        }
+    }
+
+    /// <summary>Lists the children of each feature (ADR 0243 §2), in activation order.</summary>
+    private static IReadOnlyDictionary<string, IReadOnlyList<string>> RegisterFeatures(
+        IReadOnlyDictionary<string, AppManifest> manifests, IReadOnlyList<string> activationOrder)
+    {
+        Dictionary<string, List<string>> children = manifests.Values
+            .Where(static manifest => manifest.Kind == AppKind.Feature)
+            .ToDictionary(static manifest => manifest.Id, static _ => new List<string>(), StringComparer.Ordinal);
+        foreach (string appId in activationOrder)
+        {
+            if (manifests[appId].Parent is { } parent && children.TryGetValue(parent, out List<string>? list))
+            {
+                list.Add(appId);
+            }
+        }
+
+        return children.ToFrozenDictionary(
+            static entry => entry.Key,
+            static entry => (IReadOnlyList<string>)entry.Value.AsReadOnly(),
+            StringComparer.Ordinal);
+    }
+
+    /// <summary>
     /// ADR 0098 §4, at load: gives each terminal command name and alias to one app. System apps
-    /// choose first, then the others, each group in activation order; a name already taken produces
-    /// one <c>catalog.command.duplicate</c> warning for the app that loses it. (The host build
-    /// already refuses duplicates among its own apps with <c>KOSAPP0022</c>; this covers apps that
-    /// reach the catalog another way.)
+    /// choose first, then the children of features (ADR 0243 §2: <c>x86</c> cannot be masked by
+    /// an app installed later), then the others, each group in activation order; a name already
+    /// taken produces one <c>catalog.command.duplicate</c> warning for the app that loses it. (The
+    /// host build already refuses duplicates among its own apps with <c>KOSAPP0022</c>; this covers
+    /// apps that reach the catalog another way.)
     /// </summary>
     private static IReadOnlyDictionary<string, string> AssignCommands(
         IReadOnlyDictionary<string, AppManifest> manifests,
@@ -348,7 +453,8 @@ public sealed class AppCatalog
     {
         Dictionary<string, string> owners = new(StringComparer.OrdinalIgnoreCase);
         IEnumerable<string> precedence = activationOrder.Where(systemIds.Contains)
-            .Concat(activationOrder.Where(id => !systemIds.Contains(id)));
+            .Concat(activationOrder.Where(id => !systemIds.Contains(id) && manifests[id].Parent is not null))
+            .Concat(activationOrder.Where(id => !systemIds.Contains(id) && manifests[id].Parent is null));
         foreach (string appId in precedence)
         {
             if (manifests[appId].Terminal is not { } terminal)
@@ -437,8 +543,8 @@ public sealed class AppCatalog
             changed = false;
             foreach (AppManifest manifest in byId.Values.OrderBy(static item => item.Id, StringComparer.Ordinal).ToArray())
             {
-                AppDependencyManifest? missing = manifest.Dependencies.FirstOrDefault(dependency =>
-                    !dependency.Optional && rejected.Any(item => item.AppId == dependency.AppId));
+                // ADR 0243 §2: a feature's child goes with its feature.
+                string? missing = RequiredIds(manifest).FirstOrDefault(required => rejected.Any(item => item.AppId == required));
                 if (missing is null)
                 {
                     continue;
@@ -448,7 +554,7 @@ public sealed class AppCatalog
                 rejected.Add(new AppCatalogRejection(
                     "catalog.dependency.unavailable",
                     manifest,
-                    $"'{manifest.Id}' requires '{missing.AppId}', which this system cannot load."));
+                    $"'{manifest.Id}' requires '{missing}', which this system cannot load."));
                 changed = true;
             }
         }
@@ -534,7 +640,8 @@ public sealed class AppCatalog
         IReadOnlyDictionary<string, string> CommandOwners,
         IReadOnlyDictionary<string, IReadOnlyList<AppComponentProvider>> ComponentProviders,
         IReadOnlyList<AppCatalogError> Warnings,
-        IReadOnlyDictionary<string, IReadOnlyDictionary<string, AppManifestText>> Localized);
+        IReadOnlyDictionary<string, IReadOnlyDictionary<string, AppManifestText>> Localized,
+        IReadOnlyDictionary<string, IReadOnlyList<string>> FeatureChildren);
 
     private static IReadOnlyList<string>? CreateActivationOrder(
         IReadOnlyDictionary<string, AppManifest> manifests,
@@ -551,15 +658,22 @@ public sealed class AppCatalog
 
         foreach (AppManifest manifest in manifests.Values)
         {
-            foreach (AppDependencyManifest dependency in manifest.Dependencies)
+            // ADR 0243 §2: a feature activates before its children, like a dependency.
+            IEnumerable<string> needed = manifest.Dependencies.Select(static dependency => dependency.AppId);
+            if (manifest.Parent is { } parent)
             {
-                if (!manifests.ContainsKey(dependency.AppId))
+                needed = needed.Append(parent);
+            }
+
+            foreach (string dependencyId in needed.Distinct(StringComparer.Ordinal))
+            {
+                if (!manifests.ContainsKey(dependencyId))
                 {
                     continue;
                 }
 
                 dependencyCounts[manifest.Id]++;
-                dependents[dependency.AppId].Add(manifest.Id);
+                dependents[dependencyId].Add(manifest.Id);
             }
         }
 

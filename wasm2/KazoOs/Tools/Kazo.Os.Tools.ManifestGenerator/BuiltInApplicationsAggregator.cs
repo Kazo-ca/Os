@@ -43,7 +43,7 @@ public static class BuiltInApplicationsAggregator
                 continue;
             }
 
-            if (ManifestFileReader.TryRead(input.ManifestPath, out AppManifest? manifest, out IReadOnlyList<GeneratorDiagnostic> readErrors))
+            if (ManifestFileReader.TryRead(input.ManifestPath, out AppManifest? manifest, out IReadOnlyList<AppManifest> children, out IReadOnlyList<GeneratorDiagnostic> readErrors))
             {
                 // ADR 0104 section 4: the translated texts travel with the catalog, so the launcher
                 // can show them before the app's assembly is ever loaded.
@@ -51,6 +51,11 @@ public static class BuiltInApplicationsAggregator
                     ManifestLocalizationGenerator.ReadReferenced(input.ManifestPath, manifest!, diagnostics);
                 applications.Add(new BuiltInApplication(
                     input.IsSystemApp, manifest!, InspectImage(input), localized.Count > 0 ? localized : null));
+                // ADR 0243 §2: a feature's children join the host with it, with the same system flag.
+                foreach (AppManifest child in children)
+                {
+                    applications.Add(new BuiltInApplication(input.IsSystemApp, child, null, null));
+                }
             }
             else
             {

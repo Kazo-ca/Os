@@ -60,6 +60,14 @@ public sealed record AppInstallApprovalRequest(
     /// <see langword="null"/> for a removal or a rollback, which download nothing.
     /// </summary>
     public bool? Signed { get; init; }
+
+    /// <summary>Gets whether the package is a feature (ADR 0243): the window says that one approval covers its capability set, once and for all.</summary>
+    public bool IsFeature { get; init; }
+
+    /// <summary>
+    /// Gets the entry points of a feature (ADR 0243 §2), as "name (kind)" lines the window lists; empty for an app.
+    /// </summary>
+    public IReadOnlyList<string> FeatureEntryPoints { get; init; } = [];
 }
 
 /// <summary>How the approval window ended.</summary>

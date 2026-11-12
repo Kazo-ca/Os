@@ -180,4 +180,13 @@
   <data name="SignatureNone" xml:space="preserve">
     <value>none (SHA-256 only)</value>
   </data>
+  <data name="FeatureSystemOnly" xml:space="preserve">
+    <value>kazopkg: a feature is installed for the whole machine, by an administrator (kazopkg install &lt;feature&gt; --system)</value>
+  </data>
+  <data name="FeatureApproved" xml:space="preserve">
+    <value>  (!) dangerous: approved for the whole machine by the administrator who installed this feature; no window at the first launch</value>
+  </data>
+  <data name="FeatureEntryPoints" xml:space="preserve">
+    <value>  entry points: {0}</value>
+  </data>
 </root>

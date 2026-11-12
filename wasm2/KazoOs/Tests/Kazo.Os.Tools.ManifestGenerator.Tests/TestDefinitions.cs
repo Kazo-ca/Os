@@ -116,6 +116,57 @@ public sealed class WrongKindApp : ValidCommandApp
     public override Type EntryPoint => typeof(NotAWindow);
 }
 
+/// <summary>A valid feature with three children (ADR 0243 §2): two commands and a service.</summary>
+public class ValidFeature : FeatureDefinition
+{
+    public override string Id => "org.kazoos.tests.feature";
+    public override string Name => "feature";
+    public override IReadOnlyList<string> Capabilities => [AppCapabilities.ClipboardRead, AppCapabilities.FileSystemSystemRead];
+    public override IReadOnlyList<FeatureEntryPoint> EntryPoints =>
+    [
+        new("cli", "feature cli", AppKind.Terminal, typeof(FixtureCommand))
+        {
+            Capabilities = [AppCapabilities.FileSystemSystemRead],
+            Terminal = new TerminalCommand("feature-cli", "feature-cli")
+        },
+        new("console", "feature console", AppKind.Terminal, typeof(FixtureCommand))
+        {
+            Terminal = new TerminalCommand("feature-console", "feature-console")
+        },
+        new("daemon", "feature daemon", AppKind.Service, typeof(FixtureService))
+        {
+            Capabilities = [AppCapabilities.ClipboardRead]
+        }
+    ];
+}
+
+/// <summary>A feature declaring an entry point of its own (ADR 0243 §1, <c>KOSAPP0032</c>).</summary>
+public sealed class FeatureWithEntryPoint : ValidFeature
+{
+    public override Type EntryPoint => typeof(FixtureCommand);
+}
+
+/// <summary>A feature whose child asks for a capability outside the feature's set (ADR 0243 §3).</summary>
+public sealed class FeatureChildOutsideSet : ValidFeature
+{
+    public override IReadOnlyList<FeatureEntryPoint> EntryPoints =>
+    [
+        new("cli", "feature cli", AppKind.Terminal, typeof(FixtureCommand))
+        {
+            Capabilities = [AppCapabilities.NetworkRealAccess],
+            Terminal = new TerminalCommand("feature-cli", "feature-cli")
+        }
+    ];
+}
+
+/// <summary>An ordinary definition claiming the feature kind (ADR 0243 §5, <c>KOSAPP0033</c>).</summary>
+public sealed class PlainFeatureKindApp : ValidCommandApp
+{
+    public override string Id => "org.kazoos.tests.plain-feature";
+    public override AppKind Kind => AppKind.Feature;
+    public override TerminalCommand? Terminal => null;
+}
+
 /// <summary>Marked definition, used to check attribute discovery by name.</summary>
 [AppManifest]
 public sealed class MarkedApp : ValidCommandApp

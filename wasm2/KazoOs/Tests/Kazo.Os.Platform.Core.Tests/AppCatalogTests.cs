@@ -1,5 +1,6 @@
 using Kazo.Os.App.Abstractions;
 using Kazo.Os.Platform.Core;
+using Kazo.Os.Platform.Core.Apps;
 
 namespace Kazo.Os.Platform.Core.Tests;
 
@@ -237,6 +238,73 @@ public sealed class AppCatalogTests
     }
 
     [Fact]
+    public void Build_attaches_a_feature_s_children_and_activates_the_feature_first()
+    {
+        AppManifest feature = CreateFeature("org.kazoos.x86", [AppCapabilities.FileSystemSystemRead, AppCapabilities.ClipboardRead]);
+        AppManifest cli = CreateCommand("org.kazoos.x86.cli", "x86", []) with { Parent = "org.kazoos.x86", Capabilities = [AppCapabilities.FileSystemSystemRead] };
+        AppManifest console = CreateManifest("org.kazoos.x86.console") with { Parent = "org.kazoos.x86" };
+        AppManifest daemon = CreateManifest("org.kazoos.x86.daemon") with { Parent = "org.kazoos.x86", Kind = AppKind.Service };
+
+        AppCatalogBuildResult result = AppCatalog.Build([daemon, cli, feature, console]);
+
+        Assert.True(result.IsSuccess, string.Join("; ", result.Errors.Select(error => error.Message)));
+        AppCatalog catalog = result.Catalog!;
+        Assert.Equal(["org.kazoos.x86.cli", "org.kazoos.x86.console", "org.kazoos.x86.daemon"], catalog.GetFeatureChildren("org.kazoos.x86"));
+        Assert.Equal("org.kazoos.x86", catalog.GetFeatureOf("org.kazoos.x86.cli"));
+        Assert.Null(catalog.GetFeatureOf("org.kazoos.x86"));
+        Assert.True(catalog.ActivationOrder.ToList().IndexOf("org.kazoos.x86") < catalog.ActivationOrder.ToList().IndexOf("org.kazoos.x86.cli"));
+        Assert.Equal(["org.kazoos.x86", "org.kazoos.x86.cli", "org.kazoos.x86.console", "org.kazoos.x86.daemon"], AppsConfigDocument.ExpandDependents(catalog, ["org.kazoos.x86"]).Order(StringComparer.Ordinal));
+        Assert.Equal(["org.kazoos.x86", "org.kazoos.x86.cli"], AppsConfigDocument.ExpandDependencies(catalog, "org.kazoos.x86.cli").Order(StringComparer.Ordinal));
+    }
+
+    [Fact]
+    public void Build_gives_a_command_to_a_feature_child_before_an_app_installed_later()
+    {
+        AppManifest feature = CreateFeature("org.kazoos.x86", []);
+        AppManifest cli = CreateCommand("org.kazoos.x86.cli", "x86", []) with { Parent = "org.kazoos.x86" };
+        // Activated before the feature's child by id, as an app installed afterwards may be.
+        AppManifest later = CreateCommand("org.kazoos.a-tool", "x86", ["vm"]);
+        AppManifest system = CreateCommand("org.kazoos.z-tool", "vm", []);
+
+        AppCatalog catalog = AppCatalog.Build([later, cli, feature, system], ["org.kazoos.z-tool"]).Catalog!;
+
+        Assert.Equal("org.kazoos.x86.cli", catalog.FindCommandOwner("x86"));
+        Assert.Equal("org.kazoos.z-tool", catalog.FindCommandOwner("vm"));
+        Assert.Equal(
+            [("org.kazoos.a-tool", "catalog.command.duplicate"), ("org.kazoos.a-tool", "catalog.command.duplicate")],
+            catalog.Warnings.Select(warning => (warning.AppId, warning.Code)));
+    }
+
+    [Fact]
+    public void Build_rejects_a_child_without_its_feature_or_outside_the_feature_s_set()
+    {
+        AppManifest feature = CreateFeature("org.kazoos.x86", [AppCapabilities.ClipboardRead]);
+        AppManifest orphan = CreateManifest("org.kazoos.other.cli") with { Parent = "org.kazoos.other" };
+        AppManifest notAFeature = CreateManifest("org.kazoos.app");
+        AppManifest childOfApp = CreateManifest("org.kazoos.app.child") with { Parent = "org.kazoos.app" };
+        AppManifest greedy = CreateManifest("org.kazoos.x86.greedy") with { Parent = "org.kazoos.x86", Capabilities = [AppCapabilities.FileSystemSystemRead] };
+
+        AppCatalogBuildResult result = AppCatalog.Build([feature, orphan, notAFeature, childOfApp, greedy]);
+
+        Assert.Equal(
+            [("org.kazoos.app.child", "catalog.feature.parent.kind"), ("org.kazoos.other.cli", "catalog.feature.parent.missing"), ("org.kazoos.x86", "catalog.feature.capability-outside-set")],
+            result.Errors.Select(error => (error.AppId, error.Code)).Order());
+    }
+
+    [Fact]
+    public void Build_rejects_the_children_of_a_feature_built_for_another_sdk()
+    {
+        AppManifest feature = CreateFeature("org.kazoos.x86", []) with { SdkCompatibility = new AppSdkCompatibilityManifest("99.0.0") };
+        AppManifest cli = CreateCommand("org.kazoos.x86.cli", "x86", []) with { Parent = "org.kazoos.x86", SdkCompatibility = new AppSdkCompatibilityManifest("99.0.0") };
+
+        AppCatalogBuildResult result = AppCatalog.Build([feature, cli]);
+
+        Assert.True(result.IsSuccess);
+        Assert.Empty(result.Catalog!.Manifests);
+        Assert.Equal(["org.kazoos.x86", "org.kazoos.x86.cli"], result.Catalog.Rejected.Select(rejection => rejection.AppId));
+    }
+
+    [Fact]
     public void A_live_copy_does_not_change_the_catalog_it_was_copied_from()
     {
         AppCatalog builtIn = AppCatalog.Build([CreateManifest("org.test.a")]).Catalog!;
@@ -251,6 +319,14 @@ public sealed class AppCatalogTests
     private static AppManifest CreateProvider(string appId, string contract) => CreateManifest(appId) with
     {
         Components = [new AppComponentManifest(contract, "Kazo.Os.TestApps", "TestApps.Embed")]
+    };
+
+    /// <summary>A feature (ADR 0243): no entry point, the capability set its children draw from.</summary>
+    private static AppManifest CreateFeature(string appId, IReadOnlyList<string> capabilities) => CreateManifest(appId) with
+    {
+        Kind = AppKind.Feature,
+        EntryPoint = null,
+        Capabilities = capabilities
     };
 
     private static AppManifest CreateCommand(string appId, string name, IReadOnlyList<string> aliases) => CreateManifest(appId) with

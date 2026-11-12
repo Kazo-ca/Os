@@ -213,8 +213,8 @@
     content: they must never be copied or published under the same name by several apps.
   -->
   <ItemGroup Condition="'$(KazoOsAppProject)' == 'true'">
-    <Content Remove="manifest.json;manifests/**;localization/**" />
-    <None Remove="manifest.json;manifests/**;localization/**" />
+    <Content Remove="manifest.json;manifests/**;entrypoints/**;localization/**" />
+    <None Remove="manifest.json;manifests/**;entrypoints/**;localization/**" />
     <!--
       ADR 0104 section 4: Resources/AppManifest.<culture>.resx is read by the generator, which writes
       localization/<culture>.json for the host catalog; it is not compiled into a satellite assembly.
@@ -249,6 +249,8 @@
       <_KazoOsManifestDependency Include="@(ReferencePath->'%(FullPath)')" />
       <_KazoOsExistingManifest Include="$(MSBuildProjectDirectory)/manifest.json" Condition="Exists('$(MSBuildProjectDirectory)/manifest.json')" />
       <_KazoOsExistingManifest Include="$(MSBuildProjectDirectory)/manifests/*.json" />
+      <!-- ADR 0243 §2: the children of a feature, written next to its manifest.json. -->
+      <_KazoOsExistingManifest Include="$(MSBuildProjectDirectory)/entrypoints/*.json" />
       <!-- ADR 0104: translations of the manifest, and the files generated from them. -->
       <_KazoOsExistingManifest Include="$(MSBuildProjectDirectory)/Resources/AppManifest.*.resx" />
       <_KazoOsExistingManifest Include="$(MSBuildProjectDirectory)/localization/**/*.json" />

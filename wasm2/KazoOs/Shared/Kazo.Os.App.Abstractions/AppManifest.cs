@@ -27,6 +27,15 @@ public sealed record AppManifest
     public required AppKind Kind { get; init; }
 
     /// <summary>
+    /// Gets the identifier of the <see cref="AppKind.Feature"/> this manifest is a child of (ADR 0243
+    /// §2), or <see langword="null"/> (omitted from <c>manifest.json</c>) for a stand-alone app, so
+    /// existing manifests keep their exact bytes. A child's id is <c>&lt;parent&gt;.&lt;suffix&gt;</c>,
+    /// its kind is never <see cref="AppKind.Feature"/>, its capabilities are a subset of its
+    /// parent's, and it is installed, activated and removed only with its parent.
+    /// </summary>
+    public string? Parent { get; init; }
+
+    /// <summary>
     /// Gets the managed assembly and type used to activate the app on every platform it supports.
     /// Mutually exclusive with <see cref="Platform"/> — exactly one of the two must be set. This is
     /// the legacy single-entry-point form; per doc/en/wasm/dev/old/mobile-interface-platform-plan.md §4.3, a

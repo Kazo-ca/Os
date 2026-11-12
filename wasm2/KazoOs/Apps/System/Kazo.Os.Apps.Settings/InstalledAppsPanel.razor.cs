@@ -51,15 +51,41 @@ public partial class InstalledAppsPanel : IDisposable
     [Parameter]
     public string? OnlyAppId { get; set; }
 
-    /// <summary>Window apps, sorted by name. Services are managed from System Monitor's Services tab.</summary>
+    /// <summary>
+    /// Window apps, sorted by name, the entry points of features left out (they are listed under
+    /// their feature, ADR 0243 §2). Services are managed from System Monitor's Services tab.
+    /// </summary>
     private IReadOnlyList<KazoAppInstallInfo> Applications => OnlyAppId is { } only
         ? [.. (_apps ?? []).Where(entry => entry.App.Id == only)]
-        : [.. (_apps ?? []).Where(static entry => entry.App.Kind == AppKind.Window)];
+        : [.. (_apps ?? []).Where(static entry => entry.App.Kind == AppKind.Window && entry.App.ParentId is null)];
 
-    /// <summary>Terminal commands, sorted by name; all are system apps on the Ecosystem host.</summary>
+    /// <summary>Terminal commands, sorted by name, the entry points of features left out; all are system apps on the Ecosystem host.</summary>
     private IReadOnlyList<KazoAppInstallInfo> Commands => OnlyAppId is not null
         ? []
-        : [.. (_apps ?? []).Where(static entry => entry.App.Kind == AppKind.Terminal)];
+        : [.. (_apps ?? []).Where(static entry => entry.App.Kind == AppKind.Terminal && entry.App.ParentId is null)];
+
+    /// <summary>
+    /// Features (ADR 0243): installed for the whole machine, each shown with its entry points. A
+    /// feature is uninstalled or reinstalled as one unit; an entry point has no action of its own.
+    /// </summary>
+    private IReadOnlyList<KazoAppInstallInfo> Features => OnlyAppId is not null
+        ? []
+        : [.. (_apps ?? []).Where(static entry => entry.App.Kind == AppKind.Feature)];
+
+    /// <summary>The entry points of a feature, sorted by name.</summary>
+    private IReadOnlyList<KazoAppInstallInfo> EntryPointsOf(string featureId) =>
+        [.. (_apps ?? []).Where(entry => entry.App.ParentId == featureId)];
+
+    /// <summary>The kind of an entry point, as the app details page names it.</summary>
+    private string KindLabel(AppKind kind) => kind switch
+    {
+        AppKind.Window => L["Details.Kind.Window"],
+        AppKind.Terminal => L["Details.Kind.Terminal"],
+        AppKind.Service => L["Details.Kind.Service"],
+        AppKind.Web => L["Details.Kind.Web"],
+        AppKind.Feature => L["Details.Kind.Feature"],
+        _ => kind.ToString()
+    };
 
     /// <summary>Only an administrator is offered "for all users" (ADR 0048 section 3); the OS still asks for their password.</summary>
     private bool IsAdministrator => KazoUser.Describe(Context).IsAdministrator;

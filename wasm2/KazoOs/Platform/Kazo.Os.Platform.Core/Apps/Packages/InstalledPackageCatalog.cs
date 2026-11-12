@@ -1,3 +1,5 @@
+using Kazo.Os.App.Abstractions;
+
 namespace Kazo.Os.Platform.Core.Apps.Packages;
 
 /// <summary>
@@ -27,12 +29,23 @@ public sealed class InstalledPackageCatalog
         }
     }
 
-    /// <summary>Records the installed apps the catalog accepted at boot.</summary>
+    /// <summary>
+    /// Records the installed apps the catalog accepted at boot. A feature's children (ADR 0243 §2)
+    /// are keyed too, to the feature's install: they are seen, hidden and versioned with it.
+    /// </summary>
     /// <param name="apps">The accepted installed apps.</param>
     public void Apply(IEnumerable<InstalledApp> apps)
     {
         ArgumentNullException.ThrowIfNull(apps);
-        Dictionary<string, InstalledApp> byId = apps.ToDictionary(static app => app.AppId, StringComparer.Ordinal);
+        Dictionary<string, InstalledApp> byId = new(StringComparer.Ordinal);
+        foreach (InstalledApp app in apps)
+        {
+            foreach (AppManifest manifest in app.Manifests)
+            {
+                byId[manifest.Id] = app;
+            }
+        }
+
         lock (_gate)
         {
             _apps = byId;

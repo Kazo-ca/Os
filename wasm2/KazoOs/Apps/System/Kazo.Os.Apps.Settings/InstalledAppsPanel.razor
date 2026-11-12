@@ -21,6 +21,25 @@
         }
     </div>
 
+    @if (Features.Count > 0)
+    {
+        <details class="commands-group features-group" open>
+            <summary>@L["Apps.Features", Features.Count]</summary>
+            <div class="apps-list" role="list">
+                @foreach (KazoAppInstallInfo feature in Features)
+                {
+                    @Row(feature)
+                    <div class="feature-entry-points" role="list">
+                        @foreach (KazoAppInstallInfo entryPoint in EntryPointsOf(feature.App.Id))
+                        {
+                            @EntryPointRow(entryPoint, feature.App.Name)
+                        }
+                    </div>
+                }
+            </div>
+        </details>
+    }
+
     @if (Commands.Count > 0)
     {
         <details class="commands-group">
@@ -132,6 +151,24 @@
 }
 
 @code {
+    /// <summary>
+    /// One entry point of a feature (ADR 0243 §2): its name, kind and id, with no action of its own,
+    /// since it is installed, enabled and removed with its feature.
+    /// </summary>
+    private RenderFragment EntryPointRow(KazoAppInstallInfo entry, string featureName) => __builder =>
+    {
+        KazoAppInfo app = entry.App;
+        <div class="app-row is-entry-point @RowClass(entry)" role="listitem">
+            <div class="app-identity">
+                <span class="app-name">@app.Name</span>
+                <span class="app-meta">@KindLabel(app.Kind) · <code>@app.Id</code></span>
+            </div>
+            <div class="app-actions">
+                <span class="app-badge app-badge-entry-point" title="@L["Apps.Feature.EntryPoint", featureName]">@L["Apps.Feature.EntryPoint", featureName]</span>
+            </div>
+        </div>
+    };
+
     /// <summary>One app line: identity, badge, and the one action its state allows.</summary>
     private RenderFragment Row(KazoAppInstallInfo entry) => __builder =>
     {

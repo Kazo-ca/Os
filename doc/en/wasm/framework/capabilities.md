@@ -127,6 +127,16 @@ app that uses a dangerous capability therefore receives
 In the Ecosystem host, no non-system app declares a dangerous
 capability: the base experience does not change.
 
+**Features (ADR 0243 §3).** A feature (`AppKind.Feature`) declares the
+**set** of its capabilities; each child entry point declares a **subset**,
+the only one its process receives (the set is never granted to a process).
+The installation approval screen shows the set once, and the administrator's
+consent is the machine approval: the OS writes the `allow` lines of
+`/etc/kazoos/app-permissions.config` for the feature and its children at
+installation, and no window asks at the first launch of an entry point. A
+user's own refusal stays possible. See
+[`app-installation.md`](../dev/app-installation.md#features-adr-0243).
+
 ## `policy.config` policy
 
 The `capabilityGrantsLocked` key, never evaluated, is removed from the schema of

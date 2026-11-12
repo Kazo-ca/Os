@@ -26,5 +26,14 @@ public enum AppKind
     /// to one of them (ADR 0074, section 3), and run in the shared web worker.
     /// </summary>
     [JsonStringEnumMemberName("web")]
-    Web
+    Web,
+
+    /// <summary>
+    /// An optional feature of the OS (ADR 0243): one identity, one package, one approval of its
+    /// permissions, installed for the whole machine by an administrator. It has no entry point of its
+    /// own (<see cref="AppManifest.EntryPoint"/> is forbidden): what runs are its children, ordinary
+    /// manifests of another kind that name it in <see cref="AppManifest.Parent"/>.
+    /// </summary>
+    [JsonStringEnumMemberName("feature")]
+    Feature
 }

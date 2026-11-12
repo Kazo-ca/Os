@@ -410,6 +410,8 @@ public partial class StoreWindow
     {
         "apps.package.blocked" => L["Error.Blocked"],
         "apps.package.installed-for-system" => L["Error.InstalledForSystem"],
+        // ADR 0243 §4: « Install for me » is refused for a feature; « for everyone » installs it.
+        "apps.package.feature-system-only" => L["Error.FeatureSystemOnly"],
         "apps.package.sdk-incompatible" => L["Error.Incompatible", exception.Message],
         "apps.package.missing-api" => L["Error.Incompatible", exception.Message],
         "apps.package.download-failed" => L["Error.Offline"],

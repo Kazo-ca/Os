@@ -181,13 +181,25 @@ public static class Program
                 Console.WriteLine($"{manifestPath} : warning {GeneratorCodes.PackageWebAssetsMissing}: No static web asset manifest at '{webAssets}': the package holds only the declared assets, without the rest of wwwroot/, the collocated scripts or the scoped CSS (ADR 0221).");
             }
 
+            // ADR 0243 §2: the children of a feature, entrypoints/<suffix>.json next to its manifest.
+            List<KeyValuePair<string, byte[]>> children = [];
+            string entryPoints = Path.Combine(Path.GetDirectoryName(manifestPath)!, ManifestWriter.EntryPointsDirectoryName);
+            if (Directory.Exists(entryPoints))
+            {
+                foreach (string childPath in Directory.EnumerateFiles(entryPoints, "*.json").Order(StringComparer.Ordinal))
+                {
+                    children.Add(new(Path.GetFileName(childPath), File.ReadAllBytes(childPath)));
+                }
+            }
+
             // ADR 0222 §1: the translations of the app's own assemblies go with them.
-            SortedDictionary<string, byte[]> satellites = PackagedSatellites.Find(bin, DeclaredAssemblies(manifestJson));
+            SortedDictionary<string, byte[]> satellites = PackagedSatellites.Find(bin, DeclaredAssemblies(children.Select(static child => child.Value).Prepend(manifestJson)));
             byte[] package = AppPackageWriter.Write(
                 manifestJson,
                 assembly => File.ReadAllBytes(Path.Combine(bin, assembly)),
                 asset => File.ReadAllBytes(sources.TryGetValue(asset, out string? source) ? source : Path.Combine(webroot, asset)),
-                satellites);
+                satellites,
+                children);
             AppPackage read = AppPackage.Read(package);
             string relativePath = AppPackageWriter.GetPackagePath(read.AppId, read.Version);
             string packagePath = Path.Combine(output, relativePath);
@@ -208,18 +220,24 @@ public static class Program
         }
     }
 
-    /// <summary>Gets the assemblies a manifest declares; an invalid manifest declares none (the writer refuses it).</summary>
-    private static IReadOnlySet<string> DeclaredAssemblies(byte[] manifestJson)
+    /// <summary>Gets the assemblies the manifests declare; an invalid manifest declares none (the writer refuses it).</summary>
+    private static IReadOnlySet<string> DeclaredAssemblies(IEnumerable<byte[]> manifestJsons)
     {
-        try
+        HashSet<string> assemblies = new(StringComparer.Ordinal);
+        foreach (byte[] manifestJson in manifestJsons)
         {
-            return AppPackage.GetDeclaredAssemblies(AppManifestJsonSerializer.NormalizeOptionalCollections(
-                AppManifestJsonSerializer.DeserializeStrict(System.Text.Encoding.UTF8.GetString(manifestJson))));
+            try
+            {
+                assemblies.UnionWith(AppPackage.GetDeclaredAssemblies(AppManifestJsonSerializer.NormalizeOptionalCollections(
+                    AppManifestJsonSerializer.DeserializeStrict(System.Text.Encoding.UTF8.GetString(manifestJson)))));
+            }
+            catch (Exception exception) when (exception is System.Text.Json.JsonException or InvalidOperationException or ArgumentException or FormatException)
+            {
+                // The writer refuses it with a message of its own.
+            }
         }
-        catch (Exception exception) when (exception is System.Text.Json.JsonException or InvalidOperationException or ArgumentException or FormatException)
-        {
-            return new HashSet<string>(StringComparer.Ordinal);
-        }
+
+        return assemblies;
     }
 
     /// <summary>

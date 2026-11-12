@@ -21,6 +21,42 @@ public sealed class AppPackageTests
         + "\"assets\":[" + (assetSha.Length == 0 ? string.Empty : "{\"path\":\"data/x.txt\",\"kind\":\"data\",\"sha256\":\"" + assetSha + "\"}") + "],"
         + "\"fileHandlers\":[],\"singleInstancePerUser\":false,\"autoStart\":false,\"supportsBack\":false,\"execution\":\"mainThread\"}";
 
+    internal const string FeatureId = "org.kazo.feature";
+
+    private const string ZeroResources =
+        "\"resources\":{\"baselineCpuWeight\":0,\"burstCpuWeight\":0,\"baselineMemoryWeight\":0,\"burstMemoryWeight\":0,"
+        + "\"baselineStorageIoWeight\":0,\"burstStorageIoWeight\":0,\"baselineNetworkIoWeight\":0,\"burstNetworkIoWeight\":0}";
+
+    /// <summary>The manifest of a feature (ADR 0243): no entry point, the capability set.</summary>
+    internal static string FeatureManifestJson(string version = "1.0.0") =>
+        "{\"schemaVersion\":1,\"id\":\"" + FeatureId + "\",\"name\":\"Feature\",\"version\":\"" + version + "\",\"publisherId\":\"pub.kazo\","
+        + "\"description\":\"A feature.\",\"kind\":\"feature\",\"sdkCompatibility\":{\"minimumVersion\":\"2.0.0\"},"
+        + "\"presentation\":{\"category\":\"system\",\"launchVisibility\":\"hidden\",\"iconAssetPaths\":[]},\"localizations\":[],"
+        + "\"capabilities\":[\"clipboard.read\",\"filesystem.system.read\"],\"declaredTopicPermissions\":[]," + ZeroResources + ",\"intents\":[],"
+        + "\"dependencies\":[],\"assets\":[],\"fileHandlers\":[],\"singleInstancePerUser\":false,\"autoStart\":false,\"supportsBack\":false,\"execution\":\"mainThread\"}";
+
+    /// <summary>One child of the feature: a command or a service, naming the feature as its parent.</summary>
+    internal static string FeatureChildJson(string suffix, string kind, string capabilities, string? command = null, string version = "1.0.0") =>
+        "{\"schemaVersion\":1,\"id\":\"" + FeatureId + "." + suffix + "\",\"name\":\"" + suffix + "\",\"version\":\"" + version + "\",\"publisherId\":\"pub.kazo\","
+        + "\"description\":\"An entry point.\",\"kind\":\"" + kind + "\",\"parent\":\"" + FeatureId + "\",\"entryPoint\":{\"assembly\":\"Kazo.Feature.dll\",\"type\":\"Kazo.Feature." + suffix + "\"},"
+        + "\"sdkCompatibility\":{\"minimumVersion\":\"2.0.0\"},\"presentation\":{\"category\":\"system\",\"launchVisibility\":\"hidden\",\"iconAssetPaths\":[]},"
+        + "\"localizations\":[],\"capabilities\":[" + capabilities + "],\"declaredTopicPermissions\":[]," + ZeroResources + ",\"intents\":[],\"dependencies\":[],\"assets\":[],\"fileHandlers\":[],"
+        + (command is null ? string.Empty : "\"terminal\":{\"name\":\"" + command + "\",\"aliases\":[],\"usage\":\"" + command + "\"},")
+        + "\"singleInstancePerUser\":false,\"autoStart\":false,\"supportsBack\":false,\"execution\":\"mainThread\"}";
+
+    /// <summary>The files of a feature package with three children (ADR 0243 §2): two commands and a service.</summary>
+    internal static Dictionary<string, byte[]> FeatureFiles(string version = "1.0.0") => new(StringComparer.Ordinal)
+    {
+        ["manifest.json"] = Encoding.UTF8.GetBytes(FeatureManifestJson(version)),
+        ["entrypoints/cli.json"] = Encoding.UTF8.GetBytes(FeatureChildJson("cli", "terminal", "\"filesystem.system.read\"", "x86", version)),
+        ["entrypoints/console.json"] = Encoding.UTF8.GetBytes(FeatureChildJson("console", "terminal", "\"clipboard.read\"", "x86-console", version)),
+        ["entrypoints/daemon.json"] = Encoding.UTF8.GetBytes(FeatureChildJson("daemon", "service", string.Empty, null, version)),
+        ["lib/Kazo.Feature.dll"] = [1, 2, 3],
+    };
+
+    /// <summary>The child manifests a feature package lists in <c>kazoos-package.json</c>.</summary>
+    internal static readonly string[] FeatureManifestPaths = ["entrypoints/cli.json", "entrypoints/console.json", "entrypoints/daemon.json"];
+
     internal static Dictionary<string, byte[]> SampleFiles(string version = "1.0.0")
     {
         byte[] asset = Encoding.UTF8.GetBytes("hello");
@@ -37,10 +73,13 @@ public sealed class AppPackageTests
         string appId = AppId,
         string version = "1.0.0",
         Dictionary<string, string>? listed = null,
-        string descriptionFileName = AppPackage.DescriptionFileName)
+        string descriptionFileName = AppPackage.DescriptionFileName,
+        IReadOnlyList<string>? manifests = null)
     {
         listed ??= files.ToDictionary(static pair => pair.Key, static pair => AppPackage.Sha256(pair.Value), StringComparer.Ordinal);
-        string description = JsonSerializer.Serialize(new { appId, version, files = listed });
+        string description = manifests is null
+            ? JsonSerializer.Serialize(new { appId, version, files = listed })
+            : JsonSerializer.Serialize(new { appId, version, files = listed, manifests });
         using MemoryStream stream = new();
         using (ZipArchive zip = new(stream, ZipArchiveMode.Create, leaveOpen: true))
         {
@@ -103,6 +142,55 @@ public sealed class AppPackageTests
         bool parsed = AppPackage.TryParseSatellitePath(path, out string parsedCulture, out string parsedAssembly);
 
         Assert.Equal((expected, culture, assembly), (parsed, parsedCulture, parsedAssembly));
+    }
+
+    [Fact]
+    public void A_feature_package_reads_its_three_children_listed_by_the_description()
+    {
+        AppPackage package = AppPackage.Read(Build(FeatureFiles(), FeatureId, manifests: FeatureManifestPaths));
+
+        Assert.True(package.IsFeature);
+        Assert.Equal(["org.kazo.feature.cli", "org.kazo.feature.console", "org.kazo.feature.daemon"], package.Children.Select(child => child.Id));
+        Assert.All(package.Children, child => Assert.Equal(FeatureId, child.Parent));
+        Assert.Equal(["Kazo.Feature.dll"], package.Assemblies.Keys);
+        Assert.Equal(["org.kazo.feature", "org.kazo.feature.cli", "org.kazo.feature.console", "org.kazo.feature.daemon"], package.Manifests.Select(manifest => manifest.Id));
+    }
+
+    [Fact]
+    public void A_feature_package_without_the_manifest_list_reads_every_entrypoints_file()
+    {
+        AppPackage package = AppPackage.Read(Build(FeatureFiles(), FeatureId));
+
+        Assert.Equal(3, package.Children.Count);
+    }
+
+    [Fact]
+    public void A_feature_child_outside_the_set_or_a_child_as_root_manifest_is_refused()
+    {
+        Dictionary<string, byte[]> greedy = FeatureFiles();
+        greedy["entrypoints/cli.json"] = Encoding.UTF8.GetBytes(FeatureChildJson("cli", "terminal", "\"filesystem.system.write\"", "x86"));
+        Dictionary<string, byte[]> alone = new(StringComparer.Ordinal)
+        {
+            ["manifest.json"] = Encoding.UTF8.GetBytes(FeatureChildJson("cli", "terminal", string.Empty, "x86")),
+            ["lib/Kazo.Feature.dll"] = [1],
+        };
+
+        AppPackageException outsideSet = Assert.Throws<AppPackageException>(() => AppPackage.Read(Build(greedy, FeatureId, manifests: FeatureManifestPaths)));
+        AppPackageException childAlone = Assert.Throws<AppPackageException>(() => AppPackage.Read(Build(alone, FeatureId + ".cli")));
+
+        Assert.Equal("apps.package.bad-manifest", outsideSet.Code);
+        Assert.Contains("filesystem.system.write", outsideSet.Message, StringComparison.Ordinal);
+        Assert.Equal("apps.package.bad-manifest", childAlone.Code);
+        Assert.Contains("never alone", childAlone.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void An_ordinary_package_with_a_child_manifest_is_refused()
+    {
+        Dictionary<string, byte[]> files = SampleFiles();
+        files["entrypoints/cli.json"] = Encoding.UTF8.GetBytes(FeatureChildJson("cli", "terminal", string.Empty, "x86"));
+
+        Assert.Equal("apps.package.unexpected-file", Assert.Throws<AppPackageException>(() => AppPackage.Read(Build(files))).Code);
     }
 
     [Fact]

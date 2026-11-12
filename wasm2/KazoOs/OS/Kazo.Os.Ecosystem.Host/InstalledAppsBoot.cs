@@ -190,9 +190,9 @@ public sealed class InstalledAppsBoot
     public InstalledApp? FindByAssembly(string assemblyName) =>
         Current.Installed.FirstOrDefault(app => app.AssemblyNames.Contains(assemblyName));
 
-    /// <summary>Finds an installed app by ID.</summary>
+    /// <summary>Finds an installed app by ID: its own, or that of one of its children (ADR 0243 §2).</summary>
     public InstalledApp? Find(string appId) =>
-        Current.Installed.FirstOrDefault(app => string.Equals(app.AppId, appId, StringComparison.Ordinal));
+        Current.Installed.FirstOrDefault(app => app.Owns(appId));
 
     /// <summary>Reads one installed file.</summary>
     internal ValueTask<byte[]?> ReadAsync(VirtualPath path, CancellationToken cancellationToken) =>

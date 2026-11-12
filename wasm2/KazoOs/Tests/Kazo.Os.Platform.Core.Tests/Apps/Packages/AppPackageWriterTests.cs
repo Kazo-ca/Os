@@ -43,6 +43,27 @@ public sealed class AppPackageWriterTests
     }
 
     [Fact]
+    public void A_feature_is_written_with_its_children_under_entrypoints_and_lists_them()
+    {
+        Dictionary<string, byte[]> feature = AppPackageTests.FeatureFiles();
+
+        byte[] package = AppPackageWriter.Write(
+            feature["manifest.json"],
+            assembly => feature["lib/" + assembly],
+            asset => throw new FileNotFoundException(asset),
+            null,
+            [.. AppPackageTests.FeatureManifestPaths.Select(path => new KeyValuePair<string, byte[]>(path["entrypoints/".Length..], feature[path]))]);
+        AppPackage read = AppPackage.Read(package);
+
+        Assert.True(read.IsFeature);
+        Assert.Equal(3, read.Children.Count);
+        Assert.Contains("\"manifests\"", Encoding.UTF8.GetString(read.Files[AppPackage.DescriptionFileName]), StringComparison.Ordinal);
+        Assert.Equal(
+            ["entrypoints/cli.json", "entrypoints/console.json", "entrypoints/daemon.json", "kazoos-package.json", "lib/Kazo.Feature.dll", "manifest.json"],
+            read.Files.Keys.Order(StringComparer.Ordinal));
+    }
+
+    [Fact]
     public void A_satellite_of_another_assembly_is_refused_like_the_os_would()
     {
         Dictionary<string, byte[]> sample = AppPackageTests.SampleFiles();
