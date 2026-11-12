@@ -646,9 +646,10 @@ public sealed partial class AppPackageGatewayTests
     }
 
     /// <summary>The runtime as the check sees it: everything present, or nothing.</summary>
-    private sealed class FixedRuntime(bool present) : IRuntimeApiSurface
+    private sealed class FixedRuntime(bool present, IReadOnlySet<string>? absentAssemblies = null) : IRuntimeApiSurface
     {
-        public bool HasAssembly(string assemblyName) => present;
+        // ADR 0244 §1: a library of an app is an assembly the OS does not have.
+        public bool HasAssembly(string assemblyName) => present && absentAssemblies?.Contains(assemblyName) != true;
 
         public bool HasType(string assemblyName, string typeName) => present;
 
@@ -681,7 +682,7 @@ public sealed partial class AppPackageGatewayTests
         // harness's installer knows this one instead and PublishCatalog signs with it.
         private static readonly ECDsa CatalogKey = ECDsa.Create(ECCurve.NamedCurves.nistP256);
 
-        private Harness(SettingsFilesHarness settings, bool builtInSample, bool runtimeHasEverything)
+        private Harness(SettingsFilesHarness settings, bool builtInSample, bool runtimeHasEverything, string[]? absentAssemblies = null)
         {
             Settings = settings;
             List<AppManifest> apps = [Window("org.test.term", "Term")];
@@ -694,7 +695,7 @@ public sealed partial class AppPackageGatewayTests
             Assert.True(built.IsSuccess, string.Join(", ", built.Errors.Select(error => error.Message)));
             Catalog = built.Catalog!;
             _installer = new AppPackageInstaller(
-                _downloader, new FixedRuntime(runtimeHasEverything), SemanticVersion.Parse("2.1.0"),
+                _downloader, new FixedRuntime(runtimeHasEverything, absentAssemblies?.ToHashSet(StringComparer.Ordinal)), SemanticVersion.Parse("2.1.0"),
                 defaults: AppPackageDefaults.Standard with
                 {
                     SigningKeys = [new(OfficialCatalogTrustKey, Convert.ToBase64String(CatalogKey.ExportSubjectPublicKeyInfo()))],
@@ -713,9 +714,9 @@ public sealed partial class AppPackageGatewayTests
         /// <summary>The installer's clock: a test moves it past the catalog cache (5 minutes).</summary>
         internal DateTimeOffset Now { get; set; } = new(2026, 10, 31, 0, 0, 0, TimeSpan.Zero);
 
-        internal static async Task<Harness> CreateAsync(bool builtInSample = false, bool runtimeHasEverything = true)
+        internal static async Task<Harness> CreateAsync(bool builtInSample = false, bool runtimeHasEverything = true, string[]? absentAssemblies = null)
         {
-            Harness harness = new(new SettingsFilesHarness(), builtInSample, runtimeHasEverything);
+            Harness harness = new(new SettingsFilesHarness(), builtInSample, runtimeHasEverything, absentAssemblies);
             await harness.Settings.BootAsync();
             return harness;
         }
@@ -727,14 +728,18 @@ public sealed partial class AppPackageGatewayTests
             bool isRootElevated = false,
             Func<Task>? restart = null,
             AppUpdateMonitor? monitor = null,
-            IAppPermissionStore? permissions = null)
+            IAppPermissionStore? permissions = null,
+            InstalledPackageCatalog? installed = null,
+            IInstalledLibraryState? libraries = null)
         {
             AuthenticatedPrincipal alice = Settings.Session.CurrentPrincipal ?? await Settings.LoginAsync(Settings.Alice);
             return new AppManagementGateway(
                 Catalog, () => throw new NotSupportedException(), () => agent,
                 new FixedCapabilities(capabilities ?? [AppCapabilities.AppsManage]), Catalog.Manifests["org.test.term"],
-                alice, isRootElevated, Settings.FileSystem, Settings.Clock, packages: () => _installer, approval: () => approval)
+                alice, isRootElevated, Settings.FileSystem, Settings.Clock, packages: () => _installer, approval: () => approval,
+                installedPackages: installed is null ? null : () => installed)
             {
+                InstalledLibraries = libraries is null ? null : () => libraries,
                 RestartForPackages = restart,
                 UpdateMonitor = monitor is null ? null : () => monitor,
                 PermissionStore = permissions is null ? null : () => permissions,
@@ -801,6 +806,27 @@ public sealed partial class AppPackageGatewayTests
             _downloader.Files[new Uri(root + path)] = package;
             _downloader.Files[new Uri(root + "index.json")] = Encoding.UTF8.GetBytes(
                 $"{{\"appId\":\"{AppPackageTests.FeatureId}\",\"versions\":[{{\"version\":\"{version}\",\"path\":\"{path}\",\"sha256\":\"{AppPackage.Sha256(package)}\"}}]}}");
+        }
+
+        /// <summary>
+        /// Publishes one version of the sample app with libraries of its own (ADR 0244 §1): real
+        /// assemblies in <c>lib/</c>, listed in <c>libraries</c> of the package description.
+        /// </summary>
+        internal void PublishWithLibraries(string repository, string version, params byte[][] libraries)
+        {
+            string root = $"https://raw.githubusercontent.com/{repository}/kazoos-packages/";
+            Dictionary<string, byte[]> files = AppPackageTests.SampleFiles(version);
+            files["lib/Kazo.Sample.dll"] = File.ReadAllBytes(typeof(AppManifest).Assembly.Location);
+            foreach (byte[] library in libraries)
+            {
+                files["lib/" + AppPackageLibrary.Describe("library.dll", library).FileName] = library;
+            }
+
+            byte[] package = AppPackageTests.Build(files, version: version, libraries: [.. libraries.Select(TestLibraries.Entry)]);
+            string path = $"{version}/org.kazo.sample-{version}.kazoapp";
+            _downloader.Files[new Uri(root + path)] = package;
+            _downloader.Files[new Uri(root + "index.json")] = Encoding.UTF8.GetBytes(
+                $"{{\"appId\":\"{AppPackageTests.AppId}\",\"versions\":[{{\"version\":\"{version}\",\"path\":\"{path}\",\"sha256\":\"{AppPackage.Sha256(package)}\"}}]}}");
         }
 
         internal void Publish(string repository, string latest, params string[] older) =>

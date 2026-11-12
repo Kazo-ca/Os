@@ -156,7 +156,14 @@ public sealed record InstalledApp(AppPackageSource Source, AppManifest Manifest)
     /// <summary>Gets the assembly file names the manifest and its children declare (all in <c>lib/</c>).</summary>
     public IReadOnlySet<string> AssemblyNames => AppPackage.GetDeclaredAssemblies(Manifests);
 
-    /// <summary>Gets the path of one assembly.</summary>
+    /// <summary>
+    /// Gets the libraries its package carries (ADR 0244 §1), read from <c>libraries</c> of the
+    /// <c>kazoos-package.json</c> of its folder; empty for an app without a library, and for an app
+    /// installed before the list existed. They are loaded before the app's own assemblies.
+    /// </summary>
+    public IReadOnlyList<AppPackageLibrary> Libraries { get; init; } = [];
+
+    /// <summary>Gets the path of one assembly: a declared one or a library, all in <c>lib/</c>.</summary>
     public VirtualPath GetAssemblyPath(string fileName) => VirtualPath.Parse($"{Directory.Value}/{AppPackage.LibraryFolder}{fileName}");
 
     /// <summary>
@@ -297,36 +304,47 @@ public sealed record InstalledAppsImage(IReadOnlyList<InstalledApp> Apps, IReadO
             return null;
         }
 
-        if (manifest.Kind != AppKind.Feature)
-        {
-            return new InstalledApp(source, manifest) { FilesHome = home };
-        }
-
-        // ADR 0243 §2: the children of a feature, listed by the package description written with it.
-        IReadOnlyList<AppManifest>? children = await ReadChildrenAsync(read, directory, manifest, warnings, cancellationToken).ConfigureAwait(false);
-        return children is null ? null : new InstalledApp(source, manifest) { FilesHome = home, Children = children };
-    }
-
-    private static async Task<IReadOnlyList<AppManifest>?> ReadChildrenAsync(
-        InstalledAppFileReader read, VirtualPath directory, AppManifest feature, List<string> warnings, CancellationToken cancellationToken)
-    {
+        // The package description written with the app lists its libraries (ADR 0244 §1) and, for a
+        // feature, its children (ADR 0243 §2).
         VirtualPath descriptionPath = VirtualPath.Parse($"{directory.Value}/{AppPackage.DescriptionFileName}");
-        byte[]? description = await read(descriptionPath, cancellationToken).ConfigureAwait(false);
-        List<string> paths = [];
+        string what = manifest.Kind == AppKind.Feature ? "feature" : "app";
+        List<string> childPaths = [];
+        IReadOnlyList<AppPackageLibrary> libraries;
         try
         {
+            byte[]? description = await read(descriptionPath, cancellationToken).ConfigureAwait(false);
             using System.Text.Json.JsonDocument document = System.Text.Json.JsonDocument.Parse(description ?? "{}"u8.ToArray());
             if (document.RootElement.TryGetProperty("manifests", out System.Text.Json.JsonElement listed) && listed.ValueKind == System.Text.Json.JsonValueKind.Array)
             {
-                paths.AddRange(listed.EnumerateArray().Select(static item => item.GetString() ?? string.Empty));
+                childPaths.AddRange(listed.EnumerateArray().Select(static item => item.GetString() ?? string.Empty));
             }
+
+            libraries = AppPackageLibrary.ReadList(document.RootElement);
         }
-        catch (System.Text.Json.JsonException exception)
+        catch (Exception exception) when (exception is System.Text.Json.JsonException or AppPackageException)
         {
-            warnings.Add($"apps: {descriptionPath.Value} is not valid ({exception.Message}), feature {feature.Id} skipped");
+            warnings.Add($"apps: {descriptionPath.Value} is not valid ({exception.Message}), {what} {manifest.Id} skipped");
             return null;
         }
 
+        if (manifest.Kind != AppKind.Feature)
+        {
+            return new InstalledApp(source, manifest) { FilesHome = home, Libraries = libraries };
+        }
+
+        IReadOnlyList<AppManifest>? children = await ReadChildrenAsync(read, directory, descriptionPath, manifest, childPaths, warnings, cancellationToken).ConfigureAwait(false);
+        return children is null ? null : new InstalledApp(source, manifest) { FilesHome = home, Children = children, Libraries = libraries };
+    }
+
+    private static async Task<IReadOnlyList<AppManifest>?> ReadChildrenAsync(
+        InstalledAppFileReader read,
+        VirtualPath directory,
+        VirtualPath descriptionPath,
+        AppManifest feature,
+        IReadOnlyList<string> paths,
+        List<string> warnings,
+        CancellationToken cancellationToken)
+    {
         List<AppManifest> children = [];
         foreach (string path in paths)
         {

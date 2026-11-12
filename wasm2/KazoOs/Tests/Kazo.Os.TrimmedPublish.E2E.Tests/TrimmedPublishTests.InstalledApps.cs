@@ -17,6 +17,9 @@ public sealed partial class TrimmedPublishTests
     /// <summary>The fixture's text in <c>Resources/ProbeStrings.fr.resx</c> (ADR 0222).</summary>
     private const string FrenchGreeting = "Bonjour depuis le paquet";
 
+    /// <summary>What <c>ProbeLibrary.Describe</c> of the package's library answers (ADR 0244 §1).</summary>
+    private const string LibraryAnswer = "library ready (Kazo.Fixtures.InstalledLibrary)";
+
     /// <summary>
     /// The test package (<c>Tests/fixtures/installed-app</c>), answered in place of GitHub, is
     /// installed with <c>sudo kazopkg install</c> on the development address (no service worker from
@@ -63,6 +66,9 @@ public sealed partial class TrimmedPublishTests
             // ADR 0242: CoreLib stays whole, so overloads the OS does not use itself still run.
             await Assertions.Expect(page.Locator("[data-probe-corelib]")).ToHaveTextAsync("corelib 42 0 2", new() { Timeout = StepTimeoutMs });
             Log("CoreLib overloads the OS does not use itself ran (Int32.Parse of a span, String.Compare with offsets, String.Split of strings).");
+            // ADR 0244 §1 (issue #419): the package has two assemblies; the library is loaded before the app.
+            await Assertions.Expect(page.Locator("[data-probe-library]")).ToHaveTextAsync(LibraryAnswer, new() { Timeout = StepTimeoutMs });
+            Log("the library of the installed app (its second assembly) loaded without a restart.");
 
             // --- Restart (ADR 0182, Q5 C): the app joins the catalog at boot ---
             await page.ReloadAsync(new PageReloadOptions { WaitUntil = WaitUntilState.DOMContentLoaded });
@@ -88,6 +94,10 @@ public sealed partial class TrimmedPublishTests
             // --- ADR 0222: the satellite assembly lib/fr/<assembly>.resources.dll, loaded by the OS ---
             await Assertions.Expect(page.Locator("[data-probe-french]")).ToHaveTextAsync(FrenchGreeting, new() { Timeout = StepTimeoutMs });
             Log("the French satellite assembly of the installed app loaded.");
+
+            // --- ADR 0244 §1: the library the package carries in lib/, loaded at boot too ---
+            await Assertions.Expect(page.Locator("[data-probe-library]")).ToHaveTextAsync(LibraryAnswer, new() { Timeout = StepTimeoutMs });
+            Log("the library of the installed app loaded after a restart.");
 
             string worker = await page.EvaluateAsync<string>("() => navigator.serviceWorker.controller ? navigator.serviceWorker.controller.scriptURL : ''");
             Assert.Contains("mode=installed-apps", worker, StringComparison.Ordinal);

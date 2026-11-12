@@ -326,7 +326,10 @@ approval:
   ([ADR 0221](adr/0221-pack-all-static-web-assets-of-an-app.md)). It also
   holds the satellite assemblies of the app's assemblies,
   `lib/<culture>/<assembly>.resources.dll` (not the SDK's)
-  ([ADR 0222](adr/0222-installed-app-satellite-assemblies.md)).
+  ([ADR 0222](adr/0222-installed-app-satellite-assemblies.md)), and the
+  app's own libraries with their satellites
+  ([ADR 0244](adr/0244-app-libraries-and-shared-versions.md),
+  [section below](#app-libraries-and-shared-versions-adr-0244)).
 - **`wwwroot/` resources** ([ADR 0206](adr/0206-serve-installed-app-assets.md)):
   at the app's first launch in the session, each declared resource is read
   through `AppAssetStore` (hash checked) and copied into the
@@ -353,9 +356,9 @@ approval:
   (`InstalledAppSatellites`) and loads it: `IStringLocalizer` and
   `ResourceManager` find its translated texts, whatever the process's `LANG`.
   `AppPackage` refuses a satellite that translates no declared assembly.
-- **Limits**: see the section of the same name in ADR 0182 (main thread only,
-  third-party NuGet dependencies not carried); the `wwwroot` resources limit is
-  lifted by ADR 0206.
+- **Limits**: see the section of the same name in ADR 0182 (main thread
+  only); the `wwwroot` resources limit is lifted by ADR 0206, the one on the
+  app's dependencies (projects and third-party NuGet packages) by ADR 0244.
 
 Tests: `AppPackageGatewayTests`, `AppSourcesAndPolicyTests`,
 `InstalledAppsImageTests`, `AppPackageWriterTests`, `AppPackageTests`
@@ -439,6 +442,86 @@ Tests: `FeatureDefinitionTests` (App.Abstractions), `AppDefinitionInspectorTests
 and `ManifestWriterTests` (Tools.ManifestGenerator), `AppCatalogTests`,
 `AppPackageTests`, `AppPackageWriterTests`, `InstalledAppsImageTests`,
 `AppInstallationServiceTests` and `AppPackageGatewayTests` (Platform.Core).
+
+## App libraries and shared versions (ADR 0244)
+
+ADR [0244](adr/0244-app-libraries-and-shared-versions.md) (issue #419) puts in
+the package the assemblies the app needs that the OS does not bring, and loads
+one copy per page of a **shared** library. For authors:
+[`app-repository.md`](../framework/app-repository.md#libraries-of-the-app).
+
+- **In the package**: `KazoOsPack` puts in `lib/` the outputs of the
+  `ProjectReference` items, the assemblies of the NuGet packages and the
+  referenced DLLs the build copies next to the app, with their satellites
+  (`lib/<culture>/<library>.resources.dll`). What the OS brings stays out, by
+  assembly name (property `KazoOsProvidedAssemblyPattern`: `Kazo.Os.*`,
+  `System*`, `Microsoft.*`, `MudBlazor*`, `netstandard`, `mscorlib`,
+  `WindowsBase`). `kazoos-package.json` gains the `libraries` list:
+
+  ```json
+  "libraries": [
+    { "name": "Kazo.Irc.Protocol", "version": "1.0.0.0", "sha256": "…", "shared": false }
+  ]
+  ```
+
+  `name` is the simple name of the assembly (file `lib/<name>.dll`), `version`
+  its assembly version. A package without the list (made before the ADR) has
+  no library.
+- **Checked when read**: `AppPackage.Read` reads each listed library again in
+  its assembly (`AppPackageLibrary.Describe`): file present
+  (`apps.package.missing-assembly`), same SHA-256
+  (`apps.package.hash-mismatch`), same name, same version and same `shared`
+  mark as the assembly says, and not an assembly the manifest declares
+  (`apps.package.bad-description`). `AppPackage.Assemblies` holds them:
+  `AppPackageApiCheck` checks them against the runtime like the app's assembly
+  (ADR 0242).
+- **The `shared` mark**: the author of the library sets it, with
+  `<KazoOsSharedLibrary>true</KazoOsSharedLibrary>` in the library's project.
+  The property writes
+  `[assembly: AssemblyMetadata("Kazo.Os.SharedLibrary", "true")]` into the
+  assembly: the mark follows the library whatever way it is referenced
+  (project, DLL, NuGet package), the app declares nothing, and a package
+  cannot mark as shared a library that is not.
+- **Refused at installation**: `apps.package.library-reserved` when a library
+  has the name of an assembly of the OS, of the .NET runtime or of a built-in
+  app (a library already loaded from another package is not an assembly of the
+  OS); `apps.package.library-major-mismatch` when a shared library has another
+  major version than the copy of an installed feature (the message gives both
+  versions and the feature). Without a feature, two apps with two different
+  major versions are both installed. Both refusals come before any
+  administrator is asked; the Store shows them as an incompatible version.
+- **Loading**: `InstalledAppsImage` reads `libraries` from the
+  `kazoos-package.json` of each installed app (`InstalledApp.Libraries`).
+  Before loading an assembly of the app, `InstalledAppLibraries` loads its
+  libraries, satellites included. A library that is not shared comes from the
+  app's folder. For a shared library, `InstalledLibraries.Choose` takes the
+  copy of an installed feature of the same major version, otherwise the newest
+  copy of that major version among the installed apps; the choice is written
+  to `/var/log/syslog`
+  (`libraries: Os-x86.Interface 1.2.0 loaded for ca.kazo.boxedwine (feature ca.kazo.x86)`).
+- **Copy already loaded**: .NET does not unload an assembly. When the copy in
+  the page lacks what the app expects (another major version, or older than
+  the app's) and a restart would load another one, the app stays served by the
+  loaded copy, a line says so in `/var/log/syslog`, and the app is shown as
+  "Restart to finish" (`KazoInstalledPackage.Loaded` is `false`,
+  `RestartRequired` in the install report) in the Store and `kazopkg list`.
+  The same holds for a feature installed with a newer copy than the one
+  already loaded.
+- **Limits**: every installed app shares the default load context. Two
+  libraries that are **not shared** with the same simple name in two apps: the
+  first one loaded serves both, the second is noted in the log. Two **major**
+  versions of a shared library are installed together, but only one is in the
+  page at a time: the app of the other major version asks for a restart. Until
+  features declare the services they provide (ADR 0245), a feature that
+  carries the shared library is its provider.
+
+Tests: `AppPackageLibraryTests`, `InstalledLibrariesTests`,
+`InstalledAppsImageTests` and `AppPackageGatewayTests` (Platform.Core),
+`InstalledAppLibrariesTests` (Ecosystem), `PackagedLibrariesTests` and
+`MsBuildIntegrationTests` (Tools.ManifestGenerator, fixture
+`ManifestGenerator.Fixtures.WithLibrary`), and the two-assembly package of
+`Tests/fixtures/installed-app` installed in the trimmed OS
+(`TrimmedPublishTests.InstalledApps.cs`).
 
 ## The Kazo OS Store and the catalogs
 

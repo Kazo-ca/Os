@@ -22,6 +22,12 @@ internal sealed partial class AppManagementGateway
     public Func<IInstalledAppsActivator?>? InstalledAppsActivator { get; init; }
 
     /// <summary>
+    /// Gets what the page loaded of the installed apps' libraries (ADR 0244 §3): an app whose copy of
+    /// a shared library waits for a restart is shown as « Restart to finish ».
+    /// </summary>
+    public Func<IInstalledLibraryState?>? InstalledLibraries { get; init; }
+
+    /// <summary>
     /// Gets the machine decisions of <c>/etc/kazoos/app-permissions.config</c> (ADR 0049 §4), where
     /// the administrator's consent to a feature's installation is written as <c>allow</c> for its
     /// dangerous capabilities (ADR 0243 §3); <see langword="null"/> writes none, and the first
@@ -139,11 +145,23 @@ internal sealed partial class AppManagementGateway
         }
     }
 
-    /// <summary>Gets whether the running catalog has <paramref name="appId"/> at <paramref name="version"/>.</summary>
+    /// <summary>
+    /// Gets whether the running OS has <paramref name="appId"/> at <paramref name="version"/> as it
+    /// will run after a restart: in its catalog, and with the copy of each shared library chosen for
+    /// it (ADR 0244 §3), not an older copy another app left in the page.
+    /// </summary>
     private bool RunsVersion(string appId, SemanticVersion version) =>
+        IsInCatalogAt(appId, version) && !WaitsForLibraryRestart(appId);
+
+    /// <summary>Gets whether the running catalog has <paramref name="appId"/> at <paramref name="version"/>.</summary>
+    private bool IsInCatalogAt(string appId, SemanticVersion version) =>
         _catalog.Manifests.TryGetValue(appId, out AppManifest? manifest)
         && SemanticVersion.TryParse(manifest.Version, out SemanticVersion running)
         && running == version;
+
+    /// <summary>Gets whether a shared library of <paramref name="appId"/> waits for a restart (ADR 0244 §3).</summary>
+    private bool WaitsForLibraryRestart(string appId) =>
+        InstalledLibraries?.Invoke()?.GetPendingRestarts().Any(restart => string.Equals(restart.AppId, appId, StringComparison.Ordinal)) == true;
 
     /// <summary>
     /// Whether the running catalog differs from what is installed for the system or for the

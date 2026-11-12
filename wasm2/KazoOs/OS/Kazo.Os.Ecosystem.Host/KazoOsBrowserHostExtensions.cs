@@ -92,6 +92,17 @@ public static partial class KazoOsBrowserHostExtensions
         // ADR 0189 §3: the same registry the boot fills, so each session hides the others' personal apps.
         builder.Services.AddSingleton(installedApps.Packages);
         builder.Services.AddSingleton<WebAssemblyLazyAssemblyTransport>();
+        // ADR 0222 §2: the satellite assemblies of installed apps, for every language Kazo OS speaks.
+        InstalledAppSatellites installedSatellites = new(Kazo.Os.AppSdk.Globalization.KazoLocale.SupportedLanguages.Select(static culture => culture.Name));
+        // ADR 0244: the libraries their packages carry, and one copy of each shared library per page.
+        builder.Services.AddSingleton(provider => new InstalledAppLibraries(
+            installedApps,
+            provider.GetService<Microsoft.Extensions.Logging.ILogger<InstalledAppLibraries>>())
+        {
+            Satellites = installedSatellites,
+        });
+        builder.Services.AddSingleton<Kazo.Os.Platform.Core.Apps.Packages.IInstalledLibraryState>(
+            static provider => provider.GetRequiredService<InstalledAppLibraries>());
         // ADR 0206: their wwwroot/ files, served by the service worker at _content/<assembly>/.
         builder.Services.AddSingleton<IBuildKnownAssemblyTransport>(provider => new InstalledAppAssemblyTransport(
             provider.GetRequiredService<WebAssemblyLazyAssemblyTransport>(),
@@ -104,8 +115,8 @@ public static partial class KazoOsBrowserHostExtensions
                     provider.GetService<Microsoft.Extensions.Logging.ILogger<InstalledAppAssetPublisher>>())
                 : null)
         {
-            // ADR 0222 §2: their satellite assemblies, for every language Kazo OS speaks.
-            Satellites = new InstalledAppSatellites(Kazo.Os.AppSdk.Globalization.KazoLocale.SupportedLanguages.Select(static culture => culture.Name)),
+            Satellites = installedSatellites,
+            Libraries = provider.GetRequiredService<InstalledAppLibraries>(),
         });
         // ADR 0162: an app asset that fails to load after a rebuild or a deployment means the OS
         // was updated under the page; the host then offers a restart instead of a dead launch.
@@ -143,7 +154,10 @@ public static partial class KazoOsBrowserHostExtensions
         builder.Services.AddSingleton<IInstalledAppsActivator>(provider => new InstalledAppsActivator(
             installedApps,
             provider.GetRequiredService<BuildKnownAssemblyLoaderRegistry>(),
-            provider.GetService<Microsoft.Extensions.Logging.ILogger<InstalledAppsActivator>>()));
+            provider.GetService<Microsoft.Extensions.Logging.ILogger<InstalledAppsActivator>>())
+        {
+            Libraries = provider.GetRequiredService<InstalledAppLibraries>(),
+        });
         builder.Services.AddSingleton(provider => new BuildKnownLazyAppDescriptorRegistry(
             installedApps.Live,
             provider.GetRequiredService<BuildKnownAssemblyLoaderRegistry>()));

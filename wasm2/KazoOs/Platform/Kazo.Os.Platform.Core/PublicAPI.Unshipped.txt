@@ -41,3 +41,100 @@ Kazo.Os.Platform.Core.Execution.AppCatalogGatewayServices.PermissionStore.init -
 const Kazo.Os.Platform.Core.Apps.Packages.AppPackage.EntryPointsFolder = "entrypoints/" -> string!
 static Kazo.Os.Platform.Core.Apps.Packages.AppPackage.GetDeclaredAssemblies(System.Collections.Generic.IEnumerable<Kazo.Os.App.Abstractions.AppManifest!>! manifests) -> System.Collections.Generic.IReadOnlySet<string!>!
 static Kazo.Os.Platform.Core.Apps.Packages.AppPackageWriter.Write(byte[]! manifestJson, System.Func<string!, byte[]!>! readAssembly, System.Func<string!, byte[]!>! readAsset, System.Collections.Generic.IReadOnlyDictionary<string!, byte[]!>? satellites, System.Collections.Generic.IReadOnlyList<System.Collections.Generic.KeyValuePair<string!, byte[]!>>? childManifests) -> byte[]!
+Kazo.Os.Platform.Core.Apps.Packages.AppPackage.Libraries.get -> System.Collections.Generic.IReadOnlyList<Kazo.Os.Platform.Core.Apps.Packages.AppPackageLibrary!>!
+Kazo.Os.Platform.Core.Apps.Packages.AppPackageInstallContext.InstalledApps.get -> System.Collections.Generic.IReadOnlyCollection<Kazo.Os.Platform.Core.Apps.Packages.InstalledApp!>!
+Kazo.Os.Platform.Core.Apps.Packages.AppPackageInstallContext.InstalledApps.init -> void
+Kazo.Os.Platform.Core.Apps.Packages.AppPackageInstallContext.LoadedPackageLibraries.get -> System.Collections.Generic.IReadOnlySet<string!>!
+Kazo.Os.Platform.Core.Apps.Packages.AppPackageInstallContext.LoadedPackageLibraries.init -> void
+Kazo.Os.Platform.Core.Apps.Packages.AppPackageLibrary
+Kazo.Os.Platform.Core.Apps.Packages.AppPackageLibrary.<Clone>$() -> Kazo.Os.Platform.Core.Apps.Packages.AppPackageLibrary!
+Kazo.Os.Platform.Core.Apps.Packages.AppPackageLibrary.AppPackageLibrary(string! Name, System.Version! Version, string! Sha256, bool Shared) -> void
+Kazo.Os.Platform.Core.Apps.Packages.AppPackageLibrary.Deconstruct(out string! Name, out System.Version! Version, out string! Sha256, out bool Shared) -> void
+Kazo.Os.Platform.Core.Apps.Packages.AppPackageLibrary.Equals(Kazo.Os.Platform.Core.Apps.Packages.AppPackageLibrary? other) -> bool
+Kazo.Os.Platform.Core.Apps.Packages.AppPackageLibrary.FileName.get -> string!
+Kazo.Os.Platform.Core.Apps.Packages.AppPackageLibrary.Name.get -> string!
+Kazo.Os.Platform.Core.Apps.Packages.AppPackageLibrary.Name.init -> void
+Kazo.Os.Platform.Core.Apps.Packages.AppPackageLibrary.Sha256.get -> string!
+Kazo.Os.Platform.Core.Apps.Packages.AppPackageLibrary.Sha256.init -> void
+Kazo.Os.Platform.Core.Apps.Packages.AppPackageLibrary.Shared.get -> bool
+Kazo.Os.Platform.Core.Apps.Packages.AppPackageLibrary.Shared.init -> void
+Kazo.Os.Platform.Core.Apps.Packages.AppPackageLibrary.Version.get -> System.Version!
+Kazo.Os.Platform.Core.Apps.Packages.AppPackageLibrary.Version.init -> void
+Kazo.Os.Platform.Core.Apps.Packages.IInstalledLibraryState
+Kazo.Os.Platform.Core.Apps.Packages.IInstalledLibraryState.GetPendingRestarts() -> System.Collections.Generic.IReadOnlyList<Kazo.Os.Platform.Core.Apps.Packages.LibraryRestart!>!
+Kazo.Os.Platform.Core.Apps.Packages.IInstalledLibraryState.LoadedFromPackages.get -> System.Collections.Generic.IReadOnlySet<string!>!
+Kazo.Os.Platform.Core.Apps.Packages.InstalledApp.Libraries.get -> System.Collections.Generic.IReadOnlyList<Kazo.Os.Platform.Core.Apps.Packages.AppPackageLibrary!>!
+Kazo.Os.Platform.Core.Apps.Packages.InstalledApp.Libraries.init -> void
+Kazo.Os.Platform.Core.Apps.Packages.InstalledLibraries
+Kazo.Os.Platform.Core.Apps.Packages.InstalledLibraryCopy
+Kazo.Os.Platform.Core.Apps.Packages.InstalledLibraryCopy.<Clone>$() -> Kazo.Os.Platform.Core.Apps.Packages.InstalledLibraryCopy!
+Kazo.Os.Platform.Core.Apps.Packages.InstalledLibraryCopy.Deconstruct(out Kazo.Os.Platform.Core.Apps.Packages.InstalledApp! Owner, out Kazo.Os.Platform.Core.Apps.Packages.AppPackageLibrary! Library) -> void
+Kazo.Os.Platform.Core.Apps.Packages.InstalledLibraryCopy.Equals(Kazo.Os.Platform.Core.Apps.Packages.InstalledLibraryCopy? other) -> bool
+Kazo.Os.Platform.Core.Apps.Packages.InstalledLibraryCopy.InstalledLibraryCopy(Kazo.Os.Platform.Core.Apps.Packages.InstalledApp! Owner, Kazo.Os.Platform.Core.Apps.Packages.AppPackageLibrary! Library) -> void
+Kazo.Os.Platform.Core.Apps.Packages.InstalledLibraryCopy.Library.get -> Kazo.Os.Platform.Core.Apps.Packages.AppPackageLibrary!
+Kazo.Os.Platform.Core.Apps.Packages.InstalledLibraryCopy.Library.init -> void
+Kazo.Os.Platform.Core.Apps.Packages.InstalledLibraryCopy.Owner.get -> Kazo.Os.Platform.Core.Apps.Packages.InstalledApp!
+Kazo.Os.Platform.Core.Apps.Packages.InstalledLibraryCopy.Owner.init -> void
+Kazo.Os.Platform.Core.Apps.Packages.LibraryRestart
+Kazo.Os.Platform.Core.Apps.Packages.LibraryRestart.<Clone>$() -> Kazo.Os.Platform.Core.Apps.Packages.LibraryRestart!
+Kazo.Os.Platform.Core.Apps.Packages.LibraryRestart.AppId.get -> string!
+Kazo.Os.Platform.Core.Apps.Packages.LibraryRestart.AppId.init -> void
+Kazo.Os.Platform.Core.Apps.Packages.LibraryRestart.Deconstruct(out string! AppId, out string! Library, out System.Version! Loaded, out System.Version! Wanted, out string! Reason) -> void
+Kazo.Os.Platform.Core.Apps.Packages.LibraryRestart.Equals(Kazo.Os.Platform.Core.Apps.Packages.LibraryRestart? other) -> bool
+Kazo.Os.Platform.Core.Apps.Packages.LibraryRestart.Library.get -> string!
+Kazo.Os.Platform.Core.Apps.Packages.LibraryRestart.Library.init -> void
+Kazo.Os.Platform.Core.Apps.Packages.LibraryRestart.LibraryRestart(string! AppId, string! Library, System.Version! Loaded, System.Version! Wanted, string! Reason) -> void
+Kazo.Os.Platform.Core.Apps.Packages.LibraryRestart.Loaded.get -> System.Version!
+Kazo.Os.Platform.Core.Apps.Packages.LibraryRestart.Loaded.init -> void
+Kazo.Os.Platform.Core.Apps.Packages.LibraryRestart.Reason.get -> string!
+Kazo.Os.Platform.Core.Apps.Packages.LibraryRestart.Reason.init -> void
+Kazo.Os.Platform.Core.Apps.Packages.LibraryRestart.Wanted.get -> System.Version!
+Kazo.Os.Platform.Core.Apps.Packages.LibraryRestart.Wanted.init -> void
+Kazo.Os.Platform.Core.Apps.Packages.SharedLibraryChoice
+Kazo.Os.Platform.Core.Apps.Packages.SharedLibraryChoice.<Clone>$() -> Kazo.Os.Platform.Core.Apps.Packages.SharedLibraryChoice!
+Kazo.Os.Platform.Core.Apps.Packages.SharedLibraryChoice.Copy.get -> Kazo.Os.Platform.Core.Apps.Packages.InstalledLibraryCopy!
+Kazo.Os.Platform.Core.Apps.Packages.SharedLibraryChoice.Copy.init -> void
+Kazo.Os.Platform.Core.Apps.Packages.SharedLibraryChoice.Deconstruct(out Kazo.Os.Platform.Core.Apps.Packages.InstalledLibraryCopy! Copy, out Kazo.Os.Platform.Core.Apps.Packages.SharedLibraryChoiceReason Reason) -> void
+Kazo.Os.Platform.Core.Apps.Packages.SharedLibraryChoice.Describe() -> string!
+Kazo.Os.Platform.Core.Apps.Packages.SharedLibraryChoice.Equals(Kazo.Os.Platform.Core.Apps.Packages.SharedLibraryChoice? other) -> bool
+Kazo.Os.Platform.Core.Apps.Packages.SharedLibraryChoice.Reason.get -> Kazo.Os.Platform.Core.Apps.Packages.SharedLibraryChoiceReason
+Kazo.Os.Platform.Core.Apps.Packages.SharedLibraryChoice.Reason.init -> void
+Kazo.Os.Platform.Core.Apps.Packages.SharedLibraryChoice.SharedLibraryChoice(Kazo.Os.Platform.Core.Apps.Packages.InstalledLibraryCopy! Copy, Kazo.Os.Platform.Core.Apps.Packages.SharedLibraryChoiceReason Reason) -> void
+Kazo.Os.Platform.Core.Apps.Packages.SharedLibraryChoiceReason
+Kazo.Os.Platform.Core.Apps.Packages.SharedLibraryChoiceReason.Feature = 0 -> Kazo.Os.Platform.Core.Apps.Packages.SharedLibraryChoiceReason
+Kazo.Os.Platform.Core.Apps.Packages.SharedLibraryChoiceReason.NewestCompatible = 1 -> Kazo.Os.Platform.Core.Apps.Packages.SharedLibraryChoiceReason
+Kazo.Os.Platform.Core.Execution.AppCatalogGatewayServices.InstalledLibraries.get -> System.Func<Kazo.Os.Platform.Core.Apps.Packages.IInstalledLibraryState?>?
+Kazo.Os.Platform.Core.Execution.AppCatalogGatewayServices.InstalledLibraries.init -> void
+const Kazo.Os.Platform.Core.Apps.Packages.AppPackageLibrary.ListName = "libraries" -> string!
+const Kazo.Os.Platform.Core.Apps.Packages.AppPackageLibrary.SharedMetadataKey = "Kazo.Os.SharedLibrary" -> string!
+override Kazo.Os.Platform.Core.Apps.Packages.AppPackageLibrary.Equals(object? obj) -> bool
+override Kazo.Os.Platform.Core.Apps.Packages.AppPackageLibrary.GetHashCode() -> int
+override Kazo.Os.Platform.Core.Apps.Packages.AppPackageLibrary.ToString() -> string!
+override Kazo.Os.Platform.Core.Apps.Packages.InstalledLibraryCopy.Equals(object? obj) -> bool
+override Kazo.Os.Platform.Core.Apps.Packages.InstalledLibraryCopy.GetHashCode() -> int
+override Kazo.Os.Platform.Core.Apps.Packages.InstalledLibraryCopy.ToString() -> string!
+override Kazo.Os.Platform.Core.Apps.Packages.LibraryRestart.Equals(object? obj) -> bool
+override Kazo.Os.Platform.Core.Apps.Packages.LibraryRestart.GetHashCode() -> int
+override Kazo.Os.Platform.Core.Apps.Packages.LibraryRestart.ToString() -> string!
+override Kazo.Os.Platform.Core.Apps.Packages.SharedLibraryChoice.Equals(object? obj) -> bool
+override Kazo.Os.Platform.Core.Apps.Packages.SharedLibraryChoice.GetHashCode() -> int
+override Kazo.Os.Platform.Core.Apps.Packages.SharedLibraryChoice.ToString() -> string!
+static Kazo.Os.Platform.Core.Apps.Packages.AppPackageLibrary.Describe(string! fileName, byte[]! bytes) -> Kazo.Os.Platform.Core.Apps.Packages.AppPackageLibrary!
+static Kazo.Os.Platform.Core.Apps.Packages.AppPackageLibrary.ReadList(System.Text.Json.JsonElement root) -> System.Collections.Generic.IReadOnlyList<Kazo.Os.Platform.Core.Apps.Packages.AppPackageLibrary!>!
+static Kazo.Os.Platform.Core.Apps.Packages.AppPackageLibrary.operator !=(Kazo.Os.Platform.Core.Apps.Packages.AppPackageLibrary? left, Kazo.Os.Platform.Core.Apps.Packages.AppPackageLibrary? right) -> bool
+static Kazo.Os.Platform.Core.Apps.Packages.AppPackageLibrary.operator ==(Kazo.Os.Platform.Core.Apps.Packages.AppPackageLibrary? left, Kazo.Os.Platform.Core.Apps.Packages.AppPackageLibrary? right) -> bool
+static Kazo.Os.Platform.Core.Apps.Packages.AppPackageWriter.Write(byte[]! manifestJson, System.Func<string!, byte[]!>! readAssembly, System.Func<string!, byte[]!>! readAsset, System.Collections.Generic.IReadOnlyDictionary<string!, byte[]!>? satellites, System.Collections.Generic.IReadOnlyList<System.Collections.Generic.KeyValuePair<string!, byte[]!>>? childManifests, System.Collections.Generic.IReadOnlyDictionary<string!, byte[]!>? libraries) -> byte[]!
+static Kazo.Os.Platform.Core.Apps.Packages.InstalledLibraries.CheckMajorVersions(Kazo.Os.Platform.Core.Apps.Packages.AppPackage! package, System.Collections.Generic.IEnumerable<Kazo.Os.Platform.Core.Apps.Packages.InstalledApp!>! installed) -> void
+static Kazo.Os.Platform.Core.Apps.Packages.InstalledLibraries.CheckReservedNames(Kazo.Os.Platform.Core.Apps.Packages.AppPackage! package, Kazo.Os.Platform.Core.Apps.Packages.IRuntimeApiSurface! runtime, System.Collections.Generic.IReadOnlySet<string!>! osAssemblies, System.Collections.Generic.IReadOnlySet<string!>! packageAssemblies) -> void
+static Kazo.Os.Platform.Core.Apps.Packages.InstalledLibraries.Choose(Kazo.Os.Platform.Core.Apps.Packages.InstalledApp! requester, Kazo.Os.Platform.Core.Apps.Packages.AppPackageLibrary! wanted, System.Collections.Generic.IEnumerable<Kazo.Os.Platform.Core.Apps.Packages.InstalledApp!>! apps) -> Kazo.Os.Platform.Core.Apps.Packages.SharedLibraryChoice!
+static Kazo.Os.Platform.Core.Apps.Packages.InstalledLibraries.FindPendingRestarts(System.Collections.Generic.IEnumerable<Kazo.Os.Platform.Core.Apps.Packages.InstalledApp!>! apps, System.Func<string!, System.Version?>! getLoadedVersion) -> System.Collections.Generic.IReadOnlyList<Kazo.Os.Platform.Core.Apps.Packages.LibraryRestart!>!
+static Kazo.Os.Platform.Core.Apps.Packages.InstalledLibraries.FindProvider(string! name, System.Collections.Generic.IEnumerable<Kazo.Os.Platform.Core.Apps.Packages.InstalledApp!>! apps) -> Kazo.Os.Platform.Core.Apps.Packages.InstalledLibraryCopy?
+static Kazo.Os.Platform.Core.Apps.Packages.InstalledLibraries.GetSharedCopies(string! name, System.Collections.Generic.IEnumerable<Kazo.Os.Platform.Core.Apps.Packages.InstalledApp!>! apps) -> System.Collections.Generic.IReadOnlyList<Kazo.Os.Platform.Core.Apps.Packages.InstalledLibraryCopy!>!
+static Kazo.Os.Platform.Core.Apps.Packages.InstalledLibraryCopy.operator !=(Kazo.Os.Platform.Core.Apps.Packages.InstalledLibraryCopy? left, Kazo.Os.Platform.Core.Apps.Packages.InstalledLibraryCopy? right) -> bool
+static Kazo.Os.Platform.Core.Apps.Packages.InstalledLibraryCopy.operator ==(Kazo.Os.Platform.Core.Apps.Packages.InstalledLibraryCopy? left, Kazo.Os.Platform.Core.Apps.Packages.InstalledLibraryCopy? right) -> bool
+static Kazo.Os.Platform.Core.Apps.Packages.LibraryRestart.operator !=(Kazo.Os.Platform.Core.Apps.Packages.LibraryRestart? left, Kazo.Os.Platform.Core.Apps.Packages.LibraryRestart? right) -> bool
+static Kazo.Os.Platform.Core.Apps.Packages.LibraryRestart.operator ==(Kazo.Os.Platform.Core.Apps.Packages.LibraryRestart? left, Kazo.Os.Platform.Core.Apps.Packages.LibraryRestart? right) -> bool
+static Kazo.Os.Platform.Core.Apps.Packages.SharedLibraryChoice.operator !=(Kazo.Os.Platform.Core.Apps.Packages.SharedLibraryChoice? left, Kazo.Os.Platform.Core.Apps.Packages.SharedLibraryChoice? right) -> bool
+static Kazo.Os.Platform.Core.Apps.Packages.SharedLibraryChoice.operator ==(Kazo.Os.Platform.Core.Apps.Packages.SharedLibraryChoice? left, Kazo.Os.Platform.Core.Apps.Packages.SharedLibraryChoice? right) -> bool
+static Kazo.Os.Platform.Core.Apps.Packages.InstalledLibraries.Format(System.Version! version) -> string!
+static Kazo.Os.Platform.Core.Apps.Packages.InstalledLibraries.NeedsRestart(System.Version! loaded, System.Version! own, System.Version! chosen) -> bool

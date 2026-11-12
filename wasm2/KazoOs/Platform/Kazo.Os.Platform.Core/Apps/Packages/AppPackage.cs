@@ -74,12 +74,18 @@ public sealed class AppPackage
     /// <summary>Most files accepted in one archive.</summary>
     public const int MaximumFiles = 2_000;
 
-    private AppPackage(AppManifest manifest, IReadOnlyList<AppManifest> children, SemanticVersion version, IReadOnlyDictionary<string, byte[]> files)
+    private AppPackage(
+        AppManifest manifest,
+        IReadOnlyList<AppManifest> children,
+        SemanticVersion version,
+        IReadOnlyDictionary<string, byte[]> files,
+        IReadOnlyList<AppPackageLibrary> libraries)
     {
         Manifest = manifest;
         Children = children;
         Version = version;
         Files = files;
+        Libraries = libraries;
     }
 
     /// <summary>Gets the app identifier.</summary>
@@ -106,7 +112,17 @@ public sealed class AppPackage
     /// <summary>Gets every verified file by its archive path, <see cref="DescriptionFileName"/> included.</summary>
     public IReadOnlyDictionary<string, byte[]> Files { get; }
 
-    /// <summary>Gets the app assemblies, by file name (e.g. <c>Kazo.Webamp.dll</c>); satellites are not among them.</summary>
+    /// <summary>
+    /// Gets the libraries of the app (ADR 0244 §1), listed in <c>libraries</c> of
+    /// <see cref="DescriptionFileName"/>: each one is a file of <c>lib/</c> whose name, version, SHA-256
+    /// and shared mark were checked against the assembly itself. Empty for an app without a library.
+    /// </summary>
+    public IReadOnlyList<AppPackageLibrary> Libraries { get; }
+
+    /// <summary>
+    /// Gets the assemblies of the package, by file name (e.g. <c>Kazo.Webamp.dll</c>): the declared
+    /// ones and the libraries; satellites are not among them.
+    /// </summary>
     public IReadOnlyDictionary<string, byte[]> Assemblies => Files
         .Where(static pair => pair.Key.StartsWith(LibraryFolder, StringComparison.Ordinal) && pair.Key.IndexOf('/', LibraryFolder.Length) < 0)
         .ToDictionary(static pair => pair.Key[LibraryFolder.Length..], static pair => pair.Value, StringComparer.Ordinal);
@@ -224,8 +240,42 @@ public sealed class AppPackage
         }
 
         IReadOnlyList<AppManifest> children = ReadChildren(manifest, description, files);
-        CheckContents(manifest, children, files);
-        return new AppPackage(manifest, children, description.Version, files);
+        CheckLibraries(description.Libraries, GetDeclaredAssemblies(children.Prepend(manifest)), files);
+        CheckContents(manifest, children, description.Libraries, files);
+        return new AppPackage(manifest, children, description.Version, files, description.Libraries);
+    }
+
+    /// <summary>
+    /// ADR 0244 §1: every listed library is a file of <c>lib/</c> that is the assembly the list says
+    /// (same simple name, version, SHA-256 and shared mark), and is not one the manifest declares.
+    /// </summary>
+    private static void CheckLibraries(IReadOnlyList<AppPackageLibrary> libraries, IReadOnlySet<string> declared, Dictionary<string, byte[]> files)
+    {
+        foreach (AppPackageLibrary library in libraries)
+        {
+            if (declared.Contains(library.FileName, StringComparer.OrdinalIgnoreCase))
+            {
+                throw new AppPackageException("apps.package.bad-description", $"{DescriptionFileName} lists '{library.Name}' as a library, but the manifest declares {library.FileName} as an assembly of the app.");
+            }
+
+            if (!files.TryGetValue(LibraryFolder + library.FileName, out byte[]? bytes))
+            {
+                throw new AppPackageException("apps.package.missing-assembly", $"{DescriptionFileName} lists the library lib/{library.FileName}, which the package does not hold.");
+            }
+
+            AppPackageLibrary actual = AppPackageLibrary.Describe(library.FileName, bytes);
+            if (!string.Equals(actual.Sha256, library.Sha256, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new AppPackageException("apps.package.hash-mismatch", $"The library lib/{library.FileName} does not match the SHA-256 of its entry in libraries.");
+            }
+
+            if (!string.Equals(actual.Name, library.Name, StringComparison.Ordinal) || actual.Version != library.Version || actual.Shared != library.Shared)
+            {
+                throw new AppPackageException(
+                    "apps.package.bad-description",
+                    $"{DescriptionFileName} lists the library {library.Name} {library.Version} (shared: {library.Shared}), but lib/{library.FileName} is {actual.Name} {actual.Version} (shared: {actual.Shared}).");
+            }
+        }
     }
 
     /// <summary>
@@ -393,7 +443,7 @@ public sealed class AppPackage
                 }
             }
 
-            return new PackageDescription(appId, version, listed, manifests);
+            return new PackageDescription(appId, version, listed, manifests, AppPackageLibrary.ReadList(root));
         }
         catch (Exception exception) when (exception is JsonException or KeyNotFoundException or InvalidOperationException)
         {
@@ -419,7 +469,7 @@ public sealed class AppPackage
         }
     }
 
-    private static void CheckContents(AppManifest manifest, IReadOnlyList<AppManifest> children, Dictionary<string, byte[]> files)
+    private static void CheckContents(AppManifest manifest, IReadOnlyList<AppManifest> children, IReadOnlyList<AppPackageLibrary> libraries, Dictionary<string, byte[]> files)
     {
         ManifestValidationResult validation = AppManifestValidator.Validate(manifest);
         if (!validation.IsValid)
@@ -428,6 +478,8 @@ public sealed class AppPackage
         }
 
         IReadOnlySet<string> declared = GetDeclaredAssemblies(children.Prepend(manifest));
+        // ADR 0244 §1: the libraries of the app have their satellites too.
+        HashSet<string> translatable = new(declared.Concat(libraries.Select(static library => library.FileName)), StringComparer.Ordinal);
         bool feature = manifest.Kind == AppKind.Feature;
         foreach (string path in files.Keys)
         {
@@ -435,7 +487,7 @@ public sealed class AppPackage
             // (the OS brings those) nor another package's.
             bool known = path is DescriptionFileName or LegacyDescriptionFileName or ManifestFileName
                 || (path.StartsWith(LibraryFolder, StringComparison.Ordinal) && path.EndsWith(".dll", StringComparison.OrdinalIgnoreCase) && path.Count(static c => c == '/') == 1)
-                || (TryParseSatellitePath(path, out _, out string translated) && declared.Contains(translated))
+                || (TryParseSatellitePath(path, out _, out string translated) && translatable.Contains(translated))
                 || path.StartsWith(AssetFolder, StringComparison.Ordinal)
                 // ADR 0243 §2: the children of a feature, already read and validated.
                 || (feature && path.StartsWith(EntryPointsFolder, StringComparison.Ordinal) && path.EndsWith(".json", StringComparison.Ordinal) && path.Count(static c => c == '/') == 1);
@@ -494,5 +546,10 @@ public sealed class AppPackage
         return assemblies;
     }
 
-    private sealed record PackageDescription(string AppId, SemanticVersion Version, IReadOnlyDictionary<string, string> Files, IReadOnlyList<string> Manifests);
+    private sealed record PackageDescription(
+        string AppId,
+        SemanticVersion Version,
+        IReadOnlyDictionary<string, string> Files,
+        IReadOnlyList<string> Manifests,
+        IReadOnlyList<AppPackageLibrary> Libraries);
 }

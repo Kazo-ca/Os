@@ -96,6 +96,72 @@ ajoutée avec `dotnet new kazoos-window` (ou `-command`, `-service`, `-site`)
 déclare déjà `KazoOsAppProject=true` ; ajoutez-la à l'hôte par
 `dotnet add src/<Nom>.Os reference …`.
 
+## Bibliothèques de l'app
+
+[ADR 0244](../dev/adr/0244-app-libraries-and-shared-versions.md). Une app
+peut avoir ses propres bibliothèques : un autre projet du dépôt
+(`ProjectReference`), un paquet NuGet (`PackageReference`) ou une DLL. Elle
+les référence comme dans tout projet .NET, **sans rien déclarer** :
+`KazoOsPack` met dans `lib/` du paquet chaque assemblage que le build copie à
+côté de l'app et que Kazo OS n'apporte pas, avec ses satellites, et l'OS les
+charge avant l'app.
+
+- **Ce que l'OS apporte reste hors du paquet**, par nom d'assemblage :
+  `Kazo.Os.*` (le SDK ; ce nom est réservé à l'OS), `System*`, `Microsoft.*`,
+  `MudBlazor*`, `netstandard`, `mscorlib`, `WindowsBase`. La propriété
+  `KazoOsProvidedAssemblyPattern` (expression régulière sur le nom simple)
+  change cette liste dans le projet de l'app. Une bibliothèque laissée dehors
+  que l'OS n'a pas est refusée à l'installation comme API manquante
+  (`apps.package.missing-api`) ; une bibliothèque embarquée qui porte le nom
+  d'un assemblage de l'OS aussi (`apps.package.library-reserved`) : ajoutez
+  alors son nom à la propriété, l'app utilise la copie de l'OS.
+- **`pack` nomme ce qu'il embarque** :
+  `library Kazo.Irc.Protocol 1.0.0`, avec `(shared)` pour une bibliothèque
+  partagée.
+
+### Bibliothèque partagée : `KazoOsSharedLibrary`
+
+Une bibliothèque que plusieurs apps embarquent et qui doit exister **une
+seule fois** dans l'OS (les contrats d'une fonctionnalité, que chaque app
+cliente embarque) est marquée partagée **par son auteur**, dans le projet de
+la bibliothèque :
+
+```xml
+<PropertyGroup>
+  <KazoOsSharedLibrary>true</KazoOsSharedLibrary>
+</PropertyGroup>
+```
+
+`Kazo.Os.Apps.targets` (dans le dépôt Kazo OS, ou par le paquet
+`Kazo.Os.App.Build`) en fait
+`[assembly: AssemblyMetadata("Kazo.Os.SharedLibrary", "true")]`. Un projet de
+bibliothèque qui n'importe pas ce fichier (un paquet de contrats sans
+dépendance à Kazo OS) écrit la même ligne lui-même :
+
+```xml
+<ItemGroup>
+  <AssemblyMetadata Include="Kazo.Os.SharedLibrary" Value="true" />
+</ItemGroup>
+```
+
+- La marque est **dans l'assemblage** : elle suit la bibliothèque, qu'une app
+  la référence par projet, par DLL ou par paquet NuGet. L'app n'a aucune
+  restriction ni déclaration de plus ; elle ne peut pas rendre partagée une
+  bibliothèque qui ne l'est pas.
+- Kazo OS charge **une copie par page** : celle d'une fonctionnalité
+  installée de même version majeure, sinon la plus récente de cette version
+  majeure parmi les apps installées.
+- **Règle d'édition** : la compatibilité est la version majeure de
+  l'assemblage (`AssemblyVersion`). Une version mineure ne fait qu'ajouter des
+  membres ; retirer ou changer un membre demande une nouvelle version majeure.
+  Suivez l'API publique de la bibliothèque (`PublicAPI.Shipped.txt`) comme le
+  fait le SDK.
+- Une app dont la bibliothèque partagée a une autre version majeure que la
+  copie d'une fonctionnalité installée est refusée à l'installation
+  (`apps.package.library-major-mismatch`).
+
+Détail côté OS : [`app-installation.md`](../dev/app-installation.md#bibliothèques-dapp-et-versions-partagées-adr-0244).
+
 ## Publier dans le Kazo OS Store
 
 1. Remplir `store/` : icône PNG 256×256 (200 Ko au plus), description courte
@@ -205,3 +271,4 @@ fonctionner qu'avec un sous-module sur une release qui contient ce modèle
 - [ ] Dépôt template régénéré sur la release qui contient ce modèle.
 - [x] Workflow `publish-packages.yml` et signature des paquets (ADR 0219).
 - [x] Signature retirée des dépôts d'apps et du modèle (ADR 0219).
+- [x] Bibliothèques de l'app dans le paquet et propriété `KazoOsSharedLibrary` (ADR 0244).

@@ -214,6 +214,12 @@ public sealed class InstalledAppsActivator(
 {
     private readonly SemaphoreSlim _gate = new(1, 1);
 
+    /// <summary>
+    /// Gets the loader of the installed apps' libraries (ADR 0244 §3): after each change it writes to
+    /// the log which app waits for a restart to get its copy of a shared library.
+    /// </summary>
+    public InstalledAppLibraries? Libraries { get; init; }
+
     /// <inheritdoc />
     public async ValueTask<InstalledAppsActivation> ActivateAsync(CancellationToken cancellationToken = default)
     {
@@ -238,6 +244,8 @@ public sealed class InstalledAppsActivator(
                     string.Join(", ", activation.WaitingForRestart));
             }
 
+            // ADR 0244 §3: a feature just installed may carry a newer copy of a library already in the page.
+            Libraries?.ReportPendingRestarts();
             return activation;
         }
         finally
@@ -277,6 +285,12 @@ public sealed class InstalledAppAssemblyTransport(IBuildKnownAssemblyTransport i
     /// <summary>Gets the loader of their satellite assemblies (ADR 0222 §2); <see langword="null"/> loads none.</summary>
     public InstalledAppSatellites? Satellites { get; init; }
 
+    /// <summary>
+    /// Gets the loader of the libraries their packages carry (ADR 0244 §1): they are in the page
+    /// before the app's own assembly. <see langword="null"/> loads none.
+    /// </summary>
+    public InstalledAppLibraries? Libraries { get; init; }
+
     /// <inheritdoc />
     [RequiresUnreferencedCode("Installed assemblies arrive after publishing; AppPackageApiCheck verified their references at install time.")]
     public async Task<IReadOnlyList<Assembly>> LoadAsync(IReadOnlyList<string> assemblyNames, CancellationToken cancellationToken)
@@ -303,6 +317,12 @@ public sealed class InstalledAppAssemblyTransport(IBuildKnownAssemblyTransport i
             {
                 loaded.Add(existing);
                 continue;
+            }
+
+            if (Libraries is { } libraries)
+            {
+                // ADR 0244 §1: what the app's code refers to is in the runtime before that code.
+                await libraries.LoadForAsync(app, cancellationToken).ConfigureAwait(false);
             }
 
             byte[] bytes = await installed.ReadAsync(app.GetAssemblyPath(name), cancellationToken).ConfigureAwait(false)

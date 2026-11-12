@@ -53,7 +53,33 @@ public static class AppPackageWriter
         Func<string, byte[]> readAssembly,
         Func<string, byte[]> readAsset,
         IReadOnlyDictionary<string, byte[]>? satellites,
-        IReadOnlyList<KeyValuePair<string, byte[]>>? childManifests)
+        IReadOnlyList<KeyValuePair<string, byte[]>>? childManifests) =>
+        Write(manifestJson, readAssembly, readAsset, satellites, childManifests, null);
+
+    /// <summary>
+    /// Builds the package of one app or of one feature, with the libraries of the app (ADR 0244 §1).
+    /// </summary>
+    /// <param name="manifestJson">The generated <c>manifest.json</c>, byte for byte.</param>
+    /// <param name="readAssembly">Reads one declared assembly (<c>Kazo.Webamp.dll</c>) from the build output.</param>
+    /// <param name="readAsset">Reads one declared asset (path relative to <c>wwwroot/</c>).</param>
+    /// <param name="satellites">The satellite assemblies of the app's assemblies and libraries (ADR 0222 §1), by their path under <c>lib/</c>; <see langword="null"/> for none.</param>
+    /// <param name="childManifests">The <c>entrypoints/&lt;suffix&gt;.json</c> of a feature by file name; <see langword="null"/> or empty for an app.</param>
+    /// <param name="libraries">
+    /// The assemblies the app needs that the OS does not bring, by file name
+    /// (<c>Kazo.Irc.Protocol.dll</c>); <see langword="null"/> or empty for none. Each one is listed in
+    /// <c>libraries</c> of the description with its name, version, SHA-256 and the shared mark its
+    /// author gave it (<see cref="AppPackageLibrary.SharedMetadataKey"/>). A file the manifest
+    /// already declares is not a library.
+    /// </param>
+    /// <returns>The package, already checked with <see cref="AppPackage.Read"/>.</returns>
+    /// <exception cref="AppPackageException">The result would be refused by the OS.</exception>
+    public static byte[] Write(
+        byte[] manifestJson,
+        Func<string, byte[]> readAssembly,
+        Func<string, byte[]> readAsset,
+        IReadOnlyDictionary<string, byte[]>? satellites,
+        IReadOnlyList<KeyValuePair<string, byte[]>>? childManifests,
+        IReadOnlyDictionary<string, byte[]>? libraries)
     {
         ArgumentNullException.ThrowIfNull(manifestJson);
         ArgumentNullException.ThrowIfNull(readAssembly);
@@ -70,9 +96,29 @@ public static class AppPackageWriter
             files[path] = bytes;
         }
 
-        foreach (string assembly in AppPackage.GetDeclaredAssemblies(children.Prepend(manifest)))
+        IReadOnlySet<string> declared = AppPackage.GetDeclaredAssemblies(children.Prepend(manifest));
+        foreach (string assembly in declared)
         {
             files[AppPackage.LibraryFolder + assembly] = readAssembly(assembly);
+        }
+
+        // ADR 0244 §1: the libraries of the app, described by what each assembly says of itself.
+        List<AppPackageLibrary> listed = [];
+        foreach ((string fileName, byte[] bytes) in (libraries ?? new Dictionary<string, byte[]>()).OrderBy(static pair => pair.Key, StringComparer.Ordinal))
+        {
+            if (declared.Contains(fileName, StringComparer.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            AppPackageLibrary library = AppPackageLibrary.Describe(fileName, bytes);
+            if (!string.Equals(library.FileName, fileName, StringComparison.Ordinal))
+            {
+                throw new AppPackageException("apps.package.bad-assembly", $"The library file {fileName} holds the assembly {library.Name}: a library is packed as lib/<assembly name>.dll.");
+            }
+
+            files[AppPackage.LibraryFolder + fileName] = bytes;
+            listed.Add(library);
         }
 
         foreach (AssetManifest asset in children.Prepend(manifest).SelectMany(static item => item.Assets ?? []).DistinctBy(static asset => asset.Path, StringComparer.Ordinal))
@@ -107,6 +153,8 @@ public static class AppPackageWriter
 
                 writer.WriteEndArray();
             }
+
+            AppPackageLibrary.WriteList(writer, listed);
         });
 
         using MemoryStream archive = new();

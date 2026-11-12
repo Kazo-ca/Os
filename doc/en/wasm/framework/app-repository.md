@@ -95,6 +95,69 @@ added with `dotnet new kazoos-window` (or `-command`, `-service`, `-site`)
 already declares `KazoOsAppProject=true`; add it to the host with
 `dotnet add src/<Name>.Os reference …`.
 
+## Libraries of the app
+
+[ADR 0244](../dev/adr/0244-app-libraries-and-shared-versions.md). An app may
+have libraries of its own: another project of the repository
+(`ProjectReference`), a NuGet package (`PackageReference`) or a DLL. It
+references them as in any .NET project, **declaring nothing**: `KazoOsPack`
+puts in `lib/` of the package every assembly the build copies next to the app
+that Kazo OS does not bring, with its satellites, and the OS loads them before
+the app.
+
+- **What the OS brings stays out of the package**, by assembly name:
+  `Kazo.Os.*` (the SDK; the OS keeps that name), `System*`, `Microsoft.*`,
+  `MudBlazor*`, `netstandard`, `mscorlib`, `WindowsBase`. The property
+  `KazoOsProvidedAssemblyPattern` (a regular expression on the simple name)
+  changes that list in the app's project. A library left out that the OS lacks
+  is refused at installation as a missing API (`apps.package.missing-api`); a
+  packed library with the name of an assembly of the OS is refused too
+  (`apps.package.library-reserved`): add its name to the property, and the app
+  uses the copy of the OS.
+- **`pack` names what it carries**: `library Kazo.Irc.Protocol 1.0.0`, with
+  `(shared)` for a shared library.
+
+### Shared library: `KazoOsSharedLibrary`
+
+A library that several apps carry and that must exist **once** in the OS (the
+contracts of a feature, which each client app carries) is marked as shared
+**by its author**, in the library's project:
+
+```xml
+<PropertyGroup>
+  <KazoOsSharedLibrary>true</KazoOsSharedLibrary>
+</PropertyGroup>
+```
+
+`Kazo.Os.Apps.targets` (in the Kazo OS repository, or through the
+`Kazo.Os.App.Build` package) turns it into
+`[assembly: AssemblyMetadata("Kazo.Os.SharedLibrary", "true")]`. A library
+project that does not import that file (a contracts package with no dependency
+on Kazo OS) writes the same line itself:
+
+```xml
+<ItemGroup>
+  <AssemblyMetadata Include="Kazo.Os.SharedLibrary" Value="true" />
+</ItemGroup>
+```
+
+- The mark is **in the assembly**: it follows the library, whether an app
+  references it by project, by DLL or by NuGet package. The app has no
+  restriction and nothing more to declare; it cannot make shared a library
+  that is not.
+- Kazo OS loads **one copy per page**: the one of an installed feature of the
+  same major version, otherwise the newest one of that major version among the
+  installed apps.
+- **Editing rule**: compatibility is the major version of the assembly
+  (`AssemblyVersion`). A minor version only adds members; removing or changing
+  a member needs a new major version. Track the library's public API
+  (`PublicAPI.Shipped.txt`) as the SDK does.
+- An app whose shared library has another major version than the copy of an
+  installed feature is refused at installation
+  (`apps.package.library-major-mismatch`).
+
+OS side: [`app-installation.md`](../dev/app-installation.md#app-libraries-and-shared-versions-adr-0244).
+
 ## Publishing to the Kazo OS Store
 
 1. Fill `store/`: 256×256 PNG icon (200 KB at most), English short description
@@ -203,3 +266,4 @@ can only work with a submodule on a release that contains this template
 - [ ] Template repository regenerated on the release that contains this template.
 - [x] `publish-packages.yml` workflow and package signing (ADR 0219).
 - [x] Signing removed from app repositories and the template (ADR 0219).
+- [x] Libraries of the app in the package and the `KazoOsSharedLibrary` property (ADR 0244).

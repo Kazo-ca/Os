@@ -294,6 +294,7 @@ public sealed class AppExecutionContextFactory
                 UpdateMonitor = _appCatalog.UpdateMonitor,
                 RestartForPackages = _appCatalog.RestartForPackages,
                 InstalledAppsActivator = _appCatalog.InstalledAppsActivator,
+                InstalledLibraries = _appCatalog.InstalledLibraries,
                 PermissionStore = _appCatalog.PermissionStore,
             };
         AppClipboardGateway clipboardGateway = new(_clipboard, capabilities, process.SessionId, process.Pid);
@@ -587,6 +588,12 @@ public sealed record AppCatalogGatewayServices(
     /// (ADR 0214 §1); <see langword="null"/> leaves every change for the next start of the OS.
     /// </summary>
     public Func<Apps.Packages.IInstalledAppsActivator?>? InstalledAppsActivator { get; init; }
+
+    /// <summary>
+    /// Gets what the page loaded of the installed apps' libraries (ADR 0244 §3);
+    /// <see langword="null"/> for a host that loads no installed app.
+    /// </summary>
+    public Func<Apps.Packages.IInstalledLibraryState?>? InstalledLibraries { get; init; }
 
     /// <summary>
     /// Gets the machine permission decisions (ADR 0049 §4) a feature's installation writes

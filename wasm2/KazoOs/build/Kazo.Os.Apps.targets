@@ -125,6 +125,20 @@
   </ItemGroup>
 
   <!--
+    Shared library (ADR 0244 §2): the author of a library marks it as a shared contract with
+    <KazoOsSharedLibrary>true</KazoOsSharedLibrary> in the library's own project. The mark is
+    written into the assembly, so it follows the library whatever way an app references it
+    (ProjectReference, DLL or NuGet package); the app declares nothing, and cannot mark a library
+    that is not. KazoOsPack copies it to "shared" in the package description, and Kazo OS then
+    loads one copy of the library per page. A library project that does not import this file
+    writes the same item itself:
+      <AssemblyMetadata Include="Kazo.Os.SharedLibrary" Value="true" />
+  -->
+  <ItemGroup Condition="'$(KazoOsSharedLibrary)' == 'true'">
+    <AssemblyMetadata Include="Kazo.Os.SharedLibrary" Value="true" />
+  </ItemGroup>
+
+  <!--
     ASP.Kazo route generator (ADR 0082): a Roslyn source generator every app compiles with. It only
     writes code when the app references Kazo.Os.AppSdk.Web (controllers, WebAppDefinition); for other
     apps it does nothing. Analyzer only: never a runtime dependency of the app.
@@ -315,11 +329,19 @@
     The package holds every static web resource of the project, declared or not (ADR 0221 §1), and
     the satellite assemblies of the app's own assemblies, lib/<culture>/<assembly>.resources.dll
     (ADR 0222).
+    The package also holds the libraries of the app (ADR 0244 §1): the assemblies the build copies
+    next to the app (outputs of its ProjectReference items, assemblies of its NuGet packages and
+    referenced DLLs) that the OS does not bring. KazoOsProvidedAssemblyPattern names what the OS
+    brings by assembly name: the SDK and every Kazo.Os.* assembly, the .NET runtime and the
+    Microsoft.* assemblies, MudBlazor. A library whose name the OS really has is refused at
+    installation (apps.package.library-reserved); one left out here that the OS lacks is reported
+    there as a missing API.
     The package is never signed here: only the marketplace repository signs packages (ADR 0219 §1,
     whose 2026-11-07 amendment removed the authors' KazoOsKeyGen target and signing).
   -->
   <PropertyGroup>
     <KazoOsPackageOutput Condition="'$(KazoOsPackageOutput)' == ''">$(MSBuildProjectDirectory)/bin/kazoos-packages</KazoOsPackageOutput>
+    <KazoOsProvidedAssemblyPattern Condition="'$(KazoOsProvidedAssemblyPattern)' == ''">(?i)^(Kazo\.Os\..+|System|System\..+|Microsoft\..+|MudBlazor|MudBlazor\..+|netstandard|mscorlib|WindowsBase)$</KazoOsProvidedAssemblyPattern>
   </PropertyGroup>
 
   <Target Name="KazoOsPack"
@@ -340,8 +362,23 @@
       <_KazoOsPackWebAssets>$(StaticWebAssetBuildManifestPath)</_KazoOsPackWebAssets>
       <_KazoOsPackWebAssets Condition="'$(_KazoOsPackWebAssets)' == ''">$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(IntermediateOutputPath)', 'staticwebassets.build.json'))</_KazoOsPackWebAssets>
       <_KazoOsPackWebAssetsArgument Condition="'$(UsingMicrosoftNETSdkRazor)' == 'true'"> --web-assets &quot;$(_KazoOsPackWebAssets)&quot;</_KazoOsPackWebAssetsArgument>
+      <_KazoOsPackLibraries>$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(IntermediateOutputPath)', 'kazoos-pack-libraries.txt'))</_KazoOsPackLibraries>
     </PropertyGroup>
-    <Exec Command="&quot;$(_KazoOsDotnetHost)&quot; &quot;$(_KazoOsManifestGeneratorPath)&quot; pack --manifest &quot;%(_KazoOsPackManifest.Identity)&quot; --bin &quot;$(_KazoOsPackBin)&quot; --webroot &quot;$(MSBuildProjectDirectory)/wwwroot&quot; --output &quot;$(_KazoOsPackOutput)&quot;$(_KazoOsPackWebAssetsArgument)" />
+    <!--
+      ADR 0244 §1: the copy-local references, without their satellites (culture subfolders, found
+      by pack next to them) and without what the OS brings.
+    -->
+    <ItemGroup>
+      <_KazoOsPackLibraryCandidate Include="@(ReferenceCopyLocalPaths)"
+                                   Condition="'%(Extension)' == '.dll' and '%(ReferenceCopyLocalPaths.DestinationSubDirectory)' == '' and !$([System.String]::Copy('%(Filename)').EndsWith('.resources', StringComparison.OrdinalIgnoreCase))" />
+      <_KazoOsPackLibrary Include="@(_KazoOsPackLibraryCandidate->'%(FullPath)')"
+                          Condition="!$([System.Text.RegularExpressions.Regex]::IsMatch('%(Filename)', '$(KazoOsProvidedAssemblyPattern)'))" />
+    </ItemGroup>
+    <WriteLinesToFile File="$(_KazoOsPackLibraries)" Lines="@(_KazoOsPackLibrary)" Overwrite="true" />
+    <ItemGroup>
+      <FileWrites Include="$(_KazoOsPackLibraries)" />
+    </ItemGroup>
+    <Exec Command="&quot;$(_KazoOsDotnetHost)&quot; &quot;$(_KazoOsManifestGeneratorPath)&quot; pack --manifest &quot;%(_KazoOsPackManifest.Identity)&quot; --bin &quot;$(_KazoOsPackBin)&quot; --webroot &quot;$(MSBuildProjectDirectory)/wwwroot&quot; --output &quot;$(_KazoOsPackOutput)&quot;$(_KazoOsPackWebAssetsArgument) --libraries &quot;$(_KazoOsPackLibraries)&quot;" />
   </Target>
 
   <!-- ===================================================================================== -->
@@ -350,7 +387,7 @@
 
   <PropertyGroup>
     <!-- Paths relative to the Kazo OS root, forward slashes, compared case-insensitively. -->
-    <_KazoOsAppAllowedReferencePattern>(?i)^(Shared/Kazo\.Os\.(App|Simulation|Theming)\.Abstractions|Shared/Kazo\.Os\.AppSdk(\.[^/]+)?|Platform/Kazo\.Os\.Theming\.Blazor)/[^/]+\.csproj$|^Apps/.+\.csproj$</_KazoOsAppAllowedReferencePattern>
+    <_KazoOsAppAllowedReferencePattern>(?i)^(Shared/Kazo\.Os\.(App|Simulation|Theming)\.Abstractions|Shared/Kazo\.Os\.AppSdk(\.[^/]+)?|Platform/Kazo\.Os\.Theming\.Blazor)/[^/]+\.csproj$|^Apps/.+\.csproj$|^Tests/(fixtures/.+|ManifestGenerator\.Fixtures\.[^/]+/[^/]+)\.csproj$</_KazoOsAppAllowedReferencePattern>
     <_KazoOsSdkAllowedReferencePattern>(?i)^Shared/Kazo\.Os\.((App|Simulation|Theming)\.Abstractions|AppSdk(\.[^/]+)?)/[^/]+\.csproj$</_KazoOsSdkAllowedReferencePattern>
   </PropertyGroup>
 

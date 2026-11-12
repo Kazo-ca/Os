@@ -414,6 +414,10 @@ public partial class StoreWindow
         "apps.package.feature-system-only" => L["Error.FeatureSystemOnly"],
         "apps.package.sdk-incompatible" => L["Error.Incompatible", exception.Message],
         "apps.package.missing-api" => L["Error.Incompatible", exception.Message],
+        // ADR 0244: a library named like an assembly of the OS, or a shared library of another
+        // major version than the copy an installed feature provides.
+        "apps.package.library-reserved" => L["Error.Incompatible", exception.Message],
+        "apps.package.library-major-mismatch" => L["Error.Incompatible", exception.Message],
         "apps.package.download-failed" => L["Error.Offline"],
         "apps.package.no-previous" => L["Error.NoPrevious"],
         "apps.package.reinstall-required" => L["Error.ReinstallRequired"],
