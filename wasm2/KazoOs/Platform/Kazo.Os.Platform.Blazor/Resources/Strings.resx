@@ -944,4 +944,13 @@
   <data name="Mobile.ShadeWithDnd" xml:space="preserve">
     <value>{0} (Do not disturb is on)</value>
   </data>
+  <data name="InstallApproval.Feature.EntryPoints" xml:space="preserve">
+    <value>Feature: what it brings</value>
+  </data>
+  <data name="InstallApproval.Feature.Note" xml:space="preserve">
+    <value>A feature is installed for the whole machine. Approving it approves the capabilities below once and for all: no window will ask at the first launch of its entry points.</value>
+  </data>
+  <data name="InstallApproval.Feature.Capabilities" xml:space="preserve">
+    <value>Capabilities of the feature (the whole set)</value>
+  </data>
 </root>

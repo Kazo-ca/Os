@@ -106,6 +106,13 @@ public static class AppsConfigDocument
                 continue;
             }
 
+            if (catalog.GetFeatureOf(appId) is { } feature)
+            {
+                // ADR 0243 §2: a child goes with its feature; the feature's own line disables them all.
+                warnings.Add($"apps: {path.Value}:{line.LineNumber}: {appId} is an entry point of the feature {feature} and cannot be uninstalled alone (uninstall {feature}), line ignored");
+                continue;
+            }
+
             uninstalled.Add(appId);
         }
 
@@ -212,7 +219,8 @@ public static class AppsConfigDocument
 
     /// <summary>
     /// Expands a set of uninstalled apps with every catalog app that depends on one of them through
-    /// a chain of non-optional dependencies: such an app cannot run, so it counts as uninstalled too.
+    /// a chain of non-optional dependencies, and with the children of every feature among them
+    /// (ADR 0243 §2): such an app cannot run, so it counts as uninstalled too.
     /// </summary>
     /// <param name="catalog">Catalog of this build.</param>
     /// <param name="roots">Directly uninstalled app IDs.</param>
@@ -226,8 +234,7 @@ public static class AppsConfigDocument
             changed = false;
             foreach (AppManifest manifest in catalog.Manifests.Values)
             {
-                if (!closure.Contains(manifest.Id)
-                    && manifest.Dependencies.Any(dependency => !dependency.Optional && closure.Contains(dependency.AppId)))
+                if (!closure.Contains(manifest.Id) && AppCatalog.RequiredIds(manifest).Any(closure.Contains))
                 {
                     closure.Add(manifest.Id);
                     changed = true;
@@ -238,7 +245,10 @@ public static class AppsConfigDocument
         return closure;
     }
 
-    /// <summary>Gets <paramref name="appId"/> and every non-optional dependency it needs, transitively.</summary>
+    /// <summary>
+    /// Gets <paramref name="appId"/> and every non-optional dependency it needs, transitively, the
+    /// feature it belongs to included (ADR 0243 §2).
+    /// </summary>
     /// <param name="catalog">Catalog of this build.</param>
     /// <param name="appId">App being reinstalled.</param>
     public static HashSet<string> ExpandDependencies(AppCatalog catalog, string appId)
@@ -253,11 +263,11 @@ public static class AppsConfigDocument
                 continue;
             }
 
-            foreach (AppDependencyManifest dependency in manifest.Dependencies.Where(static dependency => !dependency.Optional))
+            foreach (string required in AppCatalog.RequiredIds(manifest))
             {
-                if (closure.Add(dependency.AppId))
+                if (closure.Add(required))
                 {
-                    pending.Push(dependency.AppId);
+                    pending.Push(required);
                 }
             }
         }

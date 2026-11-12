@@ -28,6 +28,10 @@ public static class AppDefinitionMapper
     {
         ArgumentNullException.ThrowIfNull(definition);
         ArgumentException.ThrowIfNullOrWhiteSpace(sdkMinimumVersion);
+        if (definition is FeatureDefinition feature)
+        {
+            return ToFeatureManifests(feature, sdkMinimumVersion).Feature;
+        }
 
         Type entryPoint = definition.EntryPoint
             ?? throw new InvalidOperationException($"'{definition.GetType().FullName}' returned a null EntryPoint.");
@@ -88,6 +92,108 @@ public static class AppDefinitionMapper
             // ADR 0126: omitted when undeclared, so manifests of apps using the default keep their bytes.
             OomScoreAdj = definition.OomScoreAdjust
         };
+    }
+
+    /// <summary>
+    /// Maps a feature (ADR 0243) to its own manifest and one manifest per child, with the SDK version
+    /// of the current process as <c>sdkCompatibility.minimumVersion</c>.
+    /// </summary>
+    /// <param name="definition">The feature.</param>
+    /// <returns>The manifests. Not validated: call <see cref="AppManifestValidator.Validate"/> on each and <see cref="AppManifestValidator.ValidateFeature"/> on the set.</returns>
+    public static FeatureManifests ToFeatureManifests(FeatureDefinition definition) =>
+        ToFeatureManifests(definition, KazoOsSdk.Version);
+
+    /// <summary>
+    /// Maps a feature (ADR 0243) to its own manifest (kind <see cref="AppKind.Feature"/>, no entry
+    /// point, the capability set) and one manifest per <see cref="FeatureDefinition.EntryPoints"/>
+    /// entry: id <c>&lt;feature&gt;.&lt;suffix&gt;</c>, <c>parent</c> set, the child's own kind, entry
+    /// point, options and capability subset, and the feature's version, publisher, SDK range,
+    /// localizations and assets (one package holds them all). A child runs on the main thread unless
+    /// it declares another host: an installed app runs on the page (ADR 0182 §6).
+    /// </summary>
+    /// <param name="definition">The feature.</param>
+    /// <param name="sdkMinimumVersion">Value written to <c>sdkCompatibility.minimumVersion</c> when the feature declares no range.</param>
+    /// <returns>The manifests. Not validated: call <see cref="AppManifestValidator.Validate"/> on each and <see cref="AppManifestValidator.ValidateFeature"/> on the set.</returns>
+    public static FeatureManifests ToFeatureManifests(FeatureDefinition definition, string sdkMinimumVersion)
+    {
+        ArgumentNullException.ThrowIfNull(definition);
+        ArgumentException.ThrowIfNullOrWhiteSpace(sdkMinimumVersion);
+
+        AppSdkCompatibilityManifest sdk = definition.SdkCompatibility ?? new AppSdkCompatibilityManifest(sdkMinimumVersion);
+        AppManifest feature = new()
+        {
+            SchemaVersion = 1,
+            Id = definition.Id,
+            Name = definition.Name,
+            Version = definition.Version,
+            PublisherId = definition.PublisherId,
+            Description = definition.Description,
+            Kind = AppKind.Feature,
+            SdkCompatibility = sdk,
+            Presentation = new PresentationManifest(definition.Category, definition.LaunchVisibility, [.. definition.Icons]),
+            Localizations = [.. definition.Localizations],
+            Capabilities = [.. definition.Capabilities],
+            RealNetworkPorts = definition.RealNetworkPorts.Count == 0 ? null : [.. definition.RealNetworkPorts],
+            DeclaredTopicPermissions = [.. definition.DeclaredTopicPermissions],
+            Resources = definition.Resources,
+            Settings = definition.Settings,
+            Intents = [.. definition.Intents],
+            Dependencies = [.. definition.Dependencies],
+            Assets = [.. definition.Assets],
+            // ADR 0243 §1: nothing of the feature runs; the host of its children is theirs.
+            Execution = AppExecutionHost.MainThread,
+            OomScoreAdj = definition.OomScoreAdjust
+        };
+
+        IReadOnlyList<FeatureEntryPoint> entryPoints = definition.EntryPoints
+            ?? throw new InvalidOperationException($"'{definition.GetType().FullName}' returned null EntryPoints.");
+        List<AppManifest> children = [];
+        foreach (FeatureEntryPoint entry in entryPoints)
+        {
+            ArgumentNullException.ThrowIfNull(entry);
+            Type entryPoint = entry.EntryPoint
+                ?? throw new InvalidOperationException($"Entry point '{entry.Suffix}' of '{definition.Id}' has a null EntryPoint.");
+            bool carriesRealNetwork = entry.Capabilities.Contains(AppCapabilities.NetworkRealAccess, StringComparer.Ordinal);
+            children.Add(new AppManifest
+            {
+                SchemaVersion = 1,
+                Id = $"{definition.Id}.{entry.Suffix}",
+                Parent = definition.Id,
+                Name = entry.Name,
+                Version = definition.Version,
+                PublisherId = definition.PublisherId,
+                Description = entry.Description ?? entry.Name,
+                Kind = entry.Kind,
+                EntryPoint = entry.MobileEntryPoint is null ? ToEntryPoint(entryPoint) : null,
+                Platform = entry.MobileEntryPoint is null ? null : ToPlatform(entryPoint, entry.MobileEntryPoint),
+                SdkCompatibility = sdk,
+                Presentation = new PresentationManifest(entry.Category ?? definition.Category, entry.LaunchVisibility, [.. entry.Icons]),
+                Localizations = [.. definition.Localizations],
+                Capabilities = [.. entry.Capabilities],
+                // ADR 0235 §3: the ports go with the capability that needs them.
+                RealNetworkPorts = carriesRealNetwork && definition.RealNetworkPorts.Count > 0 ? [.. definition.RealNetworkPorts] : null,
+                DeclaredTopicPermissions = [],
+                Resources = entry.Resources ?? definition.Resources,
+                Settings = entry.Settings,
+                Intents = [.. entry.Intents],
+                Dependencies = [],
+                // One package: the assets are the feature's, so a child's icon is declared.
+                Assets = [.. definition.Assets],
+                FileHandlers = [],
+                Terminal = entry.Terminal is { } terminal
+                    ? new TerminalCommandManifest(terminal.Name, [.. terminal.Aliases ?? []], terminal.Usage)
+                    : null,
+                SingleInstancePerUser = entry.SingleInstancePerUser,
+                AutoStart = entry.AutoStart,
+                ServiceStartup = entry.ServiceStartup,
+                SupportsBack = entry.SupportsBack,
+                Window = entry.Window,
+                Execution = AppExecutionHosts.Resolve(entry.Kind, entry.Execution ?? AppExecutionHost.MainThread),
+                OomScoreAdj = definition.OomScoreAdjust
+            });
+        }
+
+        return new FeatureManifests(feature, children);
     }
 
     /// <summary>

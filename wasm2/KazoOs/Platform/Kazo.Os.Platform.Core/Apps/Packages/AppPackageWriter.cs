@@ -34,29 +34,48 @@ public static class AppPackageWriter
         byte[] manifestJson,
         Func<string, byte[]> readAssembly,
         Func<string, byte[]> readAsset,
-        IReadOnlyDictionary<string, byte[]>? satellites)
+        IReadOnlyDictionary<string, byte[]>? satellites) =>
+        Write(manifestJson, readAssembly, readAsset, satellites, null);
+
+    /// <summary>Builds the package of one app or of one feature with its children (ADR 0243 §2).</summary>
+    /// <param name="manifestJson">The generated <c>manifest.json</c>, byte for byte.</param>
+    /// <param name="readAssembly">Reads one declared assembly (<c>Kazo.Webamp.dll</c>) from the build output.</param>
+    /// <param name="readAsset">Reads one declared asset (path relative to <c>wwwroot/</c>).</param>
+    /// <param name="satellites">The satellite assemblies of the app's assemblies (ADR 0222 §1), by their path under <c>lib/</c>; <see langword="null"/> for none.</param>
+    /// <param name="childManifests">
+    /// The generated <c>entrypoints/&lt;suffix&gt;.json</c> of a feature, byte for byte, by file name
+    /// (<c>cli.json</c>), in the order the feature declares them; <see langword="null"/> or empty for an app.
+    /// </param>
+    /// <returns>The package, already checked with <see cref="AppPackage.Read"/>.</returns>
+    /// <exception cref="AppPackageException">The result would be refused by the OS.</exception>
+    public static byte[] Write(
+        byte[] manifestJson,
+        Func<string, byte[]> readAssembly,
+        Func<string, byte[]> readAsset,
+        IReadOnlyDictionary<string, byte[]>? satellites,
+        IReadOnlyList<KeyValuePair<string, byte[]>>? childManifests)
     {
         ArgumentNullException.ThrowIfNull(manifestJson);
         ArgumentNullException.ThrowIfNull(readAssembly);
         ArgumentNullException.ThrowIfNull(readAsset);
-        AppManifest manifest;
-        try
+        AppManifest manifest = Parse(manifestJson, AppPackage.ManifestFileName);
+        List<AppManifest> children = [];
+        List<string> childPaths = [];
+        SortedDictionary<string, byte[]> files = new(StringComparer.Ordinal) { [AppPackage.ManifestFileName] = manifestJson };
+        foreach ((string name, byte[] bytes) in childManifests ?? [])
         {
-            manifest = AppManifestJsonSerializer.NormalizeOptionalCollections(
-                AppManifestJsonSerializer.DeserializeStrict(Encoding.UTF8.GetString(manifestJson)));
-        }
-        catch (Exception exception) when (exception is JsonException or InvalidOperationException or ArgumentException or FormatException)
-        {
-            throw new AppPackageException("apps.package.bad-manifest", $"manifest.json is not valid: {exception.Message}");
+            string path = AppPackage.EntryPointsFolder + name;
+            children.Add(Parse(bytes, path));
+            childPaths.Add(path);
+            files[path] = bytes;
         }
 
-        SortedDictionary<string, byte[]> files = new(StringComparer.Ordinal) { [AppPackage.ManifestFileName] = manifestJson };
-        foreach (string assembly in AppPackage.GetDeclaredAssemblies(manifest))
+        foreach (string assembly in AppPackage.GetDeclaredAssemblies(children.Prepend(manifest)))
         {
             files[AppPackage.LibraryFolder + assembly] = readAssembly(assembly);
         }
 
-        foreach (AssetManifest asset in manifest.Assets ?? [])
+        foreach (AssetManifest asset in children.Prepend(manifest).SelectMany(static item => item.Assets ?? []).DistinctBy(static asset => asset.Path, StringComparer.Ordinal))
         {
             files[AppPackage.AssetFolder + asset.Path] = readAsset(asset.Path);
         }
@@ -77,6 +96,17 @@ public static class AppPackageWriter
             }
 
             writer.WriteEndObject();
+            if (childPaths.Count > 0)
+            {
+                // ADR 0243 §2: the package lists the manifests of the feature's children.
+                writer.WriteStartArray("manifests");
+                foreach (string path in childPaths)
+                {
+                    writer.WriteStringValue(path);
+                }
+
+                writer.WriteEndArray();
+            }
         });
 
         using MemoryStream archive = new();
@@ -95,6 +125,19 @@ public static class AppPackageWriter
         byte[] package = archive.ToArray();
         AppPackage.Read(package);
         return package;
+    }
+
+    private static AppManifest Parse(byte[] manifestJson, string path)
+    {
+        try
+        {
+            return AppManifestJsonSerializer.NormalizeOptionalCollections(
+                AppManifestJsonSerializer.DeserializeStrict(Encoding.UTF8.GetString(manifestJson)));
+        }
+        catch (Exception exception) when (exception is JsonException or InvalidOperationException or ArgumentException or FormatException)
+        {
+            throw new AppPackageException("apps.package.bad-manifest", $"{path} is not valid: {exception.Message}");
+        }
     }
 
     /// <summary>Gets the path of a package inside the packages branch: <c>&lt;version&gt;/&lt;appId&gt;-&lt;version&gt;.kazoapp</c>.</summary>

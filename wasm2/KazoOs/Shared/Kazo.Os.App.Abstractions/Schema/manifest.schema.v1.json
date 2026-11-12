@@ -24,7 +24,8 @@
     "version": { "$ref": "#/$defs/semanticVersion" },
     "publisherId": { "type": "string", "pattern": "^[a-z][a-z0-9-]*(\\.[a-z][a-z0-9-]*)+$" },
     "description": { "type": "string", "minLength": 1 },
-    "kind": { "enum": ["window", "terminal", "service", "web"] },
+    "kind": { "enum": ["window", "terminal", "service", "web", "feature"] },
+    "parent": { "type": "string", "pattern": "^[a-z][a-z0-9-]*(\\.[a-z][a-z0-9-]*){2,}$" },
     "entryPoint": {
       "type": "object",
       "additionalProperties": false,
@@ -377,11 +378,20 @@
       "then": { "not": { "required": ["window"] } }
     },
     {
-      "description": "Exactly one of entryPoint (legacy, single-platform) or platform (MOB-003, multi-platform) must be present. See doc/en/wasm/dev/old/mobile-interface-platform-plan.md §4.3.",
-      "oneOf": [
-        { "required": ["entryPoint"], "not": { "required": ["platform"] } },
-        { "required": ["platform"], "not": { "required": ["entryPoint"] } }
-      ]
+      "description": "A feature (ADR 0243) has no entry point of its own; every other kind has exactly one of entryPoint (legacy, single-platform) or platform (MOB-003, multi-platform). See doc/en/wasm/dev/old/mobile-interface-platform-plan.md §4.3.",
+      "if": {
+        "required": ["kind"],
+        "properties": { "kind": { "const": "feature" } }
+      },
+      "then": {
+        "not": { "anyOf": [{ "required": ["entryPoint"] }, { "required": ["platform"] }, { "required": ["parent"] }] }
+      },
+      "else": {
+        "oneOf": [
+          { "required": ["entryPoint"], "not": { "required": ["platform"] } },
+          { "required": ["platform"], "not": { "required": ["entryPoint"] } }
+        ]
+      }
     }
   ],
   "$defs": {

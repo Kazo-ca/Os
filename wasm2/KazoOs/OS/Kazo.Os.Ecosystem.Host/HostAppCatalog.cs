@@ -86,9 +86,10 @@ public sealed class HostAppCatalog
         List<InstalledApp> candidates = [];
         foreach (InstalledApp app in image.Apps)
         {
-            if (Catalog.Manifests.ContainsKey(app.AppId))
+            // ADR 0243 §2: a feature's children carry ids of their own, checked like the feature's.
+            if (app.Manifests.FirstOrDefault(manifest => Catalog.Manifests.ContainsKey(manifest.Id)) is { } taken)
             {
-                skipped.Add($"apps: installed app {app.AppId} has the ID of an app built into this system, app skipped");
+                skipped.Add($"apps: installed app {taken.Id} has the ID of an app built into this system, app skipped");
             }
             else
             {
@@ -99,15 +100,19 @@ public sealed class HostAppCatalog
         while (candidates.Count > 0)
         {
             AppCatalogBuildResult result = AppCatalog.BuildFromBuiltInApplications(
-                [.. _applications, .. candidates.Select(static app => new BuiltInApplication(false, app.Manifest))]);
+                [.. _applications, .. candidates.SelectMany(static app => app.Manifests).Select(static manifest => new BuiltInApplication(false, manifest))]);
             HashSet<string> refused = new(StringComparer.Ordinal);
-            foreach (AppCatalogError error in result.Errors.Where(error => candidates.Any(app => app.AppId == error.AppId)))
+            foreach (AppCatalogError error in result.Errors)
             {
-                refused.Add(error.AppId);
-                skipped.Add($"apps: installed app {error.AppId} refused by the catalog ({error.Message}), app skipped");
+                // An error naming a child refuses the whole feature (ADR 0243 §2: one unit).
+                if (candidates.FirstOrDefault(app => app.Owns(error.AppId)) is { } owner)
+                {
+                    refused.Add(owner.AppId);
+                    skipped.Add($"apps: installed app {error.AppId} refused by the catalog ({error.Message}), app skipped");
+                }
             }
 
-            foreach (AppCatalogRejection rejection in result.Catalog?.Rejected.Where(rejection => candidates.Any(app => app.AppId == rejection.AppId)) ?? [])
+            foreach (AppCatalogRejection rejection in result.Catalog?.Rejected.Where(rejection => candidates.Any(app => app.Owns(rejection.AppId))) ?? [])
             {
                 skipped.Add($"apps: installed app {rejection.AppId} cannot run here ({rejection.Message}), app skipped");
             }

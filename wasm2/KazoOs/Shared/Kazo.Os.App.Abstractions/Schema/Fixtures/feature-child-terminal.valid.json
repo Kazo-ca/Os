@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "id": "ca.kazo.x86.cli",
+  "name": "x86",
+  "version": "1.0.0",
+  "publisherId": "ca.kazo",
+  "description": "Starts a virtual machine from the terminal (entry point of ca.kazo.x86, ADR 0243).",
+  "kind": "terminal",
+  "parent": "ca.kazo.x86",
+  "entryPoint": {
+    "assembly": "Kazo.X86",
+    "type": "Kazo.X86.X86Command"
+  },
+  "sdkCompatibility": { "minimumVersion": "3.2.0" },
+  "presentation": {
+    "category": "system",
+    "launchVisibility": "hidden",
+    "iconAssetPaths": []
+  },
+  "capabilities": ["filesystem.user-home.read"],
+  "resources": {
+    "baselineCpuWeight": 0.0,
+    "burstCpuWeight": 0.0,
+    "baselineMemoryWeight": 0.0,
+    "burstMemoryWeight": 0.0,
+    "baselineStorageIoWeight": 0.0,
+    "burstStorageIoWeight": 0.0,
+    "baselineNetworkIoWeight": 0.0,
+    "burstNetworkIoWeight": 0.0
+  },
+  "terminal": {
+    "name": "x86",
+    "aliases": [],
+    "usage": "x86 <image>"
+  },
+  "execution": "mainThread"
+}

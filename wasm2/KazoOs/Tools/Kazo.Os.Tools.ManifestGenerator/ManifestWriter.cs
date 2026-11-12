@@ -16,6 +16,9 @@ public static class ManifestWriter
     /// <summary>Directory used when the project declares several apps.</summary>
     public const string MultiDirectoryName = "manifests";
 
+    /// <summary>Directory of the children of a feature (ADR 0243 §2), next to its <c>manifest.json</c>.</summary>
+    public const string EntryPointsDirectoryName = "entrypoints";
+
     private static readonly UTF8Encoding Utf8NoBom = new(encoderShouldEmitUTF8Identifier: false);
 
     /// <summary>Writes <paramref name="manifests"/> and returns the full path of every manifest file, sorted.</summary>
@@ -33,6 +36,7 @@ public static class ManifestWriter
 
         string singlePath = Path.Combine(projectDirectory, SingleFileName);
         string multiDirectory = Path.Combine(projectDirectory, MultiDirectoryName);
+        string entryPointsDirectory = Path.Combine(projectDirectory, EntryPointsDirectoryName);
         List<string> written = [];
 
         if (manifests.Count == 1)
@@ -40,6 +44,22 @@ public static class ManifestWriter
             WriteIfChanged(singlePath, manifests[0].CanonicalJson);
             written.Add(Path.GetFullPath(singlePath));
             DeleteStale(multiDirectory, keep: []);
+            // ADR 0243 §2: one file per child of a feature, next to its manifest; the stamp names
+            // the feature only, and the aggregator and `pack` find the children beside it.
+            List<string> children = [];
+            if (manifests[0].Children.Count > 0)
+            {
+                Directory.CreateDirectory(entryPointsDirectory);
+                string parentId = manifests[0].Manifest.Id;
+                foreach (GeneratedManifest child in manifests[0].Children)
+                {
+                    string path = Path.Combine(entryPointsDirectory, child.Manifest.Id[(parentId.Length + 1)..] + ".json");
+                    WriteIfChanged(path, child.CanonicalJson);
+                    children.Add(Path.GetFullPath(path));
+                }
+            }
+
+            DeleteStale(entryPointsDirectory, keep: children);
         }
         else
         {
@@ -52,6 +72,7 @@ public static class ManifestWriter
             }
 
             DeleteStale(multiDirectory, keep: written);
+            DeleteStale(entryPointsDirectory, keep: []);
             if (File.Exists(singlePath))
             {
                 File.Delete(singlePath);

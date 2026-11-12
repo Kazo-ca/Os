@@ -69,9 +69,24 @@
                     <p class="iap-warning" role="note">@L["InstallApproval.Blocked", block.ToString()]</p>
                 }
 
+                @if (request.IsFeature && request.Operation != AppInstallApprovalOperation.Remove)
+                {
+                    <h3 class="iap-section-title">@L["InstallApproval.Feature.EntryPoints"]</h3>
+                    <p class="iap-none">@L["InstallApproval.Feature.Note"]</p>
+                    @if (request.FeatureEntryPoints.Count > 0)
+                    {
+                        <ul class="iap-capabilities">
+                            @foreach (string entryPoint in request.FeatureEntryPoints)
+                            {
+                                <li key="@entryPoint" class="iap-capability"><span class="iap-capability-title">@entryPoint</span></li>
+                            }
+                        </ul>
+                    }
+                }
+
                 @if (request.Operation != AppInstallApprovalOperation.Remove)
                 {
-                    <h3 class="iap-section-title">@L["InstallApproval.Capabilities"]</h3>
+                    <h3 class="iap-section-title">@L[request.IsFeature ? "InstallApproval.Feature.Capabilities" : "InstallApproval.Capabilities"]</h3>
                     @if (request.Capabilities.Count == 0)
                     {
                         <p class="iap-none">@L["InstallApproval.NoCapability"]</p>

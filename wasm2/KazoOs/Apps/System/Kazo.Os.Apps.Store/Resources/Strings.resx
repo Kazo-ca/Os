@@ -294,4 +294,7 @@
   <data name="Error.BadSignature" xml:space="preserve">
     <value>The signature of this package does not match its source: it was refused.</value>
   </data>
+  <data name="Error.FeatureSystemOnly" xml:space="preserve">
+    <value>A feature is installed for the whole machine, by an administrator.</value>
+  </data>
 </root>

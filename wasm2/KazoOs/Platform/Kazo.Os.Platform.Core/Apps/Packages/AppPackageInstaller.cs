@@ -305,7 +305,7 @@ public sealed partial class AppPackageInstaller
 
         AppPackageSource pinned = source.WithVersion(package.Version);
         AppBlockReason? blocked = request.Policy.FindBlock(package.Manifest);
-        bool systemWide = ChooseSystemWide(package.AppId, trust, blocked, request);
+        bool systemWide = ChooseSystemWide(package, trust, blocked, request);
         SemanticVersion? previous = Check(
             package, pinned, request.Catalog, systemWide ? request.SystemInstalled : request.PersonalInstalled, request.PackagedAppIds);
         return new AppPackagePlan(pinned, package, previous, trust != AppSourceTrust.Untrusted)
@@ -551,12 +551,24 @@ public sealed partial class AppPackageInstaller
     /// blocked app cannot be installed for oneself; <see cref="AppPackageScope.Auto"/> picks the
     /// personal install whenever it is allowed.
     /// </summary>
-    private static bool ChooseSystemWide(string appId, AppSourceTrust trust, AppBlockReason? blocked, AppPackageInstallContext request)
+    private static bool ChooseSystemWide(AppPackage package, AppSourceTrust trust, AppBlockReason? blocked, AppPackageInstallContext request)
     {
+        string appId = package.AppId;
         bool forSystem = request.SystemInstalled.Sources.ContainsKey(appId);
+        if (package.IsFeature && request.Scope == AppPackageScope.User)
+        {
+            // ADR 0243 §4: a feature acts on the whole machine (its commands, its permissions); two
+            // users with two versions would give two behaviors of the shell.
+            throw new AppPackageException(
+                "apps.package.feature-system-only",
+                $"{appId} is a feature: a feature is installed for the whole machine, by an administrator (use --system).");
+        }
+
         switch (request.Scope)
         {
             case AppPackageScope.System:
+                return true;
+            case AppPackageScope.Auto when package.IsFeature:
                 return true;
             case AppPackageScope.User when forSystem:
                 throw new AppPackageException(
@@ -637,11 +649,24 @@ public sealed partial class AppPackageInstaller
         }
 
         // A Web Worker cannot load an assembly from the file system: installed apps run on the page.
-        if (AppExecutionHosts.Of(manifest) != AppExecutionHost.MainThread)
+        // ADR 0243 §2: the children of a feature run too, so each of them must say so.
+        foreach (AppManifest runnable in package.Manifests)
         {
-            throw new AppPackageException(
-                "apps.package.worker-unsupported",
-                $"{package.AppId} runs in a Web Worker ({AppExecutionHosts.Of(manifest)}); an installed app must declare Execution = MainThread.");
+            if (AppExecutionHosts.Of(runnable) != AppExecutionHost.MainThread)
+            {
+                throw new AppPackageException(
+                    "apps.package.worker-unsupported",
+                    $"{runnable.Id} runs in a Web Worker ({AppExecutionHosts.Of(runnable)}); an installed app must declare Execution = MainThread.");
+            }
+        }
+
+        // ADR 0243 §2: a feature's children carry ids of their own; none may be taken already.
+        foreach (AppManifest child in package.Children)
+        {
+            if (catalog.Manifests.ContainsKey(child.Id) && packagedAppIds?.Contains(child.Id) != true)
+            {
+                throw new AppPackageException("apps.package.built-in", $"{child.Id}, an entry point of {package.AppId}, is an app of this OS; a package cannot replace it.");
+            }
         }
 
         IReadOnlyList<MissingRuntimeApi> missing = AppPackageApiCheck.FindMissing(package.Assemblies, _runtime);

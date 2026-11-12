@@ -313,7 +313,9 @@ validation en deux étapes :
   arrière d'une app déjà chargée dans la page attend un redémarrage de Kazo OS ;
   `kazopkg list` affiche `(restart pending)` d'ici là.
 - **Capacités dangereuses** : demandées au premier lancement, comme pour toute
-  app non système.
+  app non système ; sauf pour une fonctionnalité (ADR 0243), dont le
+  consentement à l'installation vaut approbation machine (section
+  [Fonctionnalités](#fonctionnalités-adr-0243)).
 - **Publication** : `dotnet build -c Release -t:KazoOsPack` dans le projet de
   l'app écrit le paquet et `index.json` dans `bin/kazoos-packages` (propriété
   `KazoOsPackageOutput`), à pousser sur la branche `kazoos-packages` ; le
@@ -368,6 +370,84 @@ Tests : `AppPackageGatewayTests`, `AppSourcesAndPolicyTests`,
 `TrimmedPublishTests.InstalledApps.cs` (paquet de test
 `Tests/fixtures/installed-app` installé par `kazopkg` dans la publication
 réduite, lancé par `build/publish-trimmed.sh`).
+
+## Fonctionnalités (ADR 0243)
+
+L'ADR [0243](adr/0243-feature-app-type.md) ajoute le genre d'app `Feature` :
+une fonctionnalité facultative de l'OS (à la manière de WSL), une identité,
+un paquet, un écran de permissions, installée pour toute la machine par un
+administrateur. Son modèle côté SDK (`FeatureDefinition`, `FeatureEntryPoint`,
+manifestes enfants) est dans
+[`app-model.md`](../framework/app-model.md#fonctionnalités-featuredefinition-adr-0243).
+
+- **Paquet** : `manifest.json` est le manifeste de la fonctionnalité (genre
+  `feature`, sans `entryPoint`) ; chaque enfant a son propre fichier
+  `entrypoints/<suffixe>.json`, un manifeste ordinaire de son genre avec
+  `parent: "<fonctionnalité>"`, et `kazoos-package.json` les liste dans
+  `manifests` (un paquet sans cette liste est lu par le préfixe `entrypoints/`).
+  `AppPackage.Read` valide chaque enfant comme un manifeste de son genre, puis
+  l'ensemble (`AppManifestValidator.ValidateFeature` : version, éditeur,
+  permissions dans l'ensemble, `apps.package.bad-manifest` sinon). Un paquet
+  ordinaire avec un fichier `entrypoints/` est refusé
+  (`apps.package.unexpected-file`), et un manifeste enfant à la racine aussi
+  (un enfant ne s'installe jamais seul). `AppPackageWriter.Write` et
+  `pack` écrivent les enfants trouvés dans `entrypoints/` à côté du
+  `manifest.json` du projet.
+- **Au niveau système seulement** : `kazopkg install --user` et « Installer
+  pour moi » du Store refusent une fonctionnalité
+  (`apps.package.feature-system-only`, « Une fonctionnalité s'installe pour
+  toute la machine, par un administrateur ») ; sans option, elle va pour tous
+  (`/usr/lib/kazoos/apps/<id>/<version>/`, les enfants dans
+  `entrypoints/`), avec la validation en deux étapes. La fenêtre
+  d'approbation dit que c'est une fonctionnalité, nomme ses points d'entrée et
+  montre **l'ensemble** des permissions, une fois.
+- **Consentement = approbation machine** : une fois le paquet écrit, l'OS
+  inscrit dans `/etc/kazoos/app-permissions.config` une ligne `allow` pour
+  chaque capacité dangereuse de la fonctionnalité et de chacun de ses enfants
+  (et les ports réels déclarés, ADR 0233 §4). Aucune fenêtre d'approbation
+  n'apparaît au premier lancement d'un point d'entrée ; le refus par usager
+  (ADR 0049 §9) reste possible dans Paramètres ▸ Permissions. Le retrait de la
+  fonctionnalité efface ces lignes. `kazopkg install` le dit (« approuvée pour
+  toute la machine… ») à la place de la note du premier lancement.
+- **Catalogue** : au démarrage et à chaque ajout, `InstalledAppsImage` lit les
+  enfants listés par `kazoos-package.json` de la fonctionnalité ; une
+  fonctionnalité dont un enfant manque ou est invalide est laissée de côté
+  avec un avertissement. `HostAppCatalog` ajoute la fonctionnalité et ses
+  enfants ensemble ; une erreur sur un enfant écarte toute la fonctionnalité.
+  Dans `AppCatalog`, un enfant est rattaché à sa fonctionnalité
+  (`FeatureChildren`, `GetFeatureOf`, `GetFeatureChildren`) : la
+  fonctionnalité s'active avant ses enfants, les enfants d'une fonctionnalité
+  refusée (SDK) sont refusés avec elle, et un enfant dont la fonctionnalité
+  manque ou n'en est pas une, ou qui demande une permission hors de
+  l'ensemble, fait échouer le catalogue (`catalog.feature.parent.missing`,
+  `catalog.feature.parent.kind`, `catalog.feature.capability-outside-set`).
+- **Commandes** : dans `AssignCommands`, les commandes des enfants d'une
+  fonctionnalité passent avant celles des apps ordinaires (après les apps
+  système) : `x86` ne peut pas être masquée par une app installée ensuite ;
+  deux fonctionnalités de même nom, la première activée gagne, l'autre reçoit
+  `catalog.command.duplicate`.
+- **Activation et désactivation en bloc** : `AppsConfigDocument.ExpandDependents`
+  et `ExpandDependencies` traitent `parent` comme une dépendance obligatoire ;
+  désactiver la fonctionnalité (Paramètres, `apps.config`) désactive ses
+  enfants, la réactiver les réactive. Une ligne `[uninstalled]` qui nomme un
+  enfant est ignorée avec un avertissement, et `UninstallAsync` ou
+  `ReinstallAsync` sur un enfant échoue (`apps.app.feature-child:<id>:<fonctionnalité>`) ;
+  l'état d'un enfant est celui de sa fonctionnalité.
+- **Exécution** : chaque enfant est une app à part entière (processus,
+  commande, fenêtre, service), avec son seul sous-ensemble de permissions ;
+  la fonctionnalité elle-même n'a pas de point d'entrée et `AppEntryPointDiscovery`
+  l'ignore. Un paquet dont un enfant ne tourne pas sur le fil principal est
+  refusé comme toute app installée (`apps.package.worker-unsupported`).
+- **Paramètres ▸ Applications** liste les fonctionnalités dans un groupe à
+  part, chacune avec ses points d'entrée (nom, genre, id) sans action propre ;
+  désinstaller ou réinstaller se fait sur la fonctionnalité. La fiche d'une
+  app (`KazoAppInfo.ParentId`) nomme sa fonctionnalité. La section
+  « Fonctionnalités » des Paramètres est l'ADR 0249, pas encore codée.
+
+Tests : `FeatureDefinitionTests` (App.Abstractions), `AppDefinitionInspectorTests`
+et `ManifestWriterTests` (Tools.ManifestGenerator), `AppCatalogTests`,
+`AppPackageTests`, `AppPackageWriterTests`, `InstalledAppsImageTests`,
+`AppInstallationServiceTests` et `AppPackageGatewayTests` (Platform.Core).
 
 ## Le Kazo OS Store et les catalogues
 

@@ -93,7 +93,10 @@ public sealed class KazopkgCommand(AppManifest manifest) : TerminalAppBase(manif
         }
         catch (KazoPackageException exception)
         {
-            await context.StandardError.WriteLineAsync($"kazopkg: {exception.Message}");
+            // ADR 0243 §4: the one refusal with a sentence of its own, in the user's language.
+            await context.StandardError.WriteLineAsync(exception.Code == "apps.package.feature-system-only"
+                ? text["FeatureSystemOnly"].Value
+                : $"kazopkg: {exception.Message}");
             return 1;
         }
         catch (NotSupportedException)
@@ -171,6 +174,12 @@ public sealed class KazopkgCommand(AppManifest manifest) : TerminalAppBase(manif
         {
             await context.StandardOutput.WriteLineAsync(text["ReplacedPersonalCopies", report.ReplacedPersonalCopies]);
         }
+
+        if (report.EntryPoints.Count > 0)
+        {
+            await context.StandardOutput.WriteLineAsync(text["FeatureEntryPoints", string.Join(", ", report.EntryPoints)]);
+        }
+
         if (report.Capabilities.Count > 0)
         {
             await context.StandardOutput.WriteLineAsync(text[
@@ -179,7 +188,8 @@ public sealed class KazopkgCommand(AppManifest manifest) : TerminalAppBase(manif
                     AppCapabilities.IsDangerous(capability) ? $"{capability} (!)" : capability))]);
             if (report.Capabilities.Any(AppCapabilities.IsDangerous))
             {
-                await context.StandardOutput.WriteLineAsync(text["DangerousNote"]);
+                // ADR 0243 §3: the administrator's consent to the installation approved a feature's set.
+                await context.StandardOutput.WriteLineAsync(text[report.IsFeature ? "FeatureApproved" : "DangerousNote"]);
             }
         }
 

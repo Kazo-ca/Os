@@ -103,6 +103,74 @@ public sealed class TextEditorApp : AppDefinition
 - `[AppManifest(Execution = …)]` becomes `execution`, always written, resolved
   (never `default`): see the next section.
 
+### Features: `FeatureDefinition` (ADR 0243)
+
+A **feature** (`AppKind.Feature`, JSON value `feature`) is an optional feature
+of the OS, WSL-like: one identity, one package, one permissions screen,
+installed for the whole machine by an administrator
+([ADR 0243](../dev/adr/0243-feature-app-type.md)). It has no entry point of
+its own; what runs are its **children**.
+
+| Type | Role |
+| --- | --- |
+| `FeatureDefinition` | Base class of a feature, derived from `AppDefinition`. `Kind` is always `Feature`; `EntryPoint`, `Terminal`, `FileHandlers`, `Components`, `Window`, `Urls`, `BlazorRoot`, `AutoStart`, `ServiceStartup`, `SingleInstancePerUser` and `SupportsBack` are sealed to their default (a feature registers no association, D64). `Capabilities` is the feature's **set** of permissions. Added required member: `EntryPoints`. |
+| `FeatureEntryPoint` | One child: `Suffix` (last segment of the id, `cli` for `ca.kazo.x86.cli`), `Name`, `Kind` (`Terminal`, `Window` or `Service`), `EntryPoint` (a type in the feature's assembly), and its own options: `Capabilities` (the child's **subset**, empty allowed), `Terminal`, `Window`, `MobileEntryPoint`, `Category`, `LaunchVisibility` (hidden by default), `Icons`, `AutoStart`, `ServiceStartup`, `SingleInstancePerUser`, `SupportsBack`, `Execution` (`MainThread` by default: a feature is installed from a package, and an installed app runs on the page), `Resources`, `Settings`, `Intents`. |
+| `FeatureManifests` | What `AppDefinitionMapper.ToFeatureManifests(definition)` produces: the feature's manifest (`Feature`) and one manifest per child (`Children`). `ToManifest` on a `FeatureDefinition` gives the feature's manifest alone. |
+
+Conversion rules specific to a feature:
+
+- the feature's manifest has neither `entryPoint` nor `platform`; its
+  `execution` is `mainThread` (nothing of the feature runs);
+- each child gets the id `<feature>.<suffix>`, the `parent` field (the
+  feature's id), its kind, entry point, options and permission subset, and
+  inherits the feature's version, publisher, SDK range, localizations and
+  `assets`: one package holds them all. The real-network ports
+  (`realNetworkPorts`) go to the child that asks for `network.real.access`;
+- `AppManifestValidator.Validate` applies to each child the rules of its kind,
+  and to the feature those of the `Feature` kind:
+  `manifest.feature.entryPoint.forbidden` (an entry point or platform
+  declared), `manifest.feature.parent.kind` (a feature that is the child of
+  another), `manifest.feature.parent.invalid` and `manifest.feature.parent.prefix`
+  (a malformed `parent`, or an id that is not `<parent>.<suffix>`);
+- `AppManifestValidator.ValidateFeature(feature, children)` binds the set once
+  every manifest is known (generator, package, catalog):
+  `manifest.feature.kind`, `manifest.feature.child.parent`,
+  `manifest.feature.child.kind`, `manifest.feature.child.version`,
+  `manifest.feature.child.publisher` and
+  **`manifest.feature.capability-outside-set`** (a child's permission absent
+  from the set).
+
+Example:
+
+```csharp
+[AppManifest]
+public sealed class X86Feature : FeatureDefinition
+{
+    public override string Id => "ca.kazo.x86";
+    public override string Name => "Os-x86";
+    public override string PublisherId => "ca.kazo";
+    public override IReadOnlyList<string> Capabilities =>
+        [AppCapabilities.FileSystemUserHomeRead, AppCapabilities.NetworkRealAccess];
+    public override IReadOnlyList<FeatureEntryPoint> EntryPoints =>
+    [
+        new("cli", "x86", AppKind.Terminal, typeof(X86Command))
+        {
+            Capabilities = [AppCapabilities.FileSystemUserHomeRead, AppCapabilities.NetworkRealAccess],
+            Terminal = new TerminalCommand("x86", "x86 <image>")
+        },
+        new("permission", "Network permission", AppKind.Window, typeof(NetworkPermissionWindow)),
+        new("daemon", "x86 daemon", AppKind.Service, typeof(X86Daemon)) { AutoStart = true }
+    ];
+}
+```
+
+In the OS, the catalog (`AppCatalog.FeatureChildren`, `GetFeatureOf`,
+`GetFeatureChildren`) attaches each child to its feature: the feature
+activates before its children, a child follows it when disabled or removed,
+and the command of a `Terminal` child comes before that of an ordinary app of
+the same name (after system apps). See
+[`app-installation.md`](../dev/app-installation.md#features-adr-0243).
+
 ### Intents and URI schemes (ADR 0096)
 
 - `Intents` (`AppIntentDeclarationManifest(IntentId, PayloadSchemaAssetPath)`)
@@ -216,7 +284,11 @@ How `generate` works:
 
 - one `[AppManifest]` class → `manifest.json` at the project root;
 - several classes → `manifests/<appId>.json`; switching from one form to the other
-  deletes the files of the old form.
+  deletes the files of the old form;
+- a `FeatureDefinition` (ADR 0243) → `manifest.json` for the feature and
+  `entrypoints/<suffix>.json` per child; the stamp file names only
+  `manifest.json`, aggregation and `pack` find the children next to it. A
+  feature is alone in its project (`KOSAPP0033` otherwise).
 
 The JSON is the canonical JSON of ADR 0010 (`AppManifestJsonSerializer.SerializeCanonical`),
 schema version 1, with no added field. The files are **tracked by git** (a
@@ -261,6 +333,8 @@ with the full name of the class at fault: `App.csproj : error KOSAPP0005: [Ns.My
 | `KOSAPP0025` | Removed, never reused: refused `kazoos.file-view` and `kazoos.file-dialogs` to a non-system app (ADR 0153 §4), which ADR 0156 opens to any windowed app (ADR 0158 §1). |
 | `KOSAPP0030` | SDK boundary: `ProjectReference` forbidden in an app project (ADR 0055 §2, number fixed by ADR 0059). Emitted by the target `ValidateKazoOsSdkBoundary`. See [`app-sdk.md`](app-sdk.md). |
 | `KOSAPP0031` | SDK boundary: injected service that is neither an SDK type, nor MudBlazor, nor `IJSRuntime` (ADR 0055 §3, ADR 0059). See [`app-sdk.md`](app-sdk.md). |
+| `KOSAPP0032` | Feature (ADR 0243 §1): a `FeatureDefinition` overrides `EntryPoint`; a feature has no entry point of its own, only its `EntryPoints` run. |
+| `KOSAPP0033` | Feature (ADR 0243 §5): an ordinary app declares what only a feature can (the `Feature` kind outside a `FeatureDefinition`), or a feature is declared next to other apps in one project. |
 | `KOSAPP0040` | Manifest translations (ADR 0104 §4): unreadable `Resources/AppManifest.<culture>.resx`, invalid culture name, key other than `Name`, `Description`, `Terminal.Usage` (prefixed with the id in a multi-app project), `Terminal.Usage` for an app that is not a command, or a referenced `localization/` file that is unreadable at aggregation. See [`localization.md`](localization.md). |
 | `KOSAPP0090` | Invalid tool arguments. |
 | `KOSAPP0091` | App assembly cannot be loaded. |

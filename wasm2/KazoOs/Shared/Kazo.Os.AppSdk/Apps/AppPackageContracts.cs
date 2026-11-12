@@ -160,6 +160,16 @@ public sealed record KazoPackageInstallReport(
     /// <summary>Gets the block-list rule that sent it to the system install, such as <c>blocked-categories: social</c>.</summary>
     public string? BlockedBy { get; init; }
 
+    /// <summary>
+    /// Gets whether the package is a feature (ADR 0243): installed for the whole machine, its
+    /// dangerous capabilities approved by the administrator's consent at installation, so no
+    /// approval window appears at the first launch of its entry points.
+    /// </summary>
+    public bool IsFeature { get; init; }
+
+    /// <summary>Gets the names of a feature's entry points (ADR 0243 §2); empty for an app.</summary>
+    public IReadOnlyList<string> EntryPoints { get; init; } = [];
+
     /// <summary>Gets the personal copies a system install replaced (one copy at a time, ADR 0189 §3).</summary>
     public int ReplacedPersonalCopies { get; init; }
 

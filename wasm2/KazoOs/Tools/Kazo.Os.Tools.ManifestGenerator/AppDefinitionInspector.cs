@@ -16,6 +16,16 @@ public sealed record GeneratedManifest(string DefinitionType, AppManifest Manife
     /// when set). The SDK boundary check inspects their constructors (ADR 0055 §3).
     /// </summary>
     public IReadOnlyList<Type> EntryPointTypes { get; init; } = [];
+
+    /// <summary>
+    /// Gets the children of a feature (ADR 0243 §2), one per <c>FeatureDefinition.EntryPoints</c>
+    /// entry, each with its own canonical JSON, written to <c>entrypoints/&lt;suffix&gt;.json</c>;
+    /// empty for an app.
+    /// </summary>
+    public IReadOnlyList<GeneratedManifest> Children { get; init; } = [];
+
+    /// <summary>Gets this manifest followed by its children.</summary>
+    public IEnumerable<GeneratedManifest> All => Children.Prepend(this);
 }
 
 /// <summary>Result of inspecting one app assembly: manifests when valid, diagnostics otherwise.</summary>
@@ -213,8 +223,8 @@ public static class AppDefinitionInspector
         }
 
         // Instantiate twice: pure getters give byte-identical canonical JSON (ADR 0047 §1).
-        if (!TryProduce(type, sdkMinimumVersion, subject, diagnostics, out AppDefinition? first, out AppManifest? manifest, out string? json)
-            || !TryProduce(type, sdkMinimumVersion, subject, diagnostics, out _, out _, out string? secondJson))
+        if (!TryProduce(type, sdkMinimumVersion, subject, diagnostics, out AppDefinition? first, out AppManifest? manifest, out IReadOnlyList<AppManifest> children, out string? json)
+            || !TryProduce(type, sdkMinimumVersion, subject, diagnostics, out _, out _, out _, out string? secondJson))
         {
             return null;
         }
@@ -226,10 +236,41 @@ public static class AppDefinitionInspector
             return null;
         }
 
+        // ADR 0243 §1 and §5: a feature is a FeatureDefinition, alone in its project, without an entry point of its own.
+        FeatureDefinition? feature = first as FeatureDefinition;
+        if (feature is null && manifest!.Kind == AppKind.Feature)
+        {
+            diagnostics.Add(new(GeneratorCodes.FeatureOnly, subject, "Only a class deriving from FeatureDefinition can be a feature (Kind = Feature, ADR 0243)."));
+            return null;
+        }
+
+        if (feature is not null)
+        {
+            if (type.GetProperty(nameof(AppDefinition.EntryPoint))?.DeclaringType != typeof(FeatureDefinition))
+            {
+                diagnostics.Add(new(GeneratorCodes.FeatureEntryPoint, subject, "A feature has no entry point of its own: remove EntryPoint and declare its children in EntryPoints (ADR 0243 §1)."));
+            }
+
+            if (multi)
+            {
+                diagnostics.Add(new(GeneratorCodes.FeatureOnly, subject, "A feature is one identity, one package: its project declares no other [AppManifest] class (ADR 0243 §1)."));
+            }
+
+            if (diagnostics.Count > before)
+            {
+                return null;
+            }
+
+            // The feature's own JSON is what is written; the concatenation above only checked determinism.
+            json = AppManifestJsonSerializer.SerializeCanonical(manifest!);
+        }
+
         if (assetRoot is not null && manifest!.Assets.Count > 0)
         {
             manifest = AssetHasher.Apply(manifest, assetRoot, subject, diagnostics);
             json = AppManifestJsonSerializer.SerializeCanonical(manifest);
+            // One package: the children declare the feature's assets, hashed the same way.
+            children = [.. children.Select(child => child with { Assets = manifest.Assets })];
         }
 
         // ADR 0151 §3, ADR 0159 §2: the registration method runs here, at build, never in the OS.
@@ -246,10 +287,29 @@ public static class AppDefinitionInspector
             return null;
         }
 
-        CheckEntryPointAssembly(first!.EntryPoint, "EntryPoint", assembly, subject, diagnostics);
-        if (first.MobileEntryPoint is Type mobile)
+        List<Type> entryPointTypes = [];
+        if (feature is null)
         {
-            CheckEntryPointAssembly(mobile, "MobileEntryPoint", assembly, subject, diagnostics);
+            CheckEntryPointAssembly(first!.EntryPoint, "EntryPoint", assembly, subject, diagnostics);
+            entryPointTypes.Add(first.EntryPoint);
+            if (first.MobileEntryPoint is Type mobile)
+            {
+                CheckEntryPointAssembly(mobile, "MobileEntryPoint", assembly, subject, diagnostics);
+                entryPointTypes.Add(mobile);
+            }
+        }
+        else
+        {
+            foreach (FeatureEntryPoint entry in feature.EntryPoints)
+            {
+                CheckEntryPointAssembly(entry.EntryPoint, $"EntryPoints[{entry.Suffix}].EntryPoint", assembly, subject, diagnostics);
+                entryPointTypes.Add(entry.EntryPoint);
+                if (entry.MobileEntryPoint is Type mobile)
+                {
+                    CheckEntryPointAssembly(mobile, $"EntryPoints[{entry.Suffix}].MobileEntryPoint", assembly, subject, diagnostics);
+                    entryPointTypes.Add(mobile);
+                }
+            }
         }
 
         if (diagnostics.Count > before)
@@ -257,7 +317,36 @@ public static class AppDefinitionInspector
             return null;
         }
 
-        foreach (ManifestValidationError error in AppManifestValidator.Validate(manifest!).Errors)
+        ReportValidation(AppManifestValidator.Validate(manifest!), subject, string.Empty, diagnostics);
+        foreach (AppManifest child in children)
+        {
+            ReportValidation(AppManifestValidator.Validate(child), subject, $"{child.Id}: ", diagnostics);
+        }
+
+        if (feature is not null)
+        {
+            ReportValidation(AppManifestValidator.ValidateFeature(manifest!, children), subject, string.Empty, diagnostics);
+        }
+
+        if (diagnostics.Count > before)
+        {
+            return null;
+        }
+
+        CheckEntryPointKinds([manifest!, .. children], assembly, subject, diagnostics);
+        return diagnostics.Count > before
+            ? null
+            : new GeneratedManifest(subject, manifest!, json!)
+            {
+                EntryPointTypes = entryPointTypes,
+                Children = [.. children.Select(child => new GeneratedManifest(subject, child, AppManifestJsonSerializer.SerializeCanonical(child)))]
+            };
+    }
+
+    /// <summary>Turns validator errors into diagnostics, with the codes some rules have of their own.</summary>
+    private static void ReportValidation(ManifestValidationResult validation, string subject, string prefix, List<GeneratorDiagnostic> diagnostics)
+    {
+        foreach (ManifestValidationError error in validation.Errors)
         {
             // ADR 0073, section 3: a site asking for the file system has its own code.
             string code = error.Code switch
@@ -268,21 +357,8 @@ public static class AppDefinitionInspector
                 _ when error.Code.StartsWith("manifest.context-menu.", StringComparison.Ordinal) => GeneratorCodes.InvalidContextMenu,
                 _ => GeneratorCodes.InvalidManifest
             };
-            diagnostics.Add(new(code, subject, $"{error.Path}: {error.Message} ({error.Code})"));
+            diagnostics.Add(new(code, subject, $"{prefix}{error.Path}: {error.Message} ({error.Code})"));
         }
-
-        if (diagnostics.Count > before)
-        {
-            return null;
-        }
-
-        CheckEntryPointKinds(manifest!, assembly, subject, diagnostics);
-        return diagnostics.Count > before
-            ? null
-            : new GeneratedManifest(subject, manifest!, json!)
-            {
-                EntryPointTypes = first.MobileEntryPoint is Type mobileEntryPoint ? [first.EntryPoint, mobileEntryPoint] : [first.EntryPoint]
-            };
     }
 
     private static bool TryProduce(
@@ -292,14 +368,26 @@ public static class AppDefinitionInspector
         List<GeneratorDiagnostic> diagnostics,
         out AppDefinition? definition,
         out AppManifest? manifest,
+        out IReadOnlyList<AppManifest> children,
         out string? json)
     {
         definition = null;
         manifest = null;
+        children = [];
         json = null;
         try
         {
             definition = (AppDefinition)Activator.CreateInstance(type)!;
+            if (definition is FeatureDefinition feature)
+            {
+                // ADR 0243 §2: the feature and its children, compared as one for determinism.
+                FeatureManifests produced = AppDefinitionMapper.ToFeatureManifests(feature, sdkMinimumVersion);
+                manifest = produced.Feature;
+                children = produced.Children;
+                json = string.Concat(produced.All.Select(AppManifestJsonSerializer.SerializeCanonical));
+                return true;
+            }
+
             manifest = AppDefinitionMapper.ToManifest(definition, sdkMinimumVersion);
             json = AppManifestJsonSerializer.SerializeCanonical(manifest);
             return true;
@@ -332,12 +420,14 @@ public static class AppDefinitionInspector
     /// the kind, back handler) for every platform the manifest supports, so a build only succeeds
     /// when the host will be able to activate the app.
     /// </summary>
-    private static void CheckEntryPointKinds(AppManifest manifest, Assembly assembly, string subject, List<GeneratorDiagnostic> diagnostics)
+    private static void CheckEntryPointKinds(IReadOnlyList<AppManifest> manifests, Assembly assembly, string subject, List<GeneratorDiagnostic> diagnostics)
     {
+        AppManifest manifest = manifests[0];
         // Dependencies and the SDK range are checked by the host's aggregation, where every app and the
         // host's SDK are known; here the catalog runs the app's own minimum so discovery always sees it.
+        // A feature's children (ADR 0243 §2) are in the same catalog, so each is discovered for its kind.
         AppCatalogBuildResult catalogResult = AppCatalog.Build(
-            [manifest with { Dependencies = [] }],
+            manifests.Select(static item => item with { Dependencies = [] }),
             [],
             SemanticVersion.TryParse(manifest.SdkCompatibility.MinimumVersion, out SemanticVersion minimum) ? minimum : KazoOsSdk.SemanticVersion);
         if (catalogResult.Catalog is not AppCatalog catalog)
@@ -350,12 +440,17 @@ public static class AppDefinitionInspector
             return;
         }
 
-        AppManifestPlatformResolution? platforms = AppManifestPlatformSupport.Resolve(manifest);
+        HashSet<AppPlatformId> supported = [];
+        foreach (AppManifest item in manifests)
+        {
+            supported.UnionWith(AppManifestPlatformSupport.Resolve(item)?.SupportedPlatforms ?? []);
+        }
+
         Dictionary<string, Assembly> hostAssemblies = new(StringComparer.Ordinal)
         {
             [assembly.GetName().Name + ".dll"] = assembly
         };
-        foreach (AppPlatformId platform in platforms?.SupportedPlatforms ?? [])
+        foreach (AppPlatformId platform in supported.OrderBy(static platform => platform.Value, StringComparer.Ordinal))
         {
             AppDiscoveryResult discovery = AppEntryPointDiscovery.Discover(catalog, hostAssemblies, platform);
             foreach (AppDiscoveryError error in discovery.Errors)

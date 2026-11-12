@@ -122,6 +122,26 @@
     white-space: normal;
 }
 
+/* ADR 0243 §2: a feature's entry points, listed under it, with no action of their own. */
+.feature-entry-points {
+    margin: 0 0 6px 18px;
+    padding-left: 10px;
+    border-left: 1px dashed var(--kos-border, rgba(140, 170, 190, 0.35));
+}
+
+.app-row.is-entry-point {
+    padding-top: 4px;
+    padding-bottom: 4px;
+    opacity: 0.9;
+}
+
+.app-badge-entry-point {
+    border-color: var(--kos-text-secondary, #a8bac4);
+    color: var(--kos-text-secondary, #a8bac4);
+    text-transform: none;
+    letter-spacing: 0;
+}
+
 .commands-group {
     margin-top: 12px;
 }

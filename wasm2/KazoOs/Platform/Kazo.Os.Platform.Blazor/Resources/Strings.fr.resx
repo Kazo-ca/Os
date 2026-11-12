@@ -944,4 +944,13 @@
   <data name="Mobile.ShadeWithDnd" xml:space="preserve">
     <value>{0} (Ne pas déranger est activé)</value>
   </data>
+  <data name="InstallApproval.Feature.EntryPoints" xml:space="preserve">
+    <value>Fonctionnalité : ce qu’elle apporte</value>
+  </data>
+  <data name="InstallApproval.Feature.Note" xml:space="preserve">
+    <value>Une fonctionnalité s’installe pour toute la machine. L’approuver approuve une fois pour toutes les capacités ci-dessous : aucune fenêtre ne demandera au premier lancement de ses points d’entrée.</value>
+  </data>
+  <data name="InstallApproval.Feature.Capabilities" xml:space="preserve">
+    <value>Capacités de la fonctionnalité (l’ensemble)</value>
+  </data>
 </root>

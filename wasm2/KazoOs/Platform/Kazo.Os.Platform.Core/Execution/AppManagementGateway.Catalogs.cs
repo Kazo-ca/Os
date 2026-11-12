@@ -21,6 +21,14 @@ internal sealed partial class AppManagementGateway
     /// <summary>Gets what brings installed apps into the running catalog without a restart (ADR 0214 §1).</summary>
     public Func<IInstalledAppsActivator?>? InstalledAppsActivator { get; init; }
 
+    /// <summary>
+    /// Gets the machine decisions of <c>/etc/kazoos/app-permissions.config</c> (ADR 0049 §4), where
+    /// the administrator's consent to a feature's installation is written as <c>allow</c> for its
+    /// dangerous capabilities (ADR 0243 §3); <see langword="null"/> writes none, and the first
+    /// launch of an entry point then asks as for any app.
+    /// </summary>
+    public Func<Policy.IAppPermissionStore?>? PermissionStore { get; init; }
+
     /// <inheritdoc />
     public async ValueTask<IReadOnlyList<KazoAppCatalog>> GetPackageCatalogsAsync(bool refresh = false, CancellationToken cancellationToken = default)
     {

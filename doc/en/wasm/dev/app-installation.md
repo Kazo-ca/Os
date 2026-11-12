@@ -311,7 +311,9 @@ approval:
   the app appears at once. Only the update, removal or rollback of an app already
   loaded in the page waits for a restart of Kazo OS; `kazopkg list` shows
   `(restart pending)` until then.
-- **Dangerous capabilities**: asked at first launch, as for any non-system app.
+- **Dangerous capabilities**: asked at first launch, as for any non-system app;
+  except for a feature (ADR 0243), whose installation consent is the machine
+  approval (section [Features](#features-adr-0243)).
 - **Publishing**: `dotnet build -c Release -t:KazoOsPack` in the app project
   writes the package and `index.json` to `bin/kazoos-packages` (property
   `KazoOsPackageOutput`), to push to the `kazoos-packages` branch; the
@@ -365,6 +367,78 @@ Tests: `AppPackageGatewayTests`, `AppSourcesAndPolicyTests`,
 `TrimmedPublishTests.InstalledApps.cs` (test package
 `Tests/fixtures/installed-app` installed by `kazopkg` in the trimmed publish,
 run by `build/publish-trimmed.sh`).
+
+## Features (ADR 0243)
+
+ADR [0243](adr/0243-feature-app-type.md) adds the `Feature` app kind: an
+optional feature of the OS (WSL-like), one identity, one package, one
+permissions screen, installed for the whole machine by an administrator. Its
+SDK model (`FeatureDefinition`, `FeatureEntryPoint`, child manifests) is in
+[`app-model.md`](../framework/app-model.md#features-featuredefinition-adr-0243).
+
+- **Package**: `manifest.json` is the feature's manifest (kind `feature`,
+  without `entryPoint`); each child has its own file
+  `entrypoints/<suffix>.json`, an ordinary manifest of its kind with
+  `parent: "<feature>"`, and `kazoos-package.json` lists them under
+  `manifests` (a package without that list is read by the `entrypoints/`
+  prefix). `AppPackage.Read` validates each child as a manifest of its kind,
+  then the set (`AppManifestValidator.ValidateFeature`: version, publisher,
+  permissions within the set, `apps.package.bad-manifest` otherwise). An
+  ordinary package with an `entrypoints/` file is refused
+  (`apps.package.unexpected-file`), and so is a child manifest at the root (a
+  child is never installed alone). `AppPackageWriter.Write` and `pack` write
+  the children found in `entrypoints/` next to the project's `manifest.json`.
+- **System-wide only**: `kazopkg install --user` and the Store's "Install for
+  me" refuse a feature (`apps.package.feature-system-only`, "A feature is
+  installed for the whole machine, by an administrator"); without an option
+  it goes to everyone (`/usr/lib/kazoos/apps/<id>/<version>/`, the children
+  under `entrypoints/`), with the two-step approval. The approval window says
+  it is a feature, names its entry points and shows the **set** of
+  permissions, once.
+- **Consent = machine approval**: once the package is written, the OS writes
+  into `/etc/kazoos/app-permissions.config` an `allow` line for every
+  dangerous capability of the feature and of each child (and the declared
+  real-network ports, ADR 0233 §4). No approval window appears at the first
+  launch of an entry point; a user's own refusal (ADR 0049 §9) stays
+  possible in Settings ▸ Permissions. Removing the feature erases those
+  lines. `kazopkg install` says so ("approved for the whole machine…") instead
+  of the first-launch note.
+- **Catalog**: at boot and on every addition, `InstalledAppsImage` reads the
+  children listed by the feature's `kazoos-package.json`; a feature with a
+  missing or invalid child is left out with a warning. `HostAppCatalog` adds
+  the feature and its children together; an error on a child leaves the whole
+  feature out. In `AppCatalog`, a child is attached to its feature
+  (`FeatureChildren`, `GetFeatureOf`, `GetFeatureChildren`): the feature
+  activates before its children, the children of a refused feature (SDK) are
+  refused with it, and a child whose feature is missing or is not one, or
+  that asks for a permission outside the set, fails the catalog
+  (`catalog.feature.parent.missing`, `catalog.feature.parent.kind`,
+  `catalog.feature.capability-outside-set`).
+- **Commands**: in `AssignCommands`, the commands of a feature's children
+  come before those of ordinary apps (after system apps): `x86` cannot be
+  masked by an app installed later; of two features with the same name, the
+  first activated wins, the other gets `catalog.command.duplicate`.
+- **Enabling and disabling as a block**: `AppsConfigDocument.ExpandDependents`
+  and `ExpandDependencies` treat `parent` as a required dependency; disabling
+  the feature (Settings, `apps.config`) disables its children, enabling it
+  again enables them. An `[uninstalled]` line naming a child is ignored with
+  a warning, and `UninstallAsync` or `ReinstallAsync` on a child fails
+  (`apps.app.feature-child:<id>:<feature>`); a child's state is its feature's.
+- **Execution**: each child is an app in its own right (process, command,
+  window, service), with its subset of permissions only; the feature itself
+  has no entry point and `AppEntryPointDiscovery` skips it. A package whose
+  child does not run on the main thread is refused like any installed app
+  (`apps.package.worker-unsupported`).
+- **Settings ▸ Applications** lists the features in a group of their own,
+  each with its entry points (name, kind, id) without an action of their own;
+  uninstalling or reinstalling is done on the feature. An app's page
+  (`KazoAppInfo.ParentId`) names its feature. The "Features" section of
+  Settings is ADR 0249, not coded yet.
+
+Tests: `FeatureDefinitionTests` (App.Abstractions), `AppDefinitionInspectorTests`
+and `ManifestWriterTests` (Tools.ManifestGenerator), `AppCatalogTests`,
+`AppPackageTests`, `AppPackageWriterTests`, `InstalledAppsImageTests`,
+`AppInstallationServiceTests` and `AppPackageGatewayTests` (Platform.Core).
 
 ## The Kazo OS Store and the catalogs
 

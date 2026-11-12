@@ -26,6 +26,8 @@ public sealed class AppInstallationServiceTests
     private const string Kernel = "org.test.kernel";
     private const string Unknown = "org.other-build.app";
     private const string Site = "org.test.site";
+    private const string Feature = "org.test.feature";
+    private const string FeatureCli = "org.test.feature.cli";
 
     [Fact]
     public async Task User_uninstall_writes_the_home_file_blocks_launch_stops_instances_and_keeps_data()
@@ -225,6 +227,31 @@ public sealed class AppInstallationServiceTests
     }
 
     [Fact]
+    public async Task Uninstalling_a_feature_disables_its_entry_points_and_an_entry_point_is_never_uninstalled_alone()
+    {
+        Harness harness = await Harness.CreateAsync();
+        await harness.LoginAsync(harness.Settings.Alice);
+
+        Assert.Equal([FeatureCli, Feature], harness.Installation.GetUninstallClosure(Feature));
+        Assert.Equal([FeatureCli, Feature], harness.Installation.GetUninstallClosure(FeatureCli));
+        AppInstallationResult alone = await harness.Installation.UninstallAsync(FeatureCli, AppInstallationScope.User);
+        Assert.False(alone.Success);
+        Assert.Equal($"apps.app.feature-child:{FeatureCli}:{Feature}", Assert.Single(alone.Errors));
+        Assert.True(harness.Enablement.IsEnabled(FeatureCli));
+
+        AppInstallationResult uninstall = await harness.Installation.UninstallAsync(Feature, AppInstallationScope.User);
+
+        Assert.Equal([FeatureCli, Feature], uninstall.AppIds);
+        Assert.False(harness.Enablement.IsEnabled(FeatureCli));
+        Assert.Equal(AppInstallationState.UninstalledForUser, harness.Installation.GetState(FeatureCli));
+
+        Assert.False((await harness.Installation.ReinstallAsync(FeatureCli, AppInstallationScope.User)).Success);
+        AppInstallationResult reinstall = await harness.Installation.ReinstallAsync(Feature, AppInstallationScope.User);
+        Assert.Equal([Feature, FeatureCli], reinstall.AppIds);
+        Assert.True(harness.Enablement.IsEnabled(FeatureCli));
+    }
+
+    [Fact]
     public async Task An_edit_of_apps_config_through_the_file_api_applies_without_restart()
     {
         Harness harness = await Harness.CreateAsync();
@@ -318,7 +345,10 @@ public sealed class AppInstallationServiceTests
                     Window(Viewer, "Viewer", Needs(Lib)),
                     Window(Kernel, "Kernel"),
                     Window(Term, "Term", Needs(Kernel)),
-                    Window(Site, "Site") with { Kind = AppKind.Web, Web = new WebAppManifest(["http://site.hack/"]) }
+                    Window(Site, "Site") with { Kind = AppKind.Web, Web = new WebAppManifest(["http://site.hack/"]) },
+                    // ADR 0243: a feature and its one entry point, a command.
+                    Window(Feature, "Feature") with { Kind = AppKind.Feature, EntryPoint = null },
+                    Window(FeatureCli, "x86") with { Kind = AppKind.Terminal, Parent = Feature, Terminal = new TerminalCommandManifest("x86", [], "x86") }
                 ],
                 [Term]);
             Assert.True(built.IsSuccess, string.Join(", ", built.Errors.Select(error => error.Message)));

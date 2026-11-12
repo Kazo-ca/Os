@@ -50,6 +50,13 @@ public sealed record KazoAppInfo(
     /// </summary>
     public string? IconUrl { get; init; }
 
+    /// <summary>
+    /// Gets the identifier of the feature this app is an entry point of (ADR 0243 §2), or
+    /// <see langword="null"/> for a stand-alone app or a feature itself. Settings lists an entry
+    /// point under its feature; it is installed, enabled and removed with it, never alone.
+    /// </summary>
+    public string? ParentId { get; init; }
+
     /// <summary>Builds the public description of a manifest. Called by the platform's catalog gateway.</summary>
     /// <param name="manifest">Validated manifest.</param>
     /// <param name="isSystemApp">Whether the host declares the app as a system app.</param>
@@ -72,7 +79,8 @@ public sealed record KazoAppInfo(
         {
             Urls = manifest.Web is { } web ? [.. web.Urls] : [],
             Capabilities = [.. manifest.Capabilities],
-            IconUrl = KazoAppAssets.IconUrlOf(manifest)
+            IconUrl = KazoAppAssets.IconUrlOf(manifest),
+            ParentId = manifest.Parent
         };
     }
 }

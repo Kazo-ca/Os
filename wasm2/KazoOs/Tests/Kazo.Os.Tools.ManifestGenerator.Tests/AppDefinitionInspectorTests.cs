@@ -95,6 +95,51 @@ public sealed class AppDefinitionInspectorTests
     }
 
     [Fact]
+    public void A_feature_with_three_children_produces_the_feature_manifest_and_one_manifest_per_child()
+    {
+        InspectionResult result = Inspect(typeof(ValidFeature));
+
+        Assert.True(result.IsSuccess, string.Join("; ", result.Diagnostics.Select(d => $"{d.Code} {d.Message}")));
+        GeneratedManifest feature = Assert.Single(result.Manifests);
+        Assert.Equal((AppKind.Feature, "org.kazoos.tests.feature"), (feature.Manifest.Kind, feature.Manifest.Id));
+        Assert.Null(feature.Manifest.EntryPoint);
+        Assert.Equal(AppManifestJsonSerializer.SerializeCanonical(feature.Manifest), feature.CanonicalJson);
+        Assert.Equal(
+            ["org.kazoos.tests.feature.cli", "org.kazoos.tests.feature.console", "org.kazoos.tests.feature.daemon"],
+            feature.Children.Select(child => child.Manifest.Id));
+        Assert.All(feature.Children, child => Assert.Equal("org.kazoos.tests.feature", child.Manifest.Parent));
+        Assert.Equal([AppKind.Terminal, AppKind.Terminal, AppKind.Service], feature.Children.Select(child => child.Manifest.Kind));
+        Assert.Contains("\"parent\":\"org.kazoos.tests.feature\"", feature.Children[0].CanonicalJson, StringComparison.Ordinal);
+        Assert.Equal([typeof(FixtureCommand), typeof(FixtureCommand), typeof(FixtureService)], feature.EntryPointTypes);
+    }
+
+    [Fact]
+    public void KOSAPP0032_feature_with_an_entry_point_of_its_own() =>
+        AssertSingleCode(Inspect(typeof(FeatureWithEntryPoint)), GeneratorCodes.FeatureEntryPoint, typeof(FeatureWithEntryPoint));
+
+    [Fact]
+    public void KOSAPP0033_ordinary_definition_claiming_the_feature_kind() =>
+        AssertSingleCode(Inspect(typeof(PlainFeatureKindApp)), GeneratorCodes.FeatureOnly, typeof(PlainFeatureKindApp));
+
+    [Fact]
+    public void KOSAPP0033_feature_next_to_another_app_in_one_project()
+    {
+        InspectionResult result = Inspect(typeof(ValidFeature), typeof(ValidCommandApp));
+
+        Assert.False(result.IsSuccess);
+        Assert.Contains(result.Diagnostics, diagnostic => diagnostic.Code == GeneratorCodes.FeatureOnly && diagnostic.Subject == typeof(ValidFeature).FullName);
+    }
+
+    [Fact]
+    public void KOSAPP0009_child_asking_for_a_capability_outside_the_set()
+    {
+        InspectionResult result = Inspect(typeof(FeatureChildOutsideSet));
+
+        AssertSingleCode(result, GeneratorCodes.InvalidManifest, typeof(FeatureChildOutsideSet));
+        Assert.Contains(result.Diagnostics, diagnostic => diagnostic.Message.Contains("manifest.feature.capability-outside-set", StringComparison.Ordinal));
+    }
+
+    [Fact]
     public void Assembly_scan_finds_classes_marked_with_the_attribute_only()
     {
         InspectionResult result = AppDefinitionInspector.Inspect(Fixtures);

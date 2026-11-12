@@ -71,6 +71,12 @@ public static class AppEntryPointDiscovery
 
         foreach (AppManifest manifest in catalog.Manifests.Values.OrderBy(m => m.Id, StringComparer.Ordinal))
         {
+            if (manifest.Kind == AppKind.Feature)
+            {
+                // ADR 0243 §1: a feature has no entry point; its children are resolved like any app.
+                continue;
+            }
+
             AppPlatformEntryPointResolution resolution = AppPlatformEntryPointResolver.Instance.Resolve(manifest, platform);
             if (resolution.Status == AppPlatformEntryPointResolutionStatus.PlatformUnsupported)
             {

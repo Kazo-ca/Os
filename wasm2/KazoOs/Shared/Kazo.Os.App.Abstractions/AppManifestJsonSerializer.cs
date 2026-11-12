@@ -44,6 +44,7 @@ public static class AppManifestJsonSerializer
             "publisherId",
             "description",
             "kind",
+            "parent",
             "entryPoint",
             "platform",
             "sdkCompatibility",
