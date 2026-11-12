@@ -397,10 +397,14 @@ manifestes enfants) est dans
   (un enfant ne s'installe jamais seul). `AppPackageWriter.Write` et
   `pack` écrivent les enfants trouvés dans `entrypoints/` à côté du
   `manifest.json` du projet.
-- **Au niveau système seulement** : `kazopkg install --user` et « Installer
-  pour moi » du Store refusent une fonctionnalité
-  (`apps.package.feature-system-only`, « Une fonctionnalité s'installe pour
-  toute la machine, par un administrateur ») ; sans option, elle va pour tous
+- **Au niveau système seulement** : `kazopkg install --user` refuse une
+  fonctionnalité (`apps.package.feature-system-only`, « Une fonctionnalité
+  s'installe pour toute la machine, par un administrateur »). Le `catalog.json`
+  d'un catalogue porte `kind: "feature"` sur son entrée : le Store la liste
+  avec les apps, dit sur sa fiche qu'elle s'installe pour toute la machine et
+  ne propose que « Installer pour tous » ; le refus au clic reste le filet
+  (catalogue sans `kind`, paquet qui se révèle une fonctionnalité à la
+  lecture). Sans option, elle va pour tous
   (`/usr/lib/kazoos/apps/<id>/<version>/`, les enfants dans
   `entrypoints/`), avec la validation en deux étapes. La fenêtre
   d'approbation dit que c'est une fonctionnalité, nomme ses points d'entrée et
@@ -555,7 +559,12 @@ kazopkg info org.example.notes
   (`schemaVersion` 1, branche `packages` du dépôt catalogue). Les chemins du
   fichier (paquet, icône, captures, descriptions) sont relatifs à
   `catalog.json`. L'OS le garde 5 minutes ; une app ou une version invalide est
-  ignorée avec un avertissement dans `/var/log/syslog`.
+  ignorée avec un avertissement dans `/var/log/syslog`. Chaque entrée porte un
+  `kind` : `app` quand il manque, `feature` (ADR 0243 §4 : listée avec les
+  apps, installée pour toute la machine seulement) ou `theme-pack` (ADR 0213) ;
+  une valeur que l'OS ne connaît pas est lue comme `app` avec un avertissement,
+  pour qu'un catalogue plus récent ne cache rien (le paquet dit ce qu'il est à
+  l'installation).
 - **Source écrite** : `<appId>=catalog:<nom>/<appId>@<version>` dans
   `[installed]`. La confiance est celle de `catalog:<nom>` ; le catalogue
   officiel est *vérifié*. Le SHA-256 et la taille viennent du catalogue ; les

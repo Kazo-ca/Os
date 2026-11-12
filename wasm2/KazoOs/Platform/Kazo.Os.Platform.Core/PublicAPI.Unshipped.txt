@@ -138,3 +138,6 @@ static Kazo.Os.Platform.Core.Apps.Packages.SharedLibraryChoice.operator !=(Kazo.
 static Kazo.Os.Platform.Core.Apps.Packages.SharedLibraryChoice.operator ==(Kazo.Os.Platform.Core.Apps.Packages.SharedLibraryChoice? left, Kazo.Os.Platform.Core.Apps.Packages.SharedLibraryChoice? right) -> bool
 static Kazo.Os.Platform.Core.Apps.Packages.InstalledLibraries.Format(System.Version! version) -> string!
 static Kazo.Os.Platform.Core.Apps.Packages.InstalledLibraries.NeedsRestart(System.Version! loaded, System.Version! own, System.Version! chosen) -> bool
+Kazo.Os.Platform.Core.Apps.Packages.AppCatalogEntry.IsPackage.get -> bool
+Kazo.Os.Platform.Core.Apps.Packages.AppCatalogEntryKind.Feature = 2 -> Kazo.Os.Platform.Core.Apps.Packages.AppCatalogEntryKind
+const Kazo.Os.Platform.Core.Apps.Packages.AppCatalogDocument.FeatureKind = "feature" -> string!

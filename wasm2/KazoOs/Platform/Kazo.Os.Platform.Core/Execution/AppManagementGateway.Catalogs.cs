@@ -233,6 +233,11 @@ internal sealed partial class AppManagementGateway
         })],
         trust)
     {
-        Kind = app.Kind == AppCatalogEntryKind.ThemePack ? KazoCatalogItemKind.ThemePack : KazoCatalogItemKind.App,
+        Kind = app.Kind switch
+        {
+            AppCatalogEntryKind.ThemePack => KazoCatalogItemKind.ThemePack,
+            AppCatalogEntryKind.Feature => KazoCatalogItemKind.Feature,
+            _ => KazoCatalogItemKind.App,
+        },
     };
 }
