@@ -208,7 +208,7 @@ une session cloud ne peut pas créer de dépôt).
   limites connues), captures d'écran, `THIRD-PARTY-NOTICES.md`, licences dans le paquet.
 - **README du dépôt** : il reprend la fiche du Store (texte de `store/description.fr.md` et
   `store/description.en.md`, captures), puis une section « Essayer » (place réservée pour le
-  futur lien `https://os.kazo.ca/?autolunch=<id>`) et une courte présentation de Kazo OS avec
+  futur lien `https://os.kazo.ca/?autolaunch=<id>`) et une courte présentation de Kazo OS avec
   le lien vers `Kazo-ca/Os`. Modèle : [`app-repository.md`](../framework/app-repository.md)
   (modèle `kazoos-solution`, Kazo-ca/Os#469 et Kazo-ca/Os-AppTemplate#9) ; exemple complet :
   Kazo-ca/Os-App-Word#13. Les sept dépôts Craft ont été créés depuis l'ancien modèle : leur

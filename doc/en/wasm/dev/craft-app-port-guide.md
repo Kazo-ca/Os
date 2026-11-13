@@ -202,7 +202,7 @@ PC": a cloud session cannot create a repository).
   team", known limits), screenshots, `THIRD-PARTY-NOTICES.md`, licences in the package.
 - **Repository README**: it repeats the Store listing (text of `store/description.en.md` and
   `store/description.fr.md`, screenshots), then a "Try it" section (placeholder for the future
-  link `https://os.kazo.ca/?autolunch=<id>`) and a short presentation of Kazo OS with the link
+  link `https://os.kazo.ca/?autolaunch=<id>`) and a short presentation of Kazo OS with the link
   to `Kazo-ca/Os`. Template: [`app-repository.md`](../framework/app-repository.md)
   (`kazoos-solution` template, Kazo-ca/Os#469 and Kazo-ca/Os-AppTemplate#9); full example:
   Kazo-ca/Os-App-Word#13. The seven Craft repositories were created from the old template:
