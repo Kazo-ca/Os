@@ -1,0 +1,11 @@
+{
+  "id": "165e61bc-ef82-4ef7-9763-db319f796a56",
+  "category": "improved",
+  "audience": ["user"],
+  "title": { "en": "The Kazo OS Store moves to the Start menu's Quick access", "fr": "Le Kazo OS Store passe dans l'Accès rapide du menu Démarrer" },
+  "description": {
+    "en": "The Start menu's Quick access panel now lists File Explorer, the Store, then Settings. The Store is no longer pinned by default: a profile where it was pinned by default loses that pin once, and a pin you add back stays.",
+    "fr": "Le panneau Accès rapide du menu Démarrer liste maintenant l'Explorateur de fichiers, le Store, puis les Paramètres. Le Store n'est plus épinglé par défaut : un profil où il avait été épinglé par défaut perd cette épingle une seule fois, et une épingle remise reste."
+  },
+  "links": ["doc/en/wasm/dev/app-installation.md", "doc/en/wasm/dev/adr/0268-store-in-start-menu-quick-access.md"]
+}

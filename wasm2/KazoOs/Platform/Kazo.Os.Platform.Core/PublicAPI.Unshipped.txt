@@ -1,1 +1,3 @@
 #nullable enable
+static Kazo.Os.Platform.Core.Shell.StartMenuSettingsDocuments.RetiredDefaultPinnedAppIds.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Kazo.Os.Platform.Core.Shell.StartMenuPreferencesService.StartMenuPreferencesService(Kazo.Os.Platform.Core.Settings.IOsSettingsService! settings, Kazo.Os.Simulation.Abstractions.Sessions.ISessionService! session, System.Collections.Generic.IReadOnlyList<string!>! defaultPins, System.Collections.Generic.IReadOnlyList<string!>! retiredDefaultPins) -> void
