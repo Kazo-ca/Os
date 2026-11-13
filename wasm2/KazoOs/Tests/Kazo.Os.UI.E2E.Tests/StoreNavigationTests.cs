@@ -107,13 +107,13 @@ public sealed class StoreNavigationTests(ITestOutputHelper output)
             Assert.InRange(restored, homeScroll - 2, homeScroll + 2);
             output.WriteLine($"[test] back on the home page at {restored}.");
 
-            // B7: the arrow keys move between the tabs.
+            // B7: the arrow keys move between the tabs; « Themes » is hidden without a pack (ADR 0266 §5).
             ILocator homeTab = page.GetByRole(AriaRole.Tab, new() { Name = "Home" });
             await homeTab.FocusAsync();
             await page.Keyboard.PressAsync("ArrowRight");
-            ILocator themesTab = page.GetByRole(AriaRole.Tab, new() { Name = "Themes" });
-            await Assertions.Expect(themesTab).ToHaveAttributeAsync("aria-selected", "true");
-            await Assertions.Expect(themesTab).ToBeFocusedAsync();
+            ILocator installedTab = page.GetByRole(AriaRole.Tab, new() { Name = "Installed" });
+            await Assertions.Expect(installedTab).ToHaveAttributeAsync("aria-selected", "true");
+            await Assertions.Expect(installedTab).ToBeFocusedAsync();
             await page.Keyboard.PressAsync("ArrowLeft");
             await Assertions.Expect(homeTab).ToHaveAttributeAsync("aria-selected", "true");
 

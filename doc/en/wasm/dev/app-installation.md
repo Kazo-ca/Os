@@ -400,7 +400,7 @@ kazopkg info org.example.notes
   (`apps.package.ambiguous`) and the message gives every possible
   `catalog:<name>/<appId>` to type again
   ([ADR 0215](adr/0215-hack-store-answers-notification-and-ambiguous-app-id.md) §2).
-- **The app**: home by categories, search (name, short description, tags, ID,
+- **The app**: home page (below), search (name, short description, tags, ID,
   ignoring case and accents), app page (icon, screenshots, Markdown
   description drawn without HTML, version, size, license, category, date,
   repository, capabilities, trust), Install for me or for everyone, Open,
@@ -463,6 +463,29 @@ kazopkg info org.example.notes
   font. `StoreAppPage.razor.js` only does what C# cannot see: whether the
   header is still visible (`IntersectionObserver`), the height of the
   scrolling area, and the page's address.
+- **Home page** (`store-ux` series, work item 5,
+  [ADR 0266](adr/0266-store-ux-refresh.md) §2, §3 and §5): a « Featured »
+  banner shows one app (icon, name, short description, first screenshot,
+  version, size, license, its button and « See the app's page »). The Store
+  picks it by itself: the most recently published app (`publishedAt` of the
+  version it installs) that is not installed, else the most recently
+  published one (`StoreCatalog.Featured`). Below, one grid lists every app,
+  newest first (an app without a date last, by name), with chips that filter
+  it by category (« All · 6 », then each category with its number of apps; an
+  app whose category no catalog names is under « Other »). The OS's Back
+  removes the filter; the « See all » page is gone. Each card opens the app's
+  page on a click anywhere outside its buttons, and carries one button:
+  « Install » (for me), « Open » or « Update » with its state. For an
+  administrator (`KazoUserInfo.IsAdministrator`), « Install » has a menu
+  button beside it that offers « Install for everyone » (WAI-ARIA menu
+  button: the open menu takes the focus, Escape closes it and gives it back,
+  a click beside it closes it); the OS still asks for an administrator
+  itself (ADR 0189 §4). The app's page keeps its two install buttons. A card
+  shows its trust badge only when the app is not verified; the page always
+  does. The window opens at 1100 × 720 (clamped to the screen). While the
+  catalogs load, the page draws empty cards (a word is read to screen
+  readers). The **Themes** tab is hidden while no catalog offers a pack and
+  no pack is installed; `--page=themes` then opens the home page.
 - **Messages** (`store-ux` series, work item 3, ADR 0266 §6): the result of an
   action shows at the bottom of the window and closes by itself after 6
   seconds; an error stays until it is closed (`StoreWindow.Messages.cs`).
@@ -481,7 +504,7 @@ Tests: `AppCatalogDocumentTests`, the catalog and progress tests of
 (`StoreCatalog`, `StoreMarkdown`, `StoreNavigationTests`, `StoreOperations`,
 `StoreScreenshotsTests`, `StoreAppFactsTests`, manifest) and
 `Kazo.Os.UI.E2E.Tests` (`StoreNavigationTests`, `StoreInstallProgressTests`,
-`StoreScreenshotViewerTests`, `StoreAppPageTests`).
+`StoreScreenshotViewerTests`, `StoreAppPageTests`, `StoreHomeTests`).
 
 ## Adding without a restart, signing and transactions
 
@@ -557,3 +580,4 @@ Tests: `AppPackageGatewayTests.Transactions.cs`, `AppDataGuardTests`,
 - [x] Kazo OS Store: catalogs, `kazopkg install <appId>`, updates by notification, default pin (ADR 0212, ADR 0215).
 - [x] Adding without a restart, signing, transactional install, `kazopkg rollback` and `repair`, data backup (ADR 0214).
 - [x] Install progress in the Store: `IProgress<KazoPackageInstallProgress>`, steps, queue, only the app's own buttons (ADR 0266 §7).
+- [x] Store home page: featured app, grid newest first with category chips, card button with the administrator's menu, empty cards while loading, 1100 × 720 window, Themes tab hidden without a pack (ADR 0266 §2, §3, §5).

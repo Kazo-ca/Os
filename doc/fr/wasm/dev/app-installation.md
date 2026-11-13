@@ -403,7 +403,7 @@ kazopkg info org.example.notes
   refusée (`apps.package.ambiguous`) et le message donne chaque
   `catalog:<nom>/<appId>` possible, à retaper
   ([ADR 0215](adr/0215-hack-store-answers-notification-and-ambiguous-app-id.md) §2).
-- **L'app** : accueil par catégories, recherche (nom, description courte,
+- **L'app** : accueil (ci-dessous), recherche (nom, description courte,
   étiquettes, identifiant, sans casse ni accents), fiche (icône, captures,
   description Markdown dessinée sans HTML, version, taille, licence,
   catégorie, date, dépôt, capacités, confiance), Installer pour moi ou pour
@@ -472,6 +472,32 @@ kazopkg info org.example.notes
   `StoreAppPage.razor.js` ne fait que ce que C# ne voit pas : savoir si
   l'en-tête est encore visible (`IntersectionObserver`), donner la hauteur de
   la zone qui défile, et lire l'adresse de la page.
+- **Accueil** (série `store-ux`, chantier 5,
+  [ADR 0266](adr/0266-store-ux-refresh.md) §2, §3 et §5) : un bandeau « À la
+  une » montre une app (icône, nom, description courte, première capture,
+  version, taille, licence, son bouton et « Voir la fiche »). Le Store la
+  choisit seul : l'app publiée le plus récemment (`publishedAt` de la version
+  qu'il installe) parmi celles qui ne sont pas installées, sinon la plus
+  récente de toutes (`StoreCatalog.Featured`). Dessous, une seule grille
+  liste toutes les apps, de la plus récente à la plus ancienne (une app sans
+  date en dernier, par nom), avec des pastilles qui la filtrent par catégorie
+  (« Toutes · 6 », puis chaque catégorie avec son nombre d'apps ; une app dont
+  aucun catalogue ne nomme la catégorie est sous « Autre »). Le Retour de l'OS
+  enlève le filtre ; la page « Voir tout » disparaît. Un clic n'importe où sur
+  une carte, hors de ses boutons, ouvre la fiche ; la carte porte un bouton :
+  « Installer » (pour moi), « Ouvrir » ou « Mettre à jour » avec son état.
+  Pour un administrateur (`KazoUserInfo.IsAdministrator`), « Installer » a un
+  bouton à menu à sa droite qui offre « Installer pour tout le monde » (bouton
+  de menu WAI-ARIA : le menu ouvert prend le focus, Échap le ferme et rend le
+  focus, un clic à côté le ferme) ; l'OS demande toujours lui-même un
+  administrateur (ADR 0189 §4). La fiche garde ses deux boutons
+  d'installation. Une carte ne montre le badge de confiance que si l'app
+  n'est pas vérifiée ; la fiche le montre toujours. La fenêtre s'ouvre en
+  1100 × 720 (ramenée à la taille de l'écran). Pendant le chargement des
+  catalogues, la page dessine des cartes vides (un mot est lu aux lecteurs
+  d'écran). L'onglet **Thèmes** est masqué tant qu'aucun catalogue n'offre de
+  pack et qu'aucun pack n'est installé ; `--page=themes` ouvre alors
+  l'accueil.
 - **Messages** (série `store-ux`, chantier 3, ADR 0266 §6) : le résultat d'une
   action s'affiche en bas de la fenêtre et se ferme seul après 6 secondes ;
   une erreur reste jusqu'à ce qu'on la ferme (`StoreWindow.Messages.cs`).
@@ -490,7 +516,7 @@ d'`AppPackageGatewayTests`, `HttpAppPackageDownloaderTests`,
 (`StoreCatalog`, `StoreMarkdown`, `StoreNavigationTests`, `StoreOperations`,
 `StoreScreenshotsTests`, `StoreAppFactsTests`, manifeste) et
 `Kazo.Os.UI.E2E.Tests` (`StoreNavigationTests`, `StoreInstallProgressTests`,
-`StoreScreenshotViewerTests`, `StoreAppPageTests`).
+`StoreScreenshotViewerTests`, `StoreAppPageTests`, `StoreHomeTests`).
 
 ## Ajout sans redémarrage, signature et transactions
 
@@ -567,3 +593,4 @@ Tests : `AppPackageGatewayTests.Transactions.cs`, `AppDataGuardTests`,
 - [x] Kazo OS Store : catalogues, `kazopkg install <appId>`, mises à jour par notification, épinglage par défaut (ADR 0212, ADR 0215).
 - [x] Ajout sans redémarrage, signature, installation transactionnelle, `kazopkg rollback` et `repair`, sauvegarde des données (ADR 0214).
 - [x] Progression d'installation dans le Store : `IProgress<KazoPackageInstallProgress>`, étapes, file d'attente, boutons de l'app seule (ADR 0266 §7).
+- [x] Accueil du Store : app à la une, grille de la plus récente avec pastilles de catégorie, bouton de carte avec le menu de l'administrateur, cartes vides au chargement, fenêtre 1100 × 720, onglet Thèmes masqué sans pack (ADR 0266 §2, §3, §5).

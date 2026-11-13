@@ -12,11 +12,17 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="Action.Install" xml:space="preserve">
+    <value>Installer</value>
+  </data>
   <data name="Action.InstallForEveryone" xml:space="preserve">
     <value>Installer pour tous</value>
   </data>
   <data name="Action.InstallForMe" xml:space="preserve">
     <value>Installer pour moi</value>
+  </data>
+  <data name="Action.InstallMenu" xml:space="preserve">
+    <value>Autres façons d'installer {0}</value>
   </data>
   <data name="Action.Open" xml:space="preserve">
     <value>Ouvrir</value>
@@ -32,6 +38,9 @@
   </data>
   <data name="Action.Update" xml:space="preserve">
     <value>Mettre à jour vers {0}</value>
+  </data>
+  <data name="Action.UpdateShort" xml:space="preserve">
+    <value>Mettre à jour</value>
   </data>
   <data name="Back" xml:space="preserve">
     <value>Retour</value>
@@ -117,11 +126,26 @@
   <data name="Error.Unsupported" xml:space="preserve">
     <value>Ce Kazo OS ne peut pas gérer les paquets.</value>
   </data>
+  <data name="Featured.Label" xml:space="preserve">
+    <value>À la une</value>
+  </data>
+  <data name="Featured.Meta" xml:space="preserve">
+    <value>Version {0} · {1} · Licence {2}</value>
+  </data>
+  <data name="Featured.Screenshot" xml:space="preserve">
+    <value>{0}, première capture</value>
+  </data>
+  <data name="Featured.SeeApp" xml:space="preserve">
+    <value>Voir la fiche</value>
+  </data>
+  <data name="Filters.All" xml:space="preserve">
+    <value>Toutes · {0}</value>
+  </data>
+  <data name="Filters.Label" xml:space="preserve">
+    <value>Filtrer par catégorie</value>
+  </data>
   <data name="Home.Empty" xml:space="preserve">
     <value>Aucune app n'est encore disponible dans les catalogues.</value>
-  </data>
-  <data name="Home.SeeAll" xml:space="preserve">
-    <value>Tout voir ({0})</value>
   </data>
   <data name="Installed.Empty" xml:space="preserve">
     <value>Aucune app des catalogues n'est installée.</value>
@@ -209,6 +233,9 @@
   </data>
   <data name="Search.Results.One" xml:space="preserve">
     <value>{0} résultat</value>
+  </data>
+  <data name="Sort.Newest" xml:space="preserve">
+    <value>Plus récentes d'abord</value>
   </data>
   <data name="State.InstalledForEveryone" xml:space="preserve">
     <value>Installée pour tous</value>

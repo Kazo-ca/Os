@@ -12,11 +12,17 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="Action.Install" xml:space="preserve">
+    <value>Install</value>
+  </data>
   <data name="Action.InstallForEveryone" xml:space="preserve">
     <value>Install for everyone</value>
   </data>
   <data name="Action.InstallForMe" xml:space="preserve">
     <value>Install for me</value>
+  </data>
+  <data name="Action.InstallMenu" xml:space="preserve">
+    <value>More ways to install {0}</value>
   </data>
   <data name="Action.Open" xml:space="preserve">
     <value>Open</value>
@@ -32,6 +38,9 @@
   </data>
   <data name="Action.Update" xml:space="preserve">
     <value>Update to {0}</value>
+  </data>
+  <data name="Action.UpdateShort" xml:space="preserve">
+    <value>Update</value>
   </data>
   <data name="Back" xml:space="preserve">
     <value>Back</value>
@@ -117,11 +126,26 @@
   <data name="Error.Unsupported" xml:space="preserve">
     <value>This Kazo OS cannot manage packages.</value>
   </data>
+  <data name="Featured.Label" xml:space="preserve">
+    <value>Featured</value>
+  </data>
+  <data name="Featured.Meta" xml:space="preserve">
+    <value>Version {0} · {1} · License {2}</value>
+  </data>
+  <data name="Featured.Screenshot" xml:space="preserve">
+    <value>{0}, first screenshot</value>
+  </data>
+  <data name="Featured.SeeApp" xml:space="preserve">
+    <value>See the app's page</value>
+  </data>
+  <data name="Filters.All" xml:space="preserve">
+    <value>All · {0}</value>
+  </data>
+  <data name="Filters.Label" xml:space="preserve">
+    <value>Filter by category</value>
+  </data>
   <data name="Home.Empty" xml:space="preserve">
     <value>No app is available in the catalogs yet.</value>
-  </data>
-  <data name="Home.SeeAll" xml:space="preserve">
-    <value>See all ({0})</value>
   </data>
   <data name="Installed.Empty" xml:space="preserve">
     <value>No app from the catalogs is installed.</value>
@@ -209,6 +233,9 @@
   </data>
   <data name="Search.Results.One" xml:space="preserve">
     <value>{0} result</value>
+  </data>
+  <data name="Sort.Newest" xml:space="preserve">
+    <value>Newest first</value>
   </data>
   <data name="State.InstalledForEveryone" xml:space="preserve">
     <value>Installed for everyone</value>
