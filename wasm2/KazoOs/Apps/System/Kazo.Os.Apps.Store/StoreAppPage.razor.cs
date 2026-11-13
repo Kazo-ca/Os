@@ -1,4 +1,5 @@
 using System.Globalization;
+using Kazo.Os.AppSdk;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.Localization;
 using Microsoft.JSInterop;
@@ -61,6 +62,8 @@ public sealed partial class StoreAppPage : IAsyncDisposable
     [JSInvokable]
     public void OnHeadVisibilityChanged(bool visible)
     {
+        // A JavaScript callback runs outside the app's ambient frame (ADR 0043, 0067): enter it first.
+        using IDisposable? scope = AppContext is { } context ? KazoExecutionContext.Enter(context) : null;
         if (visible == _headVisible)
         {
             return;
