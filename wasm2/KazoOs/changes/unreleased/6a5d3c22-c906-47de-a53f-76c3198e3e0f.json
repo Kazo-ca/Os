@@ -10,5 +10,5 @@
     "en": "With a link ending in ?autolaunch=<app id>, the guest gets the app from the official Kazo OS Store, installed for them only, and it opens. A progress window shows the app and offers Cancel; if anything fails, a notification explains why and opens the Store at the app's page.",
     "fr": "Avec un lien qui se termine par ?autolaunch=<id de l'app>, l'invité reçoit l'app du Kazo OS Store officiel, installée pour lui seul, et elle s'ouvre. Une fenêtre de progression montre l'app et propose Annuler ; en cas d'échec, une notification dit pourquoi et ouvre le Store à la page de l'app."
   },
-  "links": ["doc/en/wasm/dev/adr/0246-direct-app-launch-link.md"]
+  "links": ["doc/en/wasm/dev/adr/0258-direct-app-launch-link.md"]
 }

@@ -13,11 +13,11 @@ namespace Kazo.Os.Platform.Core.AppLinks;
 
 /// <summary>
 /// Installs and launches the app of a direct link <c>?autolaunch=&lt;appId&gt;</c> for the session
-/// user (ADR 0246 §3, §5, §6). The host calls it once the guest session is open.
+/// user (ADR 0258 §3, §5, §6). The host calls it once the guest session is open.
 /// </summary>
 /// <remarks>
 /// <para>
-/// Safety (ADR 0246 §1, §3): the app is looked up <b>only</b> in the official catalog
+/// Safety (ADR 0258 §1, §3): the app is looked up <b>only</b> in the official catalog
 /// (<c>catalog:official/&lt;appId&gt;</c>) and installed for the session user. The install goes through
 /// the same management gateway as the Store and <c>kazopkg</c>, so the catalog and author signatures,
 /// the block list and the minimum OS version are checked as for any install; the dangerous
@@ -167,7 +167,7 @@ public sealed class AppLaunchLinkRunner : IAppLaunchLinkRunner
         Write(DiagnosticSeverity.Information, "app-link.launched", appId);
     }
 
-    /// <summary>ADR 0246 §3: an app the official catalog already installed is launched without reinstalling, even offline.</summary>
+    /// <summary>ADR 0258 §3: an app the official catalog already installed is launched without reinstalling, even offline.</summary>
     private static async Task<bool> IsInstalledFromOfficialAsync(
         IAppManagementGateway packages, string appId, string source, CancellationToken cancellationToken)
     {
@@ -177,7 +177,7 @@ public sealed class AppLaunchLinkRunner : IAppLaunchLinkRunner
             && string.Equals(package.Source, source, StringComparison.OrdinalIgnoreCase));
     }
 
-    /// <summary>ADR 0246 §3.2: only the official catalog is read; another catalog listing the app does not count.</summary>
+    /// <summary>ADR 0258 §3.2: only the official catalog is read; another catalog listing the app does not count.</summary>
     private async Task<KazoCatalogApp> FindInOfficialCatalogAsync(
         IAppManagementGateway packages, string appId, CancellationToken cancellationToken)
     {
@@ -194,7 +194,7 @@ public sealed class AppLaunchLinkRunner : IAppLaunchLinkRunner
             ?? throw new AppLaunchLinkException("not-offered", Text["AppLink.Error.NotOffered", appId]);
     }
 
-    /// <summary>ADR 0246 §3.3, Q4: for the session user only, so no administrator window for a trusted catalog.</summary>
+    /// <summary>ADR 0258 §3.3, Q4: for the session user only, so no administrator window for a trusted catalog.</summary>
     private async Task<KazoPackageInstallReport> InstallAsync(
         IAppManagementGateway packages, string source, CancellationToken cancellationToken)
     {
@@ -212,7 +212,7 @@ public sealed class AppLaunchLinkRunner : IAppLaunchLinkRunner
         }
     }
 
-    /// <summary>The usual messages of the Store for a refused package (ADR 0246 §5).</summary>
+    /// <summary>The usual messages of the Store for a refused package (ADR 0258 §5).</summary>
     private string Describe(KazoPackageException exception) => exception.Code switch
     {
         "apps.package.not-in-catalog" => Text["AppLink.Error.NotOffered", exception.Message],

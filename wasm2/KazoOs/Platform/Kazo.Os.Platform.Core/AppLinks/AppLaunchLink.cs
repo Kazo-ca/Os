@@ -3,7 +3,7 @@ using System.Text;
 namespace Kazo.Os.Platform.Core.AppLinks;
 
 /// <summary>
-/// A direct app launch link of ADR 0246: <c>https://&lt;OS address&gt;/?autolaunch=&lt;appId&gt;</c>.
+/// A direct app launch link of ADR 0258: <c>https://&lt;OS address&gt;/?autolaunch=&lt;appId&gt;</c>.
 /// The host reads it once at boot, keeps it in memory only, and removes it from the address.
 /// </summary>
 /// <remarks>
@@ -13,7 +13,7 @@ namespace Kazo.Os.Platform.Core.AppLinks;
 /// </remarks>
 public sealed record AppLaunchLink
 {
-    /// <summary>The query parameter that names the app (ADR 0246 question Q1: <c>autolaunch</c>).</summary>
+    /// <summary>The query parameter that names the app (ADR 0258 question Q1: <c>autolaunch</c>).</summary>
     public const string ParameterName = "autolaunch";
 
     /// <summary>The longest app id a link may carry.</summary>
@@ -41,7 +41,7 @@ public sealed record AppLaunchLink
                 continue;
             }
 
-            // ADR 0246 §1: if the parameter is repeated, only the first one counts.
+            // ADR 0258 §1: if the parameter is repeated, only the first one counts.
             if (!IsValidAppId(value))
             {
                 return false;
@@ -56,7 +56,7 @@ public sealed record AppLaunchLink
 
     /// <summary>
     /// Returns the address without any <c>autolaunch</c> parameter, every other parameter and the
-    /// fragment kept as written, so reloading the page never runs the link again (ADR 0246 §2).
+    /// fragment kept as written, so reloading the page never runs the link again (ADR 0258 §2).
     /// </summary>
     /// <param name="address">The page address.</param>
     /// <returns>The address to show instead; the same string when it carries no such parameter.</returns>
@@ -90,7 +90,7 @@ public sealed record AppLaunchLink
     }
 
     /// <summary>
-    /// Checks an app id against ADR 0246 §1: reverse-domain notation (<c>a.b[.c…]</c>, no empty
+    /// Checks an app id against ADR 0258 §1: reverse-domain notation (<c>a.b[.c…]</c>, no empty
     /// segment), at most <see cref="MaxAppIdLength"/> characters, only <c>a-z</c>, <c>0-9</c>,
     /// <c>.</c> and <c>-</c>.
     /// </summary>

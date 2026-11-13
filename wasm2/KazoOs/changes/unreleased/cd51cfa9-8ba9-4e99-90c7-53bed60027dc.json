@@ -13,6 +13,6 @@
     "fr": "Une adresse comme https://os.kazo.ca/?autolaunch=ca.kazo.word est lue une fois au démarrage, puis retirée de la barre d'adresse. Sans compte, Kazo OS démarre en invité sans clic (l'invité continue de la même façon à la visite suivante) ; avec un compte, l'écran de connexion dit quelle app s'ouvrira, et le Kazo OS Store s'ouvre à sa page après la connexion."
   },
   "links": [
-    "doc/en/wasm/dev/adr/0246-direct-app-launch-link.md"
+    "doc/en/wasm/dev/adr/0258-direct-app-launch-link.md"
   ]
 }

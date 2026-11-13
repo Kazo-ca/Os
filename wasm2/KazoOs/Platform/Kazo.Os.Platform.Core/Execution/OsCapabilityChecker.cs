@@ -5,7 +5,7 @@ using Kazo.Os.Simulation.Abstractions.Gateways;
 namespace Kazo.Os.Platform.Core.Execution;
 
 /// <summary>
-/// The capabilities of a gateway the OS uses itself rather than an app (ADR 0246 §3): exactly the
+/// The capabilities of a gateway the OS uses itself rather than an app (ADR 0258 §3): exactly the
 /// ones listed, whatever the authority asked; any other is refused as missing.
 /// </summary>
 /// <param name="granted">The capabilities it holds.</param>

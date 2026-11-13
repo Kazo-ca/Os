@@ -1,6 +1,6 @@
 namespace Kazo.Os.Platform.Core.AppLinks;
 
-/// <summary>Step of a direct-link launch that the progress window shows (ADR 0246 §3).</summary>
+/// <summary>Step of a direct-link launch that the progress window shows (ADR 0258 §3).</summary>
 public enum AppLaunchLinkStep
 {
     /// <summary>The app is looked up in the official catalog.</summary>
@@ -14,7 +14,7 @@ public enum AppLaunchLinkStep
 }
 
 /// <summary>
-/// The direct-link launch in progress, as the OS's progress window shows it (ADR 0246 §3): the app,
+/// The direct-link launch in progress, as the OS's progress window shows it (ADR 0258 §3): the app,
 /// what the OS is doing, and the « Annuler » button. Immutable: the runner replaces it at each step.
 /// </summary>
 /// <param name="AppId">The app of the link.</param>

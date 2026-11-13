@@ -1078,7 +1078,7 @@ public static class EcosystemServiceCollectionExtensions
             provider.GetRequiredService<INotificationQueue>(),
             () => provider.GetRequiredService<ISessionService>().CurrentPrincipal,
             () => provider.GetRequiredService<Kazo.Os.Platform.Core.Globalization.SessionLocaleService>().Culture));
-        // ADR 0246 §3: the direct link ?autolaunch=<appId> installs the app of the official
+        // ADR 0258 §3: the direct link ?autolaunch=<appId> installs the app of the official
         // catalog for the guest and launches it; the host calls it once the guest session is open,
         // the desktop shows its progress window. The install goes through the same management
         // gateway as the Store (signatures, block list, minimum OS version).
