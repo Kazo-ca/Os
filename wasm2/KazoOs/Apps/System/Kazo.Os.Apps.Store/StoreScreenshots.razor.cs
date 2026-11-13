@@ -1,7 +1,9 @@
+using Kazo.Os.AppSdk;
 using Kazo.Os.AppSdk.Globalization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.Localization;
+using Microsoft.JSInterop;
 
 namespace Kazo.Os.Apps.Store;
 
@@ -16,15 +18,31 @@ namespace Kazo.Os.Apps.Store;
 /// hide the taskbar and the other windows for a screenshot.
 /// </para>
 /// <para>
-/// No JavaScript: the keys, the swipe and the focus go through Blazor's own events and
+/// The keys, the swipe and the focus go through Blazor's own events and
 /// <c>ElementReference.FocusAsync()</c>. The state itself is
 /// <see cref="StoreScreenshotViewerState"/>, which the tests drive without a browser.
 /// </para>
+/// <para>
+/// On a phone the portrait screenshots come first (ADR 0266 §8, <see cref="StoreScreenshotOrder"/>).
+/// The catalog does not give their sizes: <c>StoreScreenshots.razor.js</c> reads them, and tells
+/// whether the Store is as narrow as a phone, through <see cref="OnScreenshotsMeasured"/>. Without
+/// JavaScript (a test renderer) the catalog's order is kept. The strip and the viewer use the same
+/// order (<see cref="Shown"/>), so « 2 / 3 » is the second thumbnail.
+/// </para>
 /// </remarks>
-public sealed partial class StoreScreenshots : IDisposable
+public sealed partial class StoreScreenshots : IAsyncDisposable
 {
     private StoreScreenshotViewerState _state = StoreScreenshotViewerState.Closed(0);
     private IReadOnlyList<string> _shownUris = [];
+    private StoreScreenshotSize?[] _sizes = [];
+    private int[] _order = [];
+    private IReadOnlyList<string> _shown = [];
+    private bool _narrow;
+    private ElementReference _strip;
+    private IJSObjectReference? _module;
+    private IJSObjectReference? _watch;
+    private DotNetObjectReference<StoreScreenshots>? _self;
+    private bool _disposed;
     private ElementReference[] _thumbnails = [];
     private ElementReference _dialog;
     private ElementReference _closeButton;
@@ -61,6 +79,13 @@ public sealed partial class StoreScreenshots : IDisposable
     /// </summary>
     [Parameter]
     public EventCallback<bool> ViewerOpenChanged { get; set; }
+
+    /// <summary>Gets or sets the browser; <see langword="null"/> when the component is built by hand (the tests).</summary>
+    [Inject]
+    private IJSRuntime? JavaScript { get; set; }
+
+    /// <summary>Gets the screenshots' addresses in the order of the strip and of the viewer.</summary>
+    internal IReadOnlyList<string> Shown => _shown;
 
     /// <summary>The Store's texts in the language of the Store process (ADR 0104).</summary>
     private IStringLocalizer<Strings> Text => _text ??= AppContext.GetLocalizer<Strings>();
@@ -143,10 +168,95 @@ public sealed partial class StoreScreenshots : IDisposable
     }
 
     /// <summary>
+    /// The browser read the screenshots' sizes, or the Store crossed the phone width: on a phone the
+    /// portrait screenshots move first. An open viewer keeps showing the same screenshot.
+    /// </summary>
+    /// <param name="uris">The addresses measured, in the catalog's order.</param>
+    /// <param name="widths">Their widths; 0 when an image could not be read.</param>
+    /// <param name="heights">Their heights; 0 when an image could not be read.</param>
+    /// <param name="narrow">Whether the Store is as narrow as a phone (640 px or less).</param>
+    [JSInvokable]
+    public void OnScreenshotsMeasured(string[] uris, double[] widths, double[] heights, bool narrow)
+    {
+        // A JavaScript callback runs outside the app's ambient frame (ADR 0043, 0067): enter it first.
+        using IDisposable? scope = AppContext is { } context ? KazoExecutionContext.Enter(context) : null;
+        if (_disposed)
+        {
+            return;
+        }
+
+        ApplyMeasure(uris, widths, heights, narrow);
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    /// <summary>Takes the sizes and the width the browser reported (also used by the tests).</summary>
+    internal void ApplyMeasure(IReadOnlyList<string>? uris, IReadOnlyList<double>? widths, IReadOnlyList<double>? heights, bool narrow)
+    {
+        _narrow = narrow;
+
+        // Sizes measured for another list (a catalog refresh changed it meanwhile) are dropped: the
+        // new list is being measured.
+        if (uris is not null && widths is not null && heights is not null
+            && uris.Count == widths.Count && uris.Count == heights.Count
+            && uris.SequenceEqual(_shownUris, StringComparer.Ordinal))
+        {
+            _sizes = [.. Enumerable.Range(0, uris.Count).Select(index => (StoreScreenshotSize?)new StoreScreenshotSize(widths[index], heights[index]))];
+        }
+
+        Arrange();
+    }
+
+    /// <summary>
     /// The app's page went away (Back, another app): the viewer counts as closed, so the Store
     /// window, which may still hold this component, never asks it to close again.
     /// </summary>
-    public void Dispose() => _state = _state.Close();
+    public async ValueTask DisposeAsync()
+    {
+        _state = _state.Close();
+        _disposed = true;
+        try
+        {
+            if (_watch is not null)
+            {
+                await _watch.InvokeVoidAsync("dispose");
+                await _watch.DisposeAsync();
+            }
+
+            if (_module is not null)
+            {
+                await _module.DisposeAsync();
+            }
+        }
+        catch (Exception exception) when (exception is JSDisconnectedException or JSException or TaskCanceledException or ObjectDisposedException)
+        {
+            // The page is going away with the window.
+        }
+
+        _self?.Dispose();
+    }
+
+    /// <summary>Whether the screenshot at this place of the strip is taken in portrait.</summary>
+    private bool IsPortraitAt(int position) =>
+        position >= 0 && position < _order.Length && StoreScreenshotOrder.IsPortrait(_sizes[_order[position]]);
+
+    /// <summary>Puts the strip in the order of <see cref="StoreScreenshotOrder"/>, keeping the viewer on its screenshot.</summary>
+    private void Arrange()
+    {
+        int[] order = StoreScreenshotOrder.Arrange(_sizes, portraitFirst: _narrow);
+        if (order.SequenceEqual(_order))
+        {
+            return;
+        }
+
+        int? shownIndex = _state.Index is int position && position < _order.Length ? _order[position] : null;
+        int returnIndex = _returnIndex >= 0 && _returnIndex < _order.Length ? _order[_returnIndex] : -1;
+        _order = order;
+        _shown = [.. order.Select(index => _shownUris[index])];
+        _state = shownIndex is int index
+            ? StoreScreenshotViewerState.Closed(order.Length).Open(Array.IndexOf(order, index))
+            : StoreScreenshotViewerState.Closed(order.Length);
+        _returnIndex = returnIndex >= 0 ? Array.IndexOf(order, returnIndex) : 0;
+    }
 
     /// <inheritdoc />
     protected override void OnParametersSet()
@@ -159,12 +269,23 @@ public sealed partial class StoreScreenshots : IDisposable
             _state = StoreScreenshotViewerState.Closed(Uris.Count);
             _thumbnails = new ElementReference[Uris.Count];
             _pendingFocus = FocusTarget.None;
+
+            // The new list keeps the catalog's order until its sizes are read.
+            _sizes = new StoreScreenshotSize?[Uris.Count];
+            _order = [.. Enumerable.Range(0, Uris.Count)];
+            _shown = _shownUris;
+            _ = MeasureAsync();
         }
     }
 
     /// <inheritdoc />
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        if (firstRender)
+        {
+            await WatchAsync();
+        }
+
         FocusTarget target = _pendingFocus;
         _pendingFocus = FocusTarget.None;
         ElementReference? element = target switch
@@ -187,6 +308,45 @@ public sealed partial class StoreScreenshots : IDisposable
                 // The element left the page between the render and this call (the user went back
                 // to the list): there is nothing left to focus.
             }
+        }
+    }
+
+    /// <summary>Starts the browser-side helper that reads the sizes and the Store's width.</summary>
+    private async Task WatchAsync()
+    {
+        if (_disposed || JavaScript is null)
+        {
+            return;
+        }
+
+        try
+        {
+            // The path is written out: the SDK boundary test (ADR 0055 §3) reads it in the source.
+            _module = await JavaScript.InvokeAsync<IJSObjectReference>("import", "./_content/Kazo.Os.Apps.Store/StoreScreenshots.razor.js");
+            _self = DotNetObjectReference.Create(this);
+            _watch = await _module.InvokeAsync<IJSObjectReference>("watch", _strip, _self, _shownUris);
+        }
+        catch (Exception exception) when (exception is JSException or InvalidOperationException or NotSupportedException or TaskCanceledException)
+        {
+            // No JavaScript (a test renderer) or the window is closing: the catalog's order stays.
+        }
+    }
+
+    /// <summary>Asks the browser-side helper to read the sizes of a new list.</summary>
+    private async Task MeasureAsync()
+    {
+        if (_watch is null || _disposed)
+        {
+            return;
+        }
+
+        try
+        {
+            await _watch.InvokeVoidAsync("measure", _shownUris);
+        }
+        catch (Exception exception) when (exception is JSException or JSDisconnectedException or InvalidOperationException or TaskCanceledException or ObjectDisposedException)
+        {
+            // The window is closing: nothing left to order.
         }
     }
 

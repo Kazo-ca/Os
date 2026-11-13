@@ -6,25 +6,27 @@
     buttons, ← and →, Home and End, or a swipe move between the screenshots; Escape, the close button,
     a click beside the image or the OS's Back closes it, and the focus goes back to the thumbnail.
 *@
-<ul class="store-screenshots" aria-label="@Text["Detail.Screenshots"]">
-    @for (int i = 0; i < Uris.Count; i++)
+@* ADR 0266 §8: on a phone the portrait screenshots come first (StoreScreenshotOrder); Shown is the
+   strip's order, and the viewer moves in that same order. *@
+<ul class="store-screenshots" aria-label="@Text["Detail.Screenshots"]" @ref="_strip">
+    @for (int i = 0; i < Shown.Count; i++)
     {
         int index = i;
-        <li>
+        <li class="@(IsPortraitAt(index) ? "is-portrait" : null)">
             <button type="button"
                     class="store-screenshot-thumb"
-                    aria-label="@Text["Viewer.OpenScreenshot", index + 1, Uris.Count, AppName]"
+                    aria-label="@Text["Viewer.OpenScreenshot", index + 1, Shown.Count, AppName]"
                     aria-haspopup="dialog"
                     data-index="@index"
                     @ref="_thumbnails[index]"
                     @onclick="() => OpenAsync(index)">
-                <img src="@Uris[index]" alt="" loading="lazy" draggable="false" />
+                <img src="@Shown[index]" alt="" loading="lazy" draggable="false" />
             </button>
         </li>
     }
 </ul>
 
-@if (_state.Index is int current && current < Uris.Count)
+@if (_state.Index is int current && current < Shown.Count)
 {
     <div class="store-viewer"
          role="dialog"
@@ -35,7 +37,7 @@
          @onkeydown="OnKeyDownAsync">
         <span class="store-viewer-edge" tabindex="0" aria-hidden="true" @onfocus="FocusLastAsync"></span>
         <div class="store-viewer-bar">
-            <span class="store-viewer-position" aria-live="polite">@Text["Viewer.Position", current + 1, Uris.Count]</span>
+            <span class="store-viewer-position" aria-live="polite">@Text["Viewer.Position", current + 1, Shown.Count]</span>
             <button type="button"
                     class="store-viewer-button store-viewer-close"
                     aria-label="@Text["Viewer.Close"]"
@@ -60,8 +62,8 @@
                 <KazoIcon Library="IconLibrary.Lucide" Name="chevron-left" Size="28" Title="" />
             </button>
             <img class="store-viewer-image"
-                 src="@Uris[current]"
-                 alt="@Text["Viewer.Screenshot", current + 1, Uris.Count, AppName]"
+                 src="@Shown[current]"
+                 alt="@Text["Viewer.Screenshot", current + 1, Shown.Count, AppName]"
                  draggable="false"
                  @onclick:stopPropagation="true" />
             <button type="button"

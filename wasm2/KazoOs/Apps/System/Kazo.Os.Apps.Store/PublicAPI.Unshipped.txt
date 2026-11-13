@@ -2,7 +2,8 @@
 Kazo.Os.Apps.Store.StoreScreenshots
 Kazo.Os.Apps.Store.StoreScreenshots.AppName.get -> string!
 Kazo.Os.Apps.Store.StoreScreenshots.AppName.set -> void
-Kazo.Os.Apps.Store.StoreScreenshots.Dispose() -> void
+Kazo.Os.Apps.Store.StoreScreenshots.DisposeAsync() -> System.Threading.Tasks.ValueTask
+Kazo.Os.Apps.Store.StoreScreenshots.OnScreenshotsMeasured(string![]! uris, double[]! widths, double[]! heights, bool narrow) -> void
 Kazo.Os.Apps.Store.StoreScreenshots.StoreScreenshots() -> void
 Kazo.Os.Apps.Store.StoreScreenshots.Uris.get -> System.Collections.Generic.IReadOnlyList<string!>!
 Kazo.Os.Apps.Store.StoreScreenshots.Uris.set -> void

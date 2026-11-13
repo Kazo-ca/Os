@@ -433,7 +433,7 @@ kazopkg info org.example.notes
   plus, par son nom et son identifiant) ; Entrée ouvre le premier résultat.
   Les onglets suivent le modèle WAI-ARIA (← → Début Fin, `tabpanel`), le focus
   du clavier est visible sur chaque contrôle, et sous 640 px l'en-tête tient
-  sur deux lignes avec des cibles d'au moins 40 px. La description ne
+  sur deux lignes (cibles portées à 44 px par le chantier 6, ci-dessous). La description ne
   répète pas un premier titre égal au nom de l'app, et une ligne qui suit un
   élément de liste reste dans cet élément.
 - **Captures de la fiche** (série `store-ux`, chantier 2) : chaque capture est
@@ -445,7 +445,9 @@ kazopkg info org.example.notes
   focus revient à la vignette de la dernière capture vue. Le catalogue ne donne
   pas la taille des captures : la vignette a une hauteur fixe (240 px, 320 px
   dans une fenêtre large, 200 px sur téléphone) et une largeur en 16:10 tant
-  que l'image n'est pas arrivée, pour que la page ne saute pas.
+  que l'image n'est pas arrivée, pour que la page ne saute pas. Sur téléphone,
+  les captures en portrait passent en premier (chantier 6, ci-dessous) ; la
+  visionneuse suit l'ordre des vignettes.
 - **Fiche d'une app** (série `store-ux`, chantier 3,
   [ADR 0266](adr/0266-store-ux-refresh.md) §4 et §6) : la fiche est un
   composant à part, `StoreAppPage.razor`, qui lit l'app et lance les actions
@@ -501,6 +503,28 @@ kazopkg info org.example.notes
 - **Messages** (série `store-ux`, chantier 3, ADR 0266 §6) : le résultat d'une
   action s'affiche en bas de la fenêtre et se ferme seul après 6 secondes ;
   une erreur reste jusqu'à ce qu'on la ferme (`StoreWindow.Messages.cs`).
+- **Téléphone** (série `store-ux`, chantier 6,
+  [ADR 0266](adr/0266-store-ux-refresh.md) §8) : quand le Store fait 640 px de
+  large ou moins (un téléphone, ou une fenêtre étroite), une requête de
+  conteneur change la mise en page sans changer le balisage.
+  - L'en-tête tient sur deux lignes : la marque et Actualiser, puis la
+    recherche.
+  - Les onglets passent dans une barre en bas de la fenêtre (60 px), une icône
+    au-dessus de chaque libellé, le nombre de mises à jour sur le coin de
+    l'icône. Ce sont les mêmes boutons du même `tablist` : l'ordre du clavier
+    et les touches ne changent pas. La zone défilante s'arrête au-dessus de la
+    barre, et les messages flottent au-dessus d'elle.
+  - Chaque cible tactile fait au moins 44 × 44 px (recherche, Actualiser,
+    onglets, pastilles, boutons et menu « Installer », nom d'une carte, liens
+    de la fiche, boutons de la visionneuse). Un lien dans le texte d'une
+    description en est exempté, comme le permet le WCAG 2.5.8.
+  - Les captures en portrait passent avant celles en paysage, chaque groupe
+    dans l'ordre du catalogue (`StoreScreenshotOrder`). Le catalogue ne
+    change pas : `StoreScreenshots.razor.js` lit la taille de chaque capture
+    dans le navigateur et dit au composant si le Store est plus étroit que
+    640 px ; une capture dont la taille n'est pas connue compte comme paysage.
+    Une capture en portrait s'affiche haute (340 px). Sans JavaScript, l'ordre
+    du catalogue reste.
 - **Mises à jour** : `AppUpdateMonitor` vérifie à l'ouverture de la session
   puis toutes les `[updates] interval-hours` heures et envoie une notification
   qui ouvre l'onglet Installées. Chaque vérification télécharge aussi tous
@@ -514,9 +538,10 @@ Tests : `AppCatalogDocumentTests`, les tests de catalogue et de progression
 d'`AppPackageGatewayTests`, `HttpAppPackageDownloaderTests`,
 `StartMenuPreferencesServiceTests` (Platform.Core), `Kazo.Os.Apps.Store.Tests`
 (`StoreCatalog`, `StoreMarkdown`, `StoreNavigationTests`, `StoreOperations`,
-`StoreScreenshotsTests`, `StoreAppFactsTests`, manifeste) et
+`StoreScreenshotsTests`, `StoreScreenshotOrderTests`, `StoreAppFactsTests`, manifeste) et
 `Kazo.Os.UI.E2E.Tests` (`StoreNavigationTests`, `StoreInstallProgressTests`,
-`StoreScreenshotViewerTests`, `StoreAppPageTests`, `StoreHomeTests`).
+`StoreScreenshotViewerTests`, `StoreAppPageTests`, `StoreHomeTests`,
+`StoreMobileTests`, qui mesure chaque contrôle sur un téléphone de 390 × 844).
 
 ## Ajout sans redémarrage, signature et transactions
 

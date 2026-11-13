@@ -16,11 +16,15 @@
                value="@_query"
                @oninput="OnQueryChanged"
                @onkeydown="OnSearchKeyDownAsync" />
+        @* ADR 0266 §8: on a phone (a Store narrower than 640 px) the same tabs become a bar at the bottom
+           of the window, with an icon over each label; the markup does not move, so the tab order and
+           the tablist stay the same (StoreWindow.razor.css). *@
         <nav class="store-tabs" role="tablist" aria-label="@L["Tabs.Label"]" @onkeydown="OnTabKeyDownAsync">
             <button type="button" role="tab" id="@TabId(StoreView.Home)" class="store-tab @(IsHomeTab ? "is-active" : null)"
                     aria-selected="@(IsHomeTab ? "true" : "false")" aria-controls="@PanelId" tabindex="@(IsHomeTab ? "0" : "-1")"
                     @ref="_tabElements[StoreView.Home]" @onclick="ShowHome">
-                @L["Tabs.Home"]
+                <span class="store-tab-icon"><KazoIcon Library="IconLibrary.Lucide" Name="house" Size="20" Title="" /></span>
+                <span class="store-tab-label">@L["Tabs.Home"]</span>
             </button>
             @* ADR 0266 §5: hidden while no catalog offers a pack and no pack is installed. *@
             @if (ShowsThemesTab)
@@ -28,13 +32,15 @@
                 <button type="button" role="tab" id="@TabId(StoreView.Themes)" class="store-tab @(_view == StoreView.Themes ? "is-active" : null)"
                         aria-selected="@(_view == StoreView.Themes ? "true" : "false")" aria-controls="@PanelId" tabindex="@(_view == StoreView.Themes ? "0" : "-1")"
                         @ref="_tabElements[StoreView.Themes]" @onclick="ShowThemes">
-                    @L["Tabs.Themes"]
+                    <span class="store-tab-icon"><KazoIcon Library="IconLibrary.Lucide" Name="palette" Size="20" Title="" /></span>
+                    <span class="store-tab-label">@L["Tabs.Themes"]</span>
                 </button>
             }
             <button type="button" role="tab" id="@TabId(StoreView.Installed)" class="store-tab @(_view == StoreView.Installed ? "is-active" : null)"
                     aria-selected="@(_view == StoreView.Installed ? "true" : "false")" aria-controls="@PanelId" tabindex="@(_view == StoreView.Installed ? "0" : "-1")"
                     @ref="_tabElements[StoreView.Installed]" @onclick="ShowInstalled">
-                @L["Tabs.Installed"]
+                <span class="store-tab-icon"><KazoIcon Library="IconLibrary.Lucide" Name="download" Size="20" Title="" /></span>
+                <span class="store-tab-label">@L["Tabs.Installed"]</span>
                 @if (_store.Updatable.Count > 0)
                 {
                     <span class="store-count">@_store.Updatable.Count</span>

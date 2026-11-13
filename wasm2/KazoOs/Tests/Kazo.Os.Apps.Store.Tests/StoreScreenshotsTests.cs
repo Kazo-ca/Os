@@ -140,9 +140,72 @@ public sealed class StoreScreenshotsTests
         (StoreTestRenderer renderer, StoreScreenshots screenshots, _) = await RenderAsync();
         await renderer.RunAsync(() => screenshots.OpenAsync(0));
 
-        screenshots.Dispose();
+        await screenshots.DisposeAsync();
 
         Assert.False(screenshots.IsViewerOpen);
+    }
+
+    [Fact]
+    public async Task On_a_phone_the_portrait_screenshots_come_first_in_the_strip_and_the_viewer()
+    {
+        (StoreTestRenderer renderer, StoreScreenshots screenshots, _) = await RenderAsync();
+
+        // one is landscape, two is portrait, three could not be read (it keeps its place).
+        await renderer.RunAsync(() =>
+        {
+            // What StoreScreenshots.razor.js calls once it has read the sizes; the strip draws again.
+            screenshots.OnScreenshotsMeasured(ThreeScreenshots, [1280, 390, 0], [800, 844, 0], narrow: true);
+            return Task.CompletedTask;
+        });
+        await renderer.RunAsync(() => Task.CompletedTask);
+
+        Assert.Equal([ThreeScreenshots[1], ThreeScreenshots[0], ThreeScreenshots[2]], screenshots.Shown);
+        string[] sources = [.. renderer.Elements().Where(element => element.Name == "img").Select(element => element["src"] ?? string.Empty)];
+        Assert.Equal(screenshots.Shown, sources);
+        RenderedElement[] items = [.. renderer.Elements().Where(element => element.Name == "li")];
+        Assert.Equal("is-portrait", items[0]["class"]);
+        Assert.Null(items[1]["class"]);
+
+        await renderer.RunAsync(() => screenshots.OpenAsync(0));
+        RenderedElement image = Assert.Single(renderer.Elements(), element => element.HasClass("store-viewer-image"));
+        Assert.Equal(ThreeScreenshots[1], image["src"]);
+    }
+
+    [Fact]
+    public async Task On_a_wide_Store_the_catalogs_order_stays_and_the_open_viewer_keeps_its_screenshot()
+    {
+        (StoreTestRenderer renderer, StoreScreenshots screenshots, _) = await RenderAsync();
+        await renderer.RunAsync(() =>
+        {
+            screenshots.ApplyMeasure(ThreeScreenshots, [1280, 390, 1280], [800, 844, 800], narrow: true);
+            return Task.CompletedTask;
+        });
+        await renderer.RunAsync(() => screenshots.OpenAsync(0));
+        Assert.Equal(ThreeScreenshots[1], screenshots.Shown[screenshots.State.Index!.Value]);
+
+        // The window grows past the phone width: the catalog's order comes back, same screenshot shown.
+        await renderer.RunAsync(() =>
+        {
+            screenshots.ApplyMeasure(ThreeScreenshots, [1280, 390, 1280], [800, 844, 800], narrow: false);
+            return Task.CompletedTask;
+        });
+
+        Assert.Equal(ThreeScreenshots, screenshots.Shown);
+        Assert.Equal(1, screenshots.State.Index);
+    }
+
+    [Fact]
+    public async Task Sizes_measured_for_another_list_are_ignored()
+    {
+        (StoreTestRenderer renderer, StoreScreenshots screenshots, _) = await RenderAsync();
+
+        await renderer.RunAsync(() =>
+        {
+            screenshots.ApplyMeasure(["https://example.test/old.png", "https://example.test/two.png", "https://example.test/x.png"], [10, 10, 10], [1, 50, 50], narrow: true);
+            return Task.CompletedTask;
+        });
+
+        Assert.Equal(ThreeScreenshots, screenshots.Shown);
     }
 
     private static RenderedElement Button(StoreTestRenderer renderer, string className) =>
