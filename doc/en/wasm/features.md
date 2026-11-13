@@ -88,6 +88,9 @@ This section lists what is released in the `main` branch and online.
   edges, with plain animations to open, close, minimize into the taskbar,
   maximize and snap, turned off by "Reduce motion".
   ([`window-model.md`](framework/window-model.md), [`window-animations.md`](dev/window-animations.md))
+  A window that comes to the front does not move in the page: an app in a
+  frame (iframe), such as Kazo Word or the browser, keeps its page, also on
+  mobile when switching apps. ([ADR 0244](dev/adr/0244-stable-window-order-in-the-page.md))
 - **Window styles inspired by WinForms** (version 3.1.0): an app picks the
   `Normal`, `Tool` (close only, the style of the OS dialogs) or `None` style
   (client area only, transparent: a click where the app draws nothing reaches

@@ -1,0 +1,19 @@
+{
+  "id": "78ce89dc-3542-49b4-bd5d-043c993eeae3",
+  "category": "fixed",
+  "audience": [
+    "user",
+    "developer"
+  ],
+  "title": {
+    "en": "A window that comes to the front no longer reloads its frames",
+    "fr": "Une fenêtre qui passe devant ne recharge plus ses cadres"
+  },
+  "description": {
+    "en": "Windows keep their place in the page and only their stacking changes, so an app shown in a frame, such as Kazo Word or the browser, keeps its document or page when you click another window, and on mobile when you switch apps. A window that receives the keyboard focus, with Tab or a click in its frame, now comes to the front.",
+    "fr": "Les fenêtres gardent leur place dans la page et seul leur empilement change : une app affichée dans un cadre, comme Kazo Word ou le navigateur, garde son document ou sa page quand on clique sur une autre fenêtre, et sur mobile quand on change d'app. Une fenêtre qui reçoit le focus clavier, par Tab ou un clic dans son cadre, passe maintenant devant."
+  },
+  "links": [
+    "doc/en/wasm/dev/adr/0244-stable-window-order-in-the-page.md"
+  ]
+}

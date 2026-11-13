@@ -22,7 +22,8 @@
          data-window-snapped="@(Window.IsSnapped ? "true" : null)"
          data-window-z="@Window.ZOrder"
          hidden="@(IsHidden ? true : null)"
-         @onpointerdown="FocusAsync">
+         @onpointerdown="FocusAsync"
+         @onfocusin="FocusOnKeyboardEntryAsync">
     @if (ShowChrome)
     {
         <WindowChrome Window="Window"
@@ -220,6 +221,18 @@
     private Task FocusAsync(PointerEventArgs _) =>
         IsInteractionBlocked ? Task.CompletedTask : OnFocus.InvokeAsync(Window.Id);
 
+    /// <summary>
+    /// Activates the window when the keyboard focus enters it while it is in the background: Tab or
+    /// Shift+Tab from another window (the page keeps the opening order, ADR 0244 §4), or a click in
+    /// an iframe, whose pointer events never reach the page (<c>trackFocus</c> in the script turns
+    /// the page blur into a focusin on the iframe). As on a real desktop, the window that holds the
+    /// keyboard focus is the active one, never a window hidden behind another.
+    /// </summary>
+    private Task FocusOnKeyboardEntryAsync(FocusEventArgs _) =>
+        Window.IsFocused || IsInteractionBlocked || Window.VisualState == WindowVisualState.Minimized
+            ? Task.CompletedTask
+            : OnFocus.InvokeAsync(Window.Id);
+
     /// <inheritdoc />
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -325,6 +338,7 @@
                 }
             }
 
+            await _module.InvokeVoidAsync("untrackFocus", _hostElement);
             await _module.DisposeAsync();
         }
         catch (JSDisconnectedException)

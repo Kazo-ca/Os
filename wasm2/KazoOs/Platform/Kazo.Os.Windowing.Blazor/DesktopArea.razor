@@ -158,10 +158,17 @@
         }
     }
 
-    /// <summary>The windows this area renders: all of them for screen 1 with shared layers, none for the other screens, else its own screen's.</summary>
-    private IEnumerable<WindowRuntimeState> RenderedWindows => Layers is null
+    /// <summary>
+    /// The page order of the windows: the order they opened in, never the stacking order, so a window
+    /// that comes to the front is not moved in the page and its iframes do not reload (ADR 0244 §1).
+    /// The stacking is drawn with <c>z-index</c> from <see cref="WindowRuntimeState.ZOrder"/>.
+    /// </summary>
+    private readonly WindowDocumentOrder _documentOrder = new();
+
+    /// <summary>The windows this area renders, in opening order: all of them for screen 1 with shared layers, none for the other screens, else its own screen's.</summary>
+    private IReadOnlyList<WindowRuntimeState> RenderedWindows => _documentOrder.Arrange(Layers is null
         ? Windows.Where(window => window.DisplayId == DisplayId)
-        : DisplayId.IsPrimary ? Windows : [];
+        : DisplayId.IsPrimary ? Windows : []);
 
     /// <summary>The layer a window moves to, or <see langword="null"/> to stay in this area (its screen, or a screen not shown).</summary>
     private ElementReference? LayerFor(WindowRuntimeState window) =>
