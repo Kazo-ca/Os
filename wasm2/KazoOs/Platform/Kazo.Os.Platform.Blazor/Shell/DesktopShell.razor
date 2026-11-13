@@ -485,6 +485,20 @@
         return result is { Status: Kazo.Os.Platform.Blazor.Display.ScreenOpenStatus.Opened, Screen: { } screen } ? screen.Id : null;
     }
 
+    /// <summary>The localized name of a window's app, for the ADR 0263 notification.</summary>
+    private string? AppNameOfWindow(WindowId windowId)
+    {
+        WindowRuntimeState? window = WindowRuntime.Windows.FirstOrDefault(candidate => candidate.Id == windowId);
+        if (window is null)
+        {
+            return null;
+        }
+
+        return Catalog.Manifests.TryGetValue(window.AppId, out AppManifest? manifest)
+            ? Catalog.Localize(manifest, SessionLocale.Culture).Name
+            : window.Title;
+    }
+
     private void HandleGesture(WindowCommand command)
     {
         // A secondary screen's desktop may report its size once more after its screen was removed.
@@ -496,6 +510,15 @@
         // A window dropped on a screen that closed during the drag stays on its own screen (ADR 0183).
         if (command is MoveWindowToDisplayCommand drop && !WindowRuntime.Displays.Contains(drop.DisplayId))
         {
+            return;
+        }
+
+        // A window that must stay on its screen (ADR 0263) is not moved; the user is told why.
+        if (command is MoveWindowToDisplayCommand refused
+            && WindowRuntime.Windows.Any(window => window.Id == refused.WindowId)
+            && !WindowRuntime.CanChangeScreen(refused.WindowId))
+        {
+            KeyboardCommands.ReportScreenChangeRefused(refused.WindowId);
             return;
         }
 
@@ -549,6 +572,7 @@
     private Func<WindowId, Task>? _closeWindow;
     private Func<Task<DisplayId?>>? _openScreen;
     private NotificationAttention? _notificationAttention;
+    private ScreenChangeRefusedNotifier? _screenChangeRefused;
     private AppUpdateAttention? _appUpdates;
 
 
@@ -580,6 +604,14 @@
             _notificationAttention = new NotificationAttention(notifications, () => SessionService.CurrentPrincipal?.UserId, SimulationClock);
             _notificationAttention.Changed += OnUnreadNotificationsChanged;
             _clockPanel.Changed += OnClockPanelChanged;
+            // ADR 0263: says why a window that must stay on its screen did not move.
+            _screenChangeRefused = new ScreenChangeRefusedNotifier(
+                KeyboardCommands,
+                notifications,
+                SimulationClock,
+                () => SessionService.CurrentPrincipal?.UserId,
+                AppNameOfWindow,
+                L);
         }
 
         // ADR 0186 §4.5: the sign-in notification of unseen changes.
@@ -700,6 +732,7 @@
         _taskbarStatus.Dispose();
         _appUpdates?.Dispose();
         _clockPanel.Changed -= OnClockPanelChanged;
+        _screenChangeRefused?.Dispose();
         if (_notificationAttention is not null)
         {
             _notificationAttention.Changed -= OnUnreadNotificationsChanged;

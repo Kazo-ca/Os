@@ -62,6 +62,15 @@ Décidé le 2026-10-28 :
   du chantier `wwwroot` des apps installées (issue #247, fait par l'ADR 0206
   dans la série `todo/base` : fichiers servis à `_content/<assemblage>/` par le
   service worker, Web Workers compris).
+- Suite Craft (Benoit, 2026-11-13) : après Kazo Word (`Os-App-Word`, WordCraft),
+  un dépôt par app Craft de l'équipe ArtCraft : `Os-App-Spreadsheets` (Kazo
+  Spreadsheets, GridCraft), `Os-App-PDF` (Kazo Pdf, PdfCraft), `Os-App-Fig`
+  (Kazo Fig, FigCraft), `Os-App-Photo` (Kazo Photo, PhotoCraft),
+  `Os-App-Design` (Kazo Design, DesignCraft), `Os-App-Deck` (Kazo Deck,
+  DeckCraft), `Os-App-Vector` (Kazo Vector, VectorCraft). Kazo Spreadsheets
+  commence dès que Kazo Word est publié au Store, avec les méthodes de Word.
+  Méthode commune : [`craft-app-port-guide.md`](../dev/craft-app-port-guide.md) ;
+  une issue `TODO` par app.
 
 ## Apps hébergées par le serveur (« bac à sable serveur »)
 

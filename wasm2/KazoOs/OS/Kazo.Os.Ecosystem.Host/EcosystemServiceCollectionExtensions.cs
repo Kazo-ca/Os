@@ -739,21 +739,15 @@ public static class EcosystemServiceCollectionExtensions
         services.TryAddSingleton<InstalledPackageCatalog>();
         // ADR 0212 §5: the Kazo OS Store's update check (sign-in, then every [updates] interval-hours).
         // Scoped like the session it watches; it reads the machine's sources as the system.
+        // ADR 0257 §2: which Store apps open a file no installed app opens, from the downloaded catalogs only.
+        services.TryAddScoped(static provider => new CatalogAppSuggestions(
+            provider.GetRequiredService<AppPackageInstaller>(),
+            () => CreateSystemPackageReader(provider),
+            provider.GetRequiredService<AppCatalog>(),
+            provider.GetService<ILogger<CatalogAppSuggestions>>()));
         services.TryAddScoped(static provider => new AppUpdateMonitor(
             provider.GetRequiredService<AppPackageInstaller>(),
-            () => new AppFileSystemGateway(
-                provider.GetRequiredService<IFileSystemService>(),
-                provider.GetRequiredService<ISimulationClock>(),
-                new AppOperationContext
-                {
-                    AppId = OsSettingsService.ShellAppId,
-                    UserId = "system",
-                    UserName = "system",
-                    UserAuthority = AppAuthority.System,
-                    GrantedCapabilities = new HashSet<string>(AppCapabilities.All, StringComparer.Ordinal),
-                    IsSystemOperation = true
-                },
-                ["system"]),
+            () => CreateSystemPackageReader(provider),
             () => provider.GetRequiredService<ISessionService>().CurrentPrincipal,
             provider.GetService<INotificationQueue>(),
             () => provider.GetRequiredService<Kazo.Os.Platform.Core.Globalization.SessionLocaleService>().Culture,
@@ -1032,7 +1026,11 @@ public static class EcosystemServiceCollectionExtensions
             provider.GetRequiredService<IAppEnablementRegistry>(),
             provider.GetRequiredService<FileAssociationResolver>(),
             provider.GetRequiredService<ICapabilityGrantRepository>(),
-            provider.GetRequiredService<IFileSystemService>()));
+            provider.GetRequiredService<IFileSystemService>())
+        {
+            // ADR 0257 §2: a file no installed app opens gets the Store apps that declare its type.
+            CatalogSuggestions = () => provider.GetService<CatalogAppSuggestions>(),
+        });
 
         services.AddSingleton<IFileSystemSelectedResourceHandleRegistry>(provider =>
             new FileSystemSelectedResourceHandleRegistry(
@@ -1385,6 +1383,24 @@ public static class EcosystemServiceCollectionExtensions
                 $"context-menus.d could not be updated after an install change: {exception.Message}");
         }
     }
+
+    /// <summary>
+    /// The OS's own reader of the package configuration (ADR 0189): <c>/etc/kazoos</c> and the users'
+    /// <c>installed-apps.config</c>, as the system, for the update check and the Store suggestions.
+    /// </summary>
+    private static AppFileSystemGateway CreateSystemPackageReader(IServiceProvider provider) => new(
+        provider.GetRequiredService<IFileSystemService>(),
+        provider.GetRequiredService<ISimulationClock>(),
+        new AppOperationContext
+        {
+            AppId = OsSettingsService.ShellAppId,
+            UserId = "system",
+            UserName = "system",
+            UserAuthority = AppAuthority.System,
+            GrantedCapabilities = new HashSet<string>(AppCapabilities.All, StringComparer.Ordinal),
+            IsSystemOperation = true
+        },
+        ["system"]);
 
     private static AppCatalog CreateEmptyCatalog()
     {

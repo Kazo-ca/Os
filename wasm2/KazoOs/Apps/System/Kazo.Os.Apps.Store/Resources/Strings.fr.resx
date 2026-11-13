@@ -294,4 +294,13 @@
   <data name="Error.BadSignature" xml:space="preserve">
     <value>La signature de ce paquet ne correspond pas à sa source : il a été refusé.</value>
   </data>
+  <data name="Detail.OpenAfterInstall" xml:space="preserve">
+    <value>{0} s'ouvrira une fois l'app installée.</value>
+  </data>
+  <data name="Message.OpenAfterRestart" xml:space="preserve">
+    <value>{0} pourra ouvrir {1} après le redémarrage.</value>
+  </data>
+  <data name="Error.OpenAfterInstall" xml:space="preserve">
+    <value>{0} n'a pas pu être ouvert ({1}).</value>
+  </data>
 </root>
