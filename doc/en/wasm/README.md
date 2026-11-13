@@ -117,6 +117,7 @@ in the same change (see [`AGENTS.md`](../../../AGENTS.md)).
 | [`v3-1-series-plan.md`](dev/plans/v3-1-series-plan.md) | v3.1 series (branch `v3.1/base`, 2026-10-17): gaps of the v3 migration fixed before the follow-ups of step 5; restoring window geometry (ADR 0116), window title set by the app and SDK 1.1 release (ADR 0117), merge of `v3/base` (per-user associations, `passwd`), branches, dependencies and merge bar. |
 | [`wasm-v3-migration-analyse.md`](dev/plans/wasm-v3-migration-analyse.md) | Analysis of the wasm v3 migration (starting point of the end-of-migration plan). History. |
 | [`authentication-task-list.md`](dev/plans/authentication-task-list.md) | Former task list of WebAssembly authentication. History. |
+| [`cloud-drives-plan.md`](dev/plans/cloud-drives-plan.md) | "Cloud drives" series, **approved on 2026-11-13** (branch `cloud-drives/base`): the user's cloud storage (Dropbox, OneDrive, S3 compatible) mounted as a network drive, with no server; work items `cloud-drives/*` 0 to 7, rules of the series, what Benoit creates himself (two Dropbox apps, one Microsoft Entra registration, privacy page); ADR [0267](dev/adr/0267-cloud-drives-as-network-drives.md). |
 
 ### Subsystems and base apps
 
