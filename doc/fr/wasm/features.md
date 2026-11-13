@@ -459,7 +459,7 @@ dans `main`, le lien mène à sa PR.
 | Fonctionnalité | Description | ADR | Issue |
 | --- | --- | --- | --- |
 | Catalogue des applications | Format du catalogue, vérification et publication des applications proposées. | [0188](dev/adr/0188-hack-store-and-app-catalog.md) | [AppMarketPlace #1](https://github.com/Kazo-ca/Os-AppMarketPlace/issues/1) |
-| Relook du Store (série `store-ux`) | Premières corrections faites : fiche ouverte en haut et liste retrouvée au retour, recherche dans l'onglet Installées et Entrée, focus clavier visible et flèches sur les onglets, en-tête du téléphone sur deux lignes, descriptions mieux lues. À venir : visionneuse de captures, fiche, progression d'installation, accueil, téléphone. | À écrire | — |
+| Nouvel accueil et nouvelle fiche du Store | App « à la une », grille filtrée par catégorie, installation depuis les cartes, visionneuse de captures, capacités en langage clair, progression d'installation, interface du téléphone revue. | [0266](dev/adr/0266-store-ux-refresh.md) | Série `store-ux/base` |
 
 ### Personnalisation
 

@@ -446,7 +446,7 @@ points to its PR.
 | Feature | Description | ADR | Issue |
 | --- | --- | --- | --- |
 | Application catalog | Catalog format, checking and publishing of the offered applications. | [0188](dev/adr/0188-hack-store-and-app-catalog.md) | [AppMarketPlace #1](https://github.com/Kazo-ca/Os-AppMarketPlace/issues/1) |
-| Store redesign (series `store-ux`) | First fixes done: an app's page opens at the top and the list comes back where it was, search in the Installed tab and Enter, visible keyboard focus and arrow keys on the tabs, a two-line phone header, descriptions read better. Next: screenshot viewer, app page, install progress, home, phone. | To be written | — |
+| New Store home and app page | Featured app, grid filtered by category, install from the cards, screenshot viewer, plain-language capabilities, install progress, reworked phone interface. | [0266](dev/adr/0266-store-ux-refresh.md) | Series `store-ux/base` |
 
 ### Personalization
 

@@ -1,0 +1,186 @@
+/* An app's screenshots on its Store page, and the viewer that shows one at the size of the window
+   (store-ux series, work item 2). The viewer covers .store-root, which is positioned. */
+
+.store-screenshots {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    list-style: none;
+    margin: 0 0 20px;
+    padding: 0 0 8px;
+    scroll-snap-type: x mandatory;
+}
+
+.store-screenshots li {
+    flex: none;
+    scroll-snap-align: start;
+}
+
+.store-screenshot-thumb {
+    display: block;
+    padding: 0;
+    border: 1px solid var(--kos-border-subtle, #30363d);
+    border-radius: var(--kos-radius-md, 8px);
+    background-color: var(--kos-bg-surface, #161b22);
+    overflow: hidden;
+    cursor: zoom-in;
+    transition: border-color 120ms ease, transform 120ms ease;
+}
+
+.store-screenshot-thumb:hover {
+    border-color: var(--kos-accent, #42d392);
+}
+
+.store-screenshot-thumb:focus-visible {
+    outline: 2px solid var(--kos-accent, #42d392);
+    outline-offset: 2px;
+}
+
+/* The catalog does not give the screenshots' sizes: the height is fixed and the width follows a
+   16:10 ratio until the image arrives, then its own ratio ("auto"). The page below no longer jumps
+   when the images load. */
+.store-screenshot-thumb img {
+    display: block;
+    height: 240px;
+    width: auto;
+    max-width: 85cqi;
+    aspect-ratio: auto 16 / 10;
+    object-fit: contain;
+}
+
+@container (min-width: 900px) {
+    .store-screenshot-thumb img {
+        height: 320px;
+    }
+}
+
+@container (max-width: 640px) {
+    .store-screenshot-thumb img {
+        height: 200px;
+    }
+}
+
+.store-viewer {
+    position: absolute;
+    inset: 0;
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    background-color: color-mix(in srgb, var(--kos-bg-base, #0d1117) 94%, transparent);
+    backdrop-filter: blur(6px);
+    color: var(--kos-text-primary, #c9d1d9);
+}
+
+.store-viewer:focus {
+    outline: none;
+}
+
+.store-viewer-edge {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+}
+
+.store-viewer-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 12px;
+}
+
+.store-viewer-position {
+    font-family: var(--kos-font-mono, 'Cascadia Mono', Consolas, monospace);
+    font-size: 0.85em;
+    color: var(--kos-text-secondary, #8b949e);
+}
+
+.store-viewer-stage {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 56px 16px;
+    cursor: zoom-out;
+    /* The finger's horizontal move is a swipe, not a page scroll. */
+    touch-action: pan-y;
+    user-select: none;
+}
+
+.store-viewer-image {
+    display: block;
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    border-radius: var(--kos-radius-md, 8px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    cursor: default;
+}
+
+.store-viewer-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 40px;
+    min-height: 40px;
+    padding: 0;
+    border: 1px solid var(--kos-border-subtle, #30363d);
+    border-radius: 999px;
+    background-color: var(--kos-bg-surface, #161b22);
+    color: var(--kos-text-primary, #c9d1d9);
+    cursor: pointer;
+}
+
+.store-viewer-button:hover:not(:disabled) {
+    border-color: var(--kos-accent, #42d392);
+    color: var(--kos-accent, #42d392);
+}
+
+.store-viewer-button:focus-visible {
+    outline: 2px solid var(--kos-accent, #42d392);
+    outline-offset: 2px;
+}
+
+.store-viewer-button:disabled {
+    opacity: 0.3;
+    cursor: default;
+}
+
+.store-viewer-previous,
+.store-viewer-next {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    min-width: 44px;
+    min-height: 44px;
+}
+
+.store-viewer-previous {
+    left: 8px;
+}
+
+.store-viewer-next {
+    right: 8px;
+}
+
+/* On a phone the image takes the whole width: the arrows sit over its edges and the swipe does
+   the rest. */
+@container (max-width: 640px) {
+    .store-viewer-stage {
+        padding: 0 0 12px;
+    }
+
+    .store-viewer-previous,
+    .store-viewer-next {
+        background-color: color-mix(in srgb, var(--kos-bg-surface, #161b22) 80%, transparent);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .store-screenshot-thumb {
+        transition: none;
+    }
+}
