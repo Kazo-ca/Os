@@ -59,6 +59,15 @@ Decided on 2026-10-28:
   the OS; an app wrapping JavaScript needs the installed apps' `wwwroot` work
   item (issue #247, built by ADR 0206 in the `todo/base` series: files served
   at `_content/<assembly>/` by the service worker, Web Workers included).
+- Craft suite (Benoit, 2026-11-13): after Kazo Word (`Os-App-Word`, WordCraft),
+  one repository per Craft app of the ArtCraft team: `Os-App-Spreadsheets` (Kazo
+  Spreadsheets, GridCraft), `Os-App-PDF` (Kazo Pdf, PdfCraft), `Os-App-Fig`
+  (Kazo Fig, FigCraft), `Os-App-Photo` (Kazo Photo, PhotoCraft),
+  `Os-App-Design` (Kazo Design, DesignCraft), `Os-App-Deck` (Kazo Deck,
+  DeckCraft), `Os-App-Vector` (Kazo Vector, VectorCraft). Kazo Spreadsheets
+  starts as soon as Kazo Word is published in the Store, with Word's methods.
+  Common method: [`craft-app-port-guide.md`](../dev/craft-app-port-guide.md);
+  one `TODO` issue per app.
 
 ## Server-hosted apps ("server sandbox")
 
