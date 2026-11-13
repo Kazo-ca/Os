@@ -42,10 +42,10 @@ in `storytold/craft-libs` and in the app, opened by Benoit) or in our fork, befo
 
 ```
 ┌─ Kazo <App> window (Blazor, C#) ─────────────────────────────────┐
-│ <App>Window.razor  ⇄  js/<app>-host.js   (OS document)            │
-│        │                    ⇅  MessagePort (one per window)       │
+│ <App>Window.razor  ⇄  craft-host.js      (OS document, module)    │
+│   CraftFrame       │        ⇅  MessagePort (one per window)       │
 │        │        ┌─ iframe  _content/Kazo.<App>/host/index.html ─┐ │
-│        │        │ host/<app>-proxy.js                           │ │
+│        │        │ craft-proxy.js (module)                       │ │
 │        │        │      ⇅  CustomEvent on the canvas             │ │
 │        │        │ <App>Craft (.wasm), data-host="page"          │ │
 │        │        └───────────────────────────────────────────────┘ │
@@ -58,22 +58,28 @@ in `storytold/craft-libs` and in the app, opened by Benoit) or in our fork, befo
   so several windows.
 - **The window (C#) decides everything**: which file is bound to which document, where to
   write, the title, the "modified" state, closing. All testable logic is in C#.
-- **`js/<app>-host.js`** (in the OS document, loaded by the component) creates the iframe,
-  holds the `MessagePort` and calls C#. It decides nothing.
-- **`host/<app>-proxy.js`** (in the iframe) talks to the Craft app: the canvas's `<app>:*`
-  events in `data-host="page"` mode, `window.<app>.request` (`craft-web-api`), the file
-  picker, keys, `localStorage`. It decides nothing either.
+- **`craft-host.js`** (in the OS document, started by the module's `CraftFrame`) creates the
+  iframe, holds the `MessagePort` and calls C#. It decides nothing.
+- **`craft-proxy.js`** (in the iframe) talks to the Craft app: the canvas's `<app>:*` events in
+  `data-host="page"` mode, `window.<app>.request` (`craft-web-api`), the file picker, keys,
+  `localStorage`. It decides nothing either.
 - One `MessagePort` per window, handed to the iframe when it loads: two windows never mix.
+- Both scripts and the C# types belong to the **`Kazo.Os.AppSdk.Craft` module**, shipped and
+  served by the OS ([ADR 0259](adr/0259-shared-craft-app-host-module.md)). An app writes its
+  window, its iframe page, its list of formats and its build: how is in
+  [`craft-apps.md`](../framework/craft-apps.md), with a complete example (the test package
+  `Tests/fixtures/craft-app`).
 
-Kazo Word's port messages are in section 5 of the
-[integration plan](https://github.com/Kazo-ca/Os-App-Word/blob/word/base/doc/en/integration-plan.md):
-`init`, `ready`, `failed`, `open`, `save`, `dirty`, `pick`/`picked`, `command`/`result`, `key`,
-`setting`, `focus`. They do not depend on WordCraft: reuse them as they are.
+The port messages (`init`, `ready`, `failed`, `open`, `save`, `saved`, `dirty`,
+`pick`/`picked`, `command`/`result`, `key`, `setting`, `focus`) are internal to the module
+([`craft-module-scripts.md`](craft-module-scripts.md)): an app never sees them, only
+`CraftFrame`'s events.
 
 ## 3. What Kazo OS already provides
 
 These fixes were made for Kazo Word; a new Craft app has nothing to ask the OS for them.
-**Minimum version: Kazo OS 3.3.2.**
+**Minimum version: Kazo OS 3.3.2**, and for the shared module, the first OS version that holds
+it (not released yet, see the last row).
 
 | Need | OS answer | Version |
 | --- | --- | --- |
@@ -83,6 +89,7 @@ These fixes were made for Kazo Word; a new Craft app has nothing to ask the OS f
 | `.kazoapp` package: 64 MiB compressed, 128 MiB extracted, 2000 files | `AppPackage` (`MaximumArchiveBytes`, `MaximumExtractedBytes`, `MaximumFiles`); installation: [`app-installation.md`](app-installation.md) | — |
 | App repository from the template, OS submodule, Store by a tag | [ADR 0176](adr/0176-app-repository-template.md), [`app-repository.md`](../framework/app-repository.md) | — |
 | Signing only in `Os-AppMarketPlace` | [ADR 0219](adr/0219-app-authors-signing-tool.md) | — |
+| The shared Kazo code of the Craft apps: iframe, proxy, file picker, reserved shortcuts, per-user settings, documents and save rule | `Kazo.Os.AppSdk.Craft` module, [ADR 0259](adr/0259-shared-craft-app-host-module.md), guide [`craft-apps.md`](../framework/craft-apps.md) | series `craft-host/base`, OS version to come |
 
 If an app goes over one of these limits (a `.wasm` over 128 MiB, a package over 64 MiB), it is
 a new decision for the OS: an ADR in `Kazo-ca/Os`, in a separate thread, then an OS version the
@@ -135,13 +142,17 @@ PC": a cloud session cannot create a repository).
   `wwwroot/<app>/` with a provenance `<app>.json` (version, source, names and SHA-256). The
   build lives **in the repository**: the Store builds with `dotnet build -t:KazoOsPack` only
   and fetches only the `external/KazoOs` submodule; it has neither Rust nor Trunk.
-- `host/index.html` (canvas `data-host="page"`, no inline script), `host/<app>-proxy.js`
-  (startup, `ready`, `failed`), `js/<app>-host.js`, a window with three states: loading,
-  app, error (60 s timeout, "Retry").
-- **OS submodule on 3.3.2 or later** from the start.
-- Tests: manifest, `<app>.json` matches the files, proxy with a fake Craft app (`ready`,
-  `failed`, timeout), a Playwright journey waiting for `ready`; the document survives its
-  window going to the front and back.
+- Reference `Kazo.Os.AppSdk.Craft`. `wwwroot/host/index.html` only: the canvas with
+  `data-host="page"`, `data-craft-app` and `data-craft-build`, the module's `craft-proxy.js` and
+  `craft-page.css`, no inline script ([`craft-apps.md`](../framework/craft-apps.md), §3). No
+  script of the app's own.
+- The window on `CraftFrame` and `FrameStartup`: loading, app, error (60 s timeout, "Retry")
+  (`craft-apps.md`, §4; the test package `Tests/fixtures/craft-app` is a complete example).
+- **OS submodule on `craft-host/base`** until the OS version that holds the module is released,
+  then on that version.
+- Tests: manifest, `<app>.json` matches the files, a Playwright journey waiting for `ready`;
+  the document survives its window going to the front and back. The proxy itself is tested by
+  the OS (fake Craft app, `node --test` and the trimmed publish journey).
 - **Done when**: the app shows and takes keyboard input with WebGPU and WebGL 2 (`--webgl` adds
   `?webgl` to the iframe), two windows run together, and **the app installs in a published
   Kazo OS** (`sudo kazopkg install Kazo-ca/Os-App-<App>`). Record the package size and memory
@@ -150,7 +161,8 @@ PC": a cloud session cannot create a repository).
 ### Work item 2: open and save (`<app>/2-open-save`)
 
 - File associations and "Open with", file requested at launch, intents.
-- `DocumentSession`: each app document name bound to a path. Kazo Word's save rule, to reuse:
+- The module's `DocumentSession` (with the app's `CraftDocumentFormats`): each app document
+  name bound to a path. Its save rule (`SaveDecision`), the window carries it out on `Saving`:
 
 | Case | Decision |
 | --- | --- |
@@ -168,18 +180,21 @@ PC": a cloud session cannot create a repository).
 - **Done when**: no case loses changes unless the user chose so, including when the write
   fails.
 
-### Work item 3: complete proxy (`<app>/3-proxy`)
+### Work item 3: the rest of the frame (`<app>/3-proxy`)
 
-- **File picker**: the proxy catches rfd's `input type=file` (click, or the `#rfd-overlay`
-  card) and sends `pick`; the window shows the OS dialog and answers `picked`. A document picked
-  with File › Open opens in a **new window** (in place only for an untouched blank document).
-- **OS shortcuts**: an iframe keeps every key; the proxy listens to `keydown` in capture and
-  forwards the OS's reserved shortcuts, plus `Ctrl+N` (new window).
-- **Theme and language**: `ui.theme` on every OS theme change, `ui.language` on the app
-  language closest to the Kazo culture.
-- **Per-Kazo-user settings**: replace `localStorage` in the iframe with an in-memory copy
-  loaded from `~/.config/ca.kazo.<app>/web-storage.json`, written back at most 500 ms after the
-  first unsaved write, one write at a time.
+The module's proxy already does the browser side; the window wires `CraftFrame`'s events
+([`craft-apps.md`](../framework/craft-apps.md), §4) and supplies what is the app's own:
+
+- **File picker** (`PickRequested`): the OS dialog, then always `AnswerPickAsync`. A document
+  picked with File › Open opens in a **new window** (in place only for an untouched blank
+  document).
+- **Shortcuts** (`ReservedKeys`, `KeyPressed`): `ReservedKeys.All` (the OS's and `Ctrl+N`), plus
+  the app's own (for GridCraft, F12 and Ctrl+Shift+S: Save As decided by the window).
+- **Theme and language** (`SchemeChanged`, `CraftLanguage`): the app's own commands (`ui.theme`
+  for WordCraft, `ui.set { dark }` for GridCraft), and its list of languages.
+- **Per-Kazo-user settings** (`WebStorageFile`, `SettingChanged`):
+  `~/.config/ca.kazo.<app>/web-storage.json`, written back at most 500 ms after the first
+  unsaved write.
 - **Done when**: no browser dialog opens from the app, and OS shortcuts work with the caret in
   the document.
 
@@ -233,10 +248,14 @@ PC": a cloud session cannot create a repository).
 
 ## 6. What stays shared between the apps
 
-- **The Kazo code** (window, `DocumentSession`, proxy, picker, keys, settings) is the same but
-  for a few names. Kazo Word's decision 8 (shared library) is taken before the second app:
-  extract that code into a common library, or copy it and keep it aligned. To ask Benoit at
-  the start of Kazo Spreadsheets.
+- **The Kazo code** (iframe frame, proxy, picker, keys, settings, `DocumentSession`) is the
+  same but for a few names. Kazo Word's decision 8, taken on 2026-11-13: it becomes an SDK
+  module shipped and served by the OS, `Kazo.Os.AppSdk.Craft`
+  ([ADR 0259](adr/0259-shared-craft-app-host-module.md), series `craft-host/base`: C# library,
+  scripts, end-to-end journey and guide [`craft-apps.md`](../framework/craft-apps.md)). Each app
+  keeps its window, its list of formats, its iframe page (`data-craft-app`) and its build. Kazo
+  Word ships with its copy and moves to the module afterwards (Kazo-ca/Os-App-Word#15); Kazo
+  Spreadsheets uses it from its work item 1. Work items 1 to 3 above are written on the module.
 - **The `.wasm`** is not shared: two wasm modules do not share Rust code. Only data loaded
   separately (translations, spelling, fonts: about 9 MB of 60 in WordCraft) could be, if
   upstream moves it out of the `.wasm`.
@@ -250,7 +269,7 @@ PC": a cloud session cannot create a repository).
 - [ ] Fork `Kazo-ca/<app>craft` created (before work item 4).
 - [ ] Step 0: upstream app read, fr and en plan merged, questions asked to Benoit.
 - [ ] Host mode present upstream or added (apps without `craft-web-host`).
-- [ ] Work item 1: iframe, two windows, installation in a published Kazo OS (3.3.2 or later).
+- [ ] Work item 1: iframe page on the module, window on `CraftFrame`, two windows, installation in a published Kazo OS.
 - [ ] Work item 2: open, save, close guard.
 - [ ] Work item 3: picker, shortcuts, theme, language, per-user settings.
 - [ ] Work item 4: build from the fork, workflow.

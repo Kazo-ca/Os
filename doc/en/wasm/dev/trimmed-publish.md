@@ -95,8 +95,9 @@ warning, serves the publication on `127.0.0.1` and `127.0.0.2`, then runs
 | `A_direct_link_with_no_account_starts_the_guest_installs_and_launches_the_app` | ADR 0258: `?autolaunch=<id>` with no account starts the guest with no click, installs the test package from the official catalog served by Playwright (signed by the run's key) and opens it; the address loses the parameter; a reload starts nothing again; a second visit continues as the guest and opens the app with no new download ([`app-launch-link.md`](app-launch-link.md)) |
 | `A_direct_link_with_an_account_opens_the_store_at_the_app_page` | ADR 0258: with an account, the sign-in notice, then the Store at the app's page; nothing downloaded |
 | `A_direct_link_reports_a_missing_app_and_can_be_cancelled` | ADR 0258: app missing from the official catalog → notification whose button opens the Store; **Cancel** during the download → no app and no notification |
+| `A_craft_app_on_the_os_module_opens_saves_and_follows_the_os` | ADR 0259: the test package `Tests/fixtures/craft-app` (a Craft window on the `Kazo.Os.AppSdk.Craft` module, around a fake Craft app; packed by the script into `kazoos-packages-craft`, without the module) is installed with `sudo kazopkg install`; `xdg-open seed.fake` opens the window on the file, typing puts `*` in the title, Ctrl+S rewrites the file and the app hears `saved`, F12 (a chord the window reserves) does Save As through the OS dialog, an error after `ready` becomes a notice, a light then dark theme is followed, Ctrl+O goes through the OS Open dialog, closing with changes asks, a second window reads back the setting the first one wrote ([`craft-apps.md`](../framework/craft-apps.md)) |
 
-The script requires all thirteen tests to pass (`EXPECTED_TESTS`). For the three direct link tests, it
+The script requires all fourteen tests to pass (`EXPECTED_TESTS`). For the three direct link tests, it
 creates a P-256 key on every run (`openssl`, in `artifacts/publish-trimmed/test-catalog-signing/`) and
 publishes with `-p:KazoOsAppSigningKeys=catalog:official=<public key>`: the publish under test accepts
 that key for the official catalog, next to the real one.

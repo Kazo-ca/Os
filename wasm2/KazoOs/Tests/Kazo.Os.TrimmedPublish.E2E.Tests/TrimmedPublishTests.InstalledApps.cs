@@ -37,7 +37,7 @@ public sealed partial class TrimmedPublishTests
 
         await using Session session = await Session.StartAsync(output);
         IPage page = session.Page;
-        await ServePackagesLocallyAsync(session.Context, settings.PackagesDirectory);
+        await ServePackagesLocallyAsync(session.Context, ProbeRepository, settings.PackagesDirectory);
         try
         {
             await NavigateWhenReadyAsync(page, settings.Url);
@@ -160,12 +160,13 @@ public sealed partial class TrimmedPublishTests
     }
 
     /// <summary>
-    /// Answers the GitHub addresses of the test package from <paramref name="directory"/>, as
-    /// <c>raw.githubusercontent.com</c> would (with <c>Access-Control-Allow-Origin: *</c>).
+    /// Answers the GitHub addresses of a test package of <paramref name="repository"/> from
+    /// <paramref name="directory"/>, as <c>raw.githubusercontent.com</c> would (with
+    /// <c>Access-Control-Allow-Origin: *</c>).
     /// </summary>
-    private async Task ServePackagesLocallyAsync(IBrowserContext context, string directory)
+    private async Task ServePackagesLocallyAsync(IBrowserContext context, string repository, string directory)
     {
-        string prefix = $"/{ProbeRepository}/kazoos-packages/";
+        string prefix = $"/{repository}/kazoos-packages/";
         string root = Path.GetFullPath(directory) + Path.DirectorySeparatorChar;
         await context.RouteAsync(new Regex("^" + Regex.Escape("https://raw.githubusercontent.com" + prefix)), async route =>
         {

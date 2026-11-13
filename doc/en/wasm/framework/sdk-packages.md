@@ -52,7 +52,7 @@ library lists its surface in `PublicAPI.Shipped.txt` (1.0, frozen) and
 
 | Packages | Content |
 |---|---|
-| `Kazo.Os.App.Abstractions`, `Kazo.Os.Simulation.Abstractions`, `Kazo.Os.Theming.Abstractions`, `Kazo.Os.AppSdk`, `.Blazor`, `.Terminal`, `.Web`, `.Web.Blazor`, `.Icons`, `.VirtualKeyboard` | the public SDK, what an app references (`.FileView` is no longer part of it since 2.0: its code is in the file explorer); `Kazo.Os.AppSdk` also carries the `KOSBG` analyzer for `KazoBackground` in `analyzers/dotnet/cs/` (ADR 0140, [`background-jobs.md`](background-jobs.md)) |
+| `Kazo.Os.App.Abstractions`, `Kazo.Os.Simulation.Abstractions`, `Kazo.Os.Theming.Abstractions`, `Kazo.Os.AppSdk`, `.Blazor`, `.Terminal`, `.Web`, `.Web.Blazor`, `.Craft`, `.Icons`, `.VirtualKeyboard` | the public SDK, what an app references (`.Craft`: module of the Craft apps, shipped with the OS, ADR 0259) (`.FileView` is no longer part of it since 2.0: its code is in the file explorer); `Kazo.Os.AppSdk` also carries the `KOSBG` analyzer for `KazoBackground` in `analyzers/dotnet/cs/` (ADR 0140, [`background-jobs.md`](background-jobs.md)) |
 | `Kazo.Os.App.Build` | the build integration (see below) |
 | `Kazo.Os.Platform.Core`, `.Blazor`, `.ResourceAccounting`, `.WorkerHost`, `Kazo.Os.Infrastructure.Browser`, `Kazo.Os.Windowing.Abstractions`, `.Core`, `.Blazor`, `Kazo.Os.Taskbar.Blazor`, `Kazo.Os.Theming.Blazor`, `Kazo.Os.MobileShell.Blazor`, `Kazo.Os.Server.Contracts` | the platform, what a host composes (`Server.Contracts` is a dependency of `Platform.Core`) |
 | `Kazo.Os.Ecosystem.Host` | the OS itself: desktop, startup, services, browser adapters, design tokens |
@@ -520,6 +520,11 @@ repository, against the packages of its version, and **never rebuilt**:
 The tests load the current major's app (3.0.0) into the OS; those of
 1.x and 2.x remain as proof of the **refusal** of an app from another major
 (ADR 0149 §5, ADR 0228).
+
+The module of the Craft apps (`Kazo.Os.AppSdk.Craft`, ADR 0259) has no
+compatibility app yet: it is compiled against the packages of the first
+published version that contains the module (`produce-fixture.sh`), at that
+release.
 
 ```bash
 build/pack-local.sh

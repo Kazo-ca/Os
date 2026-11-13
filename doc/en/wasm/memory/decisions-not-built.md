@@ -68,6 +68,13 @@ Decided on 2026-10-28:
   starts as soon as Kazo Word is published in the Store, with Word's methods.
   Common method: [`craft-app-port-guide.md`](../dev/craft-app-port-guide.md);
   one `TODO` issue per app.
+- Shared code of the Craft apps (Benoit, 2026-11-13, Kazo Word's decision 8):
+  an SDK module shipped and served by the OS, `Kazo.Os.AppSdk.Craft` (iframe
+  frame, proxy, picker, shortcuts, settings, `DocumentSession`); each app
+  keeps its window. [ADR 0259](../dev/adr/0259-shared-craft-app-host-module.md),
+  series `craft-host/base`: work items 2 (C# library), 3 (scripts) and 4 (end-to-end journey with the test package `Tests/fixtures/craft-app`, guide [`craft-apps.md`](../framework/craft-apps.md), port guide rewritten) done; reaches `main` with the next OS version (number picked by Benoit), which becomes the minimum version of the Craft apps on the module. The `host` message (`autosave: true`) is to be sent once craft-libs#713 ships. Kazo Word ships with its copy and
+  moves to the module afterwards; Kazo Spreadsheets uses it from its work
+  item 1.
 
 ## Server-hosted apps ("server sandbox")
 

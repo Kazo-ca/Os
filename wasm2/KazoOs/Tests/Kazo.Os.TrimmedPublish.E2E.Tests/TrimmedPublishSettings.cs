@@ -26,8 +26,13 @@ namespace Kazo.Os.TrimmedPublish.E2E.Tests;
 /// <c>catalog:official</c>: the direct link tests (ADR 0258) sign the test package with it;
 /// <see langword="null"/> skips them.
 /// </param>
+/// <param name="CraftPackagesDirectory">
+/// The <c>kazoos-packages</c> folder of the Craft test package of ADR 0259
+/// (<c>Tests/fixtures/craft-app</c>); <see langword="null"/> skips the Craft app journey.
+/// </param>
 public sealed record TrimmedPublishSettings(
-    string Url, string? CatalogPath, string? ArtifactsDirectory, string? PwaUrl = null, string? PackagesDirectory = null, string? SigningKeyPath = null)
+    string Url, string? CatalogPath, string? ArtifactsDirectory, string? PwaUrl = null, string? PackagesDirectory = null, string? SigningKeyPath = null,
+    string? CraftPackagesDirectory = null)
 {
     /// <summary>Base address of the served publish. Required.</summary>
     public const string UrlVariable = "KAZOOS_TRIMMED_URL";
@@ -47,6 +52,9 @@ public sealed record TrimmedPublishSettings(
     /// <summary>Private key of the run that signs the test package as the official catalog would (ADR 0258).</summary>
     public const string SigningKeyVariable = "KAZOOS_TRIMMED_SIGNING_KEY";
 
+    /// <summary>Folder of the Craft test package installed by kazopkg (ADR 0259).</summary>
+    public const string CraftPackagesVariable = "KAZOOS_TRIMMED_CRAFT_PACKAGES";
+
     /// <summary>The window apps of the Ecosystem host, when no catalog is given.</summary>
     public static readonly IReadOnlyList<string> FallbackWindowApps =
     [
@@ -61,7 +69,8 @@ public sealed record TrimmedPublishSettings(
         string? url = Read(UrlVariable);
         return url is null
             ? null
-            : new TrimmedPublishSettings(url.TrimEnd('/'), Read(CatalogVariable), Read(ArtifactsVariable), Read(PwaUrlVariable)?.TrimEnd('/'), Read(PackagesVariable), Read(SigningKeyVariable));
+            : new TrimmedPublishSettings(url.TrimEnd('/'), Read(CatalogVariable), Read(ArtifactsVariable), Read(PwaUrlVariable)?.TrimEnd('/'), Read(PackagesVariable), Read(SigningKeyVariable),
+                Read(CraftPackagesVariable));
     }
 
     /// <summary>

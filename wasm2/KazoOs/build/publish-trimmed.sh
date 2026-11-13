@@ -11,8 +11,9 @@
 # with a static file server and runs Tests/Kazo.Os.TrimmedPublish.E2E.Tests against it: sign-in,
 # every window app of the Start menu, a pipeline in the worker pool, the Intranet and the sample
 # Blazor site in the Browser, a reload with no network once the service worker has cached the
-# release, and a test package installed by kazopkg whose wwwroot/ files and worker scripts load,
-# then installed and launched by a direct link ?autolaunch=<appId> (ADR 0258).
+# release, a test package installed by kazopkg whose wwwroot/ files and worker scripts load, then
+# installed and launched by a direct link ?autolaunch=<appId> (ADR 0258), and a Craft app window
+# built on the Kazo.Os.AppSdk.Craft module (ADR 0259).
 # Exit code 0 only when the publish and every test (EXPECTED_TESTS) passed.
 #
 #   --skip-build      reuse the existing publish and test build
@@ -44,6 +45,9 @@ PACKAGES="$OUT/kazoos-packages"
 # ADR 0258: the run's signing key of the test catalog (private PEM, public base64 SubjectPublicKeyInfo).
 SIGNING_KEY="$OUT/test-catalog-signing/key.pem"
 SIGNING_PUBLIC="$OUT/test-catalog-signing/public.txt"
+# ADR 0259: the Craft test package (Tests/fixtures/craft-app), a window on the OS module Kazo.Os.AppSdk.Craft.
+CRAFT_PACKAGE_PROJECT="$ROOT/Tests/fixtures/craft-app/Kazo.Os.Fixtures.CraftApp/Kazo.Os.Fixtures.CraftApp.csproj"
+CRAFT_PACKAGES="$OUT/kazoos-packages-craft"
 
 SKIP_BUILD=0
 COMPARE=0
@@ -180,6 +184,13 @@ if [[ $SKIP_BUILD -eq 0 ]]; then
         log "RESULT: FAIL (test package)"
         exit 1
     fi
+    log "packing the Craft test package (ADR 0259)"
+    rm -rf "$CRAFT_PACKAGES"
+    if ! dotnet build "$CRAFT_PACKAGE_PROJECT" -c Release -t:KazoOsPack -p:KazoOsPackageOutput="$CRAFT_PACKAGES" >"$LOGS/pack-craft.log" 2>&1; then
+        grep -E ' error ' "$LOGS/pack-craft.log" | sort -u | head -20 | sed 's/^/    /'
+        log "RESULT: FAIL (Craft test package)"
+        exit 1
+    fi
     log "building the test suite"
     if ! dotnet build "$TEST_PROJECT" -c Debug >"$LOGS/build-tests.log" 2>&1; then
         grep -E ' error ' "$LOGS/build-tests.log" | sort -u | head -20 | sed 's/^/    /'
@@ -214,20 +225,22 @@ KAZOOS_TRIMMED_CATALOG="$CATALOG" \
 KAZOOS_TRIMMED_ARTIFACTS="$OUT/screenshots" \
 KAZOOS_TRIMMED_PACKAGES="$PACKAGES" \
 KAZOOS_TRIMMED_SIGNING_KEY="$SIGNING_KEY" \
+KAZOOS_TRIMMED_CRAFT_PACKAGES="$CRAFT_PACKAGES" \
     dotnet test "$TEST_PROJECT" --no-build -c Debug --logger "console;verbosity=detailed" >"$LOGS/tests.log" 2>&1
 code=$?
 stop_servers
 grep -E '^\s*\[(trimmed|chromium)\]' "$LOGS/tests.log" | sed "s/^ */    /"
 
-# A skipped test exits 0 too: require every test to have actually run and passed. Thirteen tests: the
+# A skipped test exits 0 too: require every test to have actually run and passed. Fourteen tests: the
 # boot with every app, the offline boot, the window rendered in a worker with its measurements
 # (ADR 0133, TrimmedPublishTests.RemoteWindows.cs), the installed app's wwwroot/ files served on
 # both addresses (ADR 0206, TrimmedPublishTests.InstalledApps.cs), an installed app's page in an
 # iframe on both addresses (ADR 0243, TrimmedPublishTests.InstalledAppPages.cs), the notification bubble
 # (ADR 0197, TrimmedPublishTests.Toasts.cs), and the unread notifications dot next to the clock
-# (ADR 0196, TrimmedPublishTests.Notifications.cs), and the direct link with no account, with an
-# account, and for a missing app and a cancel (ADR 0258, TrimmedPublishTests.AppLaunchLink.cs).
-EXPECTED_TESTS=13
+# (ADR 0196, TrimmedPublishTests.Notifications.cs), the direct link with no account, with an
+# account, and for a missing app and a cancel (ADR 0258, TrimmedPublishTests.AppLaunchLink.cs), and
+# a Craft app window on the OS module, installed by kazopkg (ADR 0259, TrimmedPublishTests.CraftApps.cs).
+EXPECTED_TESTS=14
 if [[ $code -eq 0 ]] && grep -qE "^\s*Passed: +$EXPECTED_TESTS\s*$" "$LOGS/tests.log" && ! grep -qE '^\s*Skipped: +[1-9]' "$LOGS/tests.log"; then
     [[ -z "$PWA_URL" ]] && log "note: the offline test did not run (no 127.0.0.2)"
     log "RESULT: PASS"

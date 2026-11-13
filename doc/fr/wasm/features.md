@@ -443,6 +443,7 @@ dans `main`, le lien mène à sa PR.
 | --- | --- | --- | --- |
 | Catalogue des applications | Format du catalogue, vérification et publication des applications proposées. | [0188](dev/adr/0188-hack-store-and-app-catalog.md) | [AppMarketPlace #1](https://github.com/Kazo-ca/Os-AppMarketPlace/issues/1) |
 | Lancer une app par un lien direct | Le lien `https://os.kazo.ca/?autolaunch=<appId>` démarre Kazo OS en invité s'il n'y a aucun compte, installe l'app depuis le catalogue officiel signé et la lance ; avec un compte, il ouvre le Store à la page de l'app. | [0258](https://github.com/Kazo-ca/Os/pull/468) | Série `app-link/base` : chantiers 1 à 3 faits, voir [`app-launch-link.md`](dev/app-launch-link.md) |
+| Module commun des apps Craft | `Kazo.Os.AppSdk.Craft`, livré et servi par l'OS : le cadre de l'iframe (proxy, sélecteur de fichiers, raccourcis, réglages par utilisateur) et la logique des documents des apps Craft (Kazo Word, Kazo Spreadsheets…), écrits une fois au lieu d'une copie par app. Bibliothèque, scripts, parcours de bout en bout dans l'OS publié et guide [`craft-apps.md`](framework/craft-apps.md) prêts dans la série ; arrive avec la prochaine version de l'OS. | [0259](dev/adr/0259-shared-craft-app-host-module.md) | Série `craft-host/base` |
 
 ### Personnalisation
 
