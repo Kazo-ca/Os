@@ -121,7 +121,7 @@ internal sealed partial class AppManagementGateway
             await packages.ReadPersonalInstalledAsync(user, _principal.HomePath, cancellationToken).ConfigureAwait(false))
         {
             PackagedAppIds = (_installedPackages?.Invoke()?.Apps.Keys ?? []).Concat(systemInstalled.Sources.Keys).ToHashSet(StringComparer.Ordinal),
-            // ADR 0244 §1, §2: the libraries the installed apps carry, and those already in the page.
+            // ADR 0261 §1, §2: the libraries the installed apps carry, and those already in the page.
             InstalledApps = [.. (_installedPackages?.Invoke()?.Apps.Values ?? []).Distinct()],
             LoadedPackageLibraries = InstalledLibraries?.Invoke()?.LoadedFromPackages ?? new HashSet<string>(StringComparer.OrdinalIgnoreCase),
         };
@@ -159,7 +159,7 @@ internal sealed partial class AppManagementGateway
                 {
                     BlockReason = plan.BlockReason,
                     Signed = plan.Signed,
-                    // ADR 0243 §3: the window shows the feature's set once, with what it brings.
+                    // ADR 0260 §3: the window shows the feature's set once, with what it brings.
                     IsFeature = plan.Package.IsFeature,
                     FeatureEntryPoints = DescribeEntryPoints(plan.Package),
                 },
@@ -203,7 +203,7 @@ internal sealed partial class AppManagementGateway
         [.. package.Children.Select(static child => $"{child.Name} ({child.Kind.ToString().ToLowerInvariant()})")];
 
     /// <summary>
-    /// ADR 0243 §3: the administrator's consent to the installation is the machine approval of the
+    /// ADR 0260 §3: the administrator's consent to the installation is the machine approval of the
     /// feature's dangerous capabilities. The <c>allow</c> lines of <c>/etc/kazoos/app-permissions.config</c>
     /// (ADR 0049 §4) are written for the feature and each child, with the real-network ports each one
     /// declares (ADR 0233 §4), so the first launch of an entry point shows no approval window. A
@@ -234,7 +234,7 @@ internal sealed partial class AppManagementGateway
         }
     }
 
-    /// <summary>Removes the machine decisions ADR 0243 §3 wrote for a feature and its children, once it is removed.</summary>
+    /// <summary>Removes the machine decisions ADR 0260 §3 wrote for a feature and its children, once it is removed.</summary>
     private async ValueTask ForgetFeatureApprovalsAsync(string featureId, CancellationToken cancellationToken)
     {
         if (PermissionStore?.Invoke() is not { } permissions)
@@ -311,7 +311,7 @@ internal sealed partial class AppManagementGateway
         bool feature = manifest?.Kind == AppKind.Feature;
         if (feature)
         {
-            // Before the catalog forgets the children: the approvals of ADR 0243 §3 go with the feature.
+            // Before the catalog forgets the children: the approvals of ADR 0260 §3 go with the feature.
             await ForgetFeatureApprovalsAsync(appId, cancellationToken).ConfigureAwait(false);
         }
 
@@ -499,7 +499,7 @@ internal sealed partial class AppManagementGateway
     }
 
     // removed: the package was just removed; Loaded then says the app is still in the page,
-    // whatever its libraries wait for (ADR 0244 §3).
+    // whatever its libraries wait for (ADR 0261 §3).
     private KazoInstalledPackage ToPublic(string appId, AppPackageSource source, bool systemWide, bool removed = false) => new(
         appId,
         source.Name,

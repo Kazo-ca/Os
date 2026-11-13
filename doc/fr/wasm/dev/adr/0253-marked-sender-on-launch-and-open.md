@@ -15,7 +15,7 @@ sert au journal seulement »), 2026-11-11.
 
 - **Complète :** l'[ADR 0096](0096-added-intents-and-app-defined-intents.md)
   (intents, `AppIntentDelivery.SenderAppId` pour les intents définis par une
-  app), l'[ADR 0245](0245-feature-service-registry-and-async-resolution.md)
+  app), l'[ADR 0262](0262-feature-service-registry-and-async-resolution.md)
   (identité de l'appelant d'un service) et l'[ADR 0254](0254-per-user-events.md)
   (journal par usager).
 - **Pour :** le journal d'Os-x86 (qui a demandé le lancement d'un programme :
@@ -63,7 +63,7 @@ sert au journal seulement »), 2026-11-11.
 - Le récepteur le lit dans `IAppExecutionContext.Intent?.Sender` (fenêtre
   et service) et dans `TerminalExecutionContext.Sender` (commande) ; une
   app lancée sans intent (démarrage du bureau) a `Sender.Kind = Desktop`.
-  Un service fourni par une Feature (ADR 0245) le reçoit par
+  Un service fourni par une Feature (ADR 0262) le reçoit par
   `IFeatureServiceContext.Caller` (`AppId`, `UserId`), même structure.
 
 ### 2. Pour le journal seulement

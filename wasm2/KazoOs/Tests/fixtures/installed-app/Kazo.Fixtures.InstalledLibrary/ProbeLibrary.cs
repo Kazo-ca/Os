@@ -1,7 +1,7 @@
 namespace Kazo.Fixtures.InstalledLibrary;
 
 /// <summary>
-/// What the test app of ADR 0206 calls in its second assembly (ADR 0244 §1): the answer proves the
+/// What the test app of ADR 0206 calls in its second assembly (ADR 0261 §1): the answer proves the
 /// library was in the package, verified at installation and loaded before the app's own code.
 /// </summary>
 public static class ProbeLibrary

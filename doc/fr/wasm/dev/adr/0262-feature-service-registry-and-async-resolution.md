@@ -1,6 +1,6 @@
-> [English version](../../../../en/wasm/dev/adr/0245-feature-service-registry-and-async-resolution.md)
+> [English version](../../../../en/wasm/dev/adr/0262-feature-service-registry-and-async-resolution.md)
 
-# ADR 0245 : registre d'interfaces des Features et résolution asynchrone (`KazoFeatures.GetServiceAsync<T>()`, null si absent)
+# ADR 0262 : registre d'interfaces des Features et résolution asynchrone (`KazoFeatures.GetServiceAsync<T>()`, null si absent)
 
 ## Statut
 
@@ -14,8 +14,10 @@ fin de cette ADR et la décision les applique. Décisions d'origine : décision 
 `Os-x86.Interface`, `x86-Lib` l'implémente, la Feature enregistre l'instance)
 de la conception d'Os-x86.
 
-- **Complète :** l'[ADR 0243](0243-feature-app-type.md) (seule une Feature
-  fournit une interface) et l'[ADR 0244](0244-app-libraries-and-shared-versions.md)
+D'abord numérotée 0245 ; renumérotée 0262 le 2026-11-13 (choix de Benoit), car `main` avait publié l'ADR 0245 dans Kazo OS 3.3.1 ou 3.3.2.
+
+- **Complète :** l'[ADR 0260](0260-feature-app-type.md) (seule une Feature
+  fournit une interface) et l'[ADR 0261](0261-app-libraries-and-shared-versions.md)
   (une copie des contrats par page).
 - **Ne change pas :** les contrats de composants (ADR 0063, 0148, 0156), qui
   restent la voie pour un **rendu** fourni ; cette ADR couvre un **service**
@@ -62,11 +64,11 @@ de la conception d'Os-x86.
   (`apps.package.service-already-provided`, nom de l'autre Feature).
 - L'implémentation est **instanciée au premier besoin**, une fois par page,
   dans le **contexte d'exécution de la Feature** (son identité, ses
-  permissions : l'ensemble de l'ADR 0243 §3, restreint à l'enfant déclaré
+  permissions : l'ensemble de l'ADR 0260 §3, restreint à l'enfant déclaré
   `ServiceEntryPoint` s'il y en a un), jamais dans celui de l'appelant. Elle
   reçoit un `IFeatureServiceContext` (contexte de la Feature, identité de
   l'appelant pour l'ADR 0253, jeton d'arrêt de la page).
-- Une app ordinaire ne peut rien fournir (ADR 0243 §5) ; toute app, système
+- Une app ordinaire ne peut rien fournir (ADR 0260 §5) ; toute app, système
   comprise, peut consommer (§2 ; l'app Terminal, ADR 0252 §1).
 
 ### 2. Une app consomme par `KazoFeatures`
@@ -98,7 +100,7 @@ public static class KazoFeatures
   est installé, sans le charger ; sert à afficher ou cacher un bouton.
 - `GetStatusAsync<T>()` rend la raison : `Available`, `NotInstalled`,
   `Disabled`, `VersionMismatch(installée, demandée)`, `LoadFailed(code)`,
-  `RestartRequired` (copie plus ancienne chargée, ADR 0244 §3),
+  `RestartRequired` (copie plus ancienne chargée, ADR 0261 §3),
   `NotDeclared` (§3). Une app qui veut proposer l'installation ouvre le Store
   sur la Feature (`KazoApps.RequestInstallAsync`, ADR 0248).
 - **Permission manquante = exception, pas null** : la résolution ne vérifie
@@ -123,16 +125,16 @@ public static class KazoFeatures
   null avec `VersionMismatch`. Une dépendance obligatoire hors plage garde
   le comportement actuel (`catalog.dependency.incompatible`).
 - La version de la Feature et la version de ses contrats sont liées par
-  l'ADR 0244 (majeure commune) ; la plage de la dépendance porte sur la
+  l'ADR 0261 (majeure commune) ; la plage de la dépendance porte sur la
   version de la Feature.
 
 ### 4. Chargement et redémarrage
 
 - Premier `GetServiceAsync<T>()` : l'OS charge l'assemblage de la Feature
   (comme `EnsureDescriptorAsync`), choisit la copie des contrats
-  (ADR 0244 §2), instancie l'implémentation, puis rend l'instance. Si la
+  (ADR 0261 §2), instancie l'implémentation, puis rend l'instance. Si la
   copie chargée est plus ancienne que celle de la Feature : `RestartRequired`
-  et null, avec la proposition de redémarrer de l'ADR 0243 §6.
+  et null, avec la proposition de redémarrer de l'ADR 0260 §6.
 - Un fournisseur dont le constructeur lève : `LoadFailed`, journal dans
   `/var/log/apps/<feature>.log`, null ; réessai au prochain appel.
 

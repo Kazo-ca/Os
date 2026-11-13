@@ -346,7 +346,7 @@ public sealed class AppInstallationServiceTests
                     Window(Kernel, "Kernel"),
                     Window(Term, "Term", Needs(Kernel)),
                     Window(Site, "Site") with { Kind = AppKind.Web, Web = new WebAppManifest(["http://site.hack/"]) },
-                    // ADR 0243: a feature and its one entry point, a command.
+                    // ADR 0260: a feature and its one entry point, a command.
                     Window(Feature, "Feature") with { Kind = AppKind.Feature, EntryPoint = null },
                     Window(FeatureCli, "x86") with { Kind = AppKind.Terminal, Parent = Feature, Terminal = new TerminalCommandManifest("x86", [], "x86") }
                 ],

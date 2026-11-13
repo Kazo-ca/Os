@@ -128,7 +128,7 @@ public sealed class AppInstallationService : IAppInstallationService, IAsyncDisp
             return AppInstallationState.System;
         }
 
-        // ADR 0243 §2: a feature's child has the state of its feature.
+        // ADR 0260 §2: a feature's child has the state of its feature.
         if (_catalog.GetFeatureOf(appId) is { } feature)
         {
             appId = feature;
@@ -146,7 +146,7 @@ public sealed class AppInstallationService : IAppInstallationService, IAsyncDisp
     public IReadOnlyList<string> GetUninstallClosure(string appId)
     {
         RequireKnown(appId);
-        // ADR 0243 §2: a child cannot be removed alone; the closure is its feature's.
+        // ADR 0260 §2: a child cannot be removed alone; the closure is its feature's.
         HashSet<string> closure = AppsConfigDocument.ExpandDependents(_catalog, [_catalog.GetFeatureOf(appId) ?? appId]);
         return [.. _catalog.DeactivationOrder.Where(closure.Contains)];
     }
@@ -174,7 +174,7 @@ public sealed class AppInstallationService : IAppInstallationService, IAsyncDisp
 
         if (_catalog.GetFeatureOf(appId) is { } feature)
         {
-            // ADR 0243 §2: a child is never activated or removed alone.
+            // ADR 0260 §2: a child is never activated or removed alone.
             return AppInstallationResult.Failed($"apps.app.feature-child:{appId}:{feature}");
         }
 
@@ -268,12 +268,12 @@ public sealed class AppInstallationService : IAppInstallationService, IAsyncDisp
 
         if (_catalog.GetFeatureOf(appId) is { } feature)
         {
-            // ADR 0243 §2: a child is never activated or removed alone.
+            // ADR 0260 §2: a child is never activated or removed alone.
             return AppInstallationResult.Failed($"apps.app.feature-child:{appId}:{feature}");
         }
 
         HashSet<string> needed = AppsConfigDocument.ExpandDependencies(_catalog, appId);
-        // ADR 0243 §2: a feature comes back with its entry points, whose lines the uninstall wrote.
+        // ADR 0260 §2: a feature comes back with its entry points, whose lines the uninstall wrote.
         foreach (string id in needed.ToArray())
         {
             needed.UnionWith(_catalog.GetFeatureChildren(id));
@@ -291,7 +291,7 @@ public sealed class AppInstallationService : IAppInstallationService, IAsyncDisp
         }
 
         // A feature's children are listed with it by the uninstall but never read as uninstalled by
-        // themselves (ADR 0243 §2): their lines go whenever their feature's does.
+        // themselves (ADR 0260 §2): their lines go whenever their feature's does.
         string[] toRemove = [.. _catalog.ActivationOrder.Where(id => needed.Contains(id)
             && (listed.Contains(id) || (_catalog.GetFeatureOf(id) is { } feature && listed.Contains(feature))))];
         if (toRemove.Length == 0)

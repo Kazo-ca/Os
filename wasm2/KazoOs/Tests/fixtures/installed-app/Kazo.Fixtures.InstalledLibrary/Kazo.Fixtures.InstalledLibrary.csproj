@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <!--
-    Library of the test package of ADR 0206, not part of the solution (ADR 0244 §1, issue #419):
+    Library of the test package of ADR 0206, not part of the solution (ADR 0261 §1, issue #419):
     a ProjectReference of Kazo.Os.Fixtures.InstalledAssets with no dependency on the SDK. KazoOsPack
     puts it in lib/ and lists it in "libraries" of kazoos-package.json; the trimmed OS loads it
     before the app's own assembly. Its name is outside Kazo.Os.*, which the OS reserves.

@@ -29,7 +29,7 @@ public enum AppKind
     Web,
 
     /// <summary>
-    /// An optional feature of the OS (ADR 0243): one identity, one package, one approval of its
+    /// An optional feature of the OS (ADR 0260): one identity, one package, one approval of its
     /// permissions, installed for the whole machine by an administrator. It has no entry point of its
     /// own (<see cref="AppManifest.EntryPoint"/> is forbidden): what runs are its children, ordinary
     /// manifests of another kind that name it in <see cref="AppManifest.Parent"/>.

@@ -1,6 +1,6 @@
-> [Version française](../../../../fr/wasm/dev/adr/0244-app-libraries-and-shared-versions.md)
+> [Version française](../../../../fr/wasm/dev/adr/0261-app-libraries-and-shared-versions.md)
 
-# ADR 0244: app libraries in the package (#419) and versions shared between apps
+# ADR 0261: app libraries in the package (#419) and versions shared between apps
 
 ## Status
 
@@ -11,6 +11,8 @@ Proposed on 2026-11-11, for the Os-x86 feature
 Feature" (A, both coexist); the decision applies them. Source decisions: D30
 and D36 of the Os-x86 design (series 3 and 4, 2026-11-09); issue
 [#419](https://github.com/Kazo-ca/Os/issues/419) (`TODO`).
+
+First numbered 0244; renumbered 0261 on 2026-11-13 (Benoit's choice), because `main` had released ADR 0244 in Kazo OS 3.3.1 or 3.3.2.
 
 - **Completes:** [ADR 0182](0182-install-apps-from-github.md) §5 (packages,
   `lib/`, API check), [ADR 0222](0222-installed-app-satellite-assemblies.md)
@@ -40,7 +42,7 @@ and D36 of the Os-x86 design (series 3 and 4, 2026-11-09); issue
   for the whole page, and an old copy could mask the Feature's.
 - The Os-x86 model (D30, D36) wants every client app to **embed** the
   contracts (so that `GetServiceAsync<Ix86>()` compiles and returns null when
-  Os-x86 is absent, ADR 0245) and a single copy, **the most recent compatible
+  Os-x86 is absent, ADR 0262) and a single copy, **the most recent compatible
   one**, loaded per page.
 - The SDK (`Kazo.Os.AppSdk*`, `Kazo.Os.App.Abstractions`) stays provided by
   the OS (ADR 0019); it is not an app library, and the `KOSAPP0030` rule
@@ -82,9 +84,9 @@ and D36 of the Os-x86 design (series 3 and 4, 2026-11-09); issue
   restriction; the `shared` flag of the package manifest is copied from the
   property and only serves Kazo, to load a single copy per major version.
 - Choice rule, applied **at first need** (first launch of an app that needs
-  it, or first resolution of ADR 0245):
+  it, or first resolution of ADR 0262):
   1. if an **installed Feature provides** an interface of that library
-     (ADR 0245), its copy is loaded;
+     (ADR 0262), its copy is loaded;
   2. otherwise, among the copies of the installed and enabled apps, **the most
      recent compatible one**: same major version as the one the triggering
      app asks for, highest minor version.
@@ -103,7 +105,7 @@ and D36 of the Os-x86 design (series 3 and 4, 2026-11-09); issue
 
 - .NET does not unload an assembly from the default context. When a copy of a
   shared contract is already loaded while a Feature that provides a newer
-  copy installs (ADR 0243 §6), or while an app that requires a higher minor
+  copy installs (ADR 0260 §6), or while an app that requires a higher minor
   launches, the OS **offers a restart** ("Restart to finish", ADR 0212 §3)
   and, meanwhile, serves the loaded copy: an app that asks for a member
   missing from that copy gets `MissingMethodException` in its window

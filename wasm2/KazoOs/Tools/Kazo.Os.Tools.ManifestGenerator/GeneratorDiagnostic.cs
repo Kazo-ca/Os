@@ -145,13 +145,13 @@ public static class GeneratorCodes
     public const string PackageWebAssetsMissing = "KOSAPP0065";
 
     /// <summary>
-    /// A feature (ADR 0243 §1) overrides <c>EntryPoint</c>: a feature has no entry point of its
+    /// A feature (ADR 0260 §1) overrides <c>EntryPoint</c>: a feature has no entry point of its
     /// own, only its children (<c>FeatureDefinition.EntryPoints</c>) run.
     /// </summary>
     public const string FeatureEntryPoint = "KOSAPP0032";
 
     /// <summary>
-    /// An ordinary app declares what only a feature can (ADR 0243 §5): the kind <c>Feature</c>
+    /// An ordinary app declares what only a feature can (ADR 0260 §5): the kind <c>Feature</c>
     /// outside a <c>FeatureDefinition</c>, or a feature declared next to other apps in one project.
     /// </summary>
     public const string FeatureOnly = "KOSAPP0033";

@@ -15,7 +15,7 @@ public enum AppCatalogEntryKind
 
     /// <summary>
     /// <c>feature</c>: a <c>.kazoapp</c> package that brings a feature of the OS with its entry
-    /// points, installed for the whole machine only (ADR 0243 §4).
+    /// points, installed for the whole machine only (ADR 0260 §4).
     /// </summary>
     Feature = 2
 }
@@ -86,7 +86,7 @@ public sealed record AppCatalogEntry(
     /// <summary>Gets what it installs; <see cref="AppCatalogEntryKind.App"/> unless the catalog says <c>theme-pack</c> or <c>feature</c>.</summary>
     public AppCatalogEntryKind Kind { get; init; }
 
-    /// <summary>Gets whether it installs a <c>.kazoapp</c> package: an app or a feature (ADR 0243 §4), not a theme pack.</summary>
+    /// <summary>Gets whether it installs a <c>.kazoapp</c> package: an app or a feature (ADR 0260 §4), not a theme pack.</summary>
     public bool IsPackage => Kind is AppCatalogEntryKind.App or AppCatalogEntryKind.Feature;
 
     /// <summary>Gets the version <see cref="LatestVersion"/> names, or the newest one.</summary>
@@ -149,7 +149,7 @@ public sealed record AppCatalogListing(
 /// <remarks>
 /// A file of a newer schema, or that is not JSON, is refused whole. One invalid app or version is
 /// skipped with a warning, so a single broken entry does not hide the rest of the catalog.
-/// <c>kind</c> is <c>app</c> (the default when absent), <c>feature</c> (ADR 0243 §4: a <c>.kazoapp</c>
+/// <c>kind</c> is <c>app</c> (the default when absent), <c>feature</c> (ADR 0260 §4: a <c>.kazoapp</c>
 /// installed for the whole machine only) or <c>theme-pack</c> (ADR 0213 §2), whose versions are
 /// <c>.kazotheme</c> files of at most 30 MiB. A kind this OS does not know is read as an app with a
 /// warning, so a newer catalog does not hide its entries: the package itself says what it is at
@@ -166,7 +166,7 @@ public static class AppCatalogDocument
     /// <summary>The <c>kind</c> of a theme pack (ADR 0213 §2).</summary>
     public const string ThemePackKind = "theme-pack";
 
-    /// <summary>The <c>kind</c> of a feature of the OS (ADR 0243 §4).</summary>
+    /// <summary>The <c>kind</c> of a feature of the OS (ADR 0260 §4).</summary>
     public const string FeatureKind = "feature";
 
     /// <summary>Largest <c>catalog.json</c> accepted, in bytes.</summary>

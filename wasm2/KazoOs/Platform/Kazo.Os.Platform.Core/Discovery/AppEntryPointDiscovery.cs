@@ -73,7 +73,7 @@ public static class AppEntryPointDiscovery
         {
             if (manifest.Kind == AppKind.Feature)
             {
-                // ADR 0243 §1: a feature has no entry point; its children are resolved like any app.
+                // ADR 0260 §1: a feature has no entry point; its children are resolved like any app.
                 continue;
             }
 

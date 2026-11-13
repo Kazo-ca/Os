@@ -215,7 +215,7 @@ public sealed partial class AppPackageGatewayTests
         AppPermissionDecisions decisions = await permissions.ReadAsync();
         AppManifest cli = AppManifestJsonSerializer.NormalizeOptionalCollections(
             AppManifestJsonSerializer.DeserializeStrict(AppPackageTests.FeatureChildJson("cli", "terminal", "\"filesystem.system.read\"", "x86")));
-        // ADR 0243 §3: nothing pending, so the launch gate opens no approval window.
+        // ADR 0260 §3: nothing pending, so the launch gate opens no approval window.
         Assert.All(
             DangerousCapabilityEvaluator.Evaluate(cli, isSystemApp: false, DangerousCapabilityPolicy.Prompt, decisions),
             status => Assert.Equal(DangerousCapabilityState.Allowed, status.State));
@@ -234,7 +234,7 @@ public sealed partial class AppPackageGatewayTests
             () => gateway.InstallPackageAsync(AppPackageTests.FeatureId, KazoPackageScope.User).AsTask());
         KazoPackageInstallReport report = await gateway.InstallPackageAsync(AppPackageTests.FeatureId);
 
-        // The Store reads the kind from the catalog (ADR 0243 §4, catalog.json `kind: feature`)...
+        // The Store reads the kind from the catalog (ADR 0260 §4, catalog.json `kind: feature`)...
         KazoCatalogApp feature = Assert.Single(official.Apps);
         Assert.Equal(KazoCatalogItemKind.Feature, feature.Kind);
         Assert.Equal($"catalog:official/{AppPackageTests.FeatureId}", feature.Source);
@@ -672,7 +672,7 @@ public sealed partial class AppPackageGatewayTests
     /// <summary>The runtime as the check sees it: everything present, or nothing.</summary>
     private sealed class FixedRuntime(bool present, IReadOnlySet<string>? absentAssemblies = null) : IRuntimeApiSurface
     {
-        // ADR 0244 §1: a library of an app is an assembly the OS does not have.
+        // ADR 0261 §1: a library of an app is an assembly the OS does not have.
         public bool HasAssembly(string assemblyName) => present && absentAssemblies?.Contains(assemblyName) != true;
 
         public bool HasType(string assemblyName, string typeName) => present;
@@ -818,7 +818,7 @@ public sealed partial class AppPackageGatewayTests
                 """);
         }
 
-        /// <summary>Publishes a feature with three children (ADR 0243 §2) in the official catalog, with <c>kind: feature</c> (ADR 0243 §4).</summary>
+        /// <summary>Publishes a feature with three children (ADR 0260 §2) in the official catalog, with <c>kind: feature</c> (ADR 0260 §4).</summary>
         internal void PublishFeatureCatalog(string version)
         {
             string address = AppPackageDefaults.OfficialCatalogAddress;
@@ -839,7 +839,7 @@ public sealed partial class AppPackageGatewayTests
                 """);
         }
 
-        /// <summary>Publishes a feature with three children (ADR 0243 §2) on a repository's package branch.</summary>
+        /// <summary>Publishes a feature with three children (ADR 0260 §2) on a repository's package branch.</summary>
         internal void PublishFeature(string repository, string version)
         {
             string root = $"https://raw.githubusercontent.com/{repository}/kazoos-packages/";
@@ -853,7 +853,7 @@ public sealed partial class AppPackageGatewayTests
         }
 
         /// <summary>
-        /// Publishes one version of the sample app with libraries of its own (ADR 0244 §1): real
+        /// Publishes one version of the sample app with libraries of its own (ADR 0261 §1): real
         /// assemblies in <c>lib/</c>, listed in <c>libraries</c> of the package description.
         /// </summary>
         internal void PublishWithLibraries(string repository, string version, params byte[][] libraries)

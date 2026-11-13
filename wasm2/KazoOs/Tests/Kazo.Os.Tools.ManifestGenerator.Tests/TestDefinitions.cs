@@ -116,7 +116,7 @@ public sealed class WrongKindApp : ValidCommandApp
     public override Type EntryPoint => typeof(NotAWindow);
 }
 
-/// <summary>A valid feature with three children (ADR 0243 §2): two commands and a service.</summary>
+/// <summary>A valid feature with three children (ADR 0260 §2): two commands and a service.</summary>
 public class ValidFeature : FeatureDefinition
 {
     public override string Id => "org.kazoos.tests.feature";
@@ -140,13 +140,13 @@ public class ValidFeature : FeatureDefinition
     ];
 }
 
-/// <summary>A feature declaring an entry point of its own (ADR 0243 §1, <c>KOSAPP0032</c>).</summary>
+/// <summary>A feature declaring an entry point of its own (ADR 0260 §1, <c>KOSAPP0032</c>).</summary>
 public sealed class FeatureWithEntryPoint : ValidFeature
 {
     public override Type EntryPoint => typeof(FixtureCommand);
 }
 
-/// <summary>A feature whose child asks for a capability outside the feature's set (ADR 0243 §3).</summary>
+/// <summary>A feature whose child asks for a capability outside the feature's set (ADR 0260 §3).</summary>
 public sealed class FeatureChildOutsideSet : ValidFeature
 {
     public override IReadOnlyList<FeatureEntryPoint> EntryPoints =>
@@ -159,7 +159,7 @@ public sealed class FeatureChildOutsideSet : ValidFeature
     ];
 }
 
-/// <summary>An ordinary definition claiming the feature kind (ADR 0243 §5, <c>KOSAPP0033</c>).</summary>
+/// <summary>An ordinary definition claiming the feature kind (ADR 0260 §5, <c>KOSAPP0033</c>).</summary>
 public sealed class PlainFeatureKindApp : ValidCommandApp
 {
     public override string Id => "org.kazoos.tests.plain-feature";

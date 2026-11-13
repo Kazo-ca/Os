@@ -86,7 +86,7 @@ public sealed class HostAppCatalog
         List<InstalledApp> candidates = [];
         foreach (InstalledApp app in image.Apps)
         {
-            // ADR 0243 §2: a feature's children carry ids of their own, checked like the feature's.
+            // ADR 0260 §2: a feature's children carry ids of their own, checked like the feature's.
             if (app.Manifests.FirstOrDefault(manifest => Catalog.Manifests.ContainsKey(manifest.Id)) is { } taken)
             {
                 skipped.Add($"apps: installed app {taken.Id} has the ID of an app built into this system, app skipped");
@@ -104,7 +104,7 @@ public sealed class HostAppCatalog
             HashSet<string> refused = new(StringComparer.Ordinal);
             foreach (AppCatalogError error in result.Errors)
             {
-                // An error naming a child refuses the whole feature (ADR 0243 §2: one unit).
+                // An error naming a child refuses the whole feature (ADR 0260 §2: one unit).
                 if (candidates.FirstOrDefault(app => app.Owns(error.AppId)) is { } owner)
                 {
                     refused.Add(owner.AppId);

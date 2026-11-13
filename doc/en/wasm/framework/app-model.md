@@ -103,12 +103,12 @@ public sealed class TextEditorApp : AppDefinition
 - `[AppManifest(Execution = …)]` becomes `execution`, always written, resolved
   (never `default`): see the next section.
 
-### Features: `FeatureDefinition` (ADR 0243)
+### Features: `FeatureDefinition` (ADR 0260)
 
 A **feature** (`AppKind.Feature`, JSON value `feature`) is an optional feature
 of the OS, WSL-like: one identity, one package, one permissions screen,
 installed for the whole machine by an administrator
-([ADR 0243](../dev/adr/0243-feature-app-type.md)). It has no entry point of
+([ADR 0260](../dev/adr/0260-feature-app-type.md)). It has no entry point of
 its own; what runs are its **children**.
 
 | Type | Role |
@@ -169,7 +169,7 @@ In the OS, the catalog (`AppCatalog.FeatureChildren`, `GetFeatureOf`,
 activates before its children, a child follows it when disabled or removed,
 and the command of a `Terminal` child comes before that of an ordinary app of
 the same name (after system apps). See
-[`app-installation.md`](../dev/app-installation.md#features-adr-0243).
+[`app-installation.md`](../dev/app-installation.md#features-adr-0260).
 
 ### Intents and URI schemes (ADR 0096)
 
@@ -285,7 +285,7 @@ How `generate` works:
 - one `[AppManifest]` class → `manifest.json` at the project root;
 - several classes → `manifests/<appId>.json`; switching from one form to the other
   deletes the files of the old form;
-- a `FeatureDefinition` (ADR 0243) → `manifest.json` for the feature and
+- a `FeatureDefinition` (ADR 0260) → `manifest.json` for the feature and
   `entrypoints/<suffix>.json` per child; the stamp file names only
   `manifest.json`, aggregation and `pack` find the children next to it. A
   feature is alone in its project (`KOSAPP0033` otherwise).
@@ -333,8 +333,8 @@ with the full name of the class at fault: `App.csproj : error KOSAPP0005: [Ns.My
 | `KOSAPP0025` | Removed, never reused: refused `kazoos.file-view` and `kazoos.file-dialogs` to a non-system app (ADR 0153 §4), which ADR 0156 opens to any windowed app (ADR 0158 §1). |
 | `KOSAPP0030` | SDK boundary: `ProjectReference` forbidden in an app project (ADR 0055 §2, number fixed by ADR 0059). Emitted by the target `ValidateKazoOsSdkBoundary`. See [`app-sdk.md`](app-sdk.md). |
 | `KOSAPP0031` | SDK boundary: injected service that is neither an SDK type, nor MudBlazor, nor `IJSRuntime` (ADR 0055 §3, ADR 0059). See [`app-sdk.md`](app-sdk.md). |
-| `KOSAPP0032` | Feature (ADR 0243 §1): a `FeatureDefinition` overrides `EntryPoint`; a feature has no entry point of its own, only its `EntryPoints` run. |
-| `KOSAPP0033` | Feature (ADR 0243 §5): an ordinary app declares what only a feature can (the `Feature` kind outside a `FeatureDefinition`), or a feature is declared next to other apps in one project. |
+| `KOSAPP0032` | Feature (ADR 0260 §1): a `FeatureDefinition` overrides `EntryPoint`; a feature has no entry point of its own, only its `EntryPoints` run. |
+| `KOSAPP0033` | Feature (ADR 0260 §5): an ordinary app declares what only a feature can (the `Feature` kind outside a `FeatureDefinition`), or a feature is declared next to other apps in one project. |
 | `KOSAPP0040` | Manifest translations (ADR 0104 §4): unreadable `Resources/AppManifest.<culture>.resx`, invalid culture name, key other than `Name`, `Description`, `Terminal.Usage` (prefixed with the id in a multi-app project), `Terminal.Usage` for an app that is not a command, or a referenced `localization/` file that is unreadable at aggregation. See [`localization.md`](localization.md). |
 | `KOSAPP0090` | Invalid tool arguments. |
 | `KOSAPP0091` | App assembly cannot be loaded. |

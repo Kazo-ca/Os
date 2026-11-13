@@ -94,7 +94,7 @@ public static partial class KazoOsBrowserHostExtensions
         builder.Services.AddSingleton<WebAssemblyLazyAssemblyTransport>();
         // ADR 0222 §2: the satellite assemblies of installed apps, for every language Kazo OS speaks.
         InstalledAppSatellites installedSatellites = new(Kazo.Os.AppSdk.Globalization.KazoLocale.SupportedLanguages.Select(static culture => culture.Name));
-        // ADR 0244: the libraries their packages carry, and one copy of each shared library per page.
+        // ADR 0261: the libraries their packages carry, and one copy of each shared library per page.
         builder.Services.AddSingleton(provider => new InstalledAppLibraries(
             installedApps,
             provider.GetService<Microsoft.Extensions.Logging.ILogger<InstalledAppLibraries>>())

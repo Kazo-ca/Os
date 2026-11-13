@@ -22,7 +22,7 @@ internal sealed partial class AppManagementGateway
     public Func<IInstalledAppsActivator?>? InstalledAppsActivator { get; init; }
 
     /// <summary>
-    /// Gets what the page loaded of the installed apps' libraries (ADR 0244 §3): an app whose copy of
+    /// Gets what the page loaded of the installed apps' libraries (ADR 0261 §3): an app whose copy of
     /// a shared library waits for a restart is shown as « Restart to finish ».
     /// </summary>
     public Func<IInstalledLibraryState?>? InstalledLibraries { get; init; }
@@ -30,7 +30,7 @@ internal sealed partial class AppManagementGateway
     /// <summary>
     /// Gets the machine decisions of <c>/etc/kazoos/app-permissions.config</c> (ADR 0049 §4), where
     /// the administrator's consent to a feature's installation is written as <c>allow</c> for its
-    /// dangerous capabilities (ADR 0243 §3); <see langword="null"/> writes none, and the first
+    /// dangerous capabilities (ADR 0260 §3); <see langword="null"/> writes none, and the first
     /// launch of an entry point then asks as for any app.
     /// </summary>
     public Func<Policy.IAppPermissionStore?>? PermissionStore { get; init; }
@@ -148,7 +148,7 @@ internal sealed partial class AppManagementGateway
     /// <summary>
     /// Gets whether the running OS has <paramref name="appId"/> at <paramref name="version"/> as it
     /// will run after a restart: in its catalog, and with the copy of each shared library chosen for
-    /// it (ADR 0244 §3), not an older copy another app left in the page.
+    /// it (ADR 0261 §3), not an older copy another app left in the page.
     /// </summary>
     private bool RunsVersion(string appId, SemanticVersion version) =>
         IsInCatalogAt(appId, version) && !WaitsForLibraryRestart(appId);
@@ -159,7 +159,7 @@ internal sealed partial class AppManagementGateway
         && SemanticVersion.TryParse(manifest.Version, out SemanticVersion running)
         && running == version;
 
-    /// <summary>Gets whether a shared library of <paramref name="appId"/> waits for a restart (ADR 0244 §3).</summary>
+    /// <summary>Gets whether a shared library of <paramref name="appId"/> waits for a restart (ADR 0261 §3).</summary>
     private bool WaitsForLibraryRestart(string appId) =>
         InstalledLibraries?.Invoke()?.GetPendingRestarts().Any(restart => string.Equals(restart.AppId, appId, StringComparison.Ordinal)) == true;
 

@@ -7,8 +7,8 @@
 Accepté le 2026-11-12.
 
 - **Chantier :** `feature/15-app-libraries-code` (série `feature/base`, code de
-  l'ADR 0244).
-- **Ajuste :** l'[ADR 0244](0244-app-libraries-and-shared-versions.md) §1 et §2.
+  l'ADR 0261).
+- **Ajuste :** l'[ADR 0261](0261-app-libraries-and-shared-versions.md) §1 et §2.
   Ses décisions restent vraies : le paquet embarque les bibliothèques de l'app,
   une bibliothèque partagée a une copie par page, la compatibilité est la
   version majeure, une copie chargée n'est jamais remplacée à chaud. Cet ADR
@@ -20,26 +20,26 @@ Accepté le 2026-11-12.
 
 ## Contexte
 
-En écrivant le code de l'ADR 0244, quatre points ne tenaient pas tels
+En écrivant le code de l'ADR 0261, quatre points ne tenaient pas tels
 qu'écrits ou n'étaient pas décidés :
 
-- L'ADR 0244 §2 dit que l'auteur marque sa bibliothèque « par une propriété
+- L'ADR 0261 §2 dit que l'auteur marque sa bibliothèque « par une propriété
   MSBuild de son paquet NuGet (`buildTransitive` qui pose
   `<KazoOsSharedLibrary>true</KazoOsSharedLibrary>` sur la référence) ». Mais
   le même paragraphe veut qu'une app puisse l'utiliser « par référence de
   projet, dll ou nuget » : une DLL référencée n'a pas de `buildTransitive`, et
   un élément MSBuild posé dans le projet de l'app laisserait l'app marquer une
   bibliothèque qui ne l'est pas, ce que le §2 interdit.
-- L'ADR 0244 §2 dit que, sans Feature, deux versions majeures « coexistent
+- L'ADR 0261 §2 dit que, sans Feature, deux versions majeures « coexistent
   (chacune chargée pour ses apps, séparément) ». Toutes les apps installées
   sont chargées dans le contexte de chargement par défaut (ADR 0182, et
-  l'option A écartée par l'ADR 0244) : il ne tient qu'une assemblée par nom
+  l'option A écartée par l'ADR 0261) : il ne tient qu'une assemblée par nom
   simple.
 - Rien ne disait quoi faire de deux apps qui embarquent chacune une
   bibliothèque **non partagée** du même nom simple (deux versions d'un même
   paquet NuGet).
 - La règle 1 du §2 parle d'une « Feature installée qui fournit une interface
-  de cette bibliothèque (ADR 0245) » ; l'ADR 0245 n'est pas encore codée.
+  de cette bibliothèque (ADR 0262) » ; l'ADR 0262 n'est pas encore codée.
 
 ## Décision
 
@@ -59,12 +59,12 @@ ni par le market place. Elle accompagne simplement l'application. »
   proposition de redémarrage, pas de refus d'installation fondé sur sa
   version.
 - **Seule** une bibliothèque que son auteur a marquée partagée (§2) entre dans
-  les règles de l'ADR 0244 §2 et §3 : une copie par page, choix de la copie,
+  les règles de l'ADR 0261 §2 et §3 : une copie par page, choix de la copie,
   refus `apps.package.library-major-mismatch`, « Redémarrer pour terminer ».
 
 ### 2. La marque partagée est dans l'assemblage (question 259, réponse A)
 
-Remplace la parenthèse de l'ADR 0244 §2 sur `buildTransitive`.
+Remplace la parenthèse de l'ADR 0261 §2 sur `buildTransitive`.
 
 - L'auteur pose `<KazoOsSharedLibrary>true</KazoOsSharedLibrary>` dans **le
   projet de la bibliothèque**. `Kazo.Os.Apps.targets` en fait
@@ -81,14 +81,14 @@ Remplace la parenthèse de l'ADR 0244 §2 sur `buildTransitive`.
 
 ### 3. Deux versions majeures sans Feature : installées toutes les deux, une par page (question 260, réponse A)
 
-Remplace « chacune chargée pour ses apps, séparément » de l'ADR 0244 §2.
+Remplace « chacune chargée pour ses apps, séparément » de l'ADR 0261 §2.
 
 - Entre apps, sans Feature, deux versions majeures d'une bibliothèque partagée
-  **s'installent toutes les deux** (réponse 1 A de l'ADR 0244, inchangée).
+  **s'installent toutes les deux** (réponse 1 A de l'ADR 0261, inchangée).
 - Une seule est dans la page à la fois : la première chargée. L'app de l'autre
   version majeure est servie par la copie chargée, une ligne de
   `/var/log/syslog` le dit, et l'app est montrée « Redémarrer pour terminer »
-  (ADR 0244 §3). Après le redémarrage, la première app lancée décide de
+  (ADR 0261 §3). Après le redémarrage, la première app lancée décide de
   nouveau.
 - Un contexte de chargement à part pour les apps de l'autre version majeure
   reste possible plus tard ; il demande de revoir le chargement unifié de
@@ -104,19 +104,19 @@ Remplace « chacune chargée pour ses apps, séparément » de l'ADR 0244 §2.
   (§1). Une app qui appelle un membre absent de la copie chargée reçoit
   l'erreur dans sa fenêtre (ADR 0238), jamais l'OS entier.
 
-### 5. Fournisseur d'une bibliothèque partagée avant l'ADR 0245 (question 262, réponse A)
+### 5. Fournisseur d'une bibliothèque partagée avant l'ADR 0262 (question 262, réponse A)
 
 - Tant que les Features ne déclarent pas les services qu'elles fournissent
-  (ADR 0245), le fournisseur d'une bibliothèque partagée est **toute Feature
+  (ADR 0262), le fournisseur d'une bibliothèque partagée est **toute Feature
   installée qui l'embarque** ; quand plusieurs l'embarquent, celle qui a la
   version la plus haute.
-- Le code de l'ADR 0245 restreindra la règle aux Features qui déclarent
+- Le code de l'ADR 0262 restreindra la règle aux Features qui déclarent
   fournir une interface de la bibliothèque (`InstalledLibraries.FindProvider`).
 
 ### 6. `apps.package.library-reserved` protège l'OS
 
 - Le refus d'une bibliothèque qui porte le nom d'un assemblage de l'OS, du
-  runtime .NET ou d'une app intégrée (ADR 0244 §1) vaut pour toute
+  runtime .NET ou d'une app intégrée (ADR 0261 §1) vaut pour toute
   bibliothèque, partagée ou non. Ce n'est pas une gestion de la bibliothèque
   (§1) : c'est l'OS qui refuse qu'un paquet remplace un de ses assemblages,
   comme il refuse un paquet qui prend l'identifiant d'une app intégrée
@@ -131,12 +131,12 @@ Remplace « chacune chargée pour ses apps, séparément » de l'ADR 0244 §2.
   `System*`, `Microsoft.*`, `MudBlazor*`, `netstandard`, `mscorlib`,
   `WindowsBase`), modifiable dans le projet de l'app. Le refus du §6 est le
   filet à l'installation.
-- **Redémarrage proposé** (ADR 0244 §3) seulement quand il change quelque
+- **Redémarrage proposé** (ADR 0261 §3) seulement quand il change quelque
   chose pour l'app : la copie chargée n'a pas ce que l'app attend (autre
   version majeure, ou plus ancienne que celle de l'app) **et** la copie
   choisie est autre. Une copie chargée plus récente de la même version
   majeure sert l'app telle quelle.
-- **« Apps installées et activées »** (ADR 0244 §2, règle 2) : les apps
+- **« Apps installées et activées »** (ADR 0261 §2, règle 2) : les apps
   installées présentes dans le catalogue en cours. Les copies comparées à
   l'installation sont celles de ce catalogue.
 - **Chargement** : toutes les bibliothèques de l'app sont chargées avant son
@@ -154,11 +154,11 @@ Remplace « chacune chargée pour ses apps, séparément » de l'ADR 0244 §2.
   l'app pourrait marquer une bibliothèque.
 - **Contexte de chargement à part pour l'autre version majeure** (260, B) :
   chantier à part, voir §3. **Refuser la seconde installation** (260, C) :
-  contredit la réponse 1 A de l'ADR 0244.
+  contredit la réponse 1 A de l'ADR 0261.
 - **Refuser la seconde app** qui embarque une bibliothèque non partagée du
   même nom (261, B) : ce serait gérer une bibliothèque ordinaire (§1).
-  **Un contexte par app** (261, C) : option A écartée par l'ADR 0244.
-- **Aucun fournisseur avant l'ADR 0245** (262, B) : une vieille copie d'une
+  **Un contexte par app** (261, C) : option A écartée par l'ADR 0261.
+- **Aucun fournisseur avant l'ADR 0262** (262, B) : une vieille copie d'une
   app pourrait alors servir la Feature qui apporte le contrat.
 
 ## Conséquences
@@ -166,13 +166,13 @@ Remplace « chacune chargée pour ses apps, séparément » de l'ADR 0244 §2.
 - `Os-x86.Interface` pose la marque dans son propre projet ; aucune app
   cliente n'a rien à déclarer.
 - Les docs disent qu'une bibliothèque ordinaire accompagne l'app :
-  [`app-installation.md`](../app-installation.md#bibliothèques-dapp-et-versions-partagées-adr-0244),
+  [`app-installation.md`](../app-installation.md#bibliothèques-dapp-et-versions-partagées-adr-0261),
   [`app-repository.md`](../../framework/app-repository.md#bibliothèques-de-lapp).
 - Tests : une bibliothèque non partagée n'est ni comparée à l'installation ni
   cause d'un redémarrage (`InstalledLibrariesTests`), en plus de ceux de
-  l'ADR 0244.
+  l'ADR 0261.
 
 ## Références
 
-- ADR 0182, 0222, 0238, 0242, 0243, 0244, 0245.
+- ADR 0182, 0222, 0238, 0242, 0260, 0261, 0262.
 - Issue [#419](https://github.com/Kazo-ca/Os/issues/419).

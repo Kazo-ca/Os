@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <!--
-    Build fixture (ADR 0244 §2). Not part of the solution. A contract library whose author marks it
+    Build fixture (ADR 0261 §2). Not part of the solution. A contract library whose author marks it
     as shared: the property below writes the mark into the assembly, and KazoOsPack copies it to
     "shared" in the package of any app that references this project.
   -->

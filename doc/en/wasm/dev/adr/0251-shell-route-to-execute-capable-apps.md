@@ -36,7 +36,7 @@ through `x-scheme-handler/<scheme>`), 2026-11-11; the shell's program host,
   [ADR 0121](0121-user-file-associations.md) (the user's default
   associations, `xdg-mime`), [ADR 0148](0148-sdk-contracts-and-os-provided-controls.md)
   (a type of an app instantiated by the OS outside any process) and
-  [ADR 0243](0243-feature-app-type.md) §5 (only a Feature declares format
+  [ADR 0260](0260-feature-app-type.md) §5 (only a Feature declares format
   detectors).
 - **Replaces:** the first wording of this ADR (the shell read the `Magic`
   declared by a Feature and launched its handler; `FileHandler` gained
@@ -102,7 +102,7 @@ through `x-scheme-handler/<scheme>`), 2026-11-11; the shell's program host,
 ### 1. Three declarations
 
 - **Format detector** (252 A): `FeatureDefinition.FormatDetectors`,
-  **reserved to Features** (ADR 0243 §5), a list of `FormatDetector`
+  **reserved to Features** (ADR 0260 §5), a list of `FormatDetector`
   (`MediaTypes`: the MIME types the Feature recognizes; `Type`: a type of the
   Feature's entry-point assembly that implements the SDK's
   `IFormatDetector`). `DetectAsync(header of 64 bytes at most, extension)`
@@ -270,7 +270,7 @@ path=…`, and the refusals (`route=refused reason=header-extension-mismatch`,
   `AppLaunchResult.Refused`. `FileHandler.Executable` and
   `FeatureDefinition.BinaryFormats` of the first wording do not exist.
 - Validator: detectors reserved to Features (`manifest.feature.only`,
-  ADR 0243 §5), well-formed `MediaTypes`, detector type in the entry-point
+  ADR 0260 §5), well-formed `MediaTypes`, detector type in the entry-point
   assembly (like a component); `FileHandlers` with the sole `execute` action
   allowed on a command of a `Terminal` app.
 - `AppCatalog`: registry of the detectors in installation order;

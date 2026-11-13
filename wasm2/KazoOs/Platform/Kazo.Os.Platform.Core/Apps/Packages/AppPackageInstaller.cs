@@ -89,14 +89,14 @@ public sealed record AppPackageInstallContext(
 
     /// <summary>
     /// Gets the apps installed from packages in the running catalog, with the libraries each one
-    /// carries (ADR 0244 §2): a shared library of the new package is compared with theirs.
+    /// carries (ADR 0261 §2): a shared library of the new package is compared with theirs.
     /// </summary>
     public IReadOnlyCollection<InstalledApp> InstalledApps { get; init; } = [];
 
     /// <summary>
     /// Gets the simple names of the libraries the page loaded from installed packages
     /// (<see cref="IInstalledLibraryState.LoadedFromPackages"/>): the runtime has them, yet they are
-    /// not assemblies of the OS (ADR 0244 §1).
+    /// not assemblies of the OS (ADR 0261 §1).
     /// </summary>
     public IReadOnlySet<string> LoadedPackageLibraries { get; init; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 }
@@ -576,7 +576,7 @@ public sealed partial class AppPackageInstaller
         bool forSystem = request.SystemInstalled.Sources.ContainsKey(appId);
         if (package.IsFeature && request.Scope == AppPackageScope.User)
         {
-            // ADR 0243 §4: a feature acts on the whole machine (its commands, its permissions); two
+            // ADR 0260 §4: a feature acts on the whole machine (its commands, its permissions); two
             // users with two versions would give two behaviors of the shell.
             throw new AppPackageException(
                 "apps.package.feature-system-only",
@@ -678,7 +678,7 @@ public sealed partial class AppPackageInstaller
         }
 
         // A Web Worker cannot load an assembly from the file system: installed apps run on the page.
-        // ADR 0243 §2: the children of a feature run too, so each of them must say so.
+        // ADR 0260 §2: the children of a feature run too, so each of them must say so.
         foreach (AppManifest runnable in package.Manifests)
         {
             if (AppExecutionHosts.Of(runnable) != AppExecutionHost.MainThread)
@@ -689,7 +689,7 @@ public sealed partial class AppPackageInstaller
             }
         }
 
-        // ADR 0243 §2: a feature's children carry ids of their own; none may be taken already.
+        // ADR 0260 §2: a feature's children carry ids of their own; none may be taken already.
         foreach (AppManifest child in package.Children)
         {
             if (catalog.Manifests.ContainsKey(child.Id) && packagedAppIds?.Contains(child.Id) != true)
@@ -712,7 +712,7 @@ public sealed partial class AppPackageInstaller
     }
 
     /// <summary>
-    /// ADR 0244 §1 and §2, ADR 0256: the OS does not let a package replace one of its assemblies
+    /// ADR 0261 §1 and §2, ADR 0256: the OS does not let a package replace one of its assemblies
     /// (any library, by its name), and a <b>shared</b> library may not have another major version
     /// than the copy an installed feature carries. A library that is not shared is not compared
     /// with anything: it goes with its app.

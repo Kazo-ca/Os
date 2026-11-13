@@ -17,7 +17,7 @@ milestone") and 160 A (the role opens the pages).
 - **Completes:** [ADR 0096](0096-added-intents-and-app-defined-intents.md) §4 ("app
   settings"), [ADR 0148](0148-sdk-contracts-and-os-provided-controls.md)
   (embeddable components), [ADR 0156](0156-replaceable-file-control-provider.md)
-  §3 ("OS components" page), [ADR 0243](0243-feature-app-type.md) §2
+  §3 ("OS components" page), [ADR 0260](0260-feature-app-type.md) §2
   (`SettingsPage` entry point) and [ADR 0247](0247-feature-declared-roles.md)
   (role, per-operation authentication).
 - **For:** the Os-x86 pages: "Virtual machines" (limits, common VMs,
@@ -38,7 +38,7 @@ milestone") and 160 A (the role opens the pages).
   `--show-settings`, or Settings with `--app=<id>` on the generic
   `AppDetailsPanel` page (`SettingsWindow.razor:539-544`,
   `AppIntentDispatcher.cs:480-509`). A Feature has no window of its own
-  (ADR 0243 §1); its administration page must live **inside** Settings.
+  (ADR 0260 §1); its administration page must live **inside** Settings.
 - Embeddable components (ADR 0148) render a provider's fragment in the
   host's window, **with the host's rights** (§4). Settings declares
   `apps.manage`, `permissions.manage`, `system.power`, `system.backup`,
@@ -56,7 +56,7 @@ milestone") and 160 A (the role opens the pages).
 
 - New `Features` group in the navigation, between "Applications" and
   "Network", with a built-in page **"Installed features"** (`features`) that
-  lists each Feature (ADR 0243): name, version, publisher, state (enabled,
+  lists each Feature (ADR 0260): name, version, publisher, state (enabled,
   disabled, restart required), its entry points (children) with their type,
   its declared permissions (ADR 0246) and its roles (ADR 0247), the apps that
   depend on it (ADR 0248), and the actions: enable/disable (admin,
@@ -75,15 +75,15 @@ milestone") and 160 A (the role opens the pages).
 ### 2. The `SettingsPage` entry point
 
 - `AppKind` gains `SettingsPage`, **reserved to the children of a Feature**
-  (ADR 0243 §2; `manifest.feature.only` elsewhere). It declares: the page's
+  (ADR 0260 §2; `manifest.feature.only` elsewhere). It declares: the page's
   Blazor component (derived from `KazoSettingsPageBase`, provided by
   `Kazo.Os.AppSdk.Blazor`), `Title`, `Icon`, `Order`, `RequiresRole`
-  (ADR 0247 §2) and its permission subset (ADR 0243 §3).
+  (ADR 0247 §2) and its permission subset (ADR 0260 §3).
 - The page is rendered **in the Settings window** (same frame, same
   navigation, same theme: `--kos-*` styles, no MudBlazor in the SDK), but
   runs in the **execution context of the child**: its identity
   (`ca.kazo.x86.admin`), its permissions, its process visible in `ps`
-  (ADR 0243 §2), its gateways. The page receives **no** gateway of Settings;
+  (ADR 0260 §2), its gateways. The page receives **no** gateway of Settings;
   Settings receives nothing from the page. The OS enters the child's context
   for the rendering (`KazoExecutionContext.Enter`, like a component rendered
   by the window launcher), unlike ADR 0148 §4 (host's rights), because here
@@ -122,7 +122,7 @@ milestone") and 160 A (the role opens the pages).
 ## Rejected options
 
 - **A. An administration window of Os-x86's own**: a Feature has no window
-  of its own (ADR 0243) and Benoit asked for the sections in Settings
+  of its own (ADR 0260) and Benoit asked for the sections in Settings
   (140 B).
 - **B. An embeddable component (ADR 0148) rendered by Settings**: the host's
   rights (Settings, five dangerous permissions) given to the Feature's code;

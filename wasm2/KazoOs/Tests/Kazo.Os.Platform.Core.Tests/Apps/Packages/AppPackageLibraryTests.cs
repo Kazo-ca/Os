@@ -3,7 +3,7 @@ using Kazo.Os.Platform.Core.Apps.Packages;
 
 namespace Kazo.Os.Platform.Core.Tests.Apps.Packages;
 
-/// <summary>The libraries of an app in its package (ADR 0244 §1, issue #419).</summary>
+/// <summary>The libraries of an app in its package (ADR 0261 §1, issue #419).</summary>
 public sealed class AppPackageLibraryTests
 {
     private const string Protocol = "Kazo.Sample.Protocol";
@@ -136,7 +136,7 @@ public sealed class AppPackageLibraryTests
     [Fact]
     public void A_package_cannot_mark_shared_a_library_its_author_did_not_mark()
     {
-        // ADR 0244 §2: the mark is the author's, in the assembly; the package only copies it.
+        // ADR 0261 §2: the mark is the author's, in the assembly; the package only copies it.
         byte[] protocol = TestLibraries.Build(Protocol, "1.0.0");
         object lie = new { name = Protocol, version = "1.0.0.0", sha256 = AppPackage.Sha256(protocol), shared = true };
 

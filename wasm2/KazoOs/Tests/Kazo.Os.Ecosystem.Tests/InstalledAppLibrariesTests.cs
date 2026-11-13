@@ -9,7 +9,7 @@ namespace Kazo.Os.Ecosystem.Tests;
 
 /// <summary>
 /// The libraries of installed apps are loaded before the app, and one copy of a shared library
-/// serves the page (ADR 0244).
+/// serves the page (ADR 0261).
 /// </summary>
 public sealed class InstalledAppLibrariesTests
 {
@@ -176,7 +176,7 @@ public sealed class InstalledAppLibrariesTests
     [Fact]
     public async Task A_copy_already_in_the_page_is_kept_and_the_app_waits_for_a_restart()
     {
-        // ADR 0244 §3: .NET never unloads the copy; the OS says so once and offers a restart.
+        // ADR 0261 §3: .NET never unloads the copy; the OS says so once and offers a restart.
         byte[] older = Build(Contracts, "1.1.0.0", shared: true);
         byte[] newer = Build(Contracts, "1.2.0.0", shared: true);
         InstalledApp first = App("org.kazo.first", older);
@@ -212,7 +212,7 @@ public sealed class InstalledAppLibrariesTests
         await libraries.LoadForAsync(app, CancellationToken.None);
         logger.Lines.Clear();
 
-        // The feature arrives while 1.1 serves the page (ADR 0243 §6, ADR 0214 §1).
+        // The feature arrives while 1.1 serves the page (ADR 0260 §6, ADR 0214 §1).
         boot.Refresh(new InstalledAppsImage([app, feature], []), static _ => false);
         IReadOnlyList<LibraryRestart> pending = libraries.ReportPendingRestarts();
 

@@ -34,7 +34,7 @@ internal sealed record StoreEntry(KazoCatalogApp? App, KazoInstalledPackage? Ins
     public string Name => App?.Name ?? Installed!.AppId;
 
     /// <summary>
-    /// Gets whether its catalog says it is a feature of the OS (ADR 0243 §4): installed for the whole
+    /// Gets whether its catalog says it is a feature of the OS (ADR 0260 §4): installed for the whole
     /// machine only, so the Store offers no personal installation. The OS refuses one anyway
     /// (<c>apps.package.feature-system-only</c>) when the catalog says nothing.
     /// </summary>
@@ -94,7 +94,7 @@ internal sealed class StoreCatalog
         _entries = new Dictionary<string, StoreEntry>(StringComparer.Ordinal);
         foreach (KazoAppCatalog catalog in catalogs)
         {
-            // Theme packs have their own tab (ADR 0213 §5): StoreThemePacks. A feature (ADR 0243) is listed with the apps.
+            // Theme packs have their own tab (ADR 0213 §5): StoreThemePacks. A feature (ADR 0260) is listed with the apps.
             foreach (KazoCatalogApp app in catalog.Apps.Where(static item => item.Kind != KazoCatalogItemKind.ThemePack))
             {
                 byId.TryGetValue(app.AppId, out KazoInstalledPackage? package);

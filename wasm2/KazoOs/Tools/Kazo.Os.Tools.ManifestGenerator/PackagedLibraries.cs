@@ -1,7 +1,7 @@
 namespace Kazo.Os.Tools.ManifestGenerator;
 
 /// <summary>
-/// The libraries <c>pack</c> puts in a package (ADR 0244 §1): the assemblies the app needs that the
+/// The libraries <c>pack</c> puts in a package (ADR 0261 §1): the assemblies the app needs that the
 /// OS does not bring, i.e. the outputs of its <c>ProjectReference</c>s and the assemblies of its NuGet
 /// packages. The <c>KazoOsPack</c> target lists them (the project's copy-local references, without
 /// the SDK, the .NET runtime and what the host ships) in a file, one path per line.

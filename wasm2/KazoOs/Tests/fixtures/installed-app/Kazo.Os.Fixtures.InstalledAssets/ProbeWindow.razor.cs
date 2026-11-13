@@ -15,7 +15,7 @@ namespace Kazo.Os.Fixtures.InstalledAssets;
 /// Calls CoreLib overloads the OS itself does not use, which trimming removed before ADR 0242:
 /// without CoreLib kept whole, the install check refuses this package.
 /// Calls <c>Kazo.Fixtures.InstalledLibrary</c>, a library of the app the package carries in
-/// <c>lib/</c> (ADR 0244 §1): the OS loads it before this assembly.
+/// <c>lib/</c> (ADR 0261 §1): the OS loads it before this assembly.
 /// </summary>
 public partial class ProbeWindow : WindowAppBase
 {
@@ -29,7 +29,7 @@ public partial class ProbeWindow : WindowAppBase
     // String.Compare with offsets, String.Split of strings).
     private readonly string _coreLib = CallCoreLibOverloads();
 
-    // ADR 0244 §1: a call into the second assembly of the package, a library of the app.
+    // ADR 0261 §1: a call into the second assembly of the package, a library of the app.
     private readonly string _library = Kazo.Fixtures.InstalledLibrary.ProbeLibrary.Describe();
 
     [Inject]

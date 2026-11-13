@@ -101,7 +101,7 @@ sauf s'il déclare `KazoOsAppHost=true` (un hôte). Différences avec le dépôt
   empreintes des ressources sont identiques.
 
 Dans les deux modes, `KazoOsPack` embarque les **bibliothèques de l'app**
-([ADR 0244](../dev/adr/0244-app-libraries-and-shared-versions.md)) : les
+([ADR 0261](../dev/adr/0261-app-libraries-and-shared-versions.md)) : les
 assemblages copiés à côté de l'app (projets, paquets NuGet, DLL) que l'OS
 n'apporte pas (`KazoOsProvidedAssemblyPattern`), listés dans `libraries` de
 `kazoos-package.json`. Le SDK (`Kazo.Os.*`) n'est jamais embarqué, et

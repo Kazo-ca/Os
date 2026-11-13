@@ -53,7 +53,7 @@ public static partial class AppManifestValidator
         ValidateCapabilities(manifest.Capabilities, errors);
         if (manifest.Kind != AppKind.Feature)
         {
-            // ADR 0243 §3: a feature's set may hold what its window children need; the feature itself never runs.
+            // ADR 0260 §3: a feature's set may hold what its window children need; the feature itself never runs.
             ValidateCapabilityKindCompatibility(manifest.Kind, manifest.Capabilities, errors);
         }
 
@@ -97,7 +97,7 @@ public static partial class AppManifestValidator
     }
 
     /// <summary>
-    /// Validates what binds a feature and its children together (ADR 0243 §2 and §3), once every
+    /// Validates what binds a feature and its children together (ADR 0260 §2 and §3), once every
     /// manifest is known: the package reader, the catalog and the manifest generator call it after
     /// <see cref="Validate"/> passed on each manifest. Each child names the feature as its parent,
     /// is of another kind, shares its version and publisher, and asks for no capability outside the
@@ -144,7 +144,7 @@ public static partial class AppManifestValidator
 
             foreach (string capability in (child.Capabilities ?? []).Where(capability => !set.Contains(capability)).OrderBy(static value => value, StringComparer.Ordinal))
             {
-                // ADR 0243 §3: the administrator approved the set at installation; a child cannot ask for more.
+                // ADR 0260 §3: the administrator approved the set at installation; a child cannot ask for more.
                 AddError(errors, "manifest.feature.capability-outside-set", "capabilities", $"'{child.Id}' asks for '{capability}', which its feature '{feature.Id}' does not declare.");
             }
         }
@@ -153,7 +153,7 @@ public static partial class AppManifestValidator
     }
 
     /// <summary>
-    /// ADR 0243 §1 and §2 on one manifest: a feature declares no entry point and no platform (its
+    /// ADR 0260 §1 and §2 on one manifest: a feature declares no entry point and no platform (its
     /// children run, not it) and is nobody's child; a child names a valid parent id of which its own
     /// id is a suffix, and is of another kind than <see cref="AppKind.Feature"/>. Whether the
     /// parent exists is checked where every manifest is known (<see cref="ValidateFeature"/>, the catalog).
@@ -164,12 +164,12 @@ public static partial class AppManifestValidator
         {
             if (manifest.EntryPoint is not null || manifest.Platform is not null)
             {
-                AddError(errors, "manifest.feature.entryPoint.forbidden", manifest.EntryPoint is null ? "platform" : "entryPoint", "A feature has no entry point of its own: its children run (ADR 0243).");
+                AddError(errors, "manifest.feature.entryPoint.forbidden", manifest.EntryPoint is null ? "platform" : "entryPoint", "A feature has no entry point of its own: its children run (ADR 0260).");
             }
 
             if (manifest.Parent is not null)
             {
-                AddError(errors, "manifest.feature.parent.kind", "parent", "A feature cannot be the child of another feature (ADR 0243).");
+                AddError(errors, "manifest.feature.parent.kind", "parent", "A feature cannot be the child of another feature (ADR 0260).");
             }
 
             return;

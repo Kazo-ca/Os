@@ -30,7 +30,7 @@ public sealed class InstalledPackageCatalog
     }
 
     /// <summary>
-    /// Records the installed apps the catalog accepted at boot. A feature's children (ADR 0243 §2)
+    /// Records the installed apps the catalog accepted at boot. A feature's children (ADR 0260 §2)
     /// are keyed too, to the feature's install: they are seen, hidden and versioned with it.
     /// </summary>
     /// <param name="apps">The accepted installed apps.</param>

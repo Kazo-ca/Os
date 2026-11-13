@@ -3,7 +3,7 @@ using Kazo.Os.Platform.Core.Apps.Packages;
 
 namespace Kazo.Os.Platform.Core.Tests.Apps.Packages;
 
-/// <summary>One copy of a shared library per page, and what a package may not bring (ADR 0244 §2, §3).</summary>
+/// <summary>One copy of a shared library per page, and what a package may not bring (ADR 0261 §2, §3).</summary>
 public sealed class InstalledLibrariesTests
 {
     private const string Contract = "Kazo.Sample.Contracts";
@@ -97,7 +97,7 @@ public sealed class InstalledLibrariesTests
     [Fact]
     public void An_app_built_against_a_newer_copy_than_the_one_in_the_page_waits_for_a_restart()
     {
-        // ADR 0244 §3: 1.1 was loaded for the first app; the second one needs 1.2.
+        // ADR 0261 §3: 1.1 was loaded for the first app; the second one needs 1.2.
         InstalledApp first = App("org.kazo.first", Shared("1.1.0.0"));
         InstalledApp second = App("org.kazo.second", Shared("1.2.0.0"));
 
@@ -162,7 +162,7 @@ public sealed class InstalledLibrariesTests
     [Fact]
     public void Without_a_feature_two_major_versions_are_both_installed()
     {
-        // The maintainer's answer to question 1 of ADR 0244: A, they coexist.
+        // The maintainer's answer to question 1 of ADR 0261: A, they coexist.
         AppPackage package = Package("org.kazo.client", TestLibraries.Build(Contract, "2.0.0", shared: true));
 
         InstalledLibraries.CheckMajorVersions(package, [App("org.kazo.other", Shared("1.4.0.0"))]);

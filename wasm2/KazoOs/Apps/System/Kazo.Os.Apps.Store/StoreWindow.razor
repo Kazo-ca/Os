@@ -271,7 +271,7 @@
             @switch (entry.State)
             {
                 case StoreAppState.NotInstalled when entry.App is not null && !entry.CanInstallForUser:
-                    @* A feature (ADR 0243 §4) goes to the whole machine only. *@
+                    @* A feature (ADR 0260 §4) goes to the whole machine only. *@
                     <button type="button" class="store-button is-primary" disabled="@busy" @onclick="() => InstallAsync(entry, KazoPackageScope.System)">
                         <KazoIcon Library="IconLibrary.Lucide" Name="download" Size="14" Title="" /> @L["Action.InstallForEveryone"]
                     </button>

@@ -321,7 +321,7 @@ public sealed class AppCatalogTests
         Components = [new AppComponentManifest(contract, "Kazo.Os.TestApps", "TestApps.Embed")]
     };
 
-    /// <summary>A feature (ADR 0243): no entry point, the capability set its children draw from.</summary>
+    /// <summary>A feature (ADR 0260): no entry point, the capability set its children draw from.</summary>
     private static AppManifest CreateFeature(string appId, IReadOnlyList<string> capabilities) => CreateManifest(appId) with
     {
         Kind = AppKind.Feature,

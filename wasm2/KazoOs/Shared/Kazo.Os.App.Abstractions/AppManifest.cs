@@ -27,7 +27,7 @@ public sealed record AppManifest
     public required AppKind Kind { get; init; }
 
     /// <summary>
-    /// Gets the identifier of the <see cref="AppKind.Feature"/> this manifest is a child of (ADR 0243
+    /// Gets the identifier of the <see cref="AppKind.Feature"/> this manifest is a child of (ADR 0260
     /// §2), or <see langword="null"/> (omitted from <c>manifest.json</c>) for a stand-alone app, so
     /// existing manifests keep their exact bytes. A child's id is <c>&lt;parent&gt;.&lt;suffix&gt;</c>,
     /// its kind is never <see cref="AppKind.Feature"/>, its capabilities are a subset of its

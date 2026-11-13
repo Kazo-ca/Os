@@ -55,7 +55,7 @@ public sealed class AppCatalogDocumentTests
         AppCatalogEntry entry = Assert.Single(listing.Apps);
         Assert.Equal(expected, entry.Kind);
         Assert.True(entry.IsPackage);
-        // ADR 0243 §4: a feature is found like an app, since both are .kazoapp packages.
+        // ADR 0260 §4: a feature is found like an app, since both are .kazoapp packages.
         Assert.Same(entry, listing.Find("org.example.notes"));
         Assert.Empty(listing.Warnings);
     }

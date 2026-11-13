@@ -98,7 +98,7 @@ déclare déjà `KazoOsAppProject=true` ; ajoutez-la à l'hôte par
 
 ## Bibliothèques de l'app
 
-[ADR 0244](../dev/adr/0244-app-libraries-and-shared-versions.md),
+[ADR 0261](../dev/adr/0261-app-libraries-and-shared-versions.md),
 [ADR 0256](../dev/adr/0256-app-libraries-implementation-adjustments.md). Une app
 peut avoir ses propres bibliothèques : un autre projet du dépôt
 (`ProjectReference`), un paquet NuGet (`PackageReference`) ou une DLL. Elle
@@ -163,7 +163,7 @@ dépendance à Kazo OS) écrit la même ligne lui-même :
   copie d'une fonctionnalité installée est refusée à l'installation
   (`apps.package.library-major-mismatch`).
 
-Détail côté OS : [`app-installation.md`](../dev/app-installation.md#bibliothèques-dapp-et-versions-partagées-adr-0244).
+Détail côté OS : [`app-installation.md`](../dev/app-installation.md#bibliothèques-dapp-et-versions-partagées-adr-0261).
 
 ## Publier dans le Kazo OS Store
 
@@ -274,4 +274,4 @@ fonctionner qu'avec un sous-module sur une release qui contient ce modèle
 - [ ] Dépôt template régénéré sur la release qui contient ce modèle.
 - [x] Workflow `publish-packages.yml` et signature des paquets (ADR 0219).
 - [x] Signature retirée des dépôts d'apps et du modèle (ADR 0219).
-- [x] Bibliothèques de l'app dans le paquet et propriété `KazoOsSharedLibrary` (ADR 0244).
+- [x] Bibliothèques de l'app dans le paquet et propriété `KazoOsSharedLibrary` (ADR 0261).

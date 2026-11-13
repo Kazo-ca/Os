@@ -19,7 +19,7 @@ administrator holds every declared role, implicitly (§1).
 - **Completes:** [ADR 0013](0013-local-user-session.md) (users and sessions),
   [ADR 0042](0042-sudo-root-elevation.md) (`sudo` elevation),
   [ADR 0049](0049-dangerous-capabilities-and-admin-approval.md) §6 (secure
-  window) and [ADR 0243](0243-feature-app-type.md) §5.
+  window) and [ADR 0260](0260-feature-app-type.md) §5.
 - **For:** the Os-x86 role that manages the VMs (VM and users pages of
   Settings ▸ Features, ADR 0249; `sudo x86 admin`).
 
@@ -106,7 +106,7 @@ administrator holds every declared role, implicitly (§1).
 ### 3. The OS authentication agent, for Features
 
 The SDK gains, **reserved to the entry points and services of a Feature**
-(ADR 0243 §5; an ordinary app gets `UnauthorizedAccessException`):
+(ADR 0260 §5; an ordinary app gets `UnauthorizedAccessException`):
 
 ```csharp
 public interface IKazoFeatureAuthentication

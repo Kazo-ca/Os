@@ -92,7 +92,7 @@ public sealed class StoreCatalogTests
             [Catalog("official", App("official", "org.example.notes", "Notes", "utilities"), feature, pack)],
             [], [], new HashSet<string>());
 
-        // ADR 0243 §4: a feature is an app of the Store (a theme pack has its own tab)...
+        // ADR 0260 §4: a feature is an app of the Store (a theme pack has its own tab)...
         Assert.Equal(["org.example.notes", "org.example.x86"], store.Available.Select(static entry => entry.AppId));
         // ...installed for the whole machine only: no « Install for me ».
         Assert.True(store.Find("org.example.x86")!.IsFeature);

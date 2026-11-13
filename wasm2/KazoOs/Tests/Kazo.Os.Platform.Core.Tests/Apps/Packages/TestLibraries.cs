@@ -5,7 +5,7 @@ using Kazo.Os.Platform.Core.Apps.Packages;
 namespace Kazo.Os.Platform.Core.Tests.Apps.Packages;
 
 /// <summary>
-/// Makes small real assemblies for the library tests of ADR 0244: a package library is checked
+/// Makes small real assemblies for the library tests of ADR 0261: a package library is checked
 /// against what its assembly says of itself (simple name, version, shared mark).
 /// </summary>
 internal static class TestLibraries

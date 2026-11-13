@@ -27,7 +27,7 @@ cannot quit through its menu, `nano` loses Meta, `mc` its F-keys).
 
 - **Completes:** [ADR 0061](0061-xterm-terminal-emulator.md) (xterm.js as
   screen and keyboard), [ADR 0064](0064-posix-shell-scripts-jobs-and-app-commands.md)
-  §6-7 (standard input, `nano`, full-screen commands), [ADR 0245](0245-feature-service-registry-and-async-resolution.md)
+  §6-7 (standard input, `nano`, full-screen commands), [ADR 0262](0262-feature-service-registry-and-async-resolution.md)
   (the Terminal resolves `Ix86` through the registry) and [ADR 0251](0251-shell-route-to-execute-capable-apps.md)
   (shell route outside the Terminal).
 - **Does not change:** `IKazoTerminal`, the line discipline, the full raw
@@ -89,11 +89,11 @@ cannot quit through its menu, `nano` loses Meta, `mc` its F-keys).
 
 - The Terminal app **references the `Os-x86.Interface` contracts package** as
   an **optional** dependency: a shared library embedded in its package
-  (ADR 0244, same copy rule as for any app), resolved when needed through
-  `KazoFeatures.GetServiceAsync<Ix86>()` (ADR 0245), which returns `null`
+  (ADR 0261, same copy rule as for any app), resolved when needed through
+  `KazoFeatures.GetServiceAsync<Ix86>()` (ADR 0262), which returns `null`
   when the Feature is absent or disabled: the Terminal then behaves as today.
   The OS still knows neither Wine nor v86: only the Terminal app knows
-  `Ix86`, and it calls it exactly like BoxedWine (ADR 0245 §2).
+  `Ix86`, and it calls it exactly like BoxedWine (ADR 0262 §2).
 - The Terminal is **the only system app of Kazo that uses a Feature**
   (maintainer's answer, 2026-11-11): the list is kept here; another system
   app that would want a Feature asks for an ADR.
@@ -221,7 +221,7 @@ cannot quit through its menu, `nano` loses Meta, `mc` its F-keys).
 ## Consequences
 
 - Terminal app (`Apps/System/Kazo.Os.Apps.Terminal`): references
-  `Os-x86.Interface` (shared library, ADR 0244), `ProgramHost`, header read,
+  `Os-x86.Interface` (shared library, ADR 0261), `ProgramHost`, header read,
   execution through `Ix86`, "Os-x86 session" tab; manifest: the `x86.*`
   permissions of ADR 0246 declared like BoxedWine.
 - SDK (`Kazo.Os.AppSdk`): `TerminalCell`, `TerminalColor`, `TerminalCellStyle`,

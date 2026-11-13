@@ -160,7 +160,7 @@ public static class Program
     /// the declared ones (ADR 0221 §1). The satellite assemblies of the declared assemblies, found in
     /// <c>--bin</c>, go to <c>lib/&lt;culture&gt;/</c> (ADR 0222 §1). With <c>--libraries &lt;list file&gt;</c>,
     /// the assemblies that file names (one path per line) go to <c>lib/</c> as the app's libraries, with
-    /// their satellites, and are listed in <c>libraries</c> of the package description (ADR 0244 §1).
+    /// their satellites, and are listed in <c>libraries</c> of the package description (ADR 0261 §1).
     /// The version is never signed here: only the marketplace repository signs packages (ADR 0219); the
     /// signatures already in <c>index.json</c> are kept (ADR 0219 §2).
     /// </summary>
@@ -183,7 +183,7 @@ public static class Program
                 Console.WriteLine($"{manifestPath} : warning {GeneratorCodes.PackageWebAssetsMissing}: No static web asset manifest at '{webAssets}': the package holds only the declared assets, without the rest of wwwroot/, the collocated scripts or the scoped CSS (ADR 0221).");
             }
 
-            // ADR 0243 §2: the children of a feature, entrypoints/<suffix>.json next to its manifest.
+            // ADR 0260 §2: the children of a feature, entrypoints/<suffix>.json next to its manifest.
             List<KeyValuePair<string, byte[]>> children = [];
             string entryPoints = Path.Combine(Path.GetDirectoryName(manifestPath)!, ManifestWriter.EntryPointsDirectoryName);
             if (Directory.Exists(entryPoints))
@@ -194,7 +194,7 @@ public static class Program
                 }
             }
 
-            // ADR 0244 §1: the assemblies the app needs that the OS does not bring; one the manifest
+            // ADR 0261 §1: the assemblies the app needs that the OS does not bring; one the manifest
             // declares is an assembly of the app, not a library.
             IReadOnlySet<string> declared = DeclaredAssemblies(children.Select(static child => child.Value).Prepend(manifestJson));
             SortedDictionary<string, byte[]> libraries = options.TryGetValue("libraries", out string? libraryList)

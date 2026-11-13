@@ -55,7 +55,7 @@ public sealed class InstalledAppsImageTests
     [Fact]
     public async Task The_libraries_of_an_installed_app_are_read_from_its_package_description()
     {
-        // ADR 0244 §1: kazoos-package.json is written with the app; its libraries are loaded before the app.
+        // ADR 0261 §1: kazoos-package.json is written with the app; its libraries are loaded before the app.
         string zero = new('0', 64);
         InstalledAppsImage image = await InstalledAppsImage.LoadAsync(Reader(new()
         {

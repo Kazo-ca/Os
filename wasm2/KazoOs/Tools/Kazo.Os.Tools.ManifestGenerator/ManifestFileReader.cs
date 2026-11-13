@@ -18,7 +18,7 @@ public static class ManifestFileReader
         TryRead(path, out manifest, out _, out diagnostics);
 
     /// <summary>
-    /// Reads and validates <paramref name="path"/> and, for a feature (ADR 0243 §2), the children in
+    /// Reads and validates <paramref name="path"/> and, for a feature (ADR 0260 §2), the children in
     /// <c>entrypoints/*.json</c> next to it, each validated as a manifest of its kind and against the feature.
     /// </summary>
     /// <param name="path">Manifest file path.</param>
