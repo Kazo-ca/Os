@@ -419,6 +419,17 @@ kazopkg info org.example.notes
   buttons are disabled. The actions that change the installed apps run one at
   a time, like a package manager holding its lock: the next one shows
   "Waiting for the other install…". Opening an app does not wait.
+- **Navigation and keyboard** (series `store-ux`, work item 1): every view
+  (home, category, results, Installed, Themes, app page) opens at the top;
+  coming back from an app's page, the list returns to where it was left
+  (`StoreScrollMemory` and `wwwroot/store-scroll.js`: moving the scroll bar is
+  the only thing C# cannot do). The search box also filters the Installed tab
+  (including an app no catalog lists any more, by its name and ID); Enter
+  opens the first result. The tabs follow the WAI-ARIA pattern (← → Home End,
+  `tabpanel`), keyboard focus is visible on every control, and under 640 px
+  the header takes two lines with targets of at least 40 px. The description
+  does not repeat a first heading equal to the app's name, and a line that
+  follows a list item stays in that item.
 - **The page's screenshots** (`store-ux` series, work item 2): each screenshot
   is a button (`StoreScreenshots.razor`). A click, Enter or Space opens it in a
   viewer that covers the Store window (not the screen): previous and next with
@@ -440,8 +451,9 @@ kazopkg info org.example.notes
 Tests: `AppCatalogDocumentTests`, the catalog and progress tests of
 `AppPackageGatewayTests`, `HttpAppPackageDownloaderTests`,
 `StartMenuPreferencesServiceTests` (Platform.Core), `Kazo.Os.Apps.Store.Tests`
-(`StoreCatalog`, `StoreMarkdown`, `StoreOperations`, manifest) and
-`StoreInstallProgressTests` (UI.E2E).
+(`StoreCatalog`, `StoreMarkdown`, `StoreNavigationTests`, `StoreOperations`,
+manifest) and `Kazo.Os.UI.E2E.Tests` (`StoreNavigationTests`,
+`StoreInstallProgressTests`).
 
 ## Adding without a restart, signing and transactions
 

@@ -5,6 +5,7 @@ using Kazo.Os.AppSdk.Apps;
 using Kazo.Os.AppSdk.Blazor;
 using Kazo.Os.AppSdk.Globalization;
 using Kazo.Os.Simulation.Abstractions.Gateways;
+using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.Localization;
 
 namespace Kazo.Os.Apps.Store;
@@ -90,7 +91,23 @@ public partial class StoreWindow
 
     private IReadOnlyList<StoreEntry> SearchResults => _store.Search(_query, Culture);
 
+    private IReadOnlyList<StoreEntry> InstalledResults => _store.SearchInstalled(_query, Culture);
+
     private bool IsSearching => !string.IsNullOrWhiteSpace(_query);
+
+    /// <summary>The page on screen, for <see cref="StoreScrollMemory"/>.</summary>
+    private string ScrollViewKey => StoreScrollMemory.ViewKey(_view, _selectedAppId, _categoryId, IsSearching);
+
+    /// <summary>
+    /// Draws <see cref="StoreScrollMemory"/> as the first child of the page. Written by hand: an
+    /// internal component written in C# is not found by the Razor markup.
+    /// </summary>
+    private RenderFragment RenderScrollMemory() => builder =>
+    {
+        builder.OpenComponent<StoreScrollMemory>(0);
+        builder.AddComponentParameter(1, nameof(StoreScrollMemory.View), ScrollViewKey);
+        builder.CloseComponent();
+    };
 
     /// <inheritdoc />
     protected override async Task OnAppInitializedAsync()
@@ -227,8 +244,9 @@ public partial class StoreWindow
     private void OnQueryChanged(Microsoft.AspNetCore.Components.ChangeEventArgs args)
     {
         _query = args.Value?.ToString();
-        // The search box filters the packs while the « Themes » tab is open.
-        if (_view == StoreView.Themes)
+        // The search box filters the packs while the « Themes » tab is open, and the installed
+        // apps while « Installed » is.
+        if (_view is StoreView.Themes or StoreView.Installed)
         {
             return;
         }

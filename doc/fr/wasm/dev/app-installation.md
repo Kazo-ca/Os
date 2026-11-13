@@ -424,6 +424,18 @@ kazopkg info org.example.notes
   désactivés. Les actions qui changent les apps installées passent une à la
   fois, comme un gestionnaire de paquets qui tient son verrou : la suivante
   affiche « En attente de l'autre installation… ». Ouvrir une app n'attend pas.
+- **Navigation et clavier** (série `store-ux`, chantier 1) : chaque vue
+  (accueil, catégorie, résultats, Installées, Thèmes, fiche) s'ouvre en haut ;
+  en revenant d'une fiche, la liste reprend la position où on l'avait laissée
+  (`StoreScrollMemory` et `wwwroot/store-scroll.js` : la seule chose que C# ne
+  peut pas faire est déplacer la barre de défilement). La recherche filtre
+  aussi l'onglet Installées (y compris une app qu'aucun catalogue ne liste
+  plus, par son nom et son identifiant) ; Entrée ouvre le premier résultat.
+  Les onglets suivent le modèle WAI-ARIA (← → Début Fin, `tabpanel`), le focus
+  du clavier est visible sur chaque contrôle, et sous 640 px l'en-tête tient
+  sur deux lignes avec des cibles d'au moins 40 px. La description ne
+  répète pas un premier titre égal au nom de l'app, et une ligne qui suit un
+  élément de liste reste dans cet élément.
 - **Captures de la fiche** (série `store-ux`, chantier 2) : chaque capture est
   un bouton (`StoreScreenshots.razor`). Un clic, Entrée ou Espace l'ouvre dans
   une visionneuse qui couvre la fenêtre du Store (pas l'écran) : précédent et
@@ -446,8 +458,9 @@ kazopkg info org.example.notes
 Tests : `AppCatalogDocumentTests`, les tests de catalogue et de progression
 d'`AppPackageGatewayTests`, `HttpAppPackageDownloaderTests`,
 `StartMenuPreferencesServiceTests` (Platform.Core), `Kazo.Os.Apps.Store.Tests`
-(`StoreCatalog`, `StoreMarkdown`, `StoreOperations`, manifeste) et
-`StoreInstallProgressTests` (UI.E2E).
+(`StoreCatalog`, `StoreMarkdown`, `StoreNavigationTests`, `StoreOperations`,
+manifeste) et `Kazo.Os.UI.E2E.Tests` (`StoreNavigationTests`,
+`StoreInstallProgressTests`).
 
 ## Ajout sans redémarrage, signature et transactions
 

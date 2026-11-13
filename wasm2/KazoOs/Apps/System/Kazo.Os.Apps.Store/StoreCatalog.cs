@@ -179,24 +179,36 @@ internal sealed class StoreCatalog
     /// </summary>
     /// <param name="query">What the user typed.</param>
     /// <param name="culture">Language of the descriptions.</param>
-    public IReadOnlyList<StoreEntry> Search(string? query, CultureInfo culture)
+    public IReadOnlyList<StoreEntry> Search(string? query, CultureInfo culture) => Filter(Available, query, culture);
+
+    /// <summary>
+    /// The « Installed » tab with the same search as <see cref="Search"/>: an app no catalog lists
+    /// any more is found by its name and its ID.
+    /// </summary>
+    /// <param name="query">What the user typed.</param>
+    /// <param name="culture">Language of the descriptions.</param>
+    public IReadOnlyList<StoreEntry> SearchInstalled(string? query, CultureInfo culture) => Filter(Installed, query, culture);
+
+    private static IReadOnlyList<StoreEntry> Filter(IReadOnlyList<StoreEntry> entries, string? query, CultureInfo culture)
     {
         string[] words = Normalize(query).Split(' ', StringSplitOptions.RemoveEmptyEntries);
         if (words.Length == 0)
         {
-            return Available;
+            return entries;
         }
 
-        return [.. Available.Where(entry =>
+        return [.. entries.Where(entry =>
         {
-            KazoCatalogApp app = entry.App!;
-            string haystack = Normalize(string.Join(' ', new[]
-            {
-                app.Name,
-                app.AppId,
-                app.GetShortDescription(culture),
-                app.ShortDescriptions.GetValueOrDefault("en") ?? string.Empty,
-            }.Concat(app.Tags)));
+            IEnumerable<string> fields = entry.App is { } app
+                ? new[]
+                {
+                    app.Name,
+                    app.AppId,
+                    app.GetShortDescription(culture),
+                    app.ShortDescriptions.GetValueOrDefault("en") ?? string.Empty,
+                }.Concat(app.Tags)
+                : [entry.Name, entry.AppId];
+            string haystack = Normalize(string.Join(' ', fields));
             return words.All(word => haystack.Contains(word, StringComparison.Ordinal));
         })];
     }
