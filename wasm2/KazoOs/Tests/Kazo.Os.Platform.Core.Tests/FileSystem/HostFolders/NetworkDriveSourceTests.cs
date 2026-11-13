@@ -98,6 +98,29 @@ public sealed class NetworkDriveSourceTests
     }
 
     [Fact]
+    public async Task Releasing_an_account_unmounts_and_forgets_only_its_drives()
+    {
+        Harness harness = await Harness.CreateAsync();
+        const string Other = "bob@example.test";
+        harness.Cloud.Account(Account).Put("x", "x.txt");
+        harness.Cloud.Account(Other).Put("y", "y.txt");
+        await harness.Drives.MountAsync("fakecloud", null, new NetworkDriveRequest(Account));
+        await harness.Drives.MountAsync("fakecloud", null, new NetworkDriveRequest(Account, "Docs"));
+        await harness.Drives.MountAsync("fakecloud", null, new NetworkDriveRequest(Other));
+
+        await harness.Drives.ReleaseAsync(Account);
+        await harness.Drives.ReleaseAsync("never-mounted");
+
+        NetworkDrive kept = Assert.Single(harness.Drives.GetDrives());
+        Assert.Equal(Other, kept.Name);
+        Assert.Equal(2, harness.Cloud.Forgotten.Count);
+        Assert.All(harness.Cloud.Forgotten, reference => Assert.Equal(Account, reference.Account));
+        using JsonDocument table = JsonDocument.Parse(await harness.TableAsync());
+        JsonElement line = Assert.Single(table.RootElement.GetProperty("drives").EnumerateArray());
+        Assert.Equal(Other, line.GetProperty("account").GetString());
+    }
+
+    [Fact]
     public async Task A_list_written_before_drive_sources_is_read_as_folders_of_the_computer()
     {
         Harness harness = await Harness.CreateAsync();

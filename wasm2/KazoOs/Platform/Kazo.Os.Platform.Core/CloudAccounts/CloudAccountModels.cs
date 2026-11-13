@@ -99,7 +99,7 @@ public sealed record CloudProviderInfo(string Id, string DisplayName, IReadOnlyL
 
 /// <summary>
 /// Releases the drives of an account before it is removed (ADR 0267 section 5: removing an account
-/// unmounts its drives). The network drive service implements it once drives can belong to an account.
+/// unmounts its drives). <see cref="FileSystem.HostFolders.NetworkDriveService"/> implements it.
 /// </summary>
 public interface ICloudAccountDrives
 {

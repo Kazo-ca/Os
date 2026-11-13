@@ -553,7 +553,7 @@ public static class EcosystemServiceCollectionExtensions
             provider.GetRequiredService<IOAuthAuthorizationWindow>(),
             new CloudOAuthTokenClient(new HttpClient()),
             () => provider.GetRequiredService<ISessionService>().CurrentPrincipal,
-            drives: null,
+            drives: () => provider.GetService<NetworkDriveService>(),
             provider.GetService<IEventBus>(),
             logger: provider.GetService<ILogger<CloudAccountService>>()));
 

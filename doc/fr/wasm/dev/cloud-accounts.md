@@ -130,8 +130,8 @@ await accounts.RemoveAsync(account.Id);                           // démonte, r
   chaque fois) remplace l'ancien.
 - Se connecter de nouveau au même compte avec la même étendue renouvelle ce
   compte au lieu d'en ajouter un second.
-- Le retrait appelle `ICloudAccountDrives.ReleaseAsync` (démontage des lecteurs
-  du compte, branché quand le chantier 1 est fusionné), révoque le jeton chez
+- Le retrait appelle `ICloudAccountDrives.ReleaseAsync` (`NetworkDriveService`
+  démonte et oublie les lecteurs du compte), révoque le jeton chez
   Dropbox (Microsoft n'a pas de révocation pour un client public), efface la
   clé du trousseau et la ligne du compte.
 
@@ -227,5 +227,5 @@ Dropbox exige l'adresse exacte, port compris, et n'accepte `http` que pour
 - [x] Refus clair sans trousseau (invité).
 - [x] Service worker publié : la page de retour avec sa requête.
 - [x] Tests unitaires et E2E sur la PWA publiée.
-- [ ] Brancher `ICloudAccountDrives` sur `NetworkDriveService` (après le chantier 1).
+- [x] Brancher `ICloudAccountDrives` sur `NetworkDriveService` (`ReleaseAsync`).
 - [ ] Interface (chantier 5) et connecteurs (chantiers 3 et 4).

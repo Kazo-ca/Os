@@ -77,7 +77,7 @@ public sealed class NetworkDriveException(NetworkDriveError error, string messag
 /// reconnect with no user gesture when they can (ADR 0267 §9).
 /// </para>
 /// </remarks>
-public sealed class NetworkDriveService : IDisposable
+public sealed class NetworkDriveService : IDisposable, Kazo.Os.Platform.Core.CloudAccounts.ICloudAccountDrives
 {
     /// <summary>Folder of the mount points.</summary>
     public static readonly VirtualPath MountRoot = VirtualPath.Parse("/mnt");
@@ -432,6 +432,71 @@ public sealed class NetworkDriveService : IDisposable
             {
                 await drive.Provider.Folder.DisposeAsync().ConfigureAwait(false);
             }
+        }
+        finally
+        {
+            _gate.Release();
+        }
+    }
+
+    /// <summary>
+    /// Unmounts and forgets every drive of the signed-in user bound to the cloud account
+    /// <paramref name="accountId"/> (ADR 0267 section 5: removing an account unmounts its drives).
+    /// Nothing happens when nobody is signed in or the account has no drive.
+    /// </summary>
+    /// <param name="accountId">Id of the account being removed, as kept in the drive list.</param>
+    /// <param name="cancellationToken">Cancels the wait for the service; the release itself always completes.</param>
+    public async ValueTask ReleaseAsync(string accountId, CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(accountId);
+        if (_principal() is not { } principal)
+        {
+            return;
+        }
+
+        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            MountedDrive[] drives;
+            lock (_mounted)
+            {
+                drives =
+                [
+                    .. _mounted.Values.Where(drive =>
+                        drive.Provider.OwnerId == principal.LoginName.Value
+                        && string.Equals(drive.Record.Account, accountId, StringComparison.Ordinal))
+                ];
+            }
+
+            if (drives.Length == 0)
+            {
+                return;
+            }
+
+            foreach (MountedDrive drive in drives)
+            {
+                Unmount(drive);
+            }
+
+            // Past this point the drives are gone: finish the cleanup even if the caller gives up.
+            foreach (MountedDrive drive in drives)
+            {
+                try
+                {
+                    if (_sources.TryGetValue(drive.Record.SourceType, out INetworkDriveSource? source))
+                    {
+                        await source.ForgetAsync(drive.Record.Reference, CancellationToken.None).ConfigureAwait(false);
+                    }
+
+                    await RemoveMountPointAsync(drive, CancellationToken.None).ConfigureAwait(false);
+                }
+                finally
+                {
+                    await drive.Provider.Folder.DisposeAsync().ConfigureAwait(false);
+                }
+            }
+
+            await SaveTableAsync(principal, CancellationToken.None).ConfigureAwait(false);
         }
         finally
         {

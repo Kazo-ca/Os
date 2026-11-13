@@ -129,8 +129,8 @@ await accounts.RemoveAsync(account.Id);                           // unmounts, r
   old one.
 - Signing in again to the same account with the same scope renews that account
   instead of adding a second one.
-- Removal calls `ICloudAccountDrives.ReleaseAsync` (unmounting the account's
-  drives, wired once work item 1 is merged), revokes the token at Dropbox
+- Removal calls `ICloudAccountDrives.ReleaseAsync` (`NetworkDriveService`
+  unmounts and forgets the account's drives), revokes the token at Dropbox
   (Microsoft has no revocation for a public client), erases the keyring key
   and the account's row.
 
@@ -223,5 +223,5 @@ application" platform) get the same addresses.
 - [x] Clear refusal without a keyring (guest).
 - [x] Published service worker: the callback page with its query.
 - [x] Unit tests and E2E on the published PWA.
-- [ ] Wire `ICloudAccountDrives` to `NetworkDriveService` (after work item 1).
+- [x] Wire `ICloudAccountDrives` to `NetworkDriveService` (`ReleaseAsync`).
 - [ ] UI (work item 5) and connectors (work items 3 and 4).

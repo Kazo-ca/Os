@@ -275,3 +275,4 @@ static Kazo.Os.Platform.Core.CloudAccounts.OAuthTokenSet.operator !=(Kazo.Os.Pla
 static Kazo.Os.Platform.Core.CloudAccounts.OAuthTokenSet.operator ==(Kazo.Os.Platform.Core.CloudAccounts.OAuthTokenSet? left, Kazo.Os.Platform.Core.CloudAccounts.OAuthTokenSet? right) -> bool
 static readonly Kazo.Os.Platform.Core.CloudAccounts.CloudAccountService.AuthorizationTimeout -> System.TimeSpan
 static readonly Kazo.Os.Platform.Core.CloudAccounts.CloudAccountService.RenewalMargin -> System.TimeSpan
+Kazo.Os.Platform.Core.FileSystem.HostFolders.NetworkDriveService.ReleaseAsync(string! accountId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
