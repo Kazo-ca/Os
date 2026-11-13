@@ -1,0 +1,14 @@
+{
+  "id": "75ee8486-119c-45bd-abe0-a542d7137c18",
+  "category": "fixed",
+  "audience": ["user", "developer"],
+  "title": {
+    "en": "An installed app's page opens in its window, not a second Kazo OS",
+    "fr": "La page d'une app installée s'ouvre dans sa fenêtre, pas un second Kazo OS"
+  },
+  "description": {
+    "en": "An installed app that shows one of its own web pages in a frame, such as Kazo Word, now gets that page, with the parameters in its address, online and offline. Before, the published Kazo OS answered with its own start page and a second Kazo OS started inside the window.",
+    "fr": "Une app installée qui affiche une de ses propres pages web dans un cadre, comme Kazo Word, reçoit maintenant cette page, avec les paramètres de son adresse, en ligne et hors ligne. Avant, Kazo OS publié répondait par sa propre page de démarrage et un second Kazo OS démarrait dans la fenêtre."
+  },
+  "links": ["doc/en/wasm/dev/adr/0243-serve-installed-app-pages.md"]
+}
