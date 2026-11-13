@@ -14,18 +14,22 @@
                aria-label="@L["Search.Label"]"
                placeholder="@L["Search.Placeholder"]"
                value="@_query"
-               @oninput="OnQueryChanged" />
-        <nav class="store-tabs" role="tablist" aria-label="@L["Tabs.Label"]">
-            <button type="button" role="tab" class="store-tab @(IsHomeTab ? "is-active" : null)"
-                    aria-selected="@(IsHomeTab ? "true" : "false")" @onclick="ShowHome">
+               @oninput="OnQueryChanged"
+               @onkeydown="OnSearchKeyDownAsync" />
+        <nav class="store-tabs" role="tablist" aria-label="@L["Tabs.Label"]" @onkeydown="OnTabKeyDownAsync">
+            <button type="button" role="tab" id="@TabId(StoreView.Home)" class="store-tab @(IsHomeTab ? "is-active" : null)"
+                    aria-selected="@(IsHomeTab ? "true" : "false")" aria-controls="@PanelId" tabindex="@(IsHomeTab ? "0" : "-1")"
+                    @ref="_tabElements[StoreView.Home]" @onclick="ShowHome">
                 @L["Tabs.Home"]
             </button>
-            <button type="button" role="tab" class="store-tab @(_view == StoreView.Themes ? "is-active" : null)"
-                    aria-selected="@(_view == StoreView.Themes ? "true" : "false")" @onclick="ShowThemes">
+            <button type="button" role="tab" id="@TabId(StoreView.Themes)" class="store-tab @(_view == StoreView.Themes ? "is-active" : null)"
+                    aria-selected="@(_view == StoreView.Themes ? "true" : "false")" aria-controls="@PanelId" tabindex="@(_view == StoreView.Themes ? "0" : "-1")"
+                    @ref="_tabElements[StoreView.Themes]" @onclick="ShowThemes">
                 @L["Tabs.Themes"]
             </button>
-            <button type="button" role="tab" class="store-tab @(_view == StoreView.Installed ? "is-active" : null)"
-                    aria-selected="@(_view == StoreView.Installed ? "true" : "false")" @onclick="ShowInstalled">
+            <button type="button" role="tab" id="@TabId(StoreView.Installed)" class="store-tab @(_view == StoreView.Installed ? "is-active" : null)"
+                    aria-selected="@(_view == StoreView.Installed ? "true" : "false")" aria-controls="@PanelId" tabindex="@(_view == StoreView.Installed ? "0" : "-1")"
+                    @ref="_tabElements[StoreView.Installed]" @onclick="ShowInstalled">
                 @L["Tabs.Installed"]
                 @if (_store.Updatable.Count > 0)
                 {
@@ -63,7 +67,8 @@
         </div>
     }
 
-    <main class="store-body">
+    <main class="store-body" id="@PanelId" role="tabpanel" aria-labelledby="@TabId(TabOf(_view))" tabindex="-1">
+        @RenderScrollMemory()
         @if (_isLoading && _store.Available.Count == 0 && _store.Installed.Count == 0)
         {
             <p class="store-empty">@L["Loading"]</p>
@@ -370,7 +375,7 @@
                     }
                     else if (_description is not null)
                     {
-                        <StoreMarkdownView Markdown="@_description" />
+                        <StoreMarkdownView Markdown="@StoreMarkdown.WithoutRepeatedTitle(_description, entry.Name)" />
                     }
                     else if (app is null)
                     {
@@ -445,10 +450,14 @@
         {
             <p class="store-empty">@L["Installed.Empty"]</p>
         }
+        else if (InstalledResults.Count == 0)
+        {
+            <p class="store-empty">@L["Installed.SearchNone", _query ?? string.Empty]</p>
+        }
         else
         {
             <ul class="store-list">
-                @foreach (StoreEntry entry in _store.Installed)
+                @foreach (StoreEntry entry in InstalledResults)
                 {
                     <li class="store-row">
                         <button type="button" class="store-row-main" @onclick="() => OpenDetailAsync(entry)">

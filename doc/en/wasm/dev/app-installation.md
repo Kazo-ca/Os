@@ -411,6 +411,17 @@ kazopkg info org.example.notes
   Store opens that file (ADR [0257](adr/0257-offer-a-store-app-for-an-unsupported-file.md) §5,
   the File Explorer's "View in the Store" button). A Store already open
   receives these arguments too.
+- **Navigation and keyboard** (series `store-ux`, work item 1): every view
+  (home, category, results, Installed, Themes, app page) opens at the top;
+  coming back from an app's page, the list returns to where it was left
+  (`StoreScrollMemory` and `wwwroot/store-scroll.js`: moving the scroll bar is
+  the only thing C# cannot do). The search box also filters the Installed tab
+  (including an app no catalog lists any more, by its name and ID); Enter
+  opens the first result. The tabs follow the WAI-ARIA pattern (← → Home End,
+  `tabpanel`), keyboard focus is visible on every control, and under 640 px
+  the header takes two lines with targets of at least 40 px. The description
+  does not repeat a first heading equal to the app's name, and a line that
+  follows a list item stays in that item.
 - **Updates**: `AppUpdateMonitor` checks at sign-in then every
   `[updates] interval-hours` hours and posts a notification that opens the
   Installed tab. Each check also downloads every catalog of `[catalogs]`, for
@@ -422,8 +433,9 @@ kazopkg info org.example.notes
 
 Tests: `AppCatalogDocumentTests`, the catalog tests of
 `AppPackageGatewayTests`, `StartMenuPreferencesServiceTests`
-(Platform.Core) and `Kazo.Os.Apps.Store.Tests` (`StoreCatalog`,
-`StoreMarkdown`, manifest).
+(Platform.Core), `Kazo.Os.Apps.Store.Tests` (`StoreCatalog`,
+`StoreMarkdown`, `StoreNavigationTests`, manifest) and
+`Kazo.Os.UI.E2E.Tests` (`StoreNavigationTests`).
 
 ## Adding without a restart, signing and transactions
 

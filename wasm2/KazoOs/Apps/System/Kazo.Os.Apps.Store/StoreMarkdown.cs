@@ -112,14 +112,24 @@ internal static class StoreMarkdown
             if (TryListItem(trimmed, out bool numbered, out _))
             {
                 Flush(paragraph, blocks);
-                List<IReadOnlyList<StoreMarkdownSpan>> items = [];
+                List<string> items = [];
                 while (index < lines.Length && TryListItem(lines[index].Trim(), out bool sameKind, out string item) && sameKind == numbered)
                 {
-                    items.Add(ParseInline(item));
                     index++;
+                    // A line that goes on after an item, indented or not (a « lazy » continuation in
+                    // CommonMark), belongs to that item, not to a new paragraph.
+                    while (index < lines.Length && IsListContinuation(lines[index]))
+                    {
+                        item = string.Concat(item, " ", lines[index].Trim());
+                        index++;
+                    }
+
+                    items.Add(item);
                 }
 
-                blocks.Add(new StoreMarkdownBlock(numbered ? StoreMarkdownBlockKind.NumberedList : StoreMarkdownBlockKind.BulletList, items));
+                blocks.Add(new StoreMarkdownBlock(
+                    numbered ? StoreMarkdownBlockKind.NumberedList : StoreMarkdownBlockKind.BulletList,
+                    [.. items.Select(ParseInline)]));
                 continue;
             }
 
@@ -129,6 +139,39 @@ internal static class StoreMarkdown
 
         Flush(paragraph, blocks);
         return blocks;
+    }
+
+    /// <summary>
+    /// Removes the description's first line when it is a heading that only repeats the app's name:
+    /// the page already shows that name as its title.
+    /// </summary>
+    /// <param name="markdown">The Markdown text of the description.</param>
+    /// <param name="title">The app's name, shown above the description.</param>
+    public static string? WithoutRepeatedTitle(string? markdown, string? title)
+    {
+        if (string.IsNullOrEmpty(markdown) || string.IsNullOrWhiteSpace(title))
+        {
+            return markdown;
+        }
+
+        string text = markdown.Replace("\r\n", "\n", StringComparison.Ordinal);
+        int start = 0;
+        while (start < text.Length && char.IsWhiteSpace(text[start]))
+        {
+            start++;
+        }
+
+        int end = text.IndexOf('\n', start);
+        string firstLine = (end < 0 ? text[start..] : text[start..end]).Trim();
+        if (!TryHeading(firstLine, out _, out string heading))
+        {
+            return markdown;
+        }
+
+        string plain = string.Concat(ParseInline(heading).Select(static span => span.Text)).Trim();
+        return string.Equals(plain, title.Trim(), StringComparison.CurrentCultureIgnoreCase)
+            ? (end < 0 ? string.Empty : text[(end + 1)..])
+            : markdown;
     }
 
     /// <summary>Reads the inline marks of one line.</summary>
@@ -236,6 +279,16 @@ internal static class StoreMarkdown
         }
 
         return false;
+    }
+
+    /// <summary>Whether a line goes on with the list item above it: not blank, and not a new item, heading or code block.</summary>
+    private static bool IsListContinuation(string line)
+    {
+        string trimmed = line.Trim();
+        return trimmed.Length > 0
+            && !TryListItem(trimmed, out _, out _)
+            && !TryHeading(trimmed, out _, out _)
+            && !trimmed.StartsWith("```", StringComparison.Ordinal);
     }
 
     private static void Flush(List<string> paragraph, List<StoreMarkdownBlock> blocks)

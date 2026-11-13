@@ -415,6 +415,18 @@ kazopkg info org.example.notes
   fichier (ADR [0257](adr/0257-offer-a-store-app-for-an-unsupported-file.md) §5,
   bouton « Voir dans le Store » de l'Explorateur). Le Store déjà ouvert reçoit
   aussi ces arguments.
+- **Navigation et clavier** (série `store-ux`, chantier 1) : chaque vue
+  (accueil, catégorie, résultats, Installées, Thèmes, fiche) s'ouvre en haut ;
+  en revenant d'une fiche, la liste reprend la position où on l'avait laissée
+  (`StoreScrollMemory` et `wwwroot/store-scroll.js` : la seule chose que C# ne
+  peut pas faire est déplacer la barre de défilement). La recherche filtre
+  aussi l'onglet Installées (y compris une app qu'aucun catalogue ne liste
+  plus, par son nom et son identifiant) ; Entrée ouvre le premier résultat.
+  Les onglets suivent le modèle WAI-ARIA (← → Début Fin, `tabpanel`), le focus
+  du clavier est visible sur chaque contrôle, et sous 640 px l'en-tête tient
+  sur deux lignes avec des cibles d'au moins 40 px. La description ne
+  répète pas un premier titre égal au nom de l'app, et une ligne qui suit un
+  élément de liste reste dans cet élément.
 - **Mises à jour** : `AppUpdateMonitor` vérifie à l'ouverture de la session
   puis toutes les `[updates] interval-hours` heures et envoie une notification
   qui ouvre l'onglet Installées. Chaque vérification télécharge aussi tous
@@ -426,8 +438,9 @@ kazopkg info org.example.notes
 
 Tests : `AppCatalogDocumentTests`, les tests de catalogue
 d'`AppPackageGatewayTests`, `StartMenuPreferencesServiceTests`
-(Platform.Core) et `Kazo.Os.Apps.Store.Tests` (`StoreCatalog`,
-`StoreMarkdown`, manifeste).
+(Platform.Core), `Kazo.Os.Apps.Store.Tests` (`StoreCatalog`,
+`StoreMarkdown`, `StoreNavigationTests`, manifeste) et
+`Kazo.Os.UI.E2E.Tests` (`StoreNavigationTests`).
 
 ## Ajout sans redémarrage, signature et transactions
 
