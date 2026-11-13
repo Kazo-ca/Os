@@ -100,7 +100,7 @@ next free number is given in
 | [`0089-explicit-cookie-header.md`](0089-explicit-cookie-header.md) | ADR 0089: `Cookie` header written by the app |
 | [`0090-filesystem-path-lookup-in-one-request.md`](0090-filesystem-path-lookup-in-one-request.md) | ADR 0090: looking up a path in a single storage request |
 | [`0092-game-in-a-separate-repository.md`](0092-game-in-a-separate-repository.md) | ADR 0092: the game lives in a separate repository |
-| [`0094-deferred-decisions-status-and-maximum-file-size.md`](0094-deferred-decisions-status-and-maximum-file-size.md) | ADR 0094: status of the deferred decisions of the v3 migration and maximum file size |
+| [`0094-deferred-decisions-status-and-maximum-file-size.md`](0094-deferred-decisions-status-and-maximum-file-size.md) | ADR 0094: status of the deferred decisions of the v3 migration and maximum file size (16 MiB, raised to 128 MiB by ADR 0245) |
 | [`0095-window-events-sizes-and-keyboard.md`](0095-window-events-sizes-and-keyboard.md) | ADR 0095: window events for apps, declared sizes and keyboard commands |
 | [`0096-added-intents-and-app-defined-intents.md`](0096-added-intents-and-app-defined-intents.md) | ADR 0096: added intents (view, edit, open a URI, app settings) and app-defined intents |
 | [`0097-service-health-and-startup.md`](0097-service-health-and-startup.md) | ADR 0097: service state and health, startup at boot or at login, uninstalling an active app |
@@ -241,5 +241,6 @@ next free number is given in
 | [`0242-framework-api-for-installed-apps.md`](0242-framework-api-for-installed-apps.md) | ADR 0242: the .NET API an installed app finds in the published OS: `System.Private.CoreLib` stays whole in the trimmed publish (+0.6 MiB Brotli) and the install check compares full method signatures, no longer only their parameter count (IRC 1.0.0 and `Int32.Parse` of a span). |
 | [`0243-serve-installed-app-pages.md`](0243-serve-installed-app-pages.md) | ADR 0243: the published service worker serves the page load of an installed app's file (an iframe pointed at `_content/<assembly>/…html?param`) from the installed apps' cache, instead of the OS's `index.html`, online and offline. |
 | [`0244-stable-window-order-in-the-page.md`](0244-stable-window-order-in-the-page.md) | ADR 0244: windows keep their place in the page (opening order), `ZOrder` only gives the `z-index`: an iframe no longer reloads when its window comes to the front, nor on mobile when switching apps; the window that receives the keyboard focus comes to the front. |
+| [`0245-raise-the-maximum-file-size.md`](0245-raise-the-maximum-file-size.md) | ADR 0245: a file may be 128 MiB (instead of 16 MiB, ADR 0094), the largest extracted size of a package; same chunk format, write and read in batches of 16 MiB per IndexedDB transaction (Kazo Word, version 3.4.0). |
 
 Parent folder index: [`../README.md`](../README.md).

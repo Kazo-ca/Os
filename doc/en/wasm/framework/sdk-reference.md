@@ -189,7 +189,7 @@ carries the engine code, and `ShellErrorText.Describe` gives the Linux message.
 | Code (`FileSystemErrorCode`) | Errno | When | Shell message |
 |---|---|---|---|
 | `NoSpace` (1800) | `ENOSPC` | The browser refuses the write (quota reached), or less than the root reserve remains and the caller is not an administrator | `No space left on device` |
-| `FileTooLarge` (1801) | `EFBIG` | The content exceeds 16 MiB (maximum file size) | `File too large` |
+| `FileTooLarge` (1801) | `EFBIG` | The content exceeds 128 MiB (maximum file size, ADR 0245) | `File too large` |
 | `TooManyOpenFiles` (1802, SDK 1.2) | `EMFILE` | The process has reached its `nofile` limit of open descriptors (ADR 0125, [`process-limits.md`](../dev/process-limits.md)) | `Too many open files` |
 
 ### Settings (`Kazo.Os.AppSdk.Settings`)

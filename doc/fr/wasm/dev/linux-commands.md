@@ -116,7 +116,7 @@ alice@kazoos:~$ watch -n 1 'ps | wc -l'
 | `passwd` | `[NOM]`, `-d NOM`, `-S [NOM]`, `-h` | Change le mot de passe (ADR 0120, [`sensitive-settings.md`](sensitive-settings.md)) : `Current password:`, `New password:`, `Retype new password:`, lus écho coupé ; `passwd: password updated successfully`. Mauvais mot de passe courant : `Authentication token manipulation error`, code 10 ; confirmation différente : `Sorry, passwords do not match.`, code 10 ; moins de 8 caractères : `BAD PASSWORD`, code 1. Un autre compte ou `-d` exige `sudo` (`You may not view or modify password information for NOM.`), sans demander l'ancien mot de passe ; le trousseau du compte est mis de côté. `sudo passwd` sans nom refuse (pas de mot de passe root). `-S` affiche `NOM P\|NP\|L AAAA-MM-JJ 0 99999 7 -1`. Sur le fil principal (saisie du terminal). |
 
 Plus de place : une écriture refusée affiche `No space left on device`
-(`ENOSPC`), un fichier de plus de 16 Mio `File too large` (`EFBIG`).
+(`ENOSPC`), un fichier de plus de 128 Mio `File too large` (`EFBIG`).
 
 ## Réseau
 
