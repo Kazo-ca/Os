@@ -12,14 +12,21 @@ jour à la fin de chaque série ou quand une convention change.
 - **Code actif** : `wasm2/KazoOs/` (OS simulé en Blazor WebAssembly, .NET 10,
   solution `Kazo.Os.sln`). `src/` est l'ancienne version, gardée comme
   référence.
-- **Version** : Kazo OS et le SDK passent en **3.3.1** (branche `release/3.3.1`,
-  2026-11-13), une version corrective : le service worker publié sert la page
+- **Version** : Kazo OS et le SDK passent en **3.3.2** (branche `release/3.3.2`,
+  2026-11-13), une version corrective : un fichier peut faire 128 Mio au lieu
+  de 16 Mio, écrit et lu par lots de 16 Mio (ADR 0245, PR #455) ; Kazo Word
+  s'installe dans l'OS publié. Benoit a choisi une version corrective : la
+  3.4.0 reste réservée au SDK en préversion, à la vérification des apps
+  installées avant une mise à jour de l'OS et au maintien des anciennes
+  versions (TODO #456, planifiée, pas codée). 1 ligne d'API
+  d'Infrastructure.Browser repliée (valeur de `DefaultMaxFileSizeBytes`),
+  aucun changement du SDK, 1 entrée dans `changes/3.3.2.json` ; publiée quand
+  la PR arrive dans `main`.
+- **Version 3.3.1** (2026-11-13, publiée), une version corrective : le service worker publié sert la page
   d'une app installée chargée dans une iframe (ADR 0243, PR #451) et les
   fenêtres gardent leur place dans la page, un iframe ne se recharge plus quand
-  sa fenêtre passe devant (ADR 0244, PR #452). Elle débloque l'essai de Kazo
-  Word dans l'OS publié. 3 lignes d'API de Windowing.Core repliées
-  (`WindowDocumentOrder`), aucun changement du SDK, 2 entrées dans
-  `changes/3.3.1.json` ; publiée quand la PR arrive dans `main`.
+  sa fenêtre passe devant (ADR 0244, PR #452). 3 lignes d'API de Windowing.Core
+  repliées (`WindowDocumentOrder`), 2 entrées dans `changes/3.3.1.json`.
 - **Version 3.3.0** (2026-11-11, publiée) : numéro de build et état de la version à la connexion (ADR 0236),
   démarrage sur la dernière version et remplacement d'un worker plus ancien
   (ADR 0237, 0239, 0241), la panne d'une app reste dans sa fenêtre (ADR 0238),

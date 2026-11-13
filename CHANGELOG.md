@@ -6,6 +6,12 @@ The changes of Kazo OS, by version. This file is generated from `wasm2/KazoOs/ch
 `wasm2/KazoOs/build/tools/collect-changes.sh` (ADR 0186): do not edit it by hand. Changes already
 deployed but not released yet are in the Settings ▸ What's new page of the OS.
 
+## 3.3.2 (2026-11-13)
+
+### Improved
+
+- **Files can now be up to 128 MiB.** The largest file Kazo OS stores goes from 16 MiB to 128 MiB, the most an app package may hold once extracted, so larger apps such as Kazo Word install. Large files are written and read in 16 MiB steps so the browser does not hold the whole file twice. A larger file still fails with File too large (EFBIG). ([0245-raise-the-maximum-file-size.md](doc/en/wasm/dev/adr/0245-raise-the-maximum-file-size.md))
+
 ## 3.3.1 (2026-11-13)
 
 ### Fixed
