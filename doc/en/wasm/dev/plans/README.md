@@ -19,5 +19,6 @@ summarized in [`../../memory/README.md`](../../memory/README.md).
 | [`wasm-v3-migration-analyse.md`](wasm-v3-migration-analyse.md) | Analysis of the wasm v3 migration (starting point of the end-of-migration plan). Historical. |
 | [`authentication-task-list.md`](authentication-task-list.md) | Former task list for WebAssembly authentication. Historical. |
 | [`kazoos-store.md`](kazoos-store.md) | **Kazo OS Store** plan, **approved on 2026-10-29**: system app (in the style of the Play Store) pinned by default, reviewed `Kazo-ca/Os-AppMarketPlace` catalog, trusted sources and per-user install, theme packs in v2; ADRs [0188](../adr/0188-hack-store-and-app-catalog.md) to [0190](../adr/0190-theme-packs.md) and the ordered list of work items (none started). |
+| [`cloud-drives-plan.md`](cloud-drives-plan.md) | "Cloud drives" series, **approved on 2026-11-13** (branch `cloud-drives/base`): the user's cloud storage (Dropbox, OneDrive, S3 compatible) mounted as a network drive, with no server; work items `cloud-drives/*` 0 to 7, rules of the series, what Benoit creates himself (two Dropbox apps, one Microsoft Entra registration, privacy page); ADR [0267](../adr/0267-cloud-drives-as-network-drives.md). |
 
 Parent folder index: [`../README.md`](../README.md).
