@@ -9,7 +9,7 @@ using Xunit;
 
 namespace Kazo.Os.Commands.Tests;
 
-/// <summary><c>mount</c>, <c>umount</c> and <c>df</c> with network drives (ADR 0181, section 12).</summary>
+/// <summary><c>mount</c>, <c>umount</c> and <c>df</c> with network drives (ADR 0181, section 12; ADR 0267 §3 and §4).</summary>
 public sealed class MountCommandTests
 {
     private const string ProcMounts =
@@ -109,6 +109,25 @@ public sealed class MountCommandTests
         Assert.Equal(0, run.ExitCode);
         string line = run.Stdout.Split('\n').Single(static line => line.StartsWith("host:work", StringComparison.Ordinal));
         Assert.Equal(["host:work", "-", "-", "-", "-", "/mnt/work"], line.Split(' ', StringSplitOptions.RemoveEmptyEntries));
+    }
+
+    [Fact]
+    public async Task Df_shows_a_cloud_drive_with_its_type_and_the_service_quota()
+    {
+        FakeAppDriveGateway drives = new FakeAppDriveGateway()
+            .WithNetworkDrive("/mnt/work", "work")
+            .WithCloudDrive("/mnt/Dropbox", "dropbox", "alice", 4096 * 1024, 1024 * 1024)
+            .WithCloudDrive("/mnt/bucket", "s3", "bucket", 0, 0);
+
+        Run run = await RunAsync(new DfApp(), static manifest => new DfCommand(manifest), drives, "-T");
+
+        Assert.Equal(0, run.ExitCode);
+        string[] lines = run.Stdout.Split('\n');
+        string[] Row(string source) =>
+            lines.Single(line => line.StartsWith(source, StringComparison.Ordinal)).Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        Assert.Equal(["dropbox:alice", "dropbox", "4096", "3072", "1024", "75%", "/mnt/Dropbox"], Row("dropbox:alice"));
+        Assert.Equal(["s3:bucket", "s3", "-", "-", "-", "-", "/mnt/bucket"], Row("s3:bucket"));
+        Assert.Equal(["host:work", "hostfs", "-", "-", "-", "-", "/mnt/work"], Row("host:work"));
     }
 
     private static async Task<Run> RunAsync(

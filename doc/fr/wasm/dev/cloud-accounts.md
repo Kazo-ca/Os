@@ -184,7 +184,8 @@ Dropbox exige l'adresse exacte, port compris, et n'accepte `http` que pour
 
 ## Décisions
 
-- **Jetons scellés sur l'appareil, clé dans le trousseau** plutôt que les jetons
+- **Jetons scellés sur l'appareil, clé dans le trousseau**
+  ([ADR 0269](adr/0269-cloud-tokens-stay-on-the-device.md)) plutôt que les jetons
   dans le trousseau : le trousseau est synchronisé, les jetons ne doivent pas
   quitter l'appareil.
 - **Page de retour statique et `BroadcastChannel`** : seul moyen de rendre le

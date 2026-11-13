@@ -9,12 +9,16 @@ using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Kazo.Os.Platform.Core.FileSystem.HostFolders;
 
-/// <summary>One network drive of the signed-in user (ADR 0181).</summary>
+/// <summary>One network drive of the signed-in user (ADR 0181, ADR 0267).</summary>
 /// <param name="MountPoint">Where it is mounted, e.g. <c>/mnt/Projects</c>.</param>
-/// <param name="Name">Name of the folder on the host computer.</param>
+/// <param name="Name">Name of the folder on the host computer, or of the cloud account.</param>
 /// <param name="OwnerId">Login name of the user who mounted it.</param>
-/// <param name="IsConnected">Whether the browser's permission is granted.</param>
-public sealed record NetworkDrive(VirtualPath MountPoint, string Name, string OwnerId, bool IsConnected);
+/// <param name="IsConnected">Whether the browser's permission is granted and the service can be reached.</param>
+public sealed record NetworkDrive(VirtualPath MountPoint, string Name, string OwnerId, bool IsConnected)
+{
+    /// <summary>Gets the filesystem type of the drive's source (ADR 0267 §3): <c>hostfs</c>, <c>dropbox</c>…</summary>
+    public string Type { get; init; } = HostFolderFileSystemProvider.FileSystemType;
+}
 
 /// <summary>Why a network drive operation was refused.</summary>
 public enum NetworkDriveError
@@ -38,7 +42,10 @@ public enum NetworkDriveError
     UserActivationRequired,
 
     /// <summary>The user refused the browser's permission.</summary>
-    PermissionDenied
+    PermissionDenied,
+
+    /// <summary>The source refused what was asked (an unknown account, say; ADR 0267 §3).</summary>
+    InvalidRequest
 }
 
 /// <summary>A refused network drive operation.</summary>
@@ -49,16 +56,26 @@ public sealed class NetworkDriveException(NetworkDriveError error, string messag
 }
 
 /// <summary>
-/// Mounts folders of the host computer as network drives (ADR 0181, sections 4 to 8): opens the
-/// browser's folder dialog, mounts a <see cref="HostFolderFileSystemProvider"/> at
+/// Mounts network drives (ADR 0181, sections 4 to 8; ADR 0267 §3): asks a drive source
+/// (<see cref="INetworkDriveSource"/>: <c>hostfs</c> opens the browser's folder dialog, a cloud source
+/// its account) for a folder, mounts a <see cref="HostFolderFileSystemProvider"/> at
 /// <c>/mnt/&lt;name&gt;</c>, and keeps the user's drives in
 /// <c>~/.local/state/kazoos/network-drives.json</c> (device-local, never synchronized, since the
-/// browser's handles stay in this browser).
+/// browser's handles and the cloud accounts stay on this device).
 /// </summary>
 /// <remarks>
+/// <para>
 /// At login the user's drives are mounted again, disconnected when the browser asks for its
-/// permission again; at logout they are unmounted. Mount-point folders and the drive list are
-/// written straight to the root provider, as the kernel, like <see cref="FileSystemSeeder"/> does.
+/// permission again or the service cannot be reached; at logout they are unmounted. Mount-point
+/// folders and the drive list are written straight to the root provider, as the kernel, like
+/// <see cref="FileSystemSeeder"/> does.
+/// </para>
+/// <para>
+/// Each line of the list names its source by type; a line without one is a folder of the computer,
+/// so lists written before ADR 0267 are read as they are. When a source raises
+/// <see cref="INetworkDriveSource.AvailabilityChanged"/>, its disconnected drives are asked again and
+/// reconnect with no user gesture when they can (ADR 0267 §9).
+/// </para>
 /// </remarks>
 public sealed class NetworkDriveService : IDisposable
 {
@@ -72,7 +89,7 @@ public sealed class NetworkDriveService : IDisposable
     private const ushort TableMode = 0x180; // 0600
 
     private readonly IDynamicFileSystemMountRouter _router;
-    private readonly IHostFolderAccess _access;
+    private readonly IReadOnlyDictionary<string, INetworkDriveSource> _sources;
     private readonly Func<AuthenticatedPrincipal?> _principal;
     private readonly TimeProvider _time;
     private readonly ILogger _logger;
@@ -80,7 +97,7 @@ public sealed class NetworkDriveService : IDisposable
     private readonly SemaphoreSlim _gate = new(1, 1);
     private readonly Dictionary<string, MountedDrive> _mounted = new(StringComparer.Ordinal);
 
-    /// <summary>Initializes the service.</summary>
+    /// <summary>Initializes the service with the folders of the computer as its only source (ADR 0181).</summary>
     /// <param name="router">The mount table.</param>
     /// <param name="access">The browser's folder dialog and handle store.</param>
     /// <param name="principal">The signed-in user, resolved lazily (the session service needs the file system).</param>
@@ -94,9 +111,40 @@ public sealed class NetworkDriveService : IDisposable
         IEventBus? eventBus = null,
         TimeProvider? timeProvider = null,
         ILogger<NetworkDriveService>? logger = null)
+        : this(router, [new HostFolderDriveSource(access ?? throw new ArgumentNullException(nameof(access)))], principal, eventBus, timeProvider, logger)
+    {
+    }
+
+    /// <summary>Initializes the service with its drive sources, one per type (ADR 0267 §3).</summary>
+    /// <param name="router">The mount table.</param>
+    /// <param name="sources">The drive sources; a type given twice keeps the first.</param>
+    /// <param name="principal">The signed-in user, resolved lazily (the session service needs the file system).</param>
+    /// <param name="eventBus">Login and logout events; <see langword="null"/> in tests that call <see cref="RestoreAsync"/> themselves.</param>
+    /// <param name="timeProvider">Clock of the authorization contexts.</param>
+    /// <param name="logger">Logs drives that cannot be mounted again.</param>
+    public NetworkDriveService(
+        IDynamicFileSystemMountRouter router,
+        IEnumerable<INetworkDriveSource> sources,
+        Func<AuthenticatedPrincipal?> principal,
+        IEventBus? eventBus = null,
+        TimeProvider? timeProvider = null,
+        ILogger<NetworkDriveService>? logger = null)
     {
         _router = router ?? throw new ArgumentNullException(nameof(router));
-        _access = access ?? throw new ArgumentNullException(nameof(access));
+        ArgumentNullException.ThrowIfNull(sources);
+        Dictionary<string, INetworkDriveSource> byType = new(StringComparer.Ordinal);
+        foreach (INetworkDriveSource source in sources)
+        {
+            ArgumentNullException.ThrowIfNull(source);
+            byType.TryAdd(source.Type, source);
+        }
+
+        _sources = byType;
+        foreach (INetworkDriveSource source in _sources.Values)
+        {
+            source.AvailabilityChanged += OnSourceAvailable;
+        }
+
         _principal = principal ?? throw new ArgumentNullException(nameof(principal));
         _time = timeProvider ?? TimeProvider.System;
         _logger = (ILogger?)logger ?? NullLogger.Instance;
@@ -112,9 +160,32 @@ public sealed class NetworkDriveService : IDisposable
     /// <summary>Raised after a drive is mounted, unmounted, connected or disconnected.</summary>
     public event Action? Changed;
 
+    /// <summary>Gets the types of the drive sources, e.g. <c>hostfs</c>, <c>dropbox</c>.</summary>
+    public IReadOnlyList<string> SourceTypes => [.. _sources.Keys.Order(StringComparer.Ordinal)];
+
     /// <summary>Gets whether the browser can mount a host folder.</summary>
     public ValueTask<bool> IsSupportedAsync(CancellationToken cancellationToken = default) =>
-        _access.IsSupportedAsync(cancellationToken);
+        IsAvailableAsync(HostFolderFileSystemProvider.FileSystemType, cancellationToken);
+
+    /// <summary>Gets whether a drive of <paramref name="type"/> can be created now; <see langword="false"/> for an unknown type.</summary>
+    public ValueTask<bool> IsAvailableAsync(string type, CancellationToken cancellationToken = default) =>
+        _sources.TryGetValue(type, out INetworkDriveSource? source) ? source.IsAvailableAsync(cancellationToken) : ValueTask.FromResult(false);
+
+    /// <summary>
+    /// Asks the service of a drive for its size and free space (ADR 0267 §4); <see langword="null"/>
+    /// when nothing is mounted there, the folder does not know (a folder of the computer), or the
+    /// drive is disconnected.
+    /// </summary>
+    public ValueTask<HostFolderQuota?> GetQuotaAsync(VirtualPath mountPoint, CancellationToken cancellationToken = default)
+    {
+        MountedDrive? drive;
+        lock (_mounted)
+        {
+            _mounted.TryGetValue(mountPoint.Value, out drive);
+        }
+
+        return drive is null ? ValueTask.FromResult<HostFolderQuota?>(null) : drive.Provider.GetQuotaAsync(cancellationToken);
+    }
 
     /// <summary>
     /// Gets the signed-in user's drives (every drive for an administrator), by mount point; none
@@ -155,26 +226,40 @@ public sealed class NetworkDriveService : IDisposable
     /// <param name="mountPoint"><c>/mnt/&lt;name&gt;</c>, or <see langword="null"/> for <c>/mnt/&lt;folder name&gt;</c>.</param>
     /// <param name="cancellationToken">Cancels the operation.</param>
     /// <exception cref="NetworkDriveException">The browser cannot, nobody is signed in, or the mount point is not usable.</exception>
-    public async ValueTask<NetworkDrive?> MountAsync(string? mountPoint, CancellationToken cancellationToken = default)
+    public ValueTask<NetworkDrive?> MountAsync(string? mountPoint, CancellationToken cancellationToken = default) =>
+        MountAsync(HostFolderFileSystemProvider.FileSystemType, mountPoint, null, cancellationToken);
+
+    /// <summary>
+    /// Asks the source of <paramref name="type"/> for a new drive and mounts it for the signed-in
+    /// user (ADR 0267 §3); <see langword="null"/> when the user closed the source's dialog. A folder of
+    /// the computer needs a recent user gesture.
+    /// </summary>
+    /// <param name="type">Type of the source, e.g. <c>hostfs</c> or <c>dropbox</c>.</param>
+    /// <param name="mountPoint"><c>/mnt/&lt;name&gt;</c>, or <see langword="null"/> for the source's default name, numbered when taken.</param>
+    /// <param name="request">What the user chose (account, root); <see langword="null"/> for none.</param>
+    /// <param name="cancellationToken">Cancels the operation.</param>
+    /// <exception cref="NetworkDriveException">The type is unknown or unavailable, nobody is signed in, or the mount point is not usable.</exception>
+    public async ValueTask<NetworkDrive?> MountAsync(
+        string type,
+        string? mountPoint,
+        NetworkDriveRequest? request,
+        CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(type);
         AuthenticatedPrincipal principal = RequirePrincipal();
         VirtualPath? requested = mountPoint is null ? null : ParseMountPoint(mountPoint);
-        if (!await _access.IsSupportedAsync(cancellationToken).ConfigureAwait(false))
+        if (!_sources.TryGetValue(type, out INetworkDriveSource? source))
         {
-            throw new NetworkDriveException(NetworkDriveError.NotSupported, "hostfs: not supported by this browser");
+            throw new NetworkDriveException(NetworkDriveError.NotSupported, $"{type}: unknown filesystem type");
         }
 
-        HostFolderPick? pick;
-        try
+        if (!await source.IsAvailableAsync(cancellationToken).ConfigureAwait(false))
         {
-            pick = await _access.PickAsync(cancellationToken).ConfigureAwait(false);
-        }
-        catch (InvalidOperationException exception) when (exception is not NetworkDriveException)
-        {
-            throw new NetworkDriveException(NetworkDriveError.UserActivationRequired, exception.Message);
+            throw new NetworkDriveException(NetworkDriveError.NotSupported, $"{type}: not supported by this browser");
         }
 
-        if (pick is null)
+        NetworkDriveCreation? creation = await CreateAsync(source, request ?? new NetworkDriveRequest(), cancellationToken).ConfigureAwait(false);
+        if (creation is null)
         {
             return null;
         }
@@ -186,8 +271,7 @@ public sealed class NetworkDriveService : IDisposable
         }
         catch
         {
-            await _access.ForgetAsync(pick.Key, CancellationToken.None).ConfigureAwait(false);
-            await pick.Folder.DisposeAsync().ConfigureAwait(false);
+            await DiscardAsync(source, creation).ConfigureAwait(false);
             throw;
         }
 
@@ -198,9 +282,16 @@ public sealed class NetworkDriveService : IDisposable
             await EnsureMountRootAsync(root, cancellationToken).ConfigureAwait(false);
             (VirtualPath path, bool created) = requested is { } chosen
                 ? (chosen, await PrepareMountPointAsync(root, chosen, principal, context, cancellationToken).ConfigureAwait(false))
-                : (await CreateFreeMountPointAsync(root, pick.Folder.Name, context, cancellationToken).ConfigureAwait(false), true);
-            DriveRecord record = new(path.Value, pick.Folder.Name, pick.Key, created);
-            mounted = Mount(record, pick.Folder, principal, connected: true);
+                : (await CreateFreeMountPointAsync(root, creation.DefaultMountName, context, cancellationToken).ConfigureAwait(false), true);
+            NetworkDriveReference reference = creation.Reference;
+            DriveRecord record = new(path.Value, reference.Name, reference.Key, created)
+            {
+                Type = source.Type,
+                Account = reference.Account,
+                Root = reference.Root
+            };
+            HostFolderPermission permission = await creation.Folder.QueryPermissionAsync(cancellationToken).ConfigureAwait(false);
+            mounted = Mount(record, creation.Folder, principal, permission == HostFolderPermission.Granted);
             await SaveTableAsync(principal, cancellationToken).ConfigureAwait(false);
             return mounted.Describe();
         }
@@ -212,13 +303,87 @@ public sealed class NetworkDriveService : IDisposable
                 await RemoveMountPointAsync(mounted, CancellationToken.None).ConfigureAwait(false);
             }
 
-            await _access.ForgetAsync(pick.Key, CancellationToken.None).ConfigureAwait(false);
-            await pick.Folder.DisposeAsync().ConfigureAwait(false);
+            await DiscardAsync(source, creation).ConfigureAwait(false);
             throw;
         }
         finally
         {
             _gate.Release();
+        }
+    }
+
+    /// <summary>Asks a source for a new drive, turning its refusals into <see cref="NetworkDriveException"/>.</summary>
+    private static async ValueTask<NetworkDriveCreation?> CreateAsync(
+        INetworkDriveSource source,
+        NetworkDriveRequest request,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await source.CreateAsync(request, cancellationToken).ConfigureAwait(false);
+        }
+        catch (NotSupportedException exception)
+        {
+            throw new NetworkDriveException(NetworkDriveError.NotSupported, exception.Message);
+        }
+        catch (ArgumentException exception)
+        {
+            throw new NetworkDriveException(NetworkDriveError.InvalidRequest, exception.Message);
+        }
+        catch (InvalidOperationException exception) when (exception is not NetworkDriveException)
+        {
+            throw new NetworkDriveException(NetworkDriveError.UserActivationRequired, exception.Message);
+        }
+    }
+
+    /// <summary>Forgets and closes a drive that could not be mounted.</summary>
+    private static async ValueTask DiscardAsync(INetworkDriveSource source, NetworkDriveCreation creation)
+    {
+        try
+        {
+            await source.ForgetAsync(creation.Reference, CancellationToken.None).ConfigureAwait(false);
+        }
+        finally
+        {
+            await creation.Folder.DisposeAsync().ConfigureAwait(false);
+        }
+    }
+
+    /// <summary>
+    /// A source may be reachable again (ADR 0267 §9): its disconnected drives ask their folder again
+    /// and reconnect, with no user gesture, when it answers <see cref="HostFolderPermission.Granted"/>.
+    /// </summary>
+    private void OnSourceAvailable() => Observe(ReconnectAvailableAsync().AsTask(), "reconnect");
+
+    /// <summary>Reconnects every disconnected drive whose folder grants access now.</summary>
+    public async ValueTask ReconnectAvailableAsync(CancellationToken cancellationToken = default)
+    {
+        MountedDrive[] disconnected;
+        lock (_mounted)
+        {
+            disconnected = [.. _mounted.Values.Where(static drive => !drive.Provider.IsConnected)];
+        }
+
+        bool changed = false;
+        foreach (MountedDrive drive in disconnected)
+        {
+            try
+            {
+                if (await drive.Provider.Folder.QueryPermissionAsync(cancellationToken).ConfigureAwait(false) == HostFolderPermission.Granted)
+                {
+                    drive.Provider.SetConnected(true);
+                    changed = true;
+                }
+            }
+            catch (Exception exception) when (exception is IOException or InvalidOperationException or ObjectDisposedException)
+            {
+                _logger.LogDebug(exception, "Network drive {MountPoint} is still unavailable.", drive.Provider.MountPath);
+            }
+        }
+
+        if (changed)
+        {
+            Changed?.Invoke();
         }
     }
 
@@ -255,7 +420,11 @@ public sealed class NetworkDriveService : IDisposable
             try
             {
                 // Past this point the drive is gone: finish the cleanup even if the caller gives up.
-                await _access.ForgetAsync(drive.Record.Key, CancellationToken.None).ConfigureAwait(false);
+                if (_sources.TryGetValue(drive.Record.SourceType, out INetworkDriveSource? source))
+                {
+                    await source.ForgetAsync(drive.Record.Reference, CancellationToken.None).ConfigureAwait(false);
+                }
+
                 await SaveTableAsync(principal, CancellationToken.None).ConfigureAwait(false);
                 await RemoveMountPointAsync(drive, CancellationToken.None).ConfigureAwait(false);
             }
@@ -308,10 +477,18 @@ public sealed class NetworkDriveService : IDisposable
                     continue;
                 }
 
+                if (!_sources.TryGetValue(record.SourceType, out INetworkDriveSource? source))
+                {
+                    // A source this host does not have (an older or a different build): dropped.
+                    _logger.LogWarning("Network drive {MountPoint} has the unknown type {Type}; it is dropped.", record.MountPoint, record.SourceType);
+                    dropped = true;
+                    continue;
+                }
+
                 IHostFolder? folder = null;
                 try
                 {
-                    folder = await _access.LoadAsync(record.Key, cancellationToken).ConfigureAwait(false);
+                    folder = await source.OpenAsync(record.Reference, cancellationToken).ConfigureAwait(false);
                     if (folder is null)
                     {
                         dropped = true;
@@ -394,6 +571,11 @@ public sealed class NetworkDriveService : IDisposable
             subscription.Dispose();
         }
 
+        foreach (INetworkDriveSource source in _sources.Values)
+        {
+            source.AvailabilityChanged -= OnSourceAvailable;
+        }
+
         _gate.Dispose();
     }
 
@@ -403,7 +585,10 @@ public sealed class NetworkDriveService : IDisposable
     {
         VirtualPath path = VirtualPath.Parse(record.MountPoint);
         HostFolderFileSystemProvider provider = new(
-            path, folder, principal.LoginName.Value, principal.PrimaryGroupId.ToString(), connected, _time);
+            path, folder, principal.LoginName.Value, principal.PrimaryGroupId.ToString(), connected, _time)
+        {
+            Type = record.SourceType
+        };
         _router.Mount(new FileSystemMount(path, provider, isProtectedRoot: true));
         MountedDrive drive = new(record, provider);
         lock (_mounted)
@@ -684,7 +869,8 @@ public sealed class NetworkDriveService : IDisposable
 
     private sealed record MountedDrive(DriveRecord Record, HostFolderFileSystemProvider Provider)
     {
-        public NetworkDrive Describe() => new(Provider.MountPath, Record.Name, Provider.OwnerId, Provider.IsConnected);
+        public NetworkDrive Describe() =>
+            new(Provider.MountPath, Record.Name, Provider.OwnerId, Provider.IsConnected) { Type = Provider.Type };
     }
 
     private sealed class JsonContent(byte[] content) : IFileSystemContentSource
@@ -700,10 +886,28 @@ public sealed class NetworkDriveService : IDisposable
 
 /// <summary>One line of <c>network-drives.json</c>.</summary>
 /// <param name="MountPoint">Mount point.</param>
-/// <param name="Name">Name of the host folder.</param>
-/// <param name="Key">Key of the handle in the browser's handle store.</param>
+/// <param name="Name">Name of the host folder, or of the cloud account.</param>
+/// <param name="Key">Key of the drive in its source's store (the browser's handle store for <c>hostfs</c>).</param>
 /// <param name="CreatedMountPoint">Whether mounting created the mount point, so unmounting removes it.</param>
-internal sealed record DriveRecord(string MountPoint, string Name, string Key, bool CreatedMountPoint);
+internal sealed record DriveRecord(string MountPoint, string Name, string? Key, bool CreatedMountPoint)
+{
+    /// <summary>Gets the source's type (ADR 0267 §3); absent in lists written before it, which only had folders of the computer.</summary>
+    public string? Type { get; init; }
+
+    /// <summary>Gets the reference of the cloud account; never a token.</summary>
+    public string? Account { get; init; }
+
+    /// <summary>Gets the folder of the service the drive starts at.</summary>
+    public string? Root { get; init; }
+
+    /// <summary>Gets the source's type, <c>hostfs</c> when the line has none.</summary>
+    [JsonIgnore]
+    public string SourceType => string.IsNullOrEmpty(Type) ? HostFolderFileSystemProvider.FileSystemType : Type;
+
+    /// <summary>Gets what the source needs to open or forget the drive.</summary>
+    [JsonIgnore]
+    public NetworkDriveReference Reference => new(Name, Key, Account, Root);
+}
 
 /// <summary>On-disk shape of <c>~/.local/state/kazoos/network-drives.json</c>.</summary>
 /// <param name="SchemaVersion">Format version, 1.</param>
@@ -712,5 +916,8 @@ internal sealed record DriveTable(int SchemaVersion, IReadOnlyList<DriveRecord> 
 
 /// <summary>Source-generated JSON for the drive list.</summary>
 [JsonSerializable(typeof(DriveTable))]
-[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, WriteIndented = true)]
+[JsonSourceGenerationOptions(
+    PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
+    WriteIndented = true,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
 internal sealed partial class NetworkDriveJsonContext : JsonSerializerContext;

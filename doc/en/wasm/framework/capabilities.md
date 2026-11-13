@@ -74,7 +74,7 @@ file operation asks for, before the permission bits:
 | `~/.config/<appId>/` (its settings, ADR 0044) | `filesystem.private.read` | `filesystem.private.write` |
 | `/etc/<appId>/` | `filesystem.private.read` | `filesystem.system.write` (and administrator authority) |
 | `/home/<user>/` of the acting user | `filesystem.user-home.read` | `filesystem.user-home.write` |
-| a network drive (`hostfs`, ADR 0181) mounted by the acting user ([ADR 0231](../dev/adr/0231-network-drives-count-as-personal-files.md)) | `filesystem.user-home.read` | `filesystem.user-home.write` |
+| a network drive (`hostfs`, ADR 0181, or cloud, [ADR 0267](../dev/adr/0267-cloud-drives-as-network-drives.md)) mounted by the acting user ([ADR 0231](../dev/adr/0231-network-drives-count-as-personal-files.md)) | `filesystem.user-home.read` | `filesystem.user-home.write` |
 | everything else: `/mnt` itself, another user's drive, `/etc`, `/var`… | `filesystem.system.read` | `filesystem.system.write` |
 
 On their own network drive, an app that holds only `filesystem.system.*`

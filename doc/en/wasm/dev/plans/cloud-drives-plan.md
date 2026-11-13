@@ -19,7 +19,7 @@ no server and no cost.
 | # | Branch | Content | Depends on |
 | --- | --- | --- | --- |
 | 0 | `cloud-drives/0-adr` | ADR 0267, this plan, `features.md`, memory. **Done.** | — |
-| 1 | `cloud-drives/1-drive-sources` | `NetworkDriveService` with several sources (ADR 0267 §3), drive table with type and account, optional quota and revision interfaces (§4), `/proc/mounts`, `df`, `KazoDriveInfo`. A fake in-memory remote source serves the tests. No real provider. | 0 |
+| 1 | `cloud-drives/1-drive-sources` | `NetworkDriveService` with several sources (ADR 0267 §3), drive table with type and account, optional quota and revision interfaces (§4), `/proc/mounts`, `df`, `KazoDriveInfo`. A fake in-memory remote source serves the tests. No real provider. **Done** ([`network-drive-sources.md`](../network-drive-sources.md)). | 0 |
 | 2 | `cloud-drives/2-cloud-accounts` | Cloud account service (§5): PKCE, sign-in window, static return page and `BroadcastChannel`, tokens in the keyring, renewal, removal, app identifiers in settings. A fake OAuth server for E2E tests. Checks the keyring of the guest account. Gives Benoit the exact return addresses to register. **Done**: [`cloud-accounts.md`](../cloud-accounts.md). | 0 |
 | 3 | `cloud-drives/3-dropbox` | Dropbox connector (API v2), both scopes (§8), a contract test suite shared by all connectors. | 1, 2 |
 | 4 | `cloud-drives/4-onedrive` | Microsoft Graph connector, both scopes, reconnect after 24 hours. | 1, 2 |

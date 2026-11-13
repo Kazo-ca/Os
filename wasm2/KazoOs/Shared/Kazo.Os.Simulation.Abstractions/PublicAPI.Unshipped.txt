@@ -27,3 +27,81 @@ override Kazo.Os.Simulation.Abstractions.CloudAccounts.OAuthAuthorizationResult.
 override Kazo.Os.Simulation.Abstractions.CloudAccounts.OAuthAuthorizationResult.ToString() -> string!
 static Kazo.Os.Simulation.Abstractions.CloudAccounts.OAuthAuthorizationResult.operator !=(Kazo.Os.Simulation.Abstractions.CloudAccounts.OAuthAuthorizationResult? left, Kazo.Os.Simulation.Abstractions.CloudAccounts.OAuthAuthorizationResult? right) -> bool
 static Kazo.Os.Simulation.Abstractions.CloudAccounts.OAuthAuthorizationResult.operator ==(Kazo.Os.Simulation.Abstractions.CloudAccounts.OAuthAuthorizationResult? left, Kazo.Os.Simulation.Abstractions.CloudAccounts.OAuthAuthorizationResult? right) -> bool
+Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderEntry.Revision.get -> string?
+Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderEntry.Revision.init -> void
+Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderErrorKind.RevisionConflict = 8 -> Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderErrorKind
+Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderErrorKind.Unavailable = 9 -> Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderErrorKind
+Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderPermission.Unavailable = 3 -> Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderPermission
+Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderQuota
+Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderQuota.<Clone>$() -> Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderQuota!
+Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderQuota.Deconstruct(out long TotalBytes, out long FreeBytes) -> void
+Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderQuota.Equals(Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderQuota? other) -> bool
+Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderQuota.FreeBytes.get -> long
+Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderQuota.FreeBytes.init -> void
+Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderQuota.HostFolderQuota(long TotalBytes, long FreeBytes) -> void
+Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderQuota.TotalBytes.get -> long
+Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderQuota.TotalBytes.init -> void
+Kazo.Os.Simulation.Abstractions.FileSystem.IConditionalHostFolder
+Kazo.Os.Simulation.Abstractions.FileSystem.IConditionalHostFolder.WriteIfMatchAsync(System.Collections.Generic.IReadOnlyList<string!>! path, byte[]! content, string! expectedRevision, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Kazo.Os.Simulation.Abstractions.FileSystem.IHostFolderQuota
+Kazo.Os.Simulation.Abstractions.FileSystem.IHostFolderQuota.GetQuotaAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderQuota?>
+Kazo.Os.Simulation.Abstractions.FileSystem.INetworkDriveSource
+Kazo.Os.Simulation.Abstractions.FileSystem.INetworkDriveSource.AvailabilityChanged -> System.Action?
+Kazo.Os.Simulation.Abstractions.FileSystem.INetworkDriveSource.CreateAsync(Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveRequest! request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveCreation?>
+Kazo.Os.Simulation.Abstractions.FileSystem.INetworkDriveSource.ForgetAsync(Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveReference! reference, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Kazo.Os.Simulation.Abstractions.FileSystem.INetworkDriveSource.IsAvailableAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<bool>
+Kazo.Os.Simulation.Abstractions.FileSystem.INetworkDriveSource.OpenAsync(Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveReference! reference, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.Simulation.Abstractions.FileSystem.IHostFolder?>
+Kazo.Os.Simulation.Abstractions.FileSystem.INetworkDriveSource.Type.get -> string!
+Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveCreation
+Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveCreation.<Clone>$() -> Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveCreation!
+Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveCreation.Deconstruct(out Kazo.Os.Simulation.Abstractions.FileSystem.IHostFolder! Folder, out Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveReference! Reference, out string! DefaultMountName) -> void
+Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveCreation.DefaultMountName.get -> string!
+Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveCreation.DefaultMountName.init -> void
+Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveCreation.Equals(Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveCreation? other) -> bool
+Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveCreation.Folder.get -> Kazo.Os.Simulation.Abstractions.FileSystem.IHostFolder!
+Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveCreation.Folder.init -> void
+Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveCreation.NetworkDriveCreation(Kazo.Os.Simulation.Abstractions.FileSystem.IHostFolder! Folder, Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveReference! Reference, string! DefaultMountName) -> void
+Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveCreation.Reference.get -> Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveReference!
+Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveCreation.Reference.init -> void
+Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveReference
+Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveReference.<Clone>$() -> Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveReference!
+Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveReference.Account.get -> string?
+Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveReference.Account.init -> void
+Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveReference.Deconstruct(out string! Name, out string? Key, out string? Account, out string? Root) -> void
+Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveReference.Equals(Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveReference? other) -> bool
+Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveReference.Key.get -> string?
+Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveReference.Key.init -> void
+Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveReference.Name.get -> string!
+Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveReference.Name.init -> void
+Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveReference.NetworkDriveReference(string! Name, string? Key = null, string? Account = null, string? Root = null) -> void
+Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveReference.Root.get -> string?
+Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveReference.Root.init -> void
+Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveRequest
+Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveRequest.<Clone>$() -> Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveRequest!
+Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveRequest.Account.get -> string?
+Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveRequest.Account.init -> void
+Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveRequest.Deconstruct(out string? Account, out string? Root) -> void
+Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveRequest.Equals(Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveRequest? other) -> bool
+Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveRequest.NetworkDriveRequest(string? Account = null, string? Root = null) -> void
+Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveRequest.Root.get -> string?
+Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveRequest.Root.init -> void
+override Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderQuota.Equals(object? obj) -> bool
+override Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderQuota.GetHashCode() -> int
+override Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderQuota.ToString() -> string!
+override Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveCreation.Equals(object? obj) -> bool
+override Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveCreation.GetHashCode() -> int
+override Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveCreation.ToString() -> string!
+override Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveReference.Equals(object? obj) -> bool
+override Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveReference.GetHashCode() -> int
+override Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveReference.ToString() -> string!
+override Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveRequest.Equals(object? obj) -> bool
+override Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveRequest.GetHashCode() -> int
+override Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveRequest.ToString() -> string!
+static Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderQuota.operator !=(Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderQuota? left, Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderQuota? right) -> bool
+static Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderQuota.operator ==(Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderQuota? left, Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderQuota? right) -> bool
+static Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveCreation.operator !=(Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveCreation? left, Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveCreation? right) -> bool
+static Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveCreation.operator ==(Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveCreation? left, Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveCreation? right) -> bool
+static Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveReference.operator !=(Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveReference? left, Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveReference? right) -> bool
+static Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveReference.operator ==(Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveReference? left, Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveReference? right) -> bool
+static Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveRequest.operator !=(Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveRequest? left, Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveRequest? right) -> bool
+static Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveRequest.operator ==(Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveRequest? left, Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveRequest? right) -> bool

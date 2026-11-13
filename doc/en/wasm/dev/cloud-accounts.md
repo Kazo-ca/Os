@@ -183,7 +183,8 @@ application" platform) get the same addresses.
 
 ## Decisions
 
-- **Tokens sealed on the device, key in the keyring** rather than tokens in the
+- **Tokens sealed on the device, key in the keyring**
+  ([ADR 0269](adr/0269-cloud-tokens-stay-on-the-device.md)) rather than tokens in the
   keyring: the keyring is synchronized, tokens must not leave the device.
 - **Static callback page and `BroadcastChannel`**: the only way to hand the code
   to a COOP-isolated page with no server and without leaving the OS.

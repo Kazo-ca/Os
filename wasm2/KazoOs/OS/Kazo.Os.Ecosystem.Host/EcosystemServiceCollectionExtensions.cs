@@ -275,9 +275,14 @@ public static class EcosystemServiceCollectionExtensions
         services.AddScoped<IDynamicFileSystemMountRouter>(provider => provider.GetRequiredService<FileSystemMountRouter>());
         services.AddScoped<IHostFolderAccess>(provider =>
             new BrowserHostFolderAccess(provider.GetRequiredService<Microsoft.JSInterop.IJSRuntime>()));
+        // ADR 0267 §3: the folders of the computer (hostfs) and every other drive source registered
+        // as INetworkDriveSource (the cloud connectors).
         services.AddScoped<NetworkDriveService>(provider => new NetworkDriveService(
             provider.GetRequiredService<IDynamicFileSystemMountRouter>(),
-            provider.GetRequiredService<IHostFolderAccess>(),
+            [
+                new HostFolderDriveSource(provider.GetRequiredService<IHostFolderAccess>()),
+                .. provider.GetServices<INetworkDriveSource>()
+            ],
             () => provider.GetRequiredService<ISessionService>().CurrentPrincipal,
             provider.GetService<IEventBus>(),
             logger: provider.GetService<ILogger<NetworkDriveService>>()));

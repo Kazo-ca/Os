@@ -96,7 +96,7 @@ public sealed record MountDescription(string Source, string MountPoint, string T
     /// <summary>
     /// Describes one router mount the way <c>/proc/mounts</c> lists it (ADR 0057 section 6): the
     /// <c>procfs</c> and <c>devfs</c> providers by their Linux-style pseudo-source, a network drive
-    /// as <c>host:&lt;folder&gt;</c> (ADR 0181, section 3), everything else as the persistent disk
+    /// as <c>host:&lt;folder&gt;</c> (ADR 0181, section 3) or <c>&lt;type&gt;:&lt;account&gt;</c> (ADR 0267 §3), everything else as the persistent disk
     /// <c>/dev/hda</c>.
     /// </summary>
     public static MountDescription From(FileSystemMount mount)
@@ -104,11 +104,8 @@ public sealed record MountDescription(string Source, string MountPoint, string T
         ArgumentNullException.ThrowIfNull(mount);
         if (mount.Provider is HostFolders.HostFolderFileSystemProvider host)
         {
-            return new MountDescription(
-                "host:" + host.Folder.Name,
-                mount.Path.Value,
-                HostFolders.HostFolderFileSystemProvider.FileSystemType,
-                "rw,nosuid,nodev");
+            // ADR 0267 §3: a cloud drive shows its type, e.g. dropbox:<account> /mnt/Dropbox dropbox.
+            return new MountDescription(host.MountSource, mount.Path.Value, host.Type, "rw,nosuid,nodev");
         }
 
         return mount.Provider.ProviderId switch
