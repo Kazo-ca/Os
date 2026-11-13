@@ -20,17 +20,17 @@ Kazo Word's details stay in its repository, to read with this guide:
 | Kazo repository | Name in Kazo OS | Upstream app | Upstream web build (2026-11-13) |
 | --- | --- | --- | --- |
 | `Kazo-ca/Os-App-Word` | Kazo Word | [WordCraft](https://github.com/storytold/wordcraft) | `apps/wordcraft-web`, `craft-web-host` and `craft-web-api`. **Done** (work items 1 to 4), Store in progress. |
-| `Kazo-ca/Os-App-Spreadsheets` | Kazo Spreadsheets | [GridCraft](https://github.com/storytold/gridcraft) | `apps/gridcraft-web`, `craft-web-host` and `craft-web-api`. **Next**, as soon as Kazo Word is published in the Store. |
-| `Kazo-ca/Os-App-PDF` | Kazo Pdf | [PdfCraft](https://github.com/storytold/pdfcraft) | `apps/pdfcraft-web`, `craft-web-host` and `craft-web-api`. |
-| `Kazo-ca/Os-App-Fig` | Kazo Fig | [FigCraft](https://github.com/storytold/figcraft) | `apps/figcraft-web`, `craft-web-host` and `craft-web-api`. |
-| `Kazo-ca/Os-App-Deck` | Kazo Deck | [DeckCraft](https://github.com/storytold/deckcraft) | `apps/deckcraft-web`, `craft-web-host` and `craft-web-api`. |
-| `Kazo-ca/Os-App-Vector` | Kazo Vector | [VectorCraft](https://github.com/storytold/vectorcraft) | `apps/vectorcraft-web`, `craft-web-api` only: **no host mode**. |
-| `Kazo-ca/Os-App-Photo` | Kazo Photo | [PhotoCraft](https://github.com/storytold/photocraft) | `apps/photocraft-web`, **neither `craft-web-host` nor `craft-web-api`**. |
-| `Kazo-ca/Os-App-Design` | Kazo Design | [DesignCraft](https://github.com/storytold/designcraft) | `apps/designcraft-web`, **neither `craft-web-host` nor `craft-web-api`**. |
+| [`Kazo-ca/Os-App-Spreadsheets`](https://github.com/Kazo-ca/Os-App-Spreadsheets) ([TODO #1](https://github.com/Kazo-ca/Os-App-Spreadsheets/issues/1)) | Kazo Spreadsheets | [GridCraft](https://github.com/storytold/gridcraft) | `apps/gridcraft-web`, `craft-web-host` and `craft-web-api`. **Next**, as soon as Kazo Word is published in the Store. |
+| [`Kazo-ca/Os-App-PDF`](https://github.com/Kazo-ca/Os-App-PDF) ([TODO #1](https://github.com/Kazo-ca/Os-App-PDF/issues/1)) | Kazo Pdf | [PdfCraft](https://github.com/storytold/pdfcraft) | `apps/pdfcraft-web`, `craft-web-host` and `craft-web-api`. |
+| [`Kazo-ca/Os-App-Fig`](https://github.com/Kazo-ca/Os-App-Fig) ([TODO #1](https://github.com/Kazo-ca/Os-App-Fig/issues/1)) | Kazo Fig | [FigCraft](https://github.com/storytold/figcraft) | `apps/figcraft-web`, `craft-web-host` and `craft-web-api`. |
+| [`Kazo-ca/Os-App-Deck`](https://github.com/Kazo-ca/Os-App-Deck) ([TODO #1](https://github.com/Kazo-ca/Os-App-Deck/issues/1)) | Kazo Deck | [DeckCraft](https://github.com/storytold/deckcraft) | `apps/deckcraft-web`, `craft-web-host` and `craft-web-api`. |
+| [`Kazo-ca/Os-App-Vector`](https://github.com/Kazo-ca/Os-App-Vector) ([TODO #1](https://github.com/Kazo-ca/Os-App-Vector/issues/1)) | Kazo Vector | [VectorCraft](https://github.com/storytold/vectorcraft) | `apps/vectorcraft-web`, `craft-web-api` only: **no host mode**. |
+| [`Kazo-ca/Os-App-Photo`](https://github.com/Kazo-ca/Os-App-Photo) ([TODO #1](https://github.com/Kazo-ca/Os-App-Photo/issues/1)) | Kazo Photo | [PhotoCraft](https://github.com/storytold/photocraft) | `apps/photocraft-web`, **neither `craft-web-host` nor `craft-web-api`**. |
+| [`Kazo-ca/Os-App-Design`](https://github.com/Kazo-ca/Os-App-Design) ([TODO #1](https://github.com/Kazo-ca/Os-App-Design/issues/1)) | Kazo Design | [DesignCraft](https://github.com/storytold/designcraft) | `apps/designcraft-web`, **neither `craft-web-host` nor `craft-web-api`**. |
 
 The "web build" column comes from the `Cargo.toml` of `apps/<app>-web` on each upstream
 repository's `main` branch, read on 2026-11-13. It changes fast (about one release a week):
-check it again at step 0. All these apps are licensed `MIT OR Apache-2.0`, written in Rust
+check it again at step 0. The seven Kazo repositories and the `Kazo-ca/<app>craft` forks exist since 2026-11-13; each repository has its `TODO` issue #1 that follows this guide. All these apps are licensed `MIT OR Apache-2.0`, written in Rust
 with egui and wgpu (WebGPU, WebGL 2 fallback), in alpha.
 
 An app without `craft-web-host` cannot be hosted like Kazo Word: it can neither receive a file
