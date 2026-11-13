@@ -288,6 +288,22 @@ public sealed class AppLaunchLinkRunnerTests
         Assert.Contains("busy", fixture.Log.Reasons);
     }
 
+    [Fact]
+    public void Opening_the_store_for_an_account_is_logged_without_installing_or_notifying()
+    {
+        // Arrange
+        Fixture fixture = new();
+
+        // Act
+        fixture.Runner.RecordStoreOpened(Link());
+
+        // Assert
+        Assert.Equal(["app-link.store-opened"], fixture.Log.Messages);
+        Assert.Empty(fixture.Packages.Installs);
+        Assert.Empty(fixture.Launched);
+        Assert.Empty(fixture.ActiveNotifications());
+    }
+
     [Theory]
     [InlineData("https://github.com/Kazo-ca/Os-App-Word", "Kazo-ca")]
     [InlineData("https://github.com/", null)]

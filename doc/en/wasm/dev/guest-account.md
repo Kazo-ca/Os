@@ -44,6 +44,7 @@ An address `?autolaunch=<appId>` ([ADR 0246](adr/0246-direct-app-launch-link.md)
 without a click: with no account, the OS does **Start as Guest**; with the guest as the only
 account, it does **Continue as Guest**. With another account, the sign-in screen stays the same,
 with a notice naming the app the Store will open after sign-in.
+The whole journey is described in [`app-launch-link.md`](app-launch-link.md).
 
 ## How it works
 
