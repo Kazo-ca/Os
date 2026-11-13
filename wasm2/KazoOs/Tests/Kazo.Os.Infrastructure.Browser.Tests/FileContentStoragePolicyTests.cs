@@ -9,7 +9,7 @@ public sealed class FileContentStoragePolicyTests
     {
         FileContentStoragePolicy policy = FileContentStoragePolicy.Default;
 
-        Assert.Equal(16 * 1024 * 1024, policy.MaxFileSizeBytes);
+        Assert.Equal(128L * 1024 * 1024, policy.MaxFileSizeBytes);
         Assert.Equal(256 * 1024, policy.MaxChunkSizeBytes);
         Assert.Equal("SHA-256", policy.ContentHashAlgorithm);
         Assert.True(policy.DeduplicateChunks);

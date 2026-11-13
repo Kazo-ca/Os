@@ -112,7 +112,7 @@ public enum FileSystemErrorCode
     NoSpace = 1800,
 
     /// <summary>
-    /// The content exceeds the largest file the storage accepts, 16 MiB (ADR 0094): Linux
+    /// The content exceeds the largest file the storage accepts, 128 MiB (ADR 0245, which raised the 16 MiB of ADR 0094): Linux
     /// <c>EFBIG</c>, "File too large". Nothing of the operation was committed.
     /// </summary>
     FileTooLarge = 1801,

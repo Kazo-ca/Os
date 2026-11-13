@@ -13,8 +13,8 @@ Work item `v3/7-storage-backup`, following [ADR 0099](adr/0099-os-backup-and-low
   Settings or the `kazobackup` command.
 - **Low space**: one notification per session, `df` with the browser's real
   figures, a reserve for root like ext4's reserved blocks.
-- **No more room**: `NoSpace` (`ENOSPC`) and `FileTooLarge` (`EFBIG`, 16 MiB
-  per file, ADR 0094) codes, all the way to the shell's Linux message; logs
+- **No more room**: `NoSpace` (`ENOSPC`) and `FileTooLarge` (`EFBIG`, 128 MiB
+  per file, ADR 0245) codes, all the way to the shell's Linux message; logs
   count the lost lines.
 - **Damaged PWA cache** and **tested IndexedDB version upgrades**: see
   [PWA cache](#damaged-pwa-cache-adr-0099-3) and
@@ -36,7 +36,7 @@ mkdir: cannot create directory 'projets': No space left on device
 | SDK | `Shared/Kazo.Os.AppSdk/Administration/KazoSystemBackup.cs`, `SystemBackupContracts.cs` (`IAppSystemBackupGateway`, `KazoBackupRestoreMode`, `KazoBackupInfo`, `KazoBackupInvalidException`); `IO/KazoFileSystemErrorTranslator.cs` and `ShellErrorText.cs` for the two codes |
 | Blazor SDK | `Interop/BrowserFilePicker.cs` and `wwwroot/pickFile.js` (counterpart of `download.js` for opening a host file) |
 | Platform Core | `Backup/SystemBackupService.cs` (`ISystemBackupDevice`, sequence), `Administration/AppSystemBackupGateway.cs`, `Storage/StorageSpaceMonitor.cs`, `FileSystem/FileSystemService.cs` (reserve), `Diagnostics/LogFileWriter.cs` (lost lines), `Power/SystemPowerService.cs` (`RestartAfterAsync`) |
-| Infrastructure.Browser | `Backup/IndexedDbBackupService.cs` (gzip, `ReadArchive`, `Inspect`, merge by `put`), `Storage/BrowserStorageManager.cs` (`IStorageCapacityProbe`), `FileSystem/IndexedDbFileSystemProvider.cs` (`QuotaExceededError` → `NoSpace`), `IndexedDbFileContentRepository.cs` (16 MiB → `FileTooLarge`), `IndexedDbStorageUsageProvider.cs` (`df`) |
+| Infrastructure.Browser | `Backup/IndexedDbBackupService.cs` (gzip, `ReadArchive`, `Inspect`, merge by `put`), `Storage/BrowserStorageManager.cs` (`IStorageCapacityProbe`), `FileSystem/IndexedDbFileSystemProvider.cs` (`QuotaExceededError` → `NoSpace`), `IndexedDbFileContentRepository.cs` (128 MiB → `FileTooLarge`, ADR 0245), `IndexedDbStorageUsageProvider.cs` (`df`) |
 | Ecosystem host | `Administration/BrowserSystemBackupDevice.cs`, `EcosystemServiceCollectionExtensions.cs` (registrations), `EcosystemBootCoordinator.cs` (space monitoring, audit entry of a restore) |
 | Apps | `Apps/System/Kazo.Os.Apps.Settings/BackupPanel.razor` (*Backup* tab), `Apps/Commands/Kazo.Os.Commands/Kazobackup/`; `Platform/Kazo.Os.Platform.Blazor/Shell/ClockPanel.razor` (notification action buttons) |
 
@@ -169,7 +169,7 @@ Dumps of versions 2 and 3 in `Tests/fixtures/indexeddb/` (version 1 was never co
   by `put` without `clear`, gzip and raw JSON round trip, damaged gzip, other
   schema version); `RenamedStorageMigrationTests` (pre-3.0.0 backup migrated,
   tampered one refused); `IndexedDbFileSystemProviderTests` (`QuotaExceededError` →
-  `NoSpace` without writing anything, more than 16 MiB → `FileTooLarge` before
+  `NoSpace` without writing anything, more than 128 MiB (ADR 0245) → `FileTooLarge` before
   any write).
 - `Tests/Kazo.Os.Platform.Core.Tests`: `SystemAdministrationGatewayTests`
   (capability, host without backup, creation downloaded and logged,

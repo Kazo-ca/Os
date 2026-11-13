@@ -176,14 +176,14 @@ public sealed class IndexedDbFileSystemProviderTests
     }
 
     [Fact]
-    public async Task WriteAsync_ContentOverSixteenMebibytesReturnsFileTooLargeBeforeAnyWrite()
+    public async Task WriteAsync_ContentOverTheMaximumFileSizeReturnsFileTooLargeBeforeAnyWrite()
     {
         ScriptedModule module = new(Walk(Entry(ChildId, FileSystemEntryKind.File, revision: 4)));
         await using IndexedDbFileSystemProvider provider = new(new FakeJsRuntime(module));
 
         FileSystemMutationResult result = await provider.WriteAsync(
             new FileSystemWriteRequest(VirtualPath.Parse("/big.bin"), 4),
-            new TextSource(new string('x', (16 * 1024 * 1024) + 1)),
+            new ZeroSource((128L * 1024 * 1024) + 1),
             Context());
 
         Assert.Equal(FileSystemErrorCode.FileTooLarge, result.Transaction.Error?.Code);
@@ -504,6 +504,54 @@ public sealed class IndexedDbFileSystemProviderTests
     {
         public override DateTimeOffset GetUtcNow() =>
             new(2026, 8, 2, 12, 0, 0, TimeSpan.Zero);
+    }
+
+    /// <summary>A binary source of <paramref name="length"/> zero bytes that allocates one small buffer.</summary>
+    private sealed class ZeroSource(long length) : IFileSystemContentSource
+    {
+        public FileSystemContentDescriptor Descriptor { get; } = FileSystemContentDescriptor.Binary();
+
+        public long? Length => length;
+
+        public ValueTask<Stream> OpenReadAsync(CancellationToken cancellationToken = default) =>
+            ValueTask.FromResult<Stream>(new ZeroStream(length));
+    }
+
+    private sealed class ZeroStream(long length) : Stream
+    {
+        private long _position;
+
+        public override bool CanRead => true;
+
+        public override bool CanSeek => false;
+
+        public override bool CanWrite => false;
+
+        public override long Length => length;
+
+        public override long Position
+        {
+            get => _position;
+            set => throw new NotSupportedException();
+        }
+
+        public override int Read(byte[] buffer, int offset, int count)
+        {
+            int read = (int)Math.Min(count, length - _position);
+            Array.Clear(buffer, offset, read);
+            _position += read;
+            return read;
+        }
+
+        public override void Flush()
+        {
+        }
+
+        public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+
+        public override void SetLength(long value) => throw new NotSupportedException();
+
+        public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
     }
 
     private sealed class TextSource(string value) : IFileSystemContentSource

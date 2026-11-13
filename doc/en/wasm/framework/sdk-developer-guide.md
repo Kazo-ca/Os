@@ -605,7 +605,7 @@ revision), `KazoIOException`, `KazoUnauthorizedAccessException` (with
 `RequiredCapability`). A write can fail for lack of space:
 `KazoIOException` with `ErrorCode` `NoSpace` (`ENOSPC`: browser quota
 reached, or root reserve reached for a simple user) or
-`FileTooLarge` (`EFBIG`, over 16 MiB); `ShellErrorText.Describe` gives the
+`FileTooLarge` (`EFBIG`, over 128 MiB); `ShellErrorText.Describe` gives the
 Linux message ([`system-backup.md`](../dev/system-backup.md)). An open beyond
 the process's `nofile` limit throws `KazoIOException` with
 `TooManyOpenFiles` (`EMFILE`, SDK 1.2); a launch beyond `nproc`

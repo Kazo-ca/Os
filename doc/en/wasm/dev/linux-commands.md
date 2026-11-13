@@ -114,7 +114,7 @@ alice@kazoos:~$ watch -n 1 'ps | wc -l'
 | `passwd` | `[NOM]`, `-d NOM`, `-S [NOM]`, `-h` | Changes the password (ADR 0120, [`sensitive-settings.md`](sensitive-settings.md)): `Current password:`, `New password:`, `Retype new password:`, read with echo off; `passwd: password updated successfully`. Wrong current password: `Authentication token manipulation error`, code 10; different confirmation: `Sorry, passwords do not match.`, code 10; fewer than 8 characters: `BAD PASSWORD`, code 1. Another account or `-d` requires `sudo` (`You may not view or modify password information for NOM.`), without asking for the old password; the account's keyring is set aside. `sudo passwd` without a name refuses (no root password). `-S` prints `NOM P\|NP\|L AAAA-MM-JJ 0 99999 7 -1`. On the main thread (terminal input). |
 
 Out of space: a refused write prints `No space left on device`
-(`ENOSPC`), a file over 16 MiB `File too large` (`EFBIG`).
+(`ENOSPC`), a file over 128 MiB `File too large` (`EFBIG`).
 
 ## Network
 

@@ -1,1 +1,3 @@
 #nullable enable
+*REMOVED*const Kazo.Os.Infrastructure.Browser.Schema.FileContentStoragePolicy.DefaultMaxFileSizeBytes = 16777216 -> long
+const Kazo.Os.Infrastructure.Browser.Schema.FileContentStoragePolicy.DefaultMaxFileSizeBytes = 134217728 -> long

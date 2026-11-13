@@ -11,11 +11,21 @@ namespace Kazo.Os.Infrastructure.Browser.Schema;
 /// </remarks>
 public sealed record FileContentStoragePolicy
 {
-    /// <summary>Gets the default maximum size of a single file in bytes.</summary>
-    public const long DefaultMaxFileSizeBytes = 16 * 1024 * 1024;
+    /// <summary>
+    /// Gets the default maximum size of a single file in bytes: 128 MiB, the largest content an app
+    /// package may extract (ADR 0245, which supersedes the 16 MiB of ADR 0094).
+    /// </summary>
+    public const long DefaultMaxFileSizeBytes = 128L * 1024 * 1024;
 
     /// <summary>Gets the default maximum size of one content chunk in bytes.</summary>
     public const long DefaultMaxChunkSizeBytes = 256 * 1024;
+
+    /// <summary>
+    /// Gets how many chunks one IndexedDB transaction writes or reads at most: 64 chunks of 256 KiB,
+    /// 16 MiB, the old file limit. A larger file is moved in several transactions so the browser
+    /// never holds the base64 copy of the whole file at once (ADR 0245).
+    /// </summary>
+    internal const int ChunksPerTransaction = 64;
 
     /// <summary>Gets the default content hashing algorithm name.</summary>
     public const string DefaultContentHashAlgorithm = "SHA-256";

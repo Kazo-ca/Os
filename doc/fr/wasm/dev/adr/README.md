@@ -100,7 +100,7 @@ prochain numéro libre est indiqué dans
 | [`0089-explicit-cookie-header.md`](0089-explicit-cookie-header.md) | ADR 0089 : en-tête `Cookie` écrit par l'app |
 | [`0090-filesystem-path-lookup-in-one-request.md`](0090-filesystem-path-lookup-in-one-request.md) | ADR 0090 : recherche d'un chemin en une seule requête au stockage |
 | [`0092-game-in-a-separate-repository.md`](0092-game-in-a-separate-repository.md) | ADR 0092 : le jeu vit dans un dépôt séparé |
-| [`0094-deferred-decisions-status-and-maximum-file-size.md`](0094-deferred-decisions-status-and-maximum-file-size.md) | ADR 0094 : état des décisions différées de la migration v3 et taille maximale des fichiers |
+| [`0094-deferred-decisions-status-and-maximum-file-size.md`](0094-deferred-decisions-status-and-maximum-file-size.md) | ADR 0094 : état des décisions différées de la migration v3 et taille maximale des fichiers (16 Mio, relevée à 128 Mio par l'ADR 0245) |
 | [`0095-window-events-sizes-and-keyboard.md`](0095-window-events-sizes-and-keyboard.md) | ADR 0095 : événements de fenêtre pour les apps, tailles déclarées et commandes clavier |
 | [`0096-added-intents-and-app-defined-intents.md`](0096-added-intents-and-app-defined-intents.md) | ADR 0096 : intents ajoutés (afficher, modifier, ouvrir une URI, réglages d'une app) et intents définis par les apps |
 | [`0097-service-health-and-startup.md`](0097-service-health-and-startup.md) | ADR 0097 : état et santé des services, démarrage au boot ou à la connexion, désinstallation d'une app active |
@@ -241,5 +241,6 @@ prochain numéro libre est indiqué dans
 | [`0242-framework-api-for-installed-apps.md`](0242-framework-api-for-installed-apps.md) | ADR 0242 : l'API .NET qu'une app installée trouve dans l'OS publié : `System.Private.CoreLib` reste entière à la publication trimmée (+0,6 Mio Brotli) et la vérification d'installation compare les signatures complètes des méthodes, plus seulement leur nombre de paramètres (IRC 1.0.0 et `Int32.Parse` d'un span). |
 | [`0243-serve-installed-app-pages.md`](0243-serve-installed-app-pages.md) | ADR 0243 : le service worker publié sert depuis le cache des apps installées le chargement de page d'un de leurs fichiers (une iframe vers `_content/<assemblage>/…html?param`), au lieu de l'`index.html` de l'OS, en ligne et hors ligne. |
 | [`0244-stable-window-order-in-the-page.md`](0244-stable-window-order-in-the-page.md) | ADR 0244 : les fenêtres gardent leur place dans la page (ordre d'ouverture), le `ZOrder` ne donne plus que le `z-index` : un iframe ne se recharge plus quand sa fenêtre passe devant, ni sur mobile quand on change d'app ; la fenêtre qui reçoit le focus clavier passe devant. |
+| [`0245-raise-the-maximum-file-size.md`](0245-raise-the-maximum-file-size.md) | ADR 0245 : un fichier peut faire 128 Mio (au lieu de 16 Mio, ADR 0094), la taille extraite maximale d'un paquet ; même format de blocs, écriture et lecture par lots de 16 Mio par transaction IndexedDB (Kazo Word, version 3.3.2). |
 
 Index du dossier parent : [`../README.md`](../README.md).
