@@ -37,6 +37,7 @@ export const MessageTypes = Object.freeze({
     open: "open",
     save: "save",
     saved: "saved",
+    export: "export",
     dirty: "dirty",
     focus: "focus",
     command: "command",
@@ -172,8 +173,9 @@ export async function runApp(prepared) {
  * @param {string} options.origin The only origin `init` is accepted from (this page's own).
  * @param {object|null} [options.parent] The window allowed to send `init` (the page's parent).
  * @param {() => object | undefined} [options.api] Gives the page API (`window.<app>`).
- * @param {(send: Function) => { answer(message: object): boolean }} [options.filePicker] Intercepts
- *        the app's file picker (interceptFilePicker in the browser; none in the tests of the port).
+ * @param {(send: Function) => { answer(message: object): boolean, catchDownloads?(): void }} [options.filePicker]
+ *        Intercepts the app's file picker, and its downloads when `init.exports` asks
+ *        (interceptFilePicker in the browser; none in the tests of the port).
  * @returns {{ stopped: Promise<void> }} `stopped` settles when the start attempt ended.
  */
 export function startProxy({ app, page, canvas, start, origin, parent = null, api = () => undefined, filePicker = null }) {
@@ -265,6 +267,11 @@ export function startProxy({ app, page, canvas, start, origin, parent = null, ap
         port = received;
         port.onmessage = onPortMessage;
         const init = e.data;
+        // The window takes the app's downloads as exports (ADR 0264); it asks before the app starts.
+        if (init.exports === true) {
+            picker?.catchDownloads?.();
+        }
+
         if (Array.isArray(init.reservedKeys) && init.reservedKeys.length > 0) {
             forwardReservedKeys({ page, chords: init.reservedKeys, send });
         }

@@ -88,6 +88,7 @@ frame.Saving += OnSavingAsync;        // renvoie true quand le fichier est écri
 frame.ErrorReported += OnErrorAsync;  // erreur après ready : un message, l'app continue
 frame.KeyPressed += OnKeyPressedAsync;
 frame.PickRequested += OnPickRequestedAsync;
+frame.Exporting += OnExportingAsync;   // facultatif : les exports par lien de téléchargement (ADR 0264)
 frame.SettingChanged += OnSettingChangedAsync;
 frame.SchemeChanged += OnSchemeChangedAsync;
 
@@ -105,6 +106,7 @@ await frame.StartAsync(_frameHost, new CraftFrameOptions(CraftFrameOptions.PageP
 | `Failed(error)` | `FrameStartup.OnFailed` : écran d'erreur. « Réessayer » : `DisposeAsync` du cadre, `FrameStartup.Retry`, nouveau `CraftFrame`. |
 | `DirtyChanged(dirty)` | `DocumentSession.SetFrameDirty`, puis le titre (`DocumentSession.Title`). |
 | `Saving(save)` | `DocumentSession.Decide(name, saveAs)` : réécrire, demander puis lier, ou copie ; dialogue d'enregistrement de l'OS au besoin ; `KazoFile.WriteAllBytesAsync` ; `Saved` ou `SaveFailed`. Renvoyer `true` seulement quand le fichier est écrit : si la sauvegarde de l'app portait un `id`, le module lui répond `saved` et elle efface ses modifications. |
+| `Exporting(export)` | Facultatif, à abonner **avant** `StartAsync` ([ADR 0264](../dev/adr/0264-craft-app-exports-reach-the-window.md)) : un fichier que l'app exporte par un lien de téléchargement (`<a download>` sur un `blob:`, PdfCraft). `DocumentSession.DecideCopy(name)` : toujours une copie, quelle que soit l'extension ; dialogue d'enregistrement de l'OS, `KazoFile.WriteAllBytesAsync`, puis un message « Copie enregistrée ». Sans abonné, le navigateur télécharge le fichier comme avant. |
 | `ErrorReported(error)` | Un message dans la fenêtre ; l'app tourne toujours. |
 | `KeyPressed(key)` | Les touches réservées à la fenêtre (`ReservedKeyTarget.App`) : Ctrl+N = nouvelle fenêtre (`KazoApps.LaunchAsync`), F12 ou Ctrl+Shift+S = Enregistrer sous quand l'app ne le dit jamais (GridCraft). |
 | `PickRequested(request)` | Dialogue d'ouverture de l'OS, filtré par `request.Extensions`, puis **toujours** `AnswerPickAsync(request.Id, fichiers ou null)` : l'app attend la réponse. |
@@ -141,6 +143,7 @@ fichier, passer le nom que l'app Craft lui donne (le `title` de `ui.inspect`) pl
 | Nom lié à un chemin, `saveAs` faux, dernier enregistrement réussi | `Rewrite` : réécrit ce chemin, sans dialogue. |
 | `saveAs` vrai, nom lié à rien, ou dernier enregistrement de ce nom raté | `AskAndBind` : dialogue de l'OS, puis liaison ; renommer le document dans l'app si le nom change, puis `DocumentSession.Renamed`. |
 | Format de copie (`CraftDocumentFormat.IsCopy`) | `AskForCopy` : dialogue, la liaison ne change pas. |
+| Export (`Exporting`, `DocumentSession.DecideCopy`) | `AskForCopy`, même pour un nom ou un format de document. |
 
 « Modifié » = l'app le dit, **ou** un enregistrement n'a pas abouti (dialogue annulé, écriture
 refusée) : une app Craft dont la sauvegarde n'a pas d'`id` s'efface « modifié » dès qu'elle

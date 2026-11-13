@@ -107,6 +107,19 @@ public sealed class DocumentSession
         return new SaveDecision(SaveAction.AskAndBind, name, null, folder);
     }
 
+    /// <summary>
+    /// Decides what to do with a file the Craft app exports (<see cref="CraftFrame.Exporting"/>,
+    /// ADR 0264): always a copy in the document's folder, whatever its extension, so an export named
+    /// like the document never binds the window nor rewrites the document.
+    /// </summary>
+    /// <param name="name">The file name the Craft app gave.</param>
+    /// <returns>An <see cref="SaveAction.AskForCopy"/> decision.</returns>
+    public SaveDecision DecideCopy(string name)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(name);
+        return new SaveDecision(SaveAction.AskForCopy, name, null, FolderFor(name));
+    }
+
     /// <summary>The file was written.</summary>
     /// <param name="decision">The decision that was carried out.</param>
     /// <param name="path">The file written.</param>

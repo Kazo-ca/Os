@@ -40,8 +40,9 @@ public sealed record CraftFrameOptions(string PagePath, string Title)
     }
 
     /// <summary>The form <c>craft-host.js</c>'s <c>create</c> receives.</summary>
-    /// <returns><c>{ page, title, language, parameters, reservedKeys, settings }</c>.</returns>
-    internal Dictionary<string, object?> ToMessage() => new()
+    /// <param name="takesExports">Whether the window takes the app's downloads as exports (ADR 0264).</param>
+    /// <returns><c>{ page, title, language, parameters, reservedKeys, settings, exports }</c>.</returns>
+    internal Dictionary<string, object?> ToMessage(bool takesExports = false) => new()
     {
         ["page"] = PagePath,
         ["title"] = Title,
@@ -49,5 +50,6 @@ public sealed record CraftFrameOptions(string PagePath, string Title)
         ["parameters"] = Parameters,
         ["reservedKeys"] = (ReservedKeys ?? []).Select(key => key.ToMessage()).ToArray(),
         ["settings"] = Settings,
+        ["exports"] = takesExports,
     };
 }
