@@ -364,8 +364,10 @@
         overflow: visible;
     }
 
+    /* Touch targets of at least 44 px (ADR 0266 §8). */
     .store-identifiers-toggle,
-    .store-try-link {
+    .store-try-link,
+    .store-source-link {
         min-height: 44px;
     }
 }

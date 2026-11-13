@@ -427,7 +427,7 @@ kazopkg info org.example.notes
   (including an app no catalog lists any more, by its name and ID); Enter
   opens the first result. The tabs follow the WAI-ARIA pattern (← → Home End,
   `tabpanel`), keyboard focus is visible on every control, and under 640 px
-  the header takes two lines with targets of at least 40 px. The description
+  the header takes two lines (targets raised to 44 px by work item 6, below). The description
   does not repeat a first heading equal to the app's name, and a line that
   follows a list item stays in that item.
 - **The page's screenshots** (`store-ux` series, work item 2): each screenshot
@@ -439,6 +439,8 @@ kazopkg info org.example.notes
   the screenshot last shown. The catalog does not give the screenshots' sizes:
   the thumbnail has a fixed height (240 px, 320 px in a wide window, 200 px on a
   phone) and a 16:10 width until the image arrives, so the page does not jump.
+  On a phone the portrait screenshots come first (work item 6, below); the
+  viewer follows the thumbnails' order.
 - **An app's page** (`store-ux` series, work item 3,
   [ADR 0266](adr/0266-store-ux-refresh.md) §4 and §6): the page is a component
   of its own, `StoreAppPage.razor`, which reads the app and runs the actions of
@@ -489,6 +491,26 @@ kazopkg info org.example.notes
 - **Messages** (`store-ux` series, work item 3, ADR 0266 §6): the result of an
   action shows at the bottom of the window and closes by itself after 6
   seconds; an error stays until it is closed (`StoreWindow.Messages.cs`).
+- **Phone** (`store-ux` series, work item 6,
+  [ADR 0266](adr/0266-store-ux-refresh.md) §8): when the Store is 640 px wide
+  or less (a phone, or a narrow window), a container query changes the layout
+  without changing the markup.
+  - The header takes two lines: the brand and Refresh, then the search box.
+  - The tabs move to a bar at the bottom of the window (60 px), an icon above
+    each label, the number of updates on the icon's corner. They are the same
+    buttons of the same `tablist`: the keyboard order and keys do not change.
+    The scrolling area stops above the bar, and messages float above it.
+  - Every touch target is at least 44 × 44 px (search, Refresh, tabs, chips,
+    « Install » buttons and menu, a card's name, the page's links, the
+    viewer's buttons). A link inside a description's text is exempt, as WCAG
+    2.5.8 allows.
+  - Portrait screenshots come before landscape ones, each group in the
+    catalog's order (`StoreScreenshotOrder`). The catalog does not change:
+    `StoreScreenshots.razor.js` reads each screenshot's size in the browser and
+    tells the component whether the Store is narrower than 640 px; a
+    screenshot whose size is not known counts as landscape. A portrait
+    screenshot is shown tall (340 px). Without JavaScript the catalog's order
+    stays.
 - **Updates**: `AppUpdateMonitor` checks at sign-in then every
   `[updates] interval-hours` hours and posts a notification that opens the
   Installed tab. Each check also downloads every catalog of `[catalogs]`, for
@@ -502,9 +524,10 @@ Tests: `AppCatalogDocumentTests`, the catalog and progress tests of
 `AppPackageGatewayTests`, `HttpAppPackageDownloaderTests`,
 `StartMenuPreferencesServiceTests` (Platform.Core), `Kazo.Os.Apps.Store.Tests`
 (`StoreCatalog`, `StoreMarkdown`, `StoreNavigationTests`, `StoreOperations`,
-`StoreScreenshotsTests`, `StoreAppFactsTests`, manifest) and
+`StoreScreenshotsTests`, `StoreScreenshotOrderTests`, `StoreAppFactsTests`, manifest) and
 `Kazo.Os.UI.E2E.Tests` (`StoreNavigationTests`, `StoreInstallProgressTests`,
-`StoreScreenshotViewerTests`, `StoreAppPageTests`, `StoreHomeTests`).
+`StoreScreenshotViewerTests`, `StoreAppPageTests`, `StoreHomeTests`,
+`StoreMobileTests`, which measures every control on a 390 × 844 phone).
 
 ## Adding without a restart, signing and transactions
 

@@ -58,6 +58,14 @@
     .store-screenshot-thumb img {
         height: 200px;
     }
+
+    /* ADR 0266 §8: a portrait screenshot comes first on a phone and is shown tall, about half the
+       width of the screen, where a landscape one would be tiny. */
+    .store-screenshots li.is-portrait .store-screenshot-thumb img {
+        height: 340px;
+        max-width: 60cqi;
+        aspect-ratio: auto 9 / 19.5;
+    }
 }
 
 .store-viewer {
@@ -171,6 +179,12 @@
 @container (max-width: 640px) {
     .store-viewer-stage {
         padding: 0 0 12px;
+    }
+
+    /* Touch targets of at least 44 px (ADR 0266 §8). */
+    .store-viewer-close {
+        min-width: 44px;
+        min-height: 44px;
     }
 
     .store-viewer-previous,
