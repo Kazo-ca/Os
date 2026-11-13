@@ -1,1 +1,4 @@
 #nullable enable
+Kazo.Os.AppSdk.Craft.CraftFrame.Exporting -> System.Func<Kazo.Os.AppSdk.Craft.FrameSave!, System.Threading.Tasks.Task<bool>!>?
+Kazo.Os.AppSdk.Craft.CraftFrame.OnFrameExport(string! name, byte[]! bytes) -> System.Threading.Tasks.Task<bool>!
+Kazo.Os.AppSdk.Craft.DocumentSession.DecideCopy(string! name) -> Kazo.Os.AppSdk.Craft.SaveDecision!

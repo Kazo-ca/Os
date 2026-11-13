@@ -99,6 +99,27 @@ public sealed class DocumentSessionTests
         Assert.Equal("report.docx", session.CurrentName);
     }
 
+    [Theory]
+    [InlineData("report.docx")]
+    [InlineData("report.pdf")]
+    [InlineData("other.docx")]
+    public void A_copy_never_binds_even_with_the_document_s_name_or_format(string copy)
+    {
+        DocumentSession session = NewSession();
+        session.Opened("report.docx", Report);
+
+        // An export (ADR 0264) named like the document: a copy all the same, never a rewrite.
+        SaveDecision decision = session.DecideCopy(copy);
+        Assert.Equal(SaveAction.AskForCopy, decision.Action);
+        Assert.Null(decision.Path);
+        Assert.Equal("/home/neo/Documents", decision.Folder);
+
+        session.Saved(decision, "/home/neo/Documents/copy-" + copy);
+        Assert.Equal(Report, session.PathOf("report.docx"));
+        Assert.Equal("report.docx", session.CurrentName);
+        Assert.Throws<ArgumentException>(() => session.DecideCopy(string.Empty));
+    }
+
     [Fact]
     public void A_failed_write_keeps_the_window_modified_and_the_next_save_asks_again()
     {
