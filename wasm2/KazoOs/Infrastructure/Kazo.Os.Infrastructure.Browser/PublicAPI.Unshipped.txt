@@ -1,1 +1,9 @@
 #nullable enable
+Kazo.Os.Infrastructure.Browser.CloudAccounts.BrowserOAuthAuthorizationWindow
+Kazo.Os.Infrastructure.Browser.CloudAccounts.BrowserOAuthAuthorizationWindow.AuthorizeAsync(System.Uri! authorizationUrl, string! state, System.TimeSpan timeout, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.Simulation.Abstractions.CloudAccounts.OAuthAuthorizationResult!>
+Kazo.Os.Infrastructure.Browser.CloudAccounts.BrowserOAuthAuthorizationWindow.BrowserOAuthAuthorizationWindow(Microsoft.JSInterop.IJSRuntime! runtime, System.Uri! baseAddress) -> void
+Kazo.Os.Infrastructure.Browser.CloudAccounts.BrowserOAuthAuthorizationWindow.DisposeAsync() -> System.Threading.Tasks.ValueTask
+Kazo.Os.Infrastructure.Browser.CloudAccounts.BrowserOAuthAuthorizationWindow.PrepareAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Kazo.Os.Infrastructure.Browser.CloudAccounts.BrowserOAuthAuthorizationWindow.RedirectUri.get -> System.Uri!
+const Kazo.Os.Infrastructure.Browser.CloudAccounts.BrowserOAuthAuthorizationWindow.CallbackPath = "_content/Kazo.Os.Infrastructure.Browser/oauth-callback.html" -> string!
+static Kazo.Os.Infrastructure.Browser.CloudAccounts.BrowserOAuthAuthorizationWindow.GetRedirectUri(System.Uri! baseAddress) -> System.Uri!

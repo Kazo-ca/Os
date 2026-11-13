@@ -1,4 +1,32 @@
 #nullable enable
+Kazo.Os.Simulation.Abstractions.CloudAccounts.IOAuthAuthorizationWindow
+Kazo.Os.Simulation.Abstractions.CloudAccounts.IOAuthAuthorizationWindow.AuthorizeAsync(System.Uri! authorizationUrl, string! state, System.TimeSpan timeout, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.Simulation.Abstractions.CloudAccounts.OAuthAuthorizationResult!>
+Kazo.Os.Simulation.Abstractions.CloudAccounts.IOAuthAuthorizationWindow.PrepareAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Kazo.Os.Simulation.Abstractions.CloudAccounts.IOAuthAuthorizationWindow.RedirectUri.get -> System.Uri!
+Kazo.Os.Simulation.Abstractions.CloudAccounts.OAuthAuthorizationResult
+Kazo.Os.Simulation.Abstractions.CloudAccounts.OAuthAuthorizationResult.<Clone>$() -> Kazo.Os.Simulation.Abstractions.CloudAccounts.OAuthAuthorizationResult!
+Kazo.Os.Simulation.Abstractions.CloudAccounts.OAuthAuthorizationResult.Code.get -> string?
+Kazo.Os.Simulation.Abstractions.CloudAccounts.OAuthAuthorizationResult.Code.init -> void
+Kazo.Os.Simulation.Abstractions.CloudAccounts.OAuthAuthorizationResult.Deconstruct(out Kazo.Os.Simulation.Abstractions.CloudAccounts.OAuthAuthorizationStatus Status, out string? Code, out string? Error, out string? ErrorDescription) -> void
+Kazo.Os.Simulation.Abstractions.CloudAccounts.OAuthAuthorizationResult.Equals(Kazo.Os.Simulation.Abstractions.CloudAccounts.OAuthAuthorizationResult? other) -> bool
+Kazo.Os.Simulation.Abstractions.CloudAccounts.OAuthAuthorizationResult.Error.get -> string?
+Kazo.Os.Simulation.Abstractions.CloudAccounts.OAuthAuthorizationResult.Error.init -> void
+Kazo.Os.Simulation.Abstractions.CloudAccounts.OAuthAuthorizationResult.ErrorDescription.get -> string?
+Kazo.Os.Simulation.Abstractions.CloudAccounts.OAuthAuthorizationResult.ErrorDescription.init -> void
+Kazo.Os.Simulation.Abstractions.CloudAccounts.OAuthAuthorizationResult.OAuthAuthorizationResult(Kazo.Os.Simulation.Abstractions.CloudAccounts.OAuthAuthorizationStatus Status, string? Code = null, string? Error = null, string? ErrorDescription = null) -> void
+Kazo.Os.Simulation.Abstractions.CloudAccounts.OAuthAuthorizationResult.Status.get -> Kazo.Os.Simulation.Abstractions.CloudAccounts.OAuthAuthorizationStatus
+Kazo.Os.Simulation.Abstractions.CloudAccounts.OAuthAuthorizationResult.Status.init -> void
+Kazo.Os.Simulation.Abstractions.CloudAccounts.OAuthAuthorizationStatus
+Kazo.Os.Simulation.Abstractions.CloudAccounts.OAuthAuthorizationStatus.Authorized = 0 -> Kazo.Os.Simulation.Abstractions.CloudAccounts.OAuthAuthorizationStatus
+Kazo.Os.Simulation.Abstractions.CloudAccounts.OAuthAuthorizationStatus.Blocked = 2 -> Kazo.Os.Simulation.Abstractions.CloudAccounts.OAuthAuthorizationStatus
+Kazo.Os.Simulation.Abstractions.CloudAccounts.OAuthAuthorizationStatus.Cancelled = 4 -> Kazo.Os.Simulation.Abstractions.CloudAccounts.OAuthAuthorizationStatus
+Kazo.Os.Simulation.Abstractions.CloudAccounts.OAuthAuthorizationStatus.Failed = 1 -> Kazo.Os.Simulation.Abstractions.CloudAccounts.OAuthAuthorizationStatus
+Kazo.Os.Simulation.Abstractions.CloudAccounts.OAuthAuthorizationStatus.TimedOut = 3 -> Kazo.Os.Simulation.Abstractions.CloudAccounts.OAuthAuthorizationStatus
+override Kazo.Os.Simulation.Abstractions.CloudAccounts.OAuthAuthorizationResult.Equals(object? obj) -> bool
+override Kazo.Os.Simulation.Abstractions.CloudAccounts.OAuthAuthorizationResult.GetHashCode() -> int
+override Kazo.Os.Simulation.Abstractions.CloudAccounts.OAuthAuthorizationResult.ToString() -> string!
+static Kazo.Os.Simulation.Abstractions.CloudAccounts.OAuthAuthorizationResult.operator !=(Kazo.Os.Simulation.Abstractions.CloudAccounts.OAuthAuthorizationResult? left, Kazo.Os.Simulation.Abstractions.CloudAccounts.OAuthAuthorizationResult? right) -> bool
+static Kazo.Os.Simulation.Abstractions.CloudAccounts.OAuthAuthorizationResult.operator ==(Kazo.Os.Simulation.Abstractions.CloudAccounts.OAuthAuthorizationResult? left, Kazo.Os.Simulation.Abstractions.CloudAccounts.OAuthAuthorizationResult? right) -> bool
 Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderEntry.Revision.get -> string?
 Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderEntry.Revision.init -> void
 Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderErrorKind.RevisionConflict = 8 -> Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderErrorKind

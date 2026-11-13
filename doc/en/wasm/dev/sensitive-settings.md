@@ -156,6 +156,9 @@ string? other = await KazoKeyring.GetAsync(AppContext, "org.example.mail", "imap
 
 - An app sees only its own entries. Reading those of another app or listing
   everything requires `keyring.read-all`; without it, `UnauthorizedAccessException`.
+- Entries of owner `org.kazoos.cloud-accounts` (keys of the cloud accounts'
+  tokens, [`cloud-accounts.md`](cloud-accounts.md)) are reserved to the OS: no
+  app reads them, even with `keyring.read-all`.
 - A locked keyring throws `KazoKeyringLockedException`.
 - An identifier is at most 256 characters, with no control character.
 - Each method also exists without a context (ambient context of ADR 0043).

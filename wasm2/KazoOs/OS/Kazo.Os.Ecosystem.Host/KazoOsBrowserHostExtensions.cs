@@ -165,6 +165,14 @@ public static partial class KazoOsBrowserHostExtensions
         // ADR 0226: « Forgot password? » on the sign-in screen, on unless
         // KazoOs:SignIn:FactoryReset:Enabled is false in appsettings.json.
         builder.Services.AddSingleton(SignInFactoryResetSettings.Read(builder.Configuration));
+        // ADR 0267 §5: the public app ids of the cloud providers (KazoOs:CloudDrives); an empty id
+        // leaves that provider out. /etc/kazoos/cloud-drives.config can replace them.
+        IConfigurationSection cloudDrives = builder.Configuration.GetSection(Kazo.Os.Platform.Core.CloudAccounts.CloudProviderSettings.SectionName);
+        builder.Services.AddSingleton(new Kazo.Os.Platform.Core.CloudAccounts.CloudProviderSettings(
+            cloudDrives["Dropbox:FullAccessClientId"],
+            cloudDrives["Dropbox:AppFolderClientId"],
+            cloudDrives["OneDrive:ClientId"],
+            cloudDrives["OneDrive:Tenant"]));
         builder.Services.AddKazoOsEcosystem(
             apps.Catalog,
             provider => provider.GetRequiredService<BuildKnownLazyAppDescriptorRegistry>().Descriptors,

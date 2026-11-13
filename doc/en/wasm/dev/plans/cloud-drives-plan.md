@@ -20,7 +20,7 @@ no server and no cost.
 | --- | --- | --- | --- |
 | 0 | `cloud-drives/0-adr` | ADR 0267, this plan, `features.md`, memory. **Done.** | — |
 | 1 | `cloud-drives/1-drive-sources` | `NetworkDriveService` with several sources (ADR 0267 §3), drive table with type and account, optional quota and revision interfaces (§4), `/proc/mounts`, `df`, `KazoDriveInfo`. A fake in-memory remote source serves the tests. No real provider. **Done** ([`network-drive-sources.md`](../network-drive-sources.md)). | 0 |
-| 2 | `cloud-drives/2-cloud-accounts` | Cloud account service (§5): PKCE, sign-in window, static return page and `BroadcastChannel`, tokens in the keyring, renewal, removal, app identifiers in settings. A fake OAuth server for E2E tests. Checks the keyring of the guest account. Gives Benoit the exact return addresses to register. | 0 |
+| 2 | `cloud-drives/2-cloud-accounts` | Cloud account service (§5): PKCE, sign-in window, static return page and `BroadcastChannel`, tokens in the keyring, renewal, removal, app identifiers in settings. A fake OAuth server for E2E tests. Checks the keyring of the guest account. Gives Benoit the exact return addresses to register. **Done**: [`cloud-accounts.md`](../cloud-accounts.md). | 0 |
 | 3 | `cloud-drives/3-dropbox` | Dropbox connector (API v2), both scopes (§8), a contract test suite shared by all connectors. | 1, 2 |
 | 4 | `cloud-drives/4-onedrive` | Microsoft Graph connector, both scopes, reconnect after 24 hours. | 1, 2 |
 | 5 | `cloud-drives/5-ui` | "Connect a network drive" dialog with the providers and the scope choice, Settings page for cloud accounts, mobile explorer, `mount` and `umount` commands (§11). Texts in French and English. | 1, 2 |
@@ -46,7 +46,8 @@ afterwards; work item 5 is developed with the fake source of work item 1.
 
 ## What Benoit creates himself
 
-Everything is free. The exact return addresses come from work item 2; the
+Everything is free. The exact return addresses come from work item 2
+([`cloud-accounts.md`](../cloud-accounts.md#redirect-uris-to-register)); the
 registrations can be prepared before and receive the addresses afterwards.
 
 1. **Two Dropbox apps** (Dropbox developer console, "Scoped access"):
