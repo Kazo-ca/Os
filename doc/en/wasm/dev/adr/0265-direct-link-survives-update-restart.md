@@ -4,9 +4,8 @@
 
 ## Status
 
-Proposed on 2026-11-13. Series `app-link-reload/base`. The questions are asked
-to Benoit in the project thread (see [Questions](#questions-asked-to-benoit));
-the code follows the recommendations while waiting for his answers.
+Accepted on 2026-11-13: Benoit took the recommendations (Q1 = A, Q2 = A, see
+[Questions](#questions-asked-to-benoit)). Series `app-link-reload/base`.
 
 - **Partly supersedes:** [ADR 0258](0258-direct-app-launch-link.md) §2
   ("Reloading the page, or restarting it for an update, therefore does not run
@@ -109,7 +108,7 @@ protects updates starting from the version that contains it.
 
 ## Questions asked to Benoit
 
-Asked in the project thread on 2026-11-13.
+Asked in the project thread on 2026-11-13; Benoit answered "I agree with your recommendations" the same day.
 
 - **Q1. Where to keep the link between two loads?** A the tab's
   `sessionStorage` (recommended: survives reloads, forgotten on close, not
@@ -133,4 +132,4 @@ Asked in the project thread on 2026-11-13.
 - [x] Find every path that reloads the tab.
 - [x] Write this ADR (fr + en) and update the indexes.
 - [x] Ask Benoit the questions in the thread.
-- [ ] Work item 1: keep the link in the tab, tests, doc.
+- [x] Work item 1: keep the link in the tab, tests, doc.

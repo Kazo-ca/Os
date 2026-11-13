@@ -30,8 +30,8 @@ public sealed class EcosystemHostState
 
     /// <summary>
     /// Gets the direct app launch link read from the address at boot (ADR 0258), until the first
-    /// desktop takes it; <see langword="null"/> when none waits. It lives in memory only: closing
-    /// the tab forgets it, and the address no longer carries it.
+    /// desktop takes it; <see langword="null"/> when none waits. The address no longer carries it;
+    /// the tab keeps its app id until it has finished, so a reload reads it again (ADR 0265).
     /// </summary>
     public AppLaunchLink? PendingAppLaunch { get; private set; }
 

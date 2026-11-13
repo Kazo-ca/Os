@@ -412,7 +412,8 @@ Cette section liste ce qui est publié dans la branche `main` et en ligne.
 - **Lancer une app par un lien direct** (version 3.3.3) : le lien
   `https://os.kazo.ca/?autolaunch=<appId>` démarre Kazo OS en invité s'il n'y
   a aucun compte, installe l'app depuis le catalogue officiel signé et la
-  lance ; avec un compte, il ouvre le Store à la page de l'app.
+  lance ; avec un compte, il ouvre le Store à la page de l'app. Le lien survit
+  au redémarrage pour une mise à jour (en cours : [ADR 0265](dev/adr/0265-direct-link-survives-update-restart.md)).
   ([ADR 0258](dev/adr/0258-direct-app-launch-link.md), [`app-launch-link.md`](dev/app-launch-link.md))
 - **Installations sans redémarrage et sûres** : une application installée ou
   mise à jour s'ouvre tout de suite si elle n'était pas déjà chargée. Les

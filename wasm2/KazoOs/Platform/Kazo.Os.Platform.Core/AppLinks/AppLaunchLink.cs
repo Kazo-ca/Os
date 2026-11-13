@@ -4,7 +4,8 @@ namespace Kazo.Os.Platform.Core.AppLinks;
 
 /// <summary>
 /// A direct app launch link of ADR 0258: <c>https://&lt;OS address&gt;/?autolaunch=&lt;appId&gt;</c>.
-/// The host reads it once at boot, keeps it in memory only, and removes it from the address.
+/// The host reads it once at boot, removes it from the address, and keeps it until it has run, in
+/// memory and in the tab's storage so a restart for an update does not lose it (ADR 0265).
 /// </summary>
 /// <remarks>
 /// A link is written by anyone, so it only ever carries an app id: never an address, a source, a
@@ -52,6 +53,19 @@ public sealed record AppLaunchLink
         }
 
         return false;
+    }
+
+    /// <summary>
+    /// Rebuilds the link of an app id the tab kept between two loads (ADR 0265 §2): the id goes
+    /// through the same rules as an id read from the address, since the tab's storage is input too.
+    /// </summary>
+    /// <param name="appId">The kept app id.</param>
+    /// <param name="link">The link, or <see langword="null"/> when the id is malformed.</param>
+    /// <returns><see langword="true"/> when the id may name a link.</returns>
+    public static bool TryFromAppId(string? appId, out AppLaunchLink? link)
+    {
+        link = IsValidAppId(appId) ? new AppLaunchLink(appId!) : null;
+        return link is not null;
     }
 
     /// <summary>

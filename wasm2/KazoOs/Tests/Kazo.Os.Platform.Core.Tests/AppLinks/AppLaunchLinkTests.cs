@@ -74,4 +74,27 @@ public sealed class AppLaunchLinkTests
     [InlineData("https://os.kazo.ca/#?autolaunch=a.b")]
     public void Keeps_an_address_without_the_parameter_unchanged(string address) =>
         Assert.Same(address, AppLaunchLink.RemoveFromAddress(address));
+
+    [Theory]
+    [InlineData("ca.kazo.word")]
+    [InlineData("org.example.app-2")]
+    public void Rebuilds_a_link_from_an_app_id_the_tab_kept(string appId)
+    {
+        Assert.True(AppLaunchLink.TryFromAppId(appId, out AppLaunchLink? link));
+        Assert.Equal(appId, link!.AppId);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("word")]
+    [InlineData("Ca.Kazo.Word")]
+    [InlineData("https://evil.example/app.kazopkg")]
+    [InlineData("ca.kazo.word ")]
+    public void Refuses_a_kept_app_id_a_link_could_not_carry(string? appId)
+    {
+        // ADR 0265 §2: the tab's storage is input too; it goes through the rules of ADR 0258 §1.
+        Assert.False(AppLaunchLink.TryFromAppId(appId, out AppLaunchLink? link));
+        Assert.Null(link);
+    }
 }
