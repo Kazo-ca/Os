@@ -378,7 +378,7 @@
       "then": { "not": { "required": ["window"] } }
     },
     {
-      "description": "A feature (ADR 0243) has no entry point of its own; every other kind has exactly one of entryPoint (legacy, single-platform) or platform (MOB-003, multi-platform). See doc/en/wasm/dev/old/mobile-interface-platform-plan.md §4.3.",
+      "description": "A feature (ADR 0260) has no entry point of its own; every other kind has exactly one of entryPoint (legacy, single-platform) or platform (MOB-003, multi-platform). See doc/en/wasm/dev/old/mobile-interface-platform-plan.md §4.3.",
       "if": {
         "required": ["kind"],
         "properties": { "kind": { "const": "feature" } }

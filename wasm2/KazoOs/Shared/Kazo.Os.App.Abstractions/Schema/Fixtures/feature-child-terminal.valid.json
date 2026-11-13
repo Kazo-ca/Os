@@ -4,7 +4,7 @@
   "name": "x86",
   "version": "1.0.0",
   "publisherId": "ca.kazo",
-  "description": "Starts a virtual machine from the terminal (entry point of ca.kazo.x86, ADR 0243).",
+  "description": "Starts a virtual machine from the terminal (entry point of ca.kazo.x86, ADR 0260).",
   "kind": "terminal",
   "parent": "ca.kazo.x86",
   "entryPoint": {
