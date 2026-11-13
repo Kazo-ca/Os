@@ -357,6 +357,11 @@ Cette section liste ce qui est publié dans la branche `main` et en ligne.
   des apps Craft (Kazo Word, Kazo Spreadsheets…), écrits une fois au lieu d'une
   copie par app. ([ADR 0259](dev/adr/0259-shared-craft-app-host-module.md),
   [`craft-apps.md`](framework/craft-apps.md))
+- **Exports des apps Craft dans Kazo OS** (version 3.3.4) : les exports d'une
+  app Craft (Exporter, Imprimer en PDF, OCR… de Kazo Pdf) passent par le
+  dialogue d'enregistrement de l'OS au lieu des téléchargements du navigateur,
+  et s'enregistrent comme copies.
+  ([ADR 0264](dev/adr/0264-craft-app-exports-reach-the-window.md))
 - **Modèles `dotnet new`** pour une application fenêtrée, une commande, un
   service, un site, un hôte complet ou un dépôt d'application entier, visibles
   dans Visual Studio et Rider.
@@ -405,7 +410,12 @@ Cette section liste ce qui est publié dans la branche `main` et en ligne.
   désinstallation, onglet Installées et « Redémarrer pour terminer ». Il
   vérifie les mises à jour à l'ouverture de session puis toutes les 6 heures,
   et le signale par une notification ; `kazopkg install <appId>` lit les mêmes
-  catalogues et demande de choisir quand plusieurs listent l'app.
+  catalogues et demande de choisir quand plusieurs listent l'app. Depuis la
+  version 3.3.4 : app « à la une », grille filtrée par catégorie, bouton
+  « Installer » sur les cartes, visionneuse de captures, fiche avec une barre
+  qui reste en haut et les capacités en langage clair, progression
+  d'installation, et sur le téléphone des onglets en bas et des cibles
+  tactiles de 44 px ([ADR 0266](dev/adr/0266-store-ux-refresh.md)).
   ([ADR 0188](dev/adr/0188-hack-store-and-app-catalog.md),
   [ADR 0212](dev/adr/0212-hack-store-app-build.md),
   [ADR 0215](dev/adr/0215-hack-store-answers-notification-and-ambiguous-app-id.md))
@@ -413,7 +423,7 @@ Cette section liste ce qui est publié dans la branche `main` et en ligne.
   `https://os.kazo.ca/?autolaunch=<appId>` démarre Kazo OS en invité s'il n'y
   a aucun compte, installe l'app depuis le catalogue officiel signé et la
   lance ; avec un compte, il ouvre le Store à la page de l'app. Le lien survit
-  au redémarrage pour une mise à jour (en cours : [ADR 0265](dev/adr/0265-direct-link-survives-update-restart.md)).
+  au redémarrage pour une mise à jour (version 3.3.4, [ADR 0265](dev/adr/0265-direct-link-survives-update-restart.md)).
   ([ADR 0258](dev/adr/0258-direct-app-launch-link.md), [`app-launch-link.md`](dev/app-launch-link.md))
 - **Installations sans redémarrage et sûres** : une application installée ou
   mise à jour s'ouvre tout de suite si elle n'était pas déjà chargée. Les
@@ -454,14 +464,12 @@ dans `main`, le lien mène à sa PR.
 | Changer d'utilisateur | Ouvrir une autre session sans fermer la première. Reste grisé dans le menu Marche/arrêt par choix de Benoit : une session à la fois, Se déconnecter pour changer de compte. | [0195](dev/adr/0195-start-menu-power-button.md), [0201](dev/adr/0201-switch-user-stays-greyed.md) | [#290](https://github.com/Kazo-ca/Os/issues/290) |
 | Adresse de fichier servie à la demande | Une app reçoit une adresse pour lire un gros fichier (audio, vidéo) sans le copier en mémoire, avec lecture partielle pour avancer dans un morceau. | À écrire | [#379](https://github.com/Kazo-ca/Os/issues/379) |
 | Glisser des fichiers vers une app | Contrat public du SDK pour recevoir des fichiers glissés depuis l'explorateur ou le bureau. | À écrire | [#380](https://github.com/Kazo-ca/Os/issues/380) |
-| Exports des apps Craft dans Kazo OS | Les exports d'une app Craft (Exporter, Imprimer en PDF, OCR… de Kazo Pdf) passent par le dialogue d'enregistrement de l'OS au lieu des téléchargements du navigateur, et s'enregistrent comme copies. | [0264](dev/adr/0264-craft-app-exports-reach-the-window.md) | — |
 
 ### Kazo OS Store
 
 | Fonctionnalité | Description | ADR | Issue |
 | --- | --- | --- | --- |
 | Catalogue des applications | Format du catalogue, vérification et publication des applications proposées. | [0188](dev/adr/0188-hack-store-and-app-catalog.md) | [AppMarketPlace #1](https://github.com/Kazo-ca/Os-AppMarketPlace/issues/1) |
-| Nouvel accueil et nouvelle fiche du Store | App « à la une », grille filtrée par catégorie, installation depuis les cartes, visionneuse de captures, capacités en langage clair, progression d'installation, interface du téléphone revue. Déjà dans `store-ux/base` : corrections rapides, visionneuse de captures, nouvelle fiche (barre qui reste en haut, capacités en langage clair, types de fichiers ouverts, lien « Essayer » à copier, messages qui se ferment seuls), progression d'installation, nouvel accueil (app à la une, grille filtrée par catégorie, bouton « Installer » des cartes avec « pour tout le monde » pour un administrateur, onglet Thèmes masqué sans pack), téléphone (onglets en bas, cibles tactiles de 44 px, captures en portrait d'abord). | [0266](dev/adr/0266-store-ux-refresh.md) | Série `store-ux/base` |
 
 ### Personnalisation
 

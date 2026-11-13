@@ -27,10 +27,12 @@ Kazo.Os.AppSdk.Craft.CraftFrame.CraftFrame(Microsoft.JSInterop.IJSRuntime! javaS
 Kazo.Os.AppSdk.Craft.CraftFrame.DirtyChanged -> System.Func<bool, System.Threading.Tasks.Task!>?
 Kazo.Os.AppSdk.Craft.CraftFrame.DisposeAsync() -> System.Threading.Tasks.ValueTask
 Kazo.Os.AppSdk.Craft.CraftFrame.ErrorReported -> System.Func<Kazo.Os.AppSdk.Craft.FrameError!, System.Threading.Tasks.Task!>?
+Kazo.Os.AppSdk.Craft.CraftFrame.Exporting -> System.Func<Kazo.Os.AppSdk.Craft.FrameSave!, System.Threading.Tasks.Task<bool>!>?
 Kazo.Os.AppSdk.Craft.CraftFrame.Failed -> System.Func<string?, System.Threading.Tasks.Task!>?
 Kazo.Os.AppSdk.Craft.CraftFrame.FocusAsync() -> System.Threading.Tasks.Task!
 Kazo.Os.AppSdk.Craft.CraftFrame.GetColorSchemeAsync() -> System.Threading.Tasks.Task<string!>!
 Kazo.Os.AppSdk.Craft.CraftFrame.KeyPressed -> System.Func<Kazo.Os.AppSdk.Craft.ReservedKey!, System.Threading.Tasks.Task!>?
+Kazo.Os.AppSdk.Craft.CraftFrame.OnFrameExport(string! name, byte[]! bytes) -> System.Threading.Tasks.Task<bool>!
 Kazo.Os.AppSdk.Craft.CraftFrame.OnFrameMessage(string! type, string? value) -> System.Threading.Tasks.Task!
 Kazo.Os.AppSdk.Craft.CraftFrame.OnFrameSave(string! name, bool saveAs, byte[]! bytes) -> System.Threading.Tasks.Task<bool>!
 Kazo.Os.AppSdk.Craft.CraftFrame.OpenAsync(string! name, byte[]! bytes) -> System.Threading.Tasks.Task<bool>!
@@ -63,6 +65,7 @@ Kazo.Os.AppSdk.Craft.DocumentSession
 Kazo.Os.AppSdk.Craft.DocumentSession.AppName.get -> string!
 Kazo.Os.AppSdk.Craft.DocumentSession.CurrentName.get -> string?
 Kazo.Os.AppSdk.Craft.DocumentSession.Decide(string! name, bool saveAs) -> Kazo.Os.AppSdk.Craft.SaveDecision!
+Kazo.Os.AppSdk.Craft.DocumentSession.DecideCopy(string! name) -> Kazo.Os.AppSdk.Craft.SaveDecision!
 Kazo.Os.AppSdk.Craft.DocumentSession.DocumentSession(Kazo.Os.AppSdk.Craft.CraftDocumentFormats! formats, string! appName) -> void
 Kazo.Os.AppSdk.Craft.DocumentSession.FrameDirty.get -> bool
 Kazo.Os.AppSdk.Craft.DocumentSession.IsDirty.get -> bool

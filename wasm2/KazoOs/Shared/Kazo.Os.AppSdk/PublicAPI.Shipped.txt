@@ -485,6 +485,7 @@ Kazo.Os.AppSdk.Apps.IAppManagementGateway.GetPackagePolicyAsync(System.Threading
 Kazo.Os.AppSdk.Apps.IAppManagementGateway.GetPackageSourcesAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.Apps.KazoPackageSources!>
 Kazo.Os.AppSdk.Apps.IAppManagementGateway.GetPackageUpdatesAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.Apps.KazoPackageUpdate!>!>
 Kazo.Os.AppSdk.Apps.IAppManagementGateway.InstallPackageAsync(string! source, Kazo.Os.AppSdk.Apps.KazoPackageScope scope = Kazo.Os.AppSdk.Apps.KazoPackageScope.Auto, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.Apps.KazoPackageInstallReport!>
+Kazo.Os.AppSdk.Apps.IAppManagementGateway.InstallPackageAsync(string! source, Kazo.Os.AppSdk.Apps.KazoPackageScope scope, System.IProgress<Kazo.Os.AppSdk.Apps.KazoPackageInstallProgress!>? progress, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.Apps.KazoPackageInstallReport!>
 Kazo.Os.AppSdk.Apps.IAppManagementGateway.InstallThemePackAsync(string! source, Kazo.Os.AppSdk.Apps.KazoPackageScope scope = Kazo.Os.AppSdk.Apps.KazoPackageScope.Auto, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.Apps.KazoThemePackInstallReport!>
 Kazo.Os.AppSdk.Apps.IAppManagementGateway.PlanUninstallAsync(string! appId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.Apps.KazoUninstallPlan!>
 Kazo.Os.AppSdk.Apps.IAppManagementGateway.ReinstallAsync(string! appId, Kazo.Os.AppSdk.Apps.KazoInstallScope scope, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<string!>!>
@@ -625,6 +626,8 @@ Kazo.Os.AppSdk.Apps.KazoCatalogAppVersion.Deconstruct(out string! Version, out l
 Kazo.Os.AppSdk.Apps.KazoCatalogAppVersion.DescriptionLanguages.get -> System.Collections.Generic.IReadOnlyList<string!>!
 Kazo.Os.AppSdk.Apps.KazoCatalogAppVersion.DescriptionLanguages.init -> void
 Kazo.Os.AppSdk.Apps.KazoCatalogAppVersion.Equals(Kazo.Os.AppSdk.Apps.KazoCatalogAppVersion? other) -> bool
+Kazo.Os.AppSdk.Apps.KazoCatalogAppVersion.FileHandlers.get -> System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.Apps.KazoAppFileHandler!>!
+Kazo.Os.AppSdk.Apps.KazoCatalogAppVersion.FileHandlers.init -> void
 Kazo.Os.AppSdk.Apps.KazoCatalogAppVersion.IconUri.get -> string?
 Kazo.Os.AppSdk.Apps.KazoCatalogAppVersion.IconUri.init -> void
 Kazo.Os.AppSdk.Apps.KazoCatalogAppVersion.KazoCatalogAppVersion(string! Version, long SizeBytes, System.Collections.Generic.IReadOnlyList<string!>! Capabilities) -> void
@@ -785,6 +788,18 @@ Kazo.Os.AppSdk.Apps.KazoPackageInfo.Trusted.get -> bool
 Kazo.Os.AppSdk.Apps.KazoPackageInfo.Trusted.init -> void
 Kazo.Os.AppSdk.Apps.KazoPackageInfo.Versions.get -> System.Collections.Generic.IReadOnlyList<string!>!
 Kazo.Os.AppSdk.Apps.KazoPackageInfo.Versions.init -> void
+Kazo.Os.AppSdk.Apps.KazoPackageInstallProgress
+Kazo.Os.AppSdk.Apps.KazoPackageInstallProgress.<Clone>$() -> Kazo.Os.AppSdk.Apps.KazoPackageInstallProgress!
+Kazo.Os.AppSdk.Apps.KazoPackageInstallProgress.BytesReceived.get -> long?
+Kazo.Os.AppSdk.Apps.KazoPackageInstallProgress.BytesReceived.init -> void
+Kazo.Os.AppSdk.Apps.KazoPackageInstallProgress.Deconstruct(out Kazo.Os.AppSdk.Apps.KazoPackageInstallStage Stage, out long? BytesReceived, out long? TotalBytes) -> void
+Kazo.Os.AppSdk.Apps.KazoPackageInstallProgress.Equals(Kazo.Os.AppSdk.Apps.KazoPackageInstallProgress? other) -> bool
+Kazo.Os.AppSdk.Apps.KazoPackageInstallProgress.Fraction.get -> double?
+Kazo.Os.AppSdk.Apps.KazoPackageInstallProgress.KazoPackageInstallProgress(Kazo.Os.AppSdk.Apps.KazoPackageInstallStage Stage, long? BytesReceived = null, long? TotalBytes = null) -> void
+Kazo.Os.AppSdk.Apps.KazoPackageInstallProgress.Stage.get -> Kazo.Os.AppSdk.Apps.KazoPackageInstallStage
+Kazo.Os.AppSdk.Apps.KazoPackageInstallProgress.Stage.init -> void
+Kazo.Os.AppSdk.Apps.KazoPackageInstallProgress.TotalBytes.get -> long?
+Kazo.Os.AppSdk.Apps.KazoPackageInstallProgress.TotalBytes.init -> void
 Kazo.Os.AppSdk.Apps.KazoPackageInstallReport
 Kazo.Os.AppSdk.Apps.KazoPackageInstallReport.<Clone>$() -> Kazo.Os.AppSdk.Apps.KazoPackageInstallReport!
 Kazo.Os.AppSdk.Apps.KazoPackageInstallReport.AppId.get -> string!
@@ -816,6 +831,12 @@ Kazo.Os.AppSdk.Apps.KazoPackageInstallReport.Trusted.get -> bool
 Kazo.Os.AppSdk.Apps.KazoPackageInstallReport.Trusted.init -> void
 Kazo.Os.AppSdk.Apps.KazoPackageInstallReport.Version.get -> string!
 Kazo.Os.AppSdk.Apps.KazoPackageInstallReport.Version.init -> void
+Kazo.Os.AppSdk.Apps.KazoPackageInstallStage
+Kazo.Os.AppSdk.Apps.KazoPackageInstallStage.AwaitingApproval = 3 -> Kazo.Os.AppSdk.Apps.KazoPackageInstallStage
+Kazo.Os.AppSdk.Apps.KazoPackageInstallStage.Downloading = 1 -> Kazo.Os.AppSdk.Apps.KazoPackageInstallStage
+Kazo.Os.AppSdk.Apps.KazoPackageInstallStage.Installing = 4 -> Kazo.Os.AppSdk.Apps.KazoPackageInstallStage
+Kazo.Os.AppSdk.Apps.KazoPackageInstallStage.Preparing = 0 -> Kazo.Os.AppSdk.Apps.KazoPackageInstallStage
+Kazo.Os.AppSdk.Apps.KazoPackageInstallStage.Verifying = 2 -> Kazo.Os.AppSdk.Apps.KazoPackageInstallStage
 Kazo.Os.AppSdk.Apps.KazoPackagePolicy
 Kazo.Os.AppSdk.Apps.KazoPackagePolicy.<Clone>$() -> Kazo.Os.AppSdk.Apps.KazoPackagePolicy!
 Kazo.Os.AppSdk.Apps.KazoPackagePolicy.BlockedApps.get -> System.Collections.Generic.IReadOnlyList<string!>!
@@ -2900,6 +2921,9 @@ override Kazo.Os.AppSdk.Apps.KazoPackageCatalog.ToString() -> string!
 override Kazo.Os.AppSdk.Apps.KazoPackageInfo.Equals(object? obj) -> bool
 override Kazo.Os.AppSdk.Apps.KazoPackageInfo.GetHashCode() -> int
 override Kazo.Os.AppSdk.Apps.KazoPackageInfo.ToString() -> string!
+override Kazo.Os.AppSdk.Apps.KazoPackageInstallProgress.Equals(object? obj) -> bool
+override Kazo.Os.AppSdk.Apps.KazoPackageInstallProgress.GetHashCode() -> int
+override Kazo.Os.AppSdk.Apps.KazoPackageInstallProgress.ToString() -> string!
 override Kazo.Os.AppSdk.Apps.KazoPackageInstallReport.Equals(object? obj) -> bool
 override Kazo.Os.AppSdk.Apps.KazoPackageInstallReport.GetHashCode() -> int
 override Kazo.Os.AppSdk.Apps.KazoPackageInstallReport.ToString() -> string!
@@ -3369,6 +3393,7 @@ static Kazo.Os.AppSdk.Apps.KazoAppPackages.GetPolicyAsync(System.Threading.Cance
 static Kazo.Os.AppSdk.Apps.KazoAppPackages.GetSourcesAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Kazo.Os.AppSdk.Apps.KazoPackageSources!>!
 static Kazo.Os.AppSdk.Apps.KazoAppPackages.GetUpdatesAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.Apps.KazoPackageUpdate!>!>!
 static Kazo.Os.AppSdk.Apps.KazoAppPackages.InstallAsync(string! source, Kazo.Os.AppSdk.Apps.KazoPackageScope scope = Kazo.Os.AppSdk.Apps.KazoPackageScope.Auto, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Kazo.Os.AppSdk.Apps.KazoPackageInstallReport!>!
+static Kazo.Os.AppSdk.Apps.KazoAppPackages.InstallAsync(string! source, Kazo.Os.AppSdk.Apps.KazoPackageScope scope, System.IProgress<Kazo.Os.AppSdk.Apps.KazoPackageInstallProgress!>? progress, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Kazo.Os.AppSdk.Apps.KazoPackageInstallReport!>!
 static Kazo.Os.AppSdk.Apps.KazoAppPackages.InstallThemePackAsync(string! source, Kazo.Os.AppSdk.Apps.KazoPackageScope scope = Kazo.Os.AppSdk.Apps.KazoPackageScope.Auto, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Kazo.Os.AppSdk.Apps.KazoThemePackInstallReport!>!
 static Kazo.Os.AppSdk.Apps.KazoAppPackages.RemoveAsync(string! appId, Kazo.Os.AppSdk.Apps.KazoPackageScope scope = Kazo.Os.AppSdk.Apps.KazoPackageScope.Auto, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Kazo.Os.AppSdk.Apps.KazoInstalledPackage!>!
 static Kazo.Os.AppSdk.Apps.KazoAppPackages.RemoveSourceAsync(string! source, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Kazo.Os.AppSdk.Apps.KazoPackageSources!>!
@@ -3414,6 +3439,8 @@ static Kazo.Os.AppSdk.Apps.KazoPackageCatalog.operator !=(Kazo.Os.AppSdk.Apps.Ka
 static Kazo.Os.AppSdk.Apps.KazoPackageCatalog.operator ==(Kazo.Os.AppSdk.Apps.KazoPackageCatalog? left, Kazo.Os.AppSdk.Apps.KazoPackageCatalog? right) -> bool
 static Kazo.Os.AppSdk.Apps.KazoPackageInfo.operator !=(Kazo.Os.AppSdk.Apps.KazoPackageInfo? left, Kazo.Os.AppSdk.Apps.KazoPackageInfo? right) -> bool
 static Kazo.Os.AppSdk.Apps.KazoPackageInfo.operator ==(Kazo.Os.AppSdk.Apps.KazoPackageInfo? left, Kazo.Os.AppSdk.Apps.KazoPackageInfo? right) -> bool
+static Kazo.Os.AppSdk.Apps.KazoPackageInstallProgress.operator !=(Kazo.Os.AppSdk.Apps.KazoPackageInstallProgress? left, Kazo.Os.AppSdk.Apps.KazoPackageInstallProgress? right) -> bool
+static Kazo.Os.AppSdk.Apps.KazoPackageInstallProgress.operator ==(Kazo.Os.AppSdk.Apps.KazoPackageInstallProgress? left, Kazo.Os.AppSdk.Apps.KazoPackageInstallProgress? right) -> bool
 static Kazo.Os.AppSdk.Apps.KazoPackageInstallReport.operator !=(Kazo.Os.AppSdk.Apps.KazoPackageInstallReport? left, Kazo.Os.AppSdk.Apps.KazoPackageInstallReport? right) -> bool
 static Kazo.Os.AppSdk.Apps.KazoPackageInstallReport.operator ==(Kazo.Os.AppSdk.Apps.KazoPackageInstallReport? left, Kazo.Os.AppSdk.Apps.KazoPackageInstallReport? right) -> bool
 static Kazo.Os.AppSdk.Apps.KazoPackagePolicy.operator !=(Kazo.Os.AppSdk.Apps.KazoPackagePolicy? left, Kazo.Os.AppSdk.Apps.KazoPackagePolicy? right) -> bool

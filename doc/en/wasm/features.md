@@ -346,6 +346,10 @@ This section lists what is released in the `main` branch and online.
   (Kazo Word, Kazo Spreadsheets…), written once instead of one copy per app.
   ([ADR 0259](dev/adr/0259-shared-craft-app-host-module.md),
   [`craft-apps.md`](framework/craft-apps.md))
+- **Craft app exports in Kazo OS** (version 3.3.4): a Craft app's exports
+  (Export, Print to PDF, OCR… of Kazo Pdf) go through the OS save dialog
+  instead of the browser's downloads, and are saved as copies.
+  ([ADR 0264](dev/adr/0264-craft-app-exports-reach-the-window.md))
 - **`dotnet new` templates** for a windowed application, a command, a
   service, a site, a complete host or a whole application repository, shown
   in Visual Studio and Rider.
@@ -393,7 +397,11 @@ This section lists what is released in the `main` branch and online.
   everyone, open, update, uninstall, Installed tab and "Restart to finish". It
   checks for updates at sign-in then every 6 hours and says so in a
   notification; `kazopkg install <appId>` reads the same catalogs and asks
-  the user to choose when several list the app.
+  the user to choose when several list the app. Since version 3.3.4: featured
+  app, grid filtered by category, "Install" button on the cards, screenshot
+  viewer, app page with a bar that stays at the top and plain-language
+  capabilities, install progress, and on the phone tabs at the bottom and
+  44 px touch targets ([ADR 0266](dev/adr/0266-store-ux-refresh.md)).
   ([ADR 0188](dev/adr/0188-hack-store-and-app-catalog.md),
   [ADR 0212](dev/adr/0212-hack-store-app-build.md),
   [ADR 0215](dev/adr/0215-hack-store-answers-notification-and-ambiguous-app-id.md))
@@ -401,7 +409,7 @@ This section lists what is released in the `main` branch and online.
   `https://os.kazo.ca/?autolaunch=<appId>` starts Kazo OS as guest when there
   is no account, installs the app from the signed official catalog and
   launches it; with an account, it opens the Store at the app's page. The link
-  survives the restart for an update (in progress: [ADR 0265](dev/adr/0265-direct-link-survives-update-restart.md)).
+  survives the restart for an update (version 3.3.4, [ADR 0265](dev/adr/0265-direct-link-survives-update-restart.md)).
   ([ADR 0258](dev/adr/0258-direct-app-launch-link.md), [`app-launch-link.md`](dev/app-launch-link.md))
 - **Installs without a restart, and safe**: an application installed or
   updated opens at once if it was not already loaded. The packages of a source
@@ -441,14 +449,12 @@ points to its PR.
 | Switch user | Open another session without closing the first one. Stays greyed out in the Power menu by Benoit's choice: one session at a time, Sign out to change account. | [0195](dev/adr/0195-start-menu-power-button.md), [0201](dev/adr/0201-switch-user-stays-greyed.md) | [#290](https://github.com/Kazo-ca/Os/issues/290) |
 | File address served on demand | An app gets an address to read a large file (audio, video) without copying it in memory, with partial reads to seek in a track. | To write | [#379](https://github.com/Kazo-ca/Os/issues/379) |
 | Drag files onto an app | Public SDK contract to receive files dragged from the File Explorer or the desktop. | To write | [#380](https://github.com/Kazo-ca/Os/issues/380) |
-| Craft app exports in Kazo OS | A Craft app's exports (Export, Print to PDF, OCR… of Kazo Pdf) go through the OS save dialog instead of the browser's downloads, and are saved as copies. | [0264](dev/adr/0264-craft-app-exports-reach-the-window.md) | — |
 
 ### Kazo OS Store
 
 | Feature | Description | ADR | Issue |
 | --- | --- | --- | --- |
 | Application catalog | Catalog format, checking and publishing of the offered applications. | [0188](dev/adr/0188-hack-store-and-app-catalog.md) | [AppMarketPlace #1](https://github.com/Kazo-ca/Os-AppMarketPlace/issues/1) |
-| New Store home and app page | Featured app, grid filtered by category, install from the cards, screenshot viewer, plain-language capabilities, install progress, reworked phone interface. Already in `store-ux/base`: quick fixes, screenshot viewer, new app page (bar that stays at the top, plain-language capabilities, file types opened, « Try it » link to copy, messages that close by themselves), install progress, new home page (featured app, grid filtered by category, card « Install » button with « for everyone » for an administrator, Themes tab hidden without a pack), phone (tabs at the bottom, 44 px touch targets, portrait screenshots first). | [0266](dev/adr/0266-store-ux-refresh.md) | Series `store-ux/base` |
 
 ### Personalization
 
