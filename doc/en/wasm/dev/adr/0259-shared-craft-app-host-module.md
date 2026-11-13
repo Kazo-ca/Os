@@ -1,13 +1,14 @@
-> [Version française](../../../../fr/wasm/dev/adr/0247-shared-craft-app-host-module.md)
+> [Version française](../../../../fr/wasm/dev/adr/0259-shared-craft-app-host-module.md)
 
-# ADR 0247: a shared SDK module for the Craft apps (`Kazo.Os.AppSdk.Craft`)
+# ADR 0259: a shared SDK module for the Craft apps (`Kazo.Os.AppSdk.Craft`)
 
 ## Status
 
 Accepted on 2026-11-13. Benoit took recommendation A of both questions (see
 [Questions](#questions-asked-to-benoit)): the shared code of the Craft apps is
 a module shipped and served by Kazo OS, and it holds the iframe, the proxy and
-the document logic. Series `craft-host/base`.
+the document logic. Series `craft-host/base`. First numbered 0247; renumbered 0259 on 2026-11-13
+(Benoit's choice), because the `feature/base` series already used 0247.
 
 - **Builds on:** [ADR 0019](0019-sdk-versioning-and-compatibility.md) (SDK
   versions), [ADR 0055](0055-base-apps-on-public-sdk-only.md) (an SDK library
@@ -221,7 +222,7 @@ your recommendations).
 - [x] Assess what is shared (Kazo Word, `craft-web-host`, `craft-web-api`)
       and ask Benoit the questions.
 - [x] Write the ADR (fr and en), indexes, memory, `features.md`.
-- [ ] Work item 2: C# library.
+- [x] Work item 2: C# library.
 - [ ] Work item 3: scripts.
 - [ ] Work item 4: end-to-end journey, framework doc, port guide.
 - [ ] `TODO` issue in `Kazo-ca/Os-App-Word`: move Kazo Word to the module.

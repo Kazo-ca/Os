@@ -1,13 +1,14 @@
-> [English version](../../../../en/wasm/dev/adr/0247-shared-craft-app-host-module.md)
+> [English version](../../../../en/wasm/dev/adr/0259-shared-craft-app-host-module.md)
 
-# ADR 0247 : un module commun du SDK pour les apps Craft (`Kazo.Os.AppSdk.Craft`)
+# ADR 0259 : un module commun du SDK pour les apps Craft (`Kazo.Os.AppSdk.Craft`)
 
 ## Statut
 
 Acceptée le 2026-11-13. Benoit a retenu la recommandation A des deux questions
 (voir [Questions](#questions-posées-à-benoit)) : le code commun des apps Craft
 est un module livré et servi par Kazo OS, et il contient l'iframe, le proxy et
-la logique des documents. Série `craft-host/base`.
+la logique des documents. Série `craft-host/base`. D'abord numérotée 0247 ; renumérotée 0259 le
+2026-11-13 (choix de Benoit), car la série `feature/base` utilisait déjà 0247.
 
 - **S'appuie sur :** l'[ADR 0019](0019-sdk-versioning-and-compatibility.md)
   (versions du SDK), l'[ADR 0055](0055-base-apps-on-public-sdk-only.md)
@@ -227,7 +228,7 @@ Posées dans le fil « Partager le proxy des apps Craft dans Kazo OS » le
 - [x] Évaluer ce qui est commun (Kazo Word, `craft-web-host`, `craft-web-api`)
       et poser les questions à Benoit.
 - [x] Écrire l'ADR (fr et en), index, mémoire, `features.md`.
-- [ ] Chantier 2 : bibliothèque C#.
+- [x] Chantier 2 : bibliothèque C#.
 - [ ] Chantier 3 : scripts.
 - [ ] Chantier 4 : parcours de bout en bout, doc du framework, guide de
       portage.
