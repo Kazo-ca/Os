@@ -18,6 +18,7 @@ public partial class AppLauncher : ComponentBase, IDisposable
 {
     internal const string FileExplorerAppId = "org.kazoos.file-explorer";
     internal const string SettingsAppId = "org.kazoos.settings";
+    internal const string StoreAppId = "org.kazoos.store";
 
     private ElementReference _searchInputRef;
     private AuthenticatedPrincipal? _principal;
@@ -93,6 +94,8 @@ public partial class AppLauncher : ComponentBase, IDisposable
     private AppManifest? FileExplorerApp => FindLaunchableApp(FileExplorerAppId);
 
     private AppManifest? SettingsApp => FindLaunchableApp(SettingsAppId);
+
+    private AppManifest? StoreApp => FindLaunchableApp(StoreAppId);
 
     private string? ActiveOptionId => _selectedIndex >= 0 && _selectedIndex < _projection.VisibleApps.Count
         ? GetOptionId(_projection.VisibleApps[_selectedIndex])

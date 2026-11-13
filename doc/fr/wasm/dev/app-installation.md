@@ -374,7 +374,8 @@ réduite, lancé par `build/publish-trimmed.sh`).
 
 L'ADR [0212](adr/0212-hack-store-app-build.md) met en œuvre l'app **Kazo
 Store** (`org.kazoos.store`, ADR [0188](adr/0188-hack-store-and-app-catalog.md)) :
-app système, non désinstallable, épinglée par défaut dans le menu Démarrer.
+app système, non désinstallable, dans l'Accès rapide du menu Démarrer
+(ADR [0268](adr/0268-store-in-start-menu-quick-access.md) ; elle était épinglée par défaut avant).
 
 ```text
 kazopkg install org.example.notes          # cherché dans les catalogues
@@ -531,8 +532,12 @@ kazopkg info org.example.notes
   les catalogues de `[catalogs]`, pour les propositions de l'ADR 0257. Aucun badge sur l'icône du Store
   ([ADR 0215](adr/0215-hack-store-answers-notification-and-ambiguous-app-id.md) §1).
 - **Épinglage par défaut** : `start-menu.json` note par profil
-  `defaultPinsApplied` ; le Store est ajouté une fois, à un nouveau profil
-  comme à un profil existant, et ne revient pas après un désépinglage.
+  `defaultPinsApplied` ; une épingle par défaut est ajoutée une fois, à un
+  nouveau profil comme à un profil existant, et ne revient pas après un
+  désépinglage. Depuis l'ADR [0268](adr/0268-store-in-start-menu-quick-access.md)
+  la liste est vide : le Store est un lien de l'Accès rapide, et un profil qui
+  l'avait reçu par défaut perd cette épingle une seule fois
+  (`RetiredDefaultPinnedAppIds`) ; une épingle remise reste.
 
 Tests : `AppCatalogDocumentTests`, les tests de catalogue et de progression
 d'`AppPackageGatewayTests`, `HttpAppPackageDownloaderTests`,
