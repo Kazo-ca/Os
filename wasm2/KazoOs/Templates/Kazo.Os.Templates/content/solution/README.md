@@ -22,7 +22,7 @@ shows the same listing as the Kazo OS Store.
 
 ## Try it
 
-<!-- "Open in Kazo OS" link: https://os.kazo.ca/?autolunch=<app id> goes here once Kazo OS supports it. -->
+<!-- "Open in Kazo OS" link: https://os.kazo.ca/?autolaunch=<app id> goes here once Kazo OS supports it. -->
 
 Open [Kazo OS](https://os.kazo.ca/) and install Kazo.Os.Template.Solution from the **Kazo OS Store**, or in the Kazo OS
 Terminal, as an administrator: `sudo kazopkg install <owner>/<repository>`.

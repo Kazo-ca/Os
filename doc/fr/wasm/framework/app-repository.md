@@ -109,7 +109,7 @@ déclare déjà `KazoOsAppProject=true` ; ajoutez-la à l'hôte par
    `readme-fr.md`, entre les commentaires `Fiche du Store` : le dépôt montre la
    même fiche que le Store, suivie d'un lien vers Kazo OS. La section
    « Essayer » garde une place pour le lien « Ouvrir dans Kazo OS »
-   (`https://os.kazo.ca/?autolunch=<id de l'app>`), quand Kazo OS le prendra
+   (`https://os.kazo.ca/?autolaunch=<id de l'app>`), quand Kazo OS le prendra
    en charge.
 2. Changer `Version` dans la classe `[AppManifest]`, valider dans `main`, puis
    poser le tag : lancer le workflow **Tag a release** (`tag-release.yml`, depuis

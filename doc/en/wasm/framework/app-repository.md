@@ -107,7 +107,7 @@ already declares `KazoOsAppProject=true`; add it to the host with
    `readme-fr.md`, between the `Store listing` comments: the repository shows
    the same listing as the Store, followed by a link to Kazo OS. The
    "Try it" section keeps a place for the "Open in Kazo OS" link
-   (`https://os.kazo.ca/?autolunch=<app id>`), once Kazo OS supports it.
+   (`https://os.kazo.ca/?autolaunch=<app id>`), once Kazo OS supports it.
 2. Change `Version` in the `[AppManifest]` class, commit it to `main`, then tag
    it: run the **Tag a release** workflow (`tag-release.yml`, from the Actions
    tab or, for an agent, through the GitHub API), or create the tag

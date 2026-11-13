@@ -22,7 +22,7 @@ dépôt montre la même fiche que le Kazo OS Store.
 
 ## Essayer
 
-<!-- Lien « Ouvrir dans Kazo OS » : https://os.kazo.ca/?autolunch=<id de l'app> va ici quand Kazo OS le prendra en charge. -->
+<!-- Lien « Ouvrir dans Kazo OS » : https://os.kazo.ca/?autolaunch=<id de l'app> va ici quand Kazo OS le prendra en charge. -->
 
 Ouvrez [Kazo OS](https://os.kazo.ca/) et installez Kazo.Os.Template.Solution depuis le **Kazo OS Store**, ou dans le
 Terminal de Kazo OS, en administrateur : `sudo kazopkg install <propriétaire>/<dépôt>`.
