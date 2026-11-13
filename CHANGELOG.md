@@ -6,6 +6,13 @@ The changes of Kazo OS, by version. This file is generated from `wasm2/KazoOs/ch
 `wasm2/KazoOs/build/tools/collect-changes.sh` (ADR 0186): do not edit it by hand. Changes already
 deployed but not released yet are in the Settings ▸ What's new page of the OS.
 
+## 3.3.1 (2026-11-13)
+
+### Fixed
+
+- **A window that comes to the front no longer reloads its frames.** Windows keep their place in the page and only their stacking changes, so an app shown in a frame, such as Kazo Word or the browser, keeps its document or page when you click another window, and on mobile when you switch apps. A window that receives the keyboard focus, with Tab or a click in its frame, now comes to the front. ([0244-stable-window-order-in-the-page.md](doc/en/wasm/dev/adr/0244-stable-window-order-in-the-page.md))
+- **An installed app's page opens in its window, not a second Kazo OS.** An installed app that shows one of its own web pages in a frame, such as Kazo Word, now gets that page, with the parameters in its address, online and offline. Before, the published Kazo OS answered with its own start page and a second Kazo OS started inside the window. ([0243-serve-installed-app-pages.md](doc/en/wasm/dev/adr/0243-serve-installed-app-pages.md))
+
 ## 3.3.0 (2026-11-11)
 
 ### New

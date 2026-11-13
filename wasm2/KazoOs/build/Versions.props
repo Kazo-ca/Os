@@ -56,11 +56,15 @@
     machine withdraws the user's own refusal, and installed apps find System.Private.CoreLib whole
     with an exact install check (ADR 0242). SDK additions (App Abstractions, AppSdk.Blazor) and the
     host, platform and browser API folded into PublicAPI.Shipped.txt.
+    3.3.1 (2026-11-13, patch): the published service worker serves an installed app's page loaded
+    in a frame (ADR 0243), and windows keep their place in the page so a window coming to the front
+    no longer reloads its frames (ADR 0244). No SDK change: only Windowing.Core's
+    WindowDocumentOrder moves in the API files.
 
     The App SDK version an app is compiled against comes from this number (KazoOsSdk.Version), and
     the manifest generator writes it as the app's sdkCompatibility.minimumVersion (ADR 0098 §3).
   -->
   <PropertyGroup>
-    <KazoOsVersion>3.3.0</KazoOsVersion>
+    <KazoOsVersion>3.3.1</KazoOsVersion>
   </PropertyGroup>
 </Project>
