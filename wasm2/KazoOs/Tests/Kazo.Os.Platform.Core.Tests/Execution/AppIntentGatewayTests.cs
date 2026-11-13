@@ -61,7 +61,7 @@ public sealed class AppIntentGatewayTests
         AppIntentOpenFileResult edited = await caller.Intents.EditFileAsync(VirtualPath.Parse("/home/alice/report.docx"));
 
         Assert.Equal(AppIntentOpenFileOutcome.NoHandler, opened.Outcome);
-        Assert.Equal([new AppIntentSuggestedCatalogApp("ca.kazo.word", "Kazo Word", "official")], opened.SuggestedCatalogApps);
+        Assert.Equal([KazoWordSuggestion], opened.SuggestedCatalogApps);
         Assert.Equal(AppIntentOpenFileOutcome.NoHandler, edited.Outcome);
         Assert.Equal(opened.SuggestedCatalogApps, edited.SuggestedCatalogApps);
     }
@@ -80,6 +80,44 @@ public sealed class AppIntentGatewayTests
         Assert.Equal(AppIntentOpenFileOutcome.NoHandler, result.Outcome);
         Assert.Empty(result.SuggestedCatalogApps);
     }
+
+    [Fact]
+    public async Task SuggestCatalogAppsAsync_ListsTheStoreAppsForTheOpenWithBox()
+    {
+        Fixture fixture = new(FileManagerManifest(), NotepadManifest());
+        AuthenticatedPrincipal principal = await fixture.LoginAsync();
+        fixture.Grant("org.kazoos.filemanager", principal, AppCapabilities.AppsLaunch);
+        fixture.Suggestions = await CreateSuggestionsAsync(fixture, refresh: true);
+        IAppExecutionContext caller = await fixture.LaunchCallerAsync(principal);
+
+        IReadOnlyList<AppIntentSuggestedCatalogApp> forDocx = await caller.Intents.SuggestCatalogAppsAsync(VirtualPath.Parse("/home/alice/report.docx"));
+        IReadOnlyList<AppIntentSuggestedCatalogApp> forText = await caller.Intents.SuggestCatalogAppsAsync(VirtualPath.Parse("/home/alice/notes.txt"));
+
+        AppIntentSuggestedCatalogApp word = Assert.Single(forDocx);
+        Assert.Equal(KazoWordSuggestion, word);
+        Assert.Equal("Un traitement de texte", word.ShortDescriptions["fr"]);
+        Assert.Equal("https://raw.githubusercontent.com/Kazo-ca/Os-AppMarketPlace/packages/packages/ca.kazo.word/0.1.0/icon.png", word.IconUri);
+        Assert.Empty(forText);
+    }
+
+    [Fact]
+    public async Task SuggestCatalogAppsAsync_IsDeniedWithoutAppsLaunch()
+    {
+        Fixture fixture = new(FileManagerManifest(), NotepadManifest());
+        AuthenticatedPrincipal principal = await fixture.LoginAsync();
+        fixture.Suggestions = await CreateSuggestionsAsync(fixture, refresh: true);
+        IAppExecutionContext caller = await fixture.LaunchCallerAsync(principal);
+
+        await Assert.ThrowsAsync<AppGatewayAccessDeniedException>(
+            async () => await caller.Intents.SuggestCatalogAppsAsync(VirtualPath.Parse("/home/alice/report.docx")));
+    }
+
+    /// <summary>What the official catalog of <see cref="CatalogDownloader"/> proposes for a <c>.docx</c>.</summary>
+    private static readonly AppIntentSuggestedCatalogApp KazoWordSuggestion = new("ca.kazo.word", "Kazo Word", "official")
+    {
+        ShortDescriptions = new Dictionary<string, string> { ["en"] = "A word processor", ["fr"] = "Un traitement de texte" },
+        IconUri = "https://raw.githubusercontent.com/Kazo-ca/Os-AppMarketPlace/packages/packages/ca.kazo.word/0.1.0/icon.png",
+    };
 
     /// <summary>The official catalog lists Kazo Word, which declares <c>.docx</c>; downloaded only when <paramref name="refresh"/>.</summary>
     private static async Task<CatalogAppSuggestions> CreateSuggestionsAsync(Fixture fixture, bool refresh)
@@ -100,8 +138,10 @@ public sealed class AppIntentGatewayTests
             ValueTask.FromResult<byte[]?>(uri.AbsoluteUri == AppPackageDefaults.OfficialCatalogAddress
                 ? System.Text.Encoding.UTF8.GetBytes($$$"""
                     {"schemaVersion":1,"apps":[{"appId":"ca.kazo.word","name":"Kazo Word","category":"productivity","latestVersion":"0.1.0",
+                     "shortDescriptions":{"en":"A word processor","fr":"Un traitement de texte"},
                      "versions":[{"version":"0.1.0","package":"packages/ca.kazo.word/0.1.0/ca.kazo.word-0.1.0.kazoapp","sha256":"{{{new string('a', 64)}}}",
                       "size":10,"capabilities":[],"sdkCompatibility":{"minimumVersion":"{{{KazoOsSdk.Version}}}"},
+                      "icon":"packages/ca.kazo.word/0.1.0/icon.png",
                       "fileHandlers":[{"extensions":[".docx"],"actions":["open","edit"]}]}]}]}
                     """)
                 : null);

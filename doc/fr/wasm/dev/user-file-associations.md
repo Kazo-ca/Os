@@ -88,14 +88,23 @@ fichier :
 - **Action** : `open` pour une ouverture ; pour une modification sans
   gestionnaire, les apps qui l'**ouvrent** (la modification retombe sur `open`).
 - **Résultat** : `AppIntentOpenFileResult.SuggestedCatalogApps`
-  (`AppIntentSuggestedCatalogApp` : id, nom, catalogue), transmis aux workers
-  (`WireCodec`, champ `sg`) et, dans le SDK, `KazoOpenFileResult.SuggestedCatalogApps`
-  (`KazoSuggestedCatalogApp`).
+  (`AppIntentSuggestedCatalogApp` : id, nom, catalogue, `ShortDescriptions` par
+  langue et `IconUri`, adresse absolue de l'icône de la version), transmis aux
+  workers (`WireCodec`, champ `sg` : `[id, nom, catalogue, icône, {langue: texte}]`,
+  les deux derniers facultatifs) et, dans le SDK, `KazoOpenFileResult.SuggestedCatalogApps`
+  (`KazoSuggestedCatalogApp`, `GetShortDescription(culture)`).
+- **Demandée seule** (chantier 3) : `IAppIntentGateway.SuggestCatalogAppsAsync(path)`
+  (`AppIntentDispatcher.SuggestCatalogAppsForAsync`, `apps.launch` exigée,
+  action `open`) et, dans le SDK, `KazoApps.GetSuggestedCatalogAppsAsync(path)` :
+  la boîte « Ouvrir avec » montre les apps du Store sous les apps installées,
+  même quand une app installée ouvre déjà le fichier. L'implémentation par
+  défaut de l'interface, et une app en worker, reçoivent une liste vide.
 - **`xdg-open`** : sous « aucune application ne peut ouvrir », la liste des
   apps (nom, id, catalogue) et `kazopkg install catalog:<catalogue>/<appId>`
   pour la première ; le code de sortie reste 3.
-- L'Explorateur et le Store (bouton « Voir dans le Store »,
-  `--open-after-install`) viennent avec le chantier 3.
+- **Explorateur et Store** (chantier 3) : la boîte « Ouvrir avec » et son
+  bouton « Voir dans le Store », `--open-after-install` du Store ; voir
+  [`file-explorer.md`](file-explorer.md#apps-du-store-pour-un-fichier-sans-app-adr-0257).
 
 ## Décisions
 
@@ -140,4 +149,4 @@ fichier :
 - [x] Commande `xdg-mime`.
 - [x] Tests et documentation.
 - [x] ADR 0257, chantier 2 : apps du Store proposées avec `NoHandler`, SDK, `xdg-open`.
-- [ ] ADR 0257, chantier 3 : Explorateur, « Ouvrir avec » et `--open-after-install` du Store.
+- [x] ADR 0257, chantier 3 : Explorateur, « Ouvrir avec » et `--open-after-install` du Store.

@@ -1,4 +1,5 @@
 using System.Globalization;
+using Kazo.Os.App.Abstractions;
 using Kazo.Os.AppSdk;
 using Kazo.Os.AppSdk.Apps;
 using Kazo.Os.AppSdk.Blazor;
@@ -38,7 +39,9 @@ internal enum StoreView
 /// </para>
 /// <para>
 /// Launch arguments: <c>--page=installed</c> opens the « Installed » tab (the update notification
-/// does), <c>--page=themes</c> the « Themes » tab, <c>--app=&lt;appId&gt;</c> opens an app's page.
+/// does), <c>--page=themes</c> the « Themes » tab, <c>--app=&lt;appId&gt;</c> opens an app's page,
+/// and <c>--open-after-install=&lt;path&gt;</c> opens that file once the app is installed (ADR 0257 §5,
+/// the File Explorer's « View in the Store »). A Store already open receives them too.
 /// </para>
 /// <para>
 /// The « Themes » tab (ADR 0213 §5) lists the theme packs of the catalogs: install for me or for
@@ -48,9 +51,6 @@ internal enum StoreView
 /// </remarks>
 public partial class StoreWindow
 {
-    private const string PageArgument = "--page=";
-    private const string AppArgument = "--app=";
-
     private readonly HashSet<string> _removed = new(StringComparer.Ordinal);
     private StoreCatalog _store = StoreCatalog.Empty;
     private StoreThemePacks _themePacks = StoreThemePacks.Empty;
@@ -66,6 +66,7 @@ public partial class StoreWindow
     private string? _message;
     private bool _messageIsError;
     private string? _description;
+    private (string AppId, string Path)? _openAfterInstall;
     private string? _descriptionKey;
     private bool _isDescriptionLoading;
     private IStringLocalizer<Strings>? _localizer;
@@ -85,24 +86,44 @@ public partial class StoreWindow
     /// <inheritdoc />
     protected override async Task OnAppInitializedAsync()
     {
-        foreach (string argument in LaunchArguments)
+        ApplyArguments(StoreLaunchArguments.Parse(LaunchArguments));
+        await LoadAsync(refresh: false);
+        await ShowRequestedDetailAsync();
+    }
+
+    /// <summary>
+    /// The Store is a single window per user: another app's launch (the File Explorer's « View in the
+    /// Store ») reaches the open window here with its arguments.
+    /// </summary>
+    protected override async Task OnIntentReceivedAsync(AppIntentDelivery intent)
+    {
+        StoreLaunchArguments arguments = StoreLaunchArguments.Parse(intent.Arguments);
+        if (arguments.View is null)
         {
-            if (argument.StartsWith(PageArgument, StringComparison.Ordinal) && argument[PageArgument.Length..] == "installed")
-            {
-                _view = StoreView.Installed;
-            }
-            else if (argument.StartsWith(PageArgument, StringComparison.Ordinal) && argument[PageArgument.Length..] == "themes")
-            {
-                _view = StoreView.Themes;
-            }
-            else if (argument.StartsWith(AppArgument, StringComparison.Ordinal))
-            {
-                _selectedAppId = argument[AppArgument.Length..];
-                _view = StoreView.Detail;
-            }
+            return;
         }
 
-        await LoadAsync(refresh: false);
+        ApplyArguments(arguments);
+        await ShowRequestedDetailAsync();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    /// <summary>Takes the page, the app and the file to open after its install from the command line.</summary>
+    private void ApplyArguments(StoreLaunchArguments arguments)
+    {
+        if (arguments.View is { } view)
+        {
+            _view = view;
+            _selectedAppId = arguments.AppId;
+            _openAfterInstall = arguments.OpenAfterInstall is { } path && arguments.AppId is { } appId
+                ? (appId, path)
+                : null;
+        }
+    }
+
+    /// <summary>Loads the requested app's description, or goes home when no catalog lists it.</summary>
+    private async Task ShowRequestedDetailAsync()
+    {
         if (_view == StoreView.Detail && Selected is { } entry)
         {
             await LoadDescriptionAsync(entry);
@@ -110,6 +131,8 @@ public partial class StoreWindow
         else if (_view == StoreView.Detail)
         {
             _view = StoreView.Home;
+            _selectedAppId = null;
+            _openAfterInstall = null;
         }
     }
 
@@ -260,7 +283,42 @@ public partial class StoreWindow
             KazoPackageInstallReport report = await KazoAppPackages.InstallAsync(entry.App!.Source, scope);
             _removed.Remove(entry.AppId);
             ShowInfo(L[report.SystemWide ? "Message.InstalledForEveryone" : "Message.InstalledForMe", report.Name, report.Version]);
+            await OpenFileAfterInstallAsync(report);
         });
+
+    /// <summary>
+    /// ADR 0257 §5: the Store was opened for a file no app opened. Once that app is installed, the
+    /// file is opened again through the OS's resolution, which now finds it; when another app could
+    /// open it too, the new app opens it, since it is the one the user just chose. An app that waits
+    /// for a restart cannot open it yet: the message says so, and nothing else happens.
+    /// </summary>
+    private async Task OpenFileAfterInstallAsync(KazoPackageInstallReport report)
+    {
+        if (_openAfterInstall is not ({ } appId, { } path) || !string.Equals(appId, report.AppId, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        _openAfterInstall = null;
+        if (report.RestartRequired)
+        {
+            ShowInfo(L["Message.OpenAfterRestart", report.Name, path]);
+            return;
+        }
+
+        try
+        {
+            KazoOpenFileResult opened = await KazoApps.OpenFileAsync(path);
+            if (opened.Status != KazoOpenFileStatus.Opened)
+            {
+                await KazoApps.LaunchAsync(report.AppId, [path]);
+            }
+        }
+        catch (Exception exception) when (exception is KazoAppLaunchException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
+        {
+            ShowError(L["Error.OpenAfterInstall", path, exception.Message]);
+        }
+    }
 
     private Task UpdateAsync(StoreEntry entry) =>
         RunAsync(entry, async () =>

@@ -42,7 +42,10 @@ public sealed partial class AppPackageGatewayTests
         int downloads = harness.Downloads.Count;
         IReadOnlyList<AppIntentSuggestedCatalogApp> apps = await suggestions.FindAsync(SampleFile, null, "open", alice);
 
-        Assert.Equal([new AppIntentSuggestedCatalogApp(AppPackageTests.AppId, "Sample", AppSourcesConfig.OfficialCatalogName)], apps);
+        AppIntentSuggestedCatalogApp sample = Assert.Single(apps);
+        Assert.Equal((AppPackageTests.AppId, "Sample", AppSourcesConfig.OfficialCatalogName), (sample.AppId, sample.Name, sample.Catalog));
+        Assert.Equal("A sample", sample.ShortDescriptions["en"]);
+        Assert.Equal($"https://raw.githubusercontent.com/Kazo-ca/Os-AppMarketPlace/packages/packages/{AppPackageTests.AppId}/1.0.0/icon.svg", sample.IconUri);
         Assert.Equal(downloads, harness.Downloads.Count);
         Assert.Empty(await suggestions.FindAsync(VirtualPath.Parse("/home/alice/notes.other"), null, "open", alice));
     }

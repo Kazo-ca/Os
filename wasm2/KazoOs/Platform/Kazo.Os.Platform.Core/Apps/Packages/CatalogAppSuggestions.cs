@@ -150,7 +150,11 @@ public sealed class CatalogAppSuggestions
                 }
 
                 seen.Add(app.AppId);
-                found.Add(new AppIntentSuggestedCatalogApp(app.AppId, app.Name, name));
+                found.Add(new AppIntentSuggestedCatalogApp(app.AppId, app.Name, name)
+                {
+                    ShortDescriptions = app.ShortDescriptions,
+                    IconUri = IconAddress(listing, version),
+                });
                 if (found.Count == MaximumSuggestions)
                 {
                     return found;
@@ -159,6 +163,27 @@ public sealed class CatalogAppSuggestions
         }
 
         return found;
+    }
+
+    /// <summary>
+    /// The absolute address of the version's icon, or <see langword="null"/> when it has none or
+    /// its path does not resolve against the catalog's address.
+    /// </summary>
+    private static string? IconAddress(AppCatalogListing listing, AppCatalogVersion version)
+    {
+        if (version.Icon is not { Length: > 0 } icon)
+        {
+            return null;
+        }
+
+        try
+        {
+            return listing.Resolve(icon).AbsoluteUri;
+        }
+        catch (Exception exception) when (exception is UriFormatException or ArgumentException or InvalidOperationException)
+        {
+            return null;
+        }
     }
 
     /// <summary>

@@ -97,6 +97,11 @@ internal sealed class AppIntentGateway(
         };
     }
 
+    public async ValueTask<IReadOnlyList<AppIntentSuggestedCatalogApp>> SuggestCatalogAppsAsync(
+        VirtualPath path, string? mediaType = null, CancellationToken cancellationToken = default) =>
+        await dispatcherProvider().SuggestCatalogAppsForAsync(callerAppId, path, mediaType, principal)
+            ?? throw AppsLaunchDenied();
+
     public async ValueTask<AppIntentResult> RevealFileAsync(VirtualPath path, CancellationToken cancellationToken = default) =>
         ToIntentResult(await DispatchAsync(new RevealFileIntent(path), cancellationToken));
 

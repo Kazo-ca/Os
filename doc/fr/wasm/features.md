@@ -435,7 +435,7 @@ dans `main`, le lien mène à sa PR.
 | Fonctionnalité | Description | ADR | Issue |
 | --- | --- | --- | --- |
 | Catalogue des applications | Format du catalogue, vérification et publication des applications proposées. | [0188](dev/adr/0188-hack-store-and-app-catalog.md) | [AppMarketPlace #1](https://github.com/Kazo-ca/Os-AppMarketPlace/issues/1) |
-| Proposer une app du Store pour un fichier | Ouvrir un fichier qu'aucune app installée ne prend en charge propose les apps du Store qui déclarent ce type (par exemple Kazo Word pour un `.docx`), puis ouvre le fichier après l'installation. | [0257](dev/adr/0257-offer-a-store-app-for-an-unsupported-file.md) | Série `open-with-store/base` |
+| Proposer une app du Store pour un fichier | Ouvrir un fichier qu'aucune app installée ne prend en charge propose les apps du Store qui déclarent ce type (par exemple Kazo Word pour un `.docx`), puis ouvre le fichier après l'installation. | [0257](dev/adr/0257-offer-a-store-app-for-an-unsupported-file.md) | Série `open-with-store/base` : chantiers 1 à 3 faits (catalogue, recherche, Explorateur et Store) ; reste la republication du catalogue officiel après la fusion dans `main` |
 
 ### Personnalisation
 
