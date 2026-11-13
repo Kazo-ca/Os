@@ -5,7 +5,7 @@ namespace Kazo.Os.AppSdk.Craft;
 /// <summary>
 /// A Craft app's answer to one command of its page API (<c>window.&lt;app&gt;.request</c>, the
 /// <c>craft-web-api</c> contract), sent by the window through the iframe proxy (message
-/// <c>command</c>, answered by <c>result</c>; ADR 0247).
+/// <c>command</c>, answered by <c>result</c>; ADR 0259).
 /// </summary>
 /// <param name="Ok">Whether the app ran the command.</param>
 /// <param name="Value">What the command returned (an undefined element when it failed).</param>

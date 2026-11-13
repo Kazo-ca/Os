@@ -1,7 +1,7 @@
 namespace Kazo.Os.AppSdk.Craft;
 
 /// <summary>
-/// The documents of one Craft app window and their files (ADR 0247 §2): which document name of the
+/// The documents of one Craft app window and their files (ADR 0259 §2): which document name of the
 /// app is bound to which file, what is not saved, the title. Every decision of opening and saving
 /// is taken here, in C#, and tested.
 /// </summary>

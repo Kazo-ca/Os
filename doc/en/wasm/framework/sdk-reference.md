@@ -50,7 +50,7 @@ minor; those that are known are listed in [`sdk-packages.md`](sdk-packages.md#ad
 | `Shared/Kazo.Os.AppSdk.Terminal` | `Kazo.Os.AppSdk.Terminal` | xterm.js terminal. |
 | `Shared/Kazo.Os.AppSdk.Web` | `Kazo.Os.AppSdk.Web.Hosting`, `.Http`, `.Routing`, `.Mvc`, `.Views`, `.Antiforgery`, `.Sessions`, `.Diagnostics`, `.Data`, `.Logging` | ASP.Kazo internal sites in the style of ASP.NET Core MVC ([ASP.Kazo guide](asp-kazo-developer-guide.md), [`asp-kazo-mvc.md`](asp-kazo-mvc.md)). |
 | `Shared/Kazo.Os.AppSdk.Web.Blazor` | `Kazo.Os.AppSdk.Web.Blazor.Sites` | Interactive Blazor sites drawn in the browser ([`blazor-sites.md`](blazor-sites.md)). |
-| `Shared/Kazo.Os.AppSdk.Craft` | `Kazo.Os.AppSdk.Craft` | Craft apps: a Rust app compiled to WebAssembly in an iframe of the window ([ADR 0247](../dev/adr/0247-shared-craft-app-host-module.md)). |
+| `Shared/Kazo.Os.AppSdk.Craft` | `Kazo.Os.AppSdk.Craft` | Craft apps: a Rust app compiled to WebAssembly in an iframe of the window ([ADR 0259](../dev/adr/0259-shared-craft-app-host-module.md)). |
 | `Shared/Kazo.Os.AppSdk.Icons` | `Kazo.Os.AppSdk.Icons` | Icons. |
 | `Shared/Kazo.Os.AppSdk.VirtualKeyboard` | `Kazo.Os.AppSdk.VirtualKeyboard` | Virtual keyboard. |
 
@@ -494,7 +494,7 @@ for a 1.x app is in [`sdk-packages.md`](sdk-packages.md#sdk-20).
 
 ### Craft apps (`Kazo.Os.AppSdk.Craft`)
 
-Module shipped and served by the OS ([ADR 0247](../dev/adr/0247-shared-craft-app-host-module.md)):
+Module shipped and served by the OS ([ADR 0259](../dev/adr/0259-shared-craft-app-host-module.md)):
 `Kazo.Os.Platform.Blazor` references it, every host publishes it and serves its
 scripts at `_content/Kazo.Os.AppSdk.Craft/`. A Craft app references it to
 compile and does not carry it in its package. It keeps its Razor window, its

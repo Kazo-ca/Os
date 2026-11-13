@@ -13,7 +13,7 @@ public enum ReservedKeyTarget
 }
 
 /// <summary>
-/// A key combination the iframe gives back instead of the Craft app (ADR 0247). It is matched as the OS matches its own chords:
+/// A key combination the iframe gives back instead of the Craft app (ADR 0259). It is matched as the OS matches its own chords:
 /// modifiers exactly, then <see cref="Key"/> ignoring case, else the physical <see cref="Code"/>.
 /// </summary>
 /// <param name="Key">The key's value (<c>F4</c>, <c>Tab</c>, <c>n</c>), or <see langword="null"/> to match by code only.</param>

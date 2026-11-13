@@ -2,7 +2,7 @@ namespace Kazo.Os.AppSdk.Craft;
 
 /// <summary>
 /// Names of the messages <c>craft-host.js</c> passes to <see cref="CraftFrame.OnFrameMessage"/>,
-/// each with a text value (ADR 0247 §3). They stay inside the module: the OS side and the proxy
+/// each with a text value (ADR 0259 §3). They stay inside the module: the OS side and the proxy
 /// always come from the same OS.
 /// </summary>
 public static class FrameMessages

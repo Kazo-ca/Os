@@ -74,7 +74,7 @@ platform and never reference `Platform.*` or `Infrastructure.*`
 | `Kazo.Os.AppSdk.Terminal` | xterm.js terminal emulator (`TerminalPanel`, `TerminalTabs`). |
 | `Kazo.Os.AppSdk.Web` | ASP.Kazo: internal sites in the style of ASP.NET Core MVC (pipeline, routing, controllers, session; [`asp-kazo-mvc.md`](../framework/asp-kazo-mvc.md)). |
 | `Kazo.Os.AppSdk.Web.Blazor` | Interactive Blazor sites: router, navigation, site view drawn by the browser ([`blazor-sites.md`](../framework/blazor-sites.md)). |
-| `Kazo.Os.AppSdk.Craft` | Module of the Craft apps (Rust apps compiled to WebAssembly, shown in an iframe of their window): the iframe frame (`CraftFrame`), documents and bound files (`DocumentSession`), per-user settings (`WebStorageFile`); shipped and served by the OS ([ADR 0247](adr/0247-shared-craft-app-host-module.md)). |
+| `Kazo.Os.AppSdk.Craft` | Module of the Craft apps (Rust apps compiled to WebAssembly, shown in an iframe of their window): the iframe frame (`CraftFrame`), documents and bound files (`DocumentSession`), per-user settings (`WebStorageFile`); shipped and served by the OS ([ADR 0259](adr/0259-shared-craft-app-host-module.md)). |
 | `Kazo.Os.AppSdk.VirtualKeyboard` | Virtual keyboard for mobile. |
 
 The detail of each API is in the [SDK reference](../framework/sdk-reference.md).

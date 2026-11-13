@@ -1,6 +1,6 @@
 namespace Kazo.Os.AppSdk.Craft;
 
-/// <summary>One file format a Craft app knows (ADR 0247 §2: the app gives the list).</summary>
+/// <summary>One file format a Craft app knows (ADR 0259 §2: the app gives the list).</summary>
 /// <param name="Extension">Extension with its dot, lowercase (<c>.docx</c>).</param>
 /// <param name="MediaType">Media type written in the manifest and given to the OS dialogs.</param>
 /// <param name="IsDefault">

@@ -2,7 +2,7 @@ namespace Kazo.Os.AppSdk.Craft.Tests;
 
 /// <summary>
 /// The formats of a word processor, as Kazo Word declares them: the example list the tests give the
-/// module (the module itself holds no app's list, ADR 0247 §1).
+/// module (the module itself holds no app's list, ADR 0259 §1).
 /// </summary>
 internal static class SampleFormats
 {

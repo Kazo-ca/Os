@@ -336,7 +336,7 @@ dotnet test Kazo.Os.sln
 |---|---|
 | `Tests/*.Tests` (hors E2E) | Tests unitaires et de composants (xUnit, bUnit), un projet par projet de code. Rapides, sans navigateur. |
 | `Tests/Kazo.Os.AppSdk.Web.Tests` | ASP.Kazo : routeur, pipeline d'un site compilé avec le générateur de routes, générateur piloté sur des extraits (`KOSWEB*`), page hôte et `blazor.boot.json` d'un site Blazor. |
-| `Tests/Kazo.Os.AppSdk.Craft.Tests` | Module des apps Craft (ADR 0247) : démarrage de l'app, raccourcis réservés, langue, sélecteur, réglages par utilisateur, règle d'enregistrement (`DocumentSession`), formats, et ce que `CraftFrame` donne à `craft-host.js` (faux `IJSRuntime`). |
+| `Tests/Kazo.Os.AppSdk.Craft.Tests` | Module des apps Craft (ADR 0259) : démarrage de l'app, raccourcis réservés, langue, sélecteur, réglages par utilisateur, règle d'enregistrement (`DocumentSession`), formats, et ce que `CraftFrame` donne à `craft-host.js` (faux `IJSRuntime`). |
 | `Tests/Kazo.Os.AppSdk.Web.Blazor.Tests` | Sites Blazor : routeur (`KazoSiteRouter`), gestionnaire de navigation de l'onglet, `KazoWebSite`. |
 | `Tests/Kazo.Os.Samples.Intranet.Tests` | Exemple Intranet en mémoire (`KazoWebHost.CreateApplication`) : vues `.cshtml` et `.razor`, `wwwroot`, session, anti-falsification, CRUD par formulaires, API REST, page hôte du tableau Blazor. Le parcours dans Chromium est `BrowserIntranetTests` (UI E2E). |
 | `Tests/Kazo.Os.Tools.ManifestGenerator.Tests` | Builds MSBuild réels des projets `Tests/ManifestGenerator.Fixtures.*` : génération, agrégation, frontière du SDK. Plus lents. |

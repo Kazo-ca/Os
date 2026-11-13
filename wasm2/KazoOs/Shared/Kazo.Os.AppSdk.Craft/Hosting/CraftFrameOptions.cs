@@ -1,7 +1,7 @@
 namespace Kazo.Os.AppSdk.Craft;
 
 /// <summary>
-/// What a Craft app window gives its iframe when it creates it (ADR 0247 §3): the app's own iframe
+/// What a Craft app window gives its iframe when it creates it (ADR 0259 §3): the app's own iframe
 /// page, and what the proxy passes to the Craft app.
 /// </summary>
 /// <param name="PagePath">

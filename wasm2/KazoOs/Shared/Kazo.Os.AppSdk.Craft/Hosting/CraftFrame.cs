@@ -5,7 +5,7 @@ using Microsoft.JSInterop;
 namespace Kazo.Os.AppSdk.Craft;
 
 /// <summary>
-/// The C# side of one Craft app iframe (ADR 0247): it starts <c>craft-host.js</c>, served by the OS
+/// The C# side of one Craft app iframe (ADR 0259): it starts <c>craft-host.js</c>, served by the OS
 /// at <see cref="ModulePath"/>, in an element of the window and raises the proxy's messages as .NET
 /// events. The window decides everything else (bound files, changes, title, close).
 /// </summary>

@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <!--
-    ADR 0247: the code every Craft app shares, taken from Kazo Word and made generic. An SDK library
+    ADR 0259: the code every Craft app shares, taken from Kazo Word and made generic. An SDK library
     (ADR 0055): no Platform Core, no MudBlazor. Kazo.Os.Platform.Blazor references it, so every OS
     host publishes it and serves its wwwroot/ at _content/Kazo.Os.AppSdk.Craft/; an app references it
     to compile and never carries it in its package (ADR 0221: the SDK comes with the OS).

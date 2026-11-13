@@ -52,7 +52,7 @@ bibliothèque liste sa surface dans `PublicAPI.Shipped.txt` (la 1.0, gelée) et
 
 | Paquets | Contenu |
 |---|---|
-| `Kazo.Os.App.Abstractions`, `Kazo.Os.Simulation.Abstractions`, `Kazo.Os.Theming.Abstractions`, `Kazo.Os.AppSdk`, `.Blazor`, `.Terminal`, `.Web`, `.Web.Blazor`, `.Craft`, `.Icons`, `.VirtualKeyboard` | le SDK public, ce qu'une app référence (`.Craft` : module des apps Craft, livré avec l'OS, ADR 0247) (`.FileView` n'en fait plus partie depuis la 2.0 : son code est dans l'explorateur de fichiers) ; `Kazo.Os.AppSdk` porte aussi l'analyseur `KOSBG` de `KazoBackground` dans `analyzers/dotnet/cs/` (ADR 0140, [`background-jobs.md`](background-jobs.md)) |
+| `Kazo.Os.App.Abstractions`, `Kazo.Os.Simulation.Abstractions`, `Kazo.Os.Theming.Abstractions`, `Kazo.Os.AppSdk`, `.Blazor`, `.Terminal`, `.Web`, `.Web.Blazor`, `.Craft`, `.Icons`, `.VirtualKeyboard` | le SDK public, ce qu'une app référence (`.Craft` : module des apps Craft, livré avec l'OS, ADR 0259) (`.FileView` n'en fait plus partie depuis la 2.0 : son code est dans l'explorateur de fichiers) ; `Kazo.Os.AppSdk` porte aussi l'analyseur `KOSBG` de `KazoBackground` dans `analyzers/dotnet/cs/` (ADR 0140, [`background-jobs.md`](background-jobs.md)) |
 | `Kazo.Os.App.Build` | l'intégration de build (voir plus bas) |
 | `Kazo.Os.Platform.Core`, `.Blazor`, `.ResourceAccounting`, `.WorkerHost`, `Kazo.Os.Infrastructure.Browser`, `Kazo.Os.Windowing.Abstractions`, `.Core`, `.Blazor`, `Kazo.Os.Taskbar.Blazor`, `Kazo.Os.Theming.Blazor`, `Kazo.Os.MobileShell.Blazor`, `Kazo.Os.Server.Contracts` | la plateforme, ce qu'un hôte compose (`Server.Contracts` est une dépendance de `Platform.Core`) |
 | `Kazo.Os.Ecosystem.Host` | l'OS lui-même : bureau, démarrage, services, adaptateurs du navigateur, jetons de design |
@@ -525,7 +525,7 @@ Les tests chargent l'app de la majeure courante (3.0.0) dans l'OS ; celles de la
 1.x et de la 2.x restent comme preuve du **refus** d'une app d'une autre
 majeure (ADR 0149 §5, ADR 0228).
 
-Le module des apps Craft (`Kazo.Os.AppSdk.Craft`, ADR 0247) n'a pas encore
+Le module des apps Craft (`Kazo.Os.AppSdk.Craft`, ADR 0259) n'a pas encore
 d'app de compatibilité : elle se compile contre les paquets de la première
 version publiée qui le contient (`produce-fixture.sh`), au moment de cette
 sortie.

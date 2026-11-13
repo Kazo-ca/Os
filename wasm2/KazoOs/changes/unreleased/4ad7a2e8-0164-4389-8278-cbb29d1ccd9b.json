@@ -9,11 +9,11 @@
     "fr": "Kazo.Os.AppSdk.Craft : le module commun des apps Craft"
   },
   "description": {
-    "en": "A new SDK library shipped and served by Kazo OS for the apps that show a Craft app (Rust compiled to WebAssembly) in an iframe of their window: CraftFrame (the iframe and its messages), DocumentSession and SaveDecision (bound files, changes, title, close), CraftDocumentFormats, WebStorageFile (per-user settings in ~/.config/<appId>/), PickRequest, ReservedKeys and CraftLanguage. Taken from Kazo Word and made generic (ADR 0247).",
-    "fr": "Une nouvelle bibliothèque du SDK, livrée et servie par Kazo OS, pour les apps qui affichent une app Craft (Rust compilé en WebAssembly) dans une iframe de leur fenêtre : CraftFrame (l'iframe et ses messages), DocumentSession et SaveDecision (fichiers liés, modifications, titre, fermeture), CraftDocumentFormats, WebStorageFile (réglages par utilisateur dans ~/.config/<appId>/), PickRequest, ReservedKeys et CraftLanguage. Reprise de Kazo Word et rendue générique (ADR 0247)."
+    "en": "A new SDK library shipped and served by Kazo OS for the apps that show a Craft app (Rust compiled to WebAssembly) in an iframe of their window: CraftFrame (the iframe and its messages), DocumentSession and SaveDecision (bound files, changes, title, close), CraftDocumentFormats, WebStorageFile (per-user settings in ~/.config/<appId>/), PickRequest, ReservedKeys and CraftLanguage. Taken from Kazo Word and made generic (ADR 0259).",
+    "fr": "Une nouvelle bibliothèque du SDK, livrée et servie par Kazo OS, pour les apps qui affichent une app Craft (Rust compilé en WebAssembly) dans une iframe de leur fenêtre : CraftFrame (l'iframe et ses messages), DocumentSession et SaveDecision (fichiers liés, modifications, titre, fermeture), CraftDocumentFormats, WebStorageFile (réglages par utilisateur dans ~/.config/<appId>/), PickRequest, ReservedKeys et CraftLanguage. Reprise de Kazo Word et rendue générique (ADR 0259)."
   },
   "links": [
-    "doc/en/wasm/dev/adr/0247-shared-craft-app-host-module.md",
+    "doc/en/wasm/dev/adr/0259-shared-craft-app-host-module.md",
     "doc/en/wasm/framework/sdk-reference.md"
   ]
 }
