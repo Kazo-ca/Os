@@ -18,7 +18,7 @@ jalon ») et 160 A (le rôle ouvre les pages).
 - **Complète :** l'[ADR 0096](0096-added-intents-and-app-defined-intents.md) §4
   (« Paramètres de l'app »), l'[ADR 0148](0148-sdk-contracts-and-os-provided-controls.md)
   (composants intégrables), l'[ADR 0156](0156-replaceable-file-control-provider.md)
-  §3 (page « Composants de l'OS »), l'[ADR 0243](0243-feature-app-type.md)
+  §3 (page « Composants de l'OS »), l'[ADR 0260](0260-feature-app-type.md)
   §2 (point d'entrée `SettingsPage`) et l'[ADR 0247](0247-feature-declared-roles.md)
   (rôle, authentification par opération).
 - **Pour :** les pages d'Os-x86 : « Machines virtuelles » (limites, VM
@@ -39,7 +39,7 @@ jalon ») et 160 A (le rôle ouvre les pages).
   `--show-settings`, ou Paramètres avec `--app=<id>` sur la fiche générique
   `AppDetailsPanel` (`SettingsWindow.razor:539-544`,
   `AppIntentDispatcher.cs:480-509`). Une Feature n'a pas de fenêtre propre
-  (ADR 0243 §1) ; sa page d'administration doit vivre **dans** Paramètres.
+  (ADR 0260 §1) ; sa page d'administration doit vivre **dans** Paramètres.
 - Les composants intégrables (ADR 0148) rendent un fragment du fournisseur
   dans la fenêtre de l'hôte, **avec les droits de l'hôte** (§4). Paramètres
   déclare `apps.manage`, `permissions.manage`, `system.power`, `system.backup`,
@@ -57,7 +57,7 @@ jalon ») et 160 A (le rôle ouvre les pages).
 
 - Nouveau groupe `Features` dans la navigation, entre « Applications » et
   « Réseau », avec une page intégrée **« Fonctionnalités installées »**
-  (`features`) qui liste chaque Feature (ADR 0243) : nom, version, éditeur,
+  (`features`) qui liste chaque Feature (ADR 0260) : nom, version, éditeur,
   état (activée, désactivée, redémarrage requis), ses points d'entrée
   (enfants) avec leur type, ses permissions déclarées (ADR 0246) et ses rôles
   (ADR 0247), les apps qui en dépendent (ADR 0248), et les actions :
@@ -77,15 +77,15 @@ jalon ») et 160 A (le rôle ouvre les pages).
 ### 2. Le point d'entrée `SettingsPage`
 
 - `AppKind` gagne `SettingsPage`, **réservé aux enfants d'une Feature**
-  (ADR 0243 §2 ; `manifest.feature.only` ailleurs). Il déclare : le
+  (ADR 0260 §2 ; `manifest.feature.only` ailleurs). Il déclare : le
   composant Blazor de la page (dérivé de `KazoSettingsPageBase`, fourni par
   `Kazo.Os.AppSdk.Blazor`), `Title`, `Icon`, `Order`, `RequiresRole`
-  (ADR 0247 §2) et son sous-ensemble de permissions (ADR 0243 §3).
+  (ADR 0247 §2) et son sous-ensemble de permissions (ADR 0260 §3).
 - La page est rendue **dans la fenêtre de Paramètres** (même cadre, même
   navigation, même thème : styles `--kos-*`, pas de MudBlazor dans le SDK),
   mais s'exécute dans le **contexte d'exécution de l'enfant** : son
   identité (`ca.kazo.x86.admin`), ses permissions, son processus visible
-  dans `ps` (ADR 0243 §2), ses passerelles. La page ne reçoit **aucune**
+  dans `ps` (ADR 0260 §2), ses passerelles. La page ne reçoit **aucune**
   passerelle de Paramètres ; Paramètres ne reçoit rien de la page. L'OS
   entre dans le contexte de l'enfant pour le rendu (`KazoExecutionContext.Enter`,
   comme un composant rendu par le lanceur de fenêtres), à la différence de
@@ -126,7 +126,7 @@ jalon ») et 160 A (le rôle ouvre les pages).
 ## Options écartées
 
 - **A. Une fenêtre propre d'administration d'Os-x86** : une Feature n'a pas
-  de fenêtre à elle (ADR 0243) et Benoit a demandé les sections dans
+  de fenêtre à elle (ADR 0260) et Benoit a demandé les sections dans
   Paramètres (140 B).
 - **B. Un composant intégrable (ADR 0148) rendu par Paramètres** : droits de
   l'hôte (Paramètres, cinq permissions dangereuses) donnés au code de la

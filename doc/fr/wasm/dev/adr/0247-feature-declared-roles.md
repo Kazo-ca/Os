@@ -20,7 +20,7 @@ tous les rôles déclarés, implicitement (§1).
 - **Complète :** l'[ADR 0013](0013-local-user-session.md) (usagers et
   sessions), l'[ADR 0042](0042-sudo-root-elevation.md) (élévation `sudo`),
   l'[ADR 0049](0049-dangerous-capabilities-and-admin-approval.md) §6
-  (fenêtre sécurisée) et l'[ADR 0243](0243-feature-app-type.md) §5.
+  (fenêtre sécurisée) et l'[ADR 0260](0260-feature-app-type.md) §5.
 - **Pour :** le rôle d'Os-x86 qui gère les VM (pages VM et utilisateurs de
   Paramètres ▸ Fonctionnalités, ADR 0249 ; `sudo x86 admin`).
 
@@ -111,7 +111,7 @@ tous les rôles déclarés, implicitement (§1).
 ### 3. L'agent d'authentification de l'OS, pour les Features
 
 Le SDK gagne, **réservé aux points d'entrée et aux services d'une Feature**
-(ADR 0243 §5 ; une app ordinaire reçoit `UnauthorizedAccessException`) :
+(ADR 0260 §5 ; une app ordinaire reçoit `UnauthorizedAccessException`) :
 
 ```csharp
 public interface IKazoFeatureAuthentication

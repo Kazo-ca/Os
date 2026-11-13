@@ -590,14 +590,14 @@ public sealed record AppCatalogGatewayServices(
     public Func<Apps.Packages.IInstalledAppsActivator?>? InstalledAppsActivator { get; init; }
 
     /// <summary>
-    /// Gets what the page loaded of the installed apps' libraries (ADR 0244 §3);
+    /// Gets what the page loaded of the installed apps' libraries (ADR 0261 §3);
     /// <see langword="null"/> for a host that loads no installed app.
     /// </summary>
     public Func<Apps.Packages.IInstalledLibraryState?>? InstalledLibraries { get; init; }
 
     /// <summary>
     /// Gets the machine permission decisions (ADR 0049 §4) a feature's installation writes
-    /// <c>allow</c> lines to (ADR 0243 §3); <see langword="null"/> leaves the first launch of its
+    /// <c>allow</c> lines to (ADR 0260 §3); <see langword="null"/> leaves the first launch of its
     /// entry points to ask.
     /// </summary>
     public Func<Policy.IAppPermissionStore?>? PermissionStore { get; init; }

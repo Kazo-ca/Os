@@ -127,7 +127,7 @@ public sealed class MsBuildIntegrationTests
     [Fact]
     public async Task KazoOsPack_packs_the_libraries_of_the_app_and_copies_the_shared_mark_of_their_author()
     {
-        // ADR 0244 §1, §2 (issue #419): the app references two projects of its own and declares
+        // ADR 0261 §1, §2 (issue #419): the app references two projects of its own and declares
         // nothing; Contracts sets KazoOsSharedLibrary in its own project, Protocol does not.
         string output = Directory.CreateTempSubdirectory("kazoos-pack-").FullName;
         try

@@ -2,12 +2,12 @@ using Kazo.Os.App.Abstractions;
 
 namespace Kazo.Os.Platform.Core.Apps.Packages;
 
-/// <summary>One installed copy of a library: the app whose package carries it (ADR 0244).</summary>
+/// <summary>One installed copy of a library: the app whose package carries it (ADR 0261).</summary>
 /// <param name="Owner">The installed app, or feature, whose folder holds the file.</param>
 /// <param name="Library">The library as its package lists it.</param>
 public sealed record InstalledLibraryCopy(InstalledApp Owner, AppPackageLibrary Library);
 
-/// <summary>Why a copy of a shared library was chosen (ADR 0244 §2).</summary>
+/// <summary>Why a copy of a shared library was chosen (ADR 0261 §2).</summary>
 public enum SharedLibraryChoiceReason
 {
     /// <summary>An installed feature carries the library: its copy serves every app.</summary>
@@ -17,7 +17,7 @@ public enum SharedLibraryChoiceReason
     NewestCompatible = 1,
 }
 
-/// <summary>The copy of a shared library the OS loads for an app (ADR 0244 §2).</summary>
+/// <summary>The copy of a shared library the OS loads for an app (ADR 0261 §2).</summary>
 /// <param name="Copy">The chosen copy.</param>
 /// <param name="Reason">The rule that chose it.</param>
 public sealed record SharedLibraryChoice(InstalledLibraryCopy Copy, SharedLibraryChoiceReason Reason)
@@ -30,7 +30,7 @@ public sealed record SharedLibraryChoice(InstalledLibraryCopy Copy, SharedLibrar
 
 /// <summary>
 /// An app that cannot get the copy of a shared library chosen for it until the OS restarts
-/// (ADR 0244 §3): another copy is already in the page, and .NET never unloads it.
+/// (ADR 0261 §3): another copy is already in the page, and .NET never unloads it.
 /// </summary>
 /// <param name="AppId">The installed app, or feature.</param>
 /// <param name="Library">Simple name of the library.</param>
@@ -40,7 +40,7 @@ public sealed record SharedLibraryChoice(InstalledLibraryCopy Copy, SharedLibrar
 public sealed record LibraryRestart(string AppId, string Library, Version Loaded, Version Wanted, string Reason);
 
 /// <summary>
-/// What the page has loaded of the installed apps' libraries (ADR 0244 §3). The browser hosts
+/// What the page has loaded of the installed apps' libraries (ADR 0261 §3). The browser hosts
 /// implement it; a host that cannot load installed apps has none.
 /// </summary>
 public interface IInstalledLibraryState
@@ -59,7 +59,7 @@ public interface IInstalledLibraryState
 }
 
 /// <summary>
-/// The rules of ADR 0244 §2 and §3 over the installed apps: which copy of a shared library serves an
+/// The rules of ADR 0261 §2 and §3 over the installed apps: which copy of a shared library serves an
 /// app, what a package may not bring, and what waits for a restart. No loading happens here.
 /// </summary>
 /// <remarks>
@@ -82,11 +82,11 @@ public static class InstalledLibraries
     }
 
     /// <summary>
-    /// Gets the copy an installed feature carries (ADR 0244 §2, rule 1), the newest one when several
+    /// Gets the copy an installed feature carries (ADR 0261 §2, rule 1), the newest one when several
     /// features carry it; <see langword="null"/> when no feature does.
     /// </summary>
     /// <remarks>
-    /// Until features declare the services they provide (ADR 0245), a feature that carries the
+    /// Until features declare the services they provide (ADR 0262), a feature that carries the
     /// shared library is its provider.
     /// </remarks>
     /// <param name="name">Simple assembly name.</param>
@@ -98,7 +98,7 @@ public static class InstalledLibraries
             .ThenBy(static copy => copy.Owner.AppId, StringComparer.Ordinal)
             .FirstOrDefault();
 
-    /// <summary>Chooses the copy of a shared library that serves an app (ADR 0244 §2).</summary>
+    /// <summary>Chooses the copy of a shared library that serves an app (ADR 0261 §2).</summary>
     /// <param name="requester">The app being launched.</param>
     /// <param name="wanted">The shared library as the app's own package carries it.</param>
     /// <param name="apps">The installed apps of the running catalog.</param>
@@ -131,7 +131,7 @@ public static class InstalledLibraries
     }
 
     /// <summary>
-    /// Gets whether an app must wait for a restart to get its shared library (ADR 0244 §3): the copy
+    /// Gets whether an app must wait for a restart to get its shared library (ADR 0261 §3): the copy
     /// in the page lacks what the app was built against (another major version, or an older one),
     /// and the copy chosen for the app would bring it. A newer copy of the same major version only
     /// adds members, so it serves the app as it is.
@@ -158,7 +158,7 @@ public static class InstalledLibraries
     }
 
     /// <summary>
-    /// Gets the apps whose chosen copy of a shared library is not the one in the page (ADR 0244 §3):
+    /// Gets the apps whose chosen copy of a shared library is not the one in the page (ADR 0261 §3):
     /// they are served by the loaded copy until the OS restarts.
     /// </summary>
     /// <param name="apps">The installed apps of the running catalog.</param>
@@ -192,7 +192,7 @@ public static class InstalledLibraries
 
     /// <summary>
     /// Refuses a package whose shared library has another major version than the copy an installed
-    /// feature carries (ADR 0244 §2). Between apps, without a feature, different major versions are
+    /// feature carries (ADR 0261 §2). Between apps, without a feature, different major versions are
     /// both installed.
     /// </summary>
     /// <param name="package">The package being installed.</param>
@@ -217,7 +217,7 @@ public static class InstalledLibraries
     }
 
     /// <summary>
-    /// Protects the OS (ADR 0244 §1, ADR 0256 §6): refuses a package that would replace an assembly
+    /// Protects the OS (ADR 0261 §1, ADR 0256 §6): refuses a package that would replace an assembly
     /// of the OS, of the .NET runtime or of a built-in app with a library of the same name. Only
     /// the name is looked at, never the version, and the library may be shared or not: this is not
     /// a management of the library, which simply goes with its app.

@@ -312,8 +312,8 @@ approval:
   loaded in the page waits for a restart of Kazo OS; `kazopkg list` shows
   `(restart pending)` until then.
 - **Dangerous capabilities**: asked at first launch, as for any non-system app;
-  except for a feature (ADR 0243), whose installation consent is the machine
-  approval (section [Features](#features-adr-0243)).
+  except for a feature (ADR 0260), whose installation consent is the machine
+  approval (section [Features](#features-adr-0260)).
 - **Publishing**: `dotnet build -c Release -t:KazoOsPack` in the app project
   writes the package and `index.json` to `bin/kazoos-packages` (property
   `KazoOsPackageOutput`), to push to the `kazoos-packages` branch; the
@@ -328,8 +328,8 @@ approval:
   `lib/<culture>/<assembly>.resources.dll` (not the SDK's)
   ([ADR 0222](adr/0222-installed-app-satellite-assemblies.md)), and the
   app's own libraries with their satellites
-  ([ADR 0244](adr/0244-app-libraries-and-shared-versions.md),
-  [section below](#app-libraries-and-shared-versions-adr-0244)).
+  ([ADR 0261](adr/0261-app-libraries-and-shared-versions.md),
+  [section below](#app-libraries-and-shared-versions-adr-0261)).
 - **`wwwroot/` resources** ([ADR 0206](adr/0206-serve-installed-app-assets.md)):
   at the app's first launch in the session, each declared resource is read
   through `AppAssetStore` (hash checked) and copied into the
@@ -358,7 +358,7 @@ approval:
   `AppPackage` refuses a satellite that translates no declared assembly.
 - **Limits**: see the section of the same name in ADR 0182 (main thread
   only); the `wwwroot` resources limit is lifted by ADR 0206, the one on the
-  app's dependencies (projects and third-party NuGet packages) by ADR 0244.
+  app's dependencies (projects and third-party NuGet packages) by ADR 0261.
 
 Tests: `AppPackageGatewayTests`, `AppSourcesAndPolicyTests`,
 `InstalledAppsImageTests`, `AppPackageWriterTests`, `AppPackageTests`
@@ -371,13 +371,13 @@ Tests: `AppPackageGatewayTests`, `AppSourcesAndPolicyTests`,
 `Tests/fixtures/installed-app` installed by `kazopkg` in the trimmed publish,
 run by `build/publish-trimmed.sh`).
 
-## Features (ADR 0243)
+## Features (ADR 0260)
 
-ADR [0243](adr/0243-feature-app-type.md) adds the `Feature` app kind: an
+ADR [0260](adr/0260-feature-app-type.md) adds the `Feature` app kind: an
 optional feature of the OS (WSL-like), one identity, one package, one
 permissions screen, installed for the whole machine by an administrator. Its
 SDK model (`FeatureDefinition`, `FeatureEntryPoint`, child manifests) is in
-[`app-model.md`](../framework/app-model.md#features-featuredefinition-adr-0243).
+[`app-model.md`](../framework/app-model.md#features-featuredefinition-adr-0260).
 
 - **Package**: `manifest.json` is the feature's manifest (kind `feature`,
   without `entryPoint`); each child has its own file
@@ -447,9 +447,9 @@ and `ManifestWriterTests` (Tools.ManifestGenerator), `AppCatalogTests`,
 `AppPackageTests`, `AppPackageWriterTests`, `InstalledAppsImageTests`,
 `AppInstallationServiceTests` and `AppPackageGatewayTests` (Platform.Core).
 
-## App libraries and shared versions (ADR 0244)
+## App libraries and shared versions (ADR 0261)
 
-ADR [0244](adr/0244-app-libraries-and-shared-versions.md) (issue #419) puts in
+ADR [0261](adr/0261-app-libraries-and-shared-versions.md) (issue #419) puts in
 the package the assemblies the app needs that the OS does not bring, and loads
 one copy per page of a **shared** library. ADR
 [0256](adr/0256-app-libraries-implementation-adjustments.md) adjusts its
@@ -527,7 +527,7 @@ implementation. For authors:
   noted in the log, nothing else. Two **major**
   versions of a shared library are installed together, but only one is in the
   page at a time: the app of the other major version asks for a restart. Until
-  features declare the services they provide (ADR 0245), a feature that
+  features declare the services they provide (ADR 0262), a feature that
   carries the shared library is its provider.
 
 Tests: `AppPackageLibraryTests`, `InstalledLibrariesTests`,
@@ -556,7 +556,7 @@ kazopkg info org.example.notes
   paths (package, icon, screenshots, descriptions) are relative to
   `catalog.json`. The OS keeps it 5 minutes; an invalid app or version is
   skipped with a warning in `/var/log/syslog`. Each entry carries a `kind`:
-  `app` when absent, `feature` (ADR 0243 §4: listed with the apps, installed
+  `app` when absent, `feature` (ADR 0260 §4: listed with the apps, installed
   for the whole machine only) or `theme-pack` (ADR 0213); a value this OS does
   not know is read as `app` with a warning, so a newer catalog hides nothing
   (the package says what it is at installation).

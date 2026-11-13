@@ -125,7 +125,7 @@
   </ItemGroup>
 
   <!--
-    Shared library (ADR 0244 §2): the author of a library marks it as a shared contract with
+    Shared library (ADR 0261 §2): the author of a library marks it as a shared contract with
     <KazoOsSharedLibrary>true</KazoOsSharedLibrary> in the library's own project. The mark is
     written into the assembly, so it follows the library whatever way an app references it
     (ProjectReference, DLL or NuGet package); the app declares nothing, and cannot mark a library
@@ -263,7 +263,7 @@
       <_KazoOsManifestDependency Include="@(ReferencePath->'%(FullPath)')" />
       <_KazoOsExistingManifest Include="$(MSBuildProjectDirectory)/manifest.json" Condition="Exists('$(MSBuildProjectDirectory)/manifest.json')" />
       <_KazoOsExistingManifest Include="$(MSBuildProjectDirectory)/manifests/*.json" />
-      <!-- ADR 0243 §2: the children of a feature, written next to its manifest.json. -->
+      <!-- ADR 0260 §2: the children of a feature, written next to its manifest.json. -->
       <_KazoOsExistingManifest Include="$(MSBuildProjectDirectory)/entrypoints/*.json" />
       <!-- ADR 0104: translations of the manifest, and the files generated from them. -->
       <_KazoOsExistingManifest Include="$(MSBuildProjectDirectory)/Resources/AppManifest.*.resx" />
@@ -329,7 +329,7 @@
     The package holds every static web resource of the project, declared or not (ADR 0221 §1), and
     the satellite assemblies of the app's own assemblies, lib/<culture>/<assembly>.resources.dll
     (ADR 0222).
-    The package also holds the libraries of the app (ADR 0244 §1): the assemblies the build copies
+    The package also holds the libraries of the app (ADR 0261 §1): the assemblies the build copies
     next to the app (outputs of its ProjectReference items, assemblies of its NuGet packages and
     referenced DLLs) that the OS does not bring. KazoOsProvidedAssemblyPattern names what the OS
     brings by assembly name: the SDK and every Kazo.Os.* assembly, the .NET runtime and the
@@ -365,7 +365,7 @@
       <_KazoOsPackLibraries>$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(IntermediateOutputPath)', 'kazoos-pack-libraries.txt'))</_KazoOsPackLibraries>
     </PropertyGroup>
     <!--
-      ADR 0244 §1: the copy-local references, without their satellites (culture subfolders, found
+      ADR 0261 §1: the copy-local references, without their satellites (culture subfolders, found
       by pack next to them) and without what the OS brings.
     -->
     <ItemGroup>

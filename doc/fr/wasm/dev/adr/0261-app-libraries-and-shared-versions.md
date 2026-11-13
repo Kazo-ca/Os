@@ -1,6 +1,6 @@
-> [English version](../../../../en/wasm/dev/adr/0244-app-libraries-and-shared-versions.md)
+> [English version](../../../../en/wasm/dev/adr/0261-app-libraries-and-shared-versions.md)
 
-# ADR 0244 : bibliothèques d'app dans le paquet (#419) et versions partagées entre apps
+# ADR 0261 : bibliothèques d'app dans le paquet (#419) et versions partagées entre apps
 
 ## Statut
 
@@ -11,6 +11,8 @@ Proposée le 2026-11-11, pour la fonctionnalité Os-x86
 majeures sans Feature » (A, les deux coexistent) ; la décision les applique.
 Décisions d'origine : D30 et D36 de la conception d'Os-x86 (séries 3 et 4,
 2026-11-09) ; issue [#419](https://github.com/Kazo-ca/Os/issues/419) (`TODO`).
+
+D'abord numérotée 0244 ; renumérotée 0261 le 2026-11-13 (choix de Benoit), car `main` avait publié l'ADR 0244 dans Kazo OS 3.3.1 ou 3.3.2.
 
 - **Complète :** l'[ADR 0182](0182-install-apps-from-github.md) §5 (paquets,
   `lib/`, vérification des API), l'[ADR 0222](0222-installed-app-satellite-assemblies.md)
@@ -43,7 +45,7 @@ Décisions d'origine : D30 et D36 de la conception d'Os-x86 (séries 3 et 4,
   pourrait masquer celle de la Feature.
 - Le modèle d'Os-x86 (D30, D36) veut que chaque app cliente **embarque** les
   contrats (pour que `GetServiceAsync<Ix86>()` compile et rende null quand
-  Os-x86 est absent, ADR 0245) et qu'une seule copie, **la plus récente
+  Os-x86 est absent, ADR 0262) et qu'une seule copie, **la plus récente
   compatible**, soit chargée par page.
 - Le SDK (`Kazo.Os.AppSdk*`, `Kazo.Os.App.Abstractions`) reste fourni par
   l'OS (ADR 0019) ; il n'est pas une bibliothèque d'app, et la règle
@@ -88,9 +90,9 @@ Décisions d'origine : D30 et D36 de la conception d'Os-x86 (séries 3 et 4,
   la propriété et ne sert qu'à Kazo, pour ne charger qu'une copie par
   version majeure.
 - Règle de choix, appliquée **au premier besoin** (premier lancement d'une
-  app qui en a besoin, ou première résolution de l'ADR 0245) :
+  app qui en a besoin, ou première résolution de l'ADR 0262) :
   1. s'il existe une **Feature installée qui fournit** une interface de cette
-     bibliothèque (ADR 0245), sa copie est chargée ;
+     bibliothèque (ADR 0262), sa copie est chargée ;
   2. sinon, parmi les copies des apps installées et activées, **la plus
      récente compatible** : même version majeure que celle que demande l'app
      qui déclenche le chargement, version mineure la plus haute.
@@ -111,7 +113,7 @@ Décisions d'origine : D30 et D36 de la conception d'Os-x86 (séries 3 et 4,
 
 - .NET ne décharge pas une assemblée du contexte par défaut. Si une copie
   d'un contrat partagé est déjà chargée quand une Feature qui fournit une
-  copie plus récente s'installe (ADR 0243 §6), ou quand une app qui exige
+  copie plus récente s'installe (ADR 0260 §6), ou quand une app qui exige
   une mineure plus haute est lancée, l'OS **propose de redémarrer** (« Redémarrer
   pour terminer », ADR 0212 §3) et, en attendant, sert la copie chargée :
   une app qui demande un membre absent de cette copie reçoit

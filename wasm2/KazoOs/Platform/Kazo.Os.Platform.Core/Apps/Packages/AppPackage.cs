@@ -47,7 +47,7 @@ public sealed class AppPackage
     public const string ManifestFileName = "manifest.json";
 
     /// <summary>
-    /// Folder of the children of a feature (ADR 0243 §2): one <c>entrypoints/&lt;suffix&gt;.json</c>
+    /// Folder of the children of a feature (ADR 0260 §2): one <c>entrypoints/&lt;suffix&gt;.json</c>
     /// per child, each an ordinary manifest of its kind naming the feature as its <c>parent</c>, and
     /// listed under <c>manifests</c> in <see cref="DescriptionFileName"/>.
     /// </summary>
@@ -98,12 +98,12 @@ public sealed class AppPackage
     public AppManifest Manifest { get; }
 
     /// <summary>
-    /// Gets the children of a feature (ADR 0243 §2), read from <c>entrypoints/*.json</c>, each
+    /// Gets the children of a feature (ADR 0260 §2), read from <c>entrypoints/*.json</c>, each
     /// validated as a manifest of its kind and against the feature; empty for any other package.
     /// </summary>
     public IReadOnlyList<AppManifest> Children { get; }
 
-    /// <summary>Gets whether this package holds a feature (ADR 0243): installed for the whole machine only.</summary>
+    /// <summary>Gets whether this package holds a feature (ADR 0260): installed for the whole machine only.</summary>
     public bool IsFeature => Manifest.Kind == AppKind.Feature;
 
     /// <summary>Gets the manifest followed by its children: every app the package installs.</summary>
@@ -113,7 +113,7 @@ public sealed class AppPackage
     public IReadOnlyDictionary<string, byte[]> Files { get; }
 
     /// <summary>
-    /// Gets the libraries of the app (ADR 0244 §1), listed in <c>libraries</c> of
+    /// Gets the libraries of the app (ADR 0261 §1), listed in <c>libraries</c> of
     /// <see cref="DescriptionFileName"/>: each one is a file of <c>lib/</c> whose name, version, SHA-256
     /// and shared mark were checked against the assembly itself. Empty for an app without a library.
     /// </summary>
@@ -236,7 +236,7 @@ public sealed class AppPackage
 
         if (manifest.Parent is not null)
         {
-            throw new AppPackageException("apps.package.bad-manifest", $"{ManifestFileName} is the child of '{manifest.Parent}': a child is installed with its feature's package, never alone (ADR 0243).");
+            throw new AppPackageException("apps.package.bad-manifest", $"{ManifestFileName} is the child of '{manifest.Parent}': a child is installed with its feature's package, never alone (ADR 0260).");
         }
 
         IReadOnlyList<AppManifest> children = ReadChildren(manifest, description, files);
@@ -246,7 +246,7 @@ public sealed class AppPackage
     }
 
     /// <summary>
-    /// ADR 0244 §1: every listed library is a file of <c>lib/</c> that is the assembly the list says
+    /// ADR 0261 §1: every listed library is a file of <c>lib/</c> that is the assembly the list says
     /// (same simple name, version, SHA-256 and shared mark), and is not one the manifest declares.
     /// </summary>
     private static void CheckLibraries(IReadOnlyList<AppPackageLibrary> libraries, IReadOnlySet<string> declared, Dictionary<string, byte[]> files)
@@ -279,7 +279,7 @@ public sealed class AppPackage
     }
 
     /// <summary>
-    /// ADR 0243 §2: a feature package carries one manifest per child under <c>entrypoints/</c>,
+    /// ADR 0260 §2: a feature package carries one manifest per child under <c>entrypoints/</c>,
     /// listed in <c>manifests</c> of the description (every <c>entrypoints/*.json</c> file when the
     /// description predates the list). Any other package carries none.
     /// </summary>
@@ -292,7 +292,7 @@ public sealed class AppPackage
         {
             if (listed.Length > 0)
             {
-                throw new AppPackageException("apps.package.unexpected-file", $"'{listed[0]}' is a child manifest, but {ManifestFileName} is not a feature (ADR 0243).");
+                throw new AppPackageException("apps.package.unexpected-file", $"'{listed[0]}' is a child manifest, but {ManifestFileName} is not a feature (ADR 0260).");
             }
 
             return [];
@@ -427,7 +427,7 @@ public sealed class AppPackage
                 listed[file.Name] = hash;
             }
 
-            // ADR 0243 §2: the child manifests of a feature, in the order the feature declares them.
+            // ADR 0260 §2: the child manifests of a feature, in the order the feature declares them.
             List<string> manifests = [];
             if (root.TryGetProperty("manifests", out JsonElement manifestList) && manifestList.ValueKind == JsonValueKind.Array)
             {
@@ -478,7 +478,7 @@ public sealed class AppPackage
         }
 
         IReadOnlySet<string> declared = GetDeclaredAssemblies(children.Prepend(manifest));
-        // ADR 0244 §1: the libraries of the app have their satellites too.
+        // ADR 0261 §1: the libraries of the app have their satellites too.
         HashSet<string> translatable = new(declared.Concat(libraries.Select(static library => library.FileName)), StringComparer.Ordinal);
         bool feature = manifest.Kind == AppKind.Feature;
         foreach (string path in files.Keys)
@@ -489,7 +489,7 @@ public sealed class AppPackage
                 || (path.StartsWith(LibraryFolder, StringComparison.Ordinal) && path.EndsWith(".dll", StringComparison.OrdinalIgnoreCase) && path.Count(static c => c == '/') == 1)
                 || (TryParseSatellitePath(path, out _, out string translated) && translatable.Contains(translated))
                 || path.StartsWith(AssetFolder, StringComparison.Ordinal)
-                // ADR 0243 §2: the children of a feature, already read and validated.
+                // ADR 0260 §2: the children of a feature, already read and validated.
                 || (feature && path.StartsWith(EntryPointsFolder, StringComparison.Ordinal) && path.EndsWith(".json", StringComparison.Ordinal) && path.Count(static c => c == '/') == 1);
             if (!known)
             {
@@ -527,7 +527,7 @@ public sealed class AppPackage
         return GetDeclaredAssemblies([manifest]);
     }
 
-    /// <summary>Gets every assembly a set of manifests names (a feature and its children, ADR 0243 §2).</summary>
+    /// <summary>Gets every assembly a set of manifests names (a feature and its children, ADR 0260 §2).</summary>
     /// <param name="manifests">Valid manifests.</param>
     public static IReadOnlySet<string> GetDeclaredAssemblies(IEnumerable<AppManifest> manifests)
     {

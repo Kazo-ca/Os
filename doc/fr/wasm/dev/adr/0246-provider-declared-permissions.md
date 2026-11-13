@@ -16,7 +16,7 @@ disparaît au profit du rôle de l'ADR 0247).
 
 - **Complète :** l'[ADR 0049](0049-dangerous-capabilities-and-admin-approval.md)
   (catalogue, approbation machine, refus par usager) et
-  l'[ADR 0243](0243-feature-app-type.md) §5 (seule une Feature déclare des
+  l'[ADR 0260](0260-feature-app-type.md) §5 (seule une Feature déclare des
   permissions).
 - **Corrige le fond de :** l'issue [#432](https://github.com/Kazo-ca/Os/issues/432)
   (le semeur accorde en silence tout identifiant hors catalogue), qui touche
@@ -89,7 +89,7 @@ disparaît au profit du rôle de l'ADR 0247).
 - Une app qui déclare une permission `<préfixe>.*` dont aucune Feature
   installée ne porte le préfixe : refusée à l'installation
   (`manifest.capability.unknown`, inchangé), **sauf** si elle déclare une
-  dépendance (ADR 0245 §3) vers une Feature dont le préfixe correspond ; la
+  dépendance (ADR 0262 §3) vers une Feature dont le préfixe correspond ; la
   permission est alors acceptée et **restera non accordée** tant que la
   Feature n'est pas installée (une dépendance facultative absente).
 
@@ -118,7 +118,7 @@ disparaît au profit du rôle de l'ADR 0247).
 
 ### 4. La Feature vérifie, par l'écran sécurisé de l'OS
 
-- Chaque opération d'un service fourni (ADR 0245) ou d'une commande d'une
+- Chaque opération d'un service fourni (ADR 0262) ou d'une commande d'une
   Feature exige ses permissions par `IFeatureServiceContext.Caller.Require("x86.vm.use")`,
   qui lève `UnauthorizedAccessException` comme les passerelles du SDK. La
   Feature n'évalue jamais elle-même un fichier de décision.

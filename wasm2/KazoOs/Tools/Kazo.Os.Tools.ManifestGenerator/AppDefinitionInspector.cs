@@ -18,7 +18,7 @@ public sealed record GeneratedManifest(string DefinitionType, AppManifest Manife
     public IReadOnlyList<Type> EntryPointTypes { get; init; } = [];
 
     /// <summary>
-    /// Gets the children of a feature (ADR 0243 §2), one per <c>FeatureDefinition.EntryPoints</c>
+    /// Gets the children of a feature (ADR 0260 §2), one per <c>FeatureDefinition.EntryPoints</c>
     /// entry, each with its own canonical JSON, written to <c>entrypoints/&lt;suffix&gt;.json</c>;
     /// empty for an app.
     /// </summary>
@@ -236,11 +236,11 @@ public static class AppDefinitionInspector
             return null;
         }
 
-        // ADR 0243 §1 and §5: a feature is a FeatureDefinition, alone in its project, without an entry point of its own.
+        // ADR 0260 §1 and §5: a feature is a FeatureDefinition, alone in its project, without an entry point of its own.
         FeatureDefinition? feature = first as FeatureDefinition;
         if (feature is null && manifest!.Kind == AppKind.Feature)
         {
-            diagnostics.Add(new(GeneratorCodes.FeatureOnly, subject, "Only a class deriving from FeatureDefinition can be a feature (Kind = Feature, ADR 0243)."));
+            diagnostics.Add(new(GeneratorCodes.FeatureOnly, subject, "Only a class deriving from FeatureDefinition can be a feature (Kind = Feature, ADR 0260)."));
             return null;
         }
 
@@ -248,12 +248,12 @@ public static class AppDefinitionInspector
         {
             if (type.GetProperty(nameof(AppDefinition.EntryPoint))?.DeclaringType != typeof(FeatureDefinition))
             {
-                diagnostics.Add(new(GeneratorCodes.FeatureEntryPoint, subject, "A feature has no entry point of its own: remove EntryPoint and declare its children in EntryPoints (ADR 0243 §1)."));
+                diagnostics.Add(new(GeneratorCodes.FeatureEntryPoint, subject, "A feature has no entry point of its own: remove EntryPoint and declare its children in EntryPoints (ADR 0260 §1)."));
             }
 
             if (multi)
             {
-                diagnostics.Add(new(GeneratorCodes.FeatureOnly, subject, "A feature is one identity, one package: its project declares no other [AppManifest] class (ADR 0243 §1)."));
+                diagnostics.Add(new(GeneratorCodes.FeatureOnly, subject, "A feature is one identity, one package: its project declares no other [AppManifest] class (ADR 0260 §1)."));
             }
 
             if (diagnostics.Count > before)
@@ -380,7 +380,7 @@ public static class AppDefinitionInspector
             definition = (AppDefinition)Activator.CreateInstance(type)!;
             if (definition is FeatureDefinition feature)
             {
-                // ADR 0243 §2: the feature and its children, compared as one for determinism.
+                // ADR 0260 §2: the feature and its children, compared as one for determinism.
                 FeatureManifests produced = AppDefinitionMapper.ToFeatureManifests(feature, sdkMinimumVersion);
                 manifest = produced.Feature;
                 children = produced.Children;
@@ -425,7 +425,7 @@ public static class AppDefinitionInspector
         AppManifest manifest = manifests[0];
         // Dependencies and the SDK range are checked by the host's aggregation, where every app and the
         // host's SDK are known; here the catalog runs the app's own minimum so discovery always sees it.
-        // A feature's children (ADR 0243 §2) are in the same catalog, so each is discovered for its kind.
+        // A feature's children (ADR 0260 §2) are in the same catalog, so each is discovered for its kind.
         AppCatalogBuildResult catalogResult = AppCatalog.Build(
             manifests.Select(static item => item with { Dependencies = [] }),
             [],

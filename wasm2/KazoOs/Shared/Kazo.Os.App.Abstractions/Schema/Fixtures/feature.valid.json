@@ -4,7 +4,7 @@
   "name": "Os-x86",
   "version": "1.0.0",
   "publisherId": "ca.kazo",
-  "description": "Runs x86 virtual machines in the browser (ADR 0243).",
+  "description": "Runs x86 virtual machines in the browser (ADR 0260).",
   "kind": "feature",
   "sdkCompatibility": { "minimumVersion": "3.2.0" },
   "presentation": {

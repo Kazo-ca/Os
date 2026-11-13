@@ -127,7 +127,7 @@ système qui utilise une capacité dangereuse reçoit donc
 Dans l'hôte Ecosystem, aucune app non système ne déclare de capacité
 dangereuse : l'expérience de base ne change pas.
 
-**Fonctionnalités (ADR 0243 §3).** Une fonctionnalité (`AppKind.Feature`)
+**Fonctionnalités (ADR 0260 §3).** Une fonctionnalité (`AppKind.Feature`)
 déclare **l'ensemble** de ses capacités ; chaque point d'entrée enfant en
 déclare un **sous-ensemble**, le seul que son processus reçoit (l'ensemble
 n'est jamais accordé à un processus). L'écran d'approbation de l'installation
@@ -136,7 +136,7 @@ approbation machine : l'OS écrit les lignes `allow` de
 `/etc/kazoos/app-permissions.config` pour la fonctionnalité et ses enfants à
 l'installation, et aucune fenêtre ne demande au premier lancement d'un point
 d'entrée. Le refus par usager reste possible. Voir
-[`app-installation.md`](../dev/app-installation.md#fonctionnalités-adr-0243).
+[`app-installation.md`](../dev/app-installation.md#fonctionnalités-adr-0260).
 
 ## Politique `policy.config`
 

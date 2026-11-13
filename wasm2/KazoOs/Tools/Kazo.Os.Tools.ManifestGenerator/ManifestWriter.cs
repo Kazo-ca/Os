@@ -16,7 +16,7 @@ public static class ManifestWriter
     /// <summary>Directory used when the project declares several apps.</summary>
     public const string MultiDirectoryName = "manifests";
 
-    /// <summary>Directory of the children of a feature (ADR 0243 §2), next to its <c>manifest.json</c>.</summary>
+    /// <summary>Directory of the children of a feature (ADR 0260 §2), next to its <c>manifest.json</c>.</summary>
     public const string EntryPointsDirectoryName = "entrypoints";
 
     private static readonly UTF8Encoding Utf8NoBom = new(encoderShouldEmitUTF8Identifier: false);
@@ -44,7 +44,7 @@ public static class ManifestWriter
             WriteIfChanged(singlePath, manifests[0].CanonicalJson);
             written.Add(Path.GetFullPath(singlePath));
             DeleteStale(multiDirectory, keep: []);
-            // ADR 0243 §2: one file per child of a feature, next to its manifest; the stamp names
+            // ADR 0260 §2: one file per child of a feature, next to its manifest; the stamp names
             // the feature only, and the aggregator and `pack` find the children beside it.
             List<string> children = [];
             if (manifests[0].Children.Count > 0)

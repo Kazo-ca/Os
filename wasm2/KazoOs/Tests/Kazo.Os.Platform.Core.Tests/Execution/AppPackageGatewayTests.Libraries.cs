@@ -7,7 +7,7 @@ using Kazo.Os.Platform.Core.Tests.Apps.Packages;
 namespace Kazo.Os.Platform.Core.Tests.Execution;
 
 /// <summary>
-/// Installing a package that carries libraries of its own (ADR 0244): what is written, what is
+/// Installing a package that carries libraries of its own (ADR 0261): what is written, what is
 /// refused, and what waits for a restart.
 /// </summary>
 public sealed partial class AppPackageGatewayTests
@@ -18,7 +18,7 @@ public sealed partial class AppPackageGatewayTests
     [Fact]
     public async Task A_package_with_a_library_is_installed_with_it()
     {
-        // Issue #419: before ADR 0244 the app was refused for « assembly Kazo.Sample.Protocol ».
+        // Issue #419: before ADR 0261 the app was refused for « assembly Kazo.Sample.Protocol ».
         Harness harness = await Harness.CreateAsync(absentAssemblies: [Protocol]);
         harness.PublishWithLibraries(Trusted, "1.0.0", TestLibraries.Build(Protocol, "1.0.0"));
         AppManagementGateway gateway = await harness.CreateGatewayAsync(new CountingAgent(succeed: true));
@@ -99,7 +99,7 @@ public sealed partial class AppPackageGatewayTests
     [Fact]
     public async Task An_app_whose_shared_library_waits_for_a_restart_is_reported_as_restart_to_finish()
     {
-        // ADR 0244 §3: the running catalog has the app at the installed version, yet an older copy
+        // ADR 0261 §3: the running catalog has the app at the installed version, yet an older copy
         // of its shared library is in the page; « Restart to finish » is offered as for an update.
         Harness harness = await Harness.CreateAsync(builtInSample: true, absentAssemblies: [Contracts]);
         harness.PublishWithLibraries(Trusted, "1.0.0", TestLibraries.Build(Contracts, "1.2.0", shared: true));

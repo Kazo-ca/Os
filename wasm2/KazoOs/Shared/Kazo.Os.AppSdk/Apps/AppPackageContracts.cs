@@ -161,13 +161,13 @@ public sealed record KazoPackageInstallReport(
     public string? BlockedBy { get; init; }
 
     /// <summary>
-    /// Gets whether the package is a feature (ADR 0243): installed for the whole machine, its
+    /// Gets whether the package is a feature (ADR 0260): installed for the whole machine, its
     /// dangerous capabilities approved by the administrator's consent at installation, so no
     /// approval window appears at the first launch of its entry points.
     /// </summary>
     public bool IsFeature { get; init; }
 
-    /// <summary>Gets the names of a feature's entry points (ADR 0243 §2); empty for an app.</summary>
+    /// <summary>Gets the names of a feature's entry points (ADR 0260 §2); empty for an app.</summary>
     public IReadOnlyList<string> EntryPoints { get; init; } = [];
 
     /// <summary>Gets the personal copies a system install replaced (one copy at a time, ADR 0189 §3).</summary>

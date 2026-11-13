@@ -1,6 +1,6 @@
-> [English version](../../../../en/wasm/dev/adr/0243-feature-app-type.md)
+> [English version](../../../../en/wasm/dev/adr/0260-feature-app-type.md)
 
-# ADR 0243 : le type d'app « Feature », une fonctionnalité facultative de l'OS installée au niveau système
+# ADR 0260 : le type d'app « Feature », une fonctionnalité facultative de l'OS installée au niveau système
 
 ## Statut
 
@@ -13,11 +13,13 @@ d'origine, prises par Benoit dans la conception d'Os-x86 : D33, D37, D38, D39
 (séries 3 et 4, 2026-11-09), 172 A puis 222 A (identifiants `ca.kazo.x86` et
 `ca.kazo.boxedwine`, 2026-11-11).
 
+D'abord numérotée 0243 ; renumérotée 0260 le 2026-11-13 (choix de Benoit), car `main` avait publié l'ADR 0243 dans Kazo OS 3.3.1 ou 3.3.2.
+
 - **Complète :** l'[ADR 0047](0047-app-definition-and-generated-manifests.md)
   (`AppDefinition`, manifestes générés), l'[ADR 0048](0048-system-apps-and-uninstall.md)
   (apps système, désinstallation machine ou utilisateur) et
   l'[ADR 0182](0182-install-apps-from-github.md) (installation d'un paquet).
-- **Ouvre :** les ADR 0244 à 0255 de la même série, qui donnent à une Feature
+- **Ouvre :** les ADR 0261, 0262 et 0246 à 0255 de la même série, qui donnent à une Feature
   ses bibliothèques partagées, son registre d'interfaces, ses permissions,
   ses rôles, ses dépendances, ses pages des Paramètres, ses détecteurs de
   format et son relais.
@@ -142,7 +144,7 @@ d'origine, prises par Benoit dans la conception d'Os-x86 : D33, D37, D38, D39
 
 | Capacité du modèle | ADR | Refus pour une app ordinaire |
 |---|---|---|
-| Fournir une interface résolue par `KazoFeatures.GetServiceAsync<T>()` | 0245 | `manifest.feature.only` |
+| Fournir une interface résolue par `KazoFeatures.GetServiceAsync<T>()` | 0262 | `manifest.feature.only` |
 | Déclarer des permissions de fournisseur, dangereuses comprises | 0246 | `manifest.feature.only` |
 | Déclarer des rôles | 0247 | `manifest.feature.only` |
 | Fournir des pages à Paramètres ▸ Fonctionnalités | 0249 | `manifest.feature.only` |
@@ -157,9 +159,9 @@ générateur (diagnostic `KOSAPP0033`) et par le validateur à l'installation.
 
 - Une Feature ajoutée à chaud suit l'ADR 0214 §1 : ses enfants `Terminal` et
   `Window` sont lançables immédiatement, son service démarre au prochain
-  démarrage, et son interface (ADR 0245) se résout dès l'installation.
+  démarrage, et son interface (ADR 0262) se résout dès l'installation.
 - **Exception** : si une copie plus ancienne de ses contrats est déjà chargée
-  dans la page (ADR 0244 §3), l'OS le dit et propose de redémarrer, comme
+  dans la page (ADR 0261 §3), l'OS le dit et propose de redémarrer, comme
   « Redémarrer pour terminer » du Store (ADR 0212 §3).
 - Mise à jour ou retrait : redémarrage proposé seulement si le code de la
   Feature est chargé (ADR 0214 §1.2).

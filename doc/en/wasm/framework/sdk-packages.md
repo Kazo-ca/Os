@@ -101,7 +101,7 @@ unless it declares `KazoOsAppHost=true` (a host). Differences with the repositor
   fingerprints are identical.
 
 In both modes, `KazoOsPack` carries the **libraries of the app**
-([ADR 0244](../dev/adr/0244-app-libraries-and-shared-versions.md)): the
+([ADR 0261](../dev/adr/0261-app-libraries-and-shared-versions.md)): the
 assemblies copied next to the app (projects, NuGet packages, DLLs) that the OS
 does not bring (`KazoOsProvidedAssemblyPattern`), listed in `libraries` of
 `kazoos-package.json`. The SDK (`Kazo.Os.*`) is never carried, and

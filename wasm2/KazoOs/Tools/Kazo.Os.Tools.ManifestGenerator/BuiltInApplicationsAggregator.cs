@@ -51,7 +51,7 @@ public static class BuiltInApplicationsAggregator
                     ManifestLocalizationGenerator.ReadReferenced(input.ManifestPath, manifest!, diagnostics);
                 applications.Add(new BuiltInApplication(
                     input.IsSystemApp, manifest!, InspectImage(input), localized.Count > 0 ? localized : null));
-                // ADR 0243 §2: a feature's children join the host with it, with the same system flag.
+                // ADR 0260 §2: a feature's children join the host with it, with the same system flag.
                 foreach (AppManifest child in children)
                 {
                     applications.Add(new BuiltInApplication(input.IsSystemApp, child, null, null));

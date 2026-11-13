@@ -93,7 +93,7 @@ public sealed class KazopkgCommand(AppManifest manifest) : TerminalAppBase(manif
         }
         catch (KazoPackageException exception)
         {
-            // ADR 0243 §4: the one refusal with a sentence of its own, in the user's language.
+            // ADR 0260 §4: the one refusal with a sentence of its own, in the user's language.
             await context.StandardError.WriteLineAsync(exception.Code == "apps.package.feature-system-only"
                 ? text["FeatureSystemOnly"].Value
                 : $"kazopkg: {exception.Message}");
@@ -188,7 +188,7 @@ public sealed class KazopkgCommand(AppManifest manifest) : TerminalAppBase(manif
                     AppCapabilities.IsDangerous(capability) ? $"{capability} (!)" : capability))]);
             if (report.Capabilities.Any(AppCapabilities.IsDangerous))
             {
-                // ADR 0243 §3: the administrator's consent to the installation approved a feature's set.
+                // ADR 0260 §3: the administrator's consent to the installation approved a feature's set.
                 await context.StandardOutput.WriteLineAsync(text[report.IsFeature ? "FeatureApproved" : "DangerousNote"]);
             }
         }

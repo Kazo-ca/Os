@@ -141,7 +141,7 @@ public sealed record InstalledApp(AppPackageSource Source, AppManifest Manifest)
         : InstalledAppsLayout.GetPersonalDirectory(FilesHome, AppId, Version);
 
     /// <summary>
-    /// Gets the children of a feature (ADR 0243 §2), read from <c>entrypoints/*.json</c> of its folder;
+    /// Gets the children of a feature (ADR 0260 §2), read from <c>entrypoints/*.json</c> of its folder;
     /// empty for any other app. They join the catalog with the feature and run from its folder.
     /// </summary>
     public IReadOnlyList<AppManifest> Children { get; init; } = [];
@@ -157,7 +157,7 @@ public sealed record InstalledApp(AppPackageSource Source, AppManifest Manifest)
     public IReadOnlySet<string> AssemblyNames => AppPackage.GetDeclaredAssemblies(Manifests);
 
     /// <summary>
-    /// Gets the libraries its package carries (ADR 0244 §1), read from <c>libraries</c> of the
+    /// Gets the libraries its package carries (ADR 0261 §1), read from <c>libraries</c> of the
     /// <c>kazoos-package.json</c> of its folder; empty for an app without a library, and for an app
     /// installed before the list existed. They are loaded before the app's own assemblies.
     /// </summary>
@@ -304,8 +304,8 @@ public sealed record InstalledAppsImage(IReadOnlyList<InstalledApp> Apps, IReadO
             return null;
         }
 
-        // The package description written with the app lists its libraries (ADR 0244 §1) and, for a
-        // feature, its children (ADR 0243 §2).
+        // The package description written with the app lists its libraries (ADR 0261 §1) and, for a
+        // feature, its children (ADR 0260 §2).
         VirtualPath descriptionPath = VirtualPath.Parse($"{directory.Value}/{AppPackage.DescriptionFileName}");
         string what = manifest.Kind == AppKind.Feature ? "feature" : "app";
         List<string> childPaths = [];

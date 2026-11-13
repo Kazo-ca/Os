@@ -53,7 +53,7 @@ public partial class InstalledAppsPanel : IDisposable
 
     /// <summary>
     /// Window apps, sorted by name, the entry points of features left out (they are listed under
-    /// their feature, ADR 0243 §2). Services are managed from System Monitor's Services tab.
+    /// their feature, ADR 0260 §2). Services are managed from System Monitor's Services tab.
     /// </summary>
     private IReadOnlyList<KazoAppInstallInfo> Applications => OnlyAppId is { } only
         ? [.. (_apps ?? []).Where(entry => entry.App.Id == only)]
@@ -65,7 +65,7 @@ public partial class InstalledAppsPanel : IDisposable
         : [.. (_apps ?? []).Where(static entry => entry.App.Kind == AppKind.Terminal && entry.App.ParentId is null)];
 
     /// <summary>
-    /// Features (ADR 0243): installed for the whole machine, each shown with its entry points. A
+    /// Features (ADR 0260): installed for the whole machine, each shown with its entry points. A
     /// feature is uninstalled or reinstalled as one unit; an entry point has no action of its own.
     /// </summary>
     private IReadOnlyList<KazoAppInstallInfo> Features => OnlyAppId is not null

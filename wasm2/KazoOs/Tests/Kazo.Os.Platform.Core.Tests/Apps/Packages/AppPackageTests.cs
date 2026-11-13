@@ -27,7 +27,7 @@ public sealed class AppPackageTests
         "\"resources\":{\"baselineCpuWeight\":0,\"burstCpuWeight\":0,\"baselineMemoryWeight\":0,\"burstMemoryWeight\":0,"
         + "\"baselineStorageIoWeight\":0,\"burstStorageIoWeight\":0,\"baselineNetworkIoWeight\":0,\"burstNetworkIoWeight\":0}";
 
-    /// <summary>The manifest of a feature (ADR 0243): no entry point, the capability set.</summary>
+    /// <summary>The manifest of a feature (ADR 0260): no entry point, the capability set.</summary>
     internal static string FeatureManifestJson(string version = "1.0.0") =>
         "{\"schemaVersion\":1,\"id\":\"" + FeatureId + "\",\"name\":\"Feature\",\"version\":\"" + version + "\",\"publisherId\":\"pub.kazo\","
         + "\"description\":\"A feature.\",\"kind\":\"feature\",\"sdkCompatibility\":{\"minimumVersion\":\"2.0.0\"},"
@@ -44,7 +44,7 @@ public sealed class AppPackageTests
         + (command is null ? string.Empty : "\"terminal\":{\"name\":\"" + command + "\",\"aliases\":[],\"usage\":\"" + command + "\"},")
         + "\"singleInstancePerUser\":false,\"autoStart\":false,\"supportsBack\":false,\"execution\":\"mainThread\"}";
 
-    /// <summary>The files of a feature package with three children (ADR 0243 §2): two commands and a service.</summary>
+    /// <summary>The files of a feature package with three children (ADR 0260 §2): two commands and a service.</summary>
     internal static Dictionary<string, byte[]> FeatureFiles(string version = "1.0.0") => new(StringComparer.Ordinal)
     {
         ["manifest.json"] = Encoding.UTF8.GetBytes(FeatureManifestJson(version)),
@@ -86,7 +86,7 @@ public sealed class AppPackageTests
 
         if (libraries is not null)
         {
-            // ADR 0244 §1: the libraries of the app, as TestLibraries.Entry describes each one.
+            // ADR 0261 §1: the libraries of the app, as TestLibraries.Entry describes each one.
             root["libraries"] = libraries;
         }
 

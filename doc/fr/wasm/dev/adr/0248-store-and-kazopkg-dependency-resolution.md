@@ -49,7 +49,7 @@ l'installation de BoxedWine s'arrête avec un message clair »).
   (`StoreWindow.razor.cs:52, :98-102`) ; une app peut déjà l'appeler par
   `IAppIntentGateway.LaunchAsync`. Le catalogue du Store (`catalog.json`)
   ne liste pas les dépendances d'une entrée.
-- Une Feature s'installe au niveau système seulement (ADR 0243 §4) : une
+- Une Feature s'installe au niveau système seulement (ADR 0260 §4) : une
   app installée « pour soi » qui dépend d'une Feature a donc une dépendance
   qui exige un administrateur.
 
@@ -73,7 +73,7 @@ l'installation de BoxedWine s'arrête avec un message clair »).
   dans le plan, pas réinstallée.
 - Le plan est **affiché avant tout téléchargement** : liste des paquets avec
   version, source, taille, et l'ensemble des permissions dangereuses de
-  chacun (une Feature : son ensemble, ADR 0243 §3). Le Store le montre dans
+  chacun (une Feature : son ensemble, ADR 0260 §3). Le Store le montre dans
   sa fenêtre de validation (`AppInstallApprovalOverlay`, ADR 0208) ;
   `kazopkg` l'écrit puis demande une confirmation (`--yes` la saute).
 - **Un seul consentement** pour le plan entier : si un paquet du plan est une
@@ -90,7 +90,7 @@ l'installation de BoxedWine s'arrête avec un message clair »).
 ### 2. Dépendance facultative : sur demande
 
 - Une dépendance `Optional = true` n'entre pas dans le plan. L'app s'installe
-  sans elle ; `KazoFeatures.GetServiceAsync<T>()` rend null (ADR 0245).
+  sans elle ; `KazoFeatures.GetServiceAsync<T>()` rend null (ADR 0262).
 - Le SDK gagne `KazoApps.RequestInstallAsync(appId, ct)` (permission
   `apps.launch`, déjà normale) : ouvre le Store sur le paquet
   (`--app=<appId>`), ou, sans Store, un message « Installe <app> avec
@@ -110,7 +110,7 @@ l'installation de BoxedWine s'arrête avec un message clair »).
   dépendance les réactive (`AppInstallationService.ReinstallAsync` :244-256,
   `ExpandDependencies`). Les apps à dépendance facultative ne sont pas
   touchées (elles reçoivent null).
-- Retirer une Feature garde ses données (ADR 0243 §4).
+- Retirer une Feature garde ses données (ADR 0260 §4).
 
 ### 4. Mise à jour
 

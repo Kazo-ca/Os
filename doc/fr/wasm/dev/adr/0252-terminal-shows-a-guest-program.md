@@ -29,7 +29,7 @@ Méta, `mc` ses F-touches).
 
 - **Complète :** l'[ADR 0061](0061-xterm-terminal-emulator.md) (xterm.js
   comme écran et clavier), l'[ADR 0064](0064-posix-shell-scripts-jobs-and-app-commands.md)
-  §6-7 (entrée standard, `nano`, commandes plein écran), l'[ADR 0245](0245-feature-service-registry-and-async-resolution.md)
+  §6-7 (entrée standard, `nano`, commandes plein écran), l'[ADR 0262](0262-feature-service-registry-and-async-resolution.md)
   (le Terminal résout `Ix86` par le registre) et l'[ADR 0251](0251-shell-route-to-execute-capable-apps.md)
   (route du shell hors du Terminal).
 - **Ne change pas :** `IKazoTerminal`, la discipline de ligne, le mode brut
@@ -93,12 +93,12 @@ Méta, `mc` ses F-touches).
 
 - L'app Terminal **référence le paquet de contrats `Os-x86.Interface`** en
   dépendance **facultative** : bibliothèque partagée embarquée dans son
-  paquet (ADR 0244, même règle de copie que pour toute app), résolue au
-  besoin par `KazoFeatures.GetServiceAsync<Ix86>()` (ADR 0245), qui rend
+  paquet (ADR 0261, même règle de copie que pour toute app), résolue au
+  besoin par `KazoFeatures.GetServiceAsync<Ix86>()` (ADR 0262), qui rend
   `null` quand la Feature est absente ou désactivée : le Terminal se
   comporte alors comme aujourd'hui. L'OS ne connaît toujours ni Wine ni v86 :
   seule l'app Terminal connaît `Ix86`, et elle l'appelle exactement comme
-  BoxedWine (ADR 0245 §2).
+  BoxedWine (ADR 0262 §2).
 - Le Terminal est **la seule app système de Kazo qui utilise une Feature**
   (réponse du mainteneur, 2026-11-11) : la liste est tenue ici ; une autre
   app système qui voudrait une Feature demande une ADR.
@@ -229,7 +229,7 @@ Méta, `mc` ses F-touches).
 ## Conséquences
 
 - App Terminal (`Apps/System/Kazo.Os.Apps.Terminal`) : référence
-  `Os-x86.Interface` (bibliothèque partagée, ADR 0244), `ProgramHost`,
+  `Os-x86.Interface` (bibliothèque partagée, ADR 0261), `ProgramHost`,
   lecture de l'en-tête, exécution par `Ix86`, onglet « session Os-x86 » ;
   manifeste : permissions `x86.*` de l'ADR 0246 déclarées comme BoxedWine.
 - SDK (`Kazo.Os.AppSdk`) : `TerminalCell`, `TerminalColor`, `TerminalCellStyle`,

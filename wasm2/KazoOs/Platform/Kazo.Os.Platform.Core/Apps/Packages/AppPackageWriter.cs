@@ -37,7 +37,7 @@ public static class AppPackageWriter
         IReadOnlyDictionary<string, byte[]>? satellites) =>
         Write(manifestJson, readAssembly, readAsset, satellites, null);
 
-    /// <summary>Builds the package of one app or of one feature with its children (ADR 0243 §2).</summary>
+    /// <summary>Builds the package of one app or of one feature with its children (ADR 0260 §2).</summary>
     /// <param name="manifestJson">The generated <c>manifest.json</c>, byte for byte.</param>
     /// <param name="readAssembly">Reads one declared assembly (<c>Kazo.Webamp.dll</c>) from the build output.</param>
     /// <param name="readAsset">Reads one declared asset (path relative to <c>wwwroot/</c>).</param>
@@ -57,7 +57,7 @@ public static class AppPackageWriter
         Write(manifestJson, readAssembly, readAsset, satellites, childManifests, null);
 
     /// <summary>
-    /// Builds the package of one app or of one feature, with the libraries of the app (ADR 0244 §1).
+    /// Builds the package of one app or of one feature, with the libraries of the app (ADR 0261 §1).
     /// </summary>
     /// <param name="manifestJson">The generated <c>manifest.json</c>, byte for byte.</param>
     /// <param name="readAssembly">Reads one declared assembly (<c>Kazo.Webamp.dll</c>) from the build output.</param>
@@ -102,7 +102,7 @@ public static class AppPackageWriter
             files[AppPackage.LibraryFolder + assembly] = readAssembly(assembly);
         }
 
-        // ADR 0244 §1: the libraries of the app, described by what each assembly says of itself.
+        // ADR 0261 §1: the libraries of the app, described by what each assembly says of itself.
         List<AppPackageLibrary> listed = [];
         foreach ((string fileName, byte[] bytes) in (libraries ?? new Dictionary<string, byte[]>()).OrderBy(static pair => pair.Key, StringComparer.Ordinal))
         {
@@ -144,7 +144,7 @@ public static class AppPackageWriter
             writer.WriteEndObject();
             if (childPaths.Count > 0)
             {
-                // ADR 0243 §2: the package lists the manifests of the feature's children.
+                // ADR 0260 §2: the package lists the manifests of the feature's children.
                 writer.WriteStartArray("manifests");
                 foreach (string path in childPaths)
                 {

@@ -103,12 +103,12 @@ public sealed class TextEditorApp : AppDefinition
 - `[AppManifest(Execution = …)]` devient `execution`, toujours écrit, résolu
   (jamais `default`) : voir la section suivante.
 
-### Fonctionnalités : `FeatureDefinition` (ADR 0243)
+### Fonctionnalités : `FeatureDefinition` (ADR 0260)
 
 Une **fonctionnalité** (`AppKind.Feature`, valeur JSON `feature`) est une
 fonctionnalité facultative de l'OS, à la manière de WSL : une identité, un
 paquet, un écran de permissions, installée pour toute la machine par un
-administrateur ([ADR 0243](../dev/adr/0243-feature-app-type.md)). Elle n'a
+administrateur ([ADR 0260](../dev/adr/0260-feature-app-type.md)). Elle n'a
 aucun point d'entrée à elle ; ce qui s'exécute, ce sont ses **enfants**.
 
 | Type | Rôle |
@@ -170,7 +170,7 @@ Dans l'OS, le catalogue (`AppCatalog.FeatureChildren`, `GetFeatureOf`,
 fonctionnalité s'active avant ses enfants, un enfant la suit à la
 désactivation et au retrait, et la commande d'un enfant `Terminal` passe avant
 celle d'une app ordinaire de même nom (après les apps système). Voir
-[`app-installation.md`](../dev/app-installation.md#fonctionnalités-adr-0243).
+[`app-installation.md`](../dev/app-installation.md#fonctionnalités-adr-0260).
 
 ### Intents et schémas d'URI (ADR 0096)
 
@@ -286,7 +286,7 @@ Fonctionnement de `generate` :
 - une classe `[AppManifest]` → `manifest.json` à la racine du projet ;
 - plusieurs classes → `manifests/<appId>.json` ; passer d'une forme à l'autre
   supprime les fichiers de l'ancienne forme ;
-- une `FeatureDefinition` (ADR 0243) → `manifest.json` pour la fonctionnalité
+- une `FeatureDefinition` (ADR 0260) → `manifest.json` pour la fonctionnalité
   et `entrypoints/<suffixe>.json` par enfant ; le fichier témoin ne nomme que
   `manifest.json`, l'agrégation et `pack` trouvent les enfants à côté. Une
   fonctionnalité est seule dans son projet (`KOSAPP0033` sinon).
@@ -333,8 +333,8 @@ avec le nom complet de la classe en cause : `App.csproj : error KOSAPP0005: [Ns.
 | `KOSAPP0024` | Agrégation : app non système qui déclare `OomScoreAdjust` négatif (ADR 0126 §4, ADR 0142 §6, [`oom-killer.md`](../dev/oom-killer.md)). |
 | `KOSAPP0025` | Retiré, jamais réutilisé : refusait à une app non système `kazoos.file-view` et `kazoos.file-dialogs` (ADR 0153 §4), que l'ADR 0156 ouvre à toute app fenêtrée (ADR 0158 §1). |
 | `KOSAPP0030` | Frontière du SDK : `ProjectReference` interdite dans un projet d'app (ADR 0055 §2, numéro fixé par l'ADR 0059). Émis par la cible `ValidateKazoOsSdkBoundary`. Voir [`app-sdk.md`](app-sdk.md). |
-| `KOSAPP0032` | Fonctionnalité (ADR 0243 §1) : une `FeatureDefinition` surcharge `EntryPoint` ; une fonctionnalité n'a pas de point d'entrée à elle, seuls ses `EntryPoints` s'exécutent. |
-| `KOSAPP0033` | Fonctionnalité (ADR 0243 §5) : une app ordinaire déclare ce que seule une fonctionnalité peut (le genre `Feature` hors d'une `FeatureDefinition`), ou une fonctionnalité est déclarée à côté d'autres apps dans un même projet. |
+| `KOSAPP0032` | Fonctionnalité (ADR 0260 §1) : une `FeatureDefinition` surcharge `EntryPoint` ; une fonctionnalité n'a pas de point d'entrée à elle, seuls ses `EntryPoints` s'exécutent. |
+| `KOSAPP0033` | Fonctionnalité (ADR 0260 §5) : une app ordinaire déclare ce que seule une fonctionnalité peut (le genre `Feature` hors d'une `FeatureDefinition`), ou une fonctionnalité est déclarée à côté d'autres apps dans un même projet. |
 | `KOSAPP0031` | Frontière du SDK : service injecté qui n'est ni un type du SDK, ni MudBlazor, ni `IJSRuntime` (ADR 0055 §3, ADR 0059). Voir [`app-sdk.md`](app-sdk.md). |
 | `KOSAPP0040` | Traductions du manifeste (ADR 0104 §4) : `Resources/AppManifest.<culture>.resx` illisible, nom de culture invalide, clé autre que `Name`, `Description`, `Terminal.Usage` (préfixées de l'id dans un projet à plusieurs apps), `Terminal.Usage` pour une app qui n'est pas une commande, ou fichier `localization/` référencé illisible à l'agrégation. Voir [`localization.md`](localization.md). |
 | `KOSAPP0090` | Arguments de l'outil invalides. |

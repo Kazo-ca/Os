@@ -1,6 +1,6 @@
 namespace Kazo.Os.Tools.ManifestGenerator.Tests;
 
-/// <summary>The libraries <c>pack</c> reads from the list the <c>KazoOsPack</c> target writes (ADR 0244 §1).</summary>
+/// <summary>The libraries <c>pack</c> reads from the list the <c>KazoOsPack</c> target writes (ADR 0261 §1).</summary>
 public sealed class PackagedLibrariesTests
 {
     [Fact]

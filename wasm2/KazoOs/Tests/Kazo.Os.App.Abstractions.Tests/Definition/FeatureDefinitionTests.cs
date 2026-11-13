@@ -3,12 +3,12 @@ using Kazo.Os.App.Abstractions;
 namespace Kazo.Os.App.Abstractions.Tests.Definition;
 
 /// <summary>
-/// The feature kind of ADR 0243: <see cref="FeatureDefinition"/> maps to one feature manifest and
+/// The feature kind of ADR 0260: <see cref="FeatureDefinition"/> maps to one feature manifest and
 /// one child manifest per entry point, the validator binds them, and <c>parent</c> round-trips.
 /// </summary>
 public sealed class FeatureDefinitionTests
 {
-    /// <summary>A feature with three children, the shape of Os-x86 (ADR 0243 §7).</summary>
+    /// <summary>A feature with three children, the shape of Os-x86 (ADR 0260 §7).</summary>
     public sealed class X86Feature : FeatureDefinition
     {
         public override string Id => "ca.kazo.x86";

@@ -16,7 +16,7 @@ of ADR 0247).
 
 - **Completes:** [ADR 0049](0049-dangerous-capabilities-and-admin-approval.md)
   (catalog, machine approval, per-user refusal) and
-  [ADR 0243](0243-feature-app-type.md) §5 (only a Feature declares
+  [ADR 0260](0260-feature-app-type.md) §5 (only a Feature declares
   permissions).
 - **Fixes the root of:** issue [#432](https://github.com/Kazo-ca/Os/issues/432)
   (the seeder silently grants every identifier outside the catalog), which
@@ -85,7 +85,7 @@ of ADR 0247).
   installation (`apps.package.capability-prefix-taken`).
 - An app that declares a `<prefix>.*` permission whose prefix no installed
   Feature bears: refused at installation (`manifest.capability.unknown`,
-  unchanged), **unless** it declares a dependency (ADR 0245 §3) to a Feature
+  unchanged), **unless** it declares a dependency (ADR 0262 §3) to a Feature
   whose prefix matches; the permission is then accepted and **stays
   ungranted** as long as the Feature is not installed (an absent optional
   dependency).
@@ -113,7 +113,7 @@ of ADR 0247).
 
 ### 4. The Feature checks, through the OS secure screen
 
-- Every operation of a provided service (ADR 0245) or of a Feature command
+- Every operation of a provided service (ADR 0262) or of a Feature command
   requires its permissions through `IFeatureServiceContext.Caller.Require("x86.vm.use")`,
   which throws `UnauthorizedAccessException` like the SDK gateways. The
   Feature never evaluates a decision file itself.

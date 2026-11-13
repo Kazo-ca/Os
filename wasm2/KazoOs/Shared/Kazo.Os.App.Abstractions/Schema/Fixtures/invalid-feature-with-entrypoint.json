@@ -4,7 +4,7 @@
   "name": "Os-x86",
   "version": "1.0.0",
   "publisherId": "ca.kazo",
-  "description": "A feature has no entry point of its own (ADR 0243).",
+  "description": "A feature has no entry point of its own (ADR 0260).",
   "kind": "feature",
   "entryPoint": {
     "assembly": "Kazo.X86",

@@ -15,7 +15,7 @@ on the launcher") and 186 A ("the marked sender serves the journal only"),
 
 - **Completes:** [ADR 0096](0096-added-intents-and-app-defined-intents.md)
   (intents, `AppIntentDelivery.SenderAppId` for app-defined intents),
-  [ADR 0245](0245-feature-service-registry-and-async-resolution.md) (identity
+  [ADR 0262](0262-feature-service-registry-and-async-resolution.md) (identity
   of a service's caller) and [ADR 0254](0254-per-user-events.md) (per-user
   journal).
 - **For:** the Os-x86 journal (who asked for a program launch: the terminal,
@@ -63,7 +63,7 @@ on the launcher") and 186 A ("the marked sender serves the journal only"),
 - The receiver reads it in `IAppExecutionContext.Intent?.Sender` (window and
   service) and in `TerminalExecutionContext.Sender` (command); an app
   launched without an intent (desktop start) has `Sender.Kind = Desktop`. A
-  service provided by a Feature (ADR 0245) gets it through
+  service provided by a Feature (ADR 0262) gets it through
   `IFeatureServiceContext.Caller` (`AppId`, `UserId`), same structure.
 
 ### 2. For the journal only

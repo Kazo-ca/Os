@@ -10,7 +10,7 @@ namespace Kazo.Os.Tools.ManifestGenerator;
 /// </summary>
 internal static class PackagedSatellites
 {
-    /// <summary>Finds the satellites of <paramref name="declaredAssemblies"/> (the declared assemblies and the libraries, ADR 0244) in a build output folder.</summary>
+    /// <summary>Finds the satellites of <paramref name="declaredAssemblies"/> (the declared assemblies and the libraries, ADR 0261) in a build output folder.</summary>
     /// <param name="bin">The build output folder (<c>bin/&lt;configuration&gt;/&lt;tfm&gt;</c>).</param>
     /// <param name="declaredAssemblies">File names the manifest declares, e.g. <c>Kazo.Webamp.dll</c>.</param>
     /// <returns>Each satellite's bytes by its path under <c>lib/</c> (<c>fr/Kazo.Webamp.resources.dll</c>), sorted.</returns>

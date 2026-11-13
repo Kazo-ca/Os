@@ -10,7 +10,7 @@ public enum KazoCatalogItemKind
     ThemePack = 1,
 
     /// <summary>
-    /// A feature of the OS (<c>.kazoapp</c>, ADR 0243 §4), installed with <see cref="KazoAppPackages.InstallAsync"/>
+    /// A feature of the OS (<c>.kazoapp</c>, ADR 0260 §4), installed with <see cref="KazoAppPackages.InstallAsync"/>
     /// for the whole machine only: a personal installation is refused (<c>apps.package.feature-system-only</c>).
     /// </summary>
     Feature = 2

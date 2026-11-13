@@ -95,7 +95,7 @@ public static class AppDefinitionMapper
     }
 
     /// <summary>
-    /// Maps a feature (ADR 0243) to its own manifest and one manifest per child, with the SDK version
+    /// Maps a feature (ADR 0260) to its own manifest and one manifest per child, with the SDK version
     /// of the current process as <c>sdkCompatibility.minimumVersion</c>.
     /// </summary>
     /// <param name="definition">The feature.</param>
@@ -104,7 +104,7 @@ public static class AppDefinitionMapper
         ToFeatureManifests(definition, KazoOsSdk.Version);
 
     /// <summary>
-    /// Maps a feature (ADR 0243) to its own manifest (kind <see cref="AppKind.Feature"/>, no entry
+    /// Maps a feature (ADR 0260) to its own manifest (kind <see cref="AppKind.Feature"/>, no entry
     /// point, the capability set) and one manifest per <see cref="FeatureDefinition.EntryPoints"/>
     /// entry: id <c>&lt;feature&gt;.&lt;suffix&gt;</c>, <c>parent</c> set, the child's own kind, entry
     /// point, options and capability subset, and the feature's version, publisher, SDK range,
@@ -140,7 +140,7 @@ public static class AppDefinitionMapper
             Intents = [.. definition.Intents],
             Dependencies = [.. definition.Dependencies],
             Assets = [.. definition.Assets],
-            // ADR 0243 §1: nothing of the feature runs; the host of its children is theirs.
+            // ADR 0260 §1: nothing of the feature runs; the host of its children is theirs.
             Execution = AppExecutionHost.MainThread,
             OomScoreAdj = definition.OomScoreAdjust
         };

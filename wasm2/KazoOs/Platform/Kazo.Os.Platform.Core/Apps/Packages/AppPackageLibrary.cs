@@ -7,19 +7,19 @@ namespace Kazo.Os.Platform.Core.Apps.Packages;
 
 /// <summary>
 /// One library of an app, carried in its package under <c>lib/</c> and listed in <c>libraries</c> of
-/// <c>kazoos-package.json</c> (ADR 0244 §1): an assembly the app needs that neither the OS nor the
+/// <c>kazoos-package.json</c> (ADR 0261 §1): an assembly the app needs that neither the OS nor the
 /// .NET runtime brings, such as the output of a <c>ProjectReference</c> or a NuGet package.
 /// </summary>
 /// <remarks>
 /// A library that is not shared simply goes with its app (ADR 0256 §1): the OS checks the file
 /// like any file of the package and loads it before the app; neither the OS nor the Store manages
-/// it. Only a shared library has one copy per page and the rules that go with it (ADR 0244 §2).
+/// it. Only a shared library has one copy per page and the rules that go with it (ADR 0261 §2).
 /// </remarks>
 /// <param name="Name">Simple assembly name, e.g. <c>Kazo.Irc.Protocol</c>; its file is <c>lib/&lt;name&gt;.dll</c>.</param>
-/// <param name="Version">Assembly version; its major part is the compatibility of a shared library (ADR 0244 §2).</param>
+/// <param name="Version">Assembly version; its major part is the compatibility of a shared library (ADR 0261 §2).</param>
 /// <param name="Sha256">Lower-case hexadecimal SHA-256 of the file.</param>
 /// <param name="Shared">
-/// Whether the author of the library marked it as a shared contract (ADR 0244 §2): several apps carry
+/// Whether the author of the library marked it as a shared contract (ADR 0261 §2): several apps carry
 /// it and the OS loads one copy per page. The mark is in the assembly itself
 /// (<see cref="SharedMetadataKey"/>); an app cannot set it for a library that is not marked.
 /// </param>
@@ -140,7 +140,7 @@ public sealed record AppPackageLibrary(string Name, Version Version, string Sha2
     }
 
     /// <summary>
-    /// Reads <c>libraries</c> of a package description (ADR 0244 §1). A description written before
+    /// Reads <c>libraries</c> of a package description (ADR 0261 §1). A description written before
     /// the list existed has none.
     /// </summary>
     /// <param name="root">The root object of <c>kazoos-package.json</c>.</param>

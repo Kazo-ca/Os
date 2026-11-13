@@ -1,7 +1,7 @@
 namespace Kazo.Os.App.Abstractions;
 
 /// <summary>
-/// The C# source of an optional feature of the OS (ADR 0243): an <see cref="AppDefinition"/> of kind
+/// The C# source of an optional feature of the OS (ADR 0260): an <see cref="AppDefinition"/> of kind
 /// <see cref="AppKind.Feature"/> that has no entry point of its own but a list of typed children,
 /// <see cref="EntryPoints"/>. The manifest generator writes the feature's <c>manifest.json</c> and
 /// one <c>entrypoints/&lt;suffix&gt;.json</c> per child; the OS installs, approves, activates and
@@ -9,7 +9,7 @@ namespace Kazo.Os.App.Abstractions;
 /// </summary>
 /// <remarks>
 /// <para>
-/// <see cref="AppDefinition.Capabilities"/> is the <b>set</b> of the feature (ADR 0243 §3): what the
+/// <see cref="AppDefinition.Capabilities"/> is the <b>set</b> of the feature (ADR 0260 §3): what the
 /// Store, the approval window and <c>kazopkg</c> show once, at installation. Each child declares its
 /// own subset in <see cref="FeatureEntryPoint.Capabilities"/>; a capability outside the set fails
 /// the build (<c>manifest.feature.capability-outside-set</c>).
@@ -26,7 +26,7 @@ public abstract class FeatureDefinition : AppDefinition
     public sealed override AppKind Kind => AppKind.Feature;
 
     /// <summary>
-    /// A feature has no entry point of its own (ADR 0243 §1): this member is never read. A feature
+    /// A feature has no entry point of its own (ADR 0260 §1): this member is never read. A feature
     /// class that overrides it fails the build with <c>KOSAPP0032</c>.
     /// </summary>
     public override Type EntryPoint => null!;
@@ -35,7 +35,7 @@ public abstract class FeatureDefinition : AppDefinition
     public sealed override Type? MobileEntryPoint => null;
 
     /// <summary>
-    /// Gets the children of the feature (ADR 0243 §2): one app of an ordinary kind per entry, with
+    /// Gets the children of the feature (ADR 0260 §2): one app of an ordinary kind per entry, with
     /// the identifier <c>&lt;feature id&gt;.&lt;suffix&gt;</c>.
     /// </summary>
     public abstract IReadOnlyList<FeatureEntryPoint> EntryPoints { get; }
@@ -75,7 +75,7 @@ public abstract class FeatureDefinition : AppDefinition
 }
 
 /// <summary>
-/// One child of a <see cref="FeatureDefinition"/> (ADR 0243 §2): an app of an ordinary kind the
+/// One child of a <see cref="FeatureDefinition"/> (ADR 0260 §2): an app of an ordinary kind the
 /// feature brings, identified by <c>&lt;feature id&gt;.&lt;suffix&gt;</c>.
 /// </summary>
 /// <param name="Suffix">The last segment of the child's id (<c>cli</c> for <c>ca.kazo.x86.cli</c>): lowercase letters, digits and dashes.</param>
@@ -88,7 +88,7 @@ public sealed record FeatureEntryPoint(string Suffix, string Name, AppKind Kind,
     public string? Description { get; init; }
 
     /// <summary>
-    /// Gets the child's subset of the feature's capabilities (ADR 0243 §3): what its process holds
+    /// Gets the child's subset of the feature's capabilities (ADR 0260 §3): what its process holds
     /// at run time. Empty by default; a capability outside the feature's set fails the build.
     /// </summary>
     public IReadOnlyList<string> Capabilities { get; init; } = [];

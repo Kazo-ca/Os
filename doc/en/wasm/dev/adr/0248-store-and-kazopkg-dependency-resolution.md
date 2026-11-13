@@ -49,7 +49,7 @@ message").
   (`StoreWindow.razor.cs:52, :98-102`); an app can already call it through
   `IAppIntentGateway.LaunchAsync`. The Store catalog (`catalog.json`) does not
   list the dependencies of an entry.
-- A Feature installs system-wide only (ADR 0243 §4): an app installed "for
+- A Feature installs system-wide only (ADR 0260 §4): an app installed "for
   me" that depends on a Feature therefore has a dependency that requires an
   administrator.
 
@@ -73,7 +73,7 @@ message").
   the plan, not reinstalled.
 - The plan is **shown before any download**: list of the packages with
   version, source, size, and the set of dangerous permissions of each (a
-  Feature: its whole set, ADR 0243 §3). The Store shows it in its validation
+  Feature: its whole set, ADR 0260 §3). The Store shows it in its validation
   window (`AppInstallApprovalOverlay`, ADR 0208); `kazopkg` prints it then
   asks for a confirmation (`--yes` skips it).
 - **One consent** for the whole plan: when a package of the plan is a Feature
@@ -89,7 +89,7 @@ message").
 ### 2. Optional dependency: on request
 
 - An `Optional = true` dependency does not enter the plan. The app installs
-  without it; `KazoFeatures.GetServiceAsync<T>()` returns null (ADR 0245).
+  without it; `KazoFeatures.GetServiceAsync<T>()` returns null (ADR 0262).
 - The SDK gains `KazoApps.RequestInstallAsync(appId, ct)` (permission
   `apps.launch`, already normal): opens the Store on the package
   (`--app=<appId>`), or, without the Store, a message "Install <app> with
@@ -108,7 +108,7 @@ message").
   re-enables them (`AppInstallationService.ReinstallAsync` :244-256,
   `ExpandDependencies`). Apps with an optional dependency are not touched
   (they get null).
-- Removing a Feature keeps its data (ADR 0243 §4).
+- Removing a Feature keeps its data (ADR 0260 §4).
 
 ### 4. Update
 

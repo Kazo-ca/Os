@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <!--
-    Build fixture for Kazo.Os.Tools.ManifestGenerator.Tests (ADR 0244 §1). Not part of the solution.
+    Build fixture for Kazo.Os.Tools.ManifestGenerator.Tests (ADR 0261 §1). Not part of the solution.
     An app with two libraries of its own: Protocol (private to the app) and Contracts, which its
     author marked as shared. KazoOsPack packs both in lib/ and lists them in "libraries".
   -->

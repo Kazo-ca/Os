@@ -1,6 +1,6 @@
-> [Version française](../../../../fr/wasm/dev/adr/0243-feature-app-type.md)
+> [Version française](../../../../fr/wasm/dev/adr/0260-feature-app-type.md)
 
-# ADR 0243: the "Feature" app type, an optional OS feature installed system-wide
+# ADR 0260: the "Feature" app type, an optional OS feature installed system-wide
 
 ## Status
 
@@ -13,11 +13,13 @@ during the design of Os-x86: D33, D37, D38, D39 (series 3 and 4, 2026-11-09),
 172 A then 222 A (identifiers `ca.kazo.x86` and `ca.kazo.boxedwine`,
 2026-11-11).
 
+First numbered 0243; renumbered 0260 on 2026-11-13 (Benoit's choice), because `main` had released ADR 0243 in Kazo OS 3.3.1 or 3.3.2.
+
 - **Completes:** [ADR 0047](0047-app-definition-and-generated-manifests.md)
   (`AppDefinition`, generated manifests), [ADR 0048](0048-system-apps-and-uninstall.md)
   (system apps, machine or user uninstall) and
   [ADR 0182](0182-install-apps-from-github.md) (installing a package).
-- **Opens:** ADRs 0244 to 0255 of the same series, which give a Feature its
+- **Opens:** ADRs 0261, 0262 and 0246 to 0255 of the same series, which give a Feature its
   shared libraries, its service registry, its permissions, its roles, its
   dependencies, its Settings pages, its format detectors and its relay.
 - **For:** Os-x86 (`ca.kazo.x86`), which runs x86 virtual machines in the
@@ -135,7 +137,7 @@ during the design of Os-x86: D33, D37, D38, D39 (series 3 and 4, 2026-11-09),
 
 | Model capability | ADR | Refusal for an ordinary app |
 |---|---|---|
-| Provide an interface resolved by `KazoFeatures.GetServiceAsync<T>()` | 0245 | `manifest.feature.only` |
+| Provide an interface resolved by `KazoFeatures.GetServiceAsync<T>()` | 0262 | `manifest.feature.only` |
 | Declare provider permissions, dangerous ones included | 0246 | `manifest.feature.only` |
 | Declare roles | 0247 | `manifest.feature.only` |
 | Provide pages to Settings ▸ Features | 0249 | `manifest.feature.only` |
@@ -150,9 +152,9 @@ An ordinary app that declares one of these is refused by the generator
 
 - A Feature added hot follows ADR 0214 §1: its `Terminal` and `Window`
   children can be launched immediately, its service starts at the next boot,
-  and its interface (ADR 0245) resolves from the installation on.
+  and its interface (ADR 0262) resolves from the installation on.
 - **Exception**: when an older copy of its contracts is already loaded in the
-  page (ADR 0244 §3), the OS says so and offers a restart, like the Store's
+  page (ADR 0261 §3), the OS says so and offers a restart, like the Store's
   "Restart to finish" (ADR 0212 §3).
 - Update or removal: a restart is offered only when the Feature's code is
   loaded (ADR 0214 §1.2).

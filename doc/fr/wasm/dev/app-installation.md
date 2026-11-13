@@ -313,9 +313,9 @@ validation en deux étapes :
   arrière d'une app déjà chargée dans la page attend un redémarrage de Kazo OS ;
   `kazopkg list` affiche `(restart pending)` d'ici là.
 - **Capacités dangereuses** : demandées au premier lancement, comme pour toute
-  app non système ; sauf pour une fonctionnalité (ADR 0243), dont le
+  app non système ; sauf pour une fonctionnalité (ADR 0260), dont le
   consentement à l'installation vaut approbation machine (section
-  [Fonctionnalités](#fonctionnalités-adr-0243)).
+  [Fonctionnalités](#fonctionnalités-adr-0260)).
 - **Publication** : `dotnet build -c Release -t:KazoOsPack` dans le projet de
   l'app écrit le paquet et `index.json` dans `bin/kazoos-packages` (propriété
   `KazoOsPackageOutput`), à pousser sur la branche `kazoos-packages` ; le
@@ -330,8 +330,8 @@ validation en deux étapes :
   `lib/<culture>/<assemblage>.resources.dll` (pas ceux du SDK)
   ([ADR 0222](adr/0222-installed-app-satellite-assemblies.md)), et les
   bibliothèques propres de l'app avec leurs satellites
-  ([ADR 0244](adr/0244-app-libraries-and-shared-versions.md),
-  [section plus bas](#bibliothèques-dapp-et-versions-partagées-adr-0244)).
+  ([ADR 0261](adr/0261-app-libraries-and-shared-versions.md),
+  [section plus bas](#bibliothèques-dapp-et-versions-partagées-adr-0261)).
 - **Ressources `wwwroot/`** ([ADR 0206](adr/0206-serve-installed-app-assets.md)) :
   au premier lancement de l'app dans la session, chaque ressource déclarée est
   lue par `AppAssetStore` (empreinte vérifiée) et copiée dans le cache
@@ -362,7 +362,7 @@ validation en deux étapes :
 - **Limites** : voir la section du même nom de l'ADR 0182 (fil principal
   seulement) ; la limite des ressources `wwwroot` est levée par l'ADR 0206,
   celle des dépendances de l'app (projets et paquets NuGet tiers) par
-  l'ADR 0244.
+  l'ADR 0261.
 
 Tests : `AppPackageGatewayTests`, `AppSourcesAndPolicyTests`,
 `InstalledAppsImageTests`, `AppPackageWriterTests`, `AppPackageTests`
@@ -375,14 +375,14 @@ Tests : `AppPackageGatewayTests`, `AppSourcesAndPolicyTests`,
 `Tests/fixtures/installed-app` installé par `kazopkg` dans la publication
 réduite, lancé par `build/publish-trimmed.sh`).
 
-## Fonctionnalités (ADR 0243)
+## Fonctionnalités (ADR 0260)
 
-L'ADR [0243](adr/0243-feature-app-type.md) ajoute le genre d'app `Feature` :
+L'ADR [0260](adr/0260-feature-app-type.md) ajoute le genre d'app `Feature` :
 une fonctionnalité facultative de l'OS (à la manière de WSL), une identité,
 un paquet, un écran de permissions, installée pour toute la machine par un
 administrateur. Son modèle côté SDK (`FeatureDefinition`, `FeatureEntryPoint`,
 manifestes enfants) est dans
-[`app-model.md`](../framework/app-model.md#fonctionnalités-featuredefinition-adr-0243).
+[`app-model.md`](../framework/app-model.md#fonctionnalités-featuredefinition-adr-0260).
 
 - **Paquet** : `manifest.json` est le manifeste de la fonctionnalité (genre
   `feature`, sans `entryPoint`) ; chaque enfant a son propre fichier
@@ -457,9 +457,9 @@ et `ManifestWriterTests` (Tools.ManifestGenerator), `AppCatalogTests`,
 `AppPackageTests`, `AppPackageWriterTests`, `InstalledAppsImageTests`,
 `AppInstallationServiceTests` et `AppPackageGatewayTests` (Platform.Core).
 
-## Bibliothèques d'app et versions partagées (ADR 0244)
+## Bibliothèques d'app et versions partagées (ADR 0261)
 
-L'ADR [0244](adr/0244-app-libraries-and-shared-versions.md) (issue #419) fait
+L'ADR [0261](adr/0261-app-libraries-and-shared-versions.md) (issue #419) fait
 entrer dans le paquet les assemblages dont l'app a besoin et que l'OS
 n'apporte pas, et ne charge qu'une copie par page d'une bibliothèque
 **partagée**. L'ADR [0256](adr/0256-app-libraries-implementation-adjustments.md)
@@ -542,7 +542,7 @@ en ajuste la mise en œuvre. Côté auteur : [`app-repository.md`](../framework/
   d'autre. Deux versions **majeures** d'une bibliothèque partagée sont
   installées ensemble, mais une seule est dans la page à la fois : l'app de
   l'autre majeure demande un redémarrage. Tant que les fonctionnalités ne
-  déclarent pas les services qu'elles fournissent (ADR 0245), une
+  déclarent pas les services qu'elles fournissent (ADR 0262), une
   fonctionnalité qui embarque la bibliothèque partagée en est le fournisseur.
 
 Tests : `AppPackageLibraryTests`, `InstalledLibrariesTests`,
@@ -571,7 +571,7 @@ kazopkg info org.example.notes
   fichier (paquet, icône, captures, descriptions) sont relatifs à
   `catalog.json`. L'OS le garde 5 minutes ; une app ou une version invalide est
   ignorée avec un avertissement dans `/var/log/syslog`. Chaque entrée porte un
-  `kind` : `app` quand il manque, `feature` (ADR 0243 §4 : listée avec les
+  `kind` : `app` quand il manque, `feature` (ADR 0260 §4 : listée avec les
   apps, installée pour toute la machine seulement) ou `theme-pack` (ADR 0213) ;
   une valeur que l'OS ne connaît pas est lue comme `app` avec un avertissement,
   pour qu'un catalogue plus récent ne cache rien (le paquet dit ce qu'il est à

@@ -122,7 +122,7 @@
     white-space: normal;
 }
 
-/* ADR 0243 §2: a feature's entry points, listed under it, with no action of their own. */
+/* ADR 0260 §2: a feature's entry points, listed under it, with no action of their own. */
 .feature-entry-points {
     margin: 0 0 6px 18px;
     padding-left: 10px;

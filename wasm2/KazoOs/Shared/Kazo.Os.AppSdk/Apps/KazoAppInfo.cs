@@ -51,7 +51,7 @@ public sealed record KazoAppInfo(
     public string? IconUrl { get; init; }
 
     /// <summary>
-    /// Gets the identifier of the feature this app is an entry point of (ADR 0243 §2), or
+    /// Gets the identifier of the feature this app is an entry point of (ADR 0260 §2), or
     /// <see langword="null"/> for a stand-alone app or a feature itself. Settings lists an entry
     /// point under its feature; it is installed, enabled and removed with it, never alone.
     /// </summary>

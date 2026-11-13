@@ -97,7 +97,7 @@ already declares `KazoOsAppProject=true`; add it to the host with
 
 ## Libraries of the app
 
-[ADR 0244](../dev/adr/0244-app-libraries-and-shared-versions.md),
+[ADR 0261](../dev/adr/0261-app-libraries-and-shared-versions.md),
 [ADR 0256](../dev/adr/0256-app-libraries-implementation-adjustments.md). An app may
 have libraries of its own: another project of the repository
 (`ProjectReference`), a NuGet package (`PackageReference`) or a DLL. It
@@ -159,7 +159,7 @@ on Kazo OS) writes the same line itself:
   installed feature is refused at installation
   (`apps.package.library-major-mismatch`).
 
-OS side: [`app-installation.md`](../dev/app-installation.md#app-libraries-and-shared-versions-adr-0244).
+OS side: [`app-installation.md`](../dev/app-installation.md#app-libraries-and-shared-versions-adr-0261).
 
 ## Publishing to the Kazo OS Store
 
@@ -269,4 +269,4 @@ can only work with a submodule on a release that contains this template
 - [ ] Template repository regenerated on the release that contains this template.
 - [x] `publish-packages.yml` workflow and package signing (ADR 0219).
 - [x] Signing removed from app repositories and the template (ADR 0219).
-- [x] Libraries of the app in the package and the `KazoOsSharedLibrary` property (ADR 0244).
+- [x] Libraries of the app in the package and the `KazoOsSharedLibrary` property (ADR 0261).

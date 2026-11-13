@@ -7,7 +7,7 @@
     script, the collocated ProbeWindow.razor.js and the scoped CSS (ProbeWindow.razor.css) are not
     declared; KazoOsPack adds them to the package. ADR 0222: Resources/ProbeStrings.fr.resx gives
     the satellite lib/fr/Kazo.Os.Fixtures.InstalledAssets.resources.dll, which KazoOsPack packs too.
-    ADR 0244 §1 (issue #419): Kazo.Fixtures.InstalledLibrary is a library of the app, a
+    ADR 0261 §1 (issue #419): Kazo.Fixtures.InstalledLibrary is a library of the app, a
     ProjectReference the OS does not bring; KazoOsPack packs it as lib/Kazo.Fixtures.InstalledLibrary.dll.
   -->
   <PropertyGroup>

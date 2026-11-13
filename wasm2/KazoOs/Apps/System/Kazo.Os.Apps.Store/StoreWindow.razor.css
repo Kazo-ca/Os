@@ -600,7 +600,7 @@
     }
 }
 
-/* A feature of the OS (ADR 0243 §4): installed for the whole machine only. */
+/* A feature of the OS (ADR 0260 §4): installed for the whole machine only. */
 .store-feature-note {
     display: inline-flex;
     align-items: center;

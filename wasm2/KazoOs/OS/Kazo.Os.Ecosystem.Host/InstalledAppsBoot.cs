@@ -190,7 +190,7 @@ public sealed class InstalledAppsBoot
     public InstalledApp? FindByAssembly(string assemblyName) =>
         Current.Installed.FirstOrDefault(app => app.AssemblyNames.Contains(assemblyName));
 
-    /// <summary>Finds an installed app by ID: its own, or that of one of its children (ADR 0243 §2).</summary>
+    /// <summary>Finds an installed app by ID: its own, or that of one of its children (ADR 0260 §2).</summary>
     public InstalledApp? Find(string appId) =>
         Current.Installed.FirstOrDefault(app => app.Owns(appId));
 
@@ -215,7 +215,7 @@ public sealed class InstalledAppsActivator(
     private readonly SemaphoreSlim _gate = new(1, 1);
 
     /// <summary>
-    /// Gets the loader of the installed apps' libraries (ADR 0244 §3): after each change it writes to
+    /// Gets the loader of the installed apps' libraries (ADR 0261 §3): after each change it writes to
     /// the log which app waits for a restart to get its copy of a shared library.
     /// </summary>
     public InstalledAppLibraries? Libraries { get; init; }
@@ -244,7 +244,7 @@ public sealed class InstalledAppsActivator(
                     string.Join(", ", activation.WaitingForRestart));
             }
 
-            // ADR 0244 §3: a feature just installed may carry a newer copy of a library already in the page.
+            // ADR 0261 §3: a feature just installed may carry a newer copy of a library already in the page.
             Libraries?.ReportPendingRestarts();
             return activation;
         }
@@ -286,7 +286,7 @@ public sealed class InstalledAppAssemblyTransport(IBuildKnownAssemblyTransport i
     public InstalledAppSatellites? Satellites { get; init; }
 
     /// <summary>
-    /// Gets the loader of the libraries their packages carry (ADR 0244 §1): they are in the page
+    /// Gets the loader of the libraries their packages carry (ADR 0261 §1): they are in the page
     /// before the app's own assembly. <see langword="null"/> loads none.
     /// </summary>
     public InstalledAppLibraries? Libraries { get; init; }
@@ -321,7 +321,7 @@ public sealed class InstalledAppAssemblyTransport(IBuildKnownAssemblyTransport i
 
             if (Libraries is { } libraries)
             {
-                // ADR 0244 §1: what the app's code refers to is in the runtime before that code.
+                // ADR 0261 §1: what the app's code refers to is in the runtime before that code.
                 await libraries.LoadForAsync(app, cancellationToken).ConfigureAwait(false);
             }
 

@@ -7,7 +7,7 @@ using Microsoft.Extensions.Logging;
 namespace Kazo.Os.Ecosystem;
 
 /// <summary>
-/// The assemblies of the page as the library loader sees them (ADR 0244): what is loaded under a
+/// The assemblies of the page as the library loader sees them (ADR 0261): what is loaded under a
 /// simple name, and how one more assembly joins. The page has one implementation,
 /// <see cref="DefaultContextLibraryRuntime"/>; tests give their own.
 /// </summary>
@@ -51,7 +51,7 @@ public sealed class DefaultContextLibraryRuntime : IInstalledLibraryRuntime
 }
 
 /// <summary>
-/// Loads the libraries of an installed app before its own assemblies (ADR 0244 §1), and one copy of
+/// Loads the libraries of an installed app before its own assemblies (ADR 0261 §1), and one copy of
 /// each shared library per page (§2): the copy of a feature that carries it, otherwise the newest
 /// one of the same major version among the installed apps. A copy already in the page is never
 /// replaced (§3): it serves the app, the choice is written to <c>/var/log/syslog</c> and the app
@@ -60,7 +60,7 @@ public sealed class DefaultContextLibraryRuntime : IInstalledLibraryRuntime
 /// <remarks>
 /// A library that is not shared goes with its app (ADR 0256 §1): it is loaded from the app's own
 /// package and nothing else is decided about it. Every installed app shares the default load
-/// context (ADR 0244, option A set aside), so when two apps carry a library of the same simple name
+/// context (ADR 0261, option A set aside), so when two apps carry a library of the same simple name
 /// that is not shared, the first one loaded serves both and the second is written to the log
 /// (ADR 0256 §4). For the same reason one major version of a shared library is in the page at a
 /// time (ADR 0256 §3).
@@ -106,7 +106,7 @@ public sealed class InstalledAppLibraries : IInstalledLibraryState
         InstalledLibraries.FindPendingRestarts(_installed.Current.Installed, _runtime.FindLoaded);
 
     /// <summary>
-    /// Writes to the log what waits for a restart now (ADR 0244 §3), once per app, library and
+    /// Writes to the log what waits for a restart now (ADR 0261 §3), once per app, library and
     /// version: called after each install, update or removal, when a feature may have brought a
     /// newer copy of a library that is already in the page.
     /// </summary>

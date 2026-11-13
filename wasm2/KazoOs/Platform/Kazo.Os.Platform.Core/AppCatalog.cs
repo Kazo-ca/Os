@@ -179,14 +179,14 @@ public sealed class AppCatalog
     }
 
     /// <summary>
-    /// Gets the children of each <see cref="AppKind.Feature"/> of the catalog (ADR 0243 §2), by
+    /// Gets the children of each <see cref="AppKind.Feature"/> of the catalog (ADR 0260 §2), by
     /// feature id, each list in activation order. A feature without children has an empty list.
     /// </summary>
     public IReadOnlyDictionary<string, IReadOnlyList<string>> FeatureChildren => State.FeatureChildren;
 
     /// <summary>
     /// Gets the feature <paramref name="appId"/> is a child of (its manifest's <c>parent</c>, ADR
-    /// 0243 §2), or <see langword="null"/> for a stand-alone app or a feature itself.
+    /// 0260 §2), or <see langword="null"/> for a stand-alone app or a feature itself.
     /// </summary>
     /// <param name="appId">Application identifier (ordinal comparison).</param>
     public string? GetFeatureOf(string appId)
@@ -205,7 +205,7 @@ public sealed class AppCatalog
 
     /// <summary>
     /// Gets the ids an app needs to run: its required dependencies and, for a feature's child, its
-    /// feature (ADR 0243 §2: a child is activated, deactivated and removed with its parent).
+    /// feature (ADR 0260 §2: a child is activated, deactivated and removed with its parent).
     /// </summary>
     /// <param name="manifest">Any manifest.</param>
     internal static IEnumerable<string> RequiredIds(AppManifest manifest)
@@ -381,8 +381,8 @@ public sealed class AppCatalog
     }
 
     /// <summary>
-    /// ADR 0243 §2: a child names a feature of the catalog, of kind <see cref="AppKind.Feature"/>,
-    /// of the same version, and asks for no capability outside the feature's set (ADR 0243 §3).
+    /// ADR 0260 §2: a child names a feature of the catalog, of kind <see cref="AppKind.Feature"/>,
+    /// of the same version, and asks for no capability outside the feature's set (ADR 0260 §3).
     /// Each manifest already passed <see cref="AppManifestValidator.Validate"/>, so the id prefix
     /// and the kinds are known good.
     /// </summary>
@@ -416,7 +416,7 @@ public sealed class AppCatalog
         }
     }
 
-    /// <summary>Lists the children of each feature (ADR 0243 §2), in activation order.</summary>
+    /// <summary>Lists the children of each feature (ADR 0260 §2), in activation order.</summary>
     private static IReadOnlyDictionary<string, IReadOnlyList<string>> RegisterFeatures(
         IReadOnlyDictionary<string, AppManifest> manifests, IReadOnlyList<string> activationOrder)
     {
@@ -439,7 +439,7 @@ public sealed class AppCatalog
 
     /// <summary>
     /// ADR 0098 §4, at load: gives each terminal command name and alias to one app. System apps
-    /// choose first, then the children of features (ADR 0243 §2: <c>x86</c> cannot be masked by
+    /// choose first, then the children of features (ADR 0260 §2: <c>x86</c> cannot be masked by
     /// an app installed later), then the others, each group in activation order; a name already
     /// taken produces one <c>catalog.command.duplicate</c> warning for the app that loses it. (The
     /// host build already refuses duplicates among its own apps with <c>KOSAPP0022</c>; this covers
@@ -543,7 +543,7 @@ public sealed class AppCatalog
             changed = false;
             foreach (AppManifest manifest in byId.Values.OrderBy(static item => item.Id, StringComparer.Ordinal).ToArray())
             {
-                // ADR 0243 §2: a feature's child goes with its feature.
+                // ADR 0260 §2: a feature's child goes with its feature.
                 string? missing = RequiredIds(manifest).FirstOrDefault(required => rejected.Any(item => item.AppId == required));
                 if (missing is null)
                 {
@@ -658,7 +658,7 @@ public sealed class AppCatalog
 
         foreach (AppManifest manifest in manifests.Values)
         {
-            // ADR 0243 §2: a feature activates before its children, like a dependency.
+            // ADR 0260 §2: a feature activates before its children, like a dependency.
             IEnumerable<string> needed = manifest.Dependencies.Select(static dependency => dependency.AppId);
             if (manifest.Parent is { } parent)
             {
