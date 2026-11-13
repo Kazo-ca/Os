@@ -240,5 +240,6 @@ next free number is given in
 | [`0241-replace-an-older-worker-at-boot.md`](0241-replace-an-older-worker-at-boot.md) | ADR 0241: at boot, a page loaded with Ctrl+F5 replaces a service worker of an older version, so the next F5 does not go back to that version. |
 | [`0242-framework-api-for-installed-apps.md`](0242-framework-api-for-installed-apps.md) | ADR 0242: the .NET API an installed app finds in the published OS: `System.Private.CoreLib` stays whole in the trimmed publish (+0.6 MiB Brotli) and the install check compares full method signatures, no longer only their parameter count (IRC 1.0.0 and `Int32.Parse` of a span). |
 | [`0243-serve-installed-app-pages.md`](0243-serve-installed-app-pages.md) | ADR 0243: the published service worker serves the page load of an installed app's file (an iframe pointed at `_content/<assembly>/…html?param`) from the installed apps' cache, instead of the OS's `index.html`, online and offline. |
+| [`0244-stable-window-order-in-the-page.md`](0244-stable-window-order-in-the-page.md) | ADR 0244: windows keep their place in the page (opening order), `ZOrder` only gives the `z-index`: an iframe no longer reloads when its window comes to the front, nor on mobile when switching apps; the window that receives the keyboard focus comes to the front. |
 
 Parent folder index: [`../README.md`](../README.md).

@@ -92,6 +92,9 @@ Cette section liste ce qui est publié dans la branche `main` et en ligne.
   bords de l'écran, avec des animations sobres pour ouvrir, fermer, minimiser
   vers la barre, agrandir et ancrer, coupées par « Réduire les animations ».
   ([`window-model.md`](framework/window-model.md), [`window-animations.md`](dev/window-animations.md))
+  Une fenêtre qui passe devant ne bouge pas dans la page : une app dans un
+  cadre (iframe), comme Kazo Word ou le navigateur, garde sa page, aussi sur
+  mobile quand on change d'app. ([ADR 0244](dev/adr/0244-stable-window-order-in-the-page.md))
 - **Styles de fenêtre inspirés de WinForms** (version 3.1.0) : une app choisit
   le style `Normal`, `Tool` (fermer seulement, celui des dialogues de l'OS) ou
   `None` (zone cliente seule, transparente : un clic là où l'app ne dessine rien

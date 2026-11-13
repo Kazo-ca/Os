@@ -1,1 +1,4 @@
 #nullable enable
+Kazo.Os.Windowing.Core.WindowDocumentOrder
+Kazo.Os.Windowing.Core.WindowDocumentOrder.Arrange(System.Collections.Generic.IEnumerable<Kazo.Os.Windowing.Abstractions.WindowRuntimeState!>! windows) -> System.Collections.Generic.IReadOnlyList<Kazo.Os.Windowing.Abstractions.WindowRuntimeState!>!
+Kazo.Os.Windowing.Core.WindowDocumentOrder.WindowDocumentOrder() -> void

@@ -9,6 +9,17 @@
     isolation: isolate;
 }
 
+/* ADR 0244 §3: a slot holds one window in the page whether it is on screen or not. Shown, it adds
+   no box of its own (the window is placed against the surface); hidden, the window and its iframes
+   stay in the document without being drawn or reachable. */
+.surface-slot {
+    display: contents;
+}
+
+.surface-slot[hidden] {
+    display: none;
+}
+
 /* ADR 0171 §3: the surface stacks a window and its dialogs in document order, the dialog last on top,
    whatever z-order the runtime gave them. Each host is its own stacking context, so nothing inside a
    window (a floating button) can rise above the dialog shown over it. */

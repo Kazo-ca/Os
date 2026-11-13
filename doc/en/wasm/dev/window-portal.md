@@ -44,7 +44,9 @@ each secondary screen, rendered in its surface (work item 4, [`secondary-screen-
   after the move. `WindowHost.razor.js` reads the focus in the window's document
   (`ownerDocument`), for screens in a surface.
 - **Iframes.** A moved iframe reloads (ADR 0078 §4, ADR 0178 §3): the OS browser rewrites its
-  page, other iframe apps lose the iframe's JS state.
+  page, other iframe apps lose the iframe's JS state. Coming to the front does not move the
+  window: the page keeps the opening order and only the `z-index` follows `ZOrder`
+  ([ADR 0244](adr/0244-stable-window-order-in-the-page.md)).
 
 ## 4. Tests
 

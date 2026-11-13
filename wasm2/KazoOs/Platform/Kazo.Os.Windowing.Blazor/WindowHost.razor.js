@@ -328,6 +328,28 @@ export function trackFocus(element) {
     element.addEventListener("focusin", event => {
         element.__hosLastFocus = event.target;
     });
+    // A click or Tab into an iframe gives the frame the focus without any focusin or pointer event
+    // in this page: the page only sees its own window blur, with the iframe as active element. The
+    // window that holds that iframe is told with a focusin, so it comes to the front like any window
+    // that receives the keyboard focus (ADR 0244 §4). Kazo Word lives in such an iframe.
+    const view = element.ownerDocument.defaultView;
+    const onPageBlur = () => setTimeout(() => {
+        const active = element.ownerDocument.activeElement;
+        if (active?.tagName === "IFRAME" && element.isConnected && element.contains(active)) {
+            active.dispatchEvent(new FocusEvent("focusin", { bubbles: true }));
+        }
+    }, 0);
+    view?.addEventListener("blur", onPageBlur);
+    element.__hosUntrackFocus = () => view?.removeEventListener("blur", onPageBlur);
+}
+
+/** Stops the focus tracking of a closed window, so the page does not keep it alive. */
+export function untrackFocus(element) {
+    element?.__hosUntrackFocus?.();
+    if (element) {
+        delete element.__hosUntrackFocus;
+        delete element.__hosLastFocus;
+    }
 }
 
 /**
