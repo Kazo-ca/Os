@@ -913,6 +913,8 @@ public static class EcosystemServiceCollectionExtensions
                 Passkeys = () => provider.GetRequiredService<PasskeyService>(),
                 // ADR 0187: the guest's "Create my account", shown by the host.
                 GuestRequests = () => provider.GetRequiredService<GuestAccountRequests>(),
+                // KazoCloudAccounts (ADR 0270): Explorer and Settings connect and remove cloud accounts.
+                CloudAccounts = () => provider.GetRequiredService<Kazo.Os.Platform.Core.CloudAccounts.CloudAccountService>(),
                 // KazoComponentProviders (ADR 0156): a third-party provider goes through the approval window.
                 ComponentProviders = () => provider.GetRequiredService<Kazo.Os.Platform.Core.ComponentProviders.ComponentProviderService>(),
                 ApprovalPrompt = () => provider.GetRequiredService<IDangerousCapabilityApprovalPrompt>(),

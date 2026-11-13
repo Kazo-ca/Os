@@ -26,3 +26,116 @@ override Kazo.Os.AppSdk.Apps.KazoPackageInstallProgress.GetHashCode() -> int
 override Kazo.Os.AppSdk.Apps.KazoPackageInstallProgress.ToString() -> string!
 static Kazo.Os.AppSdk.Apps.KazoPackageInstallProgress.operator !=(Kazo.Os.AppSdk.Apps.KazoPackageInstallProgress? left, Kazo.Os.AppSdk.Apps.KazoPackageInstallProgress? right) -> bool
 static Kazo.Os.AppSdk.Apps.KazoPackageInstallProgress.operator ==(Kazo.Os.AppSdk.Apps.KazoPackageInstallProgress? left, Kazo.Os.AppSdk.Apps.KazoPackageInstallProgress? right) -> bool
+Kazo.Os.AppSdk.CloudAccounts.IAppCloudAccountsGateway
+Kazo.Os.AppSdk.CloudAccounts.IAppCloudAccountsGateway.CanConnectAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<bool>
+Kazo.Os.AppSdk.CloudAccounts.IAppCloudAccountsGateway.ConnectAsync(string! providerId, Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccessScope scope, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccount!>
+Kazo.Os.AppSdk.CloudAccounts.IAppCloudAccountsGateway.GetAccountsAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccount!>!>
+Kazo.Os.AppSdk.CloudAccounts.IAppCloudAccountsGateway.GetProvidersAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.CloudAccounts.KazoCloudProvider!>!>
+Kazo.Os.AppSdk.CloudAccounts.IAppCloudAccountsGateway.PrepareAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Kazo.Os.AppSdk.CloudAccounts.IAppCloudAccountsGateway.ReconnectAsync(string! accountId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccount!>
+Kazo.Os.AppSdk.CloudAccounts.IAppCloudAccountsGateway.RemoveAsync(string! accountId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccessScope
+Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccessScope.AppFolder = 1 -> Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccessScope
+Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccessScope.Full = 0 -> Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccessScope
+Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccount
+Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccount.<Clone>$() -> Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccount!
+Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccount.ConnectedAtUtc.get -> System.DateTimeOffset
+Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccount.ConnectedAtUtc.init -> void
+Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccount.Deconstruct(out string! Id, out string! ProviderId, out Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccessScope Scope, out string! DisplayName, out Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccountState State, out System.DateTimeOffset ConnectedAtUtc) -> void
+Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccount.DisplayName.get -> string!
+Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccount.DisplayName.init -> void
+Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccount.Equals(Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccount? other) -> bool
+Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccount.Id.get -> string!
+Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccount.Id.init -> void
+Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccount.KazoCloudAccount(string! Id, string! ProviderId, Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccessScope Scope, string! DisplayName, Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccountState State, System.DateTimeOffset ConnectedAtUtc) -> void
+Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccount.ProviderId.get -> string!
+Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccount.ProviderId.init -> void
+Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccount.Scope.get -> Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccessScope
+Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccount.Scope.init -> void
+Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccount.State.get -> Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccountState
+Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccount.State.init -> void
+Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccountError
+Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccountError.AccountMismatch = 11 -> Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccountError
+Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccountError.AccountNotFound = 4 -> Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccountError
+Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccountError.Cancelled = 6 -> Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccountError
+Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccountError.Denied = 7 -> Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccountError
+Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccountError.InvalidResponse = 9 -> Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccountError
+Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccountError.KeyringLocked = 2 -> Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccountError
+Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccountError.NotSignedIn = 1 -> Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccountError
+Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccountError.Other = 0 -> Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccountError
+Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccountError.ProviderNotConfigured = 3 -> Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccountError
+Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccountError.ProviderUnavailable = 8 -> Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccountError
+Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccountError.ReconnectRequired = 10 -> Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccountError
+Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccountError.WindowBlocked = 5 -> Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccountError
+Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccountException
+Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccountException.Error.get -> Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccountError
+Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccountException.KazoCloudAccountException(Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccountError error, string! message) -> void
+Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccountState
+Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccountState.Connected = 0 -> Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccountState
+Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccountState.NeedsReconnect = 1 -> Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccountState
+Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccounts
+Kazo.Os.AppSdk.CloudAccounts.KazoCloudProvider
+Kazo.Os.AppSdk.CloudAccounts.KazoCloudProvider.<Clone>$() -> Kazo.Os.AppSdk.CloudAccounts.KazoCloudProvider!
+Kazo.Os.AppSdk.CloudAccounts.KazoCloudProvider.Deconstruct(out string! Id, out string! DisplayName, out System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccessScope>! Scopes) -> void
+Kazo.Os.AppSdk.CloudAccounts.KazoCloudProvider.DisplayName.get -> string!
+Kazo.Os.AppSdk.CloudAccounts.KazoCloudProvider.DisplayName.init -> void
+Kazo.Os.AppSdk.CloudAccounts.KazoCloudProvider.Equals(Kazo.Os.AppSdk.CloudAccounts.KazoCloudProvider? other) -> bool
+Kazo.Os.AppSdk.CloudAccounts.KazoCloudProvider.Id.get -> string!
+Kazo.Os.AppSdk.CloudAccounts.KazoCloudProvider.Id.init -> void
+Kazo.Os.AppSdk.CloudAccounts.KazoCloudProvider.KazoCloudProvider(string! Id, string! DisplayName, System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccessScope>! Scopes) -> void
+Kazo.Os.AppSdk.CloudAccounts.KazoCloudProvider.Scopes.get -> System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccessScope>!
+Kazo.Os.AppSdk.CloudAccounts.KazoCloudProvider.Scopes.init -> void
+Kazo.Os.AppSdk.CloudAccounts.UnsupportedAppCloudAccountsGateway
+Kazo.Os.AppSdk.CloudAccounts.UnsupportedAppCloudAccountsGateway.CanConnectAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<bool>
+Kazo.Os.AppSdk.CloudAccounts.UnsupportedAppCloudAccountsGateway.ConnectAsync(string! providerId, Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccessScope scope, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccount!>
+Kazo.Os.AppSdk.CloudAccounts.UnsupportedAppCloudAccountsGateway.GetAccountsAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccount!>!>
+Kazo.Os.AppSdk.CloudAccounts.UnsupportedAppCloudAccountsGateway.GetProvidersAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.CloudAccounts.KazoCloudProvider!>!>
+Kazo.Os.AppSdk.CloudAccounts.UnsupportedAppCloudAccountsGateway.PrepareAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Kazo.Os.AppSdk.CloudAccounts.UnsupportedAppCloudAccountsGateway.ReconnectAsync(string! accountId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccount!>
+Kazo.Os.AppSdk.CloudAccounts.UnsupportedAppCloudAccountsGateway.RemoveAsync(string! accountId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Kazo.Os.AppSdk.IAppExecutionContext.CloudAccounts.get -> Kazo.Os.AppSdk.CloudAccounts.IAppCloudAccountsGateway!
+Kazo.Os.AppSdk.IO.IAppDriveGateway.GetNetworkDriveTypesAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<string!>!>
+Kazo.Os.AppSdk.IO.IAppDriveGateway.MountNetworkDriveAsync(Kazo.Os.AppSdk.IO.KazoNetworkDriveRequest! request, string? mountPoint, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.IO.KazoDriveSnapshot?>
+Kazo.Os.AppSdk.IO.KazoDriveInfo.Account.get -> string?
+Kazo.Os.AppSdk.IO.KazoDriveSnapshot.Account.get -> string?
+Kazo.Os.AppSdk.IO.KazoDriveSnapshot.Account.init -> void
+Kazo.Os.AppSdk.IO.KazoNetworkDriveRequest
+Kazo.Os.AppSdk.IO.KazoNetworkDriveRequest.<Clone>$() -> Kazo.Os.AppSdk.IO.KazoNetworkDriveRequest!
+Kazo.Os.AppSdk.IO.KazoNetworkDriveRequest.Account.get -> string?
+Kazo.Os.AppSdk.IO.KazoNetworkDriveRequest.Account.init -> void
+Kazo.Os.AppSdk.IO.KazoNetworkDriveRequest.Deconstruct(out string! Type, out string? Account, out string? Root) -> void
+Kazo.Os.AppSdk.IO.KazoNetworkDriveRequest.Equals(Kazo.Os.AppSdk.IO.KazoNetworkDriveRequest? other) -> bool
+Kazo.Os.AppSdk.IO.KazoNetworkDriveRequest.KazoNetworkDriveRequest(string! Type, string? Account = null, string? Root = null) -> void
+Kazo.Os.AppSdk.IO.KazoNetworkDriveRequest.Options.get -> System.Collections.Generic.IReadOnlyDictionary<string!, string!>?
+Kazo.Os.AppSdk.IO.KazoNetworkDriveRequest.Options.init -> void
+Kazo.Os.AppSdk.IO.KazoNetworkDriveRequest.Root.get -> string?
+Kazo.Os.AppSdk.IO.KazoNetworkDriveRequest.Root.init -> void
+Kazo.Os.AppSdk.IO.KazoNetworkDriveRequest.Secrets.get -> System.Collections.Generic.IReadOnlyDictionary<string!, string!>?
+Kazo.Os.AppSdk.IO.KazoNetworkDriveRequest.Secrets.init -> void
+Kazo.Os.AppSdk.IO.KazoNetworkDriveRequest.Type.get -> string!
+Kazo.Os.AppSdk.IO.KazoNetworkDriveRequest.Type.init -> void
+override Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccount.Equals(object? obj) -> bool
+override Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccount.GetHashCode() -> int
+override Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccount.ToString() -> string!
+override Kazo.Os.AppSdk.CloudAccounts.KazoCloudProvider.Equals(object? obj) -> bool
+override Kazo.Os.AppSdk.CloudAccounts.KazoCloudProvider.GetHashCode() -> int
+override Kazo.Os.AppSdk.CloudAccounts.KazoCloudProvider.ToString() -> string!
+override Kazo.Os.AppSdk.IO.KazoNetworkDriveRequest.Equals(object? obj) -> bool
+override Kazo.Os.AppSdk.IO.KazoNetworkDriveRequest.GetHashCode() -> int
+override Kazo.Os.AppSdk.IO.KazoNetworkDriveRequest.ToString() -> string!
+static Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccount.operator !=(Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccount? left, Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccount? right) -> bool
+static Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccount.operator ==(Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccount? left, Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccount? right) -> bool
+static Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccounts.CanConnectAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<bool>!
+static Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccounts.ConnectAsync(string! providerId, Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccessScope scope, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccount!>!
+static Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccounts.GetAccountsAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccount!>!>!
+static Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccounts.GetProvidersAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.CloudAccounts.KazoCloudProvider!>!>!
+static Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccounts.PrepareAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+static Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccounts.ReconnectAsync(string! accountId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccount!>!
+static Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccounts.RemoveAsync(string! accountId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+static Kazo.Os.AppSdk.CloudAccounts.KazoCloudProvider.operator !=(Kazo.Os.AppSdk.CloudAccounts.KazoCloudProvider? left, Kazo.Os.AppSdk.CloudAccounts.KazoCloudProvider? right) -> bool
+static Kazo.Os.AppSdk.CloudAccounts.KazoCloudProvider.operator ==(Kazo.Os.AppSdk.CloudAccounts.KazoCloudProvider? left, Kazo.Os.AppSdk.CloudAccounts.KazoCloudProvider? right) -> bool
+static Kazo.Os.AppSdk.CloudAccounts.UnsupportedAppCloudAccountsGateway.Instance.get -> Kazo.Os.AppSdk.CloudAccounts.UnsupportedAppCloudAccountsGateway!
+static Kazo.Os.AppSdk.IO.KazoDriveInfo.GetNetworkDriveTypesAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<string!>!>!
+static Kazo.Os.AppSdk.IO.KazoDriveInfo.MountNetworkDriveAsync(Kazo.Os.AppSdk.IO.KazoNetworkDriveRequest! request, string? mountPoint = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Kazo.Os.AppSdk.IO.KazoDriveInfo?>!
+static Kazo.Os.AppSdk.IO.KazoNetworkDriveRequest.operator !=(Kazo.Os.AppSdk.IO.KazoNetworkDriveRequest? left, Kazo.Os.AppSdk.IO.KazoNetworkDriveRequest? right) -> bool
+static Kazo.Os.AppSdk.IO.KazoNetworkDriveRequest.operator ==(Kazo.Os.AppSdk.IO.KazoNetworkDriveRequest? left, Kazo.Os.AppSdk.IO.KazoNetworkDriveRequest? right) -> bool

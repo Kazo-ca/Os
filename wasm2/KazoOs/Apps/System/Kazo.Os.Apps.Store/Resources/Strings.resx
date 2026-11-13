@@ -606,4 +606,10 @@
   <data name="Capability.windows.manage.Title" xml:space="preserve">
     <value>Manage windows</value>
   </data>
+  <data name="Capability.cloud-accounts.manage.Title" xml:space="preserve">
+    <value>Manage cloud accounts</value>
+  </data>
+  <data name="Capability.cloud-accounts.manage.Risk" xml:space="preserve">
+    <value>Connect or remove your Dropbox, OneDrive or S3 accounts and mount their storage as network drives.</value>
+  </data>
 </root>
