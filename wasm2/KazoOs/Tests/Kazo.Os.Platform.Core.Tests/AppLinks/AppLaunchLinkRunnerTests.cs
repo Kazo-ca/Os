@@ -12,7 +12,7 @@ using Kazo.Os.Simulation.Abstractions.Sessions;
 
 namespace Kazo.Os.Platform.Core.Tests.AppLinks;
 
-/// <summary>ADR 0246 §3, §5, §6: installing and launching the app of a direct link for the guest.</summary>
+/// <summary>ADR 0258 §3, §5, §6: installing and launching the app of a direct link for the guest.</summary>
 public sealed class AppLaunchLinkRunnerTests
 {
     private const string AppId = "ca.kazo.word";

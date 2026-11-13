@@ -2,7 +2,7 @@ using Kazo.Os.Platform.Core.AppLinks;
 
 namespace Kazo.Os.Platform.Core.Tests.AppLinks;
 
-/// <summary>ADR 0246 §1 and §2: reading a direct app launch link and removing it from the address.</summary>
+/// <summary>ADR 0258 §1 and §2: reading a direct app launch link and removing it from the address.</summary>
 public sealed class AppLaunchLinkTests
 {
     [Theory]

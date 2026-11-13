@@ -43,7 +43,7 @@ créer son propre compte en gardant ou non le travail de l'invité. Décision :
 
 ### Par un lien direct
 
-Une adresse `?autolaunch=<appId>` ([ADR 0246](adr/0246-direct-app-launch-link.md)) démarre
+Une adresse `?autolaunch=<appId>` ([ADR 0258](adr/0258-direct-app-launch-link.md)) démarre
 l'invité sans clic : s'il n'existe aucun compte, l'OS fait **Démarrer en invité** ; si l'invité est
 le seul compte, il fait **Continuer en invité**. Avec un autre compte, l'écran de connexion reste
 le même, avec un bandeau qui nomme l'app que le Store ouvrira après la connexion.

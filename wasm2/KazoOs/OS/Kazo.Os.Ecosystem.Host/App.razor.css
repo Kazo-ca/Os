@@ -335,7 +335,7 @@ code {
     font-size: 0.875rem;
 }
 
-/* ADR 0246 §4: the app a direct link will open in the Store after sign-in. */
+/* ADR 0258 §4: the app a direct link will open in the Store after sign-in. */
 .app-link-notice {
     margin: 0 0 0.75rem;
     padding: 0.5rem 0.75rem;

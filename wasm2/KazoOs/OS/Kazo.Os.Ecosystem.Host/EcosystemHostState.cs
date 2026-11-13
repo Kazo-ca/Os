@@ -29,13 +29,13 @@ public sealed class EcosystemHostState
     public bool UpdateAvailable { get; private set; }
 
     /// <summary>
-    /// Gets the direct app launch link read from the address at boot (ADR 0246), until the first
+    /// Gets the direct app launch link read from the address at boot (ADR 0258), until the first
     /// desktop takes it; <see langword="null"/> when none waits. It lives in memory only: closing
     /// the tab forgets it, and the address no longer carries it.
     /// </summary>
     public AppLaunchLink? PendingAppLaunch { get; private set; }
 
-    /// <summary>Keeps the link read at boot until a session's desktop is shown (ADR 0246 §2).</summary>
+    /// <summary>Keeps the link read at boot until a session's desktop is shown (ADR 0258 §2).</summary>
     /// <param name="link">The link read from the address.</param>
     public void SetPendingAppLaunch(AppLaunchLink link) =>
         PendingAppLaunch = link ?? throw new ArgumentNullException(nameof(link));

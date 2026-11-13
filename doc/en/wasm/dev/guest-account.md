@@ -40,7 +40,7 @@ then create your own account, keeping the guest's work or not. Decision:
 
 ### From a direct link
 
-An address `?autolaunch=<appId>` ([ADR 0246](adr/0246-direct-app-launch-link.md)) starts the guest
+An address `?autolaunch=<appId>` ([ADR 0258](adr/0258-direct-app-launch-link.md)) starts the guest
 without a click: with no account, the OS does **Start as Guest**; with the guest as the only
 account, it does **Continue as Guest**. With another account, the sign-in screen stays the same,
 with a notice naming the app the Store will open after sign-in.

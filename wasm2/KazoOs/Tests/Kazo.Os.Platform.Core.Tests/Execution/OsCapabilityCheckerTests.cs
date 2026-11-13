@@ -4,7 +4,7 @@ using Kazo.Os.Simulation.Abstractions.Gateways;
 
 namespace Kazo.Os.Platform.Core.Tests.Execution;
 
-/// <summary>ADR 0246 §3: the gateway the OS uses for a direct link holds only the capabilities it was given.</summary>
+/// <summary>ADR 0258 §3: the gateway the OS uses for a direct link holds only the capabilities it was given.</summary>
 public sealed class OsCapabilityCheckerTests
 {
     [Fact]

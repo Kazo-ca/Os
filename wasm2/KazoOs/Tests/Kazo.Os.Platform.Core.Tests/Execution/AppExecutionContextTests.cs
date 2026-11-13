@@ -44,7 +44,7 @@ public sealed class AppExecutionContextTests
     [Fact]
     public async Task The_os_gets_no_management_gateway_from_a_host_that_cannot_manage_apps()
     {
-        // ADR 0246 §3: without the app-catalog services the direct link has nothing to install with.
+        // ADR 0258 §3: without the app-catalog services the direct link has nothing to install with.
         Fixture fixture = new();
         await fixture.CreateContextAsync([]);
         AuthenticatedPrincipal principal = fixture.Session.CurrentPrincipal!;
