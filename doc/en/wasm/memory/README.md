@@ -12,14 +12,20 @@ at the end of each series or when a convention changes.
 - **Active code**: `wasm2/KazoOs/` (simulated OS in Blazor WebAssembly, .NET 10,
   solution `Kazo.Os.sln`). `src/` is the old version, kept as a
   reference.
-- **Version**: Kazo OS and the SDK move to **3.3.0** (branch `release/3.3.0`,
-  2026-11-11): build number and version status at sign-in (ADR 0236), start on
+- **Version**: Kazo OS and the SDK move to **3.3.1** (branch `release/3.3.1`,
+  2026-11-13), a patch: the published service worker serves an installed app's
+  page loaded in an iframe (ADR 0243, PR #451) and windows keep their place in
+  the page, so an iframe no longer reloads when its window comes to the front
+  (ADR 0244, PR #452). It unblocks the Kazo Word trial in the published OS.
+  3 API lines of Windowing.Core folded (`WindowDocumentOrder`), no SDK change,
+  2 entries in `changes/3.3.1.json`; published when the PR lands in `main`.
+- **Version 3.3.0** (2026-11-11, published): build number and version status at sign-in (ADR 0236), start on
   the latest version and replace an older worker (ADR 0237, 0239, 0241), an
   app failure stays in its window (ADR 0238), detailed error page (ADR 0240),
   "Allow for the machine" withdraws the user's own refusal (PR #428), whole
   CoreLib and exact API check for installed apps (ADR 0242). 115 API lines
   folded (SDK additions in App Abstractions and AppSdk.Blazor, hence the minor
-  version), 7 entries in `changes/3.3.0.json`; published when the PR lands in `main`.
+  version), 7 entries in `changes/3.3.0.json`.
 - **Version 3.2.1** (2026-11-08, published), a patch: the rename migration of 3.0.0 writes the new hash of the
   rewritten configuration files, and a one-time repair at boot
   (`RenamedContentRepair`, [`rename-migration.md`](../dev/rename-migration.md))

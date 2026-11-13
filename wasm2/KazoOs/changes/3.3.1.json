@@ -1,0 +1,44 @@
+{
+  "version": "3.3.1",
+  "date": "2026-11-13",
+  "entries": [
+    {
+      "id": "78ce89dc-3542-49b4-bd5d-043c993eeae3",
+      "category": "fixed",
+      "audience": [
+        "user",
+        "developer"
+      ],
+      "title": {
+        "en": "A window that comes to the front no longer reloads its frames",
+        "fr": "Une fenêtre qui passe devant ne recharge plus ses cadres"
+      },
+      "description": {
+        "en": "Windows keep their place in the page and only their stacking changes, so an app shown in a frame, such as Kazo Word or the browser, keeps its document or page when you click another window, and on mobile when you switch apps. A window that receives the keyboard focus, with Tab or a click in its frame, now comes to the front.",
+        "fr": "Les fenêtres gardent leur place dans la page et seul leur empilement change : une app affichée dans un cadre, comme Kazo Word ou le navigateur, garde son document ou sa page quand on clique sur une autre fenêtre, et sur mobile quand on change d'app. Une fenêtre qui reçoit le focus clavier, par Tab ou un clic dans son cadre, passe maintenant devant."
+      },
+      "links": [
+        "doc/en/wasm/dev/adr/0244-stable-window-order-in-the-page.md"
+      ]
+    },
+    {
+      "id": "75ee8486-119c-45bd-abe0-a542d7137c18",
+      "category": "fixed",
+      "audience": [
+        "user",
+        "developer"
+      ],
+      "title": {
+        "en": "An installed app's page opens in its window, not a second Kazo OS",
+        "fr": "La page d'une app installée s'ouvre dans sa fenêtre, pas un second Kazo OS"
+      },
+      "description": {
+        "en": "An installed app that shows one of its own web pages in a frame, such as Kazo Word, now gets that page, with the parameters in its address, online and offline. Before, the published Kazo OS answered with its own start page and a second Kazo OS started inside the window.",
+        "fr": "Une app installée qui affiche une de ses propres pages web dans un cadre, comme Kazo Word, reçoit maintenant cette page, avec les paramètres de son adresse, en ligne et hors ligne. Avant, Kazo OS publié répondait par sa propre page de démarrage et un second Kazo OS démarrait dans la fenêtre."
+      },
+      "links": [
+        "doc/en/wasm/dev/adr/0243-serve-installed-app-pages.md"
+      ]
+    }
+  ]
+}

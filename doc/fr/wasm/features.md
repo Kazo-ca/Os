@@ -277,7 +277,7 @@ Cette section liste ce qui est publié dans la branche `main` et en ligne.
   ([ADR 0174](dev/adr/0174-announce-a-new-version-to-open-sessions.md),
   [ADR 0223](dev/adr/0223-restart-onto-the-new-version.md))
 - **Numéro de build et état de la version sur l'écran de connexion** : à côté
-  de « Kazo OS 3.3.0 », le numéro de build (nombre de commits, le même pour le
+  de « Kazo OS 3.3.1 », le numéro de build (nombre de commits, le même pour le
   site, la Release et le serveur) et une pastille « À jour », « Obsolète : … »
   ou « État inconnu (hors ligne) », vérifiée dès le démarrage.
   ([ADR 0236](dev/adr/0236-build-number-and-version-status-at-sign-in.md))

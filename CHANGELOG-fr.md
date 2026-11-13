@@ -6,6 +6,13 @@ Les changements de Kazo OS, par version. Ce fichier est généré à partir de `
 `wasm2/KazoOs/build/tools/collect-changes.sh` (ADR 0186) : ne pas le modifier à la main. Les changements
 déjà déployés mais pas encore publiés sont dans la page Paramètres ▸ Nouveautés de l'OS.
 
+## 3.3.1 (2026-11-13)
+
+### Corrigé
+
+- **Une fenêtre qui passe devant ne recharge plus ses cadres.** Les fenêtres gardent leur place dans la page et seul leur empilement change : une app affichée dans un cadre, comme Kazo Word ou le navigateur, garde son document ou sa page quand on clique sur une autre fenêtre, et sur mobile quand on change d'app. Une fenêtre qui reçoit le focus clavier, par Tab ou un clic dans son cadre, passe maintenant devant. ([0244-stable-window-order-in-the-page.md](doc/fr/wasm/dev/adr/0244-stable-window-order-in-the-page.md))
+- **La page d'une app installée s'ouvre dans sa fenêtre, pas un second Kazo OS.** Une app installée qui affiche une de ses propres pages web dans un cadre, comme Kazo Word, reçoit maintenant cette page, avec les paramètres de son adresse, en ligne et hors ligne. Avant, Kazo OS publié répondait par sa propre page de démarrage et un second Kazo OS démarrait dans la fenêtre. ([0243-serve-installed-app-pages.md](doc/fr/wasm/dev/adr/0243-serve-installed-app-pages.md))
+
 ## 3.3.0 (2026-11-11)
 
 ### Nouveau
