@@ -423,6 +423,7 @@ points to its PR.
 | Feature | Description | ADR | Issue |
 | --- | --- | --- | --- |
 | Application catalog | Catalog format, checking and publishing of the offered applications. | [0188](dev/adr/0188-hack-store-and-app-catalog.md) | [AppMarketPlace #1](https://github.com/Kazo-ca/Os-AppMarketPlace/issues/1) |
+| Offer a Store app for a file | Opening a file no installed app supports offers the Store apps that declare its type (for example Kazo Word for a `.docx`), then opens the file after the install. | [0257](dev/adr/0257-offer-a-store-app-for-an-unsupported-file.md) | Series `open-with-store/base` |
 
 ### Personalization
 
