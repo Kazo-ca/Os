@@ -487,9 +487,12 @@ public partial class StoreWindow
     /// The step of an action in words (ADR 0266 §7), such as « Téléchargement… 45 % (1,2 Mo sur
     /// 2,7 Mo) », instead of a bare « Working… ».
     /// </summary>
-    private string OperationText(StoreOperation operation) => operation.Stage switch
+    /// <param name="operation">The action.</param>
+    /// <param name="compact">On a card: the percent alone, without the sizes.</param>
+    private string OperationText(StoreOperation operation, bool compact = false) => operation.Stage switch
     {
         StoreOperationStage.Queued => L["Progress.Queued"],
+        StoreOperationStage.Downloading when compact && operation.Percent is { } shortPercent => L["Progress.DownloadingShort", shortPercent],
         StoreOperationStage.Preparing => L["Progress.Preparing"],
         StoreOperationStage.Downloading when operation.Percent is { } percent =>
             L["Progress.DownloadingPercent", percent, SizeText(operation.BytesReceived ?? 0), SizeText(operation.TotalBytes ?? 0)],

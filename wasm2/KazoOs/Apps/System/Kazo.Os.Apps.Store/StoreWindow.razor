@@ -257,7 +257,7 @@
     {
         @if (Operations.Find(id) is { } operation)
         {
-            string text = OperationText(operation);
+            string text = OperationText(operation, compact);
             <span class="store-operation @(compact ? "is-compact" : null)" role="@(compact ? null : "status")" data-stage="@operation.Stage">
                 <span class="store-operation-text">@text</span>
                 <progress class="store-operation-bar" max="100" value="@operation.Percent" aria-label="@text"></progress>

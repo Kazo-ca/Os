@@ -315,6 +315,9 @@
   <data name="Progress.DownloadingPercent" xml:space="preserve">
     <value>Téléchargement… {0} % ({1} sur {2})</value>
   </data>
+  <data name="Progress.DownloadingShort" xml:space="preserve">
+    <value>Téléchargement… {0} %</value>
+  </data>
   <data name="Progress.Verifying" xml:space="preserve">
     <value>Vérification du paquet…</value>
   </data>
