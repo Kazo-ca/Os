@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <Import Project="../../Platform/Packaging.props" />
+
+  <PropertyGroup>
+    <PackageId>Kazo.Os.AppSdk.Craft</PackageId>
+    <Description>Kazo OS module for the Craft apps (Rust apps compiled to WebAssembly, shown in an iframe of their window): the frame, the iframe proxy, the documents and their files, the per-user settings.</Description>
+    <PackageTags>kazoos;app-sdk;blazor;craft</PackageTags>
+  </PropertyGroup>
+
+  <!--
+    ADR 0259: the code every Craft app shares, taken from Kazo Word and made generic. An SDK library
+    (ADR 0055): no Platform Core, no MudBlazor. Kazo.Os.Platform.Blazor references it, so every OS
+    host publishes it and serves its wwwroot/ at _content/Kazo.Os.AppSdk.Craft/; an app references it
+    to compile and never carries it in its package (ADR 0221: the SDK comes with the OS).
+    The scripts under wwwroot/ (craft-host.js, craft-proxy.js and its modules) are work item 3.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsTrimmable>true</IsTrimmable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <SupportedPlatform Include="browser" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="10.0.14" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Kazo.Os.App.Abstractions\Kazo.Os.App.Abstractions.csproj" />
+    <ProjectReference Include="..\Kazo.Os.AppSdk\Kazo.Os.AppSdk.csproj" />
+    <ProjectReference Include="..\Kazo.Os.AppSdk.Blazor\Kazo.Os.AppSdk.Blazor.csproj" />
+  </ItemGroup>
+
+</Project>

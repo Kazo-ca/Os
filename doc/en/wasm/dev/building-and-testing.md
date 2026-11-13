@@ -335,6 +335,7 @@ dotnet test Kazo.Os.sln
 |---|---|
 | `Tests/*.Tests` (non-E2E) | Unit and component tests (xUnit, bUnit), one project per code project. Fast, no browser. |
 | `Tests/Kazo.Os.AppSdk.Web.Tests` | ASP.Kazo: router, pipeline of a site compiled with the route generator, generator driven on snippets (`KOSWEB*`), host page and `blazor.boot.json` of a Blazor site. |
+| `Tests/Kazo.Os.AppSdk.Craft.Tests` | Module of the Craft apps (ADR 0259): app start, reserved chords, language, picker, per-user settings, save rule (`DocumentSession`), formats, and what `CraftFrame` hands `craft-host.js` (fake `IJSRuntime`). |
 | `Tests/Kazo.Os.AppSdk.Web.Blazor.Tests` | Blazor sites: router (`KazoSiteRouter`), tab navigation manager, `KazoWebSite`. |
 | `Tests/Kazo.Os.Samples.Intranet.Tests` | In-memory Intranet sample (`KazoWebHost.CreateApplication`): `.cshtml` and `.razor` views, `wwwroot`, session, anti-forgery, form CRUD, REST API, host page of the Blazor dashboard. The flow in Chromium is `BrowserIntranetTests` (UI E2E). |
 | `Tests/Kazo.Os.Tools.ManifestGenerator.Tests` | Real MSBuild builds of the `Tests/ManifestGenerator.Fixtures.*` projects: generation, aggregation, SDK boundary. Slower. |
