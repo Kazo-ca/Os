@@ -4,10 +4,10 @@
 
 ## Statut
 
-Proposée le 2026-11-13, à la demande de Benoit. Série `app-link/base`. Quatre
-questions sont posées à Benoit dans le fil du projet (voir
-[Questions](#questions-posées-à-benoit)) ; tant qu'il n'a pas répondu, la
-recommandation de chacune est retenue, comme le veut la règle des questions.
+Acceptée le 2026-11-13. Benoit a retenu la recommandation A des quatre
+questions (voir [Questions](#questions-posées-à-benoit)) : paramètre
+`autolaunch`, aucune confirmation, l'invité existant continue sans clic,
+installation pour l'invité seulement. Série `app-link/base`.
 
 - **S'appuie sur :** l'[ADR 0187](0187-guest-start-and-sign-in-credits.md)
   (démarrage en invité quand aucun compte n'existe), l'[ADR 0212](0212-hack-store-app-build.md)
@@ -158,7 +158,7 @@ Aucun changement du SDK des apps n'est prévu : tout se passe dans l'hôte et
 
 ## Questions posées à Benoit
 
-Posées dans le fil du projet le 2026-11-13. La recommandation est marquée.
+Posées dans le fil du projet le 2026-11-13. Benoit a répondu A aux quatre le même jour.
 
 - **Q1. Nom du paramètre.** A `autolaunch` (recommandé, anglais correct) ;
   B `autolunch` comme dans l'exemple ; C `autolaunch` documenté et `autolunch`

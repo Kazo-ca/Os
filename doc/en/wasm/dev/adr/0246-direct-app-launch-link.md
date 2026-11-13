@@ -4,10 +4,10 @@
 
 ## Status
 
-Proposed on 2026-11-13, at Benoit's request. Series `app-link/base`. Four
-questions are asked to Benoit in the project thread (see
-[Questions](#questions-asked-to-benoit)); until he answers, the recommendation
-of each one is taken, as the questions rule says.
+Accepted on 2026-11-13. Benoit took recommendation A for all four questions
+(see [Questions](#questions-asked-to-benoit)): parameter `autolaunch`, no
+confirmation, the existing guest continues without a click, install for the
+guest only. Series `app-link/base`.
 
 - **Builds on:** [ADR 0187](0187-guest-start-and-sign-in-credits.md) (guest
   start when no account exists), [ADR 0212](0212-hack-store-app-build.md) (the
@@ -154,7 +154,7 @@ No change to the app SDK is planned: everything happens in the host and
 
 ## Questions asked to Benoit
 
-Asked in the project thread on 2026-11-13. The recommendation is marked.
+Asked in the project thread on 2026-11-13. Benoit answered A to all four the same day.
 
 - **Q1. Parameter name.** A `autolaunch` (recommended, correct English);
   B `autolunch` as in the example; C `autolaunch` documented and `autolunch`
