@@ -506,10 +506,10 @@ list of formats and its iframe page (`wwwroot/host/index.html`).
 | `CraftFrameOptions` | `PagePath` (`PagePathOf(assembly)` = `_content/<assembly>/host/index.html`), `Title`, `Language`, `Parameters` (added to the page address, for example `author`, `webgl`), `ReservedKeys`, `Settings` |
 | `FrameStartup`, `FrameState` | Loading screen, app, or error screen with "Retry": `OnReady`, `OnFailed`, `OnTimeout(attempt)`, `Retry`, `Timeout` (60 s) |
 | `ReservedKeys`, `ReservedKey`, `ReservedKeyTarget` | Chords the iframe gives back: `Os` (window manager), `NewWindow` (`Ctrl+N`, for the window), `All`, `Parse(chord, target)` |
-| `CraftLanguage` | `Pick(culture, available)`: the Craft app's language code, else `en` |
+| `CraftLanguage` | `Pick(culture, available)`: the Craft app's language code (regional such as `pt-br`, or two letters such as `pt` when the app lists only those), else `en` |
 | `CraftDocumentFormat`, `CraftDocumentFormats` | The app's list of formats: `All`, `OpenExtensions`, `FileHandlers` (for the manifest), `Find`, `IsCopy`; paths: `ExtensionOf`, `FileNameOf`, `FolderOf`, `WithExtensionOf` |
 | `DocumentSession`, `SaveDecision`, `SaveAction` | A window's documents and their files: `Opened`, `SetFrameDirty`, `Decide(name, saveAs)` (`Rewrite`, `AskAndBind`, `AskForCopy`), `Saved`, `SaveFailed`, `Renamed`, `WithUnsavedWork`, `Title(untitled)`, `IsDirty`, `IsUntouchedBlank` |
-| `OpenDocument`, `OpenRequest` | `OpenDocument.ListFrom(ui.inspect)`; `OpenRequest.FromArguments(arguments)` (first absolute path, `--webgl`) |
+| `OpenDocument`, `OpenRequest` | `OpenDocument.ListFrom(ui.inspect, nameOfTitle)` (WordCraft shape `documents[].id` or GridCraft shape `windows[].doc`); `OpenRequest.FromArguments(arguments)` (first absolute path, `--webgl`) |
 | `WebStorageFile` | The app's settings for one Kazo user: `~/.config/<appId>/web-storage.json`; `LoadAsync`, `Set`, `SaveAsync` (one write at a time), `Entries` |
 | `PickRequest`, `PickedFile` | The app's file picker: `Extensions`, `AcceptsAny`, `AcceptsOnly`, `FromJson` |
 

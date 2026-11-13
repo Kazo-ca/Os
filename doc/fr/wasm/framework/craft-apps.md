@@ -113,7 +113,18 @@ await frame.StartAsync(_frameHost, new CraftFrameOptions(CraftFrameOptions.PageP
 
 `IWindowCloseGuard.ConfirmCloseAsync` : `RequestAsync("ui.inspect")`,
 `OpenDocument.ListFrom`, `DocumentSession.WithUnsavedWork` ; « Oui » enregistre chaque document
-et ne ferme que si toutes les écritures ont réussi.
+et ne ferme que si toutes les écritures ont réussi (voir le piège du §6).
+
+**`ui.inspect` a deux formes.** WordCraft donne `documents[{ id, title, dirty, active, path }]` ;
+GridCraft donne `documents[{ title, dirty }]` et `windows[{ doc, index, active }]` (`index` = la
+place du document dans `documents`). `OpenDocument.ListFrom(inspect, nameOfTitle)` lit les deux :
+un document par identifiant (`id` ou `doc`), son chemin quand l'app le donne, sinon
+`nameOfTitle(title)`, le nom de fichier que l'app lui donne (GridCraft : `title + ".xlsx"`), à
+retrouver dans `DocumentSession`.
+
+**Langue** : `CraftLanguage.Pick(culture, langues)` rend le code régional que l'app liste
+(WordCraft : `pt-br`, `zh-hans`, `sr-latn`), sinon le code à deux lettres s'il est listé
+(GridCraft : `pt`, `sr`), sinon `en`. Passer la liste exacte de l'app suffit.
 
 **Contexte d'exécution** : les événements arrivent de JavaScript (`[JSInvokable]`). Chaque
 gestionnaire qui touche au SDK (`KazoFile`, `KazoApps`) commence par
@@ -135,7 +146,21 @@ fichier, passer le nom que l'app Craft lui donne (le `title` de `ui.inspect`) pl
 refusée) : une app Craft dont la sauvegarde n'a pas d'`id` s'efface « modifié » dès qu'elle
 la remet.
 
-## 6. Ce que le module ne fait pas encore
+## 6. Pièges
+
+- **L'app Craft se dit propre avant l'écriture.** `craft-web-host` efface « modifié » dès qu'il
+  remet les octets d'une sauvegarde, avant que la fenêtre ne les ait écrits (dialogue, disque).
+  Une garde de fermeture qui enverrait la commande d'enregistrement puis relirait `ui.inspect`
+  croirait le document enregistré et fermerait la fenêtre pendant l'écriture. La garde attend
+  donc la fin de **ses** écritures (le `Task` du gestionnaire `Saving`, ou `DocumentSession`
+  qui ne passe à `Saved` qu'une fois le fichier écrit) et ne ferme que si toutes ont réussi ;
+  l'état « modifié » de l'app ne sert pas de preuve.
+- **Pas de menu de fenêtre dans le SDK.** Une fenêtre Kazo OS n'a pas de barre de menus que
+  l'app pourrait remplir : les commandes de fenêtre (nouvelle fenêtre, Enregistrer sous pour
+  GridCraft) passent par des touches réservées (`ReservedKeyTarget.App`), et le reste vit dans
+  l'interface de l'app Craft.
+
+## 7. Ce que le module ne fait pas encore
 
 - Le message `host` de `craft-web-host` (avec `autosave: true`, craft-libs#713, suivi par
   Kazo-ca/Os-App-Word#17) : le module l'enverra quand l'amont le publiera. En attendant,
@@ -143,8 +168,9 @@ la remet.
 - `handoff` et `handoff-done`, et l'ouverture par `file` (un `Blob` lu par morceaux) : `open`
   envoie toujours `bytes`.
 - Pas de composant de fenêtre de base : chaque app écrit la sienne (ADR 0259, §2).
+- Pas de menu de fenêtre (voir §6) : un menu partagé demanderait une API de l'OS, hors de ce module.
 
-## 7. Tester
+## 8. Tester
 
 - La logique de la fenêtre se teste en xUnit sur les types du module (`DocumentSession`,
   `PickRequest`, `ReservedKeys`…), comme `Tests/Kazo.Os.AppSdk.Craft.Tests`.

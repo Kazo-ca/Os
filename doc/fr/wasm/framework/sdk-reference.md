@@ -506,10 +506,10 @@ liste de formats et sa page d'iframe (`wwwroot/host/index.html`).
 | `CraftFrameOptions` | `PagePath` (`PagePathOf(assembly)` = `_content/<assembly>/host/index.html`), `Title`, `Language`, `Parameters` (ajoutés à l'adresse de la page, par exemple `author`, `webgl`), `ReservedKeys`, `Settings` |
 | `FrameStartup`, `FrameState` | Écran de chargement, app, ou écran d'erreur avec « Réessayer » : `OnReady`, `OnFailed`, `OnTimeout(tentative)`, `Retry`, `Timeout` (60 s) |
 | `ReservedKeys`, `ReservedKey`, `ReservedKeyTarget` | Raccourcis que l'iframe rend : `Os` (gestionnaire de fenêtres), `NewWindow` (`Ctrl+N`, pour la fenêtre), `All`, `Parse(raccourci, cible)` |
-| `CraftLanguage` | `Pick(culture, disponibles)` : code de langue de l'app Craft, `en` sinon |
+| `CraftLanguage` | `Pick(culture, disponibles)` : code de langue de l'app Craft (régional comme `pt-br`, ou à deux lettres comme `pt` quand l'app ne liste que ceux-là), `en` sinon |
 | `CraftDocumentFormat`, `CraftDocumentFormats` | La liste de formats de l'app : `All`, `OpenExtensions`, `FileHandlers` (pour le manifeste), `Find`, `IsCopy` ; chemins : `ExtensionOf`, `FileNameOf`, `FolderOf`, `WithExtensionOf` |
 | `DocumentSession`, `SaveDecision`, `SaveAction` | Les documents d'une fenêtre et leurs fichiers : `Opened`, `SetFrameDirty`, `Decide(nom, saveAs)` (`Rewrite`, `AskAndBind`, `AskForCopy`), `Saved`, `SaveFailed`, `Renamed`, `WithUnsavedWork`, `Title(sans titre)`, `IsDirty`, `IsUntouchedBlank` |
-| `OpenDocument`, `OpenRequest` | `OpenDocument.ListFrom(ui.inspect)` ; `OpenRequest.FromArguments(arguments)` (premier chemin absolu, `--webgl`) |
+| `OpenDocument`, `OpenRequest` | `OpenDocument.ListFrom(ui.inspect, nomDuTitre)` (forme WordCraft `documents[].id` ou forme GridCraft `windows[].doc`) ; `OpenRequest.FromArguments(arguments)` (premier chemin absolu, `--webgl`) |
 | `WebStorageFile` | Réglages de l'app pour un utilisateur Kazo : `~/.config/<appId>/web-storage.json` ; `LoadAsync`, `Set`, `SaveAsync` (une écriture à la fois), `Entries` |
 | `PickRequest`, `PickedFile` | Le sélecteur de fichiers de l'app : `Extensions`, `AcceptsAny`, `AcceptsOnly`, `FromJson` |
 

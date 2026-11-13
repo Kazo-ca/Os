@@ -110,7 +110,17 @@ await frame.StartAsync(_frameHost, new CraftFrameOptions(CraftFrameOptions.PageP
 
 `IWindowCloseGuard.ConfirmCloseAsync`: `RequestAsync("ui.inspect")`, `OpenDocument.ListFrom`,
 `DocumentSession.WithUnsavedWork`; "Yes" saves each document and closes only when every write
-succeeded.
+succeeded (see the pitfall in §6).
+
+**`ui.inspect` has two shapes.** WordCraft gives `documents[{ id, title, dirty, active, path }]`;
+GridCraft gives `documents[{ title, dirty }]` and `windows[{ doc, index, active }]` (`index` = the
+document's place in `documents`). `OpenDocument.ListFrom(inspect, nameOfTitle)` reads both: one
+document per id (`id` or `doc`), its path when the app gives it, else `nameOfTitle(title)`, the
+file name the app gives it (GridCraft: `title + ".xlsx"`), to look up in `DocumentSession`.
+
+**Language**: `CraftLanguage.Pick(culture, languages)` returns the regional code the app lists
+(WordCraft: `pt-br`, `zh-hans`, `sr-latn`), else the two-letter code when listed (GridCraft: `pt`,
+`sr`), else `en`. Passing the app's exact list is enough.
 
 **Execution context**: the events come from JavaScript (`[JSInvokable]`). Every handler that
 touches the SDK (`KazoFile`, `KazoApps`) starts with
@@ -131,7 +141,20 @@ the OS title bar and the app say the same.
 "Modified" = the app says so, **or** a save did not complete (dialog cancelled, write refused): a
 Craft app whose save has no `id` clears "modified" as soon as it hands the save over.
 
-## 6. What the module does not do yet
+## 6. Pitfalls
+
+- **The Craft app says it is clean before the write.** `craft-web-host` clears "modified" as soon
+  as it hands over a save's bytes, before the window has written them (dialog, disk). A close
+  guard that sent the save command and then read `ui.inspect` again would think the document
+  saved and close the window during the write. The guard therefore waits for **its own** writes
+  to end (the `Saving` handler's `Task`, or `DocumentSession`, which moves to `Saved` only once
+  the file is written) and closes only when they all succeeded; the app's "modified" state is no
+  proof.
+- **No window menu in the SDK.** A Kazo OS window has no menu bar the app could fill: window
+  commands (new window, Save As for GridCraft) go through reserved chords
+  (`ReservedKeyTarget.App`), and the rest lives in the Craft app's own UI.
+
+## 7. What the module does not do yet
 
 - The `host` message of `craft-web-host` (with `autosave: true`, craft-libs#713, tracked by
   Kazo-ca/Os-App-Word#17): the module will send it once upstream publishes it. Until then, the
@@ -139,8 +162,9 @@ Craft app whose save has no `id` clears "modified" as soon as it hands the save 
 - `handoff` and `handoff-done`, and opening by `file` (a `Blob` read in slices): `open` always
   sends `bytes`.
 - No base window component: each app writes its own (ADR 0259, §2).
+- No window menu (see §6): a shared menu would need an OS API, outside this module.
 
-## 7. Testing
+## 8. Testing
 
 - The window's logic is tested with xUnit on the module's types (`DocumentSession`,
   `PickRequest`, `ReservedKeys`…), as in `Tests/Kazo.Os.AppSdk.Craft.Tests`.
