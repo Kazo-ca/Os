@@ -8,3 +8,9 @@ Kazo.Os.Apps.Store.StoreScreenshots.Uris.get -> System.Collections.Generic.IRead
 Kazo.Os.Apps.Store.StoreScreenshots.Uris.set -> void
 Kazo.Os.Apps.Store.StoreScreenshots.ViewerOpenChanged.get -> Microsoft.AspNetCore.Components.EventCallback<bool>
 Kazo.Os.Apps.Store.StoreScreenshots.ViewerOpenChanged.set -> void
+Kazo.Os.Apps.Store.StoreAppPage
+Kazo.Os.Apps.Store.StoreAppPage.DisposeAsync() -> System.Threading.Tasks.ValueTask
+Kazo.Os.Apps.Store.StoreAppPage.OnHeadVisibilityChanged(bool visible) -> void
+Kazo.Os.Apps.Store.StoreAppPage.Store.get -> Kazo.Os.Apps.Store.StoreWindow!
+Kazo.Os.Apps.Store.StoreAppPage.Store.set -> void
+Kazo.Os.Apps.Store.StoreAppPage.StoreAppPage() -> void

@@ -10,7 +10,7 @@ namespace Kazo.Os.Apps.Store;
 public partial class StoreWindow : IAppBackHandler
 {
     private bool _lastCanNavigateBack;
-    private StoreScreenshots? _screenshots;
+    private StoreAppPage? _appPage;
 
     /// <inheritdoc />
     public bool CanNavigateBack => IsScreenshotViewerOpen || _view == StoreView.Detail || (_view == StoreView.Home && _categoryId is not null);
@@ -25,8 +25,8 @@ public partial class StoreWindow : IAppBackHandler
         {
             // The screenshot viewer covers the app's page: Back closes it first, as Escape does.
             // The OS may call from outside the renderer's dispatcher, hence InvokeAsync.
-            StoreScreenshots viewer = _screenshots!;
-            await InvokeAsync(viewer.CloseAsync);
+            StoreAppPage page = _appPage!;
+            await InvokeAsync(page.CloseViewerAsync);
         }
         else if (_view == StoreView.Detail)
         {
@@ -46,13 +46,13 @@ public partial class StoreWindow : IAppBackHandler
     }
 
     /// <summary>Gets a value indicating whether an app's screenshot is shown at the size of the window.</summary>
-    private bool IsScreenshotViewerOpen => _view == StoreView.Detail && _screenshots?.IsViewerOpen == true;
+    private bool IsScreenshotViewerOpen => _view == StoreView.Detail && _appPage?.IsViewerOpen == true;
 
     /// <summary>
     /// The viewer opened or closed: the window draws itself again, which tells the OS whether Back
     /// has something to close (<see cref="OnAppAfterRenderAsync"/>).
     /// </summary>
-    private void OnScreenshotViewerChanged(bool isOpen) => StateHasChanged();
+    internal void OnScreenshotViewerChanged(bool isOpen) => StateHasChanged();
 
     /// <inheritdoc />
     protected override Task OnAppAfterRenderAsync(bool firstRender)

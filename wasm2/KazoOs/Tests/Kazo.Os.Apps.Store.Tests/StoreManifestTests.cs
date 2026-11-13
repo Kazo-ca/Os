@@ -19,11 +19,11 @@ public sealed class StoreManifestTests
     }
 
     [Fact]
-    public void Manifest_asks_only_to_manage_and_launch_apps()
+    public void Manifest_asks_only_to_manage_and_launch_apps_and_copy_a_link()
     {
         AppManifest manifest = AppDefinitionMapper.ToManifest(new StoreApp());
 
-        Assert.Equal([AppCapabilities.AppsLaunch, AppCapabilities.AppsManage], manifest.Capabilities.Order(StringComparer.Ordinal));
+        Assert.Equal([AppCapabilities.AppsLaunch, AppCapabilities.AppsManage, AppCapabilities.ClipboardWrite], manifest.Capabilities.Order(StringComparer.Ordinal));
     }
 
     [Fact]

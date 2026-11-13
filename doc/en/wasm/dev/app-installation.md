@@ -439,6 +439,33 @@ kazopkg info org.example.notes
   the screenshot last shown. The catalog does not give the screenshots' sizes:
   the thumbnail has a fixed height (240 px, 320 px in a wide window, 200 px on a
   phone) and a 16:10 width until the image arrives, so the page does not jump.
+- **An app's page** (`store-ux` series, work item 3,
+  [ADR 0266](adr/0266-store-ux-refresh.md) §4 and §6): the page is a component
+  of its own, `StoreAppPage.razor`, which reads the app and runs the actions of
+  `StoreWindow`. A bar stays at the top while the page scrolls: Back, then the
+  icon, the name and the main button (Install for me, Update or Open) once
+  the header has gone under the bar; the header keeps both install buttons.
+  Capabilities are written in plain language (the Store's
+  `Capability.<id>.Title` and `.Risk` texts, in French and English), grouped
+  (sensitive access first, then files, apps and desktop, network, system and
+  accounts, other); « See the technical identifiers » shows them, and a
+  capability with no known text keeps its identifier (`StoreAppFacts`). The
+  page lists the file types the app opens (the catalog's `fileHandlers`,
+  ADR 0257 §1, exposed by `KazoCatalogAppVersion.FileHandlers`), replaces the
+  raw repository address by a « Source code on GitHub » link (http and https
+  only), and, for an app of the official catalog, a button copies the « Try
+  it » link (`<OS address>?autolaunch=<appId>`, ADR 0258) to the OS clipboard
+  (the Store's `clipboard.write` capability), which passes it to the
+  machine's. The facts panel follows the scroll without growing taller than
+  the window; under 640 px it goes under the description. Long texts (short
+  and long description, capabilities) use the system's sans-serif font
+  (`system-ui`), with no download; titles, buttons and labels keep the theme's
+  font. `StoreAppPage.razor.js` only does what C# cannot see: whether the
+  header is still visible (`IntersectionObserver`), the height of the
+  scrolling area, and the page's address.
+- **Messages** (`store-ux` series, work item 3, ADR 0266 §6): the result of an
+  action shows at the bottom of the window and closes by itself after 6
+  seconds; an error stays until it is closed (`StoreWindow.Messages.cs`).
 - **Updates**: `AppUpdateMonitor` checks at sign-in then every
   `[updates] interval-hours` hours and posts a notification that opens the
   Installed tab. Each check also downloads every catalog of `[catalogs]`, for
@@ -452,8 +479,9 @@ Tests: `AppCatalogDocumentTests`, the catalog and progress tests of
 `AppPackageGatewayTests`, `HttpAppPackageDownloaderTests`,
 `StartMenuPreferencesServiceTests` (Platform.Core), `Kazo.Os.Apps.Store.Tests`
 (`StoreCatalog`, `StoreMarkdown`, `StoreNavigationTests`, `StoreOperations`,
-manifest) and `Kazo.Os.UI.E2E.Tests` (`StoreNavigationTests`,
-`StoreInstallProgressTests`).
+`StoreScreenshotsTests`, `StoreAppFactsTests`, manifest) and
+`Kazo.Os.UI.E2E.Tests` (`StoreNavigationTests`, `StoreInstallProgressTests`,
+`StoreScreenshotViewerTests`, `StoreAppPageTests`).
 
 ## Adding without a restart, signing and transactions
 

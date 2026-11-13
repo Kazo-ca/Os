@@ -485,6 +485,9 @@ public sealed partial class AppPackageGatewayTests
         Assert.Equal("1.1.0", app.Latest.Version);
         Assert.StartsWith("https://raw.githubusercontent.com/Kazo-ca/Os-AppMarketPlace/packages/packages/org.kazo.sample/1.1.0/", app.Latest.IconUri, StringComparison.Ordinal);
         Assert.Equal(["en"], app.Latest.DescriptionLanguages);
+        KazoAppFileHandler handler = Assert.Single(app.Latest.FileHandlers);
+        Assert.Equal([".sample"], handler.Extensions);
+        Assert.Equal(["open"], handler.Actions);
     }
 
     [Fact]

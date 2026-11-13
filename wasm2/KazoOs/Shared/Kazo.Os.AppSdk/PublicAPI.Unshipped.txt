@@ -1,4 +1,6 @@
 #nullable enable
+Kazo.Os.AppSdk.Apps.KazoCatalogAppVersion.FileHandlers.get -> System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.Apps.KazoAppFileHandler!>!
+Kazo.Os.AppSdk.Apps.KazoCatalogAppVersion.FileHandlers.init -> void
 Kazo.Os.AppSdk.Apps.IAppManagementGateway.InstallPackageAsync(string! source, Kazo.Os.AppSdk.Apps.KazoPackageScope scope, System.IProgress<Kazo.Os.AppSdk.Apps.KazoPackageInstallProgress!>? progress, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.Apps.KazoPackageInstallReport!>
 Kazo.Os.AppSdk.Apps.KazoPackageInstallProgress
 Kazo.Os.AppSdk.Apps.KazoPackageInstallProgress.BytesReceived.get -> long?

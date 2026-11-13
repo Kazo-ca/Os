@@ -1,0 +1,222 @@
+@using Kazo.Os.AppSdk.Apps
+@using Kazo.Os.AppSdk.Icons
+@inherits Kazo.Os.AppSdk.Blazor.KazoComponentBase
+@*
+    An app's page in the Kazo OS Store (ADR 0266 §4): a bar that stays at the top while the page
+    scrolls, the header with both install buttons and the « Try it » link, the screenshots, the long
+    description, and a facts panel that follows the scroll: the capabilities in plain language, the
+    file types the app opens and its information.
+*@
+@if (Store.SelectedEntry is { } entry)
+{
+    KazoCatalogApp? app = entry.App;
+    KazoCatalogAppVersion? latest = app?.Latest;
+    <article class="store-detail">
+        <div class="store-page-bar @(_headVisible ? null : "is-compact")" @ref="_bar">
+            <button type="button" class="store-back" @onclick="Store.Callback(Store.CloseDetail)">
+                <KazoIcon Library="IconLibrary.Lucide" Name="arrow-left" Size="16" Title="" /> @L["Back"]
+            </button>
+            @if (!_headVisible)
+            {
+                <span class="store-page-bar-app">
+                    @Store.RenderIcon(entry, 28)
+                    <span class="store-page-bar-name">@entry.Name</span>
+                </span>
+                @RenderPrimaryAction(entry)
+            }
+        </div>
+
+        <header class="store-detail-head" @ref="_head">
+            @Store.RenderIcon(entry, 112)
+            <div class="store-detail-title">
+                <h2>@entry.Name</h2>
+                @if (app is not null)
+                {
+                    <p class="store-detail-short store-reading">@app.GetShortDescription(Culture)</p>
+                    <div class="store-detail-meta">
+                        <span class="store-trust @StoreWindow.TrustClass(app.Trust)">
+                            <KazoIcon Library="IconLibrary.Lucide" Name="@StoreWindow.TrustIcon(app.Trust)" Size="14" Title="" />
+                            @Store.TrustText(app.Trust) · @L["Detail.Catalog", app.Catalog]
+                        </span>
+                        @if (latest is not null)
+                        {
+                            <span>@L["Detail.Version"] @app.LatestVersion</span>
+                            <span>@Store.SizeText(latest.SizeBytes)</span>
+                        }
+                    </div>
+                }
+                @if (entry.State != StoreAppState.NotInstalled)
+                {
+                    <span class="store-state">@Store.StateText(entry)</span>
+                }
+                <div class="store-detail-actions">
+                    @Store.RenderActions(entry)
+                    @if (StoreAppFacts.HasTryLink(app))
+                    {
+                        <button type="button" class="store-link store-try-link"
+                                title="@L["Action.CopyTryLinkHint", entry.Name]"
+                                disabled="@Store.IsRunning(entry)"
+                                @onclick="Store.Callback(() => CopyTryLinkAsync(entry))">
+                            <KazoIcon Library="IconLibrary.Lucide" Name="link" Size="14" Title="" /> @L["Action.CopyTryLink"]
+                        </button>
+                    }
+                </div>
+                @if (Store.OpenAfterInstallPath(entry) is { } waitingPath)
+                {
+                    <p class="store-open-after" role="note">
+                        <KazoIcon Library="IconLibrary.Lucide" Name="file-check" Size="14" Title="" /> @L["Detail.OpenAfterInstall", waitingPath]
+                    </p>
+                }
+            </div>
+        </header>
+
+        @if (latest is { ScreenshotUris.Count: > 0 })
+        {
+            <StoreScreenshots @ref="_screenshots"
+                              Uris="@latest.ScreenshotUris"
+                              AppName="@entry.Name"
+                              ViewerOpenChanged="Store.OnScreenshotViewerChanged" />
+        }
+
+        <div class="store-detail-columns">
+            <section class="store-detail-description store-reading" aria-label="@L["Detail.Description"]">
+                @if (Store.IsDescriptionLoading)
+                {
+                    <p class="store-empty">@L["Loading"]</p>
+                }
+                else if (Store.Description is { } description)
+                {
+                    <StoreMarkdownView Markdown="@StoreMarkdown.WithoutRepeatedTitle(description, entry.Name)" />
+                }
+                else if (app is null)
+                {
+                    <p class="store-empty">@L["Detail.NotInCatalog"]</p>
+                }
+            </section>
+
+            <aside class="store-facts" aria-label="@L["Detail.Facts"]">
+                @if (latest is not null)
+                {
+                    @RenderCapabilities(latest)
+                    @if (StoreAppFacts.FileTypes(latest.FileHandlers) is { Count: > 0 } types)
+                    {
+                        <section class="store-facts-card" aria-labelledby="@IdOf("types")">
+                            <h3 id="@IdOf("types")">@L["Detail.FileTypes"]</h3>
+                            <ul class="store-file-types">
+                                @foreach (string type in types)
+                                {
+                                    <li>@type</li>
+                                }
+                            </ul>
+                        </section>
+                    }
+                }
+                @RenderInformation(entry)
+            </aside>
+        </div>
+    </article>
+}
+
+@code {
+    private RenderFragment RenderPrimaryAction(StoreEntry entry) => __builder =>
+    {
+        bool busy = Store.IsRunning(entry);
+        @switch (entry.State)
+        {
+            case StoreAppState.NotInstalled when entry.App is not null:
+                <button type="button" class="store-button is-primary" disabled="@busy" @onclick="Store.Callback(() => Store.InstallAsync(entry, KazoPackageScope.User))">
+                    <KazoIcon Library="IconLibrary.Lucide" Name="download" Size="14" Title="" /> @L["Action.InstallForMe"]
+                </button>
+                break;
+            case StoreAppState.UpdateAvailable:
+                <button type="button" class="store-button is-primary" disabled="@busy" @onclick="Store.Callback(() => Store.UpdateAsync(entry))">@L["Action.Update", entry.Update!.AvailableVersion]</button>
+                break;
+            case StoreAppState.Installed:
+                <button type="button" class="store-button is-primary" disabled="@busy" @onclick="Store.Callback(() => Store.OpenAsync(entry))">
+                    <KazoIcon Library="IconLibrary.Lucide" Name="play" Size="14" Title="" /> @L["Action.Open"]
+                </button>
+                break;
+        }
+    };
+
+    private RenderFragment RenderCapabilities(KazoCatalogAppVersion latest) => __builder =>
+    {
+        IReadOnlyList<StoreCapabilityList> groups = StoreAppFacts.DescribeCapabilities(latest.Capabilities, L);
+        int count = groups.Sum(static group => group.Capabilities.Count);
+        <section class="store-facts-card" aria-labelledby="@IdOf("capabilities")">
+            <h3 id="@IdOf("capabilities")">@L["Detail.CanDo"]</h3>
+            @if (count == 0)
+            {
+                <p class="store-empty">@L["Detail.NoCapability"]</p>
+            }
+            else
+            {
+                @foreach (StoreCapabilityList group in groups)
+                {
+                    <h4 class="store-capability-group @(group.Group == StoreCapabilityGroup.Sensitive ? "is-dangerous" : null)">@L["Detail.CapabilityGroup." + group.Group]</h4>
+                    <ul class="store-capabilities">
+                        @foreach (StoreCapability capability in group.Capabilities)
+                        {
+                            <li class="@(capability.IsDangerous ? "is-dangerous" : null)">
+                                <KazoIcon Library="IconLibrary.Lucide" Name="@(capability.IsDangerous ? "shield-alert" : "check")" Size="16" Title="" />
+                                <span class="store-capability-text">
+                                    <span class="store-capability-title">@capability.Title</span>
+                                    @if (capability.Risk is { } risk)
+                                    {
+                                        <span class="store-capability-risk">@risk</span>
+                                    }
+                                    @if (_showIdentifiers)
+                                    {
+                                        <code>@capability.Id</code>
+                                    }
+                                </span>
+                            </li>
+                        }
+                    </ul>
+                }
+                <button type="button" class="store-link store-identifiers-toggle" aria-expanded="@(_showIdentifiers ? "true" : "false")" @onclick="ToggleIdentifiers">
+                    @(_showIdentifiers ? L["Detail.HideIdentifiers"] : Strings.Plural(L, "Detail.ShowIdentifiers", count))
+                </button>
+            }
+        </section>
+    };
+
+    private RenderFragment RenderInformation(StoreEntry entry) => __builder =>
+    {
+        KazoCatalogApp? app = entry.App;
+        KazoCatalogAppVersion? latest = app?.Latest;
+        <section class="store-facts-card" aria-labelledby="@IdOf("information")">
+            <h3 id="@IdOf("information")">@L["Detail.Facts"]</h3>
+            <dl>
+                @if (app is not null && latest is not null)
+                {
+                    <dt>@L["Detail.Category"]</dt>
+                    <dd>@Store.CategoryLabel(app.Category)</dd>
+                    <dt>@L["Detail.License"]</dt>
+                    <dd>@app.License</dd>
+                    <dt>@L["Detail.Version"]</dt>
+                    <dd>@app.LatestVersion</dd>
+                    <dt>@L["Detail.Size"]</dt>
+                    <dd>@Store.SizeText(latest.SizeBytes)</dd>
+                    @if (latest.PublishedAt is { } published)
+                    {
+                        <dt>@L["Detail.Published"]</dt>
+                        <dd>@published.ToString("d", Culture)</dd>
+                    }
+                }
+                @if (entry.Installed is { } installed)
+                {
+                    <dt>@L["Detail.Installed"]</dt>
+                    <dd>@installed.Version · @(installed.SystemWide ? L["Scope.Everyone"] : L["Scope.Me"])</dd>
+                }
+            </dl>
+            @if (app is not null && StoreAppFacts.IsWebAddress(app.Repository))
+            {
+                <a class="store-source-link" href="@app.Repository" target="_blank" rel="noopener noreferrer" title="@app.Repository">
+                    @(StoreAppFacts.SourceHost(app.Repository) is { } host ? L["Detail.SourceCodeOn", host] : L["Detail.SourceCode"])
+                    <KazoIcon Library="IconLibrary.Lucide" Name="arrow-up-right" Size="14" Title="" />
+                </a>
+            }
+        </section>
+    };
+}

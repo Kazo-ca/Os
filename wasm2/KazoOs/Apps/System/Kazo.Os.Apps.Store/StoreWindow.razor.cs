@@ -64,8 +64,6 @@ public partial class StoreWindow
     private bool _isLoading = true;
     private StoreOperations? _operations;
     private bool _isRestarting;
-    private string? _message;
-    private bool _messageIsError;
     private string? _description;
     private (string AppId, string Path)? _openAfterInstall;
     private string? _descriptionKey;
@@ -210,7 +208,7 @@ public partial class StoreWindow
 
     private Task RefreshAsync()
     {
-        _message = null;
+        DismissMessage();
         return LoadAsync(refresh: true);
     }
 
@@ -266,7 +264,7 @@ public partial class StoreWindow
         await LoadDescriptionAsync(entry);
     }
 
-    private void CloseDetail()
+    internal void CloseDetail()
     {
         _view = _returnView;
         _selectedAppId = null;
@@ -304,7 +302,7 @@ public partial class StoreWindow
         }
     }
 
-    private Task InstallAsync(StoreEntry entry, KazoPackageScope scope) =>
+    internal Task InstallAsync(StoreEntry entry, KazoPackageScope scope) =>
         RunAsync(entry, async () =>
         {
             KazoCatalogApp app = entry.App!;
@@ -349,7 +347,7 @@ public partial class StoreWindow
         }
     }
 
-    private Task UpdateAsync(StoreEntry entry) =>
+    internal Task UpdateAsync(StoreEntry entry) =>
         RunAsync(entry, async () =>
         {
             KazoPackageUpdate update = entry.Update!;
@@ -397,7 +395,7 @@ public partial class StoreWindow
             ShowInfo(L[report.RestartRequired ? "Message.RolledBackRestart" : "Message.RolledBack", report.Name, report.Version]);
         });
 
-    private Task OpenAsync(StoreEntry entry) =>
+    internal Task OpenAsync(StoreEntry entry) =>
         RunAsync(entry, async () => await KazoApps.LaunchAsync(entry.AppId), reload: false, exclusive: false);
 
     private Task InstallThemePackAsync(StoreThemePackEntry entry, KazoPackageScope scope) =>
@@ -472,7 +470,7 @@ public partial class StoreWindow
     private async Task RunAsync(
         string id, Func<Task> action, bool reload = true, StoreOperationStage firstStage = StoreOperationStage.Working, bool exclusive = true)
     {
-        _message = null;
+        DismissMessage();
         await Operations.RunAsync(id, firstStage, exclusive, () => RunReportingAsync(action, reload));
     }
 
@@ -537,45 +535,33 @@ public partial class StoreWindow
         _ => L["Error.Generic", exception.Message]
     };
 
-    private void ShowInfo(string message)
-    {
-        _message = message;
-        _messageIsError = false;
-    }
-
-    private void ShowError(string message)
-    {
-        _message = message;
-        _messageIsError = true;
-    }
-
-    private string CategoryLabel(string categoryId) =>
+    internal string CategoryLabel(string categoryId) =>
         categoryId == StoreCatalog.OtherCategoryId
             ? L["Category.Other"]
             : _store.Categories.FirstOrDefault(category => category.Id == categoryId)?.GetLabel(Culture) ?? categoryId;
 
-    private string TrustText(KazoPackageTrust trust) => trust switch
+    internal string TrustText(KazoPackageTrust trust) => trust switch
     {
         KazoPackageTrust.Verified => L["Trust.Verified"],
         KazoPackageTrust.Trusted => L["Trust.Trusted"],
         _ => L["Trust.Untrusted"]
     };
 
-    private static string TrustClass(KazoPackageTrust trust) => trust switch
+    internal static string TrustClass(KazoPackageTrust trust) => trust switch
     {
         KazoPackageTrust.Verified => "is-verified",
         KazoPackageTrust.Trusted => "is-trusted",
         _ => "is-untrusted"
     };
 
-    private static string TrustIcon(KazoPackageTrust trust) => trust switch
+    internal static string TrustIcon(KazoPackageTrust trust) => trust switch
     {
         KazoPackageTrust.Verified => "shield-check",
         KazoPackageTrust.Trusted => "shield",
         _ => "shield-alert"
     };
 
-    private string StateText(StoreEntry entry) => entry.State switch
+    internal string StateText(StoreEntry entry) => entry.State switch
     {
         StoreAppState.Installed => entry.Installed!.SystemWide ? L["State.InstalledForEveryone"] : L["State.InstalledForMe"],
         StoreAppState.UpdateAvailable => L["State.UpdateAvailable", entry.Update!.AvailableVersion],
@@ -583,5 +569,5 @@ public partial class StoreWindow
         _ => string.Empty
     };
 
-    private string SizeText(long bytes) => StoreCatalog.FormatSize(bytes, Culture);
+    internal string SizeText(long bytes) => StoreCatalog.FormatSize(bytes, Culture);
 }

@@ -351,4 +351,232 @@
   <data name="Viewer.Next" xml:space="preserve">
     <value>Next screenshot</value>
   </data>
+  <data name="Detail.CanDo" xml:space="preserve">
+    <value>What the app can do</value>
+  </data>
+  <data name="Detail.CapabilityGroup.Sensitive" xml:space="preserve">
+    <value>Sensitive access</value>
+  </data>
+  <data name="Detail.CapabilityGroup.Files" xml:space="preserve">
+    <value>Files</value>
+  </data>
+  <data name="Detail.CapabilityGroup.Apps" xml:space="preserve">
+    <value>Apps and desktop</value>
+  </data>
+  <data name="Detail.CapabilityGroup.Network" xml:space="preserve">
+    <value>Network</value>
+  </data>
+  <data name="Detail.CapabilityGroup.System" xml:space="preserve">
+    <value>System and accounts</value>
+  </data>
+  <data name="Detail.CapabilityGroup.Other" xml:space="preserve">
+    <value>Other</value>
+  </data>
+  <data name="Detail.ShowIdentifiers.One" xml:space="preserve">
+    <value>See the technical identifier</value>
+  </data>
+  <data name="Detail.ShowIdentifiers.Many" xml:space="preserve">
+    <value>See the {0} technical identifiers</value>
+  </data>
+  <data name="Detail.HideIdentifiers" xml:space="preserve">
+    <value>Hide the technical identifiers</value>
+  </data>
+  <data name="Detail.FileTypes" xml:space="preserve">
+    <value>Opens these files</value>
+  </data>
+  <data name="Detail.SourceCode" xml:space="preserve">
+    <value>Source code</value>
+  </data>
+  <data name="Detail.SourceCodeOn" xml:space="preserve">
+    <value>Source code on {0}</value>
+  </data>
+  <data name="Action.CopyTryLink" xml:space="preserve">
+    <value>Copy the « Try it » link</value>
+  </data>
+  <data name="Action.CopyTryLinkHint" xml:space="preserve">
+    <value>A link that opens Kazo OS and installs {0}, to share</value>
+  </data>
+  <data name="Message.TryLinkCopied" xml:space="preserve">
+    <value>The « Try it » link is copied: {0}</value>
+  </data>
+  <data name="Error.CopyFailed" xml:space="preserve">
+    <value>The link could not be copied: {0}</value>
+  </data>
+  <data name="Capability.kazoos.file-dialogs.Risk" xml:space="preserve">
+    <value>This app's code will run inside every app that opens or saves files, with that app's rights.</value>
+  </data>
+  <data name="Capability.kazoos.file-dialogs.Title" xml:space="preserve">
+    <value>Provide the OS file dialogs</value>
+  </data>
+  <data name="Capability.kazoos.file-view.Risk" xml:space="preserve">
+    <value>This app's code will run inside every app that shows files, with that app's rights.</value>
+  </data>
+  <data name="Capability.kazoos.file-view.Title" xml:space="preserve">
+    <value>Provide the OS file view</value>
+  </data>
+  <data name="Capability.apps.launch.Title" xml:space="preserve">
+    <value>Launch other applications</value>
+  </data>
+  <data name="Capability.apps.manage.Risk" xml:space="preserve">
+    <value>Install, uninstall or reinstall applications.</value>
+  </data>
+  <data name="Capability.apps.manage.Title" xml:space="preserve">
+    <value>Manage applications</value>
+  </data>
+  <data name="Capability.clipboard.read.Title" xml:space="preserve">
+    <value>Read the clipboard</value>
+  </data>
+  <data name="Capability.clipboard.write.Title" xml:space="preserve">
+    <value>Write to the clipboard</value>
+  </data>
+  <data name="Capability.dialogs.file-open.Title" xml:space="preserve">
+    <value>Show the Open File dialog</value>
+  </data>
+  <data name="Capability.dialogs.file-save.Title" xml:space="preserve">
+    <value>Show the Save As dialog</value>
+  </data>
+  <data name="Capability.dialogs.folder-select.Title" xml:space="preserve">
+    <value>Show the Choose Folder dialog</value>
+  </data>
+  <data name="Capability.file-associations.read.Title" xml:space="preserve">
+    <value>Read file associations</value>
+  </data>
+  <data name="Capability.file-associations.write.Risk" xml:space="preserve">
+    <value>Choose which app opens each file type for the whole machine.</value>
+  </data>
+  <data name="Capability.file-associations.write.Title" xml:space="preserve">
+    <value>Change file associations</value>
+  </data>
+  <data name="Capability.filesystem.private.read.Title" xml:space="preserve">
+    <value>Read its own private data</value>
+  </data>
+  <data name="Capability.filesystem.private.write.Title" xml:space="preserve">
+    <value>Write its own private data</value>
+  </data>
+  <data name="Capability.filesystem.system.read.Risk" xml:space="preserve">
+    <value>Read files outside the home folder, including the system configuration.</value>
+  </data>
+  <data name="Capability.filesystem.system.read.Title" xml:space="preserve">
+    <value>Read system files</value>
+  </data>
+  <data name="Capability.filesystem.system.write.Risk" xml:space="preserve">
+    <value>Modify system files, including /etc and the settings of every app.</value>
+  </data>
+  <data name="Capability.filesystem.system.write.Title" xml:space="preserve">
+    <value>Modify system files</value>
+  </data>
+  <data name="Capability.filesystem.user-home.read.Title" xml:space="preserve">
+    <value>Read your files, including your network drives</value>
+  </data>
+  <data name="Capability.filesystem.user-home.write.Title" xml:space="preserve">
+    <value>Write your files, including your network drives</value>
+  </data>
+  <data name="Capability.filesystem.user-selected.read.Title" xml:space="preserve">
+    <value>Read files the user picks</value>
+  </data>
+  <data name="Capability.filesystem.user-selected.write.Title" xml:space="preserve">
+    <value>Write files the user picks</value>
+  </data>
+  <data name="Capability.keyring.read-all.Risk" xml:space="preserve">
+    <value>Read the passwords, tokens and keys that all your applications have saved.</value>
+  </data>
+  <data name="Capability.keyring.read-all.Title" xml:space="preserve">
+    <value>Read the whole keyring</value>
+  </data>
+  <data name="Capability.users.manage.Risk" xml:space="preserve">
+    <value>Reset or remove another account's password, and so open their session.</value>
+  </data>
+  <data name="Capability.users.manage.Title" xml:space="preserve">
+    <value>Manage account passwords</value>
+  </data>
+  <data name="Capability.network.listen.Title" xml:space="preserve">
+    <value>Listen on a network port</value>
+  </data>
+  <data name="Capability.network.listen.privileged.Risk" xml:space="preserve">
+    <value>Open a port below 1024, where the machine's real services are expected (web, SSH...).</value>
+  </data>
+  <data name="Capability.network.listen.privileged.Title" xml:space="preserve">
+    <value>Listen on a privileged port</value>
+  </data>
+  <data name="Capability.network.real.access.Risk" xml:space="preserve">
+    <value>Reach real servers on the Internet through the relay server.</value>
+  </data>
+  <data name="Capability.network.real.access.Title" xml:space="preserve">
+    <value>Access the real network</value>
+  </data>
+  <data name="Capability.network.simulated.read.Title" xml:space="preserve">
+    <value>View the simulated network</value>
+  </data>
+  <data name="Capability.network.simulated.write.Title" xml:space="preserve">
+    <value>Change the simulated network</value>
+  </data>
+  <data name="Capability.notifications.post.Title" xml:space="preserve">
+    <value>Show notifications</value>
+  </data>
+  <data name="Capability.permissions.manage.Risk" xml:space="preserve">
+    <value>Grant dangerous permissions to other apps, or take them back.</value>
+  </data>
+  <data name="Capability.permissions.manage.Title" xml:space="preserve">
+    <value>Administer permissions</value>
+  </data>
+  <data name="Capability.process.list.Title" xml:space="preserve">
+    <value>List processes</value>
+  </data>
+  <data name="Capability.process.manage.Risk" xml:space="preserve">
+    <value>Stop the processes of other applications.</value>
+  </data>
+  <data name="Capability.process.manage.Title" xml:space="preserve">
+    <value>Manage processes</value>
+  </data>
+  <data name="Capability.server.connection.manage.Risk" xml:space="preserve">
+    <value>Connect this machine to a server and send it your files and permissions.</value>
+  </data>
+  <data name="Capability.server.connection.manage.Title" xml:space="preserve">
+    <value>Manage the server connection</value>
+  </data>
+  <data name="Capability.services.manage.Risk" xml:space="preserve">
+    <value>Start, stop and configure system services.</value>
+  </data>
+  <data name="Capability.services.manage.Title" xml:space="preserve">
+    <value>Manage services</value>
+  </data>
+  <data name="Capability.shell.control.Title" xml:space="preserve">
+    <value>Act on the shell that started the command</value>
+  </data>
+  <data name="Capability.shell.context-menu.Title" xml:space="preserve">
+    <value>Add entries to the file menus</value>
+  </data>
+  <data name="Capability.screens.manage.Title" xml:space="preserve">
+    <value>Manage screens</value>
+  </data>
+  <data name="Capability.shell.host.Risk" xml:space="preserve">
+    <value>Run commands on your behalf, with the rights of those commands.</value>
+  </data>
+  <data name="Capability.shell.host.Title" xml:space="preserve">
+    <value>Host a shell</value>
+  </data>
+  <data name="Capability.system.backup.Risk" xml:space="preserve">
+    <value>Copy every file and account of the machine to the host computer, or replace them with a backup.</value>
+  </data>
+  <data name="Capability.system.backup.Title" xml:space="preserve">
+    <value>Back up and restore the machine</value>
+  </data>
+  <data name="Capability.system.power.Risk" xml:space="preserve">
+    <value>Restart this machine or erase it completely.</value>
+  </data>
+  <data name="Capability.system.power.Title" xml:space="preserve">
+    <value>Restart or reset the machine</value>
+  </data>
+  <data name="Capability.system.storage.inspect.Risk" xml:space="preserve">
+    <value>Read the machine's raw storage, including the files of every user.</value>
+  </data>
+  <data name="Capability.system.storage.inspect.Title" xml:space="preserve">
+    <value>Inspect raw storage</value>
+  </data>
+  <data name="Capability.windows.manage.Risk" xml:space="preserve">
+    <value>Read, move or close the windows of other applications.</value>
+  </data>
+  <data name="Capability.windows.manage.Title" xml:space="preserve">
+    <value>Manage windows</value>
+  </data>
 </root>

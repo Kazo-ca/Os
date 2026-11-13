@@ -391,7 +391,7 @@ pour son profil `Release` (ADR 0207 §11).
 |---|---|---|
 | `Kazo.Os.AppSdk` | `KazoAppPackages`, `KazoPackageSources`, `KazoPackagePolicy`, `KazoPackageTrust`, `KazoPackageScope`, `KazoInstalledPackage`, `KazoPackageInstallReport`, `KazoPackageException` : installer une app pour soi ou pour tous, sources de confiance, liste noire | ADR 0182, 0208 |
 | `Kazo.Os.AppSdk` | `KazoPackageInstallProgress`, `KazoPackageInstallStage` : étapes et avancement d'une installation, passés à `InstallAsync` | ADR 0266 |
-| `Kazo.Os.AppSdk` | `KazoAppCatalog`, `KazoCatalogApp`, `KazoCatalogAppVersion`, `KazoCatalogCategory`, `KazoCatalogItemKind`, `KazoPackageCatalog`, `KazoPackageUpdate` : catalogues du Kazo OS Store et mises à jour | ADR 0189, 0212 |
+| `Kazo.Os.AppSdk` | `KazoAppCatalog`, `KazoCatalogApp`, `KazoCatalogAppVersion`, `KazoCatalogCategory`, `KazoCatalogItemKind`, `KazoPackageCatalog`, `KazoPackageUpdate` : catalogues du Kazo OS Store (avec les types de fichiers d'une version, `FileHandlers`) et mises à jour | ADR 0189, 0212, 0257, 0266 |
 | `Kazo.Os.AppSdk` | `KazoInstalledThemePack`, `KazoThemePackInstallReport`, `KazoThemePackParts` : packs de thèmes | ADR 0213 |
 | `Kazo.Os.AppSdk` | `KazoWhatsNew`, `KazoChangeList`, `KazoChangeGroup`, `KazoChangeEntry`, `KazoChangeCategory` : liste des nouveautés | ADR 0186 |
 | `Kazo.Os.AppSdk` | `KazoScreens`, `KazoScreenInfo` et leurs types : écrans du bureau étendu | ADR 0184 |
