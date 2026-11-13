@@ -200,6 +200,67 @@ public sealed partial class TrimmedPublishTests
         }
     }
 
+    /// <summary>
+    /// ADR 0265: a reload of the tab before the link has finished (a restart for an update, or F5)
+    /// runs it again although the address no longer carries it: the tab kept it. Once the app is
+    /// launched, the tab forgets it and a reload runs nothing.
+    /// </summary>
+    [TrimmedPublishFact]
+    public async Task A_reload_before_the_link_has_finished_runs_it_again()
+    {
+        TrimmedPublishSettings settings = TrimmedPublishSettings.FromEnvironment()!;
+        if (!CanServeOfficialCatalog(settings))
+        {
+            return;
+        }
+
+        await using Session session = await Session.StartAsync(output);
+        IPage page = session.Page;
+        OfficialCatalogRoute catalog = await ServeOfficialCatalogAsync(session.Context, settings);
+        try
+        {
+            // --- The link starts the guest; the download is held, as a restart would interrupt it ---
+            catalog.HoldPackage();
+            await NavigateWhenReadyAsync(page, LinkAddress(settings, ProbeAppId));
+            ILocator progress = page.Locator($".app-link-progress[data-app-id='{ProbeAppId}']");
+            await Assertions.Expect(progress).ToContainTextAsync(ProbeAppName, new() { Timeout = BootTimeoutMs });
+            await catalog.PackageRequested.WaitAsync(TimeSpan.FromMilliseconds(StepTimeoutMs));
+            Assert.DoesNotContain("autolaunch", page.Url, StringComparison.Ordinal);
+            Assert.Equal(ProbeAppId, await KeptLinkAsync(page));
+            Log("the address lost the parameter, the tab kept the link.");
+
+            // --- Reload during the install: the address has no parameter, the link runs again ---
+            await page.ReloadAsync(new PageReloadOptions { WaitUntil = WaitUntilState.Commit });
+            catalog.ReleasePackage();
+            ILocator probe = page.Locator("[data-probe-status]");
+            await Assertions.Expect(probe).ToHaveTextAsync("engine ready", new() { Timeout = BootTimeoutMs });
+            Assert.Equal(1, catalog.PackageDownloads);
+            Assert.DoesNotContain("autolaunch", page.Url, StringComparison.Ordinal);
+            await Assertions.Expect(page.Locator(".app-link-progress")).ToHaveCountAsync(0, new() { Timeout = StepTimeoutMs });
+            Assert.Null(await KeptLinkAsync(page));
+            Log("after the reload the guest continued, the app was installed and launched; the tab forgot the link.");
+            session.AssertNoErrors("reload during the link");
+            await CloseAllWindowsAsync(page);
+
+            // --- A reload after the link has finished runs nothing ---
+            await page.ReloadAsync(new PageReloadOptions { WaitUntil = WaitUntilState.DOMContentLoaded });
+            ILocator continueAsGuest = page.GetByRole(AriaRole.Button, new() { Name = "Continue as Guest" });
+            await continueAsGuest.WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = BootTimeoutMs });
+            await page.WaitForTimeoutAsync(2_000);
+            Assert.True(await continueAsGuest.IsVisibleAsync(), "A reload after the link has finished must not run it again.");
+            Log("a reload after the link shows the guest's sign-in screen and runs nothing.");
+        }
+        catch
+        {
+            await SaveScreenshotAsync(page, settings, "app-link-reload");
+            throw;
+        }
+    }
+
+    /// <summary>The app id the tab keeps for a link that has not finished (ADR 0265 §1).</summary>
+    private static Task<string?> KeptLinkAsync(IPage page) =>
+        page.EvaluateAsync<string?>("() => sessionStorage.getItem('kazoos.appLaunchLink')");
+
     /// <summary>The address of the published OS with the link of <paramref name="appId"/>.</summary>
     private static string LinkAddress(TrimmedPublishSettings settings, string appId) => $"{settings.Url}/?autolaunch={appId}";
 
