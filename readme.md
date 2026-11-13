@@ -20,6 +20,7 @@ apps, commands, services and sites.
 
 - **Try it**: <https://os.kazo.ca/> (PWA, works offline).
 - **Features**: [Kazo OS overview and features](doc/en/wasm/features.md): what Kazo OS offers today, the goal of the ecosystem, ways to deploy it, and what is in development.
+- **Store apps**: [every app available in the Kazo OS Store](https://github.com/Kazo-ca/Os-AppMarketPlace/blob/packages/APPS.md), with a link that opens each one in Kazo OS (updated at each Store publication).
 - **Code**: [`wasm2/KazoOs/`](wasm2/KazoOs/README.md).
 - **Documentation**: [`doc/en/wasm/README.md`](doc/en/wasm/README.md) (French: [`doc/fr/wasm/README.md`](doc/fr/wasm/README.md)).
 - Source repository: [Kazo-ca/Os](https://github.com/Kazo-ca/Os).
