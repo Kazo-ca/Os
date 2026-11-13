@@ -56,6 +56,11 @@
     machine withdraws the user's own refusal, and installed apps find System.Private.CoreLib whole
     with an exact install check (ADR 0242). SDK additions (App Abstractions, AppSdk.Blazor) and the
     host, platform and browser API folded into PublicAPI.Shipped.txt.
+    3.3.3 (2026-11-13, Benoit's choice of a patch number although the public API grows, like 2.2.1):
+    direct app launch link ?autolaunch=<appId> (ADR 0258), the shared Craft apps module
+    Kazo.Os.AppSdk.Craft (ADR 0259), windows that stay on their screen (window.canChangeScreen,
+    ADR 0263) and Store apps offered for a file no app opens (ADR 0257), all folded into
+    PublicAPI.Shipped.txt. Kazo Word 0.1.1 and Kazo Spreadsheets build against it.
     3.3.2 (2026-11-13, patch): a file may be 128 MiB instead of 16 MiB, written and read in 16 MiB
     batches (ADR 0245), so Kazo Word installs. No SDK API change: only the value of
     Infrastructure.Browser's FileContentStoragePolicy.DefaultMaxFileSizeBytes moves in the API files.
@@ -69,6 +74,6 @@
     the manifest generator writes it as the app's sdkCompatibility.minimumVersion (ADR 0098 §3).
   -->
   <PropertyGroup>
-    <KazoOsVersion>3.3.2</KazoOsVersion>
+    <KazoOsVersion>3.3.3</KazoOsVersion>
   </PropertyGroup>
 </Project>

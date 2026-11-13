@@ -1,2 +1,1 @@
 #nullable enable
-override Kazo.Os.Apps.Store.StoreWindow.OnIntentReceivedAsync(Kazo.Os.App.Abstractions.AppIntentDelivery! intent) -> System.Threading.Tasks.Task!

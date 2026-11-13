@@ -681,6 +681,8 @@ Kazo.Os.Simulation.Abstractions.Gateways.AppIntentOpenFileResult.FellBackToOpen.
 Kazo.Os.Simulation.Abstractions.Gateways.AppIntentOpenFileResult.FellBackToOpen.init -> void
 Kazo.Os.Simulation.Abstractions.Gateways.AppIntentOpenFileResult.Outcome.get -> Kazo.Os.Simulation.Abstractions.Gateways.AppIntentOpenFileOutcome
 Kazo.Os.Simulation.Abstractions.Gateways.AppIntentOpenFileResult.Outcome.init -> void
+Kazo.Os.Simulation.Abstractions.Gateways.AppIntentOpenFileResult.SuggestedCatalogApps.get -> System.Collections.Generic.IReadOnlyList<Kazo.Os.Simulation.Abstractions.Gateways.AppIntentSuggestedCatalogApp!>!
+Kazo.Os.Simulation.Abstractions.Gateways.AppIntentOpenFileResult.SuggestedCatalogApps.init -> void
 Kazo.Os.Simulation.Abstractions.Gateways.AppIntentOutcome
 Kazo.Os.Simulation.Abstractions.Gateways.AppIntentOutcome.AccessDenied = 4 -> Kazo.Os.Simulation.Abstractions.Gateways.AppIntentOutcome
 Kazo.Os.Simulation.Abstractions.Gateways.AppIntentOutcome.ChooserRequired = 1 -> Kazo.Os.Simulation.Abstractions.Gateways.AppIntentOutcome
@@ -701,6 +703,21 @@ Kazo.Os.Simulation.Abstractions.Gateways.AppIntentResult.ErrorCode.get -> string
 Kazo.Os.Simulation.Abstractions.Gateways.AppIntentResult.ErrorCode.init -> void
 Kazo.Os.Simulation.Abstractions.Gateways.AppIntentResult.Outcome.get -> Kazo.Os.Simulation.Abstractions.Gateways.AppIntentOutcome
 Kazo.Os.Simulation.Abstractions.Gateways.AppIntentResult.Outcome.init -> void
+Kazo.Os.Simulation.Abstractions.Gateways.AppIntentSuggestedCatalogApp
+Kazo.Os.Simulation.Abstractions.Gateways.AppIntentSuggestedCatalogApp.<Clone>$() -> Kazo.Os.Simulation.Abstractions.Gateways.AppIntentSuggestedCatalogApp!
+Kazo.Os.Simulation.Abstractions.Gateways.AppIntentSuggestedCatalogApp.AppId.get -> string!
+Kazo.Os.Simulation.Abstractions.Gateways.AppIntentSuggestedCatalogApp.AppId.init -> void
+Kazo.Os.Simulation.Abstractions.Gateways.AppIntentSuggestedCatalogApp.AppIntentSuggestedCatalogApp(string! AppId, string! Name, string! Catalog) -> void
+Kazo.Os.Simulation.Abstractions.Gateways.AppIntentSuggestedCatalogApp.Catalog.get -> string!
+Kazo.Os.Simulation.Abstractions.Gateways.AppIntentSuggestedCatalogApp.Catalog.init -> void
+Kazo.Os.Simulation.Abstractions.Gateways.AppIntentSuggestedCatalogApp.Deconstruct(out string! AppId, out string! Name, out string! Catalog) -> void
+Kazo.Os.Simulation.Abstractions.Gateways.AppIntentSuggestedCatalogApp.Equals(Kazo.Os.Simulation.Abstractions.Gateways.AppIntentSuggestedCatalogApp? other) -> bool
+Kazo.Os.Simulation.Abstractions.Gateways.AppIntentSuggestedCatalogApp.IconUri.get -> string?
+Kazo.Os.Simulation.Abstractions.Gateways.AppIntentSuggestedCatalogApp.IconUri.init -> void
+Kazo.Os.Simulation.Abstractions.Gateways.AppIntentSuggestedCatalogApp.Name.get -> string!
+Kazo.Os.Simulation.Abstractions.Gateways.AppIntentSuggestedCatalogApp.Name.init -> void
+Kazo.Os.Simulation.Abstractions.Gateways.AppIntentSuggestedCatalogApp.ShortDescriptions.get -> System.Collections.Generic.IReadOnlyDictionary<string!, string!>!
+Kazo.Os.Simulation.Abstractions.Gateways.AppIntentSuggestedCatalogApp.ShortDescriptions.init -> void
 Kazo.Os.Simulation.Abstractions.Gateways.AppPermissionErrorEventArgs
 Kazo.Os.Simulation.Abstractions.Gateways.AppPermissionErrorEventArgs.AppPermissionErrorEventArgs(Kazo.Os.Simulation.Abstractions.FileSystem.FileSystemError! error) -> void
 Kazo.Os.Simulation.Abstractions.Gateways.AppPermissionErrorEventArgs.Error.get -> Kazo.Os.Simulation.Abstractions.FileSystem.FileSystemError!
@@ -750,6 +767,7 @@ Kazo.Os.Simulation.Abstractions.Gateways.IAppIntentGateway.OpenUriAsync(System.U
 Kazo.Os.Simulation.Abstractions.Gateways.IAppIntentGateway.RevealFileAsync(Kazo.Os.App.Abstractions.VirtualPath path, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.Simulation.Abstractions.Gateways.AppIntentResult!>
 Kazo.Os.Simulation.Abstractions.Gateways.IAppIntentGateway.SendIntentAsync(string! intentId, string? payloadJson, string? targetAppId = null, bool rememberChoice = false, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.Simulation.Abstractions.Gateways.AppIntentResult!>
 Kazo.Os.Simulation.Abstractions.Gateways.IAppIntentGateway.ShowAppSettingsAsync(string! appId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.Simulation.Abstractions.Gateways.AppIntentResult!>
+Kazo.Os.Simulation.Abstractions.Gateways.IAppIntentGateway.SuggestCatalogAppsAsync(Kazo.Os.App.Abstractions.VirtualPath path, string? mediaType = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<Kazo.Os.Simulation.Abstractions.Gateways.AppIntentSuggestedCatalogApp!>!>
 Kazo.Os.Simulation.Abstractions.Gateways.IAppLoggingGateway
 Kazo.Os.Simulation.Abstractions.Gateways.IAppLoggingGateway.AppendToLogFile(string! relativePath, string! line) -> void
 Kazo.Os.Simulation.Abstractions.Gateways.IAppLoggingGateway.AppendToSiteDebugLog(string! line) -> void
@@ -2662,6 +2680,9 @@ override Kazo.Os.Simulation.Abstractions.Gateways.AppIntentOpenFileResult.ToStri
 override Kazo.Os.Simulation.Abstractions.Gateways.AppIntentResult.Equals(object? obj) -> bool
 override Kazo.Os.Simulation.Abstractions.Gateways.AppIntentResult.GetHashCode() -> int
 override Kazo.Os.Simulation.Abstractions.Gateways.AppIntentResult.ToString() -> string!
+override Kazo.Os.Simulation.Abstractions.Gateways.AppIntentSuggestedCatalogApp.Equals(object? obj) -> bool
+override Kazo.Os.Simulation.Abstractions.Gateways.AppIntentSuggestedCatalogApp.GetHashCode() -> int
+override Kazo.Os.Simulation.Abstractions.Gateways.AppIntentSuggestedCatalogApp.ToString() -> string!
 override Kazo.Os.Simulation.Abstractions.Gateways.ServiceControlResult.Equals(object? obj) -> bool
 override Kazo.Os.Simulation.Abstractions.Gateways.ServiceControlResult.GetHashCode() -> int
 override Kazo.Os.Simulation.Abstractions.Gateways.ServiceControlResult.ToString() -> string!
@@ -3075,6 +3096,8 @@ static Kazo.Os.Simulation.Abstractions.Gateways.AppIntentOpenFileResult.operator
 static Kazo.Os.Simulation.Abstractions.Gateways.AppIntentOpenFileResult.operator ==(Kazo.Os.Simulation.Abstractions.Gateways.AppIntentOpenFileResult? left, Kazo.Os.Simulation.Abstractions.Gateways.AppIntentOpenFileResult? right) -> bool
 static Kazo.Os.Simulation.Abstractions.Gateways.AppIntentResult.operator !=(Kazo.Os.Simulation.Abstractions.Gateways.AppIntentResult? left, Kazo.Os.Simulation.Abstractions.Gateways.AppIntentResult? right) -> bool
 static Kazo.Os.Simulation.Abstractions.Gateways.AppIntentResult.operator ==(Kazo.Os.Simulation.Abstractions.Gateways.AppIntentResult? left, Kazo.Os.Simulation.Abstractions.Gateways.AppIntentResult? right) -> bool
+static Kazo.Os.Simulation.Abstractions.Gateways.AppIntentSuggestedCatalogApp.operator !=(Kazo.Os.Simulation.Abstractions.Gateways.AppIntentSuggestedCatalogApp? left, Kazo.Os.Simulation.Abstractions.Gateways.AppIntentSuggestedCatalogApp? right) -> bool
+static Kazo.Os.Simulation.Abstractions.Gateways.AppIntentSuggestedCatalogApp.operator ==(Kazo.Os.Simulation.Abstractions.Gateways.AppIntentSuggestedCatalogApp? left, Kazo.Os.Simulation.Abstractions.Gateways.AppIntentSuggestedCatalogApp? right) -> bool
 static Kazo.Os.Simulation.Abstractions.Gateways.NoDescriptor.Instance.get -> Kazo.Os.Simulation.Abstractions.Gateways.NoDescriptor!
 static Kazo.Os.Simulation.Abstractions.Gateways.NullAppServiceNotifyGateway.Instance.get -> Kazo.Os.Simulation.Abstractions.Gateways.NullAppServiceNotifyGateway!
 static Kazo.Os.Simulation.Abstractions.Gateways.ServiceControlResult.operator !=(Kazo.Os.Simulation.Abstractions.Gateways.ServiceControlResult? left, Kazo.Os.Simulation.Abstractions.Gateways.ServiceControlResult? right) -> bool

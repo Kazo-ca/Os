@@ -30,5 +30,6 @@ override Kazo.Os.Apps.Store.StoreApp.SingleInstancePerUser.get -> bool
 override Kazo.Os.Apps.Store.StoreMarkdownView.OnParametersSet() -> void
 override Kazo.Os.Apps.Store.StoreWindow.OnAppAfterRenderAsync(bool firstRender) -> System.Threading.Tasks.Task!
 override Kazo.Os.Apps.Store.StoreWindow.OnAppInitializedAsync() -> System.Threading.Tasks.Task!
+override Kazo.Os.Apps.Store.StoreWindow.OnIntentReceivedAsync(Kazo.Os.App.Abstractions.AppIntentDelivery! intent) -> System.Threading.Tasks.Task!
 ~override Kazo.Os.Apps.Store.StoreMarkdownView.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
 ~override Kazo.Os.Apps.Store.StoreWindow.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void

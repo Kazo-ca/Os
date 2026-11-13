@@ -95,6 +95,13 @@ Cette section liste ce qui est publié dans la branche `main` et en ligne.
   Une fenêtre qui passe devant ne bouge pas dans la page : une app dans un
   cadre (iframe), comme Kazo Word ou le navigateur, garde sa page, aussi sur
   mobile quand on change d'app. ([ADR 0244](dev/adr/0244-stable-window-order-in-the-page.md))
+- **Fenêtres qui restent sur leur écran** (version 3.3.3) : une app peut
+  empêcher sa fenêtre de changer d'écran (`window.canChangeScreen: false`).
+  Les apps Craft dans un iframe (Kazo Word et les suivantes) restent sur leur
+  écran avec l'avertissement « problème connu, une solution est en cours » :
+  changer d'écran rechargeait l'iframe et faisait perdre le document. La vraie
+  solution prévue : compiler nous-mêmes une version WebAssembly de chaque app
+  Craft, sans iframe. ([ADR 0263](dev/adr/0263-windows-that-stay-on-their-screen.md), [#482](https://github.com/Kazo-ca/Os/issues/482))
 - **Styles de fenêtre inspirés de WinForms** (version 3.1.0) : une app choisit
   le style `Normal`, `Tool` (fermer seulement, celui des dialogues de l'OS) ou
   `None` (zone cliente seule, transparente : un clic là où l'app ne dessine rien
@@ -284,7 +291,7 @@ Cette section liste ce qui est publié dans la branche `main` et en ligne.
   ([ADR 0174](dev/adr/0174-announce-a-new-version-to-open-sessions.md),
   [ADR 0223](dev/adr/0223-restart-onto-the-new-version.md))
 - **Numéro de build et état de la version sur l'écran de connexion** : à côté
-  de « Kazo OS 3.3.2 », le numéro de build (nombre de commits, le même pour le
+  de « Kazo OS 3.3.3 », le numéro de build (nombre de commits, le même pour le
   site, la Release et le serveur) et une pastille « À jour », « Obsolète : … »
   ou « État inconnu (hors ligne) », vérifiée dès le démarrage.
   ([ADR 0236](dev/adr/0236-build-number-and-version-status-at-sign-in.md))
@@ -344,6 +351,12 @@ Cette section liste ce qui est publié dans la branche `main` et en ligne.
   fenêtres, terminal, réseau, tâches de fond, presse-papiers, dialogues,
   composants Blazor. ([`sdk-reference.md`](framework/sdk-reference.md),
   [`sdk-packages.md`](framework/sdk-packages.md))
+- **Module commun des apps Craft** (version 3.3.3) : `Kazo.Os.AppSdk.Craft`,
+  livré et servi par l'OS, réunit le cadre de l'iframe (proxy, sélecteur de
+  fichiers, raccourcis, réglages par utilisateur) et la logique des documents
+  des apps Craft (Kazo Word, Kazo Spreadsheets…), écrits une fois au lieu d'une
+  copie par app. ([ADR 0259](dev/adr/0259-shared-craft-app-host-module.md),
+  [`craft-apps.md`](framework/craft-apps.md))
 - **Modèles `dotnet new`** pour une application fenêtrée, une commande, un
   service, un site, un hôte complet ou un dépôt d'application entier, visibles
   dans Visual Studio et Rider.
@@ -396,6 +409,11 @@ Cette section liste ce qui est publié dans la branche `main` et en ligne.
   ([ADR 0188](dev/adr/0188-hack-store-and-app-catalog.md),
   [ADR 0212](dev/adr/0212-hack-store-app-build.md),
   [ADR 0215](dev/adr/0215-hack-store-answers-notification-and-ambiguous-app-id.md))
+- **Lancer une app par un lien direct** (version 3.3.3) : le lien
+  `https://os.kazo.ca/?autolaunch=<appId>` démarre Kazo OS en invité s'il n'y
+  a aucun compte, installe l'app depuis le catalogue officiel signé et la
+  lance ; avec un compte, il ouvre le Store à la page de l'app.
+  ([ADR 0258](dev/adr/0258-direct-app-launch-link.md), [`app-launch-link.md`](dev/app-launch-link.md))
 - **Installations sans redémarrage et sûres** : une application installée ou
   mise à jour s'ouvre tout de suite si elle n'était pas déjà chargée. Les
   paquets d'une source qui a une clé sont signés et vérifiés, l'installation
@@ -435,15 +453,12 @@ dans `main`, le lien mène à sa PR.
 | Changer d'utilisateur | Ouvrir une autre session sans fermer la première. Reste grisé dans le menu Marche/arrêt par choix de Benoit : une session à la fois, Se déconnecter pour changer de compte. | [0195](dev/adr/0195-start-menu-power-button.md), [0201](dev/adr/0201-switch-user-stays-greyed.md) | [#290](https://github.com/Kazo-ca/Os/issues/290) |
 | Adresse de fichier servie à la demande | Une app reçoit une adresse pour lire un gros fichier (audio, vidéo) sans le copier en mémoire, avec lecture partielle pour avancer dans un morceau. | À écrire | [#379](https://github.com/Kazo-ca/Os/issues/379) |
 | Glisser des fichiers vers une app | Contrat public du SDK pour recevoir des fichiers glissés depuis l'explorateur ou le bureau. | À écrire | [#380](https://github.com/Kazo-ca/Os/issues/380) |
-| Fenêtres qui restent sur leur écran | Une app peut empêcher sa fenêtre de changer d'écran (`window.canChangeScreen: false`). Les apps Craft dans un iframe (Kazo Word et les suivantes) restent sur leur écran avec l'avertissement « problème connu, une solution est en cours » : changer d'écran rechargeait l'iframe et faisait perdre le document. La vraie solution prévue : compiler nous-mêmes une version WebAssembly de chaque app Craft, sans iframe. | [0263](dev/adr/0263-windows-that-stay-on-their-screen.md) | [#482](https://github.com/Kazo-ca/Os/issues/482) |
 
 ### Kazo OS Store
 
 | Fonctionnalité | Description | ADR | Issue |
 | --- | --- | --- | --- |
 | Catalogue des applications | Format du catalogue, vérification et publication des applications proposées. | [0188](dev/adr/0188-hack-store-and-app-catalog.md) | [AppMarketPlace #1](https://github.com/Kazo-ca/Os-AppMarketPlace/issues/1) |
-| Lancer une app par un lien direct | Le lien `https://os.kazo.ca/?autolaunch=<appId>` démarre Kazo OS en invité s'il n'y a aucun compte, installe l'app depuis le catalogue officiel signé et la lance ; avec un compte, il ouvre le Store à la page de l'app. | [0258](https://github.com/Kazo-ca/Os/pull/468) | Série `app-link/base` : chantiers 1 à 3 faits, voir [`app-launch-link.md`](dev/app-launch-link.md) |
-| Module commun des apps Craft | `Kazo.Os.AppSdk.Craft`, livré et servi par l'OS : le cadre de l'iframe (proxy, sélecteur de fichiers, raccourcis, réglages par utilisateur) et la logique des documents des apps Craft (Kazo Word, Kazo Spreadsheets…), écrits une fois au lieu d'une copie par app. Bibliothèque, scripts, parcours de bout en bout dans l'OS publié et guide [`craft-apps.md`](framework/craft-apps.md) prêts dans la série ; arrive avec la prochaine version de l'OS. | [0259](dev/adr/0259-shared-craft-app-host-module.md) | Série `craft-host/base` |
 
 ### Personnalisation
 

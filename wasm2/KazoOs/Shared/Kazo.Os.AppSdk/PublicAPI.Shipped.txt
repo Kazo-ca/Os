@@ -736,6 +736,8 @@ Kazo.Os.AppSdk.Apps.KazoOpenFileResult.FellBackToOpen.init -> void
 Kazo.Os.AppSdk.Apps.KazoOpenFileResult.KazoOpenFileResult(Kazo.Os.AppSdk.Apps.KazoOpenFileStatus Status, System.Collections.Generic.IReadOnlyList<string!>! CandidateAppIds) -> void
 Kazo.Os.AppSdk.Apps.KazoOpenFileResult.Status.get -> Kazo.Os.AppSdk.Apps.KazoOpenFileStatus
 Kazo.Os.AppSdk.Apps.KazoOpenFileResult.Status.init -> void
+Kazo.Os.AppSdk.Apps.KazoOpenFileResult.SuggestedCatalogApps.get -> System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.Apps.KazoSuggestedCatalogApp!>!
+Kazo.Os.AppSdk.Apps.KazoOpenFileResult.SuggestedCatalogApps.init -> void
 Kazo.Os.AppSdk.Apps.KazoOpenFileStatus
 Kazo.Os.AppSdk.Apps.KazoOpenFileStatus.ChooserRequired = 1 -> Kazo.Os.AppSdk.Apps.KazoOpenFileStatus
 Kazo.Os.AppSdk.Apps.KazoOpenFileStatus.NoHandler = 2 -> Kazo.Os.AppSdk.Apps.KazoOpenFileStatus
@@ -884,6 +886,22 @@ Kazo.Os.AppSdk.Apps.KazoRunningProcessInfo.Pid.get -> long
 Kazo.Os.AppSdk.Apps.KazoRunningProcessInfo.Pid.init -> void
 Kazo.Os.AppSdk.Apps.KazoRunningProcessInfo.UserName.get -> string!
 Kazo.Os.AppSdk.Apps.KazoRunningProcessInfo.UserName.init -> void
+Kazo.Os.AppSdk.Apps.KazoSuggestedCatalogApp
+Kazo.Os.AppSdk.Apps.KazoSuggestedCatalogApp.<Clone>$() -> Kazo.Os.AppSdk.Apps.KazoSuggestedCatalogApp!
+Kazo.Os.AppSdk.Apps.KazoSuggestedCatalogApp.AppId.get -> string!
+Kazo.Os.AppSdk.Apps.KazoSuggestedCatalogApp.AppId.init -> void
+Kazo.Os.AppSdk.Apps.KazoSuggestedCatalogApp.Catalog.get -> string!
+Kazo.Os.AppSdk.Apps.KazoSuggestedCatalogApp.Catalog.init -> void
+Kazo.Os.AppSdk.Apps.KazoSuggestedCatalogApp.Deconstruct(out string! AppId, out string! Name, out string! Catalog) -> void
+Kazo.Os.AppSdk.Apps.KazoSuggestedCatalogApp.Equals(Kazo.Os.AppSdk.Apps.KazoSuggestedCatalogApp? other) -> bool
+Kazo.Os.AppSdk.Apps.KazoSuggestedCatalogApp.GetShortDescription(System.Globalization.CultureInfo! culture) -> string!
+Kazo.Os.AppSdk.Apps.KazoSuggestedCatalogApp.IconUri.get -> string?
+Kazo.Os.AppSdk.Apps.KazoSuggestedCatalogApp.IconUri.init -> void
+Kazo.Os.AppSdk.Apps.KazoSuggestedCatalogApp.KazoSuggestedCatalogApp(string! AppId, string! Name, string! Catalog) -> void
+Kazo.Os.AppSdk.Apps.KazoSuggestedCatalogApp.Name.get -> string!
+Kazo.Os.AppSdk.Apps.KazoSuggestedCatalogApp.Name.init -> void
+Kazo.Os.AppSdk.Apps.KazoSuggestedCatalogApp.ShortDescriptions.get -> System.Collections.Generic.IReadOnlyDictionary<string!, string!>!
+Kazo.Os.AppSdk.Apps.KazoSuggestedCatalogApp.ShortDescriptions.init -> void
 Kazo.Os.AppSdk.Apps.KazoThemePackInstallReport
 Kazo.Os.AppSdk.Apps.KazoThemePackInstallReport.<Clone>$() -> Kazo.Os.AppSdk.Apps.KazoThemePackInstallReport!
 Kazo.Os.AppSdk.Apps.KazoThemePackInstallReport.Deconstruct(out string! PackId, out string! Name, out string! Version, out string! Source, out string? PreviousVersion, out bool SystemWide, out Kazo.Os.AppSdk.Apps.KazoThemePackParts Parts, out Kazo.Os.AppSdk.Apps.KazoPackageTrust Trust) -> void
@@ -2703,6 +2721,7 @@ abstract Kazo.Os.AppSdk.WebServerAppBase.ProcessRequestAsync(Kazo.Os.AppSdk.Net.
 const Kazo.Os.AppSdk.Administration.KazoUserAccounts.MaximumDisplayNameLength = 128 -> int
 const Kazo.Os.AppSdk.Administration.KazoUserAccounts.MaximumPasswordLength = 256 -> int
 const Kazo.Os.AppSdk.Administration.KazoUserAccounts.MinimumPasswordLength = 8 -> int
+const Kazo.Os.AppSdk.Apps.KazoApps.StoreAppId = "org.kazoos.store" -> string!
 const Kazo.Os.AppSdk.Apps.KazoBrowser.AppId = "org.kazoos.browser" -> string!
 const Kazo.Os.AppSdk.Apps.KazoBrowser.DetachedArgument = "--detached" -> string!
 const Kazo.Os.AppSdk.Clipboard.KazoClipboardFileList.GnomeCopiedFilesMediaType = "x-special/gnome-copied-files" -> string!
@@ -2896,6 +2915,9 @@ override Kazo.Os.AppSdk.Apps.KazoPackageUpdate.ToString() -> string!
 override Kazo.Os.AppSdk.Apps.KazoRunningProcessInfo.Equals(object? obj) -> bool
 override Kazo.Os.AppSdk.Apps.KazoRunningProcessInfo.GetHashCode() -> int
 override Kazo.Os.AppSdk.Apps.KazoRunningProcessInfo.ToString() -> string!
+override Kazo.Os.AppSdk.Apps.KazoSuggestedCatalogApp.Equals(object? obj) -> bool
+override Kazo.Os.AppSdk.Apps.KazoSuggestedCatalogApp.GetHashCode() -> int
+override Kazo.Os.AppSdk.Apps.KazoSuggestedCatalogApp.ToString() -> string!
 override Kazo.Os.AppSdk.Apps.KazoThemePackInstallReport.Equals(object? obj) -> bool
 override Kazo.Os.AppSdk.Apps.KazoThemePackInstallReport.GetHashCode() -> int
 override Kazo.Os.AppSdk.Apps.KazoThemePackInstallReport.ToString() -> string!
@@ -3360,6 +3382,7 @@ static Kazo.Os.AppSdk.Apps.KazoApps.EditFileAsync(string! path, System.Threading
 static Kazo.Os.AppSdk.Apps.KazoApps.GetDefaultHandlersAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.Apps.KazoFileAssociation!>!>!
 static Kazo.Os.AppSdk.Apps.KazoApps.GetHandlersAsync(string! path, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.Apps.KazoAppInfo!>!>!
 static Kazo.Os.AppSdk.Apps.KazoApps.GetInstalledAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.Apps.KazoAppInfo!>!>!
+static Kazo.Os.AppSdk.Apps.KazoApps.GetSuggestedCatalogAppsAsync(string! path, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.Apps.KazoSuggestedCatalogApp!>!>!
 static Kazo.Os.AppSdk.Apps.KazoApps.LaunchAsync(string! appId, System.Collections.Generic.IReadOnlyList<string!>? arguments = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 static Kazo.Os.AppSdk.Apps.KazoApps.OpenFileAsync(string! path, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Kazo.Os.AppSdk.Apps.KazoOpenFileResult!>!
 static Kazo.Os.AppSdk.Apps.KazoApps.OpenUriAsync(System.Uri! uri, string? appId = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Kazo.Os.AppSdk.Apps.KazoIntentResult!>!
@@ -3401,6 +3424,8 @@ static Kazo.Os.AppSdk.Apps.KazoPackageUpdate.operator !=(Kazo.Os.AppSdk.Apps.Kaz
 static Kazo.Os.AppSdk.Apps.KazoPackageUpdate.operator ==(Kazo.Os.AppSdk.Apps.KazoPackageUpdate? left, Kazo.Os.AppSdk.Apps.KazoPackageUpdate? right) -> bool
 static Kazo.Os.AppSdk.Apps.KazoRunningProcessInfo.operator !=(Kazo.Os.AppSdk.Apps.KazoRunningProcessInfo? left, Kazo.Os.AppSdk.Apps.KazoRunningProcessInfo? right) -> bool
 static Kazo.Os.AppSdk.Apps.KazoRunningProcessInfo.operator ==(Kazo.Os.AppSdk.Apps.KazoRunningProcessInfo? left, Kazo.Os.AppSdk.Apps.KazoRunningProcessInfo? right) -> bool
+static Kazo.Os.AppSdk.Apps.KazoSuggestedCatalogApp.operator !=(Kazo.Os.AppSdk.Apps.KazoSuggestedCatalogApp? left, Kazo.Os.AppSdk.Apps.KazoSuggestedCatalogApp? right) -> bool
+static Kazo.Os.AppSdk.Apps.KazoSuggestedCatalogApp.operator ==(Kazo.Os.AppSdk.Apps.KazoSuggestedCatalogApp? left, Kazo.Os.AppSdk.Apps.KazoSuggestedCatalogApp? right) -> bool
 static Kazo.Os.AppSdk.Apps.KazoThemePackInstallReport.operator !=(Kazo.Os.AppSdk.Apps.KazoThemePackInstallReport? left, Kazo.Os.AppSdk.Apps.KazoThemePackInstallReport? right) -> bool
 static Kazo.Os.AppSdk.Apps.KazoThemePackInstallReport.operator ==(Kazo.Os.AppSdk.Apps.KazoThemePackInstallReport? left, Kazo.Os.AppSdk.Apps.KazoThemePackInstallReport? right) -> bool
 static Kazo.Os.AppSdk.Apps.KazoUninstallPlan.operator !=(Kazo.Os.AppSdk.Apps.KazoUninstallPlan? left, Kazo.Os.AppSdk.Apps.KazoUninstallPlan? right) -> bool
