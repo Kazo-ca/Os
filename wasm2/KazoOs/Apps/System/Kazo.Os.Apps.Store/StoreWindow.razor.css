@@ -599,3 +599,14 @@
         min-height: 40px;
     }
 }
+
+/* ADR 0257 §5: the file the Store opens once the app is installed. */
+.store-open-after {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin: 0.35rem 0 0;
+    font-size: 0.82rem;
+    color: var(--kos-text-secondary, #9ac3b2);
+    word-break: break-all;
+}

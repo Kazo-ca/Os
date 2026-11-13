@@ -1,0 +1,20 @@
+{
+  "id": "19c54077-d470-48ea-ada1-59ae84bdd785",
+  "category": "new",
+  "audience": [
+    "user",
+    "developer"
+  ],
+  "title": {
+    "en": "Opening a file no app supports names the Store apps that can open it",
+    "fr": "Ouvrir un fichier qu'aucune app ne prend en charge nomme les apps du Store qui l'ouvrent"
+  },
+  "description": {
+    "en": "When no installed app opens a file, the OS looks in the Store catalogs it already downloaded for the apps that declare the file type, without waiting for the network. xdg-open lists them with the kazopkg install command, and KazoApps.OpenFileAsync returns them in KazoOpenFileResult.SuggestedCatalogApps.",
+    "fr": "Quand aucune app installée n'ouvre un fichier, l'OS cherche dans les catalogues du Store déjà téléchargés les apps qui déclarent ce type de fichier, sans attendre le réseau. xdg-open les liste avec la commande kazopkg install, et KazoApps.OpenFileAsync les rend dans KazoOpenFileResult.SuggestedCatalogApps."
+  },
+  "links": [
+    "doc/en/wasm/dev/adr/0257-offer-a-store-app-for-an-unsupported-file.md",
+    "doc/en/wasm/dev/user-file-associations.md"
+  ]
+}

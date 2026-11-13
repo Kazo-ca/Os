@@ -311,7 +311,8 @@
         "maximizeBox": { "description": "Whether the title bar shows Maximize (ADR 0234 §2). Omitted: true.", "type": "boolean" },
         "minimizeBox": { "description": "Whether the title bar shows Minimize (ADR 0234 §2). Omitted: true.", "type": "boolean" },
         "showInTaskbar": { "description": "Whether the window has a taskbar button; without one the user cannot minimize it (ADR 0234 §2). Omitted: true.", "type": "boolean" },
-        "modal": { "description": "Whether a child window blocks the window that opened it (ADR 0234 §3); ignored on the main window. Omitted: false.", "type": "boolean" }
+        "modal": { "description": "Whether a child window blocks the window that opened it (ADR 0234 §3); ignored on the main window. Omitted: false.", "type": "boolean" },
+        "canChangeScreen": { "description": "Whether the user may send the window to another screen; off, it stays on its screen and opens on screen 1 (ADR 0263). Omitted: true.", "type": "boolean" }
       }
     },
     "execution": { "enum": ["mainThread", "pool", "dedicated", "web"] },

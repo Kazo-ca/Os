@@ -93,9 +93,15 @@ alerte `IL…`, sert la publication sur `127.0.0.1` et `127.0.0.2`, puis lance
 | `The_installed_apps_worker_serves_an_installed_app_page_to_an_iframe` | ADR 0243 sur `127.0.0.1` : la même page, servie par le worker du mode `installed-apps` |
 | `Trimmed_publish_shows_a_new_notification_as_a_bubble_above_the_taskbar` | ADR 0197 : la notification des nouveautés postée à la connexion d'un nouveau compte apparaît en bulle au-dessus de la barre (source « Kazo OS », titre, bouton « Voir »), part seule après environ 6 s et reste dans le panneau de l'horloge ([`notification-toasts.md`](notification-toasts.md)) |
 | `Trimmed_publish_shows_unread_notifications_next_to_the_clock` | ADR 0196 : un nouveau compte reçoit la notification des nouveautés (`whats-new.json` servi) ; point et infobulle de l'horloge, aucun point sur Applications, panneau ouvert = lu, **Voir** ouvre Paramètres ▸ Nouveautés et ferme la notification ; captures `trimmed-clock-dot.png` et `trimmed-whats-new-page.png` |
+| `A_direct_link_with_no_account_starts_the_guest_installs_and_launches_the_app` | ADR 0258 : `?autolaunch=<id>` sans compte démarre l'invité sans clic, installe le paquet de test depuis le catalogue officiel servi par Playwright (signé par la clé de l'exécution) et l'ouvre ; l'adresse perd le paramètre ; un rechargement ne relance rien ; une deuxième visite continue en invité et ouvre l'app sans nouveau téléchargement ([`app-launch-link.md`](app-launch-link.md)) |
+| `A_direct_link_with_an_account_opens_the_store_at_the_app_page` | ADR 0258 : avec un compte, bandeau de l'écran de connexion, puis le Store à la page de l'app ; rien de téléchargé |
+| `A_direct_link_reports_a_missing_app_and_can_be_cancelled` | ADR 0258 : app absente du catalogue officiel → notification dont le bouton ouvre le Store ; **Annuler** pendant le téléchargement → ni app ni notification |
 | `A_craft_app_on_the_os_module_opens_saves_and_follows_the_os` | ADR 0259 : le paquet de test `Tests/fixtures/craft-app` (une fenêtre Craft sur le module `Kazo.Os.AppSdk.Craft`, autour d'une fausse app Craft ; emballé par le script dans `kazoos-packages-craft`, sans le module) est installé par `sudo kazopkg install` ; `xdg-open seed.fake` ouvre la fenêtre sur le fichier, la frappe met `*` dans le titre, Ctrl+S réécrit le fichier et l'app reçoit `saved`, F12 (touche réservée par la fenêtre) fait Enregistrer sous par le dialogue de l'OS, une erreur après `ready` devient un message, le thème clair puis sombre suit, Ctrl+O passe par le dialogue d'ouverture de l'OS, la fermeture avec des modifications demande, une deuxième fenêtre relit le réglage écrit par la première ([`craft-apps.md`](../framework/craft-apps.md)) |
 
-Le script exige que les onze tests passent (`EXPECTED_TESTS`).
+Le script exige que les quatorze tests passent (`EXPECTED_TESTS`). Pour les trois tests du lien direct, il
+crée à chaque exécution une clé P-256 (`openssl`, dans `artifacts/publish-trimmed/test-catalog-signing/`)
+et publie avec `-p:KazoOsAppSigningKeys=catalog:official=<clé publique>` : la publication testée
+accepte cette clé pour le catalogue officiel, à côté de la vraie.
 
 Aucune erreur de console n'est admise. Sans `KAZOOS_TRIMMED_URL`, la suite est
 ignorée (un `dotnet test` de la solution ne la lance pas).

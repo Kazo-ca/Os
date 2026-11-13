@@ -28,6 +28,14 @@ public sealed partial class ExplorerFileDialogs
     private string? _selectedAppId;
     private string? _extension;
     private bool _alwaysUse;
+    private IReadOnlyList<KazoAppInfo> _installed = [];
+    private string? _openWithPath;
+
+    // "Open with": the Store apps that open the file (ADR 0257 §4)
+    private readonly string _storeHeadingId = $"explorer-store-apps-{Guid.NewGuid():N}";
+    private readonly HashSet<string> _brokenIcons = new(StringComparer.Ordinal);
+    private IReadOnlyList<AppIntentSuggestedCatalogApp>? _storeApps;
+    private string? _storeError;
 
     // Properties
     private FileSystemEntryMetadata? _metadata;
@@ -102,11 +110,92 @@ public sealed partial class ExplorerFileDialogs
             installed = [];
         }
 
+        _installed = installed;
+        _openWithPath = request.Path;
+        _storeApps = await LoadStoreAppsAsync(request.Path);
         _apps = request.CandidateAppIds is { } candidates
             ? [.. candidates.Select(id => installed.FirstOrDefault(app => app.Id == id)).OfType<KazoAppInfo>()]
             : [.. installed.Where(app => app.Kind == AppKind.Window && !app.IsHidden).OrderBy(app => app.Name, StringComparer.CurrentCultureIgnoreCase)];
         _selectedAppId = _apps.FirstOrDefault()?.Id;
     }
+
+    /// <summary>
+    /// The Store apps that open the file (ADR 0257 §4), from the catalogs the OS already downloaded:
+    /// never waits for the network. A requesting app without <c>apps.launch</c>, an unreadable path or
+    /// an OS without the search shows none: the box stays as it was.
+    /// </summary>
+    private async Task<IReadOnlyList<AppIntentSuggestedCatalogApp>> LoadStoreAppsAsync(string path)
+    {
+        try
+        {
+            return await HostContext.Intents.SuggestCatalogAppsAsync(VirtualPath.Parse(path), cancellationToken: HostContext.CancellationToken);
+        }
+        catch (Exception exception) when (exception is AppGatewayAccessDeniedException or NotSupportedException or FormatException or ArgumentException)
+        {
+            return [];
+        }
+    }
+
+    /// <summary>
+    /// No installed app declares the file's extension for <c>open</c>: the box then says so above the
+    /// list of every app (the File Explorer shows it this way when the open answered <c>NoHandler</c>
+    /// with Store apps to propose, ADR 0257 §4).
+    /// </summary>
+    private bool NoInstalledHandler => _extension is not null
+        && _storeApps is { Count: > 0 }
+        && !_installed.Any(app => app.FileHandlers.Any(handler =>
+            handler.Extensions.Any(extension => string.Equals(extension, _extension, StringComparison.OrdinalIgnoreCase))
+            && handler.Actions.Any(action => string.Equals(action, "open", StringComparison.OrdinalIgnoreCase))));
+
+    /// <summary>The app's short description in the language of the explorer's texts, else English.</summary>
+    private string ShortDescription(AppIntentSuggestedCatalogApp app)
+    {
+        CultureInfo culture = L is KazoStringLocalizer kazo ? kazo.Culture : KazoLocale.DefaultLanguage;
+        foreach (string key in new[] { culture.Name, culture.TwoLetterISOLanguageName, "en" })
+        {
+            if (key.Length > 0 && app.ShortDescriptions.TryGetValue(key, out string? text))
+            {
+                return text;
+            }
+        }
+
+        return string.Empty;
+    }
+
+    /// <summary>
+    /// « View in the Store » (ADR 0257 §4, §5): the Store opens on the app's page, where the install
+    /// keeps its usual consent (capabilities, scope, administrator), and reopens the file once the app
+    /// is installed. The box closes without opening anything.
+    /// </summary>
+    private async Task ShowInStoreAsync(AppIntentSuggestedCatalogApp app)
+    {
+        _storeError = null;
+        try
+        {
+            AppIntentLaunchResult launched = await HostContext.Intents.LaunchAsync(
+                KazoApps.StoreAppId,
+                [StoreAppArgument + app.AppId, StoreOpenAfterInstallArgument + _openWithPath],
+                HostContext.CancellationToken);
+            if (launched.Outcome != AppIntentLaunchOutcome.Launched)
+            {
+                _storeError = L["OpenWith.StoreFailed"];
+                return;
+            }
+        }
+        catch (Exception exception) when (exception is AppGatewayAccessDeniedException or NotSupportedException)
+        {
+            _storeError = L["OpenWith.StoreFailed"];
+            return;
+        }
+
+        await CancelAsync();
+    }
+
+    /// <summary>The Store's argument naming the app page to open.</summary>
+    internal const string StoreAppArgument = "--app=";
+
+    /// <summary>The Store's argument naming the file to open after the install (ADR 0257 §5).</summary>
+    internal const string StoreOpenAfterInstallArgument = "--open-after-install=";
 
     /// <summary>Reads the entry with the requesting app's rights: what it may not stat, it does not see.</summary>
     private async Task LoadMetadataAsync(string path)

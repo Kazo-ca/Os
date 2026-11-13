@@ -158,6 +158,11 @@ This section lists what is released in the `main` branch and online.
 - **Trash** with restore. ([`trash.md`](dev/trash.md))
 - **Default applications** per file type, for each user.
   ([`user-file-associations.md`](dev/user-file-associations.md))
+- **Store app offered for a file**: opening a file no installed app supports
+  offers the Store apps that declare its type (for example Kazo Word for a
+  `.docx`) in the File Explorer and "Open with", with "View in the Store"; the
+  file opens after the install. `open` in the terminal shows the `kazopkg
+  install` command. ([ADR 0257](dev/adr/0257-offer-a-store-app-for-an-unsupported-file.md))
 - **Computer folder mounted as a network drive**: a real folder of the
   computer appears in the OS (Chrome and Edge on desktop).
   ([ADR 0181](dev/adr/0181-host-folder-mounted-as-a-network-drive.md))
@@ -417,12 +422,14 @@ points to its PR.
 | Switch user | Open another session without closing the first one. Stays greyed out in the Power menu by Benoit's choice: one session at a time, Sign out to change account. | [0195](dev/adr/0195-start-menu-power-button.md), [0201](dev/adr/0201-switch-user-stays-greyed.md) | [#290](https://github.com/Kazo-ca/Os/issues/290) |
 | File address served on demand | An app gets an address to read a large file (audio, video) without copying it in memory, with partial reads to seek in a track. | To write | [#379](https://github.com/Kazo-ca/Os/issues/379) |
 | Drag files onto an app | Public SDK contract to receive files dragged from the File Explorer or the desktop. | To write | [#380](https://github.com/Kazo-ca/Os/issues/380) |
+| Windows that stay on their screen | An app can keep its window from changing screen (`window.canChangeScreen: false`). Craft apps in an iframe (Kazo Word and the next ones) stay on their screen with a "known issue, a fix is in progress" warning: changing screen reloaded the iframe and lost the document. The planned real fix: compile our own WebAssembly build of each Craft app, without iframe. | [0263](dev/adr/0263-windows-that-stay-on-their-screen.md) | [#482](https://github.com/Kazo-ca/Os/issues/482) |
 
 ### Kazo OS Store
 
 | Feature | Description | ADR | Issue |
 | --- | --- | --- | --- |
 | Application catalog | Catalog format, checking and publishing of the offered applications. | [0188](dev/adr/0188-hack-store-and-app-catalog.md) | [AppMarketPlace #1](https://github.com/Kazo-ca/Os-AppMarketPlace/issues/1) |
+| Launch an app from a direct link | The link `https://os.kazo.ca/?autolaunch=<appId>` starts Kazo OS as guest when there is no account, installs the app from the signed official catalog and launches it; with an account, it opens the Store at the app's page. | [0258](https://github.com/Kazo-ca/Os/pull/468) | Series `app-link/base`: work items 1 to 3 done, see [`app-launch-link.md`](dev/app-launch-link.md) |
 | Shared module of the Craft apps | `Kazo.Os.AppSdk.Craft`, shipped and served by the OS: the iframe frame (proxy, file picker, shortcuts, per-user settings) and the document logic of the Craft apps (Kazo Word, Kazo Spreadsheets…), written once instead of one copy per app. Library, scripts, end-to-end journey in the published OS and guide [`craft-apps.md`](framework/craft-apps.md) ready in the series; comes with the next OS version. | [0259](dev/adr/0259-shared-craft-app-host-module.md) | Series `craft-host/base` |
 
 ### Personalization
@@ -448,7 +455,7 @@ with `kazopkg` and then from the Kazo OS Store.
 | Chess | Chess, based on chess.js; first application planned for the catalog. | [Os-App-Chess](https://github.com/Kazo-ca/Os-App-Chess) | [#2](https://github.com/Kazo-ca/Os-App-Chess/issues/2), [#3](https://github.com/Kazo-ca/Os-App-Chess/issues/3) |
 | Webamp | Music player in the style of Winamp, associated with audio files, `.m3u`/`.pls` playlists and `.wsz` skins; also opens the files of network drives (ADR 0231). Plan under discussion. | [Os-App-Webamp](https://github.com/Kazo-ca/Os-App-Webamp) | [#1](https://github.com/Kazo-ca/Os-App-Webamp/issues/1), [#381](https://github.com/Kazo-ca/Os/issues/381) |
 | IRC | Native IRC chat client (C# and Blazor) for real IRC networks, desktop and mobile: WebSocket without a server, and TCP with TLS through the relay when the server is connected ([ADR 0235](dev/adr/0235-real-network-for-chat-apps.md)). **Available in the Kazo OS Store** (version 1.0.1, Kazo OS 3.2.0 or later; `kazopkg install Kazo-ca/Os-App-IRC`). | [Os-App-IRC](https://github.com/Kazo-ca/Os-App-IRC) | [#395](https://github.com/Kazo-ca/Os/issues/395), [#393](https://github.com/Kazo-ca/Os/issues/393), [#394](https://github.com/Kazo-ca/Os/issues/394) |
-| Kazo Word | Word processor for `.docx` and `.odt` documents, based on WordCraft by the ArtCraft team (MIT or Apache-2.0), shown in a Kazo OS window and associated with document files (double-click, "Open with"). Version 0.1.0, alpha like WordCraft: spelling in English only, Asian fonts limited, WebGPU or WebGL 2 needed. Kazo OS 3.3.2 or later ([ADR 0243](dev/adr/0243-serve-installed-app-pages.md), [ADR 0244](dev/adr/0244-stable-window-order-in-the-page.md), [ADR 0245](dev/adr/0245-raise-the-maximum-file-size.md)). **Coming to the Kazo OS Store**; already `kazopkg install Kazo-ca/Os-App-Word` once tagged. | [Os-App-Word](https://github.com/Kazo-ca/Os-App-Word) | [Plan](https://github.com/Kazo-ca/Os-App-Word/blob/main/doc/en/plan.md) |
+| Kazo Word | Word processor for `.docx` and `.odt` documents, based on WordCraft by the ArtCraft team (MIT or Apache-2.0), shown in a Kazo OS window and associated with document files (double-click, "Open with"). Version 0.1.0, alpha like WordCraft: spelling in English only, Asian fonts limited, WebGPU or WebGL 2 needed. Kazo OS 3.3.2 or later ([ADR 0243](dev/adr/0243-serve-installed-app-pages.md), [ADR 0244](dev/adr/0244-stable-window-order-in-the-page.md), [ADR 0245](dev/adr/0245-raise-the-maximum-file-size.md)). **Available in the Kazo OS Store** (version 0.1.0; `kazopkg install Kazo-ca/Os-App-Word`). | [Os-App-Word](https://github.com/Kazo-ca/Os-App-Word) | [Plan](https://github.com/Kazo-ca/Os-App-Word/blob/main/doc/en/plan.md) |
 | EmulatorJS | Retro console emulator. | [Os-App-EmulatorJS](https://github.com/Kazo-ca/Os-App-EmulatorJS) | Coming |
 | BoxedWine | Run old Windows programs in the OS. | [Os-App-BoxedWine](https://github.com/Kazo-ca/Os-App-BoxedWine) | Coming |
 | Kazo Spreadsheets | Spreadsheet, port of [GridCraft](https://github.com/storytold/gridcraft) (ArtCraft team) following the [Craft app port guide](dev/craft-app-port-guide.md). Starts as soon as Kazo Word is published in the Store. Planned. | [Os-App-Spreadsheets](https://github.com/Kazo-ca/Os-App-Spreadsheets) | [#1](https://github.com/Kazo-ca/Os-App-Spreadsheets/issues/1) |

@@ -1,1 +1,9 @@
 #nullable enable
+Kazo.Os.Platform.Blazor.Windows.WindowKeyboardCommands.CanChangeScreen(Kazo.Os.Windowing.Abstractions.WindowId windowId) -> bool
+Kazo.Os.Platform.Blazor.Windows.WindowKeyboardCommands.ReportScreenChangeRefused(Kazo.Os.Windowing.Abstractions.WindowId windowId) -> void
+Kazo.Os.Platform.Blazor.Windows.WindowKeyboardCommands.ScreenChangeRefused -> System.Action<Kazo.Os.Windowing.Abstractions.WindowId>?
+Kazo.Os.Platform.Blazor.Shell.AppLaunchProgress
+Kazo.Os.Platform.Blazor.Shell.AppLaunchProgress.AppLaunchProgress() -> void
+Kazo.Os.Platform.Blazor.Shell.AppLaunchProgress.Dispose() -> void
+override Kazo.Os.Platform.Blazor.Shell.AppLaunchProgress.OnInitialized() -> void
+~override Kazo.Os.Platform.Blazor.Shell.AppLaunchProgress.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void

@@ -10,7 +10,8 @@ namespace Kazo.Os.Platform.Core.Apps.Packages;
 /// <summary>
 /// The update check of the Kazo OS Store (ADR 0188 §3, ADR 0212 §5): at sign-in, then every
 /// <c>[updates] interval-hours</c> of <c>/etc/kazoos/app-sources.config</c>, the OS looks for a
-/// newer version of every app installed for the system or for the session user. A notification
+/// newer version of every app installed for the system or for the session user, and downloads every
+/// catalog of <c>[catalogs]</c> for the Store suggestions of ADR 0257. A notification
 /// opens the Store on its updates; no badge is drawn on any icon (ADR 0215 §1, Benoit: notification only).
 /// </summary>
 /// <remarks>
@@ -130,6 +131,9 @@ public sealed class AppUpdateMonitor : IDisposable
             .ConfigureAwait(false);
         Publish(report.Updates);
         Notify(user, report.Updates);
+        // ADR 0257 §2: keep a copy of every catalog, so opening a file no installed app opens can
+        // propose a Store app without waiting for the network.
+        await _installer.RefreshCatalogsAsync(sources, cancellationToken).ConfigureAwait(false);
         return report.Updates;
     }
 

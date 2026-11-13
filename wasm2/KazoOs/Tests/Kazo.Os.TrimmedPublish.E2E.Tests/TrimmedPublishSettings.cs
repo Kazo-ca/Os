@@ -21,11 +21,18 @@ namespace Kazo.Os.TrimmedPublish.E2E.Tests;
 /// The <c>kazoos-packages</c> folder of the test package of ADR 0206 (<c>index.json</c> and its
 /// <c>.kazoapp</c>), served to the browser in place of GitHub; <see langword="null"/> skips that test.
 /// </param>
+/// <param name="SigningKeyPath">
+/// The PEM private key (P-256) created for the run, whose public half the publish trusts for
+/// <c>catalog:official</c>: the direct link tests (ADR 0258) sign the test package with it;
+/// <see langword="null"/> skips them.
+/// </param>
 /// <param name="CraftPackagesDirectory">
 /// The <c>kazoos-packages</c> folder of the Craft test package of ADR 0259
 /// (<c>Tests/fixtures/craft-app</c>); <see langword="null"/> skips the Craft app journey.
 /// </param>
-public sealed record TrimmedPublishSettings(string Url, string? CatalogPath, string? ArtifactsDirectory, string? PwaUrl = null, string? PackagesDirectory = null, string? CraftPackagesDirectory = null)
+public sealed record TrimmedPublishSettings(
+    string Url, string? CatalogPath, string? ArtifactsDirectory, string? PwaUrl = null, string? PackagesDirectory = null, string? SigningKeyPath = null,
+    string? CraftPackagesDirectory = null)
 {
     /// <summary>Base address of the served publish. Required.</summary>
     public const string UrlVariable = "KAZOOS_TRIMMED_URL";
@@ -41,6 +48,9 @@ public sealed record TrimmedPublishSettings(string Url, string? CatalogPath, str
 
     /// <summary>Folder of the test package installed by kazopkg (ADR 0206).</summary>
     public const string PackagesVariable = "KAZOOS_TRIMMED_PACKAGES";
+
+    /// <summary>Private key of the run that signs the test package as the official catalog would (ADR 0258).</summary>
+    public const string SigningKeyVariable = "KAZOOS_TRIMMED_SIGNING_KEY";
 
     /// <summary>Folder of the Craft test package installed by kazopkg (ADR 0259).</summary>
     public const string CraftPackagesVariable = "KAZOOS_TRIMMED_CRAFT_PACKAGES";
@@ -59,7 +69,8 @@ public sealed record TrimmedPublishSettings(string Url, string? CatalogPath, str
         string? url = Read(UrlVariable);
         return url is null
             ? null
-            : new TrimmedPublishSettings(url.TrimEnd('/'), Read(CatalogVariable), Read(ArtifactsVariable), Read(PwaUrlVariable)?.TrimEnd('/'), Read(PackagesVariable), Read(CraftPackagesVariable));
+            : new TrimmedPublishSettings(url.TrimEnd('/'), Read(CatalogVariable), Read(ArtifactsVariable), Read(PwaUrlVariable)?.TrimEnd('/'), Read(PackagesVariable), Read(SigningKeyVariable),
+                Read(CraftPackagesVariable));
     }
 
     /// <summary>

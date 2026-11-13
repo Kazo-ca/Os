@@ -1,1 +1,3 @@
 #nullable enable
+Kazo.Os.Windowing.Abstractions.WindowFrame.CanChangeScreen.get -> bool
+Kazo.Os.Windowing.Abstractions.WindowFrame.CanChangeScreen.init -> void

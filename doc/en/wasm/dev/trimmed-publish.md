@@ -92,9 +92,15 @@ warning, serves the publication on `127.0.0.1` and `127.0.0.2`, then runs
 | `The_installed_apps_worker_serves_an_installed_app_page_to_an_iframe` | ADR 0243 on `127.0.0.1`: the same page, served by the worker of the `installed-apps` mode |
 | `Trimmed_publish_shows_a_new_notification_as_a_bubble_above_the_taskbar` | ADR 0197: the what's new notification posted at a new account's sign-in shows as a bubble above the taskbar (source "Kazo OS", title, "View" button), leaves by itself after about 6 s and stays in the clock panel ([`notification-toasts.md`](notification-toasts.md)) |
 | `Trimmed_publish_shows_unread_notifications_next_to_the_clock` | ADR 0196: a new account gets the what's new notification (`whats-new.json` served); clock dot and tooltip, no dot on Applications, opened panel = read, **View** opens Settings ▸ What's new and dismisses the notification; screenshots `trimmed-clock-dot.png` and `trimmed-whats-new-page.png` |
+| `A_direct_link_with_no_account_starts_the_guest_installs_and_launches_the_app` | ADR 0258: `?autolaunch=<id>` with no account starts the guest with no click, installs the test package from the official catalog served by Playwright (signed by the run's key) and opens it; the address loses the parameter; a reload starts nothing again; a second visit continues as the guest and opens the app with no new download ([`app-launch-link.md`](app-launch-link.md)) |
+| `A_direct_link_with_an_account_opens_the_store_at_the_app_page` | ADR 0258: with an account, the sign-in notice, then the Store at the app's page; nothing downloaded |
+| `A_direct_link_reports_a_missing_app_and_can_be_cancelled` | ADR 0258: app missing from the official catalog → notification whose button opens the Store; **Cancel** during the download → no app and no notification |
 | `A_craft_app_on_the_os_module_opens_saves_and_follows_the_os` | ADR 0259: the test package `Tests/fixtures/craft-app` (a Craft window on the `Kazo.Os.AppSdk.Craft` module, around a fake Craft app; packed by the script into `kazoos-packages-craft`, without the module) is installed with `sudo kazopkg install`; `xdg-open seed.fake` opens the window on the file, typing puts `*` in the title, Ctrl+S rewrites the file and the app hears `saved`, F12 (a chord the window reserves) does Save As through the OS dialog, an error after `ready` becomes a notice, a light then dark theme is followed, Ctrl+O goes through the OS Open dialog, closing with changes asks, a second window reads back the setting the first one wrote ([`craft-apps.md`](../framework/craft-apps.md)) |
 
-The script requires all eleven tests to pass (`EXPECTED_TESTS`).
+The script requires all fourteen tests to pass (`EXPECTED_TESTS`). For the three direct link tests, it
+creates a P-256 key on every run (`openssl`, in `artifacts/publish-trimmed/test-catalog-signing/`) and
+publishes with `-p:KazoOsAppSigningKeys=catalog:official=<public key>`: the publish under test accepts
+that key for the official catalog, next to the real one.
 
 No console error is allowed. Without `KAZOOS_TRIMMED_URL`, the suite is
 skipped (a `dotnet test` of the solution does not run it).

@@ -166,6 +166,16 @@ public sealed record WindowOptions
     [JsonIgnore]
     public bool Modal { get; init; }
 
+    /// <summary>
+    /// Gets whether the user may send the window to another screen (ADR 0263): « Autre écran »,
+    /// the screen shortcuts, dragging between screens and the Start menu of a secondary screen.
+    /// Defaults to <see langword="true"/>. Off, the window stays on its screen and opens on screen 1:
+    /// changing screen moves the window into another browser document, which reloads any iframe it
+    /// holds (a Craft app loses its document). Added after SDK 3.3.2 (ADR 0263).
+    /// </summary>
+    [JsonIgnore]
+    public bool CanChangeScreen { get; init; } = true;
+
     /// <summary>JSON projection of <see cref="Style"/>, written only when it is not <see cref="WindowStyle.Normal"/>.</summary>
     [JsonInclude]
     [JsonPropertyName("style")]
@@ -218,6 +228,15 @@ public sealed record WindowOptions
     {
         get => Modal ? true : null;
         init => Modal = value ?? false;
+    }
+
+    /// <summary>JSON projection of <see cref="CanChangeScreen"/>, written only when it is <see langword="false"/>.</summary>
+    [JsonInclude]
+    [JsonPropertyName("canChangeScreen")]
+    internal bool? CanChangeScreenJson
+    {
+        get => CanChangeScreen ? null : false;
+        init => CanChangeScreen = value ?? true;
     }
 
     /// <summary>

@@ -788,6 +788,12 @@
   <data name="Screens.SecureDialog.Action" xml:space="preserve">
     <value>Aller à l'écran 1</value>
   </data>
+  <data name="WindowMenu.ScreenChangeUnavailable" xml:space="preserve">
+    <value>Pas encore disponible pour cette app : problème connu, une solution est en cours</value>
+  </data>
+  <data name="WindowMenu.ScreenChangeRefused.Title" xml:space="preserve">
+    <value>« {0} » reste sur son écran</value>
+  </data>
   <data name="WindowMenu.OtherScreen" xml:space="preserve">
     <value>Autre écran</value>
   </data>
@@ -943,5 +949,26 @@
   </data>
   <data name="Mobile.ShadeWithDnd" xml:space="preserve">
     <value>{0} (Ne pas déranger est activé)</value>
+  </data>
+  <data name="AppLink.Progress.Title" xml:space="preserve">
+    <value>Installation de {0}…</value>
+  </data>
+  <data name="AppLink.Progress.OpeningTitle" xml:space="preserve">
+    <value>Ouverture de {0}…</value>
+  </data>
+  <data name="AppLink.Progress.Publisher" xml:space="preserve">
+    <value>Publié par {0}</value>
+  </data>
+  <data name="AppLink.Progress.Looking" xml:space="preserve">
+    <value>Recherche de l'app dans le Kazo OS Store…</value>
+  </data>
+  <data name="AppLink.Progress.Installing" xml:space="preserve">
+    <value>Téléchargement et vérification de l'app…</value>
+  </data>
+  <data name="AppLink.Progress.InstallingVersion" xml:space="preserve">
+    <value>Téléchargement et vérification de la version {0}…</value>
+  </data>
+  <data name="AppLink.Progress.Launching" xml:space="preserve">
+    <value>Démarrage de l'app…</value>
   </data>
 </root>

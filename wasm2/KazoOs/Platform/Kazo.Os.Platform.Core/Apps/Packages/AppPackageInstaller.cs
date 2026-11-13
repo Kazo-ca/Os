@@ -148,6 +148,9 @@ public sealed partial class AppPackageInstaller
     /// <summary>Gets the sources and block list the host was built with (ADR 0189 §1, §5).</summary>
     public AppPackageDefaults Defaults { get; }
 
+    /// <summary>Gets the SDK version of this OS, which a package must be compatible with.</summary>
+    public SemanticVersion SdkVersion => _sdkVersion;
+
     /// <summary>Reads <c>/etc/kazoos/app-sources.config</c>; the host's defaults when it does not exist.</summary>
     /// <param name="fileSystem">Any reader: the file is <c>0644</c>.</param>
     /// <param name="cancellationToken">Cancels the read.</param>
@@ -397,6 +400,53 @@ public sealed partial class AppPackageInstaller
         }
 
         return listing;
+    }
+
+    /// <summary>
+    /// Gets the copy of one catalog of <c>[catalogs]</c> already downloaded by this OS, whatever its
+    /// age, without any request (ADR 0257 §2, §6): what the Store, <c>kazopkg</c> or the update
+    /// check fetched last. <see langword="null"/> when it was never downloaded, or is no longer listed.
+    /// </summary>
+    /// <param name="name">Catalog name.</param>
+    /// <param name="sources">The sources.</param>
+    public AppCatalogListing? GetCachedCatalog(string name, AppSourcesConfig sources)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        ArgumentNullException.ThrowIfNull(sources);
+        if (!sources.Catalogs.TryGetValue(name, out Uri? address))
+        {
+            return null;
+        }
+
+        lock (_catalogGate)
+        {
+            return _catalogs.TryGetValue(address, out (DateTimeOffset At, AppCatalogListing Listing) cached)
+                ? cached.Listing with { Name = name }
+                : null;
+        }
+    }
+
+    /// <summary>
+    /// Downloads every catalog of <c>[catalogs]</c> not downloaded recently, so that
+    /// <see cref="GetCachedCatalog"/> has them (ADR 0257 §2): the update check calls it in the
+    /// background at sign-in. A catalog that cannot be downloaded is skipped and logged.
+    /// </summary>
+    /// <param name="sources">The sources.</param>
+    /// <param name="cancellationToken">Cancels the downloads.</param>
+    public async ValueTask RefreshCatalogsAsync(AppSourcesConfig sources, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(sources);
+        foreach (string name in GetCatalogSearchOrder(sources))
+        {
+            try
+            {
+                await GetCatalogAsync(name, sources, cancellationToken).ConfigureAwait(false);
+            }
+            catch (AppPackageException exception)
+            {
+                _logger.LogWarning("apps: catalog {Catalog} could not be read: {Reason}", name, exception.Message);
+            }
+        }
     }
 
     /// <summary>

@@ -384,7 +384,13 @@ kazopkg info org.example.notes
   (`schemaVersion` 1, `packages` branch of the catalog repository). The file's
   paths (package, icon, screenshots, descriptions) are relative to
   `catalog.json`. The OS keeps it 5 minutes; an invalid app or version is
-  skipped with a warning in `/var/log/syslog`.
+  skipped with a warning in `/var/log/syslog`. Each version may carry
+  `fileHandlers` (`{ mediaType?, extensions, actions }`, copied from the
+  manifest, ADR [0257](adr/0257-offer-a-store-app-for-an-unsupported-file.md)):
+  when no installed app opens a file, the OS proposes the apps that declare it,
+  read from the catalogs already downloaded
+  ([`user-file-associations.md`](user-file-associations.md#no-installed-app-the-store-apps-adr-0257)).
+  At most 64 entries per version and 64 extensions or actions per entry.
 - **Source written**: `<appId>=catalog:<name>/<appId>@<version>` in
   `[installed]`. The trust is that of `catalog:<name>`; the official catalog
   is *verified*. The SHA-256 and the size come from the catalog; the other
@@ -400,10 +406,15 @@ kazopkg info org.example.notes
   repository, capabilities, trust), Install for me or for everyone, Open,
   Update, Uninstall, **Installed** tab with "Update all". When an app waits for
   a restart, the banner offers **Restart to finish** (no administrator).
-  Launch arguments: `--page=installed`, `--app=<appId>`.
+  Launch arguments: `--page=installed`, `--page=themes`, `--app=<appId>` and,
+  with `--app`, `--open-after-install=<path>`: once the app is installed, the
+  Store opens that file (ADR [0257](adr/0257-offer-a-store-app-for-an-unsupported-file.md) §5,
+  the File Explorer's "View in the Store" button). A Store already open
+  receives these arguments too.
 - **Updates**: `AppUpdateMonitor` checks at sign-in then every
   `[updates] interval-hours` hours and posts a notification that opens the
-  Installed tab. No badge on the Store's icon
+  Installed tab. Each check also downloads every catalog of `[catalogs]`, for
+  the proposals of ADR 0257. No badge on the Store's icon
   ([ADR 0215](adr/0215-hack-store-answers-notification-and-ambiguous-app-id.md) §1).
 - **Default pin**: `start-menu.json` records `defaultPinsApplied` per profile;
   the Store is added once, to a new profile as to an existing one, and does

@@ -117,7 +117,7 @@ public override WindowOptions? Window => new()
   pixels. Without a declaration: `WindowOptions.Default`, 800×560 and minimum 360×240, as before.
 - Manifest: optional `window` object (`defaultWidth`, `defaultHeight`, `minWidth`, `minHeight`,
   `maxWidth`, `maxHeight`, `resizable`, and since SDK 3.1 `style`, `showIcon`, `maximizeBox`,
-  `minimizeBox`, `showInTaskbar`, `modal`, see §6), produced by the generator and absent if the app declares
+  `minimizeBox`, `showInTaskbar`, `modal`, see §6, and after SDK 3.3.2 `canChangeScreen`, ADR 0263), produced by the generator and absent if the app declares
   nothing. An omitted field takes its default value. The `manifest.schema.v1.json` schema forbids
   `window` outside apps of the `window` kind.
 - Validator codes:
@@ -323,6 +323,7 @@ public override WindowOptions? Window => new()
     MinimizeBox = true,           // Minimize button
     ShowInTaskbar = true,         // taskbar button
     Modal = false,                // child windows (work item 5)
+    CanChangeScreen = true,       // after SDK 3.3.2, ADR 0263: the user may send it to another screen
 };
 ```
 
@@ -339,6 +340,12 @@ public override WindowOptions? Window => new()
 - `MaximizeBox = false` also removes double-click on the bar; `MinimizeBox = false` also removes
   "Minimize" from the window menu and the keyboard command. `Tool` and `None` remove the handles,
   Maximize and Minimize; the window menu stays on right click on the bar and on Alt+Space.
+- `CanChangeScreen = false` ([ADR 0263](../dev/adr/0263-windows-that-stay-on-their-screen.md)) keeps the
+  window on its screen: it opens on screen 1, "Other screen" only offers a greyed-out entry "Not
+  available yet for this app: known issue, a fix is in progress", and a screen shortcut or a drop on
+  another screen shows that text in a notification. Changing screen moves the window into another
+  browser document, which reloads any iframe it holds: every Craft app declares it in its
+  manifest.
 - Without an icon (`ShowIcon = false` or `Tool`), right click on the title opens the window menu.
 - A `None` window moves through any element marked `data-kazo-window-drag` (fields, links and
   editable elements inside it stay clickable).
