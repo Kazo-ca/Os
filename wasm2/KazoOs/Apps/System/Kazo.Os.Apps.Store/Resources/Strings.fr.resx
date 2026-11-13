@@ -75,9 +75,6 @@
   <data name="Detail.Published" xml:space="preserve">
     <value>Publiée le</value>
   </data>
-  <data name="Detail.Screenshot" xml:space="preserve">
-    <value>Capture d'écran de {0}</value>
-  </data>
   <data name="Detail.Screenshots" xml:space="preserve">
     <value>Captures d'écran</value>
   </data>
@@ -326,5 +323,26 @@
   </data>
   <data name="Progress.Installing" xml:space="preserve">
     <value>Installation…</value>
+  </data>
+  <data name="Viewer.OpenScreenshot" xml:space="preserve">
+    <value>Agrandir la capture {0} sur {1} de {2}</value>
+  </data>
+  <data name="Viewer.Label" xml:space="preserve">
+    <value>Captures d'écran de {0}</value>
+  </data>
+  <data name="Viewer.Position" xml:space="preserve">
+    <value>{0} / {1}</value>
+  </data>
+  <data name="Viewer.Screenshot" xml:space="preserve">
+    <value>Capture {0} sur {1} de {2}</value>
+  </data>
+  <data name="Viewer.Close" xml:space="preserve">
+    <value>Fermer (Échap)</value>
+  </data>
+  <data name="Viewer.Previous" xml:space="preserve">
+    <value>Capture précédente</value>
+  </data>
+  <data name="Viewer.Next" xml:space="preserve">
+    <value>Capture suivante</value>
   </data>
 </root>

@@ -366,12 +366,10 @@
 
             @if (latest is { ScreenshotUris.Count: > 0 })
             {
-                <div class="store-screenshots" aria-label="@L["Detail.Screenshots"]">
-                    @foreach (string screenshot in latest.ScreenshotUris)
-                    {
-                        <img src="@screenshot" alt="@L["Detail.Screenshot", entry.Name]" loading="lazy" />
-                    }
-                </div>
+                <StoreScreenshots @ref="_screenshots"
+                                  Uris="@latest.ScreenshotUris"
+                                  AppName="@entry.Name"
+                                  ViewerOpenChanged="OnScreenshotViewerChanged" />
             }
 
             <div class="store-detail-columns">

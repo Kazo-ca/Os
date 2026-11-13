@@ -2,6 +2,8 @@
    theme tokens, and a container query so the same markup works in a narrow window and on mobile. */
 
 .store-root {
+    /* The screenshot viewer (StoreScreenshots.razor) covers the window from here. */
+    position: relative;
     container-type: inline-size;
     display: flex;
     flex-direction: column;
@@ -462,24 +464,6 @@
 .store-detail-short {
     margin: 0;
     color: var(--kos-text-secondary, #8b949e);
-}
-
-.store-screenshots {
-    display: flex;
-    gap: 10px;
-    overflow-x: auto;
-    padding-bottom: 8px;
-    margin-bottom: 20px;
-    scroll-snap-type: x mandatory;
-}
-
-.store-screenshots img {
-    flex: none;
-    max-height: 240px;
-    max-width: 85%;
-    border: 1px solid var(--kos-border-subtle, #30363d);
-    border-radius: var(--kos-radius-md, 8px);
-    scroll-snap-align: start;
 }
 
 .store-detail-columns {
