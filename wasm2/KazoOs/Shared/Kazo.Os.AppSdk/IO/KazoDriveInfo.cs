@@ -6,7 +6,7 @@ public enum KazoDriveType
     /// <summary>A fixed disk: the IndexedDB disk behind <c>/</c>.</summary>
     Fixed,
 
-    /// <summary>A network drive: a folder of the host computer mounted in <c>/mnt</c> (ADR 0181).</summary>
+    /// <summary>A network drive: a folder of the host computer (ADR 0181) or a cloud storage (ADR 0267) mounted in <c>/mnt</c>.</summary>
     Network
 }
 

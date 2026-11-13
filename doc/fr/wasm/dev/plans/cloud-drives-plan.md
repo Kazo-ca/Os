@@ -19,7 +19,7 @@ réseau, sans serveur et sans coût.
 | # | Branche | Contenu | Dépend de |
 | --- | --- | --- | --- |
 | 0 | `cloud-drives/0-adr` | ADR 0267, ce plan, `features.md`, mémoire. **Fait.** | — |
-| 1 | `cloud-drives/1-drive-sources` | `NetworkDriveService` à sources multiples (ADR 0267 §3), table des lecteurs avec type et compte, interfaces facultatives de quota et de révision (§4), `/proc/mounts`, `df`, `KazoDriveInfo`. Une source distante factice en mémoire sert aux tests. Aucun fournisseur réel. | 0 |
+| 1 | `cloud-drives/1-drive-sources` | `NetworkDriveService` à sources multiples (ADR 0267 §3), table des lecteurs avec type et compte, interfaces facultatives de quota et de révision (§4), `/proc/mounts`, `df`, `KazoDriveInfo`. Une source distante factice en mémoire sert aux tests. Aucun fournisseur réel. **Fait** ([`network-drive-sources.md`](../network-drive-sources.md)). | 0 |
 | 2 | `cloud-drives/2-cloud-accounts` | Service de comptes cloud (§5) : PKCE, fenêtre de connexion, page de retour statique et `BroadcastChannel`, jetons dans le trousseau, renouvellement, retrait, identifiants d'app dans les réglages. Faux serveur OAuth pour les tests E2E. Vérifie le trousseau du compte invité. Donne à Benoit les adresses de retour exactes à inscrire. | 0 |
 | 3 | `cloud-drives/3-dropbox` | Connecteur Dropbox (API v2), les deux étendues (§8), suite de tests de contrat commune à tous les connecteurs. | 1, 2 |
 | 4 | `cloud-drives/4-onedrive` | Connecteur Microsoft Graph, les deux étendues, reconnexion après 24 heures. | 1, 2 |
