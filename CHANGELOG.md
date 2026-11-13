@@ -6,6 +6,29 @@ The changes of Kazo OS, by version. This file is generated from `wasm2/KazoOs/ch
 `wasm2/KazoOs/build/tools/collect-changes.sh` (ADR 0186): do not edit it by hand. Changes already
 deployed but not released yet are in the Settings ▸ What's new page of the OS.
 
+## 3.3.4 (2026-11-13)
+
+### New
+
+- **KazoAppPackages.InstallAsync reports its progress.** A new overload InstallAsync(source, scope, IProgress<KazoPackageInstallProgress>?, cancellationToken) reports each KazoPackageInstallStage (Preparing, Downloading with BytesReceived and TotalBytes, Verifying, AwaitingApproval, Installing). The existing overload is unchanged; IAppManagementGateway gets a matching member with a default body. A cref to KazoAppPackages.InstallAsync without parameters is now ambiguous: name the overload. ([0266-store-ux-refresh.md](doc/en/wasm/dev/adr/0266-store-ux-refresh.md), [app-installation.md](doc/en/wasm/dev/app-installation.md))
+
+### Improved
+
+- **A clearer app page in the Kazo OS Store.** An app's page says in plain words what the app can do, sensitive access first, with the technical identifiers one click away. It lists the files the app opens, links to its source code, and copies a « Try it » link to share. A bar keeps Back, the app and its button at the top while you scroll, the information panel stays in view, and messages close by themselves (errors stay until you close them). ([app-installation.md](doc/en/wasm/dev/app-installation.md), [0266-store-ux-refresh.md](doc/en/wasm/dev/adr/0266-store-ux-refresh.md))
+- **A new home page for the Kazo OS Store.** The Store opens larger, on a « Featured » banner with the newest app you have not installed, then one grid of every app, newest first, with chips to filter by category. Each card installs the app for you in one click, or opens or updates it; an administrator also finds « Install for everyone » in the menu beside « Install ». Empty cards show while the catalogs load, a card shows its trust only when the app is not verified, and the Themes tab stays hidden until a theme pack exists. ([app-installation.md](doc/en/wasm/dev/app-installation.md), [0266-store-ux-refresh.md](doc/en/wasm/dev/adr/0266-store-ux-refresh.md))
+- **Enlarge an app's screenshots in the Store.** Click a screenshot on an app's page to see it at the size of the Store window, then move between them with the arrows, the keyboard or a swipe. Escape or Back closes it. ([app-installation.md](doc/en/wasm/dev/app-installation.md))
+- **The Kazo OS Store fits the phone.** On a phone, the Store's tabs move to a bar at the bottom of the screen, within reach of the thumb, and the header takes two lines. Every button, tab and link is at least 44 px, large enough to touch. An app's screenshots taken in portrait come first and are shown tall, before the landscape ones. ([app-installation.md](doc/en/wasm/dev/app-installation.md), [0266-store-ux-refresh.md](doc/en/wasm/dev/adr/0266-store-ux-refresh.md))
+- **The Store shows where an install stands.** While the Kazo OS Store installs or updates an app, its page and its card show the step (preparing, downloading with the percent and sizes, verifying, waiting for an administrator, installing) instead of « Working… ». Only that app's buttons wait: another app can be opened or queued, and it shows « Waiting for the other install… » until its turn. ([0266-store-ux-refresh.md](doc/en/wasm/dev/adr/0266-store-ux-refresh.md), [app-installation.md](doc/en/wasm/dev/app-installation.md))
+
+### Fixed
+
+- **The Kazo OS Store scrolls, searches and reads better.** An app's page opens at the top, and Back returns to the list where you left it. A list item written on two lines in a description stays one item, and the description no longer repeats the app's name. The search box also filters the Installed tab, and Enter opens the first result. Keyboard focus is visible everywhere, the arrow keys move between the tabs, and on a phone the header takes two lines with larger touch targets. ([app-installation.md](doc/en/wasm/dev/app-installation.md))
+- **The Try it link survives a restart for an update.** A link ending in ?autolaunch=<app id> was lost when the tab restarted onto a newer Kazo OS before the app opened. The tab now keeps the link until the app is open (or the Store, or an error is shown), so the app opens after the restart. ([0265-direct-link-survives-update-restart.md](doc/en/wasm/dev/adr/0265-direct-link-survives-update-restart.md), [app-launch-link.md](doc/en/wasm/dev/app-launch-link.md))
+
+### For developers
+
+- **A Craft app's exports reach its window as copies.** A Craft app that exports through a browser download link (an <a download> on a blob: address, as PdfCraft does) no longer sends the file to the real computer's Downloads folder: when the window subscribes to the new CraftFrame.Exporting event, the Kazo.Os.AppSdk.Craft module takes the file and the window saves it as a copy through the OS save dialog (DocumentSession.DecideCopy). A window that does not subscribe keeps the browser download. ([0264-craft-app-exports-reach-the-window.md](doc/en/wasm/dev/adr/0264-craft-app-exports-reach-the-window.md))
+
 ## 3.3.3 (2026-11-13)
 
 ### New
