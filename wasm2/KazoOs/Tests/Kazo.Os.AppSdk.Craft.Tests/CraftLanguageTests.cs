@@ -44,4 +44,18 @@ public sealed class CraftLanguageTests
     {
         Assert.Equal("en", CraftLanguage.Pick(CultureInfo.GetCultureInfo("fr-FR"), []));
     }
+
+    private static readonly string[] TwoLetterOnly = ["en", "es", "pt", "sr", "fr", "de"];
+
+    [Theory]
+    [InlineData("pt-BR", "pt")]
+    [InlineData("pt-PT", "pt")]
+    [InlineData("sr-Latn-RS", "sr")]
+    [InlineData("fr-CA", "fr")]
+    [InlineData("zh-TW", "en")]
+    [InlineData("ja-JP", "en")]
+    public void An_app_with_two_letter_codes_gets_the_two_letter_code(string culture, string expected)
+    {
+        Assert.Equal(expected, CraftLanguage.Pick(CultureInfo.GetCultureInfo(culture), TwoLetterOnly));
+    }
 }

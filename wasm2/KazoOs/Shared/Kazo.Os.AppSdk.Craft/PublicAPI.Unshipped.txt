@@ -291,6 +291,7 @@ static Kazo.Os.AppSdk.Craft.FrameError.operator ==(Kazo.Os.AppSdk.Craft.FrameErr
 static Kazo.Os.AppSdk.Craft.FrameSave.operator !=(Kazo.Os.AppSdk.Craft.FrameSave? left, Kazo.Os.AppSdk.Craft.FrameSave? right) -> bool
 static Kazo.Os.AppSdk.Craft.FrameSave.operator ==(Kazo.Os.AppSdk.Craft.FrameSave? left, Kazo.Os.AppSdk.Craft.FrameSave? right) -> bool
 static Kazo.Os.AppSdk.Craft.OpenDocument.ListFrom(System.Text.Json.JsonElement inspect) -> System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.Craft.OpenDocument!>!
+static Kazo.Os.AppSdk.Craft.OpenDocument.ListFrom(System.Text.Json.JsonElement inspect, System.Func<string!, string?>? nameOfTitle) -> System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.Craft.OpenDocument!>!
 static Kazo.Os.AppSdk.Craft.OpenDocument.operator !=(Kazo.Os.AppSdk.Craft.OpenDocument? left, Kazo.Os.AppSdk.Craft.OpenDocument? right) -> bool
 static Kazo.Os.AppSdk.Craft.OpenDocument.operator ==(Kazo.Os.AppSdk.Craft.OpenDocument? left, Kazo.Os.AppSdk.Craft.OpenDocument? right) -> bool
 static Kazo.Os.AppSdk.Craft.OpenRequest.FromArguments(System.Collections.Generic.IReadOnlyList<string!>! arguments) -> Kazo.Os.AppSdk.Craft.OpenRequest!
