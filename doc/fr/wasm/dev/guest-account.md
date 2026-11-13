@@ -41,6 +41,13 @@ créer son propre compte en gardant ou non le travail de l'invité. Décision :
    Le compte créé est administrateur et sa session s'ouvre aussitôt. Ensuite
    le bouton invité ne revient plus sur cette installation.
 
+### Par un lien direct
+
+Une adresse `?autolaunch=<appId>` ([ADR 0246](adr/0246-direct-app-launch-link.md)) démarre
+l'invité sans clic : s'il n'existe aucun compte, l'OS fait **Démarrer en invité** ; si l'invité est
+le seul compte, il fait **Continuer en invité**. Avec un autre compte, l'écran de connexion reste
+le même, avec un bandeau qui nomme l'app que le Store ouvrira après la connexion.
+
 ## Fonctionnement
 
 | Élément | Où | Rôle |
