@@ -71,7 +71,7 @@ Decided on 2026-10-28:
 - Shared code of the Craft apps (Benoit, 2026-11-13, Kazo Word's decision 8):
   an SDK module shipped and served by the OS, `Kazo.Os.AppSdk.Craft` (iframe
   frame, proxy, picker, shortcuts, settings, `DocumentSession`); each app
-  keeps its window. [ADR 0247](../dev/adr/0247-shared-craft-app-host-module.md),
+  keeps its window. [ADR 0259](../dev/adr/0259-shared-craft-app-host-module.md),
   series `craft-host/base`, not built yet. Kazo Word ships with its copy and
   moves to the module afterwards; Kazo Spreadsheets uses it from its work
   item 1.

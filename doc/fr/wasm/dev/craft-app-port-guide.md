@@ -242,7 +242,7 @@ une session cloud ne peut pas créer de dépôt).
 - **Le code Kazo** (cadre de l'iframe, proxy, sélecteur, touches, réglages,
   `DocumentSession`) est le même à quelques noms près. Décision 8 de Kazo Word, prise le
   2026-11-13 : il devient un module du SDK livré et servi par l'OS,
-  `Kazo.Os.AppSdk.Craft` ([ADR 0247](adr/0247-shared-craft-app-host-module.md), série
+  `Kazo.Os.AppSdk.Craft` ([ADR 0259](adr/0259-shared-craft-app-host-module.md), série
   `craft-host/base`, pas encore codée). Chaque app garde sa fenêtre, sa liste de formats,
   sa page d'iframe (`data-craft-app`) et sa compilation. Kazo Word sort avec sa copie et
   passe au module ensuite ; Kazo Spreadsheets l'utilise dès son chantier 1. Les

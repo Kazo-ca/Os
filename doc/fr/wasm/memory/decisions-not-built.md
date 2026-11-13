@@ -74,7 +74,7 @@ Décidé le 2026-10-28 :
 - Code commun des apps Craft (Benoit, 2026-11-13, décision 8 de Kazo Word) :
   un module du SDK livré et servi par l'OS, `Kazo.Os.AppSdk.Craft` (cadre de
   l'iframe, proxy, sélecteur, raccourcis, réglages, `DocumentSession`) ;
-  chaque app garde sa fenêtre. [ADR 0247](../dev/adr/0247-shared-craft-app-host-module.md),
+  chaque app garde sa fenêtre. [ADR 0259](../dev/adr/0259-shared-craft-app-host-module.md),
   série `craft-host/base`, pas encore codée. Kazo Word sort avec sa copie et
   passe au module ensuite ; Kazo Spreadsheets l'utilise dès son chantier 1.
 

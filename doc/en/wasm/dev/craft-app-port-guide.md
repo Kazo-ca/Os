@@ -236,7 +236,7 @@ PC": a cloud session cannot create a repository).
 - **The Kazo code** (iframe frame, proxy, picker, keys, settings, `DocumentSession`) is the
   same but for a few names. Kazo Word's decision 8, taken on 2026-11-13: it becomes an SDK
   module shipped and served by the OS, `Kazo.Os.AppSdk.Craft`
-  ([ADR 0247](adr/0247-shared-craft-app-host-module.md), series `craft-host/base`, not built
+  ([ADR 0259](adr/0259-shared-craft-app-host-module.md), series `craft-host/base`, not built
   yet). Each app keeps its window, its list of formats, its iframe page (`data-craft-app`)
   and its build. Kazo Word ships with its copy and moves to the module afterwards; Kazo
   Spreadsheets uses it from its work item 1. Work items 1 to 3 of this guide will be
