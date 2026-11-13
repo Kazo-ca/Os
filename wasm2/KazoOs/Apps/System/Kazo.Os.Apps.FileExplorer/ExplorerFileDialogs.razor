@@ -1,6 +1,8 @@
 @using Kazo.Os.AppSdk.Apps
 @using Kazo.Os.AppSdk.Blazor.Components
 @using Kazo.Os.AppSdk.Blazor.Files
+@using Kazo.Os.AppSdk.Icons
+@using Kazo.Os.Simulation.Abstractions.Gateways
 @using Kazo.Os.Simulation.Abstractions.FileSystem
 @inherits KazoEmbeddableComponent
 
@@ -26,6 +28,10 @@
             }
             else
             {
+                @if (NoInstalledHandler)
+                {
+                    <p class="dialog-status no-handler" role="status">@L["OpenWith.NoInstalledApp"]</p>
+                }
                 <div class="app-list" role="radiogroup" aria-label="@L["Dialog.OpenWith.Title"]" @onkeydown="OnAppListKeyDown">
                     @foreach (KazoAppInfo app in _apps)
                     {
@@ -42,6 +48,40 @@
                         </button>
                     }
                 </div>
+            }
+            @if (_storeApps is { Count: > 0 } storeApps)
+            {
+                <section class="store-suggestions" aria-labelledby="@_storeHeadingId">
+                    <h3 id="@_storeHeadingId" class="store-heading">
+                        <KazoIcon Library="IconLibrary.Lucide" Name="shopping-bag" Size="16" Title="" /> @L["OpenWith.StoreHeading"]
+                    </h3>
+                    <ul class="store-app-list">
+                        @foreach (AppIntentSuggestedCatalogApp app in storeApps)
+                        {
+                            <li class="store-app" data-app-id="@app.AppId">
+                                <span class="store-app-icon" aria-hidden="true">
+                                    @if (app.IconUri is { } icon && !_brokenIcons.Contains(app.AppId))
+                                    {
+                                        <img src="@icon" alt="" width="40" height="40" loading="lazy" @onerror="() => _brokenIcons.Add(app.AppId)" />
+                                    }
+                                    else
+                                    {
+                                        <KazoIcon Library="IconLibrary.Lucide" Name="package" Size="28" Title="" />
+                                    }
+                                </span>
+                                <span class="store-app-text">
+                                    <span class="store-app-name">@app.Name</span>
+                                    <span class="store-app-description">@ShortDescription(app)</span>
+                                </span>
+                                <button type="button" class="store-app-button" aria-label="@L["OpenWith.ShowInStoreLabel", app.Name]" @onclick="() => ShowInStoreAsync(app)">@L["OpenWith.ShowInStore"]</button>
+                            </li>
+                        }
+                    </ul>
+                    @if (_storeError is not null)
+                    {
+                        <p class="dialog-warning" role="alert">@_storeError</p>
+                    }
+                </section>
             }
             @if (CanRemember)
             {

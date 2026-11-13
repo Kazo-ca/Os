@@ -158,3 +158,87 @@ button.danger {
     color: var(--kos-danger, #ff6b6b);
     border-color: var(--kos-danger, #ff6b6b);
 }
+
+/* ADR 0257 §4: the Store apps that open the file, under the installed apps. */
+.store-suggestions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    padding-top: 0.6rem;
+    border-top: 1px dashed var(--kos-border, #315249);
+}
+
+.store-heading {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin: 0;
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: var(--kos-accent, #55d6a1);
+}
+
+.store-app-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    max-height: 13rem;
+    margin: 0;
+    padding: 0;
+    overflow-y: auto;
+    list-style: none;
+}
+
+.store-app {
+    display: grid;
+    grid-template-columns: 2.5rem 1fr auto;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.45rem 0.55rem;
+    border: 1px solid var(--kos-border, #315249);
+    border-radius: var(--kos-radius-sm, 0.25rem);
+    background: var(--kos-bg-elevated, #132522);
+}
+
+.store-app-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    color: var(--kos-text-secondary, #9ac3b2);
+}
+
+.store-app-icon img {
+    width: 2.5rem;
+    height: 2.5rem;
+    object-fit: contain;
+    border-radius: var(--kos-radius-sm, 0.25rem);
+}
+
+.store-app-text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.store-app-name {
+    font-weight: 600;
+}
+
+.store-app-description {
+    overflow: hidden;
+    font-size: 0.78rem;
+    color: var(--kos-text-secondary, #9ac3b2);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+button.store-app-button {
+    white-space: nowrap;
+}
+
+.no-handler {
+    color: var(--kos-warning, #f2c94c);
+}

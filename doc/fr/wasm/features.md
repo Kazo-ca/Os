@@ -162,6 +162,12 @@ Cette section liste ce qui est publié dans la branche `main` et en ligne.
 - **Corbeille** avec restauration. ([`trash.md`](dev/trash.md))
 - **Applications par défaut** par type de fichier, propres à chaque
   utilisateur. ([`user-file-associations.md`](dev/user-file-associations.md))
+- **App du Store proposée pour un fichier** : ouvrir un fichier qu'aucune app
+  installée ne prend en charge propose les apps du Store qui déclarent ce type
+  (par exemple Kazo Word pour un `.docx`) dans l'Explorateur et « Ouvrir
+  avec », avec « Voir dans le Store » ; le fichier s'ouvre après
+  l'installation. `open` dans le terminal affiche la commande `kazopkg
+  install`. ([ADR 0257](dev/adr/0257-offer-a-store-app-for-an-unsupported-file.md))
 - **Dossier de l'ordinateur monté comme lecteur réseau** : un vrai dossier de
   l'ordinateur apparaît dans l'OS (Chrome et Edge sur ordinateur).
   ([ADR 0181](dev/adr/0181-host-folder-mounted-as-a-network-drive.md))

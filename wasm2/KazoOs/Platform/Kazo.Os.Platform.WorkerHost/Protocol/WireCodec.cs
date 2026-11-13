@@ -931,13 +931,75 @@ internal static class WireCodec
         {
             writer.WriteBoolean("fb", true);
         }
+
+        // ADR 0257 §3, §4: the catalog apps that open the file, as [id, name, catalog, icon, {lang: text}].
+        if (result.SuggestedCatalogApps.Count > 0)
+        {
+            writer.WriteStartArray("sg");
+            foreach (AppIntentSuggestedCatalogApp app in result.SuggestedCatalogApps)
+            {
+                writer.WriteStartArray();
+                writer.WriteStringValue(app.AppId);
+                writer.WriteStringValue(app.Name);
+                writer.WriteStringValue(app.Catalog);
+                if (app.IconUri is { } icon)
+                {
+                    writer.WriteStringValue(icon);
+                }
+                else
+                {
+                    writer.WriteNullValue();
+                }
+
+                writer.WriteStartObject();
+                foreach ((string language, string text) in app.ShortDescriptions)
+                {
+                    writer.WriteString(language, text);
+                }
+
+                writer.WriteEndObject();
+                writer.WriteEndArray();
+            }
+
+            writer.WriteEndArray();
+        }
     }
 
     public static AppIntentOpenFileResult ReadOpenFileResult(JsonElement element) => new(
         (AppIntentOpenFileOutcome)element.GetInt32("oc"),
         element.TryGetProperty("ca", out _) ? ReadStrings(element, "ca") : null,
         element.GetOptionalString("ec"),
-        element.TryGetProperty("fb", out _) && element.GetFlag("fb"));
+        element.TryGetProperty("fb", out _) && element.GetFlag("fb"))
+    {
+        SuggestedCatalogApps = element.TryGetProperty("sg", out JsonElement suggested) && suggested.ValueKind == JsonValueKind.Array
+            ? [.. suggested.EnumerateArray()
+                .Where(static item => item.ValueKind == JsonValueKind.Array && item.GetArrayLength() >= 3)
+                .Select(ReadSuggestedCatalogApp)]
+            : [],
+    };
+
+    /// <summary>One proposed catalog app; the icon and the descriptions are optional (an older OS sends three items).</summary>
+    private static AppIntentSuggestedCatalogApp ReadSuggestedCatalogApp(JsonElement item)
+    {
+        Dictionary<string, string> descriptions = new(StringComparer.OrdinalIgnoreCase);
+        if (item.GetArrayLength() > 4 && item[4].ValueKind == JsonValueKind.Object)
+        {
+            foreach (JsonProperty property in item[4].EnumerateObject())
+            {
+                if (property.Value.ValueKind == JsonValueKind.String)
+                {
+                    descriptions[property.Name] = property.Value.GetString()!;
+                }
+            }
+        }
+
+        return new AppIntentSuggestedCatalogApp(
+            item[0].GetString() ?? string.Empty, item[1].GetString() ?? string.Empty, item[2].GetString() ?? string.Empty)
+        {
+            IconUri = item.GetArrayLength() > 3 && item[3].ValueKind == JsonValueKind.String ? item[3].GetString() : null,
+            ShortDescriptions = descriptions,
+        };
+    }
 
     public static void WriteIntentResult(Utf8JsonWriter writer, AppIntentResult result)
     {

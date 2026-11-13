@@ -580,4 +580,19 @@
   <data name="Error.ArchiveExtract" xml:space="preserve">
     <value>Impossible d'extraire « {0} » de l'archive ({1}).</value>
   </data>
+  <data name="OpenWith.NoInstalledApp" xml:space="preserve">
+    <value>Aucune application installée ne peut ouvrir ce type de fichier.</value>
+  </data>
+  <data name="OpenWith.StoreHeading" xml:space="preserve">
+    <value>Disponible dans le Kazo OS Store</value>
+  </data>
+  <data name="OpenWith.ShowInStore" xml:space="preserve">
+    <value>Voir dans le Store</value>
+  </data>
+  <data name="OpenWith.ShowInStoreLabel" xml:space="preserve">
+    <value>Voir {0} dans le Kazo OS Store</value>
+  </data>
+  <data name="OpenWith.StoreFailed" xml:space="preserve">
+    <value>Le Kazo OS Store n'a pas pu être ouvert.</value>
+  </data>
 </root>

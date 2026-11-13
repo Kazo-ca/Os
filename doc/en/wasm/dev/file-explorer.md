@@ -435,3 +435,53 @@ the archive (the manifest declares `application/zip`, `.zip` in its `fileHandler
   archive, refused changes, menus.
 - [x] Manifest `fileHandlers` for `.zip`.
 - [x] Tests: `ZipArchiveBrowsingTests` (unit), `ZipArchiveFolderTests` (UI.E2E).
+
+## Store apps for a file no app opens (ADR 0257)
+
+Work item `open-with-store/3-explorer-and-store` of
+[ADR 0257](adr/0257-offer-a-store-app-for-an-unsupported-file.md); the search
+of the catalogs is described in
+[`user-file-associations.md`](user-file-associations.md#no-installed-app-the-store-apps-adr-0257).
+
+**Behavior.**
+
+- Double-click (or Open) on a file no installed app opens: when the OS
+  proposes Store apps (`AppIntentOpenFileResult.SuggestedCatalogApps`), the
+  explorer opens the "Open with" box instead of the bare error message. It
+  says "No installed app opens this type of file.", lists every installed app
+  as before, then the "Available in the Kazo OS Store" section. Without a
+  proposal (offline, nothing in the catalogs), the error message stays as it
+  was.
+- "Open with" (menu, toolbar, or the choice the OS asks for) shows the same
+  section under the installed apps when Store apps declare the type. The box
+  asks for it with `IAppIntentGateway.SuggestCatalogAppsAsync(path)`, with the
+  rights of the app that opened the box (`apps.launch`); without that right,
+  nothing is proposed.
+- Each proposed app shows its icon (the catalog's `IconUri`; a Lucide
+  `package` icon when it has none or it does not load), its name, its short
+  description in the explorer's language (else English) and the "View in the
+  Store" button.
+- "View in the Store" launches `org.kazoos.store` with `--app=<appId>` and
+  `--open-after-install=<path>`, then closes the box without opening anything.
+  The install keeps the Store's usual consent (capabilities, scope,
+  administrator). When the Store cannot be launched, the box stays open with
+  "The Kazo OS Store could not be opened.".
+- Once the app is installed, the Store opens the file again with
+  `KazoApps.OpenFileAsync`; when another app opens it too (a choice is asked),
+  it launches the installed app with it. An app waiting for a restart cannot
+  open it yet: the Store says so. A Store already open receives these
+  arguments (one window per user).
+
+**Tasks.**
+
+- [x] "Available in the Kazo OS Store" section in `ExplorerFileDialogs` (icon,
+  name, short description, "View in the Store"), English and French texts.
+- [x] `NoHandler` with proposals opens "Open with" (`ExplorerFileView.Operations.cs`).
+- [x] `IAppIntentGateway.SuggestCatalogAppsAsync` and `KazoApps.GetSuggestedCatalogAppsAsync`;
+  `AppIntentSuggestedCatalogApp` and `KazoSuggestedCatalogApp` gain
+  `ShortDescriptions` and `IconUri`.
+- [x] Store: `--open-after-install` (`StoreLaunchArguments`), arguments
+  received by a Store already open.
+- [x] Tests: `AppIntentGatewayTests.SuggestCatalogAppsAsync_*`,
+  `WireCodecIntentTests`, `KazoAppsIntentTests`, `StoreLaunchArgumentsTests`,
+  `OpenWithStoreTests` (UI.E2E, test catalog declaring `.docx`).

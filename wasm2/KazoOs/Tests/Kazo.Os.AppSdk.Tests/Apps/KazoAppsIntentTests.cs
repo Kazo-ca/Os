@@ -1,3 +1,4 @@
+using System.Globalization;
 using Kazo.Os.App.Abstractions;
 using Kazo.Os.AppSdk.Apps;
 using Kazo.Os.AppSdk.IO;
@@ -32,6 +33,47 @@ public sealed class KazoAppsIntentTests
         {
             Exception exception = await Assert.ThrowsAnyAsync<Exception>(() => KazoApps.RevealFileAsync("/home/user/notes.txt"));
             Assert.IsType(expected, exception);
+        }
+    }
+
+    [Fact]
+    public async Task OpenFileAsync_hands_over_the_store_apps_proposed_for_a_file_no_app_opens()
+    {
+        FakeAppIntentGateway intents = new FakeAppIntentGateway()
+            .WithOpenResult("/home/user/report.docx", new AppIntentOpenFileResult(AppIntentOpenFileOutcome.NoHandler)
+            {
+                SuggestedCatalogApps = [new AppIntentSuggestedCatalogApp("ca.kazo.word", "Kazo Word", "official")],
+            });
+        using (Enter(intents))
+        {
+            KazoOpenFileResult result = await KazoApps.OpenFileAsync("/home/user/report.docx");
+
+            Assert.Equal(KazoOpenFileStatus.NoHandler, result.Status);
+            Assert.Equal([new KazoSuggestedCatalogApp("ca.kazo.word", "Kazo Word", "official")], result.SuggestedCatalogApps);
+        }
+    }
+
+    [Fact]
+    public async Task GetSuggestedCatalogAppsAsync_lists_the_store_apps_for_the_open_with_box()
+    {
+        FakeAppIntentGateway intents = new();
+        intents.SuggestedCatalogApps["/home/user/report.docx"] =
+        [
+            new AppIntentSuggestedCatalogApp("ca.kazo.word", "Kazo Word", "official")
+            {
+                IconUri = "https://example.test/icon.png",
+                ShortDescriptions = new Dictionary<string, string> { ["en"] = "A word processor", ["fr"] = "Un traitement de texte" },
+            },
+        ];
+        using (Enter(intents))
+        {
+            KazoSuggestedCatalogApp word = Assert.Single(await KazoApps.GetSuggestedCatalogAppsAsync("/home/user/report.docx"));
+
+            Assert.Equal(("ca.kazo.word", "Kazo Word", "official"), (word.AppId, word.Name, word.Catalog));
+            Assert.Equal("https://example.test/icon.png", word.IconUri);
+            Assert.Equal("Un traitement de texte", word.GetShortDescription(CultureInfo.GetCultureInfo("fr-CA")));
+            Assert.Equal("A word processor", word.GetShortDescription(CultureInfo.GetCultureInfo("de")));
+            Assert.Empty(await KazoApps.GetSuggestedCatalogAppsAsync("/home/user/notes.txt"));
         }
     }
 

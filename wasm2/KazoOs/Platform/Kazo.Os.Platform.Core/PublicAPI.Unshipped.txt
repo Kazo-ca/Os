@@ -1,1 +1,20 @@
 #nullable enable
+Kazo.Os.Platform.Core.Apps.Packages.AppCatalogVersion.FileHandlers.get -> System.Collections.Generic.IReadOnlyList<Kazo.Os.App.Abstractions.FileHandlerManifest!>!
+Kazo.Os.Platform.Core.Apps.Packages.AppCatalogVersion.FileHandlers.init -> void
+Kazo.Os.Platform.Core.Apps.Packages.AppCatalogVersion.HandlesFile(string? extension, string? mediaType, string! action) -> bool
+Kazo.Os.Platform.Core.Apps.Packages.AppPackageInstaller.GetCachedCatalog(string! name, Kazo.Os.Platform.Core.Apps.Packages.AppSourcesConfig! sources) -> Kazo.Os.Platform.Core.Apps.Packages.AppCatalogListing?
+Kazo.Os.Platform.Core.Apps.Packages.AppPackageInstaller.RefreshCatalogsAsync(Kazo.Os.Platform.Core.Apps.Packages.AppSourcesConfig! sources, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Kazo.Os.Platform.Core.Apps.Packages.AppPackageInstaller.SdkVersion.get -> Kazo.Os.App.Abstractions.SemanticVersion
+Kazo.Os.Platform.Core.Apps.Packages.AppPolicy.FindBlock(string! appId, string? category, System.Collections.Generic.IReadOnlyList<string!>! capabilities) -> Kazo.Os.Platform.Core.Apps.Packages.AppBlockReason?
+Kazo.Os.Platform.Core.Apps.Packages.CatalogAppSuggestions
+Kazo.Os.Platform.Core.Apps.Packages.CatalogAppSuggestions.CatalogAppSuggestions(Kazo.Os.Platform.Core.Apps.Packages.AppPackageInstaller! installer, System.Func<Kazo.Os.Simulation.Abstractions.Gateways.IAppFileSystemGateway!>! systemReader, Kazo.Os.Platform.Core.AppCatalog! running, Microsoft.Extensions.Logging.ILogger<Kazo.Os.Platform.Core.Apps.Packages.CatalogAppSuggestions!>? logger = null) -> void
+Kazo.Os.Platform.Core.Apps.Packages.CatalogAppSuggestions.FindAsync(Kazo.Os.App.Abstractions.VirtualPath path, string? mediaType, string! action, Kazo.Os.Simulation.Abstractions.Sessions.AuthenticatedPrincipal? user, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<Kazo.Os.Simulation.Abstractions.Gateways.AppIntentSuggestedCatalogApp!>!>
+Kazo.Os.Platform.Core.Intents.AppIntentDispatchResult.SuggestedCatalogApps.get -> System.Collections.Generic.IReadOnlyList<Kazo.Os.Simulation.Abstractions.Gateways.AppIntentSuggestedCatalogApp!>!
+Kazo.Os.Platform.Core.Intents.AppIntentDispatchResult.SuggestedCatalogApps.init -> void
+Kazo.Os.Platform.Core.Intents.AppIntentDispatcher.CatalogSuggestions.get -> System.Func<Kazo.Os.Platform.Core.Apps.Packages.CatalogAppSuggestions?>?
+Kazo.Os.Platform.Core.Intents.AppIntentDispatcher.CatalogSuggestions.init -> void
+const Kazo.Os.Platform.Core.Apps.Packages.AppCatalogDocument.MaximumFileHandlerValues = 64 -> int
+const Kazo.Os.Platform.Core.Apps.Packages.AppCatalogDocument.MaximumFileHandlers = 64 -> int
+const Kazo.Os.Platform.Core.Apps.Packages.CatalogAppSuggestions.MaximumSuggestions = 8 -> int
+static Kazo.Os.Platform.Core.Apps.Packages.CatalogAppSuggestions.Select(System.Collections.Generic.IReadOnlyList<(string! Name, Kazo.Os.Platform.Core.Apps.Packages.AppCatalogListing! Listing)>! catalogs, string? extension, string? mediaType, string! action, System.Collections.Generic.IReadOnlySet<string!>! installed, Kazo.Os.Platform.Core.Apps.Packages.AppPolicy! policy, Kazo.Os.App.Abstractions.SemanticVersion sdkVersion) -> System.Collections.Generic.IReadOnlyList<Kazo.Os.Simulation.Abstractions.Gateways.AppIntentSuggestedCatalogApp!>!
+Kazo.Os.Platform.Core.Intents.AppIntentDispatcher.SuggestCatalogAppsForAsync(string! callerAppId, Kazo.Os.App.Abstractions.VirtualPath path, string? mediaType, Kazo.Os.Simulation.Abstractions.Sessions.AuthenticatedPrincipal! principal) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<Kazo.Os.Simulation.Abstractions.Gateways.AppIntentSuggestedCatalogApp!>?>

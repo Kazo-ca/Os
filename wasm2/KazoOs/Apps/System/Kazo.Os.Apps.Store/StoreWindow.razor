@@ -343,6 +343,12 @@
                         <span class="store-state">@StateText(entry)</span>
                     }
                     @RenderActions(entry)
+                    @if (_openAfterInstall is ({ } waitingApp, { } waitingPath) && waitingApp == entry.AppId && entry.State == StoreAppState.NotInstalled)
+                    {
+                        <p class="store-open-after" role="note">
+                            <KazoIcon Library="IconLibrary.Lucide" Name="file-check" Size="14" Title="" /> @L["Detail.OpenAfterInstall", waitingPath]
+                        </p>
+                    }
                 </div>
             </div>
 
