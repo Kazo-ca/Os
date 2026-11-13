@@ -149,4 +149,22 @@ public sealed class StoreCatalogTests
     {
         Assert.Equal(expected, StoreCatalog.FormatSize(bytes, CultureInfo.InvariantCulture));
     }
+
+    [Fact]
+    public void The_installed_tab_is_searched_too_even_for_an_app_no_catalog_lists()
+    {
+        StoreCatalog store = new(
+            [Catalog("official",
+                App("official", "org.example.notes", "Notes", "utilities", "Write things down"),
+                App("official", "org.example.paint", "Paint", "graphics", "Draw pictures"))],
+            [new KazoInstalledPackage("org.example.notes", "catalog:official/org.example.notes", "1.1.0", true),
+             new KazoInstalledPackage("org.example.paint", "catalog:official/org.example.paint", "1.1.0", true),
+             new KazoInstalledPackage("org.other.clock", "file:/clock.kazoapp", "1.0.0", true)],
+            [], new HashSet<string>());
+
+        Assert.Equal(3, store.SearchInstalled(null, French).Count);
+        Assert.Equal("org.example.notes", Assert.Single(store.SearchInstalled("WRITE", French)).AppId);
+        Assert.Equal("org.other.clock", Assert.Single(store.SearchInstalled("clock", French)).AppId);
+        Assert.Empty(store.SearchInstalled("zzzz", French));
+    }
 }

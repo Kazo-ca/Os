@@ -126,6 +126,9 @@
   <data name="Installed.Empty" xml:space="preserve">
     <value>Aucune app des catalogues n'est installée.</value>
   </data>
+  <data name="Installed.SearchNone" xml:space="preserve">
+    <value>Aucune app installée ne correspond à « {0} ».</value>
+  </data>
   <data name="Installed.Title" xml:space="preserve">
     <value>Apps installées</value>
   </data>
