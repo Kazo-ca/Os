@@ -52,7 +52,7 @@ Two ways, same result:
 | `.github/workflows/publish-to-kazoos-store.yml` | submission to the catalog on a `v*` tag |
 | `.github/workflows/tag-release.yml` | tags a commit of `main` with the manifest's version and starts the two workflows above (`workflow_dispatch`) |
 | `.github/workflows/publish-packages.yml` | unsigned package pushed to the `kazoos-packages` branch on a `v*` tag ([ADR 0219](../dev/adr/0219-app-authors-signing-tool.md)) |
-| `README.md`, `readme-fr.md` | these steps, for the created repository |
+| `README.md`, `readme-fr.md` | at the top, the app's Store listing (the text of `store/description.{en,fr}.md` and the screenshots), a "Try it" section and a short presentation of Kazo OS with a link to its repository; then these steps, for the created repository |
 
 ## The Kazo OS version
 
@@ -103,6 +103,11 @@ already declares `KazoOsAppProject=true`; add it to the host with
    `repository` comes from `--repository`; `project` names the app's `.csproj`,
    which the catalog builds (at the root, `KazoOsPack` would also run on the
    tests project, which has no such target).
+   Copy the descriptions and screenshots to the top of `README.md` and
+   `readme-fr.md`, between the `Store listing` comments: the repository shows
+   the same listing as the Store, followed by a link to Kazo OS. The
+   "Try it" section keeps a place for the "Open in Kazo OS" link
+   (`https://os.kazo.ca/?autolunch=<app id>`), once Kazo OS supports it.
 2. Change `Version` in the `[AppManifest]` class, commit it to `main`, then tag
    it: run the **Tag a release** workflow (`tag-release.yml`, from the Actions
    tab or, for an agent, through the GitHub API), or create the tag

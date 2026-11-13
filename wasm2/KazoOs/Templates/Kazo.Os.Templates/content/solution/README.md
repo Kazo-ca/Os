@@ -1,6 +1,37 @@
 > [Version française](readme-fr.md)
 
+<!-- Store listing: the same text as store/description.en.md and the same screenshots as the Kazo OS Store (store/screenshots/). Change them together. -->
+
+<img src="store/icon.png" alt="" width="96" align="right">
+
 # Kazo.Os.Template.Solution
+
+Describe your app here: what it does, how to use it, what it needs. Copy here the text of
+`store/description.en.md` (and of `store/description.fr.md` in `readme-fr.md`): the repository
+shows the same listing as the Kazo OS Store.
+
+## Screenshots
+
+<!-- The images of store/screenshots/ (1.png, 2.png, 3.png), as the Kazo OS Store shows them:
+<p>
+  <img src="store/screenshots/1.png" alt="Kazo.Os.Template.Solution, screenshot 1" height="240">
+</p>
+-->
+
+<!-- /Store listing -->
+
+## Try it
+
+<!-- "Open in Kazo OS" link: https://os.kazo.ca/?autolunch=<app id> goes here once Kazo OS supports it. -->
+
+Open [Kazo OS](https://os.kazo.ca/) and install Kazo.Os.Template.Solution from the **Kazo OS Store**, or in the Kazo OS
+Terminal, as an administrator: `sudo kazopkg install <owner>/<repository>`.
+
+## About Kazo OS
+
+[Kazo OS](https://github.com/Kazo-ca/Os) is a simulated operating system that runs in the browser, written in C# with Blazor WebAssembly. It gives a complete environment to build and run applications: desktop and windows, a persistent file system, processes, a POSIX shell, a simulated network, the Kazo OS Store, and a public SDK (NuGet packages) to make apps such as this one. Try it at <https://os.kazo.ca/> (PWA, works offline).
+
+## Development
 
 A Kazo OS app repository, made with the `kazoos-solution` template.
 
@@ -12,7 +43,7 @@ A Kazo OS app repository, made with the `kazoos-solution` template.
 | `external/KazoOs` | The Kazo OS repository as a git submodule, on a release tag |
 | `store/` | What the Kazo OS Store shows: icon (PNG 256×256), short descriptions, descriptions, `store.json` |
 
-## First steps
+### First steps
 
 ```bash
 # A repository created from the GitHub template already has the submodule:
@@ -27,7 +58,7 @@ git -C external/KazoOs checkout v<Kazo OS version>
 Then open the `.sln` in Visual Studio or Rider and start `Kazo.Os.Template.Solution.Os`, or run
 `dotnet run --project src/Kazo.Os.Template.Solution.Os`.
 
-## The Kazo OS version
+### The Kazo OS version
 
 `external/KazoOs/wasm2/KazoOs/build/Versions.props` is the Kazo OS version of this repository.
 To move to another version, move the submodule to its tag and commit it:
@@ -41,7 +72,7 @@ git add external/KazoOs
 Never edit the submodule: the OS is not modified from an app repository, and CI refuses a
 submodule with local changes or off its tag.
 
-## Two build profiles
+### Two build profiles
 
 | Profile | Kazo OS comes from | Use |
 | --- | --- | --- |
@@ -50,9 +81,11 @@ submodule with local changes or off its tag.
 
 Force either one with `-p:KazoOsUseSource=true` or `false`.
 
-## Publishing to the Kazo OS Store
+### Publishing to the Kazo OS Store
 
-1. Fill `store/` (icon, short descriptions, descriptions, category and tags in `store.json`).
+1. Fill `store/` (icon, short descriptions, descriptions, screenshots, category and tags in
+   `store.json`), and copy the descriptions and screenshots to the top of `README.md` and
+   `readme-fr.md`: the repository shows the same listing as the Store.
 2. Change `Version` in the app's `[AppManifest]` class and commit it to `main`, then tag it: run the
    **Tag a release** workflow (Actions tab, or the GitHub API for an agent), which tags the head of
    `main` with the manifest's version and starts the two publishing workflows; or push the tag
@@ -75,7 +108,7 @@ Force either one with `-p:KazoOsUseSource=true` or `false`.
 The catalog never takes a binary from you: once your pull request is reviewed and merged, its CI
 compiles the app at the tagged commit.
 
-## Publishing on the `kazoos-packages` branch
+### Publishing on the `kazoos-packages` branch
 
 The same `v*` tag also runs **Publish the Kazo OS packages**: it packs the app and pushes it to the
 `kazoos-packages` branch of this repository, keeping the versions already published. Kazo OS

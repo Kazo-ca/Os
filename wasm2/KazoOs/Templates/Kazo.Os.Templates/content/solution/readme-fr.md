@@ -1,6 +1,37 @@
 > [English version](README.md)
 
+<!-- Fiche du Store : le même texte que store/description.fr.md et les mêmes captures que le Kazo OS Store (store/screenshots/). Les changer ensemble. -->
+
+<img src="store/icon.png" alt="" width="96" align="right">
+
 # Kazo.Os.Template.Solution
+
+Décrivez votre app ici : ce qu'elle fait, comment s'en servir, ce dont elle a besoin. Copiez ici le
+texte de `store/description.fr.md` (et celui de `store/description.en.md` dans `README.md`) : le
+dépôt montre la même fiche que le Kazo OS Store.
+
+## Captures d'écran
+
+<!-- Les images de store/screenshots/ (1.png, 2.png, 3.png), comme le Kazo OS Store les montre :
+<p>
+  <img src="store/screenshots/1.png" alt="Kazo.Os.Template.Solution, capture 1" height="240">
+</p>
+-->
+
+<!-- /Fiche du Store -->
+
+## Essayer
+
+<!-- Lien « Ouvrir dans Kazo OS » : https://os.kazo.ca/?autolunch=<id de l'app> va ici quand Kazo OS le prendra en charge. -->
+
+Ouvrez [Kazo OS](https://os.kazo.ca/) et installez Kazo.Os.Template.Solution depuis le **Kazo OS Store**, ou dans le
+Terminal de Kazo OS, en administrateur : `sudo kazopkg install <propriétaire>/<dépôt>`.
+
+## À propos de Kazo OS
+
+[Kazo OS](https://github.com/Kazo-ca/Os) est un système d'exploitation simulé qui tourne dans le navigateur, écrit en C# avec Blazor WebAssembly. Il offre un environnement complet pour développer et exécuter des applications : bureau et fenêtres, système de fichiers persistant, processus, shell POSIX, réseau simulé, le Kazo OS Store, et un SDK public (paquets NuGet) pour créer des apps comme celle-ci. Essayez-le sur <https://os.kazo.ca/> (PWA, fonctionne hors ligne).
+
+## Développement
 
 Un dépôt d'app Kazo OS, créé avec le modèle `kazoos-solution`.
 
@@ -12,7 +43,7 @@ Un dépôt d'app Kazo OS, créé avec le modèle `kazoos-solution`.
 | `external/KazoOs` | Le dépôt Kazo OS en sous-module git, sur un tag de release |
 | `store/` | Ce que montre le Kazo OS Store : icône (PNG 256×256), descriptions courtes, descriptions, `store.json` |
 
-## Premiers pas
+### Premiers pas
 
 ```bash
 # Un dépôt créé depuis le template GitHub a déjà le sous-module :
@@ -27,7 +58,7 @@ git -C external/KazoOs checkout v<version de Kazo OS>
 Ouvrez ensuite le `.sln` dans Visual Studio ou Rider et démarrez `Kazo.Os.Template.Solution.Os`,
 ou lancez `dotnet run --project src/Kazo.Os.Template.Solution.Os`.
 
-## La version de Kazo OS
+### La version de Kazo OS
 
 `external/KazoOs/wasm2/KazoOs/build/Versions.props` est la version de Kazo OS de ce dépôt.
 Pour changer de version, placez le sous-module sur son tag et validez-le :
@@ -41,7 +72,7 @@ git add external/KazoOs
 Ne modifiez jamais le sous-module : on ne modifie pas l'OS depuis un dépôt d'app, et la CI refuse
 un sous-module modifié ou hors de son tag.
 
-## Deux profils de build
+### Deux profils de build
 
 | Profil | Kazo OS vient de | Usage |
 | --- | --- | --- |
@@ -50,9 +81,11 @@ un sous-module modifié ou hors de son tag.
 
 Forcez l'un ou l'autre avec `-p:KazoOsUseSource=true` ou `false`.
 
-## Publier dans le Kazo OS Store
+### Publier dans le Kazo OS Store
 
-1. Remplissez `store/` (icône, descriptions courtes, descriptions, catégorie et étiquettes dans `store.json`).
+1. Remplissez `store/` (icône, descriptions courtes, descriptions, captures d'écran, catégorie et
+   étiquettes dans `store.json`), et copiez les descriptions et les captures en haut de `README.md` et
+   de `readme-fr.md` : le dépôt montre la même fiche que le Store.
 2. Changez `Version` dans la classe `[AppManifest]` de l'app et validez-la dans `main`, puis posez le
    tag : lancez le workflow **Tag a release** (onglet Actions, ou l'API GitHub pour un agent), qui pose
    sur la tête de `main` le tag de la version du manifeste et lance les deux workflows de
@@ -75,7 +108,7 @@ Forcez l'un ou l'autre avec `-p:KazoOsUseSource=true` ou `false`.
 Le catalogue ne prend jamais de binaire de votre part : une fois votre pull request relue et
 fusionnée, sa CI compile l'app au commit du tag.
 
-## Publier sur la branche `kazoos-packages`
+### Publier sur la branche `kazoos-packages`
 
 Le même tag `v*` lance aussi **Publish the Kazo OS packages** : il fait le paquet de l'app et le
 pousse sur la branche `kazoos-packages` de ce dépôt, en gardant les versions déjà publiées. Les
