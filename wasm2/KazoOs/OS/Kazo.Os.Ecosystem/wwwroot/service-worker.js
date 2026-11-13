@@ -4,7 +4,8 @@
 //
 // One exception (ADR 0206): the wwwroot/ files of apps installed by kazopkg live in the OS, not on
 // the server. The OS copies them into a cache and this worker answers _content/<assembly>/<path>
-// from it; every other request goes to the network as before.
+// from it, page loads included (an iframe pointed at an installed app's page, ADR 0243); every
+// other request goes to the network as before.
 self.importScripts('./_content/Kazo.Os.Infrastructure.Browser/installedAppAssets.sw.js');
 
 self.addEventListener('install', () => self.skipWaiting());
