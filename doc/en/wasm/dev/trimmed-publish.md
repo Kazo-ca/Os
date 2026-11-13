@@ -88,10 +88,12 @@ warning, serves the publication on `127.0.0.1` and `127.0.0.2`, then runs
 | `Measures_the_calculator_on_the_page_and_in_a_worker` | ADR 0133 measurements (opening, latency, memory, batches), written to `remote-window-measurements.json` in the artifacts folder |
 | `An_installed_app_finds_its_wwwroot_files_and_its_worker_scripts` | ADR 0206: the test package `Tests/fixtures/installed-app` (packed by the script with `KazoOsPack`, answered by Playwright in place of `raw.githubusercontent.com`) is installed with `sudo kazopkg install`, the OS restarts, the app imports its module, starts its Web Worker (relative `importScripts`), shows its image and calls CoreLib overloads the OS does not use itself (ADR 0242); on `127.0.0.1`, through the `installed-apps` mode service worker |
 | `The_published_service_worker_serves_installed_app_files_to_a_worker` | ADR 0206 on `127.0.0.2`: the published service worker answers files of the `kazoos-installed-apps` cache to a Web Worker under cross-origin isolation |
+| `The_published_service_worker_serves_an_installed_app_page_to_an_iframe` | ADR 0243 on `127.0.0.2`: an HTML page copied into the `kazoos-installed-apps` cache opens in an iframe with its query (`?author=kazo&webgl`), isolated like the OS, online then offline, instead of the OS's `index.html` |
+| `The_installed_apps_worker_serves_an_installed_app_page_to_an_iframe` | ADR 0243 on `127.0.0.1`: the same page, served by the worker of the `installed-apps` mode |
 | `Trimmed_publish_shows_a_new_notification_as_a_bubble_above_the_taskbar` | ADR 0197: the what's new notification posted at a new account's sign-in shows as a bubble above the taskbar (source "Kazo OS", title, "View" button), leaves by itself after about 6 s and stays in the clock panel ([`notification-toasts.md`](notification-toasts.md)) |
 | `Trimmed_publish_shows_unread_notifications_next_to_the_clock` | ADR 0196: a new account gets the what's new notification (`whats-new.json` served); clock dot and tooltip, no dot on Applications, opened panel = read, **View** opens Settings ▸ What's new and dismisses the notification; screenshots `trimmed-clock-dot.png` and `trimmed-whats-new-page.png` |
 
-The script requires all eight tests to pass (`EXPECTED_TESTS`).
+The script requires all ten tests to pass (`EXPECTED_TESTS`).
 
 No console error is allowed. Without `KAZOOS_TRIMMED_URL`, the suite is
 skipped (a `dotnet test` of the solution does not run it).

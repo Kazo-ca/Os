@@ -364,6 +364,9 @@ Cette section liste ce qui est publié dans la branche `main` et en ligne.
   n'est pas élaguée), et l'installation refuse avec la méthode exacte une app
   qui appelle une méthode que l'OS publié n'a pas, au lieu de la laisser
   planter. ([ADR 0242](dev/adr/0242-framework-api-for-installed-apps.md))
+  Elle peut afficher ses propres pages HTML dans une iframe, avec des paramètres
+  dans l'adresse, aussi une fois l'OS publié et hors ligne.
+  ([ADR 0243](dev/adr/0243-serve-installed-app-pages.md))
 - **Sources de confiance et installation pour soi** : une application d'une
   source de confiance s'installe pour soi sans administrateur ; une source non
   fiable, une application de la liste noire ou une installation pour tous

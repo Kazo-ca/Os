@@ -330,7 +330,8 @@ approval:
   through `AppAssetStore` (hash checked) and copied into the
   `kazoos-installed-apps` cache; the service worker serves it at
   `_content/<assembly>/<path>`, the same address as an app compiled into the
-  OS (tags, `import()`, CSS, Web Workers and their `importScripts`). On
+  OS (tags, `import()`, CSS, Web Workers and their `importScripts`, and an
+  HTML page loaded in an iframe, [ADR 0243](adr/0243-serve-installed-app-pages.md)). On
   `localhost`, the OS registers `service-worker.js?mode=installed-apps`, which
   serves only those files. A page loaded with Ctrl+F5 is not controlled: the OS
   asks the active worker to claim it, which it does when the page runs its

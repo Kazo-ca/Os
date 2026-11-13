@@ -332,7 +332,8 @@ validation en deux étapes :
   lue par `AppAssetStore` (empreinte vérifiée) et copiée dans le cache
   `kazoos-installed-apps` ; le service worker la sert à
   `_content/<assemblage>/<chemin>`, la même adresse qu'une app compilée dans
-  l'OS (balises, `import()`, CSS, Web Workers et leurs `importScripts`). Sur
+  l'OS (balises, `import()`, CSS, Web Workers et leurs `importScripts`, et une
+  page HTML chargée dans une iframe, [ADR 0243](adr/0243-serve-installed-app-pages.md)). Sur
   `localhost`, l'OS enregistre `service-worker.js?mode=installed-apps`, qui ne
   sert que ces fichiers. Une page chargée avec Ctrl+F5 n'est pas contrôlée : l'OS
   demande au worker actif de la réclamer, ce qu'il fait si elle a sa version ;

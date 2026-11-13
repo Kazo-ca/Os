@@ -89,10 +89,12 @@ alerte `IL…`, sert la publication sur `127.0.0.1` et `127.0.0.2`, puis lance
 | `Measures_the_calculator_on_the_page_and_in_a_worker` | mesures de l'ADR 0133 (ouverture, latence, mémoire, lots), écrites dans `remote-window-measurements.json` du dossier des artefacts |
 | `An_installed_app_finds_its_wwwroot_files_and_its_worker_scripts` | ADR 0206 : le paquet de test `Tests/fixtures/installed-app` (emballé par le script avec `KazoOsPack`, servi par Playwright à la place de `raw.githubusercontent.com`) est installé par `sudo kazopkg install`, l'OS redémarre, l'app importe son module, lance son Web Worker (`importScripts` relatif), affiche son image et appelle des surcharges de CoreLib que l'OS n'utilise pas lui-même (ADR 0242) ; sur `127.0.0.1`, par le service worker du mode `installed-apps` |
 | `The_published_service_worker_serves_installed_app_files_to_a_worker` | ADR 0206 sur `127.0.0.2` : le service worker publié sert les fichiers du cache `kazoos-installed-apps` à un Web Worker sous isolation cross-origin |
+| `The_published_service_worker_serves_an_installed_app_page_to_an_iframe` | ADR 0243 sur `127.0.0.2` : une page HTML copiée dans le cache `kazoos-installed-apps` s'ouvre dans une iframe avec sa requête (`?author=kazo&webgl`), isolée comme l'OS, en ligne puis hors ligne, au lieu de l'`index.html` de l'OS |
+| `The_installed_apps_worker_serves_an_installed_app_page_to_an_iframe` | ADR 0243 sur `127.0.0.1` : la même page, servie par le worker du mode `installed-apps` |
 | `Trimmed_publish_shows_a_new_notification_as_a_bubble_above_the_taskbar` | ADR 0197 : la notification des nouveautés postée à la connexion d'un nouveau compte apparaît en bulle au-dessus de la barre (source « Kazo OS », titre, bouton « Voir »), part seule après environ 6 s et reste dans le panneau de l'horloge ([`notification-toasts.md`](notification-toasts.md)) |
 | `Trimmed_publish_shows_unread_notifications_next_to_the_clock` | ADR 0196 : un nouveau compte reçoit la notification des nouveautés (`whats-new.json` servi) ; point et infobulle de l'horloge, aucun point sur Applications, panneau ouvert = lu, **Voir** ouvre Paramètres ▸ Nouveautés et ferme la notification ; captures `trimmed-clock-dot.png` et `trimmed-whats-new-page.png` |
 
-Le script exige que les huit tests passent (`EXPECTED_TESTS`).
+Le script exige que les dix tests passent (`EXPECTED_TESTS`).
 
 Aucune erreur de console n'est admise. Sans `KAZOOS_TRIMMED_URL`, la suite est
 ignorée (un `dotnet test` de la solution ne la lance pas).
