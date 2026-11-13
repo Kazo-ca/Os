@@ -2,6 +2,7 @@ using Kazo.Os.Platform.Core.Settings;
 using Kazo.Os.App.Abstractions;
 using Kazo.Os.App.Abstractions.Policy;
 using Kazo.Os.AppSdk;
+using Kazo.Os.Platform.Core.Apps.Packages;
 using Kazo.Os.Platform.Core.Diagnostics;
 using Kazo.Os.Platform.Core.Discovery;
 using Kazo.Os.Platform.Core.Events;
@@ -21,6 +22,7 @@ using Kazo.Os.Simulation.Abstractions.FileSystem;
 using Kazo.Os.Simulation.Abstractions.Gateways;
 using Kazo.Os.Simulation.Abstractions.Processes;
 using Kazo.Os.Simulation.Abstractions.Sessions;
+using Kazo.Os.Simulation.Abstractions.Time;
 
 namespace Kazo.Os.Platform.Core.Tests.Execution;
 
@@ -44,6 +46,65 @@ public sealed class AppIntentGatewayTests
             VirtualPath.Parse("/home/alice/notes.txt"));
 
         Assert.Equal(AppIntentOpenFileOutcome.Opened, result.Outcome);
+    }
+
+    [Fact]
+    public async Task OpenFileAsync_NoHandler_ProposesTheStoreAppsThatOpenTheFile()
+    {
+        Fixture fixture = new(FileManagerManifest(), NotepadManifest());
+        AuthenticatedPrincipal principal = await fixture.LoginAsync();
+        fixture.Grant("org.kazoos.filemanager", principal, AppCapabilities.AppsLaunch);
+        fixture.Suggestions = await CreateSuggestionsAsync(fixture, refresh: true);
+        IAppExecutionContext caller = await fixture.LaunchCallerAsync(principal);
+
+        AppIntentOpenFileResult opened = await caller.Intents.OpenFileAsync(VirtualPath.Parse("/home/alice/report.docx"));
+        AppIntentOpenFileResult edited = await caller.Intents.EditFileAsync(VirtualPath.Parse("/home/alice/report.docx"));
+
+        Assert.Equal(AppIntentOpenFileOutcome.NoHandler, opened.Outcome);
+        Assert.Equal([new AppIntentSuggestedCatalogApp("ca.kazo.word", "Kazo Word", "official")], opened.SuggestedCatalogApps);
+        Assert.Equal(AppIntentOpenFileOutcome.NoHandler, edited.Outcome);
+        Assert.Equal(opened.SuggestedCatalogApps, edited.SuggestedCatalogApps);
+    }
+
+    [Fact]
+    public async Task OpenFileAsync_NoHandler_ProposesNothingWhenNoCatalogWasDownloaded()
+    {
+        Fixture fixture = new(FileManagerManifest(), NotepadManifest());
+        AuthenticatedPrincipal principal = await fixture.LoginAsync();
+        fixture.Grant("org.kazoos.filemanager", principal, AppCapabilities.AppsLaunch);
+        fixture.Suggestions = await CreateSuggestionsAsync(fixture, refresh: false);
+        IAppExecutionContext caller = await fixture.LaunchCallerAsync(principal);
+
+        AppIntentOpenFileResult result = await caller.Intents.OpenFileAsync(VirtualPath.Parse("/home/alice/report.docx"));
+
+        Assert.Equal(AppIntentOpenFileOutcome.NoHandler, result.Outcome);
+        Assert.Empty(result.SuggestedCatalogApps);
+    }
+
+    /// <summary>The official catalog lists Kazo Word, which declares <c>.docx</c>; downloaded only when <paramref name="refresh"/>.</summary>
+    private static async Task<CatalogAppSuggestions> CreateSuggestionsAsync(Fixture fixture, bool refresh)
+    {
+        AppPackageInstaller installer = new(new CatalogDownloader(), sdkVersion: KazoOsSdk.SemanticVersion);
+        if (refresh)
+        {
+            await installer.RefreshCatalogsAsync(AppSourcesConfigDocument.Read(null, AppPackageDefaults.Standard));
+        }
+
+        return new CatalogAppSuggestions(installer, fixture.CreateSystemReader, fixture.Catalog);
+    }
+
+    /// <summary>Serves an official <c>catalog.json</c> whose only app opens <c>.docx</c>.</summary>
+    private sealed class CatalogDownloader : IAppPackageDownloader
+    {
+        public ValueTask<byte[]?> DownloadAsync(Uri uri, long maximumBytes, CancellationToken cancellationToken = default) =>
+            ValueTask.FromResult<byte[]?>(uri.AbsoluteUri == AppPackageDefaults.OfficialCatalogAddress
+                ? System.Text.Encoding.UTF8.GetBytes($$$"""
+                    {"schemaVersion":1,"apps":[{"appId":"ca.kazo.word","name":"Kazo Word","category":"productivity","latestVersion":"0.1.0",
+                     "versions":[{"version":"0.1.0","package":"packages/ca.kazo.word/0.1.0/ca.kazo.word-0.1.0.kazoapp","sha256":"{{{new string('a', 64)}}}",
+                      "size":10,"capabilities":[],"sdkCompatibility":{"minimumVersion":"{{{KazoOsSdk.Version}}}"},
+                      "fileHandlers":[{"extensions":[".docx"],"actions":["open","edit"]}]}]}]}
+                    """)
+                : null);
     }
 
     [Fact]
@@ -208,8 +269,38 @@ public sealed class AppIntentGatewayTests
             Orchestrator = new AppLifecycleOrchestrator(
                 catalog, descriptors, enablement, Manager, Grants, contextFactory);
             FileAssociationResolver resolver = new(catalog, enablement, Settings);
-            _dispatcher = new AppIntentDispatcher(Orchestrator, catalog, enablement, resolver, Grants, fileSystem);
+            _dispatcher = new AppIntentDispatcher(Orchestrator, catalog, enablement, resolver, Grants, fileSystem)
+            {
+                CatalogSuggestions = () => Suggestions,
+            };
+            FileSystem = fileSystem;
+            Clock = clock;
+            Catalog = catalog;
         }
+
+        /// <summary>Gets or sets the Store search the dispatcher asks on <c>NoHandler</c> (ADR 0257 §2).</summary>
+        internal CatalogAppSuggestions? Suggestions { get; set; }
+
+        internal IFileSystemService FileSystem { get; }
+
+        internal ISimulationClock Clock { get; }
+
+        internal AppCatalog Catalog { get; }
+
+        /// <summary>The OS's own reader of <c>/etc</c>, as the update check and the suggestions use it.</summary>
+        internal IAppFileSystemGateway CreateSystemReader() => new AppFileSystemGateway(
+            FileSystem,
+            Clock,
+            new AppOperationContext
+            {
+                AppId = "org.kazoos.shell",
+                UserId = "system",
+                UserName = "system",
+                UserAuthority = AppAuthority.System,
+                GrantedCapabilities = new HashSet<string>(AppCapabilities.All, StringComparer.Ordinal),
+                IsSystemOperation = true
+            },
+            ["system"]);
 
         internal LocalSessionService Session { get; }
         internal InMemoryProcessManager Manager { get; }

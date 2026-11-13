@@ -450,7 +450,24 @@ public sealed record AppIntentOpenFileResult(
     AppIntentOpenFileOutcome Outcome,
     IReadOnlyList<string>? CandidateAppIds = null,
     string? ErrorCode = null,
-    bool FellBackToOpen = false);
+    bool FellBackToOpen = false)
+{
+    /// <summary>
+    /// Gets the apps of the Store catalogs that declare this file type, for
+    /// <see cref="AppIntentOpenFileOutcome.NoHandler"/> (ADR 0257 §3): official catalog first, then
+    /// the order of <c>[catalogs]</c>. Empty when nothing is proposed, offline, or for another outcome.
+    /// </summary>
+    public IReadOnlyList<AppIntentSuggestedCatalogApp> SuggestedCatalogApps { get; init; } = [];
+}
+
+/// <summary>
+/// An app of a Store catalog that can open a file no installed app opens (ADR 0257 §2, §3). The
+/// Store installs it (<c>--app=&lt;AppId&gt;</c>), or <c>kazopkg install catalog:&lt;Catalog&gt;/&lt;AppId&gt;</c>.
+/// </summary>
+/// <param name="AppId">App identifier.</param>
+/// <param name="Name">Its name in the catalog.</param>
+/// <param name="Catalog">Name of the catalog of <c>[catalogs]</c> that publishes it.</param>
+public sealed record AppIntentSuggestedCatalogApp(string AppId, string Name, string Catalog);
 
 /// <summary>Identifies the stable outcome of one reveal, URI, app-settings or app-defined intent (ADR 0096).</summary>
 public enum AppIntentOutcome

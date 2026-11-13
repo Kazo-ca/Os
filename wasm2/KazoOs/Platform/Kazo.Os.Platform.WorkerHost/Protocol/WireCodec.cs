@@ -931,13 +931,37 @@ internal static class WireCodec
         {
             writer.WriteBoolean("fb", true);
         }
+
+        // ADR 0257 §3: the catalog apps that open the file, as [id, name, catalog] triples.
+        if (result.SuggestedCatalogApps.Count > 0)
+        {
+            writer.WriteStartArray("sg");
+            foreach (AppIntentSuggestedCatalogApp app in result.SuggestedCatalogApps)
+            {
+                writer.WriteStartArray();
+                writer.WriteStringValue(app.AppId);
+                writer.WriteStringValue(app.Name);
+                writer.WriteStringValue(app.Catalog);
+                writer.WriteEndArray();
+            }
+
+            writer.WriteEndArray();
+        }
     }
 
     public static AppIntentOpenFileResult ReadOpenFileResult(JsonElement element) => new(
         (AppIntentOpenFileOutcome)element.GetInt32("oc"),
         element.TryGetProperty("ca", out _) ? ReadStrings(element, "ca") : null,
         element.GetOptionalString("ec"),
-        element.TryGetProperty("fb", out _) && element.GetFlag("fb"));
+        element.TryGetProperty("fb", out _) && element.GetFlag("fb"))
+    {
+        SuggestedCatalogApps = element.TryGetProperty("sg", out JsonElement suggested) && suggested.ValueKind == JsonValueKind.Array
+            ? [.. suggested.EnumerateArray()
+                .Where(static item => item.ValueKind == JsonValueKind.Array && item.GetArrayLength() == 3)
+                .Select(static item => new AppIntentSuggestedCatalogApp(
+                    item[0].GetString() ?? string.Empty, item[1].GetString() ?? string.Empty, item[2].GetString() ?? string.Empty))]
+            : [],
+    };
 
     public static void WriteIntentResult(Utf8JsonWriter writer, AppIntentResult result)
     {

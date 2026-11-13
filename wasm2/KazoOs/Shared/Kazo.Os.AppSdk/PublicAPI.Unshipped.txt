@@ -1,1 +1,19 @@
 #nullable enable
+Kazo.Os.AppSdk.Apps.KazoOpenFileResult.SuggestedCatalogApps.get -> System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.Apps.KazoSuggestedCatalogApp!>!
+Kazo.Os.AppSdk.Apps.KazoOpenFileResult.SuggestedCatalogApps.init -> void
+Kazo.Os.AppSdk.Apps.KazoSuggestedCatalogApp
+Kazo.Os.AppSdk.Apps.KazoSuggestedCatalogApp.<Clone>$() -> Kazo.Os.AppSdk.Apps.KazoSuggestedCatalogApp!
+Kazo.Os.AppSdk.Apps.KazoSuggestedCatalogApp.AppId.get -> string!
+Kazo.Os.AppSdk.Apps.KazoSuggestedCatalogApp.AppId.init -> void
+Kazo.Os.AppSdk.Apps.KazoSuggestedCatalogApp.Catalog.get -> string!
+Kazo.Os.AppSdk.Apps.KazoSuggestedCatalogApp.Catalog.init -> void
+Kazo.Os.AppSdk.Apps.KazoSuggestedCatalogApp.Deconstruct(out string! AppId, out string! Name, out string! Catalog) -> void
+Kazo.Os.AppSdk.Apps.KazoSuggestedCatalogApp.Equals(Kazo.Os.AppSdk.Apps.KazoSuggestedCatalogApp? other) -> bool
+Kazo.Os.AppSdk.Apps.KazoSuggestedCatalogApp.KazoSuggestedCatalogApp(string! AppId, string! Name, string! Catalog) -> void
+Kazo.Os.AppSdk.Apps.KazoSuggestedCatalogApp.Name.get -> string!
+Kazo.Os.AppSdk.Apps.KazoSuggestedCatalogApp.Name.init -> void
+override Kazo.Os.AppSdk.Apps.KazoSuggestedCatalogApp.Equals(object? obj) -> bool
+override Kazo.Os.AppSdk.Apps.KazoSuggestedCatalogApp.GetHashCode() -> int
+override Kazo.Os.AppSdk.Apps.KazoSuggestedCatalogApp.ToString() -> string!
+static Kazo.Os.AppSdk.Apps.KazoSuggestedCatalogApp.operator !=(Kazo.Os.AppSdk.Apps.KazoSuggestedCatalogApp? left, Kazo.Os.AppSdk.Apps.KazoSuggestedCatalogApp? right) -> bool
+static Kazo.Os.AppSdk.Apps.KazoSuggestedCatalogApp.operator ==(Kazo.Os.AppSdk.Apps.KazoSuggestedCatalogApp? left, Kazo.Os.AppSdk.Apps.KazoSuggestedCatalogApp? right) -> bool

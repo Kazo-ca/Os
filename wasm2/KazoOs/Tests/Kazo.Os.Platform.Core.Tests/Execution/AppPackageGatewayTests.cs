@@ -723,6 +723,7 @@ public sealed partial class AppPackageGatewayTests
                     {"version":"{{{version}}}","commit":"abc","package":"{{{folder}}}/{{{AppPackageTests.AppId}}}-{{{version}}}.kazoapp",
                      "sha256":"{{{AppPackage.Sha256(package)}}}","size":{{{package.Length}}},"publishedAt":"2026-10-30T00:00:00Z",{{{Signature(package, signed)}}}
                      "capabilities":[],"sdkCompatibility":{"minimumVersion":"2.0.0"},"icon":"{{{folder}}}/icon.svg",
+                     "fileHandlers":[{"extensions":[".sample"],"actions":["open"]}],
                      "screenshots":["{{{folder}}}/screenshots/1.png"],"descriptions":{"en":"{{{folder}}}/description.en.md"}}
                     """);
             }

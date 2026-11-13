@@ -81,7 +81,8 @@ KazoIntentResult sent = await KazoApps.SendIntentAsync(
 | Membre | Capacité | Échecs |
 |---|---|---|
 | `RevealFileAsync(path)` | `apps.launch` | `KazoFileNotFoundException`, `KazoUnauthorizedAccessException` (dossier illisible), `KazoAppLaunchException` (aucun gestionnaire de dossiers) |
-| `EditFileAsync(path)` | `apps.launch` | `KazoOpenFileResult` : `Opened`, `ChooserRequired` (candidats), `NoHandler` ; `FellBackToOpen` |
+| `OpenFileAsync(path)` | `apps.launch` | `KazoOpenFileResult` : `Opened`, `ChooserRequired` (candidats), `NoHandler` ; avec `NoHandler`, `SuggestedCatalogApps` liste les apps du Store qui ouvrent ce type ([ADR 0257](../dev/adr/0257-offer-a-store-app-for-an-unsupported-file.md)) |
+| `EditFileAsync(path)` | `apps.launch` | `KazoOpenFileResult` : `Opened`, `ChooserRequired` (candidats), `NoHandler` (avec `SuggestedCatalogApps`) ; `FellBackToOpen` |
 | `OpenUriAsync(uri, appId)` | `apps.launch` | `ArgumentException` si l'URI n'est pas absolue ; `KazoIntentResult` : `Delivered`, `ChooserRequired`, `NoHandler` |
 | `ShowSettingsAsync(appId)` | aucune | `KazoAppLaunchException` (app inconnue ou désactivée) |
 | `SendIntentAsync(id, payload, targetAppId, rememberChoice)` | `apps.launch` | `ArgumentException` (identifiant mal formé ou réservé, charge utile qui n'est pas un objet JSON ou dépasse 64 Kio, cible qui ne déclare pas l'intent) ; `KazoIntentResult` |

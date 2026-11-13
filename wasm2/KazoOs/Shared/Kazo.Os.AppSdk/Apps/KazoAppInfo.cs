@@ -106,7 +106,21 @@ public sealed record KazoOpenFileResult(KazoOpenFileStatus Status, IReadOnlyList
     /// the <c>open</c> handlers instead, like <c>xdg-open</c> (ADR 0096, section 2).
     /// </summary>
     public bool FellBackToOpen { get; init; }
+
+    /// <summary>
+    /// Gets, with <see cref="KazoOpenFileStatus.NoHandler"/>, the apps of the Kazo OS Store catalogs
+    /// that can open the file (ADR 0257 §3): official catalog first. Show them to the user with a way
+    /// to the Store (<c>org.kazoos.store</c> with <c>--app=&lt;AppId&gt;</c>). Empty when nothing is
+    /// proposed, offline, or for another status.
+    /// </summary>
+    public IReadOnlyList<KazoSuggestedCatalogApp> SuggestedCatalogApps { get; init; } = [];
 }
+
+/// <summary>An app of a Kazo OS Store catalog that can open a file no installed app opens (ADR 0257 §3).</summary>
+/// <param name="AppId">App identifier.</param>
+/// <param name="Name">Its name in the catalog.</param>
+/// <param name="Catalog">Name of the catalog that publishes it (<c>official</c> for the Kazo OS catalog).</param>
+public sealed record KazoSuggestedCatalogApp(string AppId, string Name, string Catalog);
 
 /// <summary>What happened to an intent sent with <see cref="KazoApps"/> (ADR 0096).</summary>
 public enum KazoIntentStatus

@@ -387,7 +387,13 @@ kazopkg info org.example.notes
   (`schemaVersion` 1, branche `packages` du dépôt catalogue). Les chemins du
   fichier (paquet, icône, captures, descriptions) sont relatifs à
   `catalog.json`. L'OS le garde 5 minutes ; une app ou une version invalide est
-  ignorée avec un avertissement dans `/var/log/syslog`.
+  ignorée avec un avertissement dans `/var/log/syslog`. Chaque version peut
+  porter `fileHandlers` (`{ mediaType?, extensions, actions }`, recopié du
+  manifeste, ADR [0257](adr/0257-offer-a-store-app-for-an-unsupported-file.md)) :
+  quand aucune app installée n'ouvre un fichier, l'OS propose les apps qui le
+  déclarent, lues dans les catalogues déjà téléchargés
+  ([`user-file-associations.md`](user-file-associations.md#aucune-app-installée--les-apps-du-store-adr-0257)).
+  Au plus 64 entrées par version et 64 extensions ou actions par entrée.
 - **Source écrite** : `<appId>=catalog:<nom>/<appId>@<version>` dans
   `[installed]`. La confiance est celle de `catalog:<nom>` ; le catalogue
   officiel est *vérifié*. Le SHA-256 et la taille viennent du catalogue ; les
@@ -407,7 +413,8 @@ kazopkg info org.example.notes
   `--page=installed`, `--app=<appId>`.
 - **Mises à jour** : `AppUpdateMonitor` vérifie à l'ouverture de la session
   puis toutes les `[updates] interval-hours` heures et envoie une notification
-  qui ouvre l'onglet Installées. Aucun badge sur l'icône du Store
+  qui ouvre l'onglet Installées. Chaque vérification télécharge aussi tous
+  les catalogues de `[catalogs]`, pour les propositions de l'ADR 0257. Aucun badge sur l'icône du Store
   ([ADR 0215](adr/0215-hack-store-answers-notification-and-ambiguous-app-id.md) §1).
 - **Épinglage par défaut** : `start-menu.json` note par profil
   `defaultPinsApplied` ; le Store est ajouté une fois, à un nouveau profil
