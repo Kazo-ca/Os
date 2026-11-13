@@ -85,14 +85,23 @@ file:
 - **Action**: `open` for an open; for an edit with no handler, the apps that
   **open** it (the edit falls back to `open`).
 - **Result**: `AppIntentOpenFileResult.SuggestedCatalogApps`
-  (`AppIntentSuggestedCatalogApp`: id, name, catalog), carried to workers
-  (`WireCodec`, field `sg`) and, in the SDK, `KazoOpenFileResult.SuggestedCatalogApps`
-  (`KazoSuggestedCatalogApp`).
+  (`AppIntentSuggestedCatalogApp`: id, name, catalog, `ShortDescriptions` per
+  language and `IconUri`, the absolute address of the version's icon), carried
+  to workers (`WireCodec`, field `sg`: `[id, name, catalog, icon, {language: text}]`,
+  the last two optional) and, in the SDK, `KazoOpenFileResult.SuggestedCatalogApps`
+  (`KazoSuggestedCatalogApp`, `GetShortDescription(culture)`).
+- **Asked on its own** (work item 3): `IAppIntentGateway.SuggestCatalogAppsAsync(path)`
+  (`AppIntentDispatcher.SuggestCatalogAppsForAsync`, `apps.launch` required,
+  action `open`) and, in the SDK, `KazoApps.GetSuggestedCatalogAppsAsync(path)`:
+  the "Open with" box shows the Store apps under the installed ones even when
+  an installed app opens the file. The default implementation of the
+  interface, and a worker app, get an empty list.
 - **`xdg-open`**: under "no application can open", the list of apps (name, id,
   catalog) and `kazopkg install catalog:<catalog>/<appId>` for the first one;
   the exit code stays 3.
-- The File Explorer and the Store ("See in the Store" button,
-  `--open-after-install`) come with work item 3.
+- **File Explorer and Store** (work item 3): the "Open with" box and its
+  "View in the Store" button, the Store's `--open-after-install`; see
+  [`file-explorer.md`](file-explorer.md#store-apps-for-a-file-no-app-opens-adr-0257).
 
 ## Decisions
 
@@ -134,4 +143,4 @@ file:
 - [x] `xdg-mime` command.
 - [x] Tests and documentation.
 - [x] ADR 0257, work item 2: Store apps proposed with `NoHandler`, SDK, `xdg-open`.
-- [ ] ADR 0257, work item 3: File Explorer, "Open with" and the Store's `--open-after-install`.
+- [x] ADR 0257, work item 3: File Explorer, "Open with" and the Store's `--open-after-install`.

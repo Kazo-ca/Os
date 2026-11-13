@@ -261,6 +261,29 @@ public sealed class AppIntentDispatcher
     }
 
     /// <summary>
+    /// Lists the Store catalog apps that open a file, for the "Open with" box (ADR 0257 §4): the same
+    /// search as a <c>NoHandler</c> answer, asked on its own. The caller needs
+    /// <see cref="AppCapabilities.AppsLaunch"/>, as for opening the file.
+    /// </summary>
+    /// <param name="callerAppId">The asking app.</param>
+    /// <param name="path">The file.</param>
+    /// <param name="mediaType">Its media type, when the caller knows it.</param>
+    /// <param name="principal">The user the box is shown to.</param>
+    /// <returns>The apps, or <see langword="null"/> when the caller lacks <c>apps.launch</c>.</returns>
+    public async ValueTask<IReadOnlyList<AppIntentSuggestedCatalogApp>?> SuggestCatalogAppsForAsync(
+        string callerAppId, VirtualPath path, string? mediaType, AuthenticatedPrincipal principal)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(callerAppId);
+        ArgumentNullException.ThrowIfNull(principal);
+        if (!HasAppsLaunch(callerAppId, principal.UserId.ToString(), principal.Authority))
+        {
+            return null;
+        }
+
+        return await SuggestCatalogAppsAsync(path, mediaType, "open", principal).ConfigureAwait(false);
+    }
+
+    /// <summary>
     /// Asks <see cref="CatalogSuggestions"/> which catalog apps open a file (ADR 0257 §2).</summary>
     private async ValueTask<IReadOnlyList<AppIntentSuggestedCatalogApp>> SuggestCatalogAppsAsync(
         VirtualPath path, string? mediaType, string action, AuthenticatedPrincipal principal) =>

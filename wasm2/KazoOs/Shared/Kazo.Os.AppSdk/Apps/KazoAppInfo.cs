@@ -120,7 +120,32 @@ public sealed record KazoOpenFileResult(KazoOpenFileStatus Status, IReadOnlyList
 /// <param name="AppId">App identifier.</param>
 /// <param name="Name">Its name in the catalog.</param>
 /// <param name="Catalog">Name of the catalog that publishes it (<c>official</c> for the Kazo OS catalog).</param>
-public sealed record KazoSuggestedCatalogApp(string AppId, string Name, string Catalog);
+public sealed record KazoSuggestedCatalogApp(string AppId, string Name, string Catalog)
+{
+    /// <summary>Gets its short description per language code, as its catalog writes it; may be empty.</summary>
+    public IReadOnlyDictionary<string, string> ShortDescriptions { get; init; } = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>Gets the address of its 256×256 PNG icon, or <see langword="null"/>; offline it does not load.</summary>
+    public string? IconUri { get; init; }
+
+    /// <summary>Compares every field, the descriptions by their content (a record would compare the map by reference).</summary>
+    /// <param name="other">The other app.</param>
+    public bool Equals(KazoSuggestedCatalogApp? other) =>
+        other is not null
+        && string.Equals(AppId, other.AppId, StringComparison.Ordinal)
+        && string.Equals(Name, other.Name, StringComparison.Ordinal)
+        && string.Equals(Catalog, other.Catalog, StringComparison.Ordinal)
+        && string.Equals(IconUri, other.IconUri, StringComparison.Ordinal)
+        && ShortDescriptions.Count == other.ShortDescriptions.Count
+        && ShortDescriptions.All(pair => other.ShortDescriptions.TryGetValue(pair.Key, out string? text) && string.Equals(text, pair.Value, StringComparison.Ordinal));
+
+    /// <inheritdoc />
+    public override int GetHashCode() => HashCode.Combine(AppId, Name, Catalog, IconUri, ShortDescriptions.Count);
+
+    /// <summary>Gets the short description in <paramref name="culture"/>'s language, else English, else empty.</summary>
+    /// <param name="culture">The language wanted.</param>
+    public string GetShortDescription(System.Globalization.CultureInfo culture) => KazoCatalogText.Pick(ShortDescriptions, culture) ?? string.Empty;
+}
 
 /// <summary>What happened to an intent sent with <see cref="KazoApps"/> (ADR 0096).</summary>
 public enum KazoIntentStatus

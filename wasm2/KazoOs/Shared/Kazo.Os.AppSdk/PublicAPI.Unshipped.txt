@@ -17,3 +17,10 @@ override Kazo.Os.AppSdk.Apps.KazoSuggestedCatalogApp.GetHashCode() -> int
 override Kazo.Os.AppSdk.Apps.KazoSuggestedCatalogApp.ToString() -> string!
 static Kazo.Os.AppSdk.Apps.KazoSuggestedCatalogApp.operator !=(Kazo.Os.AppSdk.Apps.KazoSuggestedCatalogApp? left, Kazo.Os.AppSdk.Apps.KazoSuggestedCatalogApp? right) -> bool
 static Kazo.Os.AppSdk.Apps.KazoSuggestedCatalogApp.operator ==(Kazo.Os.AppSdk.Apps.KazoSuggestedCatalogApp? left, Kazo.Os.AppSdk.Apps.KazoSuggestedCatalogApp? right) -> bool
+Kazo.Os.AppSdk.Apps.KazoSuggestedCatalogApp.GetShortDescription(System.Globalization.CultureInfo! culture) -> string!
+Kazo.Os.AppSdk.Apps.KazoSuggestedCatalogApp.IconUri.get -> string?
+Kazo.Os.AppSdk.Apps.KazoSuggestedCatalogApp.IconUri.init -> void
+Kazo.Os.AppSdk.Apps.KazoSuggestedCatalogApp.ShortDescriptions.get -> System.Collections.Generic.IReadOnlyDictionary<string!, string!>!
+Kazo.Os.AppSdk.Apps.KazoSuggestedCatalogApp.ShortDescriptions.init -> void
+const Kazo.Os.AppSdk.Apps.KazoApps.StoreAppId = "org.kazoos.store" -> string!
+static Kazo.Os.AppSdk.Apps.KazoApps.GetSuggestedCatalogAppsAsync(string! path, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.Apps.KazoSuggestedCatalogApp!>!>!

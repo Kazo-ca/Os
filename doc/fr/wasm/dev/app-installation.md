@@ -410,7 +410,11 @@ kazopkg info org.example.notes
   tous, Ouvrir, Mettre à jour, Désinstaller, onglet **Installées** avec « Tout
   mettre à jour ». Quand une app attend un redémarrage, le bandeau propose
   **Redémarrer pour terminer** (sans administrateur). Arguments de lancement :
-  `--page=installed`, `--app=<appId>`.
+  `--page=installed`, `--page=themes`, `--app=<appId>` et, avec `--app`,
+  `--open-after-install=<chemin>` : une fois l'app installée, le Store ouvre ce
+  fichier (ADR [0257](adr/0257-offer-a-store-app-for-an-unsupported-file.md) §5,
+  bouton « Voir dans le Store » de l'Explorateur). Le Store déjà ouvert reçoit
+  aussi ces arguments.
 - **Mises à jour** : `AppUpdateMonitor` vérifie à l'ouverture de la session
   puis toutes les `[updates] interval-hours` heures et envoie une notification
   qui ouvre l'onglet Installées. Chaque vérification télécharge aussi tous

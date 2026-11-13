@@ -32,6 +32,13 @@ public sealed class FakeAppIntentGateway : IAppIntentGateway
         return this;
     }
 
+    /// <summary>The Store apps <see cref="SuggestCatalogAppsAsync"/> answers for a path (ADR 0257 §4); none by default.</summary>
+    public Dictionary<string, IReadOnlyList<AppIntentSuggestedCatalogApp>> SuggestedCatalogApps { get; } = new(StringComparer.Ordinal);
+
+    public ValueTask<IReadOnlyList<AppIntentSuggestedCatalogApp>> SuggestCatalogAppsAsync(
+        VirtualPath path, string? mediaType = null, CancellationToken cancellationToken = default) =>
+        ValueTask.FromResult(SuggestedCatalogApps.TryGetValue(path.Value, out IReadOnlyList<AppIntentSuggestedCatalogApp>? apps) ? apps : []);
+
     public FakeAppIntentGateway WithCapabilityDenied(string appId)
     {
         _denied.Add(appId);
