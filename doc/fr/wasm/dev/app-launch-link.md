@@ -99,9 +99,10 @@ Chaque lien écrit une ligne dans `/var/log/apps/org.kazoos.app-link.log` (sourc
 
 ## Lien « Essayer » des README d'apps
 
-Le README de chaque app du Store garde une place pour un lien **Essayer dans Kazo OS** vers
-`https://os.kazo.ca/?autolaunch=<appId>`. Il sera rempli quand cette fonction sera dans une
-version publiée de Kazo OS (la série `app-link/base` doit d'abord arriver dans `main`).
+Depuis Kazo OS 3.3.3, le README de chaque app du Store (Échecs, Webamp, IRC, Kazo Word, Kazo
+Spreadsheets) pointe vers `https://os.kazo.ca/?autolaunch=<appId>` dans sa section « Essayer »,
+comme le modèle `kazoos-solution` et Kazo-ca/Os-AppTemplate. La section est hors du bloc de la
+fiche du Store : `store-readme.mjs` la laisse telle qu'elle est écrite.
 
 ## Liste des tâches
 
