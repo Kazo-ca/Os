@@ -48,7 +48,7 @@ public sealed class CraftFrameTests
         using JsonDocument options = JsonDocument.Parse(JsonSerializer.Serialize(arguments[2]));
         JsonElement root = options.RootElement;
         Assert.Equal(
-            ["page", "title", "language", "parameters", "reservedKeys", "settings"],
+            ["page", "title", "language", "parameters", "reservedKeys", "settings", "exports"],
             root.EnumerateObject().Select(property => property.Name));
         Assert.Equal("_content/Kazo.Word/host/index.html", root.GetProperty("page").GetString());
         Assert.Equal("WordCraft", root.GetProperty("title").GetString());
@@ -58,6 +58,47 @@ public sealed class CraftFrameTests
         JsonElement key = Assert.Single(root.GetProperty("reservedKeys").EnumerateArray());
         Assert.Equal("app", key.GetProperty("target").GetString());
         Assert.Equal("{}", root.GetProperty("settings").GetProperty("wordcraft.ui").GetString());
+
+        // No Exporting handler: the browser keeps the app's downloads (ADR 0264).
+        Assert.False(root.GetProperty("exports").GetBoolean());
+    }
+
+    [Fact]
+    public async Task A_window_that_handles_exports_asks_the_proxy_for_them()
+    {
+        FakeJavaScript js = new();
+        CraftFrame frame = new(js);
+        frame.Exporting += _ => Task.FromResult(true);
+        await frame.StartAsync(default, Options, CancellationToken.None);
+
+        using JsonDocument options = JsonDocument.Parse(JsonSerializer.Serialize(js.Calls[1].Arguments[2]));
+        Assert.True(options.RootElement.GetProperty("exports").GetBoolean());
+    }
+
+    [Fact]
+    public async Task An_export_is_never_a_save_and_reports_whether_the_file_was_written()
+    {
+        CraftFrame frame = new(new FakeJavaScript());
+        Assert.False(await frame.OnFrameExport("a.pdf", [1]));
+
+        FrameSave? exported = null;
+        bool saved = false;
+        frame.Saving += _ =>
+        {
+            saved = true;
+            return Task.FromResult(true);
+        };
+        frame.Exporting += export =>
+        {
+            exported = export;
+            return Task.FromResult(true);
+        };
+
+        Assert.True(await frame.OnFrameExport("a.pdf", [1, 2]));
+        Assert.False(saved);
+        Assert.Equal("a.pdf", exported!.Name);
+        Assert.False(exported.SaveAs);
+        Assert.Equal([1, 2], exported.Bytes);
     }
 
     [Fact]
