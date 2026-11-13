@@ -36,6 +36,23 @@ public sealed class KazoAppsIntentTests
     }
 
     [Fact]
+    public async Task OpenFileAsync_hands_over_the_store_apps_proposed_for_a_file_no_app_opens()
+    {
+        FakeAppIntentGateway intents = new FakeAppIntentGateway()
+            .WithOpenResult("/home/user/report.docx", new AppIntentOpenFileResult(AppIntentOpenFileOutcome.NoHandler)
+            {
+                SuggestedCatalogApps = [new AppIntentSuggestedCatalogApp("ca.kazo.word", "Kazo Word", "official")],
+            });
+        using (Enter(intents))
+        {
+            KazoOpenFileResult result = await KazoApps.OpenFileAsync("/home/user/report.docx");
+
+            Assert.Equal(KazoOpenFileStatus.NoHandler, result.Status);
+            Assert.Equal([new KazoSuggestedCatalogApp("ca.kazo.word", "Kazo Word", "official")], result.SuggestedCatalogApps);
+        }
+    }
+
+    [Fact]
     public async Task EditFileAsync_sends_an_edit_request()
     {
         FakeAppIntentGateway intents = new();

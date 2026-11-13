@@ -167,7 +167,7 @@ public static class KazoApps
         {
             AppIntentOpenFileOutcome.Opened => new KazoOpenFileResult(KazoOpenFileStatus.Opened, []),
             AppIntentOpenFileOutcome.ChooserRequired => new KazoOpenFileResult(KazoOpenFileStatus.ChooserRequired, result.CandidateAppIds ?? []),
-            AppIntentOpenFileOutcome.NoHandler => new KazoOpenFileResult(KazoOpenFileStatus.NoHandler, []),
+            AppIntentOpenFileOutcome.NoHandler => new KazoOpenFileResult(KazoOpenFileStatus.NoHandler, []) { SuggestedCatalogApps = ToPublic(result.SuggestedCatalogApps) },
             _ => throw new KazoAppLaunchException($"'{target.Value}' could not be opened ({result.ErrorCode}).", errorCode: result.ErrorCode)
         };
     }
@@ -190,10 +190,14 @@ public static class KazoApps
         {
             AppIntentOpenFileOutcome.Opened => new KazoOpenFileResult(KazoOpenFileStatus.Opened, []) { FellBackToOpen = result.FellBackToOpen },
             AppIntentOpenFileOutcome.ChooserRequired => new KazoOpenFileResult(KazoOpenFileStatus.ChooserRequired, result.CandidateAppIds ?? []) { FellBackToOpen = result.FellBackToOpen },
-            AppIntentOpenFileOutcome.NoHandler => new KazoOpenFileResult(KazoOpenFileStatus.NoHandler, []),
+            AppIntentOpenFileOutcome.NoHandler => new KazoOpenFileResult(KazoOpenFileStatus.NoHandler, []) { SuggestedCatalogApps = ToPublic(result.SuggestedCatalogApps) },
             _ => throw new KazoAppLaunchException($"'{target.Value}' could not be edited ({result.ErrorCode}).", errorCode: result.ErrorCode)
         };
     }
+
+    /// <summary>Copies the catalog apps the OS proposes for a file (ADR 0257 §3) into the SDK's type.</summary>
+    private static IReadOnlyList<KazoSuggestedCatalogApp> ToPublic(IReadOnlyList<AppIntentSuggestedCatalogApp>? apps) =>
+        apps is null ? [] : [.. apps.Select(static app => new KazoSuggestedCatalogApp(app.AppId, app.Name, app.Catalog))];
 
     /// <summary>
     /// Shows a file in its folder, selected (ADR 0096, section 1), like "Show in folder": the default

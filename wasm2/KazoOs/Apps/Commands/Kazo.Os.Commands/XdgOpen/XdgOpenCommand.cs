@@ -15,7 +15,8 @@ namespace Kazo.Os.Commands.XdgOpen;
 /// the web browser for <c>http</c>/<c>https</c>). It returns as soon as the request is sent.
 /// </summary>
 /// <remarks>
-/// Exit codes follow <c>xdg-open</c>: 0 sent, 1 bad command line, 3 no application handles it,
+/// Exit codes follow <c>xdg-open</c>: 0 sent, 1 bad command line, 3 no application handles it (with,
+/// under the error, the apps of the Store catalogs that open it and the <c>kazopkg install</c> line, ADR 0257 §3),
 /// 4 the file does not exist or the action failed (several apps and no default included: a terminal
 /// has no chooser and the OS never guesses).
 /// </remarks>
@@ -86,7 +87,7 @@ public sealed partial class XdgOpenCommand : TerminalAppBase
         return result.Outcome switch
         {
             AppIntentOpenFileOutcome.Opened => 0,
-            AppIntentOpenFileOutcome.NoHandler => Fail(context, 3, text["NoHandler", target]),
+            AppIntentOpenFileOutcome.NoHandler => SuggestCatalogApps(context, Fail(context, 3, text["NoHandler", target]), result.SuggestedCatalogApps),
             AppIntentOpenFileOutcome.ChooserRequired => Fail(
                 context, 4,
                 text["Ambiguous", target, string.Join(", ", result.CandidateAppIds ?? []), path.Value]),
@@ -109,6 +110,29 @@ public sealed partial class XdgOpenCommand : TerminalAppBase
             AppIntentOutcome.Invalid => Fail(context, 1, text["InvalidUri", uri.OriginalString]),
             _ => Fail(context, 4, text["OpenFailed", uri.OriginalString, result.ErrorCode ?? string.Empty])
         };
+    }
+
+    /// <summary>
+    /// Writes, under the error, the Store apps the OS proposes for the file (ADR 0257 §3) and the
+    /// <c>kazopkg install</c> line for the first one; the exit code stays 3, like <c>xdg-open</c>.
+    /// </summary>
+    private static int SuggestCatalogApps(
+        TerminalExecutionContext context, int exitCode, IReadOnlyList<AppIntentSuggestedCatalogApp> apps)
+    {
+        if (apps.Count == 0)
+        {
+            return exitCode;
+        }
+
+        IStringLocalizer<Strings> text = context.App.GetLocalizer<Strings>();
+        context.StandardError.WriteLine(text["SuggestedHeader"]);
+        foreach (AppIntentSuggestedCatalogApp app in apps)
+        {
+            context.StandardError.WriteLine(text["SuggestedApp", app.Name, app.AppId, app.Catalog]);
+        }
+
+        context.StandardError.WriteLine(text["SuggestedInstall", apps[0].Catalog, apps[0].AppId]);
+        return exitCode;
     }
 
     private static int Fail(TerminalExecutionContext context, int exitCode, string message)

@@ -2,6 +2,7 @@ using Kazo.Os.App.Abstractions;
 using Kazo.Os.Simulation.Abstractions.Gateways;
 using Kazo.Os.App.Abstractions.Policy;
 using Kazo.Os.AppSdk;
+using Kazo.Os.Platform.Core.Apps.Packages;
 using Kazo.Os.Platform.Core.Discovery;
 using Kazo.Os.Platform.Core.Lifecycle;
 using Kazo.Os.Platform.Core.Policy;
@@ -74,7 +75,14 @@ public sealed record AppIntentDispatchResult(
     IReadOnlyList<string>? CandidateAppIds = null,
     string? ErrorCode = null,
     IReadOnlyList<FileSystemError>? PermissionDenials = null,
-    bool FellBackToOpen = false);
+    bool FellBackToOpen = false)
+{
+    /// <summary>
+    /// Gets the apps of the Store catalogs that can open the file, for a file intent no installed
+    /// app handles (ADR 0257 §3); empty otherwise.
+    /// </summary>
+    public IReadOnlyList<AppIntentSuggestedCatalogApp> SuggestedCatalogApps { get; init; } = [];
+}
 
 /// <summary>Identifies the stable outcome of one service-control request (start/stop/get/set start mode).</summary>
 public enum ServiceControlDispatchStatus
@@ -139,6 +147,12 @@ public sealed class AppIntentDispatcher
         _fileSystem = fileSystem ?? throw new ArgumentNullException(nameof(fileSystem));
         _shell = new ShellInterpreter(orchestrator, catalog, enablement);
     }
+
+    /// <summary>
+    /// Gets the search of the Store catalogs run when no installed app opens a file (ADR 0257 §2);
+    /// <see langword="null"/> (or a provider returning it) proposes nothing.
+    /// </summary>
+    public Func<CatalogAppSuggestions?>? CatalogSuggestions { get; init; }
 
     /// <summary>Dispatches one intent request on behalf of an authenticated principal.</summary>
     /// <param name="request">Caller app, acting user, and typed intent.</param>
@@ -233,7 +247,10 @@ public sealed class AppIntentDispatcher
             case FileHandlerResolutionStatus.ChooserRequired:
                 return new AppIntentDispatchResult(AppIntentDispatchStatus.ChooserRequired, CandidateAppIds: resolution.CandidateAppIds, ErrorCode: "intent.open-file.chooser-required");
             case FileHandlerResolutionStatus.NoHandler:
-                return new AppIntentDispatchResult(AppIntentDispatchStatus.NotFound, ErrorCode: "intent.open-file.no-handler");
+                return new AppIntentDispatchResult(AppIntentDispatchStatus.NotFound, ErrorCode: "intent.open-file.no-handler")
+                {
+                    SuggestedCatalogApps = await SuggestCatalogAppsAsync(intent.Path, intent.MediaType, intent.Action == FileIntentAction.Edit ? "edit" : "open", principal),
+                };
             case FileHandlerResolutionStatus.TargetInvalid:
                 return new AppIntentDispatchResult(AppIntentDispatchStatus.TargetInvalid, ErrorCode: "intent.open-file.target-invalid");
         }
@@ -242,6 +259,14 @@ public sealed class AppIntentDispatcher
             new AppLaunchRequest(resolution.AppId!, principal, [intent.Path.Value]));
         return ToDispatchResult(launch);
     }
+
+    /// <summary>
+    /// Asks <see cref="CatalogSuggestions"/> which catalog apps open a file (ADR 0257 §2).</summary>
+    private async ValueTask<IReadOnlyList<AppIntentSuggestedCatalogApp>> SuggestCatalogAppsAsync(
+        VirtualPath path, string? mediaType, string action, AuthenticatedPrincipal principal) =>
+        CatalogSuggestions?.Invoke() is { } suggestions
+            ? await suggestions.FindAsync(path, mediaType, action, principal).ConfigureAwait(false)
+            : [];
 
     /// <summary>
     /// Runs <see cref="ExecuteCommandIntent.CommandLine"/> in a non-interactive shell (ADR 0050,
@@ -410,7 +435,11 @@ public sealed class AppIntentDispatcher
             case FileHandlerResolutionStatus.ChooserRequired:
                 return new AppIntentDispatchResult(AppIntentDispatchStatus.ChooserRequired, CandidateAppIds: resolution.CandidateAppIds, ErrorCode: "intent.edit-file.chooser-required", FellBackToOpen: fellBack);
             case FileHandlerResolutionStatus.NoHandler:
-                return new AppIntentDispatchResult(AppIntentDispatchStatus.NotFound, ErrorCode: "intent.edit-file.no-handler");
+                // Nothing edits it and nothing opens it: propose what opens it, as the edit falls back to open.
+                return new AppIntentDispatchResult(AppIntentDispatchStatus.NotFound, ErrorCode: "intent.edit-file.no-handler")
+                {
+                    SuggestedCatalogApps = await SuggestCatalogAppsAsync(intent.Path, intent.MediaType, "open", principal),
+                };
             case FileHandlerResolutionStatus.TargetInvalid:
                 return new AppIntentDispatchResult(AppIntentDispatchStatus.TargetInvalid, ErrorCode: "intent.edit-file.target-invalid");
         }

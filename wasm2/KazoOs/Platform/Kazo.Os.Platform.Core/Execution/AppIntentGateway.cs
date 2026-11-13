@@ -64,7 +64,10 @@ internal sealed class AppIntentGateway(
             AppIntentDispatchStatus.ChooserRequired =>
                 new AppIntentOpenFileResult(AppIntentOpenFileOutcome.ChooserRequired, result.CandidateAppIds),
             AppIntentDispatchStatus.NotFound =>
-                new AppIntentOpenFileResult(AppIntentOpenFileOutcome.NoHandler, ErrorCode: result.ErrorCode),
+                new AppIntentOpenFileResult(AppIntentOpenFileOutcome.NoHandler, ErrorCode: result.ErrorCode)
+                {
+                    SuggestedCatalogApps = result.SuggestedCatalogApps,
+                },
             AppIntentDispatchStatus.TargetInvalid =>
                 new AppIntentOpenFileResult(AppIntentOpenFileOutcome.NoHandler, ErrorCode: result.ErrorCode),
             AppIntentDispatchStatus.CapabilityDenied =>
@@ -85,7 +88,10 @@ internal sealed class AppIntentGateway(
             AppIntentDispatchStatus.ChooserRequired =>
                 new AppIntentOpenFileResult(AppIntentOpenFileOutcome.ChooserRequired, result.CandidateAppIds, FellBackToOpen: result.FellBackToOpen),
             AppIntentDispatchStatus.NotFound or AppIntentDispatchStatus.TargetInvalid =>
-                new AppIntentOpenFileResult(AppIntentOpenFileOutcome.NoHandler, ErrorCode: result.ErrorCode),
+                new AppIntentOpenFileResult(AppIntentOpenFileOutcome.NoHandler, ErrorCode: result.ErrorCode)
+                {
+                    SuggestedCatalogApps = result.SuggestedCatalogApps,
+                },
             AppIntentDispatchStatus.CapabilityDenied => throw AppsLaunchDenied(),
             _ => new AppIntentOpenFileResult(AppIntentOpenFileOutcome.Faulted, ErrorCode: result.ErrorCode)
         };
