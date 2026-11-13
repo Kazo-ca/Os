@@ -1,0 +1,379 @@
+/* An app's page in the Kazo OS Store (ADR 0266 §4, store-ux work item 3). The page is drawn inside
+   the Store's scrolling .store-body; StoreAppPage.razor.js gives that body --store-bar-height and
+   --store-body-height so the sticky bar and the facts panel fit it. Buttons, badges and links keep
+   the Store's own styles (StoreWindow.razor.css reaches them with ::deep). */
+
+.store-detail {
+    /* Long texts read in the system's sans-serif (ADR 0266 §4); titles, buttons and labels keep the
+       theme's font. Nothing is downloaded. */
+    --store-reading-font: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", "Helvetica Neue", Arial, sans-serif;
+    --store-page-gutter: 16px;
+}
+
+.store-reading {
+    font-family: var(--store-reading-font);
+}
+
+/* ---- The bar that stays at the top: Back, then the app and its main button once the header is gone. */
+
+.store-page-bar {
+    position: sticky;
+    /* Sticky offsets count from the body's content box: the bar goes over its padding. */
+    top: calc(-1 * var(--store-page-gutter));
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 48px;
+    /* Full width of the scrolling body, over its padding. */
+    margin: calc(-1 * var(--store-page-gutter)) calc(-1 * var(--store-page-gutter)) 20px;
+    padding: 6px var(--store-page-gutter);
+    background-color: color-mix(in srgb, var(--kos-toolbar-bg, var(--kos-bg-surface, #161b22)) 92%, transparent);
+    border-bottom: 1px solid transparent;
+    backdrop-filter: blur(8px);
+    transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.store-page-bar.is-compact {
+    border-bottom-color: var(--kos-border-subtle, #30363d);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
+}
+
+.store-page-bar ::deep .store-back {
+    margin: 0;
+}
+
+.store-page-bar-app {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    animation: store-bar-app-in 160ms ease-out;
+}
+
+.store-page-bar-name {
+    overflow: hidden;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.store-page-bar-app ::deep .store-app-icon.is-placeholder {
+    width: 28px;
+    height: 28px;
+}
+
+@keyframes store-bar-app-in {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+}
+
+/* ---- Header: icon, name, short description, trust and size, the two install buttons, « Try it ». */
+
+.store-detail-head {
+    display: flex;
+    gap: 24px;
+    align-items: flex-start;
+    margin-bottom: 24px;
+}
+
+.store-detail-head ::deep .store-app-icon {
+    border-radius: 22px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+.store-detail-head ::deep .store-app-icon.is-placeholder {
+    width: 112px;
+    height: 112px;
+}
+
+.store-detail-title {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    min-width: 0;
+}
+
+.store-detail-title h2 {
+    margin: 0;
+    font-size: 2rem;
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+}
+
+.store-detail-short {
+    margin: 0;
+    max-width: 62ch;
+    font-size: 1.05rem;
+    line-height: 1.45;
+    color: var(--kos-text-primary, #c9d1d9);
+    opacity: 0.88;
+}
+
+.store-detail-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 14px;
+    color: var(--kos-text-secondary, #8b949e);
+    font-size: 0.8rem;
+}
+
+.store-detail-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 14px;
+    margin-top: 4px;
+}
+
+.store-detail-actions ::deep .store-button {
+    padding: 9px 18px;
+    font-size: 0.92rem;
+}
+
+.store-try-link {
+    margin-top: 6px;
+}
+
+.store-try-link:disabled {
+    opacity: 0.5;
+    cursor: default;
+}
+
+/* ---- Description and the facts panel that follows the scroll. */
+
+.store-detail-columns {
+    display: grid;
+    grid-template-columns: minmax(0, 7fr) minmax(240px, 4fr);
+    gap: 32px;
+    align-items: start;
+}
+
+.store-detail-description {
+    max-width: 72ch;
+    font-size: 1rem;
+}
+
+.store-detail-description ::deep .store-markdown {
+    font-size: 0.98rem;
+    line-height: 1.65;
+}
+
+.store-detail-description ::deep .store-markdown h3,
+.store-detail-description ::deep .store-markdown h4,
+.store-detail-description ::deep .store-markdown h5 {
+    font-family: var(--kos-font-ui, system-ui, sans-serif);
+}
+
+.store-facts {
+    position: sticky;
+    top: calc(var(--store-bar-height, 48px) + 12px - var(--store-page-gutter));
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    /* Never taller than the scrolling body: its own end stays reachable. */
+    max-height: calc(var(--store-body-height, 100vh) - var(--store-bar-height, 48px) - 24px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+}
+
+.store-facts-card {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 14px 16px;
+    background-color: var(--kos-bg-surface, #161b22);
+    border: 1px solid var(--kos-border-subtle, #30363d);
+    border-radius: var(--kos-radius-md, 8px);
+    font-size: 0.85rem;
+}
+
+.store-facts h3 {
+    margin: 0;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--kos-text-secondary, #8b949e);
+}
+
+.store-facts dl {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 6px 14px;
+    margin: 0;
+}
+
+.store-facts dt {
+    color: var(--kos-text-secondary, #8b949e);
+}
+
+.store-facts dd {
+    margin: 0;
+    overflow-wrap: anywhere;
+}
+
+.store-source-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    align-self: flex-start;
+    padding: 4px 0;
+    color: var(--kos-accent, #42d392);
+    text-decoration: none;
+}
+
+.store-source-link:hover {
+    text-decoration: underline;
+}
+
+.store-source-link:focus-visible {
+    outline: 2px solid var(--kos-focus-ring, var(--kos-accent, #42d392));
+    outline-offset: 2px;
+}
+
+/* Capabilities in plain language, grouped, the sensitive ones first. */
+.store-capability-group {
+    margin: 4px 0 0;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--kos-text-secondary, #8b949e);
+}
+
+.store-capability-group.is-dangerous {
+    color: var(--kos-warning, #d29922);
+}
+
+.store-capabilities {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.store-capabilities li {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    color: var(--kos-text-secondary, #8b949e);
+}
+
+.store-capabilities li.is-dangerous {
+    color: var(--kos-warning, #d29922);
+}
+
+.store-capability-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    font-family: var(--store-reading-font);
+}
+
+.store-capability-title {
+    color: var(--kos-text-primary, #c9d1d9);
+    font-size: 0.9rem;
+}
+
+.store-capabilities li.is-dangerous .store-capability-title {
+    color: var(--kos-warning, #d29922);
+    font-weight: 600;
+}
+
+.store-capability-risk {
+    color: var(--kos-text-secondary, #8b949e);
+    font-size: 0.8rem;
+    line-height: 1.4;
+}
+
+.store-capability-text code {
+    align-self: flex-start;
+    font-family: var(--kos-font-mono, ui-monospace, monospace);
+    font-size: 0.75rem;
+    color: var(--kos-text-secondary, #8b949e);
+    overflow-wrap: anywhere;
+}
+
+.store-identifiers-toggle {
+    align-self: flex-start;
+    font-size: 0.8rem;
+}
+
+/* The file types the app opens (ADR 0257 §1). */
+.store-file-types {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.store-file-types li {
+    padding: 2px 9px;
+    border: 1px solid var(--kos-border, #30363d);
+    border-radius: var(--kos-radius-sm, 4px);
+    font-family: var(--kos-font-mono, ui-monospace, monospace);
+    font-size: 0.78rem;
+}
+
+/* ---- Narrow window or phone: one column, the header centred, the panel no longer sticky. */
+
+@container (max-width: 640px) {
+    .store-detail {
+        --store-page-gutter: 12px;
+    }
+
+    .store-detail-head {
+        flex-direction: column;
+        align-items: center;
+        gap: 14px;
+        text-align: center;
+    }
+
+    .store-detail-title {
+        align-items: center;
+    }
+
+    .store-detail-title h2 {
+        font-size: 1.6rem;
+    }
+
+    .store-detail-meta,
+    .store-detail-actions {
+        justify-content: center;
+    }
+
+    .store-detail-columns {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+    .store-facts {
+        position: static;
+        max-height: none;
+        overflow: visible;
+    }
+
+    .store-identifiers-toggle,
+    .store-try-link {
+        min-height: 44px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .store-page-bar,
+    .store-page-bar-app {
+        transition: none;
+        animation: none;
+    }
+}

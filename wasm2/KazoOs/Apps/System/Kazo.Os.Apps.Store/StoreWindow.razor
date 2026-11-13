@@ -51,14 +51,6 @@
         </div>
     }
 
-    @if (_message is not null)
-    {
-        <div class="store-banner @(_messageIsError ? "is-error" : "is-info")" role="@(_messageIsError ? "alert" : "status")">
-            <span>@_message</span>
-            <button type="button" class="store-icon-button" aria-label="@L["Dismiss"]" @onclick="() => _message = null">×</button>
-        </div>
-    }
-
     @foreach (KazoAppCatalog failed in _store.FailedCatalogs)
     {
         <div class="store-banner is-warning" role="status">
@@ -75,7 +67,7 @@
         }
         else if (_view == StoreView.Detail && Selected is { } entry)
         {
-            @RenderDetail(entry)
+            <StoreAppPage @key="entry.AppId" @ref="_appPage" Store="this" />
         }
         else if (_view == StoreView.Installed)
         {
@@ -123,6 +115,18 @@
             }
         }
     </main>
+
+    @* ADR 0266 §6: the result of an action closes by itself; an error stays until it is closed. *@
+    <div class="store-toasts" role="@(_messageIsError ? "alert" : "status")" aria-live="@(_messageIsError ? "assertive" : "polite")">
+        @if (_message is not null)
+        {
+            <div class="store-toast @(_messageIsError ? "is-error" : "is-info")">
+                <span class="store-toast-icon"><KazoIcon Library="IconLibrary.Lucide" Name="@(_messageIsError ? "circle-alert" : "circle-check")" Size="16" Title="" /></span>
+                <span class="store-toast-text">@_message</span>
+                <button type="button" class="store-icon-button" aria-label="@L["Dismiss"]" @onclick="DismissMessage">×</button>
+            </div>
+        }
+    </div>
 </div>
 
 @code {
@@ -255,7 +259,7 @@
         </ul>
     };
 
-    private RenderFragment RenderIcon(StoreEntry entry, int size) => __builder =>
+    internal RenderFragment RenderIcon(StoreEntry entry, int size) => __builder =>
     {
         @if (entry.App?.Latest.IconUri is { } icon)
         {
@@ -269,7 +273,7 @@
         }
     };
 
-    private RenderFragment RenderActions(StoreEntry entry) => __builder =>
+    internal RenderFragment RenderActions(StoreEntry entry) => __builder =>
     {
         bool busy = _isBusy;
         <div class="store-actions">
@@ -321,118 +325,6 @@
                 <span class="store-progress" role="status">@L["Working"]</span>
             }
         </div>
-    };
-
-    private RenderFragment RenderDetail(StoreEntry entry) => __builder =>
-    {
-        KazoCatalogApp? app = entry.App;
-        KazoCatalogAppVersion? latest = app?.Latest;
-        <article class="store-detail">
-            <button type="button" class="store-back" @onclick="CloseDetail">
-                <KazoIcon Library="IconLibrary.Lucide" Name="arrow-left" Size="16" Title="" /> @L["Back"]
-            </button>
-            <div class="store-detail-head">
-                @RenderIcon(entry, 96)
-                <div class="store-detail-title">
-                    <h2>@entry.Name</h2>
-                    @if (app is not null)
-                    {
-                        <p class="store-detail-short">@app.GetShortDescription(Culture)</p>
-                        <span class="store-trust @TrustClass(app.Trust)">
-                            <KazoIcon Library="IconLibrary.Lucide" Name="@TrustIcon(app.Trust)" Size="14" Title="" />
-                            @TrustText(app.Trust) · @L["Detail.Catalog", app.Catalog]
-                        </span>
-                    }
-                    @if (entry.State != StoreAppState.NotInstalled)
-                    {
-                        <span class="store-state">@StateText(entry)</span>
-                    }
-                    @RenderActions(entry)
-                    @if (_openAfterInstall is ({ } waitingApp, { } waitingPath) && waitingApp == entry.AppId && entry.State == StoreAppState.NotInstalled)
-                    {
-                        <p class="store-open-after" role="note">
-                            <KazoIcon Library="IconLibrary.Lucide" Name="file-check" Size="14" Title="" /> @L["Detail.OpenAfterInstall", waitingPath]
-                        </p>
-                    }
-                </div>
-            </div>
-
-            @if (latest is { ScreenshotUris.Count: > 0 })
-            {
-                <StoreScreenshots @ref="_screenshots"
-                                  Uris="@latest.ScreenshotUris"
-                                  AppName="@entry.Name"
-                                  ViewerOpenChanged="OnScreenshotViewerChanged" />
-            }
-
-            <div class="store-detail-columns">
-                <section class="store-detail-description" aria-label="@L["Detail.Description"]">
-                    @if (_isDescriptionLoading)
-                    {
-                        <p class="store-empty">@L["Loading"]</p>
-                    }
-                    else if (_description is not null)
-                    {
-                        <StoreMarkdownView Markdown="@StoreMarkdown.WithoutRepeatedTitle(_description, entry.Name)" />
-                    }
-                    else if (app is null)
-                    {
-                        <p class="store-empty">@L["Detail.NotInCatalog"]</p>
-                    }
-                </section>
-                <aside class="store-facts" aria-label="@L["Detail.Facts"]">
-                    <dl>
-                        @if (app is not null && latest is not null)
-                        {
-                            <dt>@L["Detail.Version"]</dt>
-                            <dd>@app.LatestVersion</dd>
-                            <dt>@L["Detail.Size"]</dt>
-                            <dd>@SizeText(latest.SizeBytes)</dd>
-                            <dt>@L["Detail.License"]</dt>
-                            <dd>@app.License</dd>
-                            <dt>@L["Detail.Category"]</dt>
-                            <dd>@CategoryLabel(app.Category)</dd>
-                            @if (latest.PublishedAt is { } published)
-                            {
-                                <dt>@L["Detail.Published"]</dt>
-                                <dd>@published.ToString("d", Culture)</dd>
-                            }
-                            <dt>@L["Detail.Source"]</dt>
-                            <dd><a href="@app.Repository" target="_blank" rel="noopener noreferrer">@app.Repository</a></dd>
-                        }
-                        @if (entry.Installed is { } installed)
-                        {
-                            <dt>@L["Detail.Installed"]</dt>
-                            <dd>@installed.Version · @(installed.SystemWide ? L["Scope.Everyone"] : L["Scope.Me"])</dd>
-                        }
-                    </dl>
-                    @if (latest is not null)
-                    {
-                        <h3>@L["Detail.Capabilities"]</h3>
-                        @if (latest.Capabilities.Count == 0)
-                        {
-                            <p class="store-empty">@L["Detail.NoCapability"]</p>
-                        }
-                        else
-                        {
-                            <ul class="store-capabilities">
-                                @foreach (string capability in latest.Capabilities.OrderBy(capability => StoreCatalog.IsDangerous(capability) ? 0 : 1))
-                                {
-                                    bool dangerous = StoreCatalog.IsDangerous(capability);
-                                    <li class="@(dangerous ? "is-dangerous" : null)">
-                                        <code>@capability</code>
-                                        @if (dangerous)
-                                        {
-                                            <span class="store-capability-note">@L["Detail.Dangerous"]</span>
-                                        }
-                                    </li>
-                                }
-                            </ul>
-                        }
-                    }
-                </aside>
-            </div>
-        </article>
     };
 
     private RenderFragment RenderInstalled() => __builder =>

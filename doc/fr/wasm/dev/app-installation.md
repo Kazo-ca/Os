@@ -437,6 +437,35 @@ kazopkg info org.example.notes
   pas la taille des captures : la vignette a une hauteur fixe (240 px, 320 px
   dans une fenêtre large, 200 px sur téléphone) et une largeur en 16:10 tant
   que l'image n'est pas arrivée, pour que la page ne saute pas.
+- **Fiche d'une app** (série `store-ux`, chantier 3,
+  [ADR 0266](adr/0266-store-ux-refresh.md) §4 et §6) : la fiche est un
+  composant à part, `StoreAppPage.razor`, qui lit l'app et lance les actions
+  de `StoreWindow`. Une barre reste en haut pendant le défilement : Retour,
+  puis l'icône, le nom et le bouton principal (Installer pour moi, Mettre à
+  jour ou Ouvrir) dès que l'en-tête est passé sous la barre ; l'en-tête garde
+  les deux boutons d'installation. Les capacités sont écrites en langage
+  clair (textes `Capability.<id>.Title` et `.Risk` du Store, en français et en
+  anglais), groupées (accès sensibles d'abord, puis fichiers, apps et bureau,
+  réseau, système et comptes, autres) ; « Voir les identifiants techniques »
+  les montre, et une capacité sans texte connu garde son identifiant
+  (`StoreAppFacts`). La fiche liste les types de fichiers que l'app ouvre
+  (`fileHandlers` du catalogue, ADR 0257 §1, exposés par
+  `KazoCatalogAppVersion.FileHandlers`), remplace l'adresse brute du dépôt par
+  un lien « Code source sur GitHub » (http et https seulement), et, pour une
+  app du catalogue officiel, un bouton copie le lien « Essayer »
+  (`<adresse de l'OS>?autolaunch=<appId>`, ADR 0258) dans le presse-papiers de
+  l'OS (capacité `clipboard.write` du Store), qui le passe à celui de la
+  machine. Le panneau d'informations suit le défilement sans dépasser la
+  hauteur de la fenêtre ; sous 640 px, il passe sous la description. Les
+  textes longs (description courte et longue, capacités) sont écrits dans la
+  police sans empattement du système (`system-ui`), sans téléchargement ; les
+  titres, boutons et étiquettes gardent la police du thème.
+  `StoreAppPage.razor.js` ne fait que ce que C# ne voit pas : savoir si
+  l'en-tête est encore visible (`IntersectionObserver`), donner la hauteur de
+  la zone qui défile, et lire l'adresse de la page.
+- **Messages** (série `store-ux`, chantier 3, ADR 0266 §6) : le résultat d'une
+  action s'affiche en bas de la fenêtre et se ferme seul après 6 secondes ;
+  une erreur reste jusqu'à ce qu'on la ferme (`StoreWindow.Messages.cs`).
 - **Mises à jour** : `AppUpdateMonitor` vérifie à l'ouverture de la session
   puis toutes les `[updates] interval-hours` heures et envoie une notification
   qui ouvre l'onglet Installées. Chaque vérification télécharge aussi tous
@@ -449,8 +478,9 @@ kazopkg info org.example.notes
 Tests : `AppCatalogDocumentTests`, les tests de catalogue
 d'`AppPackageGatewayTests`, `StartMenuPreferencesServiceTests`
 (Platform.Core), `Kazo.Os.Apps.Store.Tests` (`StoreCatalog`,
-`StoreMarkdown`, `StoreNavigationTests`, manifeste) et
-`Kazo.Os.UI.E2E.Tests` (`StoreNavigationTests`).
+`StoreMarkdown`, `StoreNavigationTests`, `StoreScreenshotsTests`,
+`StoreAppFactsTests`, manifeste) et `Kazo.Os.UI.E2E.Tests`
+(`StoreNavigationTests`, `StoreScreenshotViewerTests`, `StoreAppPageTests`).
 
 ## Ajout sans redémarrage, signature et transactions
 

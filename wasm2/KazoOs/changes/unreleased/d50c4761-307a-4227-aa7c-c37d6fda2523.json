@@ -1,0 +1,11 @@
+{
+  "id": "d50c4761-307a-4227-aa7c-c37d6fda2523",
+  "category": "improved",
+  "audience": ["user"],
+  "title": { "en": "A clearer app page in the Kazo OS Store", "fr": "Une fiche d'app plus claire dans le Kazo OS Store" },
+  "description": {
+    "en": "An app's page says in plain words what the app can do, sensitive access first, with the technical identifiers one click away. It lists the files the app opens, links to its source code, and copies a « Try it » link to share. A bar keeps Back, the app and its button at the top while you scroll, the information panel stays in view, and messages close by themselves (errors stay until you close them).",
+    "fr": "La fiche d'une app dit en mots simples ce que l'app peut faire, les accès sensibles d'abord, avec les identifiants techniques à un clic. Elle liste les fichiers que l'app ouvre, mène à son code source et copie un lien « Essayer » à partager. Une barre garde Retour, l'app et son bouton en haut pendant le défilement, le panneau d'informations reste visible, et les messages se ferment seuls (une erreur reste jusqu'à ce qu'on la ferme)."
+  },
+  "links": ["doc/en/wasm/dev/app-installation.md", "doc/en/wasm/dev/adr/0266-store-ux-refresh.md"]
+}

@@ -1,1 +1,3 @@
 #nullable enable
+Kazo.Os.AppSdk.Apps.KazoCatalogAppVersion.FileHandlers.get -> System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.Apps.KazoAppFileHandler!>!
+Kazo.Os.AppSdk.Apps.KazoCatalogAppVersion.FileHandlers.init -> void
