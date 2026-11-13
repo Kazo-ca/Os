@@ -32,7 +32,7 @@ OUT="$ROOT/artifacts/publish-trimmed"
 LOGS="$OUT/logs"
 HOST_PROJECT="$ROOT/OS/Kazo.Os.Ecosystem/Kazo.Os.Ecosystem.csproj"
 TEST_PROJECT="$ROOT/Tests/Kazo.Os.TrimmedPublish.E2E.Tests/Kazo.Os.TrimmedPublish.E2E.Tests.csproj"
-CATALOG="$ROOT/OS/Kazo.Os.Ecosystem/obj/Release/net10.0/BuiltInApplications.json"
+CATALOG="$ROOT/OS/Kazo.Os.Ecosystem/obj/Release/net11.0/BuiltInApplications.json"
 # ADR 0206: the test package kazopkg installs (Tests/fixtures/installed-app), packed by KazoOsPack.
 PACKAGE_PROJECT="$ROOT/Tests/fixtures/installed-app/Kazo.Os.Fixtures.InstalledAssets/Kazo.Os.Fixtures.InstalledAssets.csproj"
 PACKAGES="$OUT/kazoos-packages"
@@ -83,7 +83,7 @@ free_port() {
 # The SDK converts each assembly to WebCIL incrementally, by timestamp: a publish that follows one
 # with the other PublishTrimmed value can reuse the other's converted files (an untrimmed publish
 # then ships trimmed assemblies). Each publish here starts from a clean link/convert state.
-HOST_OBJ="$ROOT/OS/Kazo.Os.Ecosystem/obj/Release/net10.0"
+HOST_OBJ="$ROOT/OS/Kazo.Os.Ecosystem/obj/Release/net11.0"
 clean_link_state() { rm -rf "$HOST_OBJ/linked" "$HOST_OBJ/webcil" "$HOST_OBJ/tmp-webcil"; }
 
 # wasm_size DIR — total bytes of the published .wasm files (satellite assemblies included), and of

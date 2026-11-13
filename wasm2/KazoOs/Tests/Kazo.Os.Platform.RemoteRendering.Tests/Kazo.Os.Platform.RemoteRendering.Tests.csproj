@@ -6,7 +6,7 @@
     page's executor (RemoteWindowHost.razor.js), and the event arguments read from the page's JSON.
   -->
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFramework>net11.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>

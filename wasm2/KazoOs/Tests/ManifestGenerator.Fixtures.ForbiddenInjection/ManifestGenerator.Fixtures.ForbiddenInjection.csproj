@@ -4,7 +4,7 @@
     for a raw OS service must fail with KOSAPP0031 and write no manifest. Not part of the solution.
   -->
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFramework>net11.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <KazoOsAppProject>true</KazoOsAppProject>

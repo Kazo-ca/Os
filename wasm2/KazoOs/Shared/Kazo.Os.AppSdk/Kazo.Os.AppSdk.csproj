@@ -15,7 +15,7 @@
 
   <ItemGroup>
     <!-- ADR 0104: IStringLocalizer, the contract KazoStringLocalizer implements. -->
-    <PackageReference Include="Microsoft.Extensions.Localization.Abstractions" Version="10.0.14" />
+    <PackageReference Include="Microsoft.Extensions.Localization.Abstractions" Version="11.0.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -63,7 +63,7 @@
 
   <PropertyGroup>
     <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);_KazoOsPackBackgroundAnalyzer</TargetsForTfmSpecificContentInPackage>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFramework>net11.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>

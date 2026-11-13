@@ -9,7 +9,7 @@
 
   <PropertyGroup>
     <!-- Shared contracts used by both server and browser client; no Blazor/UI dependency. -->
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFramework>net11.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
