@@ -15,3 +15,39 @@ override Kazo.Os.Platform.Core.AppLinks.AppLaunchLink.Equals(object? obj) -> boo
 override Kazo.Os.Platform.Core.AppLinks.AppLaunchLink.GetHashCode() -> int
 static Kazo.Os.Platform.Core.AppLinks.AppLaunchLink.operator !=(Kazo.Os.Platform.Core.AppLinks.AppLaunchLink? left, Kazo.Os.Platform.Core.AppLinks.AppLaunchLink? right) -> bool
 static Kazo.Os.Platform.Core.AppLinks.AppLaunchLink.operator ==(Kazo.Os.Platform.Core.AppLinks.AppLaunchLink? left, Kazo.Os.Platform.Core.AppLinks.AppLaunchLink? right) -> bool
+Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkOperation
+Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkOperation.<Clone>$() -> Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkOperation!
+Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkOperation.AppId.get -> string!
+Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkOperation.AppId.init -> void
+Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkOperation.AppLaunchLinkOperation(string! AppId, string! Name, string? Publisher, string? Version, Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkStep Step) -> void
+Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkOperation.CanCancel.get -> bool
+Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkOperation.Deconstruct(out string! AppId, out string! Name, out string? Publisher, out string? Version, out Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkStep Step) -> void
+Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkOperation.Equals(Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkOperation? other) -> bool
+Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkOperation.Name.get -> string!
+Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkOperation.Name.init -> void
+Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkOperation.Percent.get -> int
+Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkOperation.Publisher.get -> string?
+Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkOperation.Publisher.init -> void
+Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkOperation.Step.get -> Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkStep
+Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkOperation.Step.init -> void
+Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkOperation.Version.get -> string?
+Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkOperation.Version.init -> void
+Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkRunner
+Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkRunner.AppLaunchLinkRunner(System.Func<Kazo.Os.Simulation.Abstractions.Sessions.AuthenticatedPrincipal?>! currentUser, System.Func<Kazo.Os.Simulation.Abstractions.Sessions.AuthenticatedPrincipal!, Kazo.Os.AppSdk.Apps.IAppManagementGateway?>! packages, System.Func<Kazo.Os.Simulation.Abstractions.Sessions.AuthenticatedPrincipal!, string!, System.Threading.Tasks.Task<Kazo.Os.Platform.Core.Lifecycle.AppLaunchResult!>!>! launch, Kazo.Os.Simulation.Abstractions.Gateways.IAppLoggingGateway! log, Kazo.Os.Simulation.Abstractions.Notifications.INotificationQueue? notifications = null, System.Func<System.Globalization.CultureInfo!>? language = null, System.TimeProvider? time = null) -> void
+Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkRunner.Cancel() -> void
+Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkRunner.Changed -> System.Action?
+Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkRunner.Current.get -> Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkOperation?
+Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkRunner.RunAsync(Kazo.Os.Platform.Core.AppLinks.AppLaunchLink! link, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkStep
+Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkStep.Installing = 1 -> Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkStep
+Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkStep.Launching = 2 -> Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkStep
+Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkStep.Looking = 0 -> Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkStep
+Kazo.Os.Platform.Core.Execution.AppExecutionContextFactory.CreateManagementGateway(Kazo.Os.Simulation.Abstractions.Sessions.AuthenticatedPrincipal! principal, string! callerAppId, System.Func<System.Globalization.CultureInfo!>? language = null) -> Kazo.Os.AppSdk.Apps.IAppManagementGateway?
+const Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkOperation.StepCount = 3 -> int
+const Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkRunner.SourceAppId = "org.kazoos.app-link" -> string!
+const Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkRunner.StoreAppId = "org.kazoos.store" -> string!
+override Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkOperation.Equals(object? obj) -> bool
+override Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkOperation.GetHashCode() -> int
+override Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkOperation.ToString() -> string!
+static Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkOperation.operator !=(Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkOperation? left, Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkOperation? right) -> bool
+static Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkOperation.operator ==(Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkOperation? left, Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkOperation? right) -> bool

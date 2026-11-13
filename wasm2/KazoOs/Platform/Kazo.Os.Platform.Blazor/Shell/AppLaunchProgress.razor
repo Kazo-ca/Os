@@ -1,0 +1,37 @@
+@using Kazo.Os.Platform.Core.AppLinks
+@inject IServiceProvider Services
+@inject IStringLocalizer<Strings> L
+
+@if (_runner?.Current is { } operation)
+{
+    @* ADR 0246 §3: the OS's progress window of a direct link; not modal, the desktop stays usable. *@
+    <section class="app-link-progress"
+             role="dialog"
+             aria-modal="false"
+             aria-labelledby="app-link-progress-title"
+             aria-describedby="app-link-progress-step"
+             data-app-id="@operation.AppId">
+        <header class="progress-header">
+            <div class="progress-mark" aria-hidden="true">⇩</div>
+            <div class="progress-heading">
+                <h2 id="app-link-progress-title">@Title(operation)</h2>
+                @if (!string.IsNullOrEmpty(operation.Publisher))
+                {
+                    <p class="progress-publisher">@L["AppLink.Progress.Publisher", operation.Publisher]</p>
+                }
+            </div>
+        </header>
+
+        <p id="app-link-progress-step" class="progress-step" aria-live="polite">@StepText(operation)</p>
+        <progress class="progress-bar" max="100" value="@operation.Percent">@operation.Percent %</progress>
+
+        <footer class="progress-footer">
+            <button type="button"
+                    class="btn-secondary"
+                    disabled="@(!operation.CanCancel)"
+                    @onclick="_runner.Cancel">
+                @L["Common.Cancel"]
+            </button>
+        </footer>
+    </section>
+}

@@ -198,6 +198,65 @@ public sealed class AppExecutionContextFactory
     public Globalization.SessionTimeZoneService? TimeZones { get; init; }
 
     /// <summary>
+    /// Creates the app-management gateway the OS itself uses for <paramref name="principal"/>, as if
+    /// <paramref name="callerAppId"/> asked (ADR 0246 §3): the direct link <c>?autolaunch=</c> installs
+    /// through it for the guest exactly as the Store does, with the same signature, block-list and
+    /// version checks and the same approval window when one is needed. It holds only
+    /// <c>apps.manage</c>.
+    /// </summary>
+    /// <param name="principal">The session user the install is for.</param>
+    /// <param name="callerAppId">The app named in an approval window, such as <c>org.kazoos.store</c>.</param>
+    /// <param name="language">Language of the texts it shows (ADR 0104); English when <see langword="null"/>.</param>
+    /// <returns>The gateway, or <see langword="null"/> when this host cannot manage apps or has no such caller.</returns>
+    public Kazo.Os.AppSdk.Apps.IAppManagementGateway? CreateManagementGateway(
+        AuthenticatedPrincipal principal, string callerAppId, Func<System.Globalization.CultureInfo>? language = null)
+    {
+        ArgumentNullException.ThrowIfNull(principal);
+        ArgumentException.ThrowIfNullOrWhiteSpace(callerAppId);
+        if (_appCatalog is null || !_appCatalog.Catalog.Manifests.TryGetValue(callerAppId, out AppManifest? caller))
+        {
+            return null;
+        }
+
+        return CreateManagementGateway(
+            new OsCapabilityChecker(AppCapabilities.AppsManage),
+            caller,
+            principal,
+            isRootElevated: false,
+            language ?? (static () => Kazo.Os.AppSdk.Globalization.KazoLocale.DefaultLanguage));
+    }
+
+    /// <summary>The management gateway of one caller, shared by an app's context and the OS's own use.</summary>
+    private AppManagementGateway? CreateManagementGateway(
+        ICapabilityChecker capabilities,
+        AppManifest caller,
+        AuthenticatedPrincipal principal,
+        bool isRootElevated,
+        Func<System.Globalization.CultureInfo> language) =>
+        _appCatalog?.Installation is null
+            ? null
+            : new AppManagementGateway(
+                _appCatalog.Catalog,
+                _appCatalog.Installation,
+                _appCatalog.AuthenticationAgent,
+                capabilities,
+                caller,
+                principal,
+                isRootElevated,
+                _fileSystem,
+                _clock,
+                language,
+                _appCatalog.Assets,
+                _appCatalog.Packages,
+                _appCatalog.InstallApproval,
+                _appCatalog.InstalledPackages)
+            {
+                UpdateMonitor = _appCatalog.UpdateMonitor,
+                RestartForPackages = _appCatalog.RestartForPackages,
+                InstalledAppsActivator = _appCatalog.InstalledAppsActivator,
+            };
+
+    /// <summary>
     /// Creates a new trusted context for one running app instance, wiring every scoped gateway to
     /// the acting app/user/process.
     /// </summary>
@@ -273,28 +332,7 @@ public sealed class AppExecutionContextFactory
             ? null
             : new AppCatalogGateway(
                 _appCatalog.Catalog, _appCatalog.Enablement, _appCatalog.FileAssociations, _appCatalog.Installation, principal, capabilities);
-        AppManagementGateway? managementGateway = _appCatalog?.Installation is null
-            ? null
-            : new AppManagementGateway(
-                _appCatalog.Catalog,
-                _appCatalog.Installation,
-                _appCatalog.AuthenticationAgent,
-                capabilities,
-                manifest,
-                principal,
-                isRootElevated,
-                _fileSystem,
-                _clock,
-                language,
-                _appCatalog.Assets,
-                _appCatalog.Packages,
-                _appCatalog.InstallApproval,
-                _appCatalog.InstalledPackages)
-            {
-                UpdateMonitor = _appCatalog.UpdateMonitor,
-                RestartForPackages = _appCatalog.RestartForPackages,
-                InstalledAppsActivator = _appCatalog.InstalledAppsActivator,
-            };
+        AppManagementGateway? managementGateway = CreateManagementGateway(capabilities, manifest, principal, isRootElevated, language);
         AppClipboardGateway clipboardGateway = new(_clipboard, capabilities, process.SessionId, process.Pid);
 
         AppFileSystemGateway fileSystem = new(
