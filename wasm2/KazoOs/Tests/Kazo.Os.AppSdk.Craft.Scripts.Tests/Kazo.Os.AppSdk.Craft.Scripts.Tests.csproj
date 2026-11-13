@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <!--
-    The scripts of the shared Craft module (ADR 0247, Shared/Kazo.Os.AppSdk.Craft/wwwroot), tested
+    The scripts of the shared Craft module (ADR 0259, Shared/Kazo.Os.AppSdk.Craft/wwwroot), tested
     with Node's own test runner and a fake Craft app. This project only starts
     Node, so the scripts' tests run with the other non-browser suites.
   -->

@@ -1,4 +1,4 @@
-// The proxy in a Craft app's iframe (ADR 0247, module Kazo.Os.AppSdk.Craft; taken from Kazo Word's
+// The proxy in a Craft app's iframe (ADR 0259, module Kazo.Os.AppSdk.Craft; taken from Kazo Word's
 // word-proxy.js).
 //
 // The app's iframe page (its own `host/index.html`) has one canvas that describes the app:
@@ -29,7 +29,7 @@ import { interceptFilePicker } from "./file-picker.js";
 import { forwardReservedKeys } from "./reserved-keys.js";
 import { installStorage, MemoryStorage } from "./settings-store.js";
 
-/** Names of the messages on the port (internal to the module, ADR 0247 section 3). */
+/** Names of the messages on the port (internal to the module, ADR 0259 section 3). */
 export const MessageTypes = Object.freeze({
     init: "init",
     ready: "ready",

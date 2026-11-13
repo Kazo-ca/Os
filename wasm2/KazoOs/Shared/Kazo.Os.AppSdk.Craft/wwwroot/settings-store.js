@@ -1,4 +1,4 @@
-// A Craft app's settings, per Kazo user (ADR 0247, module Kazo.Os.AppSdk.Craft; taken from Kazo Word).
+// A Craft app's settings, per Kazo user (ADR 0259, module Kazo.Os.AppSdk.Craft; taken from Kazo Word).
 //
 // A Craft app keeps its preferences in `localStorage` (WordCraft's `wordcraft.ui`: theme, recent
 // files, author, AutoCorrect...). The iframe has the OS page's origin, so that storage

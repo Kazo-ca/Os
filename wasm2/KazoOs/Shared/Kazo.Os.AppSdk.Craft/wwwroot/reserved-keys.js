@@ -1,4 +1,4 @@
-// Keys a Craft app's iframe gives back (ADR 0247, module Kazo.Os.AppSdk.Craft; taken from Kazo Word):
+// Keys a Craft app's iframe gives back (ADR 0259, module Kazo.Os.AppSdk.Craft; taken from Kazo Word):
 // a key pressed in an iframe never reaches the OS page, so Alt+F4, Alt+Tab and the other window
 // manager shortcuts would stop working while the caret is in the Craft app. The window sends the list
 // of chords it reserves with `init` (`reservedKeys`); a reserved chord is stopped here and sent to

@@ -3,7 +3,7 @@
 # Module Craft : les scripts (côté OS et proxy de l'iframe)
 
 Chantier 3 de la série `craft-host/base`
-([ADR 0247](adr/0247-shared-craft-app-host-module.md)). Les scripts de Kazo Word
+([ADR 0259](adr/0259-shared-craft-app-host-module.md)). Les scripts de Kazo Word
 (`word-host.js`, `word-proxy.js` et ses modules) deviennent ceux du module
 `Kazo.Os.AppSdk.Craft`, sans rien de propre à une app : l'identifiant de l'app
 vient de la page de l'iframe. La bibliothèque C# (`CraftFrame`, chantier 2) les
@@ -105,7 +105,7 @@ GridCraft 0.19.1 face à WordCraft :
 
 `init`, `ready`, `failed`, `open`, `save`, `saved`, `dirty`, `focus`,
 `command`, `result`, `pick`, `picked`, `key`, `setting`. Ils restent internes au
-module (ADR 0247, §3) : le côté OS et le proxy viennent toujours du même OS.
+module (ADR 0259, §3) : le côté OS et le proxy viennent toujours du même OS.
 
 ## Ce qui change par rapport à Kazo Word
 

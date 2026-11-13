@@ -1,4 +1,4 @@
-// The OS side (craft-host.js, ADR 0247): the iframe address, and how the proxy's messages reach
+// The OS side (craft-host.js, ADR 0259): the iframe address, and how the proxy's messages reach
 // the window's C# (CraftFrame). A small fake document stands in for the OS page; the test plays
 // the proxy on the other end of the port.
 import { test } from "node:test";

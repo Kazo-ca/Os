@@ -1,4 +1,4 @@
-// The file picker of a Craft app's iframe (ADR 0247, module Kazo.Os.AppSdk.Craft; taken from Kazo
+// The file picker of a Craft app's iframe (ADR 0259, module Kazo.Os.AppSdk.Craft; taken from Kazo
 // Word). A Craft app asks the browser for files through the `rfd` crate, which builds a
 // `<div id="rfd-overlay">` holding an `<input id="rfd-input" type="file">`, listens to its `change`
 // and `cancel` events, and calls `input.click()` when the page has a user activation. This module

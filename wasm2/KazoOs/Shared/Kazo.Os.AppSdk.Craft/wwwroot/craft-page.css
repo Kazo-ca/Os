@@ -1,5 +1,5 @@
 /*
- * The iframe page of a Craft app (ADR 0247, module Kazo.Os.AppSdk.Craft): the app's canvas fills
+ * The iframe page of a Craft app (ADR 0259, module Kazo.Os.AppSdk.Craft): the app's canvas fills
  * it. The app's page links this file next to craft-proxy.js:
  *   <link rel="stylesheet" href="../../Kazo.Os.AppSdk.Craft/craft-page.css">
  * The Kazo window draws its own loading and error screens over the iframe; an element the Craft

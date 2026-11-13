@@ -1,4 +1,4 @@
-// What the module adds to Kazo Word's proxy (ADR 0247): the app id comes from the page
+// What the module adds to Kazo Word's proxy (ADR 0259): the app id comes from the page
 // (`data-craft-app`, `data-craft-build`), only that app's events are relayed, and the optional
 // craft-web-host fields (`id` on save and failed, `saved` back to the app) go through.
 import { test } from "node:test";

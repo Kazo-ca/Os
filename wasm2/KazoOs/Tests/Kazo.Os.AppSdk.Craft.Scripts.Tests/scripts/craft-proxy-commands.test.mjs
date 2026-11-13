@@ -1,4 +1,4 @@
-// Commands of the window on a Craft app's page API (craft-web-api, ADR 0247): `command` calls
+// Commands of the window on a Craft app's page API (craft-web-api, ADR 0259): `command` calls
 // window.<app>.request, `result` answers it. Taken from Kazo Word's proxy tests.
 import { test } from "node:test";
 import assert from "node:assert/strict";

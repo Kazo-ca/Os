@@ -1,4 +1,4 @@
-// The iframe proxy with a fake Craft app (ADR 0247; taken from Kazo Word's tests):
+// The iframe proxy with a fake Craft app (ADR 0259; taken from Kazo Word's tests):
 // it relays ready and failed to the window's port, keeps what happens before the port arrives,
 // accepts the port only from its parent and its origin, and sends focus on a click.
 import { test } from "node:test";

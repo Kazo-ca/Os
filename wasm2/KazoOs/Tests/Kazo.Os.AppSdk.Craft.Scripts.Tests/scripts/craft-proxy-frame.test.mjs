@@ -1,4 +1,4 @@
-// The frame services of the proxy (ADR 0247; taken from Kazo Word's tests): reserved keys, the
+// The frame services of the proxy (ADR 0259; taken from Kazo Word's tests): reserved keys, the
 // user's settings in place of localStorage, the app started only once `init` arrived, and the
 // file picker's hand-over. The picker's DOM interception is covered by the end-to-end journey (work item 4).
 import { test } from "node:test";

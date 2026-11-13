@@ -1,4 +1,4 @@
-// The OS side of a Craft app's window (ADR 0247, module Kazo.Os.AppSdk.Craft; taken from Kazo
+// The OS side of a Craft app's window (ADR 0259, module Kazo.Os.AppSdk.Craft; taken from Kazo
 // Word's word-host.js).
 //
 // It creates the iframe that runs the Craft app (the app's own `host/index.html`, which loads
@@ -10,7 +10,7 @@
 // is watched.
 //
 // The messages on the port are internal to this module: the OS side and the proxy always come from
-// the same OS (ADR 0247, section 3).
+// the same OS (ADR 0259, section 3).
 
 /**
  * Builds the iframe address: `page` is the app's iframe page, relative to `base` (the OS

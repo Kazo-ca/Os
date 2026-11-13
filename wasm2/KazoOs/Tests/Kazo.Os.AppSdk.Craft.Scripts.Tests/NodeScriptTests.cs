@@ -6,7 +6,7 @@ namespace Kazo.Os.AppSdk.Craft.Scripts.Tests;
 /// <summary>
 /// Runs each test file of <c>scripts/</c> with Node's test runner: the OS side
 /// (<c>craft-host.js</c>) and the iframe proxy (<c>craft-proxy.js</c> and its modules) of the
-/// shared Craft module (ADR 0247), against a fake Craft app. Skipped when <c>node</c> is not on
+/// shared Craft module (ADR 0259), against a fake Craft app. Skipped when <c>node</c> is not on
 /// the PATH; the GitHub runners have it.
 /// </summary>
 public sealed class NodeScriptTests
