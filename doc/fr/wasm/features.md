@@ -435,6 +435,7 @@ dans `main`, le lien mène à sa PR.
 | Fonctionnalité | Description | ADR | Issue |
 | --- | --- | --- | --- |
 | Catalogue des applications | Format du catalogue, vérification et publication des applications proposées. | [0188](dev/adr/0188-hack-store-and-app-catalog.md) | [AppMarketPlace #1](https://github.com/Kazo-ca/Os-AppMarketPlace/issues/1) |
+| Lancer une app par un lien direct | Le lien `https://os.kazo.ca/?autolaunch=<appId>` démarre Kazo OS en invité s'il n'y a aucun compte, installe l'app depuis le catalogue officiel signé et la lance ; avec un compte, il ouvre le Store à la page de l'app. | [0246](https://github.com/Kazo-ca/Os/pulls?q=head%3Aapp-link%2F0-adr-direct-launch-link) | Série `app-link/base` |
 
 ### Personnalisation
 
