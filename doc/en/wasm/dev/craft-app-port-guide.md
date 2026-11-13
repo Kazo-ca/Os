@@ -233,10 +233,14 @@ PC": a cloud session cannot create a repository).
 
 ## 6. What stays shared between the apps
 
-- **The Kazo code** (window, `DocumentSession`, proxy, picker, keys, settings) is the same but
-  for a few names. Kazo Word's decision 8 (shared library) is taken before the second app:
-  extract that code into a common library, or copy it and keep it aligned. To ask Benoit at
-  the start of Kazo Spreadsheets.
+- **The Kazo code** (iframe frame, proxy, picker, keys, settings, `DocumentSession`) is the
+  same but for a few names. Kazo Word's decision 8, taken on 2026-11-13: it becomes an SDK
+  module shipped and served by the OS, `Kazo.Os.AppSdk.Craft`
+  ([ADR 0247](adr/0247-shared-craft-app-host-module.md), series `craft-host/base`, not built
+  yet). Each app keeps its window, its list of formats, its iframe page (`data-craft-app`)
+  and its build. Kazo Word ships with its copy and moves to the module afterwards; Kazo
+  Spreadsheets uses it from its work item 1. Work items 1 to 3 of this guide will be
+  rewritten on the module by the series' work item 4.
 - **The `.wasm`** is not shared: two wasm modules do not share Rust code. Only data loaded
   separately (translations, spelling, fonts: about 9 MB of 60 in WordCraft) could be, if
   upstream moves it out of the `.wasm`.
