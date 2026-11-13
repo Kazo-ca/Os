@@ -75,7 +75,7 @@ Décidé le 2026-10-28 :
   un module du SDK livré et servi par l'OS, `Kazo.Os.AppSdk.Craft` (cadre de
   l'iframe, proxy, sélecteur, raccourcis, réglages, `DocumentSession`) ;
   chaque app garde sa fenêtre. [ADR 0259](../dev/adr/0259-shared-craft-app-host-module.md),
-  série `craft-host/base` : chantier 2 (bibliothèque C#, `CraftFrame`, `DocumentSession`, `WebStorageFile`…) fait ; scripts (3), parcours de bout en bout et doc (4) en cours. Kazo Word sort avec sa copie et
+  série `craft-host/base` : chantiers 2 (bibliothèque C#), 3 (scripts) et 4 (parcours de bout en bout avec le paquet de test `Tests/fixtures/craft-app`, guide [`craft-apps.md`](../framework/craft-apps.md), guide de portage réécrit) faits ; arrive dans `main` avec la prochaine version de l'OS (numéro choisi par Benoit), qui sera la version minimale des apps Craft sur le module. Message `host` (`autosave: true`) à envoyer quand craft-libs#713 sortira. Kazo Word sort avec sa copie et
   passe au module ensuite ; Kazo Spreadsheets l'utilise dès son chantier 1.
 
 ## Apps hébergées par le serveur (« bac à sable serveur »)

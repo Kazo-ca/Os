@@ -435,7 +435,7 @@ dans `main`, le lien mène à sa PR.
 | Fonctionnalité | Description | ADR | Issue |
 | --- | --- | --- | --- |
 | Catalogue des applications | Format du catalogue, vérification et publication des applications proposées. | [0188](dev/adr/0188-hack-store-and-app-catalog.md) | [AppMarketPlace #1](https://github.com/Kazo-ca/Os-AppMarketPlace/issues/1) |
-| Module commun des apps Craft | `Kazo.Os.AppSdk.Craft`, livré et servi par l'OS : le cadre de l'iframe (proxy, sélecteur de fichiers, raccourcis, réglages par utilisateur) et la logique des documents des apps Craft (Kazo Word, Kazo Spreadsheets…), écrits une fois au lieu d'une copie par app. | [0259](dev/adr/0259-shared-craft-app-host-module.md) | Série `craft-host/base` |
+| Module commun des apps Craft | `Kazo.Os.AppSdk.Craft`, livré et servi par l'OS : le cadre de l'iframe (proxy, sélecteur de fichiers, raccourcis, réglages par utilisateur) et la logique des documents des apps Craft (Kazo Word, Kazo Spreadsheets…), écrits une fois au lieu d'une copie par app. Bibliothèque, scripts, parcours de bout en bout dans l'OS publié et guide [`craft-apps.md`](framework/craft-apps.md) prêts dans la série ; arrive avec la prochaine version de l'OS. | [0259](dev/adr/0259-shared-craft-app-host-module.md) | Série `craft-host/base` |
 
 ### Personnalisation
 

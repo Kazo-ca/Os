@@ -7,8 +7,8 @@ Work item 3 of the `craft-host/base` series
 (`word-host.js`, `word-proxy.js` and its modules) become those of the
 `Kazo.Os.AppSdk.Craft` module, with nothing specific to one app: the app id
 comes from the iframe page. The C# library (`CraftFrame`, work item 2) calls
-them; the end-to-end journey and the guide for app authors come with work
-item 4.
+them; the end-to-end journey and the guide for app authors
+([`craft-apps.md`](../framework/craft-apps.md)) come from work item 4.
 
 ## Purpose
 
@@ -143,7 +143,7 @@ fake Craft app (`fakecraft`) stands in for WordCraft.
 
 Run by hand: `node --test wasm2/KazoOs/Tests/Kazo.Os.AppSdk.Craft.Scripts.Tests/scripts/*.test.mjs`.
 The real picker interception in a browser is covered by work item 4's
-Playwright journey.
+Playwright journey (`TrimmedPublishTests.CraftApps.cs`, [`trimmed-publish.md`](trimmed-publish.md)).
 
 ## Key decisions
 

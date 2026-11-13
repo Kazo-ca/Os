@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<!--
+  The iframe page of the Craft test package (ADR 0259), served at
+  _content/Kazo.Os.Fixtures.CraftApp/host/index.html. The proxy and its stylesheet come from the
+  OS (module Kazo.Os.AppSdk.Craft); the canvas names the fake Craft app and its build.
+-->
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Fake Craft app</title>
+    <link rel="stylesheet" href="../../Kazo.Os.AppSdk.Craft/craft-page.css">
+    <link rel="stylesheet" href="../fakecraft/fakecraft.css">
+    <script type="module" src="../../Kazo.Os.AppSdk.Craft/craft-proxy.js"></script>
+</head>
+<body>
+    <canvas id="fakecraft_canvas" tabindex="0" data-host="page"
+            data-craft-app="fakecraft"
+            data-craft-build="../fakecraft/fakecraft.json"></canvas>
+</body>
+</html>

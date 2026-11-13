@@ -93,8 +93,9 @@ alerte `IL…`, sert la publication sur `127.0.0.1` et `127.0.0.2`, puis lance
 | `The_installed_apps_worker_serves_an_installed_app_page_to_an_iframe` | ADR 0243 sur `127.0.0.1` : la même page, servie par le worker du mode `installed-apps` |
 | `Trimmed_publish_shows_a_new_notification_as_a_bubble_above_the_taskbar` | ADR 0197 : la notification des nouveautés postée à la connexion d'un nouveau compte apparaît en bulle au-dessus de la barre (source « Kazo OS », titre, bouton « Voir »), part seule après environ 6 s et reste dans le panneau de l'horloge ([`notification-toasts.md`](notification-toasts.md)) |
 | `Trimmed_publish_shows_unread_notifications_next_to_the_clock` | ADR 0196 : un nouveau compte reçoit la notification des nouveautés (`whats-new.json` servi) ; point et infobulle de l'horloge, aucun point sur Applications, panneau ouvert = lu, **Voir** ouvre Paramètres ▸ Nouveautés et ferme la notification ; captures `trimmed-clock-dot.png` et `trimmed-whats-new-page.png` |
+| `A_craft_app_on_the_os_module_opens_saves_and_follows_the_os` | ADR 0259 : le paquet de test `Tests/fixtures/craft-app` (une fenêtre Craft sur le module `Kazo.Os.AppSdk.Craft`, autour d'une fausse app Craft ; emballé par le script dans `kazoos-packages-craft`, sans le module) est installé par `sudo kazopkg install` ; `xdg-open seed.fake` ouvre la fenêtre sur le fichier, la frappe met `*` dans le titre, Ctrl+S réécrit le fichier et l'app reçoit `saved`, F12 (touche réservée par la fenêtre) fait Enregistrer sous par le dialogue de l'OS, une erreur après `ready` devient un message, le thème clair puis sombre suit, Ctrl+O passe par le dialogue d'ouverture de l'OS, la fermeture avec des modifications demande, une deuxième fenêtre relit le réglage écrit par la première ([`craft-apps.md`](../framework/craft-apps.md)) |
 
-Le script exige que les dix tests passent (`EXPECTED_TESTS`).
+Le script exige que les onze tests passent (`EXPECTED_TESTS`).
 
 Aucune erreur de console n'est admise. Sans `KAZOOS_TRIMMED_URL`, la suite est
 ignorée (un `dotnet test` de la solution ne la lance pas).

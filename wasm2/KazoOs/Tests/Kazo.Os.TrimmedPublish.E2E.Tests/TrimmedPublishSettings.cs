@@ -21,7 +21,11 @@ namespace Kazo.Os.TrimmedPublish.E2E.Tests;
 /// The <c>kazoos-packages</c> folder of the test package of ADR 0206 (<c>index.json</c> and its
 /// <c>.kazoapp</c>), served to the browser in place of GitHub; <see langword="null"/> skips that test.
 /// </param>
-public sealed record TrimmedPublishSettings(string Url, string? CatalogPath, string? ArtifactsDirectory, string? PwaUrl = null, string? PackagesDirectory = null)
+/// <param name="CraftPackagesDirectory">
+/// The <c>kazoos-packages</c> folder of the Craft test package of ADR 0259
+/// (<c>Tests/fixtures/craft-app</c>); <see langword="null"/> skips the Craft app journey.
+/// </param>
+public sealed record TrimmedPublishSettings(string Url, string? CatalogPath, string? ArtifactsDirectory, string? PwaUrl = null, string? PackagesDirectory = null, string? CraftPackagesDirectory = null)
 {
     /// <summary>Base address of the served publish. Required.</summary>
     public const string UrlVariable = "KAZOOS_TRIMMED_URL";
@@ -38,6 +42,9 @@ public sealed record TrimmedPublishSettings(string Url, string? CatalogPath, str
     /// <summary>Folder of the test package installed by kazopkg (ADR 0206).</summary>
     public const string PackagesVariable = "KAZOOS_TRIMMED_PACKAGES";
 
+    /// <summary>Folder of the Craft test package installed by kazopkg (ADR 0259).</summary>
+    public const string CraftPackagesVariable = "KAZOOS_TRIMMED_CRAFT_PACKAGES";
+
     /// <summary>The window apps of the Ecosystem host, when no catalog is given.</summary>
     public static readonly IReadOnlyList<string> FallbackWindowApps =
     [
@@ -52,7 +59,7 @@ public sealed record TrimmedPublishSettings(string Url, string? CatalogPath, str
         string? url = Read(UrlVariable);
         return url is null
             ? null
-            : new TrimmedPublishSettings(url.TrimEnd('/'), Read(CatalogVariable), Read(ArtifactsVariable), Read(PwaUrlVariable)?.TrimEnd('/'), Read(PackagesVariable));
+            : new TrimmedPublishSettings(url.TrimEnd('/'), Read(CatalogVariable), Read(ArtifactsVariable), Read(PwaUrlVariable)?.TrimEnd('/'), Read(PackagesVariable), Read(CraftPackagesVariable));
     }
 
     /// <summary>

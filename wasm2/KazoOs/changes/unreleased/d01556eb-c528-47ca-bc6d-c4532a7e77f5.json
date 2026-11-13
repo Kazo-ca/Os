@@ -1,0 +1,19 @@
+{
+  "id": "d01556eb-c528-47ca-bc6d-c4532a7e77f5",
+  "category": "developer",
+  "audience": [
+    "developer"
+  ],
+  "title": {
+    "en": "Guide and end-to-end test for Craft apps on the Kazo.Os.AppSdk.Craft module",
+    "fr": "Guide et test de bout en bout des apps Craft sur le module Kazo.Os.AppSdk.Craft"
+  },
+  "description": {
+    "en": "A new guide, framework/craft-apps.md, shows how to write a Craft app window on the module: the iframe page, the CraftFrame events, the save rule, the minimum OS version. build/publish-trimmed.sh now packs a Craft test package (a window around a fake Craft app), installs it with kazopkg in the trimmed OS and drives it: open, save, Save As through a reserved chord, changes, an error after ready, theme, file picker, close guard and per-user settings. The Craft app port guide is rewritten on the module.",
+    "fr": "Un nouveau guide, framework/craft-apps.md, montre comment écrire une fenêtre d'app Craft sur le module : la page de l'iframe, les événements de CraftFrame, la règle d'enregistrement, la version minimale de l'OS. build/publish-trimmed.sh emballe maintenant un paquet de test Craft (une fenêtre autour d'une fausse app Craft), l'installe par kazopkg dans l'OS réduit et le conduit : ouvrir, enregistrer, Enregistrer sous par une touche réservée, modifications, erreur après ready, thème, sélecteur de fichiers, garde de fermeture et réglages par utilisateur. Le guide de portage des apps Craft est réécrit sur le module."
+  },
+  "links": [
+    "doc/en/wasm/framework/craft-apps.md",
+    "doc/en/wasm/dev/craft-app-port-guide.md"
+  ]
+}

@@ -223,6 +223,6 @@ your recommendations).
       and ask Benoit the questions.
 - [x] Write the ADR (fr and en), indexes, memory, `features.md`.
 - [x] Work item 2: C# library.
-- [ ] Work item 3: scripts.
-- [ ] Work item 4: end-to-end journey, framework doc, port guide.
-- [ ] `TODO` issue in `Kazo-ca/Os-App-Word`: move Kazo Word to the module.
+- [x] Work item 3: scripts ([`craft-module-scripts.md`](../craft-module-scripts.md)).
+- [x] Work item 4: end-to-end journey, framework doc ([`craft-apps.md`](../../framework/craft-apps.md)), port guide.
+- [x] `TODO` issue in `Kazo-ca/Os-App-Word`: move Kazo Word to the module ([#15](https://github.com/Kazo-ca/Os-App-Word/issues/15)).

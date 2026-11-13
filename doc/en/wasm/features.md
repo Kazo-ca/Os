@@ -423,7 +423,7 @@ points to its PR.
 | Feature | Description | ADR | Issue |
 | --- | --- | --- | --- |
 | Application catalog | Catalog format, checking and publishing of the offered applications. | [0188](dev/adr/0188-hack-store-and-app-catalog.md) | [AppMarketPlace #1](https://github.com/Kazo-ca/Os-AppMarketPlace/issues/1) |
-| Shared module of the Craft apps | `Kazo.Os.AppSdk.Craft`, shipped and served by the OS: the iframe frame (proxy, file picker, shortcuts, per-user settings) and the document logic of the Craft apps (Kazo Word, Kazo Spreadsheets…), written once instead of one copy per app. | [0259](dev/adr/0259-shared-craft-app-host-module.md) | Series `craft-host/base` |
+| Shared module of the Craft apps | `Kazo.Os.AppSdk.Craft`, shipped and served by the OS: the iframe frame (proxy, file picker, shortcuts, per-user settings) and the document logic of the Craft apps (Kazo Word, Kazo Spreadsheets…), written once instead of one copy per app. Library, scripts, end-to-end journey in the published OS and guide [`craft-apps.md`](framework/craft-apps.md) ready in the series; comes with the next OS version. | [0259](dev/adr/0259-shared-craft-app-host-module.md) | Series `craft-host/base` |
 
 ### Personalization
 
