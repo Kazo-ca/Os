@@ -81,7 +81,9 @@ KazoIntentResult sent = await KazoApps.SendIntentAsync(
 | Member | Capability | Failures |
 |---|---|---|
 | `RevealFileAsync(path)` | `apps.launch` | `KazoFileNotFoundException`, `KazoUnauthorizedAccessException` (unreadable folder), `KazoAppLaunchException` (no folder handler) |
-| `EditFileAsync(path)` | `apps.launch` | `KazoOpenFileResult`: `Opened`, `ChooserRequired` (candidates), `NoHandler`; `FellBackToOpen` |
+| `OpenFileAsync(path)` | `apps.launch` | `KazoOpenFileResult`: `Opened`, `ChooserRequired` (candidates), `NoHandler`; with `NoHandler`, `SuggestedCatalogApps` lists the Store apps that open this type ([ADR 0257](../dev/adr/0257-offer-a-store-app-for-an-unsupported-file.md)) |
+| `EditFileAsync(path)` | `apps.launch` | `KazoOpenFileResult`: `Opened`, `ChooserRequired` (candidates), `NoHandler` (with `SuggestedCatalogApps`); `FellBackToOpen` |
+| `GetSuggestedCatalogAppsAsync(path)` | `apps.launch` | The Store apps, not installed yet, that open this type (catalogs already downloaded, no network; empty offline or in a worker); for an "Open with" box, with a button to `KazoApps.StoreAppId` with `--app=<id>` and `--open-after-install=<path>` ([ADR 0257](../dev/adr/0257-offer-a-store-app-for-an-unsupported-file.md)) |
 | `OpenUriAsync(uri, appId)` | `apps.launch` | `ArgumentException` if the URI is not absolute; `KazoIntentResult`: `Delivered`, `ChooserRequired`, `NoHandler` |
 | `ShowSettingsAsync(appId)` | none | `KazoAppLaunchException` (unknown or disabled app) |
 | `SendIntentAsync(id, payload, targetAppId, rememberChoice)` | `apps.launch` | `ArgumentException` (malformed or reserved identifier, payload that is not a JSON object or exceeds 64 KiB, target that does not declare the intent); `KazoIntentResult` |

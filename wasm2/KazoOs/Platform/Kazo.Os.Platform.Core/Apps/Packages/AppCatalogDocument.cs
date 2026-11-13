@@ -54,6 +54,26 @@ public sealed record AppCatalogVersion(
 
     /// <summary>Gets the path of its long Markdown description per language, relative to the catalog root.</summary>
     public IReadOnlyDictionary<string, string> Descriptions { get; init; } = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// Gets the file types this version opens, copied from the <c>fileHandlers</c> of its manifest
+    /// by the catalog tool (ADR 0257 §1); empty when the catalog does not say. The OS proposes the
+    /// app when no installed app opens a file (ADR 0257 §2).
+    /// </summary>
+    public IReadOnlyList<FileHandlerManifest> FileHandlers { get; init; } = [];
+
+    /// <summary>
+    /// Gets whether this version declares <paramref name="action"/> for a file: its extension
+    /// (with the dot) first, else its media type, compared without case (ADR 0257 §2).
+    /// </summary>
+    /// <param name="extension">The file's extension with its dot, or <see langword="null"/>.</param>
+    /// <param name="mediaType">The file's media type, or <see langword="null"/>.</param>
+    /// <param name="action"><c>open</c> or <c>edit</c>.</param>
+    public bool HandlesFile(string? extension, string? mediaType, string action) =>
+        FileHandlers.Any(handler =>
+            ((extension is not null && handler.Extensions.Any(e => string.Equals(e, extension, StringComparison.OrdinalIgnoreCase)))
+                || (mediaType is not null && string.Equals(handler.MediaType, mediaType, StringComparison.OrdinalIgnoreCase)))
+            && handler.Actions.Any(a => string.Equals(a, action, StringComparison.OrdinalIgnoreCase)));
 }
 
 /// <summary>An app of a catalog, with what the Kazo OS Store shows on its page (ADR 0188 §2, §6).</summary>
@@ -152,6 +172,12 @@ public static class AppCatalogDocument
 
     /// <summary>The <c>kind</c> of a theme pack (ADR 0213 §2).</summary>
     public const string ThemePackKind = "theme-pack";
+
+    /// <summary>Most <c>fileHandlers</c> entries read from one version; the rest are ignored.</summary>
+    public const int MaximumFileHandlers = 64;
+
+    /// <summary>Most extensions or actions read from one <c>fileHandlers</c> entry; the rest are ignored.</summary>
+    public const int MaximumFileHandlerValues = 64;
 
     /// <summary>Largest <c>catalog.json</c> accepted, in bytes.</summary>
     public const int MaximumBytes = 8 * 1024 * 1024;
@@ -350,7 +376,51 @@ public static class AppCatalogDocument
             Descriptions = ReadMap(item, "descriptions")
                 .Where(static pair => AppPackage.IsSafeRelativePath(pair.Value))
                 .ToDictionary(static pair => pair.Key, static pair => pair.Value, StringComparer.OrdinalIgnoreCase),
+            FileHandlers = ReadFileHandlers(item),
         };
+    }
+
+    /// <summary>
+    /// Reads the optional <c>fileHandlers</c> of a version (ADR 0257 §1): <c>{ mediaType, extensions,
+    /// actions }</c> like the manifest. An entry with no extension and no media type, or with no
+    /// action, is skipped; extensions are kept only in the <c>.ext</c> form, lowercase. The counts
+    /// are capped: the catalog is downloaded data.
+    /// </summary>
+    private static IReadOnlyList<FileHandlerManifest> ReadFileHandlers(JsonElement item)
+    {
+        if (!item.TryGetProperty("fileHandlers", out JsonElement array) || array.ValueKind != JsonValueKind.Array)
+        {
+            return [];
+        }
+
+        List<FileHandlerManifest> handlers = [];
+        foreach (JsonElement handler in array.EnumerateArray().Take(MaximumFileHandlers))
+        {
+            if (handler.ValueKind != JsonValueKind.Object)
+            {
+                continue;
+            }
+
+            string[] extensions = [.. ReadStrings(handler, "extensions")
+                .Take(MaximumFileHandlerValues)
+                .Select(static extension => extension.Trim().ToLowerInvariant())
+                .Where(static extension => extension.Length > 1 && extension[0] == '.' && extension.IndexOf('/') < 0)
+                .Distinct(StringComparer.Ordinal)];
+            string[] actions = [.. ReadStrings(handler, "actions")
+                .Take(MaximumFileHandlerValues)
+                .Select(static action => action.Trim().ToLowerInvariant())
+                .Where(static action => action.Length > 0)
+                .Distinct(StringComparer.Ordinal)];
+            string? mediaType = NullIfEmpty(ReadString(handler, "mediaType").Trim());
+            if ((extensions.Length == 0 && mediaType is null) || actions.Length == 0)
+            {
+                continue;
+            }
+
+            handlers.Add(new FileHandlerManifest(mediaType, extensions, actions));
+        }
+
+        return handlers;
     }
 
     private static string? SafePathOrNull(string path) => path.Length > 0 && AppPackage.IsSafeRelativePath(path) ? path : null;

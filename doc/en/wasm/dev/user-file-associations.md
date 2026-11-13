@@ -60,8 +60,54 @@ AppIntentDispatcher (passe le principal à chaque résolution)
 - **`xdg-mime`** ([`linux-commands.md`](linux-commands.md)):
   `query default <type>`, `default <app> <type>...`, `query filetype <fichier>`.
 
+## No installed app: the Store apps (ADR 0257)
+
+Work item `open-with-store/2-suggest-catalog-apps` of
+[ADR 0257](adr/0257-offer-a-store-app-for-an-unsupported-file.md). When
+`FileAssociationResolver` finds no installed app (`NoHandler`),
+`AppIntentDispatcher` asks **`CatalogAppSuggestions`**
+(`Platform.Core/Apps/Packages`) which apps of the Store catalogs open the
+file:
+
+- **Catalogs read**: only the copies already downloaded
+  (`AppPackageInstaller.GetCachedCatalog`, whatever their age); opening a file
+  never waits for the network. `AppUpdateMonitor` downloads every catalog of
+  `[catalogs]` at sign-in and then at each check (`RefreshCatalogsAsync`), in
+  the background. Without a copy, the list is empty and the result stays as
+  before.
+- **Choosing an app**: its newest stable version compatible with the OS SDK
+  must declare the file's extension (otherwise its MIME type) for the action,
+  in the `fileHandlers` field of `catalog.json`. Apps already installed
+  (running catalog, the system's and the user's `[installed]`) and apps
+  blocked by `app-policy.config` (id, category or capability) are left out.
+  Official catalog first, then the order of `[catalogs]`; an app listed by two
+  catalogs is proposed once; eight apps at most.
+- **Action**: `open` for an open; for an edit with no handler, the apps that
+  **open** it (the edit falls back to `open`).
+- **Result**: `AppIntentOpenFileResult.SuggestedCatalogApps`
+  (`AppIntentSuggestedCatalogApp`: id, name, catalog, `ShortDescriptions` per
+  language and `IconUri`, the absolute address of the version's icon), carried
+  to workers (`WireCodec`, field `sg`: `[id, name, catalog, icon, {language: text}]`,
+  the last two optional) and, in the SDK, `KazoOpenFileResult.SuggestedCatalogApps`
+  (`KazoSuggestedCatalogApp`, `GetShortDescription(culture)`).
+- **Asked on its own** (work item 3): `IAppIntentGateway.SuggestCatalogAppsAsync(path)`
+  (`AppIntentDispatcher.SuggestCatalogAppsForAsync`, `apps.launch` required,
+  action `open`) and, in the SDK, `KazoApps.GetSuggestedCatalogAppsAsync(path)`:
+  the "Open with" box shows the Store apps under the installed ones even when
+  an installed app opens the file. The default implementation of the
+  interface, and a worker app, get an empty list.
+- **`xdg-open`**: under "no application can open", the list of apps (name, id,
+  catalog) and `kazopkg install catalog:<catalog>/<appId>` for the first one;
+  the exit code stays 3.
+- **File Explorer and Store** (work item 3): the "Open with" box and its
+  "View in the Store" button, the Store's `--open-after-install`; see
+  [`file-explorer.md`](file-explorer.md#store-apps-for-a-file-no-app-opens-adr-0257).
+
 ## Decisions
 
+- Catalogs of the ADR 0257 proposals: on 2026-11-13 Benoit chose option A,
+  the update check downloads every catalog at sign-in (rather than memory only,
+  B, or a download when the file is opened, C).
 - Same JSON format as the machine's file rather than `mimeapps.list`: a single
   validator, a single index.
 - No administrator lock for now (question raised, ADR 0121 §8).
@@ -78,6 +124,12 @@ AppIntentDispatcher (passe le principal à chaque résolution)
 - `XdgMimeCommandTests`, `xdg-mime` parity in `CommandParityTests`,
   `WireCodecIntentTests.Default_handlers_keep_target_action_app_and_layer`.
 - `Kazo.Os.Apps.Settings.Tests/FileAssociationsPanelTests.cs`: panel rows.
+- ADR 0257: `CatalogAppSuggestionsTests` (reading `fileHandlers`, choice of
+  the version, exclusions, order, cache without network),
+  `AppPackageGatewayTests.Suggestions.cs` (update check, installed app),
+  `AppIntentGatewayTests.OpenFileAsync_NoHandler_*`,
+  `WireCodecIntentTests.Open_file_result_keeps_the_proposed_store_apps`,
+  `KazoAppsIntentTests`, `XdgOpenCommandTests`.
 
 ## Task list
 
@@ -90,3 +142,5 @@ AppIntentDispatcher (passe le principal à chaque résolution)
 - [x] "Always use" in "Open with".
 - [x] `xdg-mime` command.
 - [x] Tests and documentation.
+- [x] ADR 0257, work item 2: Store apps proposed with `NoHandler`, SDK, `xdg-open`.
+- [x] ADR 0257, work item 3: File Explorer, "Open with" and the Store's `--open-after-install`.
