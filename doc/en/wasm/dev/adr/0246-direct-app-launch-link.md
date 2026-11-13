@@ -170,11 +170,34 @@ Asked in the project thread on 2026-11-13. Benoit answered A to all four the sam
   window (recommended); B for the machine, with one **Confirm** click from the
   guest, and the app stays if the guest is deleted.
 
+## Implementation
+
+### Work item 1 (`app-link/1-read-link-and-guest-start`)
+
+- `Kazo.Os.Platform.Core.AppLinks.AppLaunchLink`: `TryParse(address, out link)` reads the first
+  `autolaunch` of the query (the `#…` fragment is not read), `IsValidAppId` applies the rules of
+  §1, `RemoveFromAddress` removes **every** `autolaunch` and keeps the other parameters and the
+  fragment. Tests: `Tests/Kazo.Os.Platform.Core.Tests/AppLinks/AppLaunchLinkTests.cs`.
+- `IAppLaunchLinkRunner.RunAsync(link)` (same namespace) is the contract work item 2 implements.
+  While no runner is registered, the guest session also opens the Store on the app's page.
+- `App.razor` reads the link **after** the boot update (ADR 0239, which reloads the same address)
+  and before the first screen, keeps it in `EcosystemHostState.PendingAppLaunch`, then rewrites the
+  address (`NavigateTo(…, replace: true)`). A malformed id is ignored but removed too.
+- Once only, after the first load: first-account screen → **Start as Guest**; lone guest →
+  **Continue as Guest**. After a sign-out, the usual screen comes back.
+- The first desktop shown takes the link (`TakePendingAppLaunch`) and runs it without waiting:
+  guest session → `IAppLaunchLinkRunner`; another account → `org.kazoos.store --app=<appId>`.
+  A failure is logged and leaves the session usable.
+- **Deviation:** the sign-in notice names the app by its id ("ca.kazo.word will open in the Kazo
+  OS Store after you sign in."), not by its name: the sign-in screen does not read the catalog,
+  which needs the network and a session.
+- The `app-link.store-opened` log line (§6) is left to work item 3.
+
 ## Task list
 
 - [x] Read ADR 0187, the Store app (`--app=`) and the install API.
 - [x] Write this ADR (fr + en) and update the indexes.
 - [x] Ask Benoit the four questions in the thread.
-- [ ] Work item 1: read the link, guest start, Store after sign-in.
+- [x] Work item 1: read the link, guest start, Store after sign-in.
 - [ ] Work item 2: install and launch, errors, log.
 - [ ] Work item 3: Playwright tests, doc, change entry.

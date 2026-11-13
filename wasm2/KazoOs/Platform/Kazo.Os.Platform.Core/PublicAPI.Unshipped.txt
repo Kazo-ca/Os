@@ -1,1 +1,17 @@
 #nullable enable
+Kazo.Os.Platform.Core.AppLinks.AppLaunchLink
+Kazo.Os.Platform.Core.AppLinks.AppLaunchLink.AppId.get -> string!
+Kazo.Os.Platform.Core.AppLinks.IAppLaunchLinkRunner
+Kazo.Os.Platform.Core.AppLinks.IAppLaunchLinkRunner.RunAsync(Kazo.Os.Platform.Core.AppLinks.AppLaunchLink! link, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+const Kazo.Os.Platform.Core.AppLinks.AppLaunchLink.MaxAppIdLength = 128 -> int
+const Kazo.Os.Platform.Core.AppLinks.AppLaunchLink.ParameterName = "autolaunch" -> string!
+override Kazo.Os.Platform.Core.AppLinks.AppLaunchLink.ToString() -> string!
+static Kazo.Os.Platform.Core.AppLinks.AppLaunchLink.IsValidAppId(string? appId) -> bool
+static Kazo.Os.Platform.Core.AppLinks.AppLaunchLink.RemoveFromAddress(string! address) -> string!
+static Kazo.Os.Platform.Core.AppLinks.AppLaunchLink.TryParse(string? address, out Kazo.Os.Platform.Core.AppLinks.AppLaunchLink? link) -> bool
+Kazo.Os.Platform.Core.AppLinks.AppLaunchLink.<Clone>$() -> Kazo.Os.Platform.Core.AppLinks.AppLaunchLink!
+Kazo.Os.Platform.Core.AppLinks.AppLaunchLink.Equals(Kazo.Os.Platform.Core.AppLinks.AppLaunchLink? other) -> bool
+override Kazo.Os.Platform.Core.AppLinks.AppLaunchLink.Equals(object? obj) -> bool
+override Kazo.Os.Platform.Core.AppLinks.AppLaunchLink.GetHashCode() -> int
+static Kazo.Os.Platform.Core.AppLinks.AppLaunchLink.operator !=(Kazo.Os.Platform.Core.AppLinks.AppLaunchLink? left, Kazo.Os.Platform.Core.AppLinks.AppLaunchLink? right) -> bool
+static Kazo.Os.Platform.Core.AppLinks.AppLaunchLink.operator ==(Kazo.Os.Platform.Core.AppLinks.AppLaunchLink? left, Kazo.Os.Platform.Core.AppLinks.AppLaunchLink? right) -> bool

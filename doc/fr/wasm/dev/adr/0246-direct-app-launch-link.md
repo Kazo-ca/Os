@@ -174,11 +174,36 @@ Posées dans le fil du projet le 2026-11-13. Benoit a répondu A aux quatre le m
   fenêtre d'administrateur (recommandé) ; B pour la machine, avec un clic
   **Confirmer** de l'invité, et l'app reste si l'invité est supprimé.
 
+## Mise en œuvre
+
+### Chantier 1 (`app-link/1-read-link-and-guest-start`)
+
+- `Kazo.Os.Platform.Core.AppLinks.AppLaunchLink` : `TryParse(adresse, out lien)` lit le premier
+  `autolaunch` de la requête (le fragment `#…` n'est pas lu), `IsValidAppId` applique les règles
+  du §1, `RemoveFromAddress` retire **tous** les `autolaunch` en gardant les autres paramètres et le
+  fragment. Tests : `Tests/Kazo.Os.Platform.Core.Tests/AppLinks/AppLaunchLinkTests.cs`.
+- `IAppLaunchLinkRunner.RunAsync(lien)` (même espace de noms) est le contrat que le chantier 2
+  implémente. Tant qu'aucun runner n'est enregistré, la session invité ouvre elle aussi le Store
+  à la page de l'app.
+- `App.razor` lit le lien **après** la mise à jour au démarrage (ADR 0239, qui recharge la même
+  adresse) et avant le premier écran, le garde dans `EcosystemHostState.PendingAppLaunch`, puis
+  réécrit l'adresse (`NavigateTo(…, replace: true)`). Un identifiant mal formé est ignoré mais
+  retiré lui aussi.
+- Une seule fois, après le premier chargement : écran du premier compte → **Démarrer en invité** ;
+  invité seul → **Continuer en invité**. Après une déconnexion, l'écran habituel revient.
+- Le premier bureau affiché prend le lien (`TakePendingAppLaunch`) et le lance sans attendre :
+  session de l'invité → `IAppLaunchLinkRunner` ; autre compte → `org.kazoos.store --app=<appId>`.
+  Une erreur est journalisée et laisse la session utilisable.
+- **Écart :** le bandeau de l'écran de connexion nomme l'app par son identifiant
+  (« ca.kazo.word s'ouvrira dans le Kazo OS Store après la connexion. »), pas par son nom :
+  l'écran de connexion ne lit pas le catalogue, qui demande le réseau et la session.
+- La ligne `app-link.store-opened` du journal (§6) est laissée au chantier 3.
+
 ## Liste des tâches
 
 - [x] Lire l'ADR 0187, l'app Store (`--app=`) et l'API d'installation.
 - [x] Écrire cette ADR (fr + en) et mettre à jour les index.
 - [x] Poser les quatre questions à Benoit dans le fil.
-- [ ] Chantier 1 : lire le lien, démarrage invité, Store après connexion.
+- [x] Chantier 1 : lire le lien, démarrage invité, Store après connexion.
 - [ ] Chantier 2 : installer et lancer, erreurs, journal.
 - [ ] Chantier 3 : tests Playwright, doc, entrée de changement.
