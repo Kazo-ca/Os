@@ -368,9 +368,95 @@
     cursor: default;
 }
 
-.store-progress {
+/* ADR 0266 §7: the step of an install and its progress, under the buttons and on the card. */
+.store-operation {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1 1 100%;
+    min-width: 0;
     color: var(--kos-text-secondary, #8b949e);
     font-size: 0.8rem;
+}
+
+.store-operation.is-compact {
+    margin-top: 6px;
+    font-size: 0.75rem;
+}
+
+.store-operation-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.store-operation-bar {
+    appearance: none;
+    width: 100%;
+    max-width: 320px;
+    height: 6px;
+    border: none;
+    border-radius: 3px;
+    overflow: hidden;
+    background-color: var(--kos-border-subtle, rgba(139, 148, 158, 0.25));
+    color: var(--kos-accent, #42d392);
+}
+
+.store-operation.is-compact .store-operation-bar {
+    height: 4px;
+    max-width: none;
+}
+
+.store-operation-bar::-webkit-progress-bar {
+    background-color: transparent;
+}
+
+.store-operation-bar::-webkit-progress-value {
+    background-color: var(--kos-accent, #42d392);
+    border-radius: 3px;
+    transition: width 0.2s ease-out;
+}
+
+.store-operation-bar::-moz-progress-bar {
+    background-color: var(--kos-accent, #42d392);
+    border-radius: 3px;
+}
+
+/* No value yet (preparing, verifying, an unknown size): a stripe sweeps the track. */
+.store-operation-bar:indeterminate {
+    background-image: linear-gradient(90deg, transparent 0%, var(--kos-accent, #42d392) 50%, transparent 100%);
+    background-size: 40% 100%;
+    background-repeat: no-repeat;
+    animation: store-operation-sweep 1.2s ease-in-out infinite;
+}
+
+.store-operation-bar:indeterminate::-webkit-progress-bar {
+    background-color: transparent;
+}
+
+.store-operation-bar:indeterminate::-moz-progress-bar {
+    background-color: transparent;
+}
+
+@keyframes store-operation-sweep {
+    from {
+        background-position: -40% 0;
+    }
+
+    to {
+        background-position: 140% 0;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .store-operation-bar:indeterminate {
+        animation: none;
+        background-position: 50% 0;
+    }
+
+    .store-operation-bar::-webkit-progress-value {
+        transition: none;
+    }
 }
 
 .store-detail-head {

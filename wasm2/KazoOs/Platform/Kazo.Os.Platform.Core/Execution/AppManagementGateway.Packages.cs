@@ -102,8 +102,13 @@ internal sealed partial class AppManagementGateway
     }
 
     /// <inheritdoc />
+    public ValueTask<KazoPackageInstallReport> InstallPackageAsync(
+        string source, KazoPackageScope scope = KazoPackageScope.Auto, CancellationToken cancellationToken = default) =>
+        InstallPackageAsync(source, scope, progress: null, cancellationToken);
+
+    /// <inheritdoc />
     public async ValueTask<KazoPackageInstallReport> InstallPackageAsync(
-        string source, KazoPackageScope scope = KazoPackageScope.Auto, CancellationToken cancellationToken = default)
+        string source, KazoPackageScope scope, IProgress<KazoPackageInstallProgress>? progress, CancellationToken cancellationToken = default)
     {
         AppPackageInstaller packages = RequirePackages();
         IAppFileSystemGateway system = CreateSystemWriter();
@@ -123,11 +128,12 @@ internal sealed partial class AppManagementGateway
             PackagedAppIds = (_installedPackages?.Invoke()?.Apps.Keys ?? []).Concat(systemInstalled.Sources.Keys).ToHashSet(StringComparer.Ordinal),
         };
         // Download and every check first: no administrator is asked for a package that would be refused.
-        AppPackagePlan plan = await Translate(() => packages.PrepareAsync(parsed, context, cancellationToken)).ConfigureAwait(false);
+        AppPackagePlan plan = await Translate(() => packages.PrepareAsync(parsed, context, progress, cancellationToken)).ConfigureAwait(false);
         AppManifest manifest = plan.Package.Manifest;
         string by = _principal.LoginName.Value;
         if (plan.RequiresAdministrator)
         {
+            progress?.Report(new KazoPackageInstallProgress(KazoPackageInstallStage.AwaitingApproval));
             string operation = Strings.For(_language())[
                 plan.SystemWide
                     ? plan.Trust == AppSourceTrust.Untrusted ? "Admin.App.InstallUntrustedPackage" : "Admin.App.InstallPackage"
@@ -160,6 +166,7 @@ internal sealed partial class AppManagementGateway
                 cancellationToken).ConfigureAwait(false);
         }
 
+        progress?.Report(new KazoPackageInstallProgress(KazoPackageInstallStage.Installing));
         IReadOnlyList<string> personalCopies = plan.SystemWide
             ? await packages.FindPersonalCopiesAsync(system, manifest.Id, cancellationToken).ConfigureAwait(false)
             : [];

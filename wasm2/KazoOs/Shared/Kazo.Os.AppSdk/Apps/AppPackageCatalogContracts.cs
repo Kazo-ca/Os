@@ -63,7 +63,7 @@ public sealed record KazoCatalogApp(
     public KazoCatalogItemKind Kind { get; init; }
 
     /// <summary>
-    /// Gets the source to pass to <see cref="KazoAppPackages.InstallAsync"/> (an app) or
+    /// Gets the source to pass to <see cref="KazoAppPackages.InstallAsync(string, KazoPackageScope, CancellationToken)"/> (an app) or
     /// <see cref="KazoAppPackages.InstallThemePackAsync"/> (a theme pack): <c>catalog:&lt;catalog&gt;/&lt;appId&gt;</c>.
     /// </summary>
     public string Source => $"catalog:{Catalog}/{AppId}";

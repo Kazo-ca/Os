@@ -228,7 +228,7 @@ carries the engine code, and `ShellErrorText.Describe` gives the Linux message.
 | `KazoAppAssets` | `RelativeUrl(manifest, assetPath)`: the `_content/<assembly>/<path>` URL of a file an app declares; used by `KazoAppInfo.IconUrl` (ADR 0232) | none | [ADR 0232](../dev/adr/0232-illustrated-app-icons-everywhere.md) |
 | `KazoBrowser` | `OpenAsync(url)`, `OpenDetachedAsync(url)` (detached window, ADR 0078); `AppId`, `DetachedArgument` (`--detached`) | `apps.launch` | [`detached-display-windows.md`](../dev/detached-display-windows.md), [`display-surface-api.md`](display-surface-api.md) |
 | `KazoAppManagement` | `GetAllAsync`, `UninstallAsync`, `ReinstallAsync`; `KazoInstallScope`, `KazoAppInstallState` | `apps.manage` | [`app-installation.md`](../dev/app-installation.md) |
-| `KazoAppPackages` | `GetSourcesAsync`, `GetInstalledAsync` (with `PreviousVersion`), `GetInfoAsync`, `InstallAsync`, `RemoveAsync`, `RollbackAsync(appId, scope)` and `RepairAsync(system)` (ADR 0214), sources, block list, catalogs, updates, `RestartToFinishAsync`, theme packs | `apps.manage` | [`app-installation.md`](../dev/app-installation.md#adding-without-a-restart-signing-and-transactions) |
+| `KazoAppPackages` | `GetSourcesAsync`, `GetInstalledAsync` (with `PreviousVersion`), `GetInfoAsync`, `InstallAsync` (with an optional `IProgress<KazoPackageInstallProgress>`, ADR 0266), `RemoveAsync`, `RollbackAsync(appId, scope)` and `RepairAsync(system)` (ADR 0214), sources, block list, catalogs, updates, `RestartToFinishAsync`, theme packs | `apps.manage` | [`app-installation.md`](../dev/app-installation.md#adding-without-a-restart-signing-and-transactions) |
 
 ### Processes and services
 

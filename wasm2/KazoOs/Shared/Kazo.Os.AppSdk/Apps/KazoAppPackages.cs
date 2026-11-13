@@ -76,6 +76,33 @@ public static class KazoAppPackages
         return CallAsync(gateway => gateway.InstallPackageAsync(source, scope, cancellationToken));
     }
 
+    /// <summary>
+    /// Installs or updates an app like <see cref="InstallAsync(string, KazoPackageScope, CancellationToken)"/>
+    /// and reports each step to <paramref name="progress"/> (ADR 0266 §7): preparing, downloading
+    /// (with the bytes received), verifying, waiting for an administrator when one must approve, and
+    /// installing. A Store or an installer shows them instead of a bare « Working… ».
+    /// </summary>
+    /// <param name="source">
+    /// The repository, <c>catalog:name/app.id</c> or an app ID alone (looked up in the catalogs),
+    /// optionally followed by <c>@version</c>.
+    /// </param>
+    /// <param name="scope">For whom; <see cref="KazoPackageScope.Auto"/> picks the personal install when allowed.</param>
+    /// <param name="progress">
+    /// Receives the steps, on the caller's synchronization context when it is a
+    /// <see cref="Progress{T}"/>; <see langword="null"/> reports nothing. An OS that predates
+    /// ADR 0266 installs without reporting.
+    /// </param>
+    /// <param name="cancellationToken">Cancels the download, the approval and the writes.</param>
+    /// <exception cref="KazoPackageException">The package is refused; its code says why.</exception>
+    /// <exception cref="KazoUnauthorizedAccessException">This app lacks <c>apps.manage</c>, or the administrator did not approve.</exception>
+    /// <exception cref="KazoExecutionContextMissingException">No app context is active.</exception>
+    public static Task<KazoPackageInstallReport> InstallAsync(
+        string source, KazoPackageScope scope, IProgress<KazoPackageInstallProgress>? progress, CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(source);
+        return CallAsync(gateway => gateway.InstallPackageAsync(source, scope, progress, cancellationToken));
+    }
+
     /// <summary>Removes an app installed from a package: the user's own copy freely, a system copy after the two-step approval.</summary>
     /// <param name="appId">The installed app.</param>
     /// <param name="scope">Which copy; <see cref="KazoPackageScope.Auto"/> takes the user's own, else the system's.</param>
