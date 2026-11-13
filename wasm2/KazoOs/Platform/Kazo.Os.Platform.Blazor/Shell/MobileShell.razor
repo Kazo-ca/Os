@@ -95,6 +95,8 @@
     }
 
     @* ADR 0197: the notification bubbles at the top of the screen, hidden while the shade is open. *@
+    @* ADR 0246 §3: the progress window of a direct link ?autolaunch=<appId>. *@
+    <AppLaunchProgress />
     <NotificationToasts Placement="NotificationToastPlacement.TopOfScreen" IsPanelOpen="_isShadeOpen" />
 
     <MobileSystemNavigationBar Commands="_systemNavigationCommands" />
