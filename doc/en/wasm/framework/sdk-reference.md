@@ -50,6 +50,7 @@ minor; those that are known are listed in [`sdk-packages.md`](sdk-packages.md#ad
 | `Shared/Kazo.Os.AppSdk.Terminal` | `Kazo.Os.AppSdk.Terminal` | xterm.js terminal. |
 | `Shared/Kazo.Os.AppSdk.Web` | `Kazo.Os.AppSdk.Web.Hosting`, `.Http`, `.Routing`, `.Mvc`, `.Views`, `.Antiforgery`, `.Sessions`, `.Diagnostics`, `.Data`, `.Logging` | ASP.Kazo internal sites in the style of ASP.NET Core MVC ([ASP.Kazo guide](asp-kazo-developer-guide.md), [`asp-kazo-mvc.md`](asp-kazo-mvc.md)). |
 | `Shared/Kazo.Os.AppSdk.Web.Blazor` | `Kazo.Os.AppSdk.Web.Blazor.Sites` | Interactive Blazor sites drawn in the browser ([`blazor-sites.md`](blazor-sites.md)). |
+| `Shared/Kazo.Os.AppSdk.Craft` | `Kazo.Os.AppSdk.Craft` | Craft apps: a Rust app compiled to WebAssembly in an iframe of the window ([ADR 0247](../dev/adr/0247-shared-craft-app-host-module.md)). |
 | `Shared/Kazo.Os.AppSdk.Icons` | `Kazo.Os.AppSdk.Icons` | Icons. |
 | `Shared/Kazo.Os.AppSdk.VirtualKeyboard` | `Kazo.Os.AppSdk.VirtualKeyboard` | Virtual keyboard. |
 
@@ -490,6 +491,30 @@ for a 1.x app is in [`sdk-packages.md`](sdk-packages.md#sdk-20).
 |---|---|---|
 | `TerminalPanel` | `CallerAppId`, `InitialUsername`, `InitialCwd`, `UseVirtualKeyboard`, `ShowBanner`, `FocusOnStart`, `OnExitRequested`, `OnTitleChanged`; hosts an `hsh` (capability `shell.host`); implements `IKazoTerminal` (`RunCommandAsync`, `SetWorkingDirectoryAsync`, `SendInputAsync`, `ReadOutput`, `ClearAsync`, events) | [`terminal-emulator.md`](../dev/terminal-emulator.md), [`terminal-api.md`](terminal-api.md), [`shell-host.md`](shell-host.md) |
 | `TerminalTabs` | `CallerAppId`, `InitialCwd`, `OnLastTabClosed`; one `hsh` per tab | [`terminal-console.md`](../dev/terminal-console.md) |
+
+### Craft apps (`Kazo.Os.AppSdk.Craft`)
+
+Module shipped and served by the OS ([ADR 0247](../dev/adr/0247-shared-craft-app-host-module.md)):
+`Kazo.Os.Platform.Blazor` references it, every host publishes it and serves its
+scripts at `_content/Kazo.Os.AppSdk.Craft/`. A Craft app references it to
+compile and does not carry it in its package. It keeps its Razor window, its
+list of formats and its iframe page (`wwwroot/host/index.html`).
+
+| Type | Members |
+|---|---|
+| `CraftFrame` | The C# side of one iframe: `StartAsync(container, CraftFrameOptions, token)` imports `ModulePath` (`craft-host.js`) and creates the iframe; `OpenAsync(name, bytes)`, `RequestAsync(method, parameters, timeout)` (`window.<app>.request`, a failure is a `FrameCommandResult`, never an exception), `AnswerPickAsync(id, files)`, `FocusAsync`, `GetColorSchemeAsync`, `DisposeAsync`; events `Ready`, `Failed`, `ErrorReported` (`FrameError`), `DirtyChanged`, `Saving` (`Func<FrameSave, Task<bool>>`: `true` once the file is written, the app then gets `saved` when its save carried an `id`), `KeyPressed`, `PickRequested` (`PickRequest`), `SettingChanged`, `SchemeChanged`. One instance per iframe: "Retry" creates another. |
+| `CraftFrameOptions` | `PagePath` (`PagePathOf(assembly)` = `_content/<assembly>/host/index.html`), `Title`, `Language`, `Parameters` (added to the page address, for example `author`, `webgl`), `ReservedKeys`, `Settings` |
+| `FrameStartup`, `FrameState` | Loading screen, app, or error screen with "Retry": `OnReady`, `OnFailed`, `OnTimeout(attempt)`, `Retry`, `Timeout` (60 s) |
+| `ReservedKeys`, `ReservedKey`, `ReservedKeyTarget` | Chords the iframe gives back: `Os` (window manager), `NewWindow` (`Ctrl+N`, for the window), `All`, `Parse(chord, target)` |
+| `CraftLanguage` | `Pick(culture, available)`: the Craft app's language code, else `en` |
+| `CraftDocumentFormat`, `CraftDocumentFormats` | The app's list of formats: `All`, `OpenExtensions`, `FileHandlers` (for the manifest), `Find`, `IsCopy`; paths: `ExtensionOf`, `FileNameOf`, `FolderOf`, `WithExtensionOf` |
+| `DocumentSession`, `SaveDecision`, `SaveAction` | A window's documents and their files: `Opened`, `SetFrameDirty`, `Decide(name, saveAs)` (`Rewrite`, `AskAndBind`, `AskForCopy`), `Saved`, `SaveFailed`, `Renamed`, `WithUnsavedWork`, `Title(untitled)`, `IsDirty`, `IsUntouchedBlank` |
+| `OpenDocument`, `OpenRequest` | `OpenDocument.ListFrom(ui.inspect)`; `OpenRequest.FromArguments(arguments)` (first absolute path, `--webgl`) |
+| `WebStorageFile` | The app's settings for one Kazo user: `~/.config/<appId>/web-storage.json`; `LoadAsync`, `Set`, `SaveAsync` (one write at a time), `Entries` |
+| `PickRequest`, `PickedFile` | The app's file picker: `Extensions`, `AcceptsAny`, `AcceptsOnly`, `FromJson` |
+
+The contract with the module's scripts: `create(container, dotnet, { page, title, language, parameters, reservedKeys, settings })`,
+callbacks `OnFrameMessage(type, value)` (`FrameMessages`) and `OnFrameSave(name, saveAs, bytes)`.
 
 ### Icons and virtual keyboard
 

@@ -227,7 +227,7 @@ Posées dans le fil « Partager le proxy des apps Craft dans Kazo OS » le
 - [x] Évaluer ce qui est commun (Kazo Word, `craft-web-host`, `craft-web-api`)
       et poser les questions à Benoit.
 - [x] Écrire l'ADR (fr et en), index, mémoire, `features.md`.
-- [ ] Chantier 2 : bibliothèque C#.
+- [x] Chantier 2 : bibliothèque C#.
 - [ ] Chantier 3 : scripts.
 - [ ] Chantier 4 : parcours de bout en bout, doc du framework, guide de
       portage.

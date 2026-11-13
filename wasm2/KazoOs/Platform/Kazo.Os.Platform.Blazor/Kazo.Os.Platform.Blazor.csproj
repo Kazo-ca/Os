@@ -31,6 +31,12 @@
     <!-- ADR 0084: the OS side of Blazor sites (IKazoWebSiteHost). -->
     <ProjectReference Include="..\..\Shared\Kazo.Os.AppSdk.Web.Blazor\Kazo.Os.AppSdk.Web.Blazor.csproj" />
     <ProjectReference Include="..\..\Shared\Kazo.Os.AppSdk.Icons\Kazo.Os.AppSdk.Icons.csproj" />
+    <!--
+      ADR 0247: the module of the Craft apps ships with the OS. Nothing here uses it; the reference
+      makes every host publish it in _framework and serve its scripts at
+      _content/Kazo.Os.AppSdk.Craft/, so an installed Craft app finds it there.
+    -->
+    <ProjectReference Include="..\..\Shared\Kazo.Os.AppSdk.Craft\Kazo.Os.AppSdk.Craft.csproj" />
     <ProjectReference Include="..\..\Shared\Kazo.Os.Simulation.Abstractions\Kazo.Os.Simulation.Abstractions.csproj" />
   </ItemGroup>
 

@@ -75,7 +75,7 @@ Décidé le 2026-10-28 :
   un module du SDK livré et servi par l'OS, `Kazo.Os.AppSdk.Craft` (cadre de
   l'iframe, proxy, sélecteur, raccourcis, réglages, `DocumentSession`) ;
   chaque app garde sa fenêtre. [ADR 0247](../dev/adr/0247-shared-craft-app-host-module.md),
-  série `craft-host/base`, pas encore codée. Kazo Word sort avec sa copie et
+  série `craft-host/base` : chantier 2 (bibliothèque C#, `CraftFrame`, `DocumentSession`, `WebStorageFile`…) fait ; scripts (3), parcours de bout en bout et doc (4) en cours. Kazo Word sort avec sa copie et
   passe au module ensuite ; Kazo Spreadsheets l'utilise dès son chantier 1.
 
 ## Apps hébergées par le serveur (« bac à sable serveur »)

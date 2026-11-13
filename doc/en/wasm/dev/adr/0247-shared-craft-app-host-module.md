@@ -221,7 +221,7 @@ your recommendations).
 - [x] Assess what is shared (Kazo Word, `craft-web-host`, `craft-web-api`)
       and ask Benoit the questions.
 - [x] Write the ADR (fr and en), indexes, memory, `features.md`.
-- [ ] Work item 2: C# library.
+- [x] Work item 2: C# library.
 - [ ] Work item 3: scripts.
 - [ ] Work item 4: end-to-end journey, framework doc, port guide.
 - [ ] `TODO` issue in `Kazo-ca/Os-App-Word`: move Kazo Word to the module.
