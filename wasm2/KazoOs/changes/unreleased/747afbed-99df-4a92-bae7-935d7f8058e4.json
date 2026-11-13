@@ -1,0 +1,18 @@
+{
+  "id": "747afbed-99df-4a92-bae7-935d7f8058e4",
+  "category": "developer",
+  "audience": [
+    "developer"
+  ],
+  "title": {
+    "en": "Shared scripts for the Craft apps' iframe",
+    "fr": "Scripts communs pour l'iframe des apps Craft"
+  },
+  "description": {
+    "en": "The Kazo.Os.AppSdk.Craft module serves craft-host.js (OS side) and craft-proxy.js (in the iframe, with its file picker, reserved shortcuts and settings modules), taken from Kazo Word. An app's iframe page names its app with data-craft-app and its build with data-craft-build; saves with an id get saved back, and errors after ready reach the window as error.",
+    "fr": "Le module Kazo.Os.AppSdk.Craft sert craft-host.js (côté OS) et craft-proxy.js (dans l'iframe, avec ses modules sélecteur de fichiers, raccourcis réservés et réglages), repris de Kazo Word. La page de l'iframe d'une app nomme son app par data-craft-app et son build par data-craft-build ; une sauvegarde avec un id reçoit saved, et une erreur après ready arrive à la fenêtre comme error."
+  },
+  "links": [
+    "doc/en/wasm/dev/craft-module-scripts.md"
+  ]
+}
