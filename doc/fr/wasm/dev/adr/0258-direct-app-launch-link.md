@@ -1,6 +1,6 @@
-> [English version](../../../../en/wasm/dev/adr/0246-direct-app-launch-link.md)
+> [English version](../../../../en/wasm/dev/adr/0258-direct-app-launch-link.md)
 
-# ADR 0246 : lancer une app du Kazo OS Store par un lien direct
+# ADR 0258 : lancer une app du Kazo OS Store par un lien direct
 
 ## Statut
 
@@ -8,6 +8,9 @@ Acceptée le 2026-11-13. Benoit a retenu la recommandation A des quatre
 questions (voir [Questions](#questions-posées-à-benoit)) : paramètre
 `autolaunch`, aucune confirmation, l'invité existant continue sans clic,
 installation pour l'invité seulement. Série `app-link/base`.
+
+D'abord numérotée 0246, renumérotée 0258 le 2026-11-13 (choix A de Benoit) : la
+série `feature/base` réservait déjà 0243 à 0256.
 
 - **S'appuie sur :** l'[ADR 0187](0187-guest-start-and-sign-in-credits.md)
   (démarrage en invité quand aucun compte n'existe), l'[ADR 0212](0212-hack-store-app-build.md)

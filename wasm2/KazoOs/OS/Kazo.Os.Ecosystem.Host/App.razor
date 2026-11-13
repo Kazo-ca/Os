@@ -183,7 +183,7 @@
                 }
                 else
                 {
-                @* ADR 0246 §4: with an account, the link only opens the Store on the app's page after sign-in. *@
+                @* ADR 0258 §4: with an account, the link only opens the Store on the app's page after sign-in. *@
                 @if (State.PendingAppLaunch is { } pendingLaunch)
                 {
                     <p class="app-link-notice" role="status">@L["AppLink.StoreAfterLogin", pendingLaunch.AppId]</p>
@@ -373,7 +373,7 @@
         {
             BootCoordinator.MarkSystemStarted();
             ShowUpdateNotification();
-            // ADR 0246: the link read at boot runs once, when the first desktop is shown.
+            // ADR 0258: the link read at boot runs once, when the first desktop is shown.
             if (State.TakePendingAppLaunch() is { } link)
             {
                 _ = RunAppLaunchLinkAsync(link);
@@ -451,7 +451,7 @@
         // ADR 0241: this page runs the latest version; the site's worker must become its own.
         AdoptServiceWorkerInBackground();
 
-        // ADR 0246 §2: read after the boot update, which reloads the same address, and before the
+        // ADR 0258 §2: read after the boot update, which reloads the same address, and before the
         // first screen; the address then loses the parameter so a reload never runs it again.
         ReadAppLaunchLink();
 
@@ -466,13 +466,13 @@
         // a user can reach a desktop, so the saved theme never depends on opening Settings first.
         await InitializeHostAsync();
 
-        // ADR 0246 §3: with no account, or the guest as the only account, the link starts the guest
+        // ADR 0258 §3: with no account, or the guest as the only account, the link starts the guest
         // session without a click. Only here, once: a sign-out returns to the usual sign-in screen.
         await StartForAppLaunchLinkAsync();
     }
 
     /// <summary>
-    /// ADR 0246 §1 and §2: keeps the direct app launch link of the address in memory and removes it
+    /// ADR 0258 §1 and §2: keeps the direct app launch link of the address in memory and removes it
     /// from the address bar without reloading the page. A malformed link is ignored but still removed.
     /// </summary>
     private void ReadAppLaunchLink()
@@ -491,7 +491,7 @@
     }
 
     /// <summary>
-    /// ADR 0246 §3: a link with no account creates the guest and opens its session, like « Start as
+    /// ADR 0258 §3: a link with no account creates the guest and opens its session, like « Start as
     /// Guest »; a link while the guest is the only account continues as the guest (question Q3).
     /// An account other than the guest keeps the usual sign-in screen and its notice (§4).
     /// </summary>
@@ -513,7 +513,7 @@
     }
 
     /// <summary>
-    /// ADR 0246 §3 and §4: in the guest's session the link installs and launches the app
+    /// ADR 0258 §3 and §4: in the guest's session the link installs and launches the app
     /// (<see cref="IAppLaunchLinkRunner"/>); in an account's session, or while no runner is
     /// registered, it opens the Kazo OS Store on the app's page and installs nothing.
     /// </summary>

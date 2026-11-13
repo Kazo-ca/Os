@@ -1,7 +1,7 @@
 namespace Kazo.Os.Platform.Core.AppLinks;
 
 /// <summary>
-/// Runs a direct app launch link in a guest session (ADR 0246 §3): finds the app in the official
+/// Runs a direct app launch link in a guest session (ADR 0258 §3): finds the app in the official
 /// signed catalog only, installs it for the guest, launches it, and reports failures as an OS
 /// notification. The host calls it once the guest's desktop is shown.
 /// </summary>

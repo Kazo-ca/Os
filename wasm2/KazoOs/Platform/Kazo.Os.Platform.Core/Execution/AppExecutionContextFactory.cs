@@ -199,7 +199,7 @@ public sealed class AppExecutionContextFactory
 
     /// <summary>
     /// Creates the app-management gateway the OS itself uses for <paramref name="principal"/>, as if
-    /// <paramref name="callerAppId"/> asked (ADR 0246 §3): the direct link <c>?autolaunch=</c> installs
+    /// <paramref name="callerAppId"/> asked (ADR 0258 §3): the direct link <c>?autolaunch=</c> installs
     /// through it for the guest exactly as the Store does, with the same signature, block-list and
     /// version checks and the same approval window when one is needed. It holds only
     /// <c>apps.manage</c>.
