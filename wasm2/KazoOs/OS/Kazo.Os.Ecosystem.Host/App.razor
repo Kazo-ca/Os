@@ -533,11 +533,18 @@
                 return;
             }
 
-            await Services.GetRequiredService<Kazo.Os.Platform.Core.Lifecycle.AppLifecycleOrchestrator>()
+            Kazo.Os.Platform.Core.Lifecycle.AppLaunchResult opened = await Services
+                .GetRequiredService<Kazo.Os.Platform.Core.Lifecycle.AppLifecycleOrchestrator>()
                 .LaunchAsync(new Kazo.Os.Platform.Core.Lifecycle.AppLaunchRequest(
                     Kazo.Os.Platform.Core.Apps.Packages.AppUpdateMonitor.StoreAppId,
                     principal,
                     [StoreAppArgumentPrefix + link.AppId]));
+
+            // ADR 0258 §6: the account's case writes app-link.store-opened in the same log as the guest's.
+            if (opened.IsSuccess)
+            {
+                Services.GetService<AppLaunchLinkRunner>()?.RecordStoreOpened(link);
+            }
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {

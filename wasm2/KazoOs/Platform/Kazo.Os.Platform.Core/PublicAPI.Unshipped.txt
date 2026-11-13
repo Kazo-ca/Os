@@ -51,3 +51,4 @@ override Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkOperation.GetHashCode() -> 
 override Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkOperation.ToString() -> string!
 static Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkOperation.operator !=(Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkOperation? left, Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkOperation? right) -> bool
 static Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkOperation.operator ==(Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkOperation? left, Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkOperation? right) -> bool
+Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkRunner.RecordStoreOpened(Kazo.Os.Platform.Core.AppLinks.AppLaunchLink! link) -> void

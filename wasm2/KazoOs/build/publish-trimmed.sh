@@ -11,11 +11,16 @@
 # with a static file server and runs Tests/Kazo.Os.TrimmedPublish.E2E.Tests against it: sign-in,
 # every window app of the Start menu, a pipeline in the worker pool, the Intranet and the sample
 # Blazor site in the Browser, a reload with no network once the service worker has cached the
-# release, and a test package installed by kazopkg whose wwwroot/ files and worker scripts load.
+# release, and a test package installed by kazopkg whose wwwroot/ files and worker scripts load,
+# then installed and launched by a direct link ?autolaunch=<appId> (ADR 0258).
 # Exit code 0 only when the publish and every test (EXPECTED_TESTS) passed.
 #
 #   --skip-build      reuse the existing publish and test build
 #   --compare         also publish untrimmed (-p:PublishTrimmed=false) and print both sizes
+#
+# The direct link tests serve the official catalog locally, with the test package signed by a P-256
+# key created for the run (openssl): the publish trusts its public half for catalog:official, next to
+# the real key (-p:KazoOsAppSigningKeys, ADR 0214 §2). The key stays in the output folder, never in git.
 #
 # The service worker is only registered off localhost and 127.0.0.1 (index.html), so the offline
 # test uses a second server on 127.0.0.2 (a loopback address Chromium treats as secure). Where that
@@ -36,6 +41,9 @@ CATALOG="$ROOT/OS/Kazo.Os.Ecosystem/obj/Release/net10.0/BuiltInApplications.json
 # ADR 0206: the test package kazopkg installs (Tests/fixtures/installed-app), packed by KazoOsPack.
 PACKAGE_PROJECT="$ROOT/Tests/fixtures/installed-app/Kazo.Os.Fixtures.InstalledAssets/Kazo.Os.Fixtures.InstalledAssets.csproj"
 PACKAGES="$OUT/kazoos-packages"
+# ADR 0258: the run's signing key of the test catalog (private PEM, public base64 SubjectPublicKeyInfo).
+SIGNING_KEY="$OUT/test-catalog-signing/key.pem"
+SIGNING_PUBLIC="$OUT/test-catalog-signing/public.txt"
 
 SKIP_BUILD=0
 COMPARE=0
@@ -52,7 +60,7 @@ done
 if [[ -d "$HOME/.dotnet" && ":$PATH:" != *":$HOME/.dotnet:"* ]]; then
     export PATH="$HOME/.dotnet:$PATH"
 fi
-for tool in dotnet python3 curl setsid; do
+for tool in dotnet python3 curl setsid openssl; do
     command -v "$tool" >/dev/null || { echo "publish-trimmed: '$tool' not found on PATH" >&2; exit 2; }
 done
 
@@ -135,6 +143,14 @@ cd "$ROOT" || exit 2
 # 1. Publish and build the test
 # --------------------------------------------------------------------------------------------------
 if [[ $SKIP_BUILD -eq 0 ]]; then
+    log "creating the signing key of the test catalog (ADR 0258)"
+    rm -rf "$(dirname "$SIGNING_KEY")"
+    mkdir -p "$(dirname "$SIGNING_KEY")"
+    if ! openssl ecparam -name prime256v1 -genkey -noout 2>/dev/null | openssl pkcs8 -topk8 -nocrypt -out "$SIGNING_KEY" \
+        || ! openssl ec -in "$SIGNING_KEY" -pubout -outform DER 2>/dev/null | base64 -w0 >"$SIGNING_PUBLIC"; then
+        log "RESULT: FAIL (signing key of the test catalog)"
+        exit 1
+    fi
     if [[ $COMPARE -eq 1 ]]; then
         log "publishing OS/Kazo.Os.Ecosystem (Release, untrimmed) for comparison"
         rm -rf "$OUT/publish-untrimmed"
@@ -145,7 +161,8 @@ if [[ $SKIP_BUILD -eq 0 ]]; then
     log "publishing OS/Kazo.Os.Ecosystem (Release, trimmed)"
     rm -rf "$OUT/publish"
     clean_link_state
-    if ! dotnet publish "$HOST_PROJECT" -c Release -o "$OUT/publish" >"$LOGS/publish.log" 2>&1; then
+    if ! dotnet publish "$HOST_PROJECT" -c Release -o "$OUT/publish" \
+        "-p:KazoOsAppSigningKeys=catalog:official=$(cat "$SIGNING_PUBLIC")" >"$LOGS/publish.log" 2>&1; then
         grep -E ' error |error [A-Z]+[0-9]+' "$LOGS/publish.log" | sort -u | head -20 | sed 's/^/    /'
         log "RESULT: FAIL (publish, log: ${LOGS#"$ROOT/"}/publish.log)"
         exit 1
@@ -171,6 +188,7 @@ if [[ $SKIP_BUILD -eq 0 ]]; then
     fi
 fi
 
+[[ -s "$SIGNING_KEY" ]] || { log "no signing key in ${SIGNING_KEY#"$ROOT/"}; run without --skip-build"; exit 1; }
 [[ -d "$OUT/publish/wwwroot/_framework" ]] || { log "no publish in ${OUT#"$ROOT/"}/publish; run without --skip-build"; exit 1; }
 log "trimmed:   $(wasm_size "$OUT/publish")"
 if [[ -d "$OUT/publish-untrimmed/wwwroot/_framework" ]]; then
@@ -195,19 +213,21 @@ KAZOOS_TRIMMED_PWA_URL="$PWA_URL" \
 KAZOOS_TRIMMED_CATALOG="$CATALOG" \
 KAZOOS_TRIMMED_ARTIFACTS="$OUT/screenshots" \
 KAZOOS_TRIMMED_PACKAGES="$PACKAGES" \
+KAZOOS_TRIMMED_SIGNING_KEY="$SIGNING_KEY" \
     dotnet test "$TEST_PROJECT" --no-build -c Debug --logger "console;verbosity=detailed" >"$LOGS/tests.log" 2>&1
 code=$?
 stop_servers
 grep -E '^\s*\[(trimmed|chromium)\]' "$LOGS/tests.log" | sed "s/^ */    /"
 
-# A skipped test exits 0 too: require every test to have actually run and passed. Ten tests: the
+# A skipped test exits 0 too: require every test to have actually run and passed. Thirteen tests: the
 # boot with every app, the offline boot, the window rendered in a worker with its measurements
 # (ADR 0133, TrimmedPublishTests.RemoteWindows.cs), the installed app's wwwroot/ files served on
 # both addresses (ADR 0206, TrimmedPublishTests.InstalledApps.cs), an installed app's page in an
 # iframe on both addresses (ADR 0243, TrimmedPublishTests.InstalledAppPages.cs), the notification bubble
 # (ADR 0197, TrimmedPublishTests.Toasts.cs), and the unread notifications dot next to the clock
-# (ADR 0196, TrimmedPublishTests.Notifications.cs).
-EXPECTED_TESTS=10
+# (ADR 0196, TrimmedPublishTests.Notifications.cs), and the direct link with no account, with an
+# account, and for a missing app and a cancel (ADR 0258, TrimmedPublishTests.AppLaunchLink.cs).
+EXPECTED_TESTS=13
 if [[ $code -eq 0 ]] && grep -qE "^\s*Passed: +$EXPECTED_TESTS\s*$" "$LOGS/tests.log" && ! grep -qE '^\s*Skipped: +[1-9]' "$LOGS/tests.log"; then
     [[ -z "$PWA_URL" ]] && log "note: the offline test did not run (no 127.0.0.2)"
     log "RESULT: PASS"

@@ -423,7 +423,7 @@ points to its PR.
 | Feature | Description | ADR | Issue |
 | --- | --- | --- | --- |
 | Application catalog | Catalog format, checking and publishing of the offered applications. | [0188](dev/adr/0188-hack-store-and-app-catalog.md) | [AppMarketPlace #1](https://github.com/Kazo-ca/Os-AppMarketPlace/issues/1) |
-| Launch an app from a direct link | The link `https://os.kazo.ca/?autolaunch=<appId>` starts Kazo OS as guest when there is no account, installs the app from the signed official catalog and launches it; with an account, it opens the Store at the app's page. | [0258](https://github.com/Kazo-ca/Os/pull/468) | Series `app-link/base` |
+| Launch an app from a direct link | The link `https://os.kazo.ca/?autolaunch=<appId>` starts Kazo OS as guest when there is no account, installs the app from the signed official catalog and launches it; with an account, it opens the Store at the app's page. | [0258](https://github.com/Kazo-ca/Os/pull/468) | Series `app-link/base`: work items 1 to 3 done, see [`app-launch-link.md`](dev/app-launch-link.md) |
 
 ### Personalization
 
