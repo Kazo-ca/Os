@@ -216,8 +216,8 @@ The module's proxy already does the browser side; the window wires `CraftFrame`'
 - Icon without the ArtCraft logo, fr and en listing ("based on <App>Craft by the ArtCraft
   team", known limits), screenshots, `THIRD-PARTY-NOTICES.md`, licences in the package.
 - **Repository README**: it repeats the Store listing (text of `store/description.en.md` and
-  `store/description.fr.md`, screenshots), then a "Try it" section (placeholder for the future
-  link `https://os.kazo.ca/?autolaunch=<id>`) and a short presentation of Kazo OS with the link
+  `store/description.fr.md`, screenshots), then a "Try it" section (link
+  `https://os.kazo.ca/?autolaunch=<id>`) and a short presentation of Kazo OS with the link
   to `Kazo-ca/Os`. Template: [`app-repository.md`](../framework/app-repository.md)
   (`kazoos-solution` template, Kazo-ca/Os#469 and Kazo-ca/Os-AppTemplate#9); full example:
   Kazo-ca/Os-App-Word#13. The seven Craft repositories were created from the old template:

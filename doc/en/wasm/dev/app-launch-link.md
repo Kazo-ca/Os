@@ -96,9 +96,10 @@ Every link writes a line to `/var/log/apps/org.kazoos.app-link.log` (source
 
 ## "Try it" link of app readmes
 
-The readme of each Store app keeps a slot for a **Try in Kazo OS** link to
-`https://os.kazo.ca/?autolaunch=<appId>`. It will be filled once this feature is in a released
-version of Kazo OS (the `app-link/base` series must reach `main` first).
+Since Kazo OS 3.3.3, the readme of each Store app (Chess, Webamp, IRC, Kazo Word, Kazo
+Spreadsheets) links to `https://os.kazo.ca/?autolaunch=<appId>` in its "Try it" section, as do
+the `kazoos-solution` template and Kazo-ca/Os-AppTemplate. The section sits outside the Store
+listing block, so `store-readme.mjs` leaves it as written.
 
 ## Task list
 

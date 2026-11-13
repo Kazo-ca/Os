@@ -112,9 +112,10 @@ déclare déjà `KazoOsAppProject=true` ; ajoutez-la à l'hôte par
    pour que le dépôt montre la même fiche que le Store, suivie d'un lien vers
    Kazo OS. La CI le lance avec `--check` et échoue quand un README diffère de
    `store/`. La section
-   « Essayer » garde une place pour le lien « Ouvrir dans Kazo OS »
-   (`https://os.kazo.ca/?autolaunch=<id de l'app>`), quand Kazo OS le prendra
-   en charge.
+   « Essayer » pointe vers `https://os.kazo.ca/?autolaunch=<id de l'app>`
+   ([ADR 0258](../dev/adr/0258-direct-app-launch-link.md), Kazo OS 3.3.3) : le
+   lien démarre Kazo OS, installe l'app depuis le Store officiel et l'ouvre.
+   Le modèle `kazoos-solution` y écrit l'id donné par `--appId`.
 2. Changer `Version` dans la classe `[AppManifest]`, valider dans `main`, puis
    poser le tag : lancer le workflow **Tag a release** (`tag-release.yml`, depuis
    l'onglet Actions ou, pour un agent, via l'API GitHub), ou poser le tag

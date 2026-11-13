@@ -14,9 +14,9 @@ This text is shown on the app's page in the Kazo OS Store.
 
 ## Try it
 
-<!-- "Open in Kazo OS" link: https://os.kazo.ca/?autolaunch=<app id> goes here once Kazo OS supports it. -->
+[Open Kazo.Os.Template.Solution in Kazo OS](https://os.kazo.ca/?autolaunch=com.example.template-app): the link starts Kazo OS, installs the app from the official Store and opens it.
 
-Open [Kazo OS](https://os.kazo.ca/) and install Kazo.Os.Template.Solution from the **Kazo OS Store**, or in the Kazo OS
+Or open [Kazo OS](https://os.kazo.ca/) and install Kazo.Os.Template.Solution from the **Kazo OS Store**, or in the Kazo OS
 Terminal, as an administrator: `sudo kazopkg install <owner>/<repository>`.
 
 ## About Kazo OS
