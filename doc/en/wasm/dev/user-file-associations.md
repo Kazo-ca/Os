@@ -96,6 +96,9 @@ file:
 
 ## Decisions
 
+- Catalogs of the ADR 0257 proposals: on 2026-11-13 Benoit chose option A,
+  the update check downloads every catalog at sign-in (rather than memory only,
+  B, or a download when the file is opened, C).
 - Same JSON format as the machine's file rather than `mimeapps.list`: a single
   validator, a single index.
 - No administrator lock for now (question raised, ADR 0121 §8).

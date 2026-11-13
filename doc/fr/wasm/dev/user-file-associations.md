@@ -99,6 +99,10 @@ fichier :
 
 ## Décisions
 
+- Catalogues des propositions de l'ADR 0257 : Benoit a choisi le 2026-11-13 le
+  choix A, la vérification des mises à jour télécharge tous les catalogues à
+  l'ouverture de la session (plutôt que la seule mémoire, B, ou un
+  téléchargement à l'ouverture du fichier, C).
 - Même format JSON que le fichier de la machine plutôt que `mimeapps.list` :
   un seul validateur, un seul index.
 - Pas de verrou de l'administrateur pour l'instant (question posée, ADR 0121 §8).
