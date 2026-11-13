@@ -173,14 +173,21 @@ async function fetchShellOrAsset(event) {
     }
 
     // Cache-First strategy for static assets and HTML shell (P2-PWA-004)
+    // ADR 0267 §5: a page load of a page of the release (the cloud sign-in's callback page,
+    // _content/Kazo.Os.Infrastructure.Browser/oauth-callback.html?code=…&state=…) is that page,
+    // whatever its query, never a second Kazo OS.
+    const requestUrl = new URL(event.request.url);
+    const releasePageLoad = event.request.mode === 'navigate'
+        && manifestUrlList.some(url => url === requestUrl.origin + requestUrl.pathname);
     const shouldServeIndexHtml = event.request.mode === 'navigate'
+        && !releasePageLoad
         && !manifestUrlList.some(url => url === event.request.url);
 
     const request = shouldServeIndexHtml ? 'index.html' : event.request;
     const cache = await caches.open(cacheName);
     // A Web Worker's script carries its id in the query (?kazoos-worker=N, ADR 0131 §4, memory
-    // attribution): it is the same cached file.
-    const ignoreSearch = !shouldServeIndexHtml && new URL(event.request.url).searchParams.has('kazoos-worker');
+    // attribution): it is the same cached file. So is a release page loaded with a query.
+    const ignoreSearch = !shouldServeIndexHtml && (releasePageLoad || requestUrl.searchParams.has('kazoos-worker'));
     const cachedResponse = await cache.match(request, { ignoreSearch });
 
     if (cachedResponse) {

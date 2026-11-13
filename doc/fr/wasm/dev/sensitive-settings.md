@@ -156,6 +156,9 @@ string? other = await KazoKeyring.GetAsync(AppContext, "org.example.mail", "imap
 
 - Une app ne voit que ses propres entrées. Lire celles d'une autre app ou tout
   lister demande `keyring.read-all` ; sans elle, `UnauthorizedAccessException`.
+- Les entrées du propriétaire `org.kazoos.cloud-accounts` (clés des jetons des
+  comptes cloud, [`cloud-accounts.md`](cloud-accounts.md)) sont réservées à
+  l'OS : aucune app ne les lit, même avec `keyring.read-all`.
 - Un trousseau verrouillé lève `KazoKeyringLockedException`.
 - Un identifiant fait au plus 256 caractères, sans caractère de contrôle.
 - Chaque méthode existe aussi sans contexte (contexte ambiant de l'ADR 0043).

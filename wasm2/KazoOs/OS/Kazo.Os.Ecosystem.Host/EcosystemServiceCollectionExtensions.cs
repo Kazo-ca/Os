@@ -1,6 +1,7 @@
 using Kazo.Os.App.Abstractions;
 using Kazo.Os.App.Abstractions.Policy;
 using Kazo.Os.Infrastructure.Browser.Catalog;
+using Kazo.Os.Infrastructure.Browser.CloudAccounts;
 using Kazo.Os.Infrastructure.Browser.FileSystem;
 using Kazo.Os.Infrastructure.Browser.Interop;
 using Kazo.Os.Infrastructure.Browser.Policy;
@@ -11,6 +12,7 @@ using Kazo.Os.Infrastructure.Browser.Sync;
 using Kazo.Os.Platform.Core.ServerConnection;
 using Kazo.Os.Ecosystem.Administration;
 using Kazo.Os.Platform.Core.Administration;
+using Kazo.Os.Platform.Core.CloudAccounts;
 using Kazo.Os.Platform.Core.Power;
 using Kazo.Os.Platform.Core.Backup;
 using Kazo.Os.Platform.Core.Storage;
@@ -19,6 +21,7 @@ using Kazo.Os.Platform.Core.Apps;
 using Kazo.Os.Platform.Core.Apps.Packages;
 using Kazo.Os.Platform.Core;
 using Kazo.Os.Platform.WorkerHost.Host;
+using Kazo.Os.Simulation.Abstractions.CloudAccounts;
 using Kazo.Os.Simulation.Abstractions.Workers;
 using Kazo.Os.Platform.Core.Diagnostics;
 using Kazo.Os.Platform.Core.Discovery;
@@ -527,6 +530,27 @@ public static class EcosystemServiceCollectionExtensions
             provider.GetRequiredService<IKeyringCipher>(),
             provider.GetRequiredService<IAuditLog>(),
             provider.GetService<ILogger<UserKeyringService>>()));
+
+        // Cloud accounts (ADR 0267 §5): OAuth with PKCE in a pop-up window that returns to the static
+        // oauth-callback.html of Infrastructure.Browser, tokens sealed on the device under a key of
+        // the keyring above. Nothing is offered until KazoOs:CloudDrives has app ids.
+        services.TryAddScoped<IOAuthAuthorizationWindow>(provider => new BrowserOAuthAuthorizationWindow(
+            provider.GetRequiredService<IJSRuntime>(),
+            new Uri(provider.GetRequiredService<Microsoft.AspNetCore.Components.NavigationManager>().BaseUri)));
+        services.AddScoped<CloudAccountService>(provider => new CloudAccountService(
+            provider.GetRequiredService<IFileSystemService>(),
+            provider.GetRequiredService<ISimulationClock>(),
+            provider.GetRequiredService<UserKeyringService>(),
+            provider.GetRequiredService<IKeyringCipher>(),
+            new CloudProviderCatalog(
+                provider.GetService<CloudProviderSettings>() ?? CloudProviderSettings.None,
+                provider.GetRequiredService<IOsSettingsService>()),
+            provider.GetRequiredService<IOAuthAuthorizationWindow>(),
+            new CloudOAuthTokenClient(new HttpClient()),
+            () => provider.GetRequiredService<ISessionService>().CurrentPrincipal,
+            drives: null,
+            provider.GetService<IEventBus>(),
+            logger: provider.GetService<ILogger<CloudAccountService>>()));
 
         // passwd and the Settings "Users" tab (ADR 0120): new credentials hashed through Web Crypto
         // like at login, the login keyring re-sealed or set aside, every attempt in auth.log.

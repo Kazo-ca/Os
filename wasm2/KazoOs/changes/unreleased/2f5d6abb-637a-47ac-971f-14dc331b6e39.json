@@ -1,0 +1,11 @@
+{
+  "id": "2f5d6abb-637a-47ac-971f-14dc331b6e39",
+  "category": "developer",
+  "audience": ["developer"],
+  "title": { "en": "Cloud accounts: sign-in without a server", "fr": "Comptes cloud : connexion sans serveur" },
+  "description": {
+    "en": "The OS can sign in to Dropbox and OneDrive with OAuth and PKCE, in a pop-up window that comes back to a static page of Kazo OS. Tokens stay on the device, sealed under a key of the user's keyring, and are renewed before they expire. Nothing is offered until app ids are set in KazoOs:CloudDrives or /etc/kazoos/cloud-drives.config; the drives and the dialog come with the next steps of the series.",
+    "fr": "L'OS sait se connecter à Dropbox et à OneDrive par OAuth et PKCE, dans une fenêtre qui revient sur une page statique de Kazo OS. Les jetons restent sur l'appareil, scellés sous une clé du trousseau de l'utilisateur, et sont renouvelés avant d'expirer. Rien n'est proposé tant que les identifiants d'app ne sont pas inscrits dans KazoOs:CloudDrives ou /etc/kazoos/cloud-drives.config ; les lecteurs et le dialogue arrivent avec les chantiers suivants de la série."
+  },
+  "links": ["doc/en/wasm/dev/cloud-accounts.md", "doc/en/wasm/dev/adr/0267-cloud-drives-as-network-drives.md"]
+}

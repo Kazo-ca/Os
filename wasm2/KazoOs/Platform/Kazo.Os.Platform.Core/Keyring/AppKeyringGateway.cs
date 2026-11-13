@@ -9,7 +9,8 @@ namespace Kazo.Os.Platform.Core.Keyring;
 /// <summary>
 /// Trusted <see cref="IAppKeyringGateway"/> of one app instance (ADR 0100 section 2): the session
 /// user's keyring, confined to the app's own entries; another app's entries need the dangerous
-/// capability <c>keyring.read-all</c>.
+/// capability <c>keyring.read-all</c>. The entries of the cloud accounts (ADR 0267) are never
+/// readable by an app.
 /// </summary>
 internal sealed class AppKeyringGateway : IAppKeyringGateway
 {
@@ -42,6 +43,12 @@ internal sealed class AppKeyringGateway : IAppKeyringGateway
         if (!string.Equals(owner, _appId, StringComparison.Ordinal))
         {
             RequireReadAll();
+        }
+
+        // ADR 0267 section 5: apps never receive a cloud account's secrets, keyring.read-all or not.
+        if (string.Equals(owner, CloudAccounts.CloudAccountStore.KeyringOwner, StringComparison.Ordinal))
+        {
+            throw new UnauthorizedAccessException("The keyring entries of cloud accounts are reserved to Kazo OS.");
         }
 
         return _keyring.GetAsync(_userId, owner, id, cancellationToken);

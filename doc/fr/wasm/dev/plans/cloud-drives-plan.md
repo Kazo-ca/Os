@@ -20,7 +20,7 @@ réseau, sans serveur et sans coût.
 | --- | --- | --- | --- |
 | 0 | `cloud-drives/0-adr` | ADR 0267, ce plan, `features.md`, mémoire. **Fait.** | — |
 | 1 | `cloud-drives/1-drive-sources` | `NetworkDriveService` à sources multiples (ADR 0267 §3), table des lecteurs avec type et compte, interfaces facultatives de quota et de révision (§4), `/proc/mounts`, `df`, `KazoDriveInfo`. Une source distante factice en mémoire sert aux tests. Aucun fournisseur réel. | 0 |
-| 2 | `cloud-drives/2-cloud-accounts` | Service de comptes cloud (§5) : PKCE, fenêtre de connexion, page de retour statique et `BroadcastChannel`, jetons dans le trousseau, renouvellement, retrait, identifiants d'app dans les réglages. Faux serveur OAuth pour les tests E2E. Vérifie le trousseau du compte invité. Donne à Benoit les adresses de retour exactes à inscrire. | 0 |
+| 2 | `cloud-drives/2-cloud-accounts` | Service de comptes cloud (§5) : PKCE, fenêtre de connexion, page de retour statique et `BroadcastChannel`, jetons dans le trousseau, renouvellement, retrait, identifiants d'app dans les réglages. Faux serveur OAuth pour les tests E2E. Vérifie le trousseau du compte invité. Donne à Benoit les adresses de retour exactes à inscrire. **Fait** : [`cloud-accounts.md`](../cloud-accounts.md). | 0 |
 | 3 | `cloud-drives/3-dropbox` | Connecteur Dropbox (API v2), les deux étendues (§8), suite de tests de contrat commune à tous les connecteurs. | 1, 2 |
 | 4 | `cloud-drives/4-onedrive` | Connecteur Microsoft Graph, les deux étendues, reconnexion après 24 heures. | 1, 2 |
 | 5 | `cloud-drives/5-ui` | Dialogue « Connecter un lecteur réseau » avec les fournisseurs et le choix de l'étendue, page Paramètres des comptes cloud, explorateur mobile, commandes `mount` et `umount` (§11). Textes en français et en anglais. | 1, 2 |
@@ -47,7 +47,8 @@ chantier 1.
 
 ## Ce que Benoit crée lui-même
 
-Tout est gratuit. Les adresses de retour exactes viennent du chantier 2 ; les
+Tout est gratuit. Les adresses de retour exactes viennent du chantier 2
+([`cloud-accounts.md`](../cloud-accounts.md#adresses-de-retour-à-inscrire)) ; les
 inscriptions peuvent se préparer avant et recevoir les adresses ensuite.
 
 1. **Deux apps Dropbox** (console des développeurs Dropbox, « Scoped access ») :

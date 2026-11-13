@@ -17,3 +17,240 @@ static Kazo.Os.Platform.Core.Apps.Packages.AppPackageDownloadProgress.operator !
 static Kazo.Os.Platform.Core.Apps.Packages.AppPackageDownloadProgress.operator ==(Kazo.Os.Platform.Core.Apps.Packages.AppPackageDownloadProgress left, Kazo.Os.Platform.Core.Apps.Packages.AppPackageDownloadProgress right) -> bool
 ~override Kazo.Os.Platform.Core.Apps.Packages.AppPackageDownloadProgress.Equals(object obj) -> bool
 ~override Kazo.Os.Platform.Core.Apps.Packages.AppPackageDownloadProgress.ToString() -> string
+Kazo.Os.Platform.Core.CloudAccounts.CloudAccessScope
+Kazo.Os.Platform.Core.CloudAccounts.CloudAccessScope.AppFolder = 1 -> Kazo.Os.Platform.Core.CloudAccounts.CloudAccessScope
+Kazo.Os.Platform.Core.CloudAccounts.CloudAccessScope.Full = 0 -> Kazo.Os.Platform.Core.CloudAccounts.CloudAccessScope
+Kazo.Os.Platform.Core.CloudAccounts.CloudAccount
+Kazo.Os.Platform.Core.CloudAccounts.CloudAccount.<Clone>$() -> Kazo.Os.Platform.Core.CloudAccounts.CloudAccount!
+Kazo.Os.Platform.Core.CloudAccounts.CloudAccount.CloudAccount(string! Id, string! ProviderId, Kazo.Os.Platform.Core.CloudAccounts.CloudAccessScope Scope, string! DisplayName, string? ProviderAccountId, Kazo.Os.Platform.Core.CloudAccounts.CloudAccountState State, System.DateTimeOffset ConnectedAtUtc) -> void
+Kazo.Os.Platform.Core.CloudAccounts.CloudAccount.ConnectedAtUtc.get -> System.DateTimeOffset
+Kazo.Os.Platform.Core.CloudAccounts.CloudAccount.ConnectedAtUtc.init -> void
+Kazo.Os.Platform.Core.CloudAccounts.CloudAccount.Deconstruct(out string! Id, out string! ProviderId, out Kazo.Os.Platform.Core.CloudAccounts.CloudAccessScope Scope, out string! DisplayName, out string? ProviderAccountId, out Kazo.Os.Platform.Core.CloudAccounts.CloudAccountState State, out System.DateTimeOffset ConnectedAtUtc) -> void
+Kazo.Os.Platform.Core.CloudAccounts.CloudAccount.DisplayName.get -> string!
+Kazo.Os.Platform.Core.CloudAccounts.CloudAccount.DisplayName.init -> void
+Kazo.Os.Platform.Core.CloudAccounts.CloudAccount.Equals(Kazo.Os.Platform.Core.CloudAccounts.CloudAccount? other) -> bool
+Kazo.Os.Platform.Core.CloudAccounts.CloudAccount.Id.get -> string!
+Kazo.Os.Platform.Core.CloudAccounts.CloudAccount.Id.init -> void
+Kazo.Os.Platform.Core.CloudAccounts.CloudAccount.ProviderAccountId.get -> string?
+Kazo.Os.Platform.Core.CloudAccounts.CloudAccount.ProviderAccountId.init -> void
+Kazo.Os.Platform.Core.CloudAccounts.CloudAccount.ProviderId.get -> string!
+Kazo.Os.Platform.Core.CloudAccounts.CloudAccount.ProviderId.init -> void
+Kazo.Os.Platform.Core.CloudAccounts.CloudAccount.Scope.get -> Kazo.Os.Platform.Core.CloudAccounts.CloudAccessScope
+Kazo.Os.Platform.Core.CloudAccounts.CloudAccount.Scope.init -> void
+Kazo.Os.Platform.Core.CloudAccounts.CloudAccount.State.get -> Kazo.Os.Platform.Core.CloudAccounts.CloudAccountState
+Kazo.Os.Platform.Core.CloudAccounts.CloudAccount.State.init -> void
+Kazo.Os.Platform.Core.CloudAccounts.CloudAccountError
+Kazo.Os.Platform.Core.CloudAccounts.CloudAccountError.AccountMismatch = 10 -> Kazo.Os.Platform.Core.CloudAccounts.CloudAccountError
+Kazo.Os.Platform.Core.CloudAccounts.CloudAccountError.AccountNotFound = 3 -> Kazo.Os.Platform.Core.CloudAccounts.CloudAccountError
+Kazo.Os.Platform.Core.CloudAccounts.CloudAccountError.Cancelled = 5 -> Kazo.Os.Platform.Core.CloudAccounts.CloudAccountError
+Kazo.Os.Platform.Core.CloudAccounts.CloudAccountError.Denied = 6 -> Kazo.Os.Platform.Core.CloudAccounts.CloudAccountError
+Kazo.Os.Platform.Core.CloudAccounts.CloudAccountError.InvalidResponse = 8 -> Kazo.Os.Platform.Core.CloudAccounts.CloudAccountError
+Kazo.Os.Platform.Core.CloudAccounts.CloudAccountError.KeyringLocked = 1 -> Kazo.Os.Platform.Core.CloudAccounts.CloudAccountError
+Kazo.Os.Platform.Core.CloudAccounts.CloudAccountError.NotSignedIn = 0 -> Kazo.Os.Platform.Core.CloudAccounts.CloudAccountError
+Kazo.Os.Platform.Core.CloudAccounts.CloudAccountError.ProviderNotConfigured = 2 -> Kazo.Os.Platform.Core.CloudAccounts.CloudAccountError
+Kazo.Os.Platform.Core.CloudAccounts.CloudAccountError.ProviderUnavailable = 7 -> Kazo.Os.Platform.Core.CloudAccounts.CloudAccountError
+Kazo.Os.Platform.Core.CloudAccounts.CloudAccountError.ReconnectRequired = 9 -> Kazo.Os.Platform.Core.CloudAccounts.CloudAccountError
+Kazo.Os.Platform.Core.CloudAccounts.CloudAccountError.WindowBlocked = 4 -> Kazo.Os.Platform.Core.CloudAccounts.CloudAccountError
+Kazo.Os.Platform.Core.CloudAccounts.CloudAccountException
+Kazo.Os.Platform.Core.CloudAccounts.CloudAccountException.CloudAccountException(Kazo.Os.Platform.Core.CloudAccounts.CloudAccountError error, string! message, System.Exception? innerException = null) -> void
+Kazo.Os.Platform.Core.CloudAccounts.CloudAccountException.Error.get -> Kazo.Os.Platform.Core.CloudAccounts.CloudAccountError
+Kazo.Os.Platform.Core.CloudAccounts.CloudAccountService
+Kazo.Os.Platform.Core.CloudAccounts.CloudAccountService.CanConnect.get -> bool
+Kazo.Os.Platform.Core.CloudAccounts.CloudAccountService.Changed -> System.Action?
+Kazo.Os.Platform.Core.CloudAccounts.CloudAccountService.CloudAccountService(Kazo.Os.Simulation.Abstractions.FileSystem.IFileSystemService! fileSystem, Kazo.Os.Simulation.Abstractions.Time.ISimulationClock! clock, Kazo.Os.Platform.Core.Keyring.UserKeyringService! keyring, Kazo.Os.Platform.Core.Keyring.IKeyringCipher! cipher, Kazo.Os.Platform.Core.CloudAccounts.ICloudProviderCatalog! catalog, Kazo.Os.Simulation.Abstractions.CloudAccounts.IOAuthAuthorizationWindow! window, Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthTokenClient! tokens, System.Func<Kazo.Os.Simulation.Abstractions.Sessions.AuthenticatedPrincipal?>! principal, System.Func<Kazo.Os.Platform.Core.CloudAccounts.ICloudAccountDrives?>? drives = null, Kazo.Os.Simulation.Abstractions.Events.IEventBus? eventBus = null, System.TimeProvider? timeProvider = null, Microsoft.Extensions.Logging.ILogger<Kazo.Os.Platform.Core.CloudAccounts.CloudAccountService!>? logger = null) -> void
+Kazo.Os.Platform.Core.CloudAccounts.CloudAccountService.ConnectAsync(string! providerId, Kazo.Os.Platform.Core.CloudAccounts.CloudAccessScope scope, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.Platform.Core.CloudAccounts.CloudAccount!>
+Kazo.Os.Platform.Core.CloudAccounts.CloudAccountService.Dispose() -> void
+Kazo.Os.Platform.Core.CloudAccounts.CloudAccountService.GetAccessTokenAsync(string! accountId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<string!>
+Kazo.Os.Platform.Core.CloudAccounts.CloudAccountService.GetAccountsAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<Kazo.Os.Platform.Core.CloudAccounts.CloudAccount!>!>
+Kazo.Os.Platform.Core.CloudAccounts.CloudAccountService.GetProvidersAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<Kazo.Os.Platform.Core.CloudAccounts.CloudProviderInfo!>!>
+Kazo.Os.Platform.Core.CloudAccounts.CloudAccountService.PrepareAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Kazo.Os.Platform.Core.CloudAccounts.CloudAccountService.ReconnectAsync(string! accountId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.Platform.Core.CloudAccounts.CloudAccount!>
+Kazo.Os.Platform.Core.CloudAccounts.CloudAccountService.RedirectUri.get -> System.Uri!
+Kazo.Os.Platform.Core.CloudAccounts.CloudAccountService.RemoveAsync(string! accountId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Kazo.Os.Platform.Core.CloudAccounts.CloudAccountState
+Kazo.Os.Platform.Core.CloudAccounts.CloudAccountState.Connected = 0 -> Kazo.Os.Platform.Core.CloudAccounts.CloudAccountState
+Kazo.Os.Platform.Core.CloudAccounts.CloudAccountState.NeedsReconnect = 1 -> Kazo.Os.Platform.Core.CloudAccounts.CloudAccountState
+Kazo.Os.Platform.Core.CloudAccounts.CloudDrivesSettingsDocuments
+Kazo.Os.Platform.Core.CloudAccounts.CloudIdentity
+Kazo.Os.Platform.Core.CloudAccounts.CloudIdentity.<Clone>$() -> Kazo.Os.Platform.Core.CloudAccounts.CloudIdentity!
+Kazo.Os.Platform.Core.CloudAccounts.CloudIdentity.AccountId.get -> string?
+Kazo.Os.Platform.Core.CloudAccounts.CloudIdentity.AccountId.init -> void
+Kazo.Os.Platform.Core.CloudAccounts.CloudIdentity.CloudIdentity(string? AccountId, string? DisplayName) -> void
+Kazo.Os.Platform.Core.CloudAccounts.CloudIdentity.Deconstruct(out string? AccountId, out string? DisplayName) -> void
+Kazo.Os.Platform.Core.CloudAccounts.CloudIdentity.DisplayName.get -> string?
+Kazo.Os.Platform.Core.CloudAccounts.CloudIdentity.DisplayName.init -> void
+Kazo.Os.Platform.Core.CloudAccounts.CloudIdentity.Equals(Kazo.Os.Platform.Core.CloudAccounts.CloudIdentity? other) -> bool
+Kazo.Os.Platform.Core.CloudAccounts.CloudIdentityEndpoint
+Kazo.Os.Platform.Core.CloudAccounts.CloudIdentityEndpoint.<Clone>$() -> Kazo.Os.Platform.Core.CloudAccounts.CloudIdentityEndpoint!
+Kazo.Os.Platform.Core.CloudAccounts.CloudIdentityEndpoint.Address.get -> System.Uri!
+Kazo.Os.Platform.Core.CloudAccounts.CloudIdentityEndpoint.Address.init -> void
+Kazo.Os.Platform.Core.CloudAccounts.CloudIdentityEndpoint.CloudIdentityEndpoint(System.Uri! Address, bool UsePost, string! IdPath, System.Collections.Generic.IReadOnlyList<string!>! NamePaths) -> void
+Kazo.Os.Platform.Core.CloudAccounts.CloudIdentityEndpoint.Deconstruct(out System.Uri! Address, out bool UsePost, out string! IdPath, out System.Collections.Generic.IReadOnlyList<string!>! NamePaths) -> void
+Kazo.Os.Platform.Core.CloudAccounts.CloudIdentityEndpoint.Equals(Kazo.Os.Platform.Core.CloudAccounts.CloudIdentityEndpoint? other) -> bool
+Kazo.Os.Platform.Core.CloudAccounts.CloudIdentityEndpoint.IdPath.get -> string!
+Kazo.Os.Platform.Core.CloudAccounts.CloudIdentityEndpoint.IdPath.init -> void
+Kazo.Os.Platform.Core.CloudAccounts.CloudIdentityEndpoint.NamePaths.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Kazo.Os.Platform.Core.CloudAccounts.CloudIdentityEndpoint.NamePaths.init -> void
+Kazo.Os.Platform.Core.CloudAccounts.CloudIdentityEndpoint.UsePost.get -> bool
+Kazo.Os.Platform.Core.CloudAccounts.CloudIdentityEndpoint.UsePost.init -> void
+Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthClient
+Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthClient.<Clone>$() -> Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthClient!
+Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthClient.ClientId.get -> string!
+Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthClient.ClientId.init -> void
+Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthClient.CloudOAuthClient(string! ClientId, string? Scope) -> void
+Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthClient.Deconstruct(out string! ClientId, out string? Scope) -> void
+Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthClient.Equals(Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthClient? other) -> bool
+Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthClient.Scope.get -> string?
+Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthClient.Scope.init -> void
+Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthProvider
+Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthProvider.<Clone>$() -> Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthProvider!
+Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthProvider.AuthorizationEndpoint.get -> System.Uri!
+Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthProvider.AuthorizationEndpoint.init -> void
+Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthProvider.BuildAuthorizationUri(Kazo.Os.Platform.Core.CloudAccounts.CloudAccessScope scope, Kazo.Os.Platform.Core.CloudAccounts.OAuthPkce! pkce, System.Uri! redirectUri) -> System.Uri!
+Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthProvider.Clients.get -> System.Collections.Generic.IReadOnlyDictionary<Kazo.Os.Platform.Core.CloudAccounts.CloudAccessScope, Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthClient!>!
+Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthProvider.Clients.init -> void
+Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthProvider.CloudOAuthProvider(string! Id, string! DisplayName, System.Uri! AuthorizationEndpoint, System.Uri! TokenEndpoint, System.Uri? RevocationEndpoint, System.Collections.Generic.IReadOnlyDictionary<Kazo.Os.Platform.Core.CloudAccounts.CloudAccessScope, Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthClient!>! Clients, System.Collections.Generic.IReadOnlyDictionary<string!, string!>! ExtraAuthorizationParameters, Kazo.Os.Platform.Core.CloudAccounts.CloudIdentityEndpoint! Identity) -> void
+Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthProvider.Deconstruct(out string! Id, out string! DisplayName, out System.Uri! AuthorizationEndpoint, out System.Uri! TokenEndpoint, out System.Uri? RevocationEndpoint, out System.Collections.Generic.IReadOnlyDictionary<Kazo.Os.Platform.Core.CloudAccounts.CloudAccessScope, Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthClient!>! Clients, out System.Collections.Generic.IReadOnlyDictionary<string!, string!>! ExtraAuthorizationParameters, out Kazo.Os.Platform.Core.CloudAccounts.CloudIdentityEndpoint! Identity) -> void
+Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthProvider.DisplayName.get -> string!
+Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthProvider.DisplayName.init -> void
+Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthProvider.Equals(Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthProvider? other) -> bool
+Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthProvider.ExtraAuthorizationParameters.get -> System.Collections.Generic.IReadOnlyDictionary<string!, string!>!
+Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthProvider.ExtraAuthorizationParameters.init -> void
+Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthProvider.GetClient(Kazo.Os.Platform.Core.CloudAccounts.CloudAccessScope scope) -> Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthClient!
+Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthProvider.Id.get -> string!
+Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthProvider.Id.init -> void
+Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthProvider.Identity.get -> Kazo.Os.Platform.Core.CloudAccounts.CloudIdentityEndpoint!
+Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthProvider.Identity.init -> void
+Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthProvider.RevocationEndpoint.get -> System.Uri?
+Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthProvider.RevocationEndpoint.init -> void
+Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthProvider.Scopes.get -> System.Collections.Generic.IReadOnlyList<Kazo.Os.Platform.Core.CloudAccounts.CloudAccessScope>!
+Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthProvider.TokenEndpoint.get -> System.Uri!
+Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthProvider.TokenEndpoint.init -> void
+Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthTokenClient
+Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthTokenClient.CloudOAuthTokenClient(System.Net.Http.HttpClient! http, System.TimeProvider? timeProvider = null) -> void
+Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthTokenClient.ExchangeCodeAsync(Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthProvider! provider, Kazo.Os.Platform.Core.CloudAccounts.CloudAccessScope scope, string! code, string! verifier, System.Uri! redirectUri, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.Platform.Core.CloudAccounts.OAuthTokenSet!>
+Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthTokenClient.ReadIdentityAsync(Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthProvider! provider, string! accessToken, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.Platform.Core.CloudAccounts.CloudIdentity!>
+Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthTokenClient.RefreshAsync(Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthProvider! provider, Kazo.Os.Platform.Core.CloudAccounts.CloudAccessScope scope, string! refreshToken, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.Platform.Core.CloudAccounts.OAuthTokenSet!>
+Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthTokenClient.RevokeAsync(Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthProvider! provider, string! accessToken, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<bool>
+Kazo.Os.Platform.Core.CloudAccounts.CloudProviderCatalog
+Kazo.Os.Platform.Core.CloudAccounts.CloudProviderCatalog.CloudProviderCatalog(Kazo.Os.Platform.Core.CloudAccounts.CloudProviderSettings! hostSettings, Kazo.Os.Platform.Core.Settings.IOsSettingsService? settings = null) -> void
+Kazo.Os.Platform.Core.CloudAccounts.CloudProviderCatalog.GetProvidersAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthProvider!>!>
+Kazo.Os.Platform.Core.CloudAccounts.CloudProviderInfo
+Kazo.Os.Platform.Core.CloudAccounts.CloudProviderInfo.<Clone>$() -> Kazo.Os.Platform.Core.CloudAccounts.CloudProviderInfo!
+Kazo.Os.Platform.Core.CloudAccounts.CloudProviderInfo.CloudProviderInfo(string! Id, string! DisplayName, System.Collections.Generic.IReadOnlyList<Kazo.Os.Platform.Core.CloudAccounts.CloudAccessScope>! Scopes) -> void
+Kazo.Os.Platform.Core.CloudAccounts.CloudProviderInfo.Deconstruct(out string! Id, out string! DisplayName, out System.Collections.Generic.IReadOnlyList<Kazo.Os.Platform.Core.CloudAccounts.CloudAccessScope>! Scopes) -> void
+Kazo.Os.Platform.Core.CloudAccounts.CloudProviderInfo.DisplayName.get -> string!
+Kazo.Os.Platform.Core.CloudAccounts.CloudProviderInfo.DisplayName.init -> void
+Kazo.Os.Platform.Core.CloudAccounts.CloudProviderInfo.Equals(Kazo.Os.Platform.Core.CloudAccounts.CloudProviderInfo? other) -> bool
+Kazo.Os.Platform.Core.CloudAccounts.CloudProviderInfo.Id.get -> string!
+Kazo.Os.Platform.Core.CloudAccounts.CloudProviderInfo.Id.init -> void
+Kazo.Os.Platform.Core.CloudAccounts.CloudProviderInfo.Scopes.get -> System.Collections.Generic.IReadOnlyList<Kazo.Os.Platform.Core.CloudAccounts.CloudAccessScope>!
+Kazo.Os.Platform.Core.CloudAccounts.CloudProviderInfo.Scopes.init -> void
+Kazo.Os.Platform.Core.CloudAccounts.CloudProviderSettings
+Kazo.Os.Platform.Core.CloudAccounts.CloudProviderSettings.<Clone>$() -> Kazo.Os.Platform.Core.CloudAccounts.CloudProviderSettings!
+Kazo.Os.Platform.Core.CloudAccounts.CloudProviderSettings.BuildProviders() -> System.Collections.Generic.IReadOnlyList<Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthProvider!>!
+Kazo.Os.Platform.Core.CloudAccounts.CloudProviderSettings.CloudProviderSettings(string? DropboxFullAccessClientId = null, string? DropboxAppFolderClientId = null, string? OneDriveClientId = null, string? OneDriveTenant = null) -> void
+Kazo.Os.Platform.Core.CloudAccounts.CloudProviderSettings.Deconstruct(out string? DropboxFullAccessClientId, out string? DropboxAppFolderClientId, out string? OneDriveClientId, out string? OneDriveTenant) -> void
+Kazo.Os.Platform.Core.CloudAccounts.CloudProviderSettings.DropboxAppFolderClientId.get -> string?
+Kazo.Os.Platform.Core.CloudAccounts.CloudProviderSettings.DropboxAppFolderClientId.init -> void
+Kazo.Os.Platform.Core.CloudAccounts.CloudProviderSettings.DropboxFullAccessClientId.get -> string?
+Kazo.Os.Platform.Core.CloudAccounts.CloudProviderSettings.DropboxFullAccessClientId.init -> void
+Kazo.Os.Platform.Core.CloudAccounts.CloudProviderSettings.Equals(Kazo.Os.Platform.Core.CloudAccounts.CloudProviderSettings? other) -> bool
+Kazo.Os.Platform.Core.CloudAccounts.CloudProviderSettings.OneDriveClientId.get -> string?
+Kazo.Os.Platform.Core.CloudAccounts.CloudProviderSettings.OneDriveClientId.init -> void
+Kazo.Os.Platform.Core.CloudAccounts.CloudProviderSettings.OneDriveTenant.get -> string?
+Kazo.Os.Platform.Core.CloudAccounts.CloudProviderSettings.OneDriveTenant.init -> void
+Kazo.Os.Platform.Core.CloudAccounts.CloudProviderSettings.OverriddenBy(Kazo.Os.Simulation.Abstractions.Settings.LayeredConfigSnapshot! snapshot) -> Kazo.Os.Platform.Core.CloudAccounts.CloudProviderSettings!
+Kazo.Os.Platform.Core.CloudAccounts.ICloudAccountDrives
+Kazo.Os.Platform.Core.CloudAccounts.ICloudAccountDrives.ReleaseAsync(string! accountId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Kazo.Os.Platform.Core.CloudAccounts.ICloudProviderCatalog
+Kazo.Os.Platform.Core.CloudAccounts.ICloudProviderCatalog.GetProvidersAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthProvider!>!>
+Kazo.Os.Platform.Core.CloudAccounts.OAuthPkce
+Kazo.Os.Platform.Core.CloudAccounts.OAuthPkce.<Clone>$() -> Kazo.Os.Platform.Core.CloudAccounts.OAuthPkce!
+Kazo.Os.Platform.Core.CloudAccounts.OAuthPkce.Challenge.get -> string!
+Kazo.Os.Platform.Core.CloudAccounts.OAuthPkce.Challenge.init -> void
+Kazo.Os.Platform.Core.CloudAccounts.OAuthPkce.Deconstruct(out string! Verifier, out string! Challenge, out string! State) -> void
+Kazo.Os.Platform.Core.CloudAccounts.OAuthPkce.Equals(Kazo.Os.Platform.Core.CloudAccounts.OAuthPkce? other) -> bool
+Kazo.Os.Platform.Core.CloudAccounts.OAuthPkce.OAuthPkce(string! Verifier, string! Challenge, string! State) -> void
+Kazo.Os.Platform.Core.CloudAccounts.OAuthPkce.State.get -> string!
+Kazo.Os.Platform.Core.CloudAccounts.OAuthPkce.State.init -> void
+Kazo.Os.Platform.Core.CloudAccounts.OAuthPkce.Verifier.get -> string!
+Kazo.Os.Platform.Core.CloudAccounts.OAuthPkce.Verifier.init -> void
+Kazo.Os.Platform.Core.CloudAccounts.OAuthTokenSet
+Kazo.Os.Platform.Core.CloudAccounts.OAuthTokenSet.<Clone>$() -> Kazo.Os.Platform.Core.CloudAccounts.OAuthTokenSet!
+Kazo.Os.Platform.Core.CloudAccounts.OAuthTokenSet.AccessToken.get -> string!
+Kazo.Os.Platform.Core.CloudAccounts.OAuthTokenSet.AccessToken.init -> void
+Kazo.Os.Platform.Core.CloudAccounts.OAuthTokenSet.Deconstruct(out string! AccessToken, out string? RefreshToken, out System.DateTimeOffset? ExpiresAtUtc) -> void
+Kazo.Os.Platform.Core.CloudAccounts.OAuthTokenSet.Equals(Kazo.Os.Platform.Core.CloudAccounts.OAuthTokenSet? other) -> bool
+Kazo.Os.Platform.Core.CloudAccounts.OAuthTokenSet.ExpiresAtUtc.get -> System.DateTimeOffset?
+Kazo.Os.Platform.Core.CloudAccounts.OAuthTokenSet.ExpiresAtUtc.init -> void
+Kazo.Os.Platform.Core.CloudAccounts.OAuthTokenSet.OAuthTokenSet(string! AccessToken, string? RefreshToken, System.DateTimeOffset? ExpiresAtUtc) -> void
+Kazo.Os.Platform.Core.CloudAccounts.OAuthTokenSet.RefreshToken.get -> string?
+Kazo.Os.Platform.Core.CloudAccounts.OAuthTokenSet.RefreshToken.init -> void
+const Kazo.Os.Platform.Core.CloudAccounts.CloudDrivesSettingsDocuments.DocumentId = "cloud-drives" -> string!
+const Kazo.Os.Platform.Core.CloudAccounts.CloudDrivesSettingsDocuments.DropboxGroup = "dropbox" -> string!
+const Kazo.Os.Platform.Core.CloudAccounts.CloudDrivesSettingsDocuments.OneDriveGroup = "onedrive" -> string!
+const Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthProvider.DefaultMicrosoftTenant = "common" -> string!
+const Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthProvider.DropboxId = "dropbox" -> string!
+const Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthProvider.OneDriveId = "onedrive" -> string!
+const Kazo.Os.Platform.Core.CloudAccounts.CloudProviderSettings.SectionName = "KazoOs:CloudDrives" -> string!
+const Kazo.Os.Platform.Core.CloudAccounts.OAuthPkce.ChallengeMethod = "S256" -> string!
+override Kazo.Os.Platform.Core.CloudAccounts.CloudAccount.Equals(object? obj) -> bool
+override Kazo.Os.Platform.Core.CloudAccounts.CloudAccount.GetHashCode() -> int
+override Kazo.Os.Platform.Core.CloudAccounts.CloudAccount.ToString() -> string!
+override Kazo.Os.Platform.Core.CloudAccounts.CloudIdentity.Equals(object? obj) -> bool
+override Kazo.Os.Platform.Core.CloudAccounts.CloudIdentity.GetHashCode() -> int
+override Kazo.Os.Platform.Core.CloudAccounts.CloudIdentity.ToString() -> string!
+override Kazo.Os.Platform.Core.CloudAccounts.CloudIdentityEndpoint.Equals(object? obj) -> bool
+override Kazo.Os.Platform.Core.CloudAccounts.CloudIdentityEndpoint.GetHashCode() -> int
+override Kazo.Os.Platform.Core.CloudAccounts.CloudIdentityEndpoint.ToString() -> string!
+override Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthClient.Equals(object? obj) -> bool
+override Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthClient.GetHashCode() -> int
+override Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthClient.ToString() -> string!
+override Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthProvider.Equals(object? obj) -> bool
+override Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthProvider.GetHashCode() -> int
+override Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthProvider.ToString() -> string!
+override Kazo.Os.Platform.Core.CloudAccounts.CloudProviderInfo.Equals(object? obj) -> bool
+override Kazo.Os.Platform.Core.CloudAccounts.CloudProviderInfo.GetHashCode() -> int
+override Kazo.Os.Platform.Core.CloudAccounts.CloudProviderInfo.ToString() -> string!
+override Kazo.Os.Platform.Core.CloudAccounts.CloudProviderSettings.Equals(object? obj) -> bool
+override Kazo.Os.Platform.Core.CloudAccounts.CloudProviderSettings.GetHashCode() -> int
+override Kazo.Os.Platform.Core.CloudAccounts.CloudProviderSettings.ToString() -> string!
+override Kazo.Os.Platform.Core.CloudAccounts.OAuthPkce.Equals(object? obj) -> bool
+override Kazo.Os.Platform.Core.CloudAccounts.OAuthPkce.GetHashCode() -> int
+override Kazo.Os.Platform.Core.CloudAccounts.OAuthPkce.ToString() -> string!
+override Kazo.Os.Platform.Core.CloudAccounts.OAuthTokenSet.Equals(object? obj) -> bool
+override Kazo.Os.Platform.Core.CloudAccounts.OAuthTokenSet.GetHashCode() -> int
+override Kazo.Os.Platform.Core.CloudAccounts.OAuthTokenSet.ToString() -> string!
+static Kazo.Os.Platform.Core.CloudAccounts.CloudAccount.operator !=(Kazo.Os.Platform.Core.CloudAccounts.CloudAccount? left, Kazo.Os.Platform.Core.CloudAccounts.CloudAccount? right) -> bool
+static Kazo.Os.Platform.Core.CloudAccounts.CloudAccount.operator ==(Kazo.Os.Platform.Core.CloudAccounts.CloudAccount? left, Kazo.Os.Platform.Core.CloudAccounts.CloudAccount? right) -> bool
+static Kazo.Os.Platform.Core.CloudAccounts.CloudDrivesSettingsDocuments.Document.get -> Kazo.Os.Platform.Core.Settings.OsSettingsDocument!
+static Kazo.Os.Platform.Core.CloudAccounts.CloudDrivesSettingsDocuments.DropboxAppFolderQualifiedKey.get -> string!
+static Kazo.Os.Platform.Core.CloudAccounts.CloudDrivesSettingsDocuments.DropboxFullAccessQualifiedKey.get -> string!
+static Kazo.Os.Platform.Core.CloudAccounts.CloudDrivesSettingsDocuments.OneDriveClientQualifiedKey.get -> string!
+static Kazo.Os.Platform.Core.CloudAccounts.CloudDrivesSettingsDocuments.OneDriveTenantQualifiedKey.get -> string!
+static Kazo.Os.Platform.Core.CloudAccounts.CloudDrivesSettingsDocuments.Schema.get -> Kazo.Os.Simulation.Abstractions.Settings.SettingsSchema!
+static Kazo.Os.Platform.Core.CloudAccounts.CloudIdentity.operator !=(Kazo.Os.Platform.Core.CloudAccounts.CloudIdentity? left, Kazo.Os.Platform.Core.CloudAccounts.CloudIdentity? right) -> bool
+static Kazo.Os.Platform.Core.CloudAccounts.CloudIdentity.operator ==(Kazo.Os.Platform.Core.CloudAccounts.CloudIdentity? left, Kazo.Os.Platform.Core.CloudAccounts.CloudIdentity? right) -> bool
+static Kazo.Os.Platform.Core.CloudAccounts.CloudIdentityEndpoint.operator !=(Kazo.Os.Platform.Core.CloudAccounts.CloudIdentityEndpoint? left, Kazo.Os.Platform.Core.CloudAccounts.CloudIdentityEndpoint? right) -> bool
+static Kazo.Os.Platform.Core.CloudAccounts.CloudIdentityEndpoint.operator ==(Kazo.Os.Platform.Core.CloudAccounts.CloudIdentityEndpoint? left, Kazo.Os.Platform.Core.CloudAccounts.CloudIdentityEndpoint? right) -> bool
+static Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthClient.operator !=(Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthClient? left, Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthClient? right) -> bool
+static Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthClient.operator ==(Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthClient? left, Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthClient? right) -> bool
+static Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthProvider.Dropbox(string? fullAccessClientId, string? appFolderClientId) -> Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthProvider?
+static Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthProvider.OneDrive(string? clientId, string? tenant) -> Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthProvider?
+static Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthProvider.operator !=(Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthProvider? left, Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthProvider? right) -> bool
+static Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthProvider.operator ==(Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthProvider? left, Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthProvider? right) -> bool
+static Kazo.Os.Platform.Core.CloudAccounts.CloudProviderInfo.operator !=(Kazo.Os.Platform.Core.CloudAccounts.CloudProviderInfo? left, Kazo.Os.Platform.Core.CloudAccounts.CloudProviderInfo? right) -> bool
+static Kazo.Os.Platform.Core.CloudAccounts.CloudProviderInfo.operator ==(Kazo.Os.Platform.Core.CloudAccounts.CloudProviderInfo? left, Kazo.Os.Platform.Core.CloudAccounts.CloudProviderInfo? right) -> bool
+static Kazo.Os.Platform.Core.CloudAccounts.CloudProviderSettings.None.get -> Kazo.Os.Platform.Core.CloudAccounts.CloudProviderSettings!
+static Kazo.Os.Platform.Core.CloudAccounts.CloudProviderSettings.operator !=(Kazo.Os.Platform.Core.CloudAccounts.CloudProviderSettings? left, Kazo.Os.Platform.Core.CloudAccounts.CloudProviderSettings? right) -> bool
+static Kazo.Os.Platform.Core.CloudAccounts.CloudProviderSettings.operator ==(Kazo.Os.Platform.Core.CloudAccounts.CloudProviderSettings? left, Kazo.Os.Platform.Core.CloudAccounts.CloudProviderSettings? right) -> bool
+static Kazo.Os.Platform.Core.CloudAccounts.OAuthPkce.Base64Url(System.ReadOnlySpan<byte> bytes) -> string!
+static Kazo.Os.Platform.Core.CloudAccounts.OAuthPkce.ComputeChallenge(string! verifier) -> string!
+static Kazo.Os.Platform.Core.CloudAccounts.OAuthPkce.Create() -> Kazo.Os.Platform.Core.CloudAccounts.OAuthPkce!
+static Kazo.Os.Platform.Core.CloudAccounts.OAuthPkce.operator !=(Kazo.Os.Platform.Core.CloudAccounts.OAuthPkce? left, Kazo.Os.Platform.Core.CloudAccounts.OAuthPkce? right) -> bool
+static Kazo.Os.Platform.Core.CloudAccounts.OAuthPkce.operator ==(Kazo.Os.Platform.Core.CloudAccounts.OAuthPkce? left, Kazo.Os.Platform.Core.CloudAccounts.OAuthPkce? right) -> bool
+static Kazo.Os.Platform.Core.CloudAccounts.OAuthTokenSet.operator !=(Kazo.Os.Platform.Core.CloudAccounts.OAuthTokenSet? left, Kazo.Os.Platform.Core.CloudAccounts.OAuthTokenSet? right) -> bool
+static Kazo.Os.Platform.Core.CloudAccounts.OAuthTokenSet.operator ==(Kazo.Os.Platform.Core.CloudAccounts.OAuthTokenSet? left, Kazo.Os.Platform.Core.CloudAccounts.OAuthTokenSet? right) -> bool
+static readonly Kazo.Os.Platform.Core.CloudAccounts.CloudAccountService.AuthorizationTimeout -> System.TimeSpan
+static readonly Kazo.Os.Platform.Core.CloudAccounts.CloudAccountService.RenewalMargin -> System.TimeSpan

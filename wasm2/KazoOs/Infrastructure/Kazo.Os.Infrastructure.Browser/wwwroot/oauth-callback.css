@@ -1,0 +1,36 @@
+/* The callback page of the cloud accounts (ADR 0267 section 5): one line on a dark console background. */
+:root {
+    color-scheme: dark;
+}
+
+html,
+body {
+    height: 100%;
+    margin: 0;
+}
+
+body {
+    display: grid;
+    place-items: center;
+    padding: 24px;
+    box-sizing: border-box;
+    background: #0d1117;
+    color: #c9d1d9;
+    font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+    text-align: center;
+}
+
+main {
+    max-width: 420px;
+    border: 1px solid #30363d;
+    border-radius: 10px;
+    padding: 20px 24px;
+    background: #161b22;
+}
+
+h1 {
+    margin: 0 0 8px;
+    font-size: 16px;
+    color: #58a6ff;
+    letter-spacing: 0.04em;
+}
