@@ -6,7 +6,7 @@
 
 Accepted on 2026-11-13. Benoit chose option A of Kazo Word question 17 (raise
 the OS limit rather than split the `.wasm` inside the app), then **128 MiB**
-among 64, 128 and 256 MiB. Branch `files/raise-max-file-size`, version 3.4.0.
+among 64, 128 and 256 MiB. Branch `files/raise-max-file-size`, version 3.3.2.
 
 - **Supersedes:** point 2 of [ADR 0094](0094-deferred-decisions-status-and-maximum-file-size.md)
   for the maximum size only (16 MiB). The 256 KiB chunks, SHA-256,
@@ -42,7 +42,7 @@ among 64, 128 and 256 MiB. Branch `files/raise-max-file-size`, version 3.4.0.
    `[SHA-256 of the content, index]`, base64-encoded and deduplicated. A
    128 MiB file is 512 chunks. No IndexedDB migration: an existing database
    stays readable, and an earlier version also reads a file larger than 16 MiB
-   written by 3.4.0 (it reads every chunk of a hash, with no limit); it only
+   written by 3.3.2 (it reads every chunk of a hash, with no limit); it only
    refuses to write one.
 
 3. **Batched write.** The content is first read and hashed whole (the chunk key
@@ -74,7 +74,7 @@ among 64, 128 and 256 MiB. Branch `files/raise-max-file-size`, version 3.4.0.
 
 ## Consequences
 
-- Kazo Word installs in the published OS from 3.4.0 on; its package requires
+- Kazo Word installs in the published OS from 3.3.2 on; its package requires
   that version at least.
 - A 128 MiB file takes about 171 MB in IndexedDB (base64). The browser quota
   and the low-space warning (ADR 0099) still apply.
@@ -95,4 +95,4 @@ among 64, 128 and 256 MiB. Branch `files/raise-max-file-size`, version 3.4.0.
   read of more than one batch, missing chunk refused.
 - [x] Docs (FR and EN): SDK, Linux commands, backup, Kazo Paint, indexes,
   `features.md`, memory.
-- [ ] Version 3.4.0.
+- [ ] Version 3.3.2.

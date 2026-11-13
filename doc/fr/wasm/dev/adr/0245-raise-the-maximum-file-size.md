@@ -7,7 +7,7 @@
 Acceptée le 2026-11-13. Benoit a choisi l'option A de la question 17 de Kazo
 Word (relever la limite de l'OS plutôt que découper le `.wasm` dans l'app), puis
 **128 Mio** parmi 64, 128 et 256 Mio. Branche `files/raise-max-file-size`,
-version 3.4.0.
+version 3.3.2.
 
 - **Remplace :** le point 2 de l'[ADR 0094](0094-deferred-decisions-status-and-maximum-file-size.md)
   pour la seule taille maximale (16 Mio). Les blocs de 256 Kio, le SHA-256, la
@@ -45,7 +45,7 @@ version 3.4.0.
    `[SHA-256 du contenu, numéro]`, encodés en base64 et dédupliqués. Un fichier
    de 128 Mio fait 512 blocs. Aucune migration IndexedDB : une base existante
    reste lisible, et une version précédente lit aussi un fichier de plus de
-   16 Mio écrit par 3.4.0 (elle lit tous les blocs d'un hachage, sans limite) ;
+   16 Mio écrit par 3.3.2 (elle lit tous les blocs d'un hachage, sans limite) ;
    elle refuse seulement d'en écrire un.
 
 3. **Écriture par lots.** Le contenu est d'abord lu et haché en entier (la clé
@@ -77,7 +77,7 @@ version 3.4.0.
 
 ## Conséquences
 
-- Kazo Word s'installe dans l'OS publié à partir de 3.4.0 ; son paquet demande
+- Kazo Word s'installe dans l'OS publié à partir de 3.3.2 ; son paquet demande
   cette version au minimum.
 - Un fichier de 128 Mio occupe environ 171 Mo dans IndexedDB (base64). Le
   quota du navigateur et l'alerte d'espace faible (ADR 0099) s'appliquent
@@ -99,4 +99,4 @@ version 3.4.0.
   lecture de plus d'un lot, bloc manquant refusé.
 - [x] Docs (FR et EN) : SDK, commandes Linux, sauvegarde, Kazo Paint, index,
   `features.md`, mémoire.
-- [ ] Version 3.4.0.
+- [ ] Version 3.3.2.

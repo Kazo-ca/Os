@@ -146,7 +146,7 @@ Cette section liste ce qui est publié dans la branche `main` et en ligne.
 
 - **Système de fichiers persistant** gardé dans le navigateur, avec dossiers
   personnels, permissions et propriétaires comme sous Linux. Un fichier peut
-  faire jusqu'à 128 Mio (version 3.4.0). ([`project-overview.md`](dev/project-overview.md#système-de-fichiers),
+  faire jusqu'à 128 Mio (version 3.3.2). ([`project-overview.md`](dev/project-overview.md#système-de-fichiers),
   [ADR 0245](dev/adr/0245-raise-the-maximum-file-size.md))
 - **Explorateur de fichiers** avec vues, recherche, glisser-déposer,
   téléversement et téléchargement. ([`file-explorer.md`](dev/file-explorer.md))

@@ -142,7 +142,7 @@ This section lists what is released in the `main` branch and online.
 
 - **Persistent file system** stored in the browser, with home folders,
   permissions and owners as on Linux. A file may be up to 128 MiB (version
-  3.4.0). ([`project-overview.md`](dev/project-overview.md#file-system),
+  3.3.2). ([`project-overview.md`](dev/project-overview.md#file-system),
   [ADR 0245](dev/adr/0245-raise-the-maximum-file-size.md))
 - **File explorer** with views, search, drag and drop, upload and download.
   ([`file-explorer.md`](dev/file-explorer.md))
