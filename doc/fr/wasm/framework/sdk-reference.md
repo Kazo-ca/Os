@@ -516,6 +516,15 @@ liste de formats et sa page d'iframe (`wwwroot/host/index.html`).
 Le contrat avec les scripts du module : `create(conteneur, dotnet, { page, title, language, parameters, reservedKeys, settings })`,
 rappels `OnFrameMessage(type, valeur)` (`FrameMessages`) et `OnFrameSave(nom, saveAs, octets)`.
 
+Ce qui change d'une app Craft à l'autre reste dans la fenêtre de l'app : les
+commandes de thème et de langue (`ui.theme` pour WordCraft, `ui.set` et
+`app.language.set` pour GridCraft) passent par `RequestAsync` ; un
+« Enregistrer sous » propre à la fenêtre (GridCraft n'envoie jamais `saveAs`)
+est un raccourci réservé de cible `App` (`ReservedKeys.Parse("F12", ReservedKeyTarget.App)`),
+puis `Decide(nom, saveAs: true)` ; une sauvegarde dont l'extension change
+(`Budget.ods` ouvert, `Budget.xlsx` enregistré) demande un chemin une fois puis
+réécrit ce fichier ; `dirty` vaut pour tout ce que la page affiche.
+
 ### Icônes et clavier virtuel
 
 | Composant | Paramètres |
