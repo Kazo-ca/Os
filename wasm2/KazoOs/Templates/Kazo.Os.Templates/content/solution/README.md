@@ -1,22 +1,14 @@
 > [Version française](readme-fr.md)
 
-<!-- Store listing: the same text as store/description.en.md and the same screenshots as the Kazo OS Store (store/screenshots/). Change them together. -->
+<!-- Store listing: generated from store/ by .github/scripts/store-readme.mjs. Edit store/, then run it. -->
 
 <img src="store/icon.png" alt="" width="96" align="right">
 
 # Kazo.Os.Template.Solution
 
-Describe your app here: what it does, how to use it, what it needs. Copy here the text of
-`store/description.en.md` (and of `store/description.fr.md` in `readme-fr.md`): the repository
-shows the same listing as the Kazo OS Store.
+Describe your app here: what it does, how to use it, what it needs.
 
-## Screenshots
-
-<!-- The images of store/screenshots/ (1.png, 2.png, 3.png), as the Kazo OS Store shows them:
-<p>
-  <img src="store/screenshots/1.png" alt="Kazo.Os.Template.Solution, screenshot 1" height="240">
-</p>
--->
+This text is shown on the app's page in the Kazo OS Store.
 
 <!-- /Store listing -->
 
@@ -84,8 +76,9 @@ Force either one with `-p:KazoOsUseSource=true` or `false`.
 ### Publishing to the Kazo OS Store
 
 1. Fill `store/` (icon, short descriptions, descriptions, screenshots, category and tags in
-   `store.json`), and copy the descriptions and screenshots to the top of `README.md` and
-   `readme-fr.md`: the repository shows the same listing as the Store.
+   `store.json`), then run `node .github/scripts/store-readme.mjs`: it copies the descriptions and
+   screenshots to the top of `README.md` and `readme-fr.md`, so the repository shows the same listing
+   as the Store. CI fails when a README differs from `store/`.
 2. Change `Version` in the app's `[AppManifest]` class and commit it to `main`, then tag it: run the
    **Tag a release** workflow (Actions tab, or the GitHub API for an agent), which tags the head of
    `main` with the manifest's version and starts the two publishing workflows; or push the tag

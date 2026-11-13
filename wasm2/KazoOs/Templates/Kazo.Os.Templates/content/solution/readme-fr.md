@@ -1,22 +1,14 @@
 > [English version](README.md)
 
-<!-- Fiche du Store : le même texte que store/description.fr.md et les mêmes captures que le Kazo OS Store (store/screenshots/). Les changer ensemble. -->
+<!-- Fiche du Store : générée depuis store/ par .github/scripts/store-readme.mjs. Modifiez store/, puis lancez-le. -->
 
 <img src="store/icon.png" alt="" width="96" align="right">
 
 # Kazo.Os.Template.Solution
 
-Décrivez votre app ici : ce qu'elle fait, comment s'en servir, ce dont elle a besoin. Copiez ici le
-texte de `store/description.fr.md` (et celui de `store/description.en.md` dans `README.md`) : le
-dépôt montre la même fiche que le Kazo OS Store.
+Décrivez votre app ici : ce qu'elle fait, comment s'en servir, ce dont elle a besoin.
 
-## Captures d'écran
-
-<!-- Les images de store/screenshots/ (1.png, 2.png, 3.png), comme le Kazo OS Store les montre :
-<p>
-  <img src="store/screenshots/1.png" alt="Kazo.Os.Template.Solution, capture 1" height="240">
-</p>
--->
+Ce texte est affiché sur la fiche de l'app dans le Kazo OS Store.
 
 <!-- /Fiche du Store -->
 
@@ -84,8 +76,9 @@ Forcez l'un ou l'autre avec `-p:KazoOsUseSource=true` ou `false`.
 ### Publier dans le Kazo OS Store
 
 1. Remplissez `store/` (icône, descriptions courtes, descriptions, captures d'écran, catégorie et
-   étiquettes dans `store.json`), et copiez les descriptions et les captures en haut de `README.md` et
-   de `readme-fr.md` : le dépôt montre la même fiche que le Store.
+   étiquettes dans `store.json`), puis lancez `node .github/scripts/store-readme.mjs` : il copie les
+   descriptions et les captures en haut de `README.md` et de `readme-fr.md`, pour que le dépôt montre
+   la même fiche que le Store. La CI échoue quand un README diffère de `store/`.
 2. Changez `Version` dans la classe `[AppManifest]` de l'app et validez-la dans `main`, puis posez le
    tag : lancez le workflow **Tag a release** (onglet Actions, ou l'API GitHub pour un agent), qui pose
    sur la tête de `main` le tag de la version du manifeste et lance les deux workflows de
