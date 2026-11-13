@@ -417,6 +417,7 @@ points to its PR.
 | Switch user | Open another session without closing the first one. Stays greyed out in the Power menu by Benoit's choice: one session at a time, Sign out to change account. | [0195](dev/adr/0195-start-menu-power-button.md), [0201](dev/adr/0201-switch-user-stays-greyed.md) | [#290](https://github.com/Kazo-ca/Os/issues/290) |
 | File address served on demand | An app gets an address to read a large file (audio, video) without copying it in memory, with partial reads to seek in a track. | To write | [#379](https://github.com/Kazo-ca/Os/issues/379) |
 | Drag files onto an app | Public SDK contract to receive files dragged from the File Explorer or the desktop. | To write | [#380](https://github.com/Kazo-ca/Os/issues/380) |
+| Windows that stay on their screen | An app can keep its window from changing screen (`window.canChangeScreen: false`). Craft apps in an iframe (Kazo Word and the next ones) stay on their screen with a "known issue, a fix is in progress" warning: changing screen reloaded the iframe and lost the document. The planned real fix: compile our own WebAssembly build of each Craft app, without iframe. | [0263](dev/adr/0263-windows-that-stay-on-their-screen.md) | [#482](https://github.com/Kazo-ca/Os/issues/482) |
 
 ### Kazo OS Store
 

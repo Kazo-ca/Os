@@ -1,1 +1,4 @@
 #nullable enable
+Kazo.Os.Platform.Blazor.Windows.WindowKeyboardCommands.CanChangeScreen(Kazo.Os.Windowing.Abstractions.WindowId windowId) -> bool
+Kazo.Os.Platform.Blazor.Windows.WindowKeyboardCommands.ReportScreenChangeRefused(Kazo.Os.Windowing.Abstractions.WindowId windowId) -> void
+Kazo.Os.Platform.Blazor.Windows.WindowKeyboardCommands.ScreenChangeRefused -> System.Action<Kazo.Os.Windowing.Abstractions.WindowId>?

@@ -48,6 +48,15 @@ public sealed record WindowFrame(
     /// <summary>Gets the frame of the OS dialogs (ADR 0234 §6): tool style, no taskbar button.</summary>
     public static WindowFrame Dialog { get; } = new(WindowFrameStyle.Tool, ShowInTaskbar: false);
 
+    /// <summary>
+    /// Gets whether the user may send the window to another screen (ADR 0263): « Autre écran »,
+    /// the screen shortcuts, dragging between screens. Defaults to <see langword="true"/>. Off,
+    /// <c>WindowRuntime</c> refuses <see cref="MoveWindowToDisplayCommand"/> for the window
+    /// and its modal family, and creates it on screen 1: changing screen moves the window into another
+    /// browser document, which reloads any iframe it holds.
+    /// </summary>
+    public bool CanChangeScreen { get; init; } = true;
+
     /// <summary>Gets whether a title bar is drawn (every style but <see cref="WindowFrameStyle.None"/>).</summary>
     public bool HasTitleBar => Style != WindowFrameStyle.None;
 

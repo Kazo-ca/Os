@@ -242,5 +242,6 @@ next free number is given in
 | [`0243-serve-installed-app-pages.md`](0243-serve-installed-app-pages.md) | ADR 0243: the published service worker serves the page load of an installed app's file (an iframe pointed at `_content/<assembly>/…html?param`) from the installed apps' cache, instead of the OS's `index.html`, online and offline. |
 | [`0244-stable-window-order-in-the-page.md`](0244-stable-window-order-in-the-page.md) | ADR 0244: windows keep their place in the page (opening order), `ZOrder` only gives the `z-index`: an iframe no longer reloads when its window comes to the front, nor on mobile when switching apps; the window that receives the keyboard focus comes to the front. |
 | [`0245-raise-the-maximum-file-size.md`](0245-raise-the-maximum-file-size.md) | ADR 0245: a file may be 128 MiB (instead of 16 MiB, ADR 0094), the largest extracted size of a package; same chunk format, write and read in batches of 16 MiB per IndexedDB transaction (Kazo Word, version 3.3.2). |
+| [`0263-windows-that-stay-on-their-screen.md`](0263-windows-that-stay-on-their-screen.md) | ADR 0263: a window may refuse to change screen (`window.canChangeScreen: false`); Craft apps in an iframe stay on their screen, with a "known issue, a fix is in progress" warning (proposed, Kazo Word). |
 
 Parent folder index: [`../README.md`](../README.md).

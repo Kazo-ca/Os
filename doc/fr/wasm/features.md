@@ -429,6 +429,7 @@ dans `main`, le lien mène à sa PR.
 | Changer d'utilisateur | Ouvrir une autre session sans fermer la première. Reste grisé dans le menu Marche/arrêt par choix de Benoit : une session à la fois, Se déconnecter pour changer de compte. | [0195](dev/adr/0195-start-menu-power-button.md), [0201](dev/adr/0201-switch-user-stays-greyed.md) | [#290](https://github.com/Kazo-ca/Os/issues/290) |
 | Adresse de fichier servie à la demande | Une app reçoit une adresse pour lire un gros fichier (audio, vidéo) sans le copier en mémoire, avec lecture partielle pour avancer dans un morceau. | À écrire | [#379](https://github.com/Kazo-ca/Os/issues/379) |
 | Glisser des fichiers vers une app | Contrat public du SDK pour recevoir des fichiers glissés depuis l'explorateur ou le bureau. | À écrire | [#380](https://github.com/Kazo-ca/Os/issues/380) |
+| Fenêtres qui restent sur leur écran | Une app peut empêcher sa fenêtre de changer d'écran (`window.canChangeScreen: false`). Les apps Craft dans un iframe (Kazo Word et les suivantes) restent sur leur écran avec l'avertissement « problème connu, une solution est en cours » : changer d'écran rechargeait l'iframe et faisait perdre le document. La vraie solution prévue : compiler nous-mêmes une version WebAssembly de chaque app Craft, sans iframe. | [0263](dev/adr/0263-windows-that-stay-on-their-screen.md) | [#482](https://github.com/Kazo-ca/Os/issues/482) |
 
 ### Kazo OS Store
 

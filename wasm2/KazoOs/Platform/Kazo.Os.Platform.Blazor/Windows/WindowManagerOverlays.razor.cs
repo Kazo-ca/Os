@@ -24,6 +24,9 @@ public sealed partial class WindowManagerOverlays : ComponentBase
     /// <summary>Id of the « Autre écran » entry.</summary>
     internal const string OtherScreenItemId = "window.other-screen";
 
+    /// <summary>The disabled entry of « Autre écran » for a window that must stay on its screen (ADR 0263).</summary>
+    internal const string ScreenChangeUnavailableItemId = "window.screen-change-unavailable";
+
     /// <summary>Id of the « Nouvel écran » entry.</summary>
     internal const string NewScreenItemId = "window.new-screen";
 

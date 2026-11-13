@@ -20,6 +20,7 @@
          data-window-height="@Window.Bounds.Height.ToString(System.Globalization.CultureInfo.InvariantCulture)"
          data-window-state="@Window.VisualState"
          data-window-snapped="@(Window.IsSnapped ? "true" : null)"
+         data-window-single-screen="@(Window.Frame.CanChangeScreen ? null : "true")"
          data-window-z="@Window.ZOrder"
          hidden="@(IsHidden ? true : null)"
          @onpointerdown="FocusAsync"
