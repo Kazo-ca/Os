@@ -1,1 +1,10 @@
 #nullable enable
+Kazo.Os.Apps.Store.StoreScreenshots
+Kazo.Os.Apps.Store.StoreScreenshots.AppName.get -> string!
+Kazo.Os.Apps.Store.StoreScreenshots.AppName.set -> void
+Kazo.Os.Apps.Store.StoreScreenshots.Dispose() -> void
+Kazo.Os.Apps.Store.StoreScreenshots.StoreScreenshots() -> void
+Kazo.Os.Apps.Store.StoreScreenshots.Uris.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Kazo.Os.Apps.Store.StoreScreenshots.Uris.set -> void
+Kazo.Os.Apps.Store.StoreScreenshots.ViewerOpenChanged.get -> Microsoft.AspNetCore.Components.EventCallback<bool>
+Kazo.Os.Apps.Store.StoreScreenshots.ViewerOpenChanged.set -> void

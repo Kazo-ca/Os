@@ -415,6 +415,16 @@ kazopkg info org.example.notes
   fichier (ADR [0257](adr/0257-offer-a-store-app-for-an-unsupported-file.md) §5,
   bouton « Voir dans le Store » de l'Explorateur). Le Store déjà ouvert reçoit
   aussi ces arguments.
+- **Captures de la fiche** (série `store-ux`, chantier 2) : chaque capture est
+  un bouton (`StoreScreenshots.razor`). Un clic, Entrée ou Espace l'ouvre dans
+  une visionneuse qui couvre la fenêtre du Store (pas l'écran) : précédent et
+  suivant par les boutons, ← et →, Début et Fin, ou un balayage du doigt ;
+  Échap, le bouton Fermer, un clic à côté de l'image ou le Retour de l'OS
+  (bouton Précédent de la souris, Alt+←, Retour du téléphone) la ferment, et le
+  focus revient à la vignette de la dernière capture vue. Le catalogue ne donne
+  pas la taille des captures : la vignette a une hauteur fixe (240 px, 320 px
+  dans une fenêtre large, 200 px sur téléphone) et une largeur en 16:10 tant
+  que l'image n'est pas arrivée, pour que la page ne saute pas.
 - **Mises à jour** : `AppUpdateMonitor` vérifie à l'ouverture de la session
   puis toutes les `[updates] interval-hours` heures et envoie une notification
   qui ouvre l'onglet Installées. Chaque vérification télécharge aussi tous

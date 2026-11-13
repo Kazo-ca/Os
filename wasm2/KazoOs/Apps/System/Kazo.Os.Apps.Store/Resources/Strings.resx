@@ -75,9 +75,6 @@
   <data name="Detail.Published" xml:space="preserve">
     <value>Published</value>
   </data>
-  <data name="Detail.Screenshot" xml:space="preserve">
-    <value>Screenshot of {0}</value>
-  </data>
   <data name="Detail.Screenshots" xml:space="preserve">
     <value>Screenshots</value>
   </data>
@@ -302,5 +299,26 @@
   </data>
   <data name="Error.OpenAfterInstall" xml:space="preserve">
     <value>{0} could not be opened ({1}).</value>
+  </data>
+  <data name="Viewer.OpenScreenshot" xml:space="preserve">
+    <value>Enlarge screenshot {0} of {1} of {2}</value>
+  </data>
+  <data name="Viewer.Label" xml:space="preserve">
+    <value>Screenshots of {0}</value>
+  </data>
+  <data name="Viewer.Position" xml:space="preserve">
+    <value>{0} / {1}</value>
+  </data>
+  <data name="Viewer.Screenshot" xml:space="preserve">
+    <value>Screenshot {0} of {1} of {2}</value>
+  </data>
+  <data name="Viewer.Close" xml:space="preserve">
+    <value>Close (Esc)</value>
+  </data>
+  <data name="Viewer.Previous" xml:space="preserve">
+    <value>Previous screenshot</value>
+  </data>
+  <data name="Viewer.Next" xml:space="preserve">
+    <value>Next screenshot</value>
   </data>
 </root>

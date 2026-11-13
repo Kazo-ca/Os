@@ -5,9 +5,17 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
+    <!--
+      BL0005: the screenshot tests set StoreScreenshots' parameters directly before attaching it to
+      StoreTestRenderer; BL0006: StoreTestRenderer reads the render tree. Both are the supported way
+      to drive a component without bUnit, which this solution doesn't use (see
+      Tests/Kazo.Os.Apps.FileExplorer.FileControl.Tests/TestComponentRenderer.cs).
+    -->
+    <NoWarn>$(NoWarn);BL0005;BL0006</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.14" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.11.0" />
     <PackageReference Include="xunit" Version="2.9.3" />
     <PackageReference Include="xunit.runner.visualstudio" Version="4.0.1">

@@ -1,0 +1,11 @@
+{
+  "id": "8e21e17f-1b55-43d3-a290-7456ef6fcd6a",
+  "category": "improved",
+  "audience": ["user"],
+  "title": { "en": "Enlarge an app's screenshots in the Store", "fr": "Agrandir les captures d'une app dans le Store" },
+  "description": {
+    "en": "Click a screenshot on an app's page to see it at the size of the Store window, then move between them with the arrows, the keyboard or a swipe. Escape or Back closes it.",
+    "fr": "Cliquez sur une capture dans la fiche d'une app pour la voir à la taille de la fenêtre du Store, puis passez de l'une à l'autre avec les flèches, le clavier ou un balayage. Échap ou Retour la ferme."
+  },
+  "links": ["doc/en/wasm/dev/app-installation.md"]
+}

@@ -411,6 +411,15 @@ kazopkg info org.example.notes
   Store opens that file (ADR [0257](adr/0257-offer-a-store-app-for-an-unsupported-file.md) §5,
   the File Explorer's "View in the Store" button). A Store already open
   receives these arguments too.
+- **The page's screenshots** (`store-ux` series, work item 2): each screenshot
+  is a button (`StoreScreenshots.razor`). A click, Enter or Space opens it in a
+  viewer that covers the Store window (not the screen): previous and next with
+  the buttons, ← and →, Home and End, or a finger swipe; Escape, the Close
+  button, a click beside the image or the OS's Back (the mouse's Back button,
+  Alt+←, the phone's Back) close it, and the focus returns to the thumbnail of
+  the screenshot last shown. The catalog does not give the screenshots' sizes:
+  the thumbnail has a fixed height (240 px, 320 px in a wide window, 200 px on a
+  phone) and a 16:10 width until the image arrives, so the page does not jump.
 - **Updates**: `AppUpdateMonitor` checks at sign-in then every
   `[updates] interval-hours` hours and posts a notification that opens the
   Installed tab. Each check also downloads every catalog of `[catalogs]`, for
