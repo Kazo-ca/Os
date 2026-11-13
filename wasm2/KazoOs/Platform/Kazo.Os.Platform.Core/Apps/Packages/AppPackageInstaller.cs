@@ -1,4 +1,5 @@
 using Kazo.Os.App.Abstractions;
+using Kazo.Os.AppSdk.Apps;
 using Kazo.Os.Simulation.Abstractions.FileSystem;
 using Kazo.Os.Simulation.Abstractions.Gateways;
 using Kazo.Os.Simulation.Abstractions.Settings;
@@ -67,7 +68,7 @@ public sealed record AppPackageUpdate(string AppId, AppPackageSource Installed, 
 /// <param name="Failures">Sources that could not be read, one line each.</param>
 public sealed record AppPackageUpdateReport(IReadOnlyList<AppPackageUpdate> Updates, IReadOnlyList<string> Failures);
 
-/// <summary>What <see cref="AppPackageInstaller.PrepareAsync"/> decides with (ADR 0189).</summary>
+/// <summary>What <see cref="AppPackageInstaller.PrepareAsync(AppPackageSource, AppPackageInstallContext, CancellationToken)"/> decides with (ADR 0189).</summary>
 /// <param name="Sources">The sources and hosts.</param>
 /// <param name="Policy">The administrator's block list.</param>
 /// <param name="Scope">For whom the caller asked.</param>
@@ -266,8 +267,26 @@ public sealed partial class AppPackageInstaller
     /// <param name="request">The sources, the block list, the scope and what is installed already.</param>
     /// <param name="cancellationToken">Cancels the downloads.</param>
     /// <exception cref="AppPackageException">The package is refused; <see cref="AppPackageException.Code"/> says why.</exception>
+    public ValueTask<AppPackagePlan> PrepareAsync(
+        AppPackageSource source, AppPackageInstallContext request, CancellationToken cancellationToken = default) =>
+        PrepareAsync(source, request, progress: null, cancellationToken);
+
+    /// <summary>
+    /// Prepares like <see cref="PrepareAsync(AppPackageSource, AppPackageInstallContext, CancellationToken)"/>
+    /// and reports its steps (ADR 0266 §7): <see cref="KazoPackageInstallStage.Preparing"/> while the
+    /// index is read, <see cref="KazoPackageInstallStage.Downloading"/> as the package's bytes arrive,
+    /// then <see cref="KazoPackageInstallStage.Verifying"/>.
+    /// </summary>
+    /// <param name="source">The repository, with or without a version.</param>
+    /// <param name="request">The sources, the block list, the scope and what is installed already.</param>
+    /// <param name="progress">Receives the steps; <see langword="null"/> reports nothing.</param>
+    /// <param name="cancellationToken">Cancels the downloads.</param>
+    /// <exception cref="AppPackageException">The package is refused; <see cref="AppPackageException.Code"/> says why.</exception>
     public async ValueTask<AppPackagePlan> PrepareAsync(
-        AppPackageSource source, AppPackageInstallContext request, CancellationToken cancellationToken = default)
+        AppPackageSource source,
+        AppPackageInstallContext request,
+        IProgress<KazoPackageInstallProgress>? progress,
+        CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(source);
         ArgumentNullException.ThrowIfNull(request);
@@ -278,6 +297,7 @@ public sealed partial class AppPackageInstaller
             throw new AppPackageException("apps.package.no-session", "A personal install needs a signed-in user.");
         }
 
+        progress?.Report(new KazoPackageInstallProgress(KazoPackageInstallStage.Preparing));
         AppPackageIndex index = await GetIndexAsync(source, sources, cancellationToken).ConfigureAwait(false);
         AppPackageIndexEntry entry = (source.Version is { } wanted ? index.Find(wanted) : index.Latest)
             ?? throw new AppPackageException(
@@ -288,10 +308,12 @@ public sealed partial class AppPackageInstaller
         Uri packageUri = source.IsCatalog
             ? (await GetCatalogEntryAsync(source, sources, cancellationToken).ConfigureAwait(false)).Listing.Resolve(entry.Path)
             : source.GetFileUri(sources.GitHubHost, entry.Path);
+        progress?.Report(new KazoPackageInstallProgress(KazoPackageInstallStage.Downloading, 0));
         byte[] archive = await _downloader
-            .DownloadAsync(packageUri, AppPackage.MaximumArchiveBytes, cancellationToken)
+            .DownloadAsync(packageUri, AppPackage.MaximumArchiveBytes, DownloadProgress.For(progress), cancellationToken)
             .ConfigureAwait(false)
             ?? throw new AppPackageException("apps.package.download-failed", $"{entry.Path} is listed in the index of {source.Name} but missing.");
+        progress?.Report(new KazoPackageInstallProgress(KazoPackageInstallStage.Verifying));
         if (!string.Equals(AppPackage.Sha256(archive), entry.Sha256, StringComparison.OrdinalIgnoreCase))
         {
             throw new AppPackageException("apps.package.hash-mismatch", $"{entry.Path} does not match the SHA-256 of the index of {source.Name}.");
@@ -865,6 +887,34 @@ public sealed partial class AppPackageInstaller
         {
             cancellationToken.ThrowIfCancellationRequested();
             return ValueTask.FromResult<Stream>(new MemoryStream(content, writable: false));
+        }
+    }
+
+    /// <summary>
+    /// Turns the downloader's byte counts into <see cref="KazoPackageInstallStage.Downloading"/>
+    /// reports, at most one per whole percent (or per 256 KiB when the size is unknown), so a Store
+    /// does not redraw for each 80 KiB chunk of a large package.
+    /// </summary>
+    private sealed class DownloadProgress(IProgress<KazoPackageInstallProgress> target) : IProgress<AppPackageDownloadProgress>
+    {
+        private const long UnknownSizeStep = 256 * 1024;
+        private long _lastStep = -1;
+
+        public static IProgress<AppPackageDownloadProgress>? For(IProgress<KazoPackageInstallProgress>? target) =>
+            target is null ? null : new DownloadProgress(target);
+
+        public void Report(AppPackageDownloadProgress value)
+        {
+            long step = value.TotalBytes is > 0 and { } total
+                ? Math.Min(100, value.BytesReceived * 100 / total)
+                : value.BytesReceived / UnknownSizeStep;
+            if (step == _lastStep)
+            {
+                return;
+            }
+
+            _lastStep = step;
+            target.Report(new KazoPackageInstallProgress(KazoPackageInstallStage.Downloading, value.BytesReceived, value.TotalBytes));
         }
     }
 }

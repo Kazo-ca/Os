@@ -415,6 +415,15 @@ kazopkg info org.example.notes
   fichier (ADR [0257](adr/0257-offer-a-store-app-for-an-unsupported-file.md) §5,
   bouton « Voir dans le Store » de l'Explorateur). Le Store déjà ouvert reçoit
   aussi ces arguments.
+- **Progression** (ADR [0266](adr/0266-store-ux-refresh.md) §7) : pendant une
+  installation ou une mise à jour, la fiche et la carte de l'app montrent
+  l'étape que l'OS rapporte à `KazoAppPackages.InstallAsync(source, scope,
+  progress)` : préparation, téléchargement (pourcentage et tailles ; la taille
+  du catalogue quand l'hôte n'annonce pas la sienne), vérification, attente
+  d'un administrateur, installation. Seuls les boutons de cette app sont
+  désactivés. Les actions qui changent les apps installées passent une à la
+  fois, comme un gestionnaire de paquets qui tient son verrou : la suivante
+  affiche « En attente de l'autre installation… ». Ouvrir une app n'attend pas.
 - **Navigation et clavier** (série `store-ux`, chantier 1) : chaque vue
   (accueil, catégorie, résultats, Installées, Thèmes, fiche) s'ouvre en haut ;
   en revenant d'une fiche, la liste reprend la position où on l'avait laissée
@@ -475,12 +484,13 @@ kazopkg info org.example.notes
   `defaultPinsApplied` ; le Store est ajouté une fois, à un nouveau profil
   comme à un profil existant, et ne revient pas après un désépinglage.
 
-Tests : `AppCatalogDocumentTests`, les tests de catalogue
-d'`AppPackageGatewayTests`, `StartMenuPreferencesServiceTests`
-(Platform.Core), `Kazo.Os.Apps.Store.Tests` (`StoreCatalog`,
-`StoreMarkdown`, `StoreNavigationTests`, `StoreScreenshotsTests`,
-`StoreAppFactsTests`, manifeste) et `Kazo.Os.UI.E2E.Tests`
-(`StoreNavigationTests`, `StoreScreenshotViewerTests`, `StoreAppPageTests`).
+Tests : `AppCatalogDocumentTests`, les tests de catalogue et de progression
+d'`AppPackageGatewayTests`, `HttpAppPackageDownloaderTests`,
+`StartMenuPreferencesServiceTests` (Platform.Core), `Kazo.Os.Apps.Store.Tests`
+(`StoreCatalog`, `StoreMarkdown`, `StoreNavigationTests`, `StoreOperations`,
+`StoreScreenshotsTests`, `StoreAppFactsTests`, manifeste) et
+`Kazo.Os.UI.E2E.Tests` (`StoreNavigationTests`, `StoreInstallProgressTests`,
+`StoreScreenshotViewerTests`, `StoreAppPageTests`).
 
 ## Ajout sans redémarrage, signature et transactions
 
@@ -556,3 +566,4 @@ Tests : `AppPackageGatewayTests.Transactions.cs`, `AppDataGuardTests`,
 - [x] Tests de contrat et documentation.
 - [x] Kazo OS Store : catalogues, `kazopkg install <appId>`, mises à jour par notification, épinglage par défaut (ADR 0212, ADR 0215).
 - [x] Ajout sans redémarrage, signature, installation transactionnelle, `kazopkg rollback` et `repair`, sauvegarde des données (ADR 0214).
+- [x] Progression d'installation dans le Store : `IProgress<KazoPackageInstallProgress>`, étapes, file d'attente, boutons de l'app seule (ADR 0266 §7).

@@ -55,7 +55,7 @@
                     {
                         <button type="button" class="store-link store-try-link"
                                 title="@L["Action.CopyTryLinkHint", entry.Name]"
-                                disabled="@Store.IsBusy"
+                                disabled="@Store.IsRunning(entry)"
                                 @onclick="Store.Callback(() => CopyTryLinkAsync(entry))">
                             <KazoIcon Library="IconLibrary.Lucide" Name="link" Size="14" Title="" /> @L["Action.CopyTryLink"]
                         </button>
@@ -120,7 +120,7 @@
 @code {
     private RenderFragment RenderPrimaryAction(StoreEntry entry) => __builder =>
     {
-        bool busy = Store.IsBusy;
+        bool busy = Store.IsRunning(entry);
         @switch (entry.State)
         {
             case StoreAppState.NotInstalled when entry.App is not null:

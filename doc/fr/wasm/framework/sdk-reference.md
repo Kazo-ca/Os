@@ -228,7 +228,7 @@ porte le code du moteur, et `ShellErrorText.Describe` donne le message Linux.
 | `KazoAppAssets` | `RelativeUrl(manifest, assetPath)` : URL `_content/<assembly>/<chemin>` d'un fichier déclaré par une app ; repris par `KazoAppInfo.IconUrl` (ADR 0232) | aucune | [ADR 0232](../dev/adr/0232-illustrated-app-icons-everywhere.md) |
 | `KazoBrowser` | `OpenAsync(url)`, `OpenDetachedAsync(url)` (fenêtre détachée, ADR 0078) ; `AppId`, `DetachedArgument` (`--detached`) | `apps.launch` | [`detached-display-windows.md`](../dev/detached-display-windows.md), [`display-surface-api.md`](display-surface-api.md) |
 | `KazoAppManagement` | `GetAllAsync`, `UninstallAsync`, `ReinstallAsync` ; `KazoInstallScope`, `KazoAppInstallState` | `apps.manage` | [`app-installation.md`](../dev/app-installation.md) |
-| `KazoAppPackages` | `GetSourcesAsync`, `GetInstalledAsync` (avec `PreviousVersion`), `GetInfoAsync`, `InstallAsync`, `RemoveAsync`, `RollbackAsync(appId, scope)` et `RepairAsync(system)` (ADR 0214), sources, liste noire, catalogues, mises à jour, `RestartToFinishAsync`, packs de thèmes | `apps.manage` | [`app-installation.md`](../dev/app-installation.md#ajout-sans-redémarrage-signature-et-transactions) |
+| `KazoAppPackages` | `GetSourcesAsync`, `GetInstalledAsync` (avec `PreviousVersion`), `GetInfoAsync`, `InstallAsync` (avec `IProgress<KazoPackageInstallProgress>` en option, ADR 0266), `RemoveAsync`, `RollbackAsync(appId, scope)` et `RepairAsync(system)` (ADR 0214), sources, liste noire, catalogues, mises à jour, `RestartToFinishAsync`, packs de thèmes | `apps.manage` | [`app-installation.md`](../dev/app-installation.md#ajout-sans-redémarrage-signature-et-transactions) |
 
 ### Processus et services
 

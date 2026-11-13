@@ -29,8 +29,9 @@ public partial class StoreWindow
     /// <summary>Gets the language of the Store, for the catalogs' texts and the dates.</summary>
     internal CultureInfo TextCulture => Culture;
 
-    /// <summary>Gets whether an action is running (every action button waits).</summary>
-    internal bool IsBusy => _isBusy;
+    /// <summary>Gets whether an action runs or waits on this app: only its buttons wait (ADR 0266 §7).</summary>
+    /// <param name="entry">The app.</param>
+    internal bool IsRunning(StoreEntry entry) => Operations.IsRunning(entry.AppId);
 
     /// <summary>Gets whether the long description is being read.</summary>
     internal bool IsDescriptionLoading => _isDescriptionLoading;
