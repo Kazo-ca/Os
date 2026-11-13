@@ -4,9 +4,9 @@
 
 ## Statut
 
-Proposée le 2026-11-13. Série `app-link-reload/base`. Les questions sont posées
-à Benoit dans le fil du projet (voir [Questions](#questions-posées-à-benoit)) ;
-le code suit les recommandations en attendant ses réponses.
+Acceptée le 2026-11-13 : Benoit a retenu les recommandations (Q1 = A,
+Q2 = A, voir [Questions](#questions-posées-à-benoit)). Série
+`app-link-reload/base`.
 
 - **Remplace en partie :** l'[ADR 0258](0258-direct-app-launch-link.md) §2
   (« Recharger la page, ou la redémarrer pour une mise à jour, ne relance donc
@@ -113,7 +113,7 @@ la contient.
 
 ## Questions posées à Benoit
 
-Posées dans le fil du projet le 2026-11-13.
+Posées dans le fil du projet le 2026-11-13 ; Benoit a répondu « d'accord avec tes recommandations » le même jour.
 
 - **Q1. Où garder le lien entre deux chargements ?** A le `sessionStorage` de
   l'onglet (recommandé : survit aux rechargements, oublié à la fermeture, pas
@@ -138,4 +138,4 @@ Posées dans le fil du projet le 2026-11-13.
 - [x] Trouver tous les chemins qui rechargent l'onglet.
 - [x] Écrire cette ADR (fr + en) et mettre à jour les index.
 - [x] Poser les questions à Benoit dans le fil.
-- [ ] Chantier 1 : garder le lien dans l'onglet, tests, doc.
+- [x] Chantier 1 : garder le lien dans l'onglet, tests, doc.

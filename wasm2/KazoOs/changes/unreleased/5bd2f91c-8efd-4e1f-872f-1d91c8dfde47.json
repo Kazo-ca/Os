@@ -1,0 +1,14 @@
+{
+  "id": "5bd2f91c-8efd-4e1f-872f-1d91c8dfde47",
+  "category": "fixed",
+  "audience": ["user"],
+  "title": {
+    "en": "The Try it link survives a restart for an update",
+    "fr": "Le lien Essayer survit au redémarrage pour une mise à jour"
+  },
+  "description": {
+    "en": "A link ending in ?autolaunch=<app id> was lost when the tab restarted onto a newer Kazo OS before the app opened. The tab now keeps the link until the app is open (or the Store, or an error is shown), so the app opens after the restart.",
+    "fr": "Un lien qui se termine par ?autolaunch=<id de l'app> était perdu quand l'onglet redémarrait sur une version plus récente de Kazo OS avant que l'app s'ouvre. L'onglet garde maintenant le lien jusqu'à l'ouverture de l'app (ou du Store, ou d'une erreur), et l'app s'ouvre après le redémarrage."
+  },
+  "links": ["doc/en/wasm/dev/adr/0265-direct-link-survives-update-restart.md", "doc/en/wasm/dev/app-launch-link.md"]
+}

@@ -1,1 +1,2 @@
 #nullable enable
+static Kazo.Os.Platform.Core.AppLinks.AppLaunchLink.TryFromAppId(string? appId, out Kazo.Os.Platform.Core.AppLinks.AppLaunchLink? link) -> bool
