@@ -86,6 +86,21 @@ Types de `OnFrameMessage` : `ready`, `failed`, `dirty`, `key`, `pick`,
 `setting`, `scheme`, et `error` (nouveau, voir plus bas). L'iframe a la classe
 `craft-frame-iframe`.
 
+## Ce que chaque app fournit (pas les scripts)
+
+Les scripts ne connaissent ni les commandes ni les formats d'une app ; tout ce
+qui diffère d'une app Craft à l'autre passe par le C# de la fenêtre. Exemple de
+GridCraft 0.19.1 face à WordCraft :
+
+- thème et langue : autres commandes de la page (`ui.set { dark }`,
+  `app.language.set { language }`) ; la fenêtre les envoie par `request` ;
+- « Enregistrer sous » : `gridcraft:save` a toujours `saveAs: false` ; la
+  fenêtre réserve F12 et Ctrl+Maj+S (`reservedKeys`, cible `app`) et décide
+  elle-même ; Ctrl+S reste à l'app (test `craft-proxy-frame.test.mjs`) ;
+  le nom reçu porte l'extension du format choisi ;
+- `dirty` vaut pour tous les documents de la page ; la liste des formats
+  ouvrables est celle de l'app.
+
 ## Messages internes (fenêtre ↔ proxy)
 
 `init`, `ready`, `failed`, `open`, `save`, `saved`, `dirty`, `focus`,

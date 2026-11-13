@@ -72,6 +72,28 @@ test("a reserved chord is kept from the fake Craft app and sent to the window, t
     ]);
 });
 
+test("an app reserves its own chords for the window: F12 and Ctrl+Shift+S go to it, Ctrl+S stays with the app", () => {
+    // GridCraft's saves never ask "Save as": its window takes Save As (F12, Ctrl+Shift+S) itself.
+    const f12 = { key: "F12", code: "F12", ctrl: false, alt: false, shift: false, meta: false, target: "app" };
+    const ctrlShiftS = { key: "s", code: "KeyS", ctrl: true, alt: false, shift: true, meta: false, target: "app" };
+    const page = new EventTarget();
+    const sent = [];
+    const reachedApp = [];
+    forwardReservedKeys({ page, chords: [f12, ctrlShiftS], send: (message) => sent.push(message) });
+    page.addEventListener("keydown", (event) => reachedApp.push(event.key));
+
+    page.dispatchEvent(keyEvent("keydown", { key: "F12", code: "F12" }));
+    page.dispatchEvent(keyEvent("keydown", { key: "S", code: "KeyS", ctrl: true, shift: true }));
+    page.dispatchEvent(keyEvent("keydown", { key: "s", code: "KeyS", ctrl: true }));
+    page.dispatchEvent(keyEvent("keyup", { key: "Control", code: "ControlLeft" }));
+
+    assert.deepEqual(reachedApp, ["s"]);
+    assert.deepEqual(sent.map((message) => [message.phase, message.target, message.key, message.shift]), [
+        ["down", "app", "F12", false],
+        ["down", "app", "S", true],
+    ]);
+});
+
 test("while an OS chord is held its key releases go to the window too, not to the fake Craft app", () => {
     const page = new EventTarget();
     const sent = [];
