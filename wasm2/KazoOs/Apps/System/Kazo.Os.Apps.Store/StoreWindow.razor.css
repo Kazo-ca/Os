@@ -105,6 +105,7 @@
 /* Keyboard focus is always visible (WCAG 2.4.7): the same ring on every control of the Store. The
    mouse does not show it (:focus-visible). */
 .store-tab:focus-visible,
+.store-chip:focus-visible,
 .store-button:focus-visible,
 .store-icon-button:focus-visible,
 .store-back:focus-visible,
@@ -212,14 +213,49 @@
 
 .store-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-    gap: 10px;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 14px;
     margin: 0;
     padding: 0;
     list-style: none;
 }
 
-.store-card,
+/* ADR 0266 §2: a card is a list item that opens the app's page; its name is the button the
+   keyboard reaches, and the card's buttons keep their own clicks. */
+.store-card {
+    position: relative;
+    cursor: pointer;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 16px;
+    background-color: var(--kos-bg-surface, #161b22);
+    color: inherit;
+    border: 1px solid var(--kos-border-subtle, #30363d);
+    border-radius: var(--kos-radius-md, 8px);
+    transition: border-color 120ms ease, transform 120ms ease;
+}
+
+.store-card:hover,
+.store-card:has(.store-card-name:focus-visible) {
+    border-color: var(--kos-accent, #42d392);
+}
+
+.store-card:hover {
+    transform: translateY(-1px);
+}
+
+.store-card:has(.store-card-name:focus-visible) {
+    outline: 2px solid var(--kos-focus-ring, var(--kos-accent, #42d392));
+    outline-offset: 2px;
+}
+
+/* An open install menu floats over the next cards and over the backdrop that closes it. */
+.store-card.has-menu {
+    z-index: 7;
+    transform: none;
+}
+
 .store-row-main {
     display: flex;
     align-items: flex-start;
@@ -234,19 +270,13 @@
     font: inherit;
     text-align: left;
     cursor: pointer;
-    transition: border-color 120ms ease, transform 120ms ease;
+    transition: border-color 120ms ease;
 }
 
-.store-card:hover,
-.store-card:focus-visible,
 .store-row-main:hover,
 .store-row-main:focus-visible {
     border-color: var(--kos-accent, #42d392);
     outline: none;
-}
-
-.store-card:hover {
-    transform: translateY(-1px);
 }
 
 .store-app-icon {
@@ -259,8 +289,8 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 48px;
-    height: 48px;
+    width: 56px;
+    height: 56px;
     background-color: var(--kos-btn-bg, #21262d);
     color: var(--kos-text-secondary, #8b949e);
 }
@@ -274,12 +304,33 @@
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 6px;
     min-width: 0;
 }
 
 .store-card-name {
     font-weight: 600;
+}
+
+button.store-card-name {
+    align-self: flex-start;
+    max-width: 100%;
+    padding: 0;
+    background: none;
+    border: none;
+    color: var(--kos-text-primary, #c9d1d9);
+    font: inherit;
+    font-size: 1rem;
+    font-weight: 700;
+    text-align: left;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+button.store-card-name:focus-visible {
+    outline: none;
 }
 
 .store-card-description {
@@ -291,10 +342,323 @@
     overflow: hidden;
 }
 
+/* Long texts in the system's sans serif (ADR 0266, second questions Q1 A), as on the app's page. */
+.store-card .store-card-description,
+.store-featured-description {
+    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    font-size: 0.875rem;
+    line-height: 1.4;
+}
+
 .store-card-meta {
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
+}
+
+.store-card .store-card-meta {
+    color: var(--kos-text-secondary, #8b949e);
+    font-size: 0.75rem;
+}
+
+.store-card-actions {
+    cursor: default;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    margin-top: 4px;
+}
+
+.store-card-state {
+    color: var(--kos-accent, #42d392);
+    font-size: 0.75rem;
+}
+
+.store-card-state.is-update {
+    color: var(--kos-warning, #d29922);
+}
+
+/* « Install » with its menu « Install for everyone » (ADR 0266 §3): one control in two parts. */
+.store-split {
+    position: relative;
+    display: inline-flex;
+}
+
+.store-split .store-split-main:not(:last-child) {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.store-split .store-split-toggle {
+    padding-inline: 8px;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    border-left: 1px solid color-mix(in srgb, var(--kos-accent-contrast, #0d1117) 55%, transparent);
+}
+
+.store-split.is-large .store-button,
+.store-button.is-large {
+    padding: 9px 18px;
+    font-size: 0.95rem;
+}
+
+.store-split.is-large .store-split-toggle {
+    padding-inline: 12px;
+}
+
+.store-menu {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    z-index: 8;
+    display: flex;
+    flex-direction: column;
+    min-width: 100%;
+    padding: 4px;
+    background-color: var(--kos-bg-elevated, var(--kos-bg-surface, #161b22));
+    border: 1px solid var(--kos-border, #30363d);
+    border-radius: var(--kos-radius-md, 8px);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+}
+
+.store-menu-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: none;
+    border: none;
+    border-radius: var(--kos-radius-sm, 4px);
+    color: var(--kos-text-primary, #c9d1d9);
+    font: inherit;
+    font-size: 0.85rem;
+    text-align: left;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.store-menu-item:hover,
+.store-menu-item:focus-visible {
+    background-color: color-mix(in srgb, var(--kos-accent, #42d392) 16%, transparent);
+    outline: none;
+}
+
+.store-menu-backdrop {
+    position: absolute;
+    inset: 0;
+    z-index: 6;
+}
+
+/* ADR 0266 §2: the featured app, with its first screenshot beside the text. */
+.store-featured {
+    display: grid;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+    min-height: 260px;
+    margin-bottom: 20px;
+    overflow: hidden;
+    background-color: var(--kos-bg-surface, #161b22);
+    border: 1px solid var(--kos-border, #30363d);
+    border-radius: var(--kos-radius-lg, 12px);
+}
+
+.store-featured.is-text-only {
+    grid-template-columns: minmax(0, 1fr);
+}
+
+.store-featured:has(.store-menu) {
+    overflow: visible;
+    position: relative;
+    z-index: 7;
+}
+
+.store-featured-text {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 12px;
+    padding: 28px 32px;
+    min-width: 0;
+}
+
+.store-featured-label {
+    color: var(--kos-accent, #42d392);
+    font-family: var(--kos-font-mono, 'Cascadia Mono', Consolas, monospace);
+    font-size: 0.75rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.store-featured-title {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-width: 0;
+}
+
+.store-featured-title h2 {
+    margin: 0;
+    font-size: 1.9rem;
+    font-weight: 700;
+    overflow-wrap: anywhere;
+}
+
+.store-featured-description {
+    margin: 0;
+    color: var(--kos-text-secondary, #8b949e);
+    font-size: 1rem;
+    line-height: 1.45;
+}
+
+.store-featured-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 16px;
+}
+
+.store-featured-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    color: var(--kos-text-secondary, #8b949e);
+    font-size: 0.75rem;
+}
+
+.store-featured-shot {
+    display: block;
+    width: 100%;
+    height: 100%;
+    min-height: 260px;
+    max-height: 320px;
+    object-fit: cover;
+    object-position: left top;
+    border-left: 1px solid var(--kos-border-subtle, #30363d);
+    background-color: var(--kos-btn-bg, #21262d);
+}
+
+/* ADR 0266 §2: one chip per category, « All » first; the sort on the right. */
+.store-filters-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+}
+
+.store-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.store-chip {
+    padding: 6px 14px;
+    background: none;
+    border: 1px solid var(--kos-border, #30363d);
+    border-radius: 999px;
+    color: var(--kos-text-primary, #c9d1d9);
+    font: inherit;
+    font-size: 0.85rem;
+    cursor: pointer;
+}
+
+.store-chip:hover {
+    border-color: var(--kos-accent, #42d392);
+}
+
+.store-chip.is-active {
+    background-color: var(--kos-accent, #42d392);
+    border-color: var(--kos-accent, #42d392);
+    color: var(--kos-accent-contrast, #0d1117);
+    font-weight: 700;
+}
+
+.store-sort {
+    margin-left: auto;
+    color: var(--kos-text-secondary, #8b949e);
+    font-size: 0.75rem;
+}
+
+/* ADR 0266 §2: empty shapes while the catalogs load. */
+.store-featured.is-skeleton {
+    display: block;
+    height: 260px;
+}
+
+.store-card.is-skeleton {
+    min-height: 110px;
+}
+
+.store-skeleton-icon,
+.store-skeleton-line,
+.store-featured.is-skeleton {
+    background-image: linear-gradient(90deg,
+        var(--kos-bg-surface, #161b22) 0%,
+        color-mix(in srgb, var(--kos-text-secondary, #8b949e) 14%, var(--kos-bg-surface, #161b22)) 50%,
+        var(--kos-bg-surface, #161b22) 100%);
+    background-size: 200% 100%;
+    animation: store-skeleton-shine 1.4s ease-in-out infinite;
+}
+
+.store-skeleton-icon {
+    flex: none;
+    width: 56px;
+    height: 56px;
+    border-radius: var(--kos-radius-md, 8px);
+    background-color: var(--kos-btn-bg, #21262d);
+}
+
+.store-skeleton-line {
+    display: block;
+    height: 10px;
+    width: 90%;
+    border-radius: 5px;
+    background-color: var(--kos-btn-bg, #21262d);
+}
+
+.store-skeleton-line.is-title {
+    height: 14px;
+    width: 55%;
+}
+
+.store-skeleton-line.is-short {
+    width: 35%;
+}
+
+@keyframes store-skeleton-shine {
+    from {
+        background-position: 100% 0;
+    }
+
+    to {
+        background-position: -100% 0;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .store-skeleton-icon,
+    .store-skeleton-line,
+    .store-featured.is-skeleton {
+        animation: none;
+    }
+}
+
+.store-visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
+
+.store-button.is-outline {
+    border-color: var(--kos-accent, #42d392);
+    font-weight: 600;
 }
 
 .store-trust,
@@ -608,6 +972,30 @@
 
     .store-grid {
         grid-template-columns: 1fr;
+    }
+
+    .store-featured {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .store-featured-text {
+        padding: 20px;
+    }
+
+    .store-featured-title h2 {
+        font-size: 1.4rem;
+    }
+
+    .store-featured-shot {
+        border-left: none;
+        border-top: 1px solid var(--kos-border-subtle, #30363d);
+        min-height: 0;
+        max-height: 200px;
+    }
+
+    .store-chip,
+    .store-menu-item {
+        min-height: 40px;
     }
 
     .store-row {

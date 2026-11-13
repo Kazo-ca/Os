@@ -14,3 +14,4 @@ Kazo.Os.Apps.Store.StoreAppPage.OnHeadVisibilityChanged(bool visible) -> void
 Kazo.Os.Apps.Store.StoreAppPage.Store.get -> Kazo.Os.Apps.Store.StoreWindow!
 Kazo.Os.Apps.Store.StoreAppPage.Store.set -> void
 Kazo.Os.Apps.Store.StoreAppPage.StoreAppPage() -> void
+override Kazo.Os.Apps.Store.StoreApp.Window.get -> Kazo.Os.App.Abstractions.WindowOptions?

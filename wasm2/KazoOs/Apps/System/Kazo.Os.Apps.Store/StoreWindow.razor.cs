@@ -13,7 +13,7 @@ namespace Kazo.Os.Apps.Store;
 /// <summary>The page the Store shows.</summary>
 internal enum StoreView
 {
-    /// <summary>Categories, or the search results.</summary>
+    /// <summary>The featured app and every app by category filter, or the search results.</summary>
     Home,
 
     /// <summary>The « Installed » tab, with the updates.</summary>
@@ -27,7 +27,8 @@ internal enum StoreView
 }
 
 /// <summary>
-/// The Kazo OS Store window (ADR 0188 §1 to §3, ADR 0212): home by categories, search, an app's page,
+/// The Kazo OS Store window (ADR 0188 §1 to §3, ADR 0212, ADR 0266): home with a featured app and a
+/// grid filtered by category, search, an app's page,
 /// Install for me / for everyone, Open, Update, Uninstall, the « Installed » tab and « Restart to
 /// finish ». The same component is the desktop window and the mobile screen.
 /// </summary>
@@ -110,6 +111,7 @@ public partial class StoreWindow
     /// <inheritdoc />
     protected override async Task OnAppInitializedAsync()
     {
+        ReadUser();
         ApplyArguments(StoreLaunchArguments.Parse(LaunchArguments));
         await LoadAsync(refresh: false);
         await ShowRequestedDetailAsync();
@@ -128,6 +130,7 @@ public partial class StoreWindow
         }
 
         ApplyArguments(arguments);
+        LeaveHiddenThemesTab();
         await ShowRequestedDetailAsync();
         await InvokeAsync(StateHasChanged);
     }
@@ -187,6 +190,7 @@ public partial class StoreWindow
         finally
         {
             _isLoading = false;
+            LeaveHiddenThemesTab();
         }
     }
 
@@ -259,6 +263,7 @@ public partial class StoreWindow
     private async Task OpenDetailAsync(StoreEntry entry)
     {
         _returnView = _view == StoreView.Detail ? _returnView : _view;
+        _installMenuKey = null;
         _selectedAppId = entry.AppId;
         _view = StoreView.Detail;
         await LoadDescriptionAsync(entry);

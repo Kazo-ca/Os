@@ -27,6 +27,16 @@ public sealed class StoreManifestTests
     }
 
     [Fact]
+    public void The_window_opens_large_enough_for_the_home_page()
+    {
+        AppManifest manifest = AppDefinitionMapper.ToManifest(new StoreApp());
+
+        Assert.Equal(1100, manifest.Window!.DefaultWidth);
+        Assert.Equal(720, manifest.Window.DefaultHeight);
+        Assert.True(manifest.Window.Resizable);
+    }
+
+    [Fact]
     public void Manifest_passes_validation()
     {
         ManifestValidationResult result = AppManifestValidator.Validate(AppDefinitionMapper.ToManifest(new StoreApp()));

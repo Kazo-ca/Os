@@ -58,6 +58,16 @@ public sealed class StoreApp : AppDefinition
     /// <inheritdoc />
     public override bool SingleInstancePerUser => true;
 
+    /// <summary>
+    /// Large enough by default for the featured app, three cards per row and an app's page with its
+    /// information panel (ADR 0266 §2); the window still shrinks to a phone-like width.
+    /// </summary>
+    public override WindowOptions? Window => new()
+    {
+        DefaultWidth = 1100,
+        DefaultHeight = 720
+    };
+
     /// <inheritdoc />
     public override AppResourceProfileManifest Resources => new(
         BaselineCpuWeight: 0.02,

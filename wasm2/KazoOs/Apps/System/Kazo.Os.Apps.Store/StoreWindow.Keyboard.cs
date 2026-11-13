@@ -9,8 +9,15 @@ namespace Kazo.Os.Apps.Store;
 /// </summary>
 public partial class StoreWindow
 {
-    /// <summary>The tabs, left to right.</summary>
+    /// <summary>Every tab, left to right.</summary>
     internal static readonly IReadOnlyList<StoreView> TabOrder = [StoreView.Home, StoreView.Themes, StoreView.Installed];
+
+    /// <summary>The tabs without « Themes », hidden while there is no pack (ADR 0266 §5).</summary>
+    private static readonly IReadOnlyList<StoreView> TabOrderWithoutThemes = [StoreView.Home, StoreView.Installed];
+
+    /// <summary>The tabs on screen, left to right.</summary>
+    /// <param name="showThemes">Whether the « Themes » tab is shown.</param>
+    internal static IReadOnlyList<StoreView> VisibleTabs(bool showThemes) => showThemes ? TabOrder : TabOrderWithoutThemes;
 
     private readonly string _idPrefix = "store-" + Guid.NewGuid().ToString("N")[..8];
     private readonly Dictionary<StoreView, ElementReference> _tabElements = [];
@@ -24,24 +31,26 @@ public partial class StoreWindow
     /// </summary>
     /// <param name="current">The view on screen.</param>
     /// <param name="key">The key's <c>KeyboardEvent.key</c>.</param>
-    internal static StoreView? TabAfterKey(StoreView current, string key)
+    /// <param name="tabs">The tabs on screen (<see cref="VisibleTabs"/>); every tab when omitted.</param>
+    internal static StoreView? TabAfterKey(StoreView current, string key, IReadOnlyList<StoreView>? tabs = null)
     {
-        int index = Math.Max(0, IndexOfTab(TabOf(current)));
+        tabs ??= TabOrder;
+        int index = Math.Max(0, IndexOfTab(tabs, TabOf(current)));
         return key switch
         {
-            "ArrowRight" => TabOrder[(index + 1) % TabOrder.Count],
-            "ArrowLeft" => TabOrder[(index + TabOrder.Count - 1) % TabOrder.Count],
-            "Home" => TabOrder[0],
-            "End" => TabOrder[^1],
+            "ArrowRight" => tabs[(index + 1) % tabs.Count],
+            "ArrowLeft" => tabs[(index + tabs.Count - 1) % tabs.Count],
+            "Home" => tabs[0],
+            "End" => tabs[^1],
             _ => null
         };
     }
 
-    private static int IndexOfTab(StoreView view)
+    private static int IndexOfTab(IReadOnlyList<StoreView> tabs, StoreView view)
     {
-        for (int index = 0; index < TabOrder.Count; index++)
+        for (int index = 0; index < tabs.Count; index++)
         {
-            if (TabOrder[index] == view)
+            if (tabs[index] == view)
             {
                 return index;
             }
@@ -56,7 +65,7 @@ public partial class StoreWindow
 
     private async Task OnTabKeyDownAsync(KeyboardEventArgs args)
     {
-        if (TabAfterKey(_view, args.Key) is not { } next || next == TabOf(_view))
+        if (TabAfterKey(_view, args.Key, VisibleTabs(ShowsThemesTab)) is not { } next || next == TabOf(_view))
         {
             return;
         }

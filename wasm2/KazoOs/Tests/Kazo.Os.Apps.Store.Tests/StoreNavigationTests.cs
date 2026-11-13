@@ -41,6 +41,18 @@ public sealed class StoreNavigationTests
         Assert.Equal(Enum.Parse<StoreView>(expected), StoreWindow.TabAfterKey(Enum.Parse<StoreView>(current), key));
     }
 
+    [Theory]
+    [InlineData("Home", "ArrowRight", "Installed")]
+    [InlineData("Installed", "ArrowRight", "Home")]
+    [InlineData("Home", "ArrowLeft", "Installed")]
+    [InlineData("Detail", "End", "Installed")]
+    public void The_arrow_keys_skip_the_hidden_themes_tab(string current, string key, string expected)
+    {
+        Assert.Equal(
+            Enum.Parse<StoreView>(expected),
+            StoreWindow.TabAfterKey(Enum.Parse<StoreView>(current), key, StoreWindow.VisibleTabs(showThemes: false)));
+    }
+
     [Fact]
     public void Other_keys_leave_the_tab_alone()
     {
