@@ -690,6 +690,7 @@ public sealed class HostFolderFileSystemProvider : IFileSystemProvider
                     HostFolderErrorKind.NoSpace => FileSystemErrorCode.NoSpace,
                     HostFolderErrorKind.InvalidName => FileSystemErrorCode.InvalidName,
                     HostFolderErrorKind.RevisionConflict => FileSystemErrorCode.RevisionConflict,
+                    HostFolderErrorKind.FileTooLarge => FileSystemErrorCode.FileTooLarge,
                     _ => FileSystemErrorCode.ProviderFailure
                 };
             case IOException or InvalidOperationException or ObjectDisposedException:

@@ -13,6 +13,7 @@ using Kazo.Os.Platform.Core.ServerConnection;
 using Kazo.Os.Ecosystem.Administration;
 using Kazo.Os.Platform.Core.Administration;
 using Kazo.Os.Platform.Core.CloudAccounts;
+using Kazo.Os.Platform.Core.CloudDrives.OneDrive;
 using Kazo.Os.Platform.Core.Power;
 using Kazo.Os.Platform.Core.Backup;
 using Kazo.Os.Platform.Core.Storage;
@@ -542,20 +543,27 @@ public static class EcosystemServiceCollectionExtensions
         services.TryAddScoped<IOAuthAuthorizationWindow>(provider => new BrowserOAuthAuthorizationWindow(
             provider.GetRequiredService<IJSRuntime>(),
             new Uri(provider.GetRequiredService<Microsoft.AspNetCore.Components.NavigationManager>().BaseUri)));
+        services.TryAddScoped<ICloudProviderCatalog>(provider => new CloudProviderCatalog(
+            provider.GetService<CloudProviderSettings>() ?? CloudProviderSettings.None,
+            provider.GetRequiredService<IOsSettingsService>()));
         services.AddScoped<CloudAccountService>(provider => new CloudAccountService(
             provider.GetRequiredService<IFileSystemService>(),
             provider.GetRequiredService<ISimulationClock>(),
             provider.GetRequiredService<UserKeyringService>(),
             provider.GetRequiredService<IKeyringCipher>(),
-            new CloudProviderCatalog(
-                provider.GetService<CloudProviderSettings>() ?? CloudProviderSettings.None,
-                provider.GetRequiredService<IOsSettingsService>()),
+            provider.GetRequiredService<ICloudProviderCatalog>(),
             provider.GetRequiredService<IOAuthAuthorizationWindow>(),
             new CloudOAuthTokenClient(new HttpClient()),
             () => provider.GetRequiredService<ISessionService>().CurrentPrincipal,
             drives: () => provider.GetService<NetworkDriveService>(),
             provider.GetService<IEventBus>(),
             logger: provider.GetService<ILogger<CloudAccountService>>()));
+        // ADR 0267 §6: OneDrive drives over Microsoft Graph, for the accounts connected above.
+        services.AddScoped<INetworkDriveSource>(provider => new OneDriveDriveSource(
+            provider.GetRequiredService<CloudAccountService>(),
+            provider.GetRequiredService<ICloudProviderCatalog>(),
+            new HttpClient(),
+            provider.GetService<IHostActivitySignal>()));
 
         // passwd and the Settings "Users" tab (ADR 0120): new credentials hashed through Web Crypto
         // like at login, the login keyring re-sealed or set aside, every attempt in auth.log.
