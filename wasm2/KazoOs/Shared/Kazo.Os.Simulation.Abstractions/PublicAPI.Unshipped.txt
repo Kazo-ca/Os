@@ -105,3 +105,7 @@ static Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveReference.operator
 static Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveReference.operator ==(Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveReference? left, Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveReference? right) -> bool
 static Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveRequest.operator !=(Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveRequest? left, Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveRequest? right) -> bool
 static Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveRequest.operator ==(Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveRequest? left, Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveRequest? right) -> bool
+Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveRequest.Options.get -> System.Collections.Generic.IReadOnlyDictionary<string!, string!>?
+Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveRequest.Options.init -> void
+Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveRequest.Secrets.get -> System.Collections.Generic.IReadOnlyDictionary<string!, string!>?
+Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveRequest.Secrets.init -> void
