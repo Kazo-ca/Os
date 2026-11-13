@@ -4,6 +4,7 @@
 @using Microsoft.AspNetCore.Components
 @using Kazo.Os.Infrastructure.Browser.Recovery
 @using Kazo.Os.Platform.Blazor.Shell
+@using Kazo.Os.Ecosystem.AppLinks
 @using Kazo.Os.Platform.Core.AppLinks
 @using Kazo.Os.Platform.Core.Sessions
 @using Kazo.Os.Platform.Core.Shell
@@ -452,8 +453,9 @@
         AdoptServiceWorkerInBackground();
 
         // ADR 0258 §2: read after the boot update, which reloads the same address, and before the
-        // first screen; the address then loses the parameter so a reload never runs it again.
-        ReadAppLaunchLink();
+        // first screen; the address then loses the parameter. ADR 0265: the tab keeps the link until
+        // it has finished, so a restart for an update (or any reload before) runs it again.
+        await ReadAppLaunchLinkAsync();
 
         // ADR 0187 section 5: Settings ▸ Users and the Start menu ask from inside the guest session.
         GuestRequests = Services.GetService<GuestAccountRequests>();
@@ -474,11 +476,13 @@
     /// <summary>
     /// ADR 0258 §1 and §2: keeps the direct app launch link of the address in memory and removes it
     /// from the address bar without reloading the page. A malformed link is ignored but still removed.
+    /// ADR 0265 §2: with no link in the address, the link this tab kept before a reload is used.
     /// </summary>
-    private void ReadAppLaunchLink()
+    private async Task ReadAppLaunchLinkAsync()
     {
         string address = Navigation.Uri;
-        if (AppLaunchLink.TryParse(address, out AppLaunchLink? link) && link is not null)
+        LinkKeeper = new AppLaunchLinkKeeper(Services.GetService<IAppLaunchLinkStore>());
+        if (await LinkKeeper.ReadAtBootAsync(address) is { } link)
         {
             State.SetPendingAppLaunch(link);
         }
@@ -519,6 +523,8 @@
     /// </summary>
     private async Task RunAppLaunchLinkAsync(AppLaunchLink link)
     {
+        LinkInRun = link;
+        LinkRefusedForUpdate = false;
         try
         {
             if (Services.GetService<ISessionService>()?.CurrentPrincipal is not { } principal)
@@ -554,7 +560,26 @@
                 Microsoft.Extensions.Logging.LoggerExtensions.LogWarning(logger, exception, "app-link: the link {Link} could not run", link);
             }
         }
+        finally
+        {
+            LinkInRun = null;
+            // ADR 0265 §3: the link has finished, a reload runs nothing; unless the app was refused
+            // because a newer version waits: the restart onto it runs the link again.
+            if (!LinkRefusedForUpdate && LinkKeeper is not null)
+            {
+                await LinkKeeper.FinishAsync();
+            }
+        }
     }
+
+    /// <summary>Decides which link the boot runs and how long the tab keeps it (ADR 0265).</summary>
+    private AppLaunchLinkKeeper? LinkKeeper { get; set; }
+
+    /// <summary>The direct link being handled, while its app is looked up, installed and launched.</summary>
+    private AppLaunchLink? LinkInRun { get; set; }
+
+    /// <summary>ADR 0265 §3: the link's app was refused because a newer version waits; the tab keeps the link.</summary>
+    private bool LinkRefusedForUpdate { get; set; }
 
     /// <summary>The Store's argument naming the app whose page to open (ADR 0212).</summary>
     private const string StoreAppArgumentPrefix = "--app=";
@@ -627,7 +652,18 @@
         }
     }
 
-    private void OnUpdateRequired(string appName) => InvokeAsync(() =>
+    private void OnUpdateRequired(string appName)
+    {
+        // ADR 0265 §3: raised while the launch is refused, so before the link's handling ends.
+        if (LinkInRun is not null)
+        {
+            LinkRefusedForUpdate = true;
+        }
+
+        _ = ShowUpdateRequiredAsync(appName);
+    }
+
+    private Task ShowUpdateRequiredAsync(string appName) => InvokeAsync(() =>
     {
         UpdateRequiredApp = appName;
         State.SetUpdateAvailable(true);
@@ -635,7 +671,16 @@
         StateHasChanged();
     });
 
-    private void CloseUpdateRequired() => UpdateRequiredApp = null;
+    private void CloseUpdateRequired()
+    {
+        UpdateRequiredApp = null;
+        // ADR 0265 §3: « Later » forgets a link kept for the restart.
+        if (LinkRefusedForUpdate)
+        {
+            LinkRefusedForUpdate = false;
+            _ = LinkKeeper?.FinishAsync();
+        }
+    }
 
     private void OnPlatformPreferenceChanged() => InvokeAsync(StateHasChanged);
 

@@ -1,4 +1,5 @@
 #nullable enable
+static Kazo.Os.Platform.Core.AppLinks.AppLaunchLink.TryFromAppId(string? appId, out Kazo.Os.Platform.Core.AppLinks.AppLaunchLink? link) -> bool
 Kazo.Os.Platform.Core.Apps.Packages.AppPackageDownloadProgress
 Kazo.Os.Platform.Core.Apps.Packages.AppPackageDownloadProgress.AppPackageDownloadProgress() -> void
 Kazo.Os.Platform.Core.Apps.Packages.AppPackageDownloadProgress.AppPackageDownloadProgress(long BytesReceived, long? TotalBytes) -> void

@@ -21,7 +21,9 @@ ailleurs, l'OS servi par `Kazo.Os.Server`.
 | Aucun compte sur cette machine | L'OS fait **Démarrer en invité** sans clic. Une fenêtre de progression montre l'app, son éditeur et l'étape (recherche, installation, ouverture), avec **Annuler**. L'app est installée pour l'invité seul, puis elle s'ouvre. |
 | L'invité est le seul compte (visite précédente) | L'OS fait **Continuer en invité** sans clic. Si l'app est déjà installée depuis le catalogue officiel, elle s'ouvre sans être téléchargée de nouveau. |
 | Un autre compte existe | L'écran de connexion reste le même, avec un bandeau : « `ca.kazo.word` s'ouvrira dans le Kazo OS Store après la connexion. » Après la connexion, le Store s'ouvre à la page de l'app. Rien n'est installé sans le clic de l'utilisateur. |
-| Rechargement de la page | Le paramètre a été retiré de l'adresse au premier chargement : rien ne recommence. L'écran habituel s'affiche. |
+| Rechargement de la page **avant** la fin du lien (redémarrage pour une mise à jour, F5 pendant l'installation) | L'onglet a gardé le lien ([ADR 0265](adr/0265-direct-link-survives-update-restart.md)) : il est relancé, l'invité continue sans clic et l'app s'ouvre (sans nouveau téléchargement si elle était déjà installée). |
+| L'app est refusée parce qu'une version plus récente attend (ADR 0239 §2) | « Redémarrer » recharge l'onglet sur la nouvelle version, qui relance le lien et ouvre l'app. « Plus tard » oublie le lien. |
+| Rechargement de la page **après** la fin du lien | Le paramètre a été retiré de l'adresse et l'onglet a oublié le lien : rien ne recommence. L'écran habituel s'affiche. |
 | Identifiant mal formé | Le lien est ignoré (mais retiré de l'adresse) ; l'OS démarre comme d'habitude. |
 
 ### Erreurs
@@ -49,7 +51,7 @@ l'app.
 - Le lien n'accorde aucune capacité dangereuse : la demande d'autorisation habituelle s'affiche au
   lancement.
 - Une personne qui a déjà un compte ne voit jamais une app s'installer sans son clic.
-- La demande n'est jamais écrite dans le stockage : fermer l'onglet l'oublie.
+- Seul l'identifiant de l'app est gardé, dans le `sessionStorage` de l'onglet (clé `kazoos.appLaunchLink`), jusqu'à la fin du lien ; il est vérifié de nouveau à la relecture. Fermer l'onglet l'oublie, et les autres onglets ne le voient pas (ADR 0265).
 
 ## Architecture
 
@@ -57,6 +59,7 @@ l'app.
 | --- | --- | --- |
 | `AppLaunchLink` | `Platform.Core/AppLinks` | `TryParse(adresse, out lien)` lit le premier `autolaunch` de la requête (pas le fragment `#…`) ; `IsValidAppId` applique les règles ci-dessus ; `RemoveFromAddress` retire **tous** les `autolaunch` et garde les autres paramètres et le fragment. |
 | `EcosystemHostState.PendingAppLaunch` | `Ecosystem.Host` | Garde le lien en mémoire entre la lecture et le premier bureau ; `TakePendingAppLaunch` le rend une seule fois. |
+| `AppLaunchLinkKeeper`, `IAppLaunchLinkStore`, `BrowserAppLaunchLinkStore` | `Ecosystem.Host/AppLinks` | ADR 0265 : au démarrage, le lien de l'adresse, sinon celui que l'onglet a gardé (`AppLaunchLink.TryFromAppId`) ; gardé dans le `sessionStorage` jusqu'à la fin du lien, sauf si l'app a été refusée pour une mise à jour (gardé jusqu'au redémarrage, « Plus tard » l'efface). |
 | `App.razor` | `Ecosystem.Host` | Lit le lien **après** la mise à jour au démarrage (ADR 0239, qui recharge la même adresse) et avant le premier écran, puis réécrit l'adresse (`NavigateTo(…, replace: true)`, sans rechargement). Démarre ou continue l'invité une seule fois. Au premier bureau : session invité → `IAppLaunchLinkRunner` ; autre compte → `org.kazoos.store --app=<appId>`, puis `RecordStoreOpened`. |
 | `IAppLaunchLinkRunner`, `AppLaunchLinkRunner` | `Platform.Core/AppLinks` | Cherche l'app dans le catalogue officiel, l'installe pour l'utilisateur de la session par la passerelle de gestion des apps (la même que le Store et `kazopkg`), la lance par l'orchestrateur, et transforme chaque échec en notification. Un deuxième lien pendant qu'un lien tourne est ignoré. |
 | `AppLaunchLinkOperation` | `Platform.Core/AppLinks` | L'étape en cours (`Looking`, `Installing`, `Launching`), le nom, l'éditeur (propriétaire du dépôt) et la version, que montre la fenêtre de progression. **Annuler** est possible jusqu'au lancement. |
@@ -80,7 +83,8 @@ Chaque lien écrit une ligne dans `/var/log/apps/org.kazoos.app-link.log` (sourc
 - **Unitaires** (`Tests/Kazo.Os.Platform.Core.Tests/AppLinks/`) : `AppLaunchLinkTests` (lecture,
   identifiants refusés, retrait de l'adresse) et `AppLaunchLinkRunnerTests` (catalogue officiel
   seulement, app déjà installée, thème du même nom, erreurs, annulation, deuxième lien, journal).
-  `EcosystemHostStateTests` couvre `TakePendingAppLaunch`.
+  `EcosystemHostStateTests` couvre `TakePendingAppLaunch` ; `AppLaunchLinkKeeperTests`
+  (`Tests/Kazo.Os.Ecosystem.Tests/AppLinks/`) couvre l'ordre adresse puis onglet et l'effacement (ADR 0265).
 - **Bout en bout** (`Tests/Kazo.Os.TrimmedPublish.E2E.Tests/TrimmedPublishTests.AppLaunchLink.cs`,
   lancés par `build/publish-trimmed.sh`, voir [`trimmed-publish.md`](trimmed-publish.md)) :
   1. sans compte : l'invité démarre, l'app s'installe et s'ouvre, l'adresse perd le paramètre ; un
@@ -89,7 +93,9 @@ Chaque lien écrit une ligne dans `/var/log/apps/org.kazoos.app-link.log` (sourc
   2. avec un compte : bandeau de l'écran de connexion, puis le Store à la page de l'app, rien de
      téléchargé ;
   3. app absente du catalogue : notification, son bouton ouvre le Store ; puis **Annuler**
-     pendant le téléchargement : ni app ni notification.
+     pendant le téléchargement : ni app ni notification ;
+  4. rechargement pendant l'installation (ADR 0265) : l'adresse n'a plus le paramètre, mais le lien
+     est relancé et l'app s'ouvre ; un rechargement après ne relance rien.
 
   Le catalogue officiel est servi par une route Playwright. Il liste le paquet de test de
   l'ADR 0206 (`Tests/fixtures/installed-app`), signé par une clé P-256 que le script crée à chaque

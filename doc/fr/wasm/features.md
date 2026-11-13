@@ -412,7 +412,8 @@ Cette section liste ce qui est publié dans la branche `main` et en ligne.
 - **Lancer une app par un lien direct** (version 3.3.3) : le lien
   `https://os.kazo.ca/?autolaunch=<appId>` démarre Kazo OS en invité s'il n'y
   a aucun compte, installe l'app depuis le catalogue officiel signé et la
-  lance ; avec un compte, il ouvre le Store à la page de l'app.
+  lance ; avec un compte, il ouvre le Store à la page de l'app. Le lien survit
+  au redémarrage pour une mise à jour (en cours : [ADR 0265](dev/adr/0265-direct-link-survives-update-restart.md)).
   ([ADR 0258](dev/adr/0258-direct-app-launch-link.md), [`app-launch-link.md`](dev/app-launch-link.md))
 - **Installations sans redémarrage et sûres** : une application installée ou
   mise à jour s'ouvre tout de suite si elle n'était pas déjà chargée. Les
@@ -453,6 +454,7 @@ dans `main`, le lien mène à sa PR.
 | Changer d'utilisateur | Ouvrir une autre session sans fermer la première. Reste grisé dans le menu Marche/arrêt par choix de Benoit : une session à la fois, Se déconnecter pour changer de compte. | [0195](dev/adr/0195-start-menu-power-button.md), [0201](dev/adr/0201-switch-user-stays-greyed.md) | [#290](https://github.com/Kazo-ca/Os/issues/290) |
 | Adresse de fichier servie à la demande | Une app reçoit une adresse pour lire un gros fichier (audio, vidéo) sans le copier en mémoire, avec lecture partielle pour avancer dans un morceau. | À écrire | [#379](https://github.com/Kazo-ca/Os/issues/379) |
 | Glisser des fichiers vers une app | Contrat public du SDK pour recevoir des fichiers glissés depuis l'explorateur ou le bureau. | À écrire | [#380](https://github.com/Kazo-ca/Os/issues/380) |
+| Exports des apps Craft dans Kazo OS | Les exports d'une app Craft (Exporter, Imprimer en PDF, OCR… de Kazo Pdf) passent par le dialogue d'enregistrement de l'OS au lieu des téléchargements du navigateur, et s'enregistrent comme copies. | [0264](dev/adr/0264-craft-app-exports-reach-the-window.md) | — |
 
 ### Kazo OS Store
 

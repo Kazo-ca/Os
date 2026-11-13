@@ -132,6 +132,9 @@ public static partial class KazoOsBrowserHostExtensions
         builder.Services.AddSingleton<IHostUpdateWorker>(provider => new BrowserHostUpdateWorker(
             provider.GetRequiredService<Microsoft.JSInterop.IJSRuntime>()));
         builder.Services.AddSingleton(provider => new HostUpdateInstaller(provider.GetRequiredService<IHostUpdateWorker>()));
+        // ADR 0265: the tab keeps a direct link until it has finished, across a restart for an update.
+        builder.Services.AddSingleton<Kazo.Os.Ecosystem.AppLinks.IAppLaunchLinkStore>(provider => new Kazo.Os.Ecosystem.AppLinks.BrowserAppLaunchLinkStore(
+            provider.GetRequiredService<Microsoft.JSInterop.IJSRuntime>()));
         // ADR 0186: the change list the build serves as whats-new.json, for Settings > What's new.
         builder.Services.AddSingleton<Kazo.Os.Platform.Core.WhatsNew.IWhatsNewSource>(new BrowserWhatsNewSource(
             new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) }));
