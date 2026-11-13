@@ -74,7 +74,7 @@ opération de fichier demande, avant les bits de permission :
 | `~/.config/<appId>/` (ses paramètres, ADR 0044) | `filesystem.private.read` | `filesystem.private.write` |
 | `/etc/<appId>/` | `filesystem.private.read` | `filesystem.system.write` (et l'autorité d'administrateur) |
 | `/home/<utilisateur>/` de l'utilisateur qui agit | `filesystem.user-home.read` | `filesystem.user-home.write` |
-| un lecteur réseau (`hostfs`, ADR 0181) monté par l'utilisateur qui agit ([ADR 0231](../dev/adr/0231-network-drives-count-as-personal-files.md)) | `filesystem.user-home.read` | `filesystem.user-home.write` |
+| un lecteur réseau (`hostfs`, ADR 0181, ou cloud, [ADR 0267](../dev/adr/0267-cloud-drives-as-network-drives.md)) monté par l'utilisateur qui agit ([ADR 0231](../dev/adr/0231-network-drives-count-as-personal-files.md)) | `filesystem.user-home.read` | `filesystem.user-home.write` |
 | tout le reste : `/mnt` lui-même, le lecteur d'un autre utilisateur, `/etc`, `/var`… | `filesystem.system.read` | `filesystem.system.write` |
 
 Pour son propre lecteur réseau, une app qui n'a que `filesystem.system.*`

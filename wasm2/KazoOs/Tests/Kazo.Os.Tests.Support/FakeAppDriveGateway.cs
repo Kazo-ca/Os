@@ -32,6 +32,13 @@ public sealed class FakeAppDriveGateway : IAppDriveGateway
         return this;
     }
 
+    /// <summary>Adds a cloud drive (ADR 0267) with its service's quota; 0 for a service without one.</summary>
+    public FakeAppDriveGateway WithCloudDrive(string mountPoint, string type, string account, long totalBytes, long freeBytes, bool ready = true)
+    {
+        _drives.Add(new KazoDriveSnapshot(mountPoint, type, account, totalBytes, freeBytes) { DriveType = KazoDriveType.Network, IsReady = ready });
+        return this;
+    }
+
     public ValueTask<IReadOnlyList<KazoDriveSnapshot>> GetDrivesAsync(CancellationToken cancellationToken = default) =>
         ValueTask.FromResult<IReadOnlyList<KazoDriveSnapshot>>([.. _drives]);
 

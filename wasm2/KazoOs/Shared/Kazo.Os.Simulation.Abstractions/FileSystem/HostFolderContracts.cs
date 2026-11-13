@@ -35,7 +35,15 @@ public enum HostFolderEntryKind
 /// <param name="Kind">File or folder.</param>
 /// <param name="Length">Size of a file in bytes; 0 for a folder.</param>
 /// <param name="LastModifiedUtc">Modification time of a file; <see langword="null"/> for a folder (the browser has none).</param>
-public sealed record HostFolderEntry(string Name, HostFolderEntryKind Kind, long Length, DateTimeOffset? LastModifiedUtc);
+public sealed record HostFolderEntry(string Name, HostFolderEntryKind Kind, long Length, DateTimeOffset? LastModifiedUtc)
+{
+    /// <summary>
+    /// The service's own revision of a file (ADR 0267 §4): Dropbox's <c>rev</c>, Graph's <c>eTag</c>,
+    /// S3's <c>ETag</c>. <see langword="null"/> for a folder of the computer, whose revision comes
+    /// from the modification time and the size.
+    /// </summary>
+    public string? Revision { get; init; }
+}
 
 /// <summary>Why an operation on a host folder failed, from the browser's <c>DOMException</c> name.</summary>
 public enum HostFolderErrorKind
@@ -62,7 +70,19 @@ public enum HostFolderErrorKind
     InvalidName,
 
     /// <summary>Any other failure.</summary>
-    Failure
+    Failure,
+
+    /// <summary>
+    /// The service refused a conditional write because the file changed since it was read
+    /// (ADR 0267 §4, <see cref="IConditionalHostFolder"/>).
+    /// </summary>
+    RevisionConflict,
+
+    /// <summary>
+    /// The service cannot be reached (no network) or the account must sign in again (ADR 0267 §9):
+    /// the drive is disconnected until its source is available again.
+    /// </summary>
+    Unavailable
 }
 
 /// <summary>A failed operation on a host folder.</summary>
@@ -89,7 +109,13 @@ public enum HostFolderPermission
     Prompt,
 
     /// <summary>The user refused.</summary>
-    Denied
+    Denied,
+
+    /// <summary>
+    /// The service cannot be reached now (ADR 0267 §9): the drive stays disconnected and reconnects
+    /// by itself when its source says it is available again, with no user gesture.
+    /// </summary>
+    Unavailable
 }
 
 /// <summary>
@@ -134,6 +160,42 @@ public interface IHostFolder : IAsyncDisposable
     ValueTask<bool> TryMoveAsync(
         IReadOnlyList<string> source,
         IReadOnlyList<string> destination,
+        CancellationToken cancellationToken = default);
+}
+
+/// <summary>The size and the free space of a drive, as its service reports them (ADR 0267 §4).</summary>
+/// <param name="TotalBytes">Size of the storage, in bytes.</param>
+/// <param name="FreeBytes">Free space, in bytes; never more than <paramref name="TotalBytes"/>.</param>
+public sealed record HostFolderQuota(long TotalBytes, long FreeBytes);
+
+/// <summary>
+/// A folder that knows its size and free space (ADR 0267 §4), for <c>df</c> and
+/// <c>KazoDriveInfo</c>. A folder of the computer has none and shows <c>-</c>.
+/// </summary>
+public interface IHostFolderQuota
+{
+    /// <summary>Asks the service for the size and the free space; <see langword="null"/> when it does not say.</summary>
+    /// <exception cref="HostFolderException">The service cannot be reached.</exception>
+    ValueTask<HostFolderQuota?> GetQuotaAsync(CancellationToken cancellationToken = default);
+}
+
+/// <summary>
+/// A folder whose service keeps its own revision of each file (<see cref="HostFolderEntry.Revision"/>)
+/// and can write on condition (ADR 0267 §4): Dropbox's <c>update</c> mode, Graph's and S3's <c>If-Match</c>.
+/// </summary>
+public interface IConditionalHostFolder
+{
+    /// <summary>
+    /// Replaces the content of the existing file at <paramref name="path"/> only while its service
+    /// revision is still <paramref name="expectedRevision"/>.
+    /// </summary>
+    /// <exception cref="HostFolderException">
+    /// <see cref="HostFolderErrorKind.RevisionConflict"/> when the file changed in between; the other kinds as <see cref="IHostFolder.WriteAsync"/>.
+    /// </exception>
+    ValueTask WriteIfMatchAsync(
+        IReadOnlyList<string> path,
+        byte[] content,
+        string expectedRevision,
         CancellationToken cancellationToken = default);
 }
 

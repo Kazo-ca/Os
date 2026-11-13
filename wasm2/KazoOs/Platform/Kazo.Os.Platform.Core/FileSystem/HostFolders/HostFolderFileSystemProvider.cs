@@ -7,9 +7,10 @@ using Kazo.Os.Simulation.Abstractions.FileSystem;
 namespace Kazo.Os.Platform.Core.FileSystem.HostFolders;
 
 /// <summary>
-/// The <c>hostfs</c> provider (ADR 0181, section 2): one folder of the host computer, mounted as a
-/// network drive. Every operation goes to the browser through <see cref="IHostFolder"/>; nothing is
-/// stored in IndexedDB.
+/// The provider of a network drive (ADR 0181, section 2; ADR 0267 §1): one folder of the host
+/// computer (<c>hostfs</c>) or of a cloud service (<c>dropbox</c>, <c>onedrive</c>, <c>s3</c>), mounted
+/// under <c>/mnt</c>. Every operation goes to the folder through <see cref="IHostFolder"/>; nothing
+/// is stored in IndexedDB.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -19,19 +20,26 @@ namespace Kazo.Os.Platform.Core.FileSystem.HostFolders;
 /// </para>
 /// <para>
 /// <b>Revisions.</b> A file's revision comes from its modification time and size, so a change made
-/// on the host is seen at the next stat. A folder has no time in the browser: its revision is a
+/// on the host is seen at the next stat. When the service keeps its own revision
+/// (<see cref="HostFolderEntry.Revision"/>, ADR 0267 §4), the revision is derived from it instead,
+/// and a write that expects a revision is sent on condition (<see cref="IConditionalHostFolder"/>):
+/// the service's refusal is a <see cref="FileSystemErrorCode.RevisionConflict"/>. A folder has no time in the browser: its revision is a
 /// counter this provider raises on each change it makes inside the folder.
 /// </para>
 /// <para>
 /// <b>Connection.</b> Until the browser grants its permission (after a reload, ADR 0181 section 8),
 /// the drive is disconnected: its root still stats as an empty folder, everything else answers
-/// <see cref="FileSystemErrorCode.ProviderUnavailable"/>.
+/// <see cref="FileSystemErrorCode.ProviderUnavailable"/>. A cloud folder that cannot reach its
+/// service (<see cref="HostFolderErrorKind.Unavailable"/>, ADR 0267 §9) disconnects the drive the same way.
 /// </para>
 /// </remarks>
 public sealed class HostFolderFileSystemProvider : IFileSystemProvider
 {
     /// <summary>Filesystem type of a host folder in <c>/proc/mounts</c> and <c>df -T</c>.</summary>
     public const string FileSystemType = "hostfs";
+
+    /// <summary>Prefix of the <c>/proc/mounts</c> source of a host folder: <c>host:&lt;folder&gt;</c>.</summary>
+    public const string HostSourcePrefix = "host";
 
     /// <summary>Prefix of <see cref="ProviderId"/>; the mount path follows it.</summary>
     public const string ProviderIdPrefix = "hostfs:";
@@ -82,7 +90,19 @@ public sealed class HostFolderFileSystemProvider : IFileSystemProvider
     }
 
     /// <inheritdoc />
-    public string ProviderId => ProviderIdPrefix + MountPath.Value;
+    public string ProviderId => (Type == FileSystemType ? ProviderIdPrefix : $"{Type}:") + MountPath.Value;
+
+    /// <summary>
+    /// Gets the filesystem type of the drive (ADR 0267 §3): <see cref="FileSystemType"/> for a folder
+    /// of the computer, the source's type (<c>dropbox</c>, <c>onedrive</c>, <c>s3</c>) otherwise.
+    /// </summary>
+    public string Type { get; init; } = FileSystemType;
+
+    /// <summary>
+    /// Gets the source column of <c>/proc/mounts</c>: <c>host:&lt;folder&gt;</c> for a folder of the
+    /// computer, <c>&lt;type&gt;:&lt;account&gt;</c> for a cloud drive.
+    /// </summary>
+    public string MountSource => $"{(Type == FileSystemType ? HostSourcePrefix : Type)}:{Folder.Name}";
 
     /// <summary>Gets the mount path.</summary>
     public VirtualPath MountPath { get; }
@@ -104,6 +124,31 @@ public sealed class HostFolderFileSystemProvider : IFileSystemProvider
 
     /// <summary>Marks the drive connected (permission granted) or disconnected.</summary>
     public void SetConnected(bool connected) => _connected = connected;
+
+    /// <summary>
+    /// Asks the folder for the size and free space of its storage (ADR 0267 §4); <see langword="null"/>
+    /// when the folder does not know them (a folder of the computer), the drive is disconnected, or
+    /// the service cannot answer (which disconnects the drive when it cannot be reached).
+    /// </summary>
+    public async ValueTask<HostFolderQuota?> GetQuotaAsync(CancellationToken cancellationToken = default)
+    {
+        if (!_connected || Folder is not IHostFolderQuota quota)
+        {
+            return null;
+        }
+
+        try
+        {
+            HostFolderQuota? answer = await quota.GetQuotaAsync(cancellationToken).ConfigureAwait(false);
+            return answer is { TotalBytes: >= 0 } valid
+                ? valid with { FreeBytes = Math.Clamp(valid.FreeBytes, 0, valid.TotalBytes) }
+                : null;
+        }
+        catch (Exception exception) when (Map(exception, cancellationToken) is not null)
+        {
+            return null;
+        }
+    }
 
     /// <inheritdoc />
     public async ValueTask<FileSystemResult<FileSystemContentReadHandle>> ReadAsync(
@@ -268,7 +313,17 @@ public sealed class HostFolderFileSystemProvider : IFileSystemProvider
                 bytes = buffer.ToArray();
             }
 
-            await Folder.WriteAsync(segments, bytes, cancellationToken).ConfigureAwait(false);
+            if (request.ExpectedRevision is not null && entry.Revision is { } serviceRevision && Folder is IConditionalHostFolder conditional)
+            {
+                // ADR 0267 §4: the service checks the revision again, so a change made elsewhere
+                // between the stat above and this write is still refused.
+                await conditional.WriteIfMatchAsync(segments, bytes, serviceRevision, cancellationToken).ConfigureAwait(false);
+            }
+            else
+            {
+                await Folder.WriteAsync(segments, bytes, cancellationToken).ConfigureAwait(false);
+            }
+
             return await CommittedAsync(request.Path, cancellationToken).ConfigureAwait(false);
         }
         catch (Exception exception) when (Map(exception, cancellationToken) is { } code)
@@ -519,10 +574,17 @@ public sealed class HostFolderFileSystemProvider : IFileSystemProvider
 
     /// <summary>
     /// Revision of a host file: its modification time in milliseconds, times 1000, plus the last
-    /// three digits of its size, so a change of either is seen. Always at least 1.
+    /// three digits of its size, so a change of either is seen. Always at least 1. When the service
+    /// keeps its own revision (ADR 0267 §4), a stable 62-bit hash of it instead.
     /// </summary>
     private static long FileRevision(HostFolderEntry entry)
     {
+        if (entry.Revision is { Length: > 0 } serviceRevision)
+        {
+            byte[] hash = SHA256.HashData(Utf8.GetBytes(serviceRevision));
+            return Math.Max(1, BitConverter.ToInt64(hash, 0) & 0x3FFF_FFFF_FFFF_FFFF);
+        }
+
         long milliseconds = Math.Max(0, entry.LastModifiedUtc?.ToUnixTimeMilliseconds() ?? 0);
         return Math.Max(1, (milliseconds * 1000) + (entry.Length % 1000));
     }
@@ -614,6 +676,10 @@ public sealed class HostFolderFileSystemProvider : IFileSystemProvider
                 }
 
                 return _connected ? FileSystemErrorCode.PermissionDenied : FileSystemErrorCode.ProviderUnavailable;
+            case HostFolderException { Kind: HostFolderErrorKind.Unavailable }:
+                // ADR 0267 §9: no network or the sign-in expired; the source reconnects the drive later.
+                _connected = false;
+                return FileSystemErrorCode.ProviderUnavailable;
             case HostFolderException host:
                 return host.Kind switch
                 {
@@ -623,6 +689,7 @@ public sealed class HostFolderFileSystemProvider : IFileSystemProvider
                     HostFolderErrorKind.NotEmpty => FileSystemErrorCode.DirectoryNotEmpty,
                     HostFolderErrorKind.NoSpace => FileSystemErrorCode.NoSpace,
                     HostFolderErrorKind.InvalidName => FileSystemErrorCode.InvalidName,
+                    HostFolderErrorKind.RevisionConflict => FileSystemErrorCode.RevisionConflict,
                     _ => FileSystemErrorCode.ProviderFailure
                 };
             case IOException or InvalidOperationException or ObjectDisposedException:

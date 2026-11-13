@@ -19,7 +19,9 @@ namespace Kazo.Os.Platform.Core.Execution;
 /// </para>
 /// <para>
 /// <b>Network drives.</b> Listed from <see cref="NetworkDriveService.GetDrives"/>: the caller's own
-/// drives only. The browser gives neither the size nor the free space of a host folder: both are 0. Mounting, reconnecting and unmounting go to <see cref="NetworkDriveService"/>, which
+/// drives only, with the type of their source (ADR 0267 §3). The browser gives neither the size nor
+/// the free space of a host folder: both are 0; a cloud drive reports its service's quota when it
+/// has one and is connected (ADR 0267 §4). Mounting, reconnecting and unmounting go to <see cref="NetworkDriveService"/>, which
 /// opens the browser's folder dialog; without it (tests, hosts with no browser) they are not supported.
 /// </para>
 /// <para>
@@ -68,13 +70,21 @@ public sealed class AppDriveGateway : IAppDriveGateway
             .. mounts.Where(static mount => mount.Provider is not (IVirtualFileSystemProvider or HostFolderFileSystemProvider))
         ];
         // ADR 0181: only the caller's own network drives (every drive for an administrator).
-        KazoDriveSnapshot[] network = NetworkDrives?.Invoke() is { } drives
-            ? [.. drives.GetDrives().Select(static drive => Describe(drive))]
-            : [];
+        List<KazoDriveSnapshot> network = [];
+        if (NetworkDrives?.Invoke() is { } drives)
+        {
+            foreach (NetworkDrive drive in drives.GetDrives())
+            {
+                HostFolderQuota? driveQuota = await drives.GetQuotaAsync(drive.MountPoint, cancellationToken).ConfigureAwait(false);
+                network.Add(Describe(drive, driveQuota));
+            }
+        }
+
         if (sized.Length == 0)
         {
             return network;
         }
+
 
         StorageUsage usage = _usage is null
             ? new StorageUsage(0, null)
@@ -107,7 +117,7 @@ public sealed class AppDriveGateway : IAppDriveGateway
         try
         {
             NetworkDrive? drive = await drives.MountAsync(mountPoint, cancellationToken).ConfigureAwait(false);
-            return drive is null ? null : Describe(drive);
+            return drive is null ? null : Describe(drive, null);
         }
         catch (NetworkDriveException exception)
         {
@@ -141,8 +151,8 @@ public sealed class AppDriveGateway : IAppDriveGateway
         }
     }
 
-    private static KazoDriveSnapshot Describe(NetworkDrive drive) =>
-        new(drive.MountPoint.Value, HostFolderFileSystemProvider.FileSystemType, drive.Name, 0, 0)
+    private static KazoDriveSnapshot Describe(NetworkDrive drive, HostFolderQuota? quota) =>
+        new(drive.MountPoint.Value, drive.Type, drive.Name, quota?.TotalBytes ?? 0, quota?.FreeBytes ?? 0)
         {
             DriveType = KazoDriveType.Network,
             IsReady = drive.IsConnected
