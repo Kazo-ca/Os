@@ -1,0 +1,60 @@
+.craft-fixture {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #10141f;
+    color: #c9d6ee;
+    font: 14px system-ui, sans-serif;
+}
+
+.craft-fixture-frame {
+    position: absolute;
+    inset: 0;
+    visibility: hidden;
+}
+
+.craft-fixture-frame.running {
+    visibility: visible;
+}
+
+.craft-fixture-frame ::deep iframe {
+    width: 100%;
+    height: 100%;
+    border: 0;
+    display: block;
+}
+
+.craft-fixture-screen {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.craft-fixture-screen.failed {
+    color: #ffb4b4;
+}
+
+.craft-fixture-detail {
+    font-family: monospace;
+}
+
+.craft-fixture-notice {
+    position: absolute;
+    right: 0.75rem;
+    bottom: 0.75rem;
+    max-width: 70%;
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+    border: 1px solid #3c5a99;
+    background: #18233b;
+}
+
+.craft-fixture-notice.error {
+    border-color: #b64a4a;
+    background: #3a1a1a;
+}

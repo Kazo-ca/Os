@@ -92,8 +92,9 @@ warning, serves the publication on `127.0.0.1` and `127.0.0.2`, then runs
 | `The_installed_apps_worker_serves_an_installed_app_page_to_an_iframe` | ADR 0243 on `127.0.0.1`: the same page, served by the worker of the `installed-apps` mode |
 | `Trimmed_publish_shows_a_new_notification_as_a_bubble_above_the_taskbar` | ADR 0197: the what's new notification posted at a new account's sign-in shows as a bubble above the taskbar (source "Kazo OS", title, "View" button), leaves by itself after about 6 s and stays in the clock panel ([`notification-toasts.md`](notification-toasts.md)) |
 | `Trimmed_publish_shows_unread_notifications_next_to_the_clock` | ADR 0196: a new account gets the what's new notification (`whats-new.json` served); clock dot and tooltip, no dot on Applications, opened panel = read, **View** opens Settings ▸ What's new and dismisses the notification; screenshots `trimmed-clock-dot.png` and `trimmed-whats-new-page.png` |
+| `A_craft_app_on_the_os_module_opens_saves_and_follows_the_os` | ADR 0259: the test package `Tests/fixtures/craft-app` (a Craft window on the `Kazo.Os.AppSdk.Craft` module, around a fake Craft app; packed by the script into `kazoos-packages-craft`, without the module) is installed with `sudo kazopkg install`; `xdg-open seed.fake` opens the window on the file, typing puts `*` in the title, Ctrl+S rewrites the file and the app hears `saved`, F12 (a chord the window reserves) does Save As through the OS dialog, an error after `ready` becomes a notice, a light then dark theme is followed, Ctrl+O goes through the OS Open dialog, closing with changes asks, a second window reads back the setting the first one wrote ([`craft-apps.md`](../framework/craft-apps.md)) |
 
-The script requires all ten tests to pass (`EXPECTED_TESTS`).
+The script requires all eleven tests to pass (`EXPECTED_TESTS`).
 
 No console error is allowed. Without `KAZOOS_TRIMMED_URL`, the suite is
 skipped (a `dotnet test` of the solution does not run it).

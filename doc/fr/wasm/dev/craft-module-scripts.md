@@ -8,7 +8,7 @@ Chantier 3 de la série `craft-host/base`
 `Kazo.Os.AppSdk.Craft`, sans rien de propre à une app : l'identifiant de l'app
 vient de la page de l'iframe. La bibliothèque C# (`CraftFrame`, chantier 2) les
 appelle ; le parcours de bout en bout et le guide pour les auteurs d'apps
-viennent au chantier 4.
+([`craft-apps.md`](../framework/craft-apps.md)) viennent du chantier 4.
 
 ## Rôle
 
@@ -144,7 +144,7 @@ lance chaque fichier de `scripts/*.test.mjs` avec `node --test` (sauté si
 
 Lancer à la main : `node --test wasm2/KazoOs/Tests/Kazo.Os.AppSdk.Craft.Scripts.Tests/scripts/*.test.mjs`.
 L'interception réelle du sélecteur dans un navigateur est couverte par le
-parcours Playwright du chantier 4.
+parcours Playwright du chantier 4 (`TrimmedPublishTests.CraftApps.cs`, [`trimmed-publish.md`](trimmed-publish.md)).
 
 ## Décisions
 

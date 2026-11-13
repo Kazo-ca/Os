@@ -229,7 +229,7 @@ Posées dans le fil « Partager le proxy des apps Craft dans Kazo OS » le
       et poser les questions à Benoit.
 - [x] Écrire l'ADR (fr et en), index, mémoire, `features.md`.
 - [x] Chantier 2 : bibliothèque C#.
-- [ ] Chantier 3 : scripts.
-- [ ] Chantier 4 : parcours de bout en bout, doc du framework, guide de
+- [x] Chantier 3 : scripts ([`craft-module-scripts.md`](../craft-module-scripts.md)).
+- [x] Chantier 4 : parcours de bout en bout, doc du framework, guide de
       portage.
-- [ ] Issue `TODO` dans `Kazo-ca/Os-App-Word` : passer Kazo Word au module.
+- [x] Issue `TODO` dans `Kazo-ca/Os-App-Word` : passer Kazo Word au module ([#15](https://github.com/Kazo-ca/Os-App-Word/issues/15)).
