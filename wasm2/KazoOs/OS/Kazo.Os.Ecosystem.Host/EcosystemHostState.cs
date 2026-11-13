@@ -1,3 +1,4 @@
+using Kazo.Os.Platform.Core.AppLinks;
 using Kazo.Os.Simulation.Abstractions.Recovery;
 using Kazo.Os.Simulation.Abstractions.Sessions;
 
@@ -26,6 +27,30 @@ public sealed class EcosystemHostState
 
     /// <summary>Gets whether a newer release waits for a restart: a PWA update, or a build the origin replaced under the page (ADR 0162).</summary>
     public bool UpdateAvailable { get; private set; }
+
+    /// <summary>
+    /// Gets the direct app launch link read from the address at boot (ADR 0258), until the first
+    /// desktop takes it; <see langword="null"/> when none waits. It lives in memory only: closing
+    /// the tab forgets it, and the address no longer carries it.
+    /// </summary>
+    public AppLaunchLink? PendingAppLaunch { get; private set; }
+
+    /// <summary>Keeps the link read at boot until a session's desktop is shown (ADR 0258 §2).</summary>
+    /// <param name="link">The link read from the address.</param>
+    public void SetPendingAppLaunch(AppLaunchLink link) =>
+        PendingAppLaunch = link ?? throw new ArgumentNullException(nameof(link));
+
+    /// <summary>
+    /// Returns the waiting link and forgets it, so it runs once only: a sign-out and another
+    /// sign-in, or a later render of the desktop, never run it again.
+    /// </summary>
+    /// <returns>The link, or <see langword="null"/> when none waits.</returns>
+    public AppLaunchLink? TakePendingAppLaunch()
+    {
+        AppLaunchLink? link = PendingAppLaunch;
+        PendingAppLaunch = null;
+        return link;
+    }
 
     /// <summary>Returns the host to its non-ready initialization surface.</summary>
     public void BeginInitialization()

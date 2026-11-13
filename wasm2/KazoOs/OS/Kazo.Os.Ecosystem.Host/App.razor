@@ -4,6 +4,7 @@
 @using Microsoft.AspNetCore.Components
 @using Kazo.Os.Infrastructure.Browser.Recovery
 @using Kazo.Os.Platform.Blazor.Shell
+@using Kazo.Os.Platform.Core.AppLinks
 @using Kazo.Os.Platform.Core.Sessions
 @using Kazo.Os.Platform.Core.Shell
 @using Kazo.Os.Platform.Core.Appearance
@@ -33,6 +34,7 @@
 @inject IStringLocalizer<Strings> L
 @using Microsoft.Extensions.DependencyInjection
 @inject IServiceProvider Services
+@inject NavigationManager Navigation
 
 <ThemeScope ThemeId="@ActiveTheme.BaseThemeId"
             Tokens="@ActiveTheme.UserTheme?.Tokens"
@@ -181,6 +183,11 @@
                 }
                 else
                 {
+                @* ADR 0258 §4: with an account, the link only opens the Store on the app's page after sign-in. *@
+                @if (State.PendingAppLaunch is { } pendingLaunch)
+                {
+                    <p class="app-link-notice" role="status">@L["AppLink.StoreAfterLogin", pendingLaunch.AppId]</p>
+                }
                 <form @onsubmit="LoginAsync" @onsubmit:preventDefault>
                     <label for="login-user">@L["Login.User"]</label>
                     <select id="login-user" autocomplete="username" required @bind="SelectedLogin">
@@ -366,6 +373,11 @@
         {
             BootCoordinator.MarkSystemStarted();
             ShowUpdateNotification();
+            // ADR 0258: the link read at boot runs once, when the first desktop is shown.
+            if (State.TakePendingAppLaunch() is { } link)
+            {
+                _ = RunAppLaunchLinkAsync(link);
+            }
         }
     }
 
@@ -439,6 +451,10 @@
         // ADR 0241: this page runs the latest version; the site's worker must become its own.
         AdoptServiceWorkerInBackground();
 
+        // ADR 0258 §2: read after the boot update, which reloads the same address, and before the
+        // first screen; the address then loses the parameter so a reload never runs it again.
+        ReadAppLaunchLink();
+
         // ADR 0187 section 5: Settings ▸ Users and the Start menu ask from inside the guest session.
         GuestRequests = Services.GetService<GuestAccountRequests>();
         if (GuestRequests is not null)
@@ -449,7 +465,99 @@
         // Boot creates/reconciles canonical settings documents. Preferences are then loaded before
         // a user can reach a desktop, so the saved theme never depends on opening Settings first.
         await InitializeHostAsync();
+
+        // ADR 0258 §3: with no account, or the guest as the only account, the link starts the guest
+        // session without a click. Only here, once: a sign-out returns to the usual sign-in screen.
+        await StartForAppLaunchLinkAsync();
     }
+
+    /// <summary>
+    /// ADR 0258 §1 and §2: keeps the direct app launch link of the address in memory and removes it
+    /// from the address bar without reloading the page. A malformed link is ignored but still removed.
+    /// </summary>
+    private void ReadAppLaunchLink()
+    {
+        string address = Navigation.Uri;
+        if (AppLaunchLink.TryParse(address, out AppLaunchLink? link) && link is not null)
+        {
+            State.SetPendingAppLaunch(link);
+        }
+
+        string cleaned = AppLaunchLink.RemoveFromAddress(address);
+        if (!StringComparer.Ordinal.Equals(cleaned, address))
+        {
+            Navigation.NavigateTo(cleaned, forceLoad: false, replace: true);
+        }
+    }
+
+    /// <summary>
+    /// ADR 0258 §3: a link with no account creates the guest and opens its session, like « Start as
+    /// Guest »; a link while the guest is the only account continues as the guest (question Q3).
+    /// An account other than the guest keeps the usual sign-in screen and its notice (§4).
+    /// </summary>
+    private async Task StartForAppLaunchLinkAsync()
+    {
+        if (State.PendingAppLaunch is null)
+        {
+            return;
+        }
+
+        if (State.View == EcosystemHostView.FirstRun && await GuestAccounts.CanCreateAsync())
+        {
+            await StartAsGuestAsync();
+        }
+        else if (State.View == EcosystemHostView.Login && State.LoneGuest is not null)
+        {
+            await ContinueAsGuestAsync();
+        }
+    }
+
+    /// <summary>
+    /// ADR 0258 §3 and §4: in the guest's session the link installs and launches the app
+    /// (<see cref="IAppLaunchLinkRunner"/>); in an account's session, or while no runner is
+    /// registered, it opens the Kazo OS Store on the app's page and installs nothing.
+    /// </summary>
+    private async Task RunAppLaunchLinkAsync(AppLaunchLink link)
+    {
+        try
+        {
+            if (Services.GetService<ISessionService>()?.CurrentPrincipal is not { } principal)
+            {
+                return;
+            }
+
+            bool isGuest = await GuestAccounts.FindGuestAsync() is { } guest && guest.Id == principal.UserId;
+            if (isGuest && Services.GetService<IAppLaunchLinkRunner>() is { } runner)
+            {
+                await runner.RunAsync(link);
+                return;
+            }
+
+            Kazo.Os.Platform.Core.Lifecycle.AppLaunchResult opened = await Services
+                .GetRequiredService<Kazo.Os.Platform.Core.Lifecycle.AppLifecycleOrchestrator>()
+                .LaunchAsync(new Kazo.Os.Platform.Core.Lifecycle.AppLaunchRequest(
+                    Kazo.Os.Platform.Core.Apps.Packages.AppUpdateMonitor.StoreAppId,
+                    principal,
+                    [StoreAppArgumentPrefix + link.AppId]));
+
+            // ADR 0258 §6: the account's case writes app-link.store-opened in the same log as the guest's.
+            if (opened.IsSuccess)
+            {
+                Services.GetService<AppLaunchLinkRunner>()?.RecordStoreOpened(link);
+            }
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            // The link never breaks the session: the user can still open the Store by hand.
+            if (Services.GetService<Microsoft.Extensions.Logging.ILogger<App>>() is { } logger)
+            {
+                Microsoft.Extensions.Logging.LoggerExtensions.LogWarning(logger, exception, "app-link: the link {Link} could not run", link);
+            }
+        }
+    }
+
+    /// <summary>The Store's argument naming the app whose page to open (ADR 0212).</summary>
+    private const string StoreAppArgumentPrefix = "--app=";
 
     /// <summary>
     /// ADR 0239 §1: reads the served version before the first screen; when it is newer (and this tab

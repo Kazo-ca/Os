@@ -1,0 +1,14 @@
+{
+  "id": "6bcad809-1a66-4d48-929f-ba2b5267321b",
+  "category": "developer",
+  "audience": ["developer"],
+  "title": {
+    "en": "The direct link logs the Store opened for an account, and is tested end to end",
+    "fr": "Le lien direct journalise le Store ouvert pour un compte, et il est testé de bout en bout"
+  },
+  "description": {
+    "en": "/var/log/apps/org.kazoos.app-link.log gets an app-link.store-opened line when an account signs in and the Store opens at the app's page. build/publish-trimmed.sh now runs three direct link journeys (no account, account, missing app and cancel) against the official catalog served locally and signed by a key created for the run.",
+    "fr": "/var/log/apps/org.kazoos.app-link.log reçoit une ligne app-link.store-opened quand un compte se connecte et que le Store s'ouvre à la page de l'app. build/publish-trimmed.sh lance maintenant trois parcours du lien direct (sans compte, avec un compte, app absente et annulation) contre le catalogue officiel servi localement et signé par une clé créée pour l'exécution."
+  },
+  "links": ["doc/en/wasm/dev/app-launch-link.md"]
+}
