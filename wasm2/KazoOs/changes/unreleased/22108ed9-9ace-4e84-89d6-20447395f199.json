@@ -1,0 +1,19 @@
+{
+  "id": "22108ed9-9ace-4e84-89d6-20447395f199",
+  "category": "improved",
+  "audience": [
+    "user",
+    "developer"
+  ],
+  "title": {
+    "en": "Files can now be up to 128 MiB",
+    "fr": "Un fichier peut maintenant faire 128 Mio"
+  },
+  "description": {
+    "en": "The largest file Kazo OS stores goes from 16 MiB to 128 MiB, the most an app package may hold once extracted, so larger apps such as Kazo Word install. Large files are written and read in 16 MiB steps so the browser does not hold the whole file twice. A larger file still fails with File too large (EFBIG).",
+    "fr": "Le plus gros fichier que Kazo OS garde passe de 16 Mio à 128 Mio, le maximum qu'un paquet d'app contient une fois extrait : des apps plus lourdes comme Kazo Word s'installent. Les gros fichiers sont écrits et lus par tranches de 16 Mio, pour que le navigateur ne garde pas tout le fichier en double. Un fichier plus gros échoue toujours avec File too large (EFBIG)."
+  },
+  "links": [
+    "doc/en/wasm/dev/adr/0245-raise-the-maximum-file-size.md"
+  ]
+}

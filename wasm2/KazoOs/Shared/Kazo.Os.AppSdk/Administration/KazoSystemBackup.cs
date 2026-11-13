@@ -16,8 +16,8 @@ namespace Kazo.Os.AppSdk.Administration;
 /// <see cref="KazoUnauthorizedAccessException"/> and nothing happens.
 /// </para>
 /// <para>
-/// The archive goes to the host, never into the OS's own files: it would exceed the 16 MiB limit
-/// of a file (ADR 0094), and a copy inside the very database it saves would make no sense.
+/// The archive goes to the host, never into the OS's own files: it would exceed the 128 MiB limit
+/// of a file (ADR 0245), and a copy inside the very database it saves would make no sense.
 /// Opening the host's file picker needs a recent user gesture (a click, or Enter in a terminal).
 /// </para>
 /// <para>

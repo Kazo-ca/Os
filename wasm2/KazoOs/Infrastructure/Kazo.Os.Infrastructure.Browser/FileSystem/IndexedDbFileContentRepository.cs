@@ -84,23 +84,40 @@ internal sealed class IndexedDbFileContentRepository : IAsyncDisposable
         }
 
         string contentHash = Convert.ToHexString(hash.GetHashAndReset()).ToLowerInvariant();
-        IReadOnlyList<IndexedDbOperation> operations = [.. chunks.Select((chunk, index) =>
-            new IndexedDbOperation(
-                "addIfAbsent",
-                KazoOsIndexedDbSchema.FileContentStoreName,
-                Key: new object[] { contentHash, index },
-                Value: new IndexedDbFileContentChunkRecord(
-                    contentHash,
-                    index,
-                    Convert.ToBase64String(chunk),
-                    _timeProvider.GetUtcNow().ToUnixTimeMilliseconds())))];
         await _adapter.OpenAsync(IndexedDbMigrationPlan.CreateCurrent(), cancellationToken).ConfigureAwait(false);
-        await _adapter.ExecuteAsync(
-            Boundary,
-            IndexedDbTransactionMode.ReadWrite,
-            operations,
-            cancellationToken,
-            ioBytes: length).ConfigureAwait(false);
+
+        // A file of up to 128 MiB is written in batches of ChunksPerTransaction chunks (ADR 0245):
+        // only one batch is base64-encoded and crosses the JS interop at a time. The chunks are
+        // addressed by the hash of the whole content, so an interrupted write leaves only
+        // unreferenced chunks that the orphan cleanup removes, and a retry adds the missing ones.
+        long createdUtcMs = _timeProvider.GetUtcNow().ToUnixTimeMilliseconds();
+        for (int first = 0; first < chunks.Count; first += FileContentStoragePolicy.ChunksPerTransaction)
+        {
+            int count = Math.Min(FileContentStoragePolicy.ChunksPerTransaction, chunks.Count - first);
+            IReadOnlyList<IndexedDbOperation> operations = [.. Enumerable.Range(first, count).Select(index =>
+                new IndexedDbOperation(
+                    "addIfAbsent",
+                    KazoOsIndexedDbSchema.FileContentStoreName,
+                    Key: new object[] { contentHash, index },
+                    Value: new IndexedDbFileContentChunkRecord(
+                        contentHash,
+                        index,
+                        Convert.ToBase64String(chunks[index]),
+                        createdUtcMs)))];
+            long batchBytes = 0;
+            for (int index = first; index < first + count; index++)
+            {
+                batchBytes += chunks[index].Length;
+            }
+
+            await _adapter.ExecuteAsync(
+                Boundary,
+                IndexedDbTransactionMode.ReadWrite,
+                operations,
+                cancellationToken,
+                ioBytes: batchBytes).ConfigureAwait(false);
+        }
+
         return new IndexedDbFileContentWrite(contentHash, length);
     }
 
@@ -113,48 +130,65 @@ internal sealed class IndexedDbFileContentRepository : IAsyncDisposable
         ArgumentException.ThrowIfNullOrWhiteSpace(contentHash);
         ArgumentOutOfRangeException.ThrowIfNegative(expectedLength);
         await _adapter.OpenAsync(IndexedDbMigrationPlan.CreateCurrent(), cancellationToken).ConfigureAwait(false);
-        IReadOnlyList<JsonElement> results = await _adapter.ExecuteAsync(
-            Boundary,
-            IndexedDbTransactionMode.ReadOnly,
-            [new IndexedDbOperation(
-                "getAll",
-                KazoOsIndexedDbSchema.FileContentStoreName,
-                IndexName: "contentHash",
-                Query: contentHash)],
-            cancellationToken,
-            ioBytes: expectedLength).ConfigureAwait(false);
-        JsonElement records = results.Single();
-        if (records.ValueKind != JsonValueKind.Array || records.GetArrayLength() == 0)
-        {
-            throw new InvalidDataException("Persisted file content has no chunks.");
-        }
-
         MemoryStream content = new(checked((int)expectedLength));
-        int expectedIndex = 0;
         using IncrementalHash hash = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
-        foreach (JsonElement element in records.EnumerateArray())
+        try
         {
-            IndexedDbFileContentChunkRecord chunk = IndexedDbFileContentChunkRecord.FromJson(element);
-            if (!StringComparer.Ordinal.Equals(chunk.ContentHash, contentHash)
-                || chunk.ChunkIndex != expectedIndex++)
+            int expectedChunks = expectedLength == 0 ? 1 : _policy.ChunkCountFor(expectedLength);
+            if (expectedChunks <= FileContentStoragePolicy.ChunksPerTransaction)
             {
-                content.Dispose();
-                throw new InvalidDataException("Persisted file chunks are incomplete or out of order.");
-            }
+                // A file of at most one batch is read with one index query, as before ADR 0245.
+                IReadOnlyList<JsonElement> results = await _adapter.ExecuteAsync(
+                    Boundary,
+                    IndexedDbTransactionMode.ReadOnly,
+                    [new IndexedDbOperation(
+                        "getAll",
+                        KazoOsIndexedDbSchema.FileContentStoreName,
+                        IndexName: "contentHash",
+                        Query: contentHash)],
+                    cancellationToken,
+                    ioBytes: expectedLength).ConfigureAwait(false);
+                JsonElement records = results.Single();
+                if (records.ValueKind != JsonValueKind.Array || records.GetArrayLength() == 0)
+                {
+                    throw new InvalidDataException("Persisted file content has no chunks.");
+                }
 
-            byte[] bytes;
-            try
-            {
-                bytes = Convert.FromBase64String(chunk.DataBase64);
+                await AppendChunksAsync(content, hash, contentHash, 0, records.EnumerateArray(), cancellationToken)
+                    .ConfigureAwait(false);
             }
-            catch (FormatException exception)
+            else
             {
-                content.Dispose();
-                throw new InvalidDataException("Persisted file chunk data is malformed.", exception);
-            }
+                // A larger file is read in batches of ChunksPerTransaction keys (ADR 0245), so the
+                // interop never carries the base64 copy of the whole file at once.
+                for (int first = 0; first < expectedChunks; first += FileContentStoragePolicy.ChunksPerTransaction)
+                {
+                    int count = Math.Min(FileContentStoragePolicy.ChunksPerTransaction, expectedChunks - first);
+                    IReadOnlyList<JsonElement> results = await _adapter.ExecuteAsync(
+                        Boundary,
+                        IndexedDbTransactionMode.ReadOnly,
+                        [.. Enumerable.Range(first, count).Select(index => new IndexedDbOperation(
+                            "get",
+                            KazoOsIndexedDbSchema.FileContentStoreName,
+                            Key: new object[] { contentHash, index }))],
+                        cancellationToken,
+                        ioBytes: Math.Min(
+                            (long)count * _policy.MaxChunkSizeBytes,
+                            expectedLength - (first * _policy.MaxChunkSizeBytes))).ConfigureAwait(false);
+                    if (results.Count != count || results.Any(record => record.ValueKind != JsonValueKind.Object))
+                    {
+                        throw new InvalidDataException("Persisted file chunks are incomplete or out of order.");
+                    }
 
-            hash.AppendData(bytes);
-            await content.WriteAsync(bytes, cancellationToken).ConfigureAwait(false);
+                    await AppendChunksAsync(content, hash, contentHash, first, results, cancellationToken)
+                        .ConfigureAwait(false);
+                }
+            }
+        }
+        catch
+        {
+            content.Dispose();
+            throw;
         }
 
         string actualHash = Convert.ToHexString(hash.GetHashAndReset()).ToLowerInvariant();
@@ -167,6 +201,43 @@ internal sealed class IndexedDbFileContentRepository : IAsyncDisposable
 
         content.Position = 0;
         return content;
+    }
+
+    /// <summary>
+    /// Appends a run of chunk records to <paramref name="content"/>, checking that they belong to
+    /// <paramref name="contentHash"/> and follow each other from <paramref name="firstIndex"/>.
+    /// </summary>
+    private static async ValueTask AppendChunksAsync(
+        MemoryStream content,
+        IncrementalHash hash,
+        string contentHash,
+        int firstIndex,
+        IEnumerable<JsonElement> records,
+        CancellationToken cancellationToken)
+    {
+        int expectedIndex = firstIndex;
+        foreach (JsonElement element in records)
+        {
+            IndexedDbFileContentChunkRecord chunk = IndexedDbFileContentChunkRecord.FromJson(element);
+            if (!StringComparer.Ordinal.Equals(chunk.ContentHash, contentHash)
+                || chunk.ChunkIndex != expectedIndex++)
+            {
+                throw new InvalidDataException("Persisted file chunks are incomplete or out of order.");
+            }
+
+            byte[] bytes;
+            try
+            {
+                bytes = Convert.FromBase64String(chunk.DataBase64);
+            }
+            catch (FormatException exception)
+            {
+                throw new InvalidDataException("Persisted file chunk data is malformed.", exception);
+            }
+
+            hash.AppendData(bytes);
+            await content.WriteAsync(bytes, cancellationToken).ConfigureAwait(false);
+        }
     }
 
     /// <summary>Deletes a bounded set of retained hashes after atomic reference revalidation.</summary>
@@ -251,7 +322,7 @@ public sealed record IndexedDbFileContentCleanupResult(
 
 /// <summary>
 /// The content being stored exceeds <see cref="Schema.FileContentStoragePolicy.MaxFileSizeBytes"/>
-/// (16 MiB, ADR 0094); the provider reports it as <c>FileSystemErrorCode.FileTooLarge</c>
+/// (128 MiB, ADR 0245); the provider reports it as <c>FileSystemErrorCode.FileTooLarge</c>
 /// (<c>EFBIG</c>). Nothing was written: the limit is checked before any chunk is stored.
 /// </summary>
 internal sealed class FileContentTooLargeException : IOException

@@ -16,7 +16,7 @@ namespace Kazo.Os.AppSdk.Threading;
 /// </summary>
 internal static class KazoBackgroundWire
 {
-    /// <summary>The largest input or result: the largest file (16 MiB, ADR 0094), counted in UTF-8 bytes of JSON.</summary>
+    /// <summary>The largest input or result: 16 MiB, the file limit of ADR 0094 when ADR 0128 was written (files may now reach 128 MiB, ADR 0245), counted in UTF-8 bytes of JSON.</summary>
     public const int MaxPayloadBytes = 16 * 1024 * 1024;
 
     private static readonly ConcurrentDictionary<Type, JsonSerializerContext?> s_contexts = new();
