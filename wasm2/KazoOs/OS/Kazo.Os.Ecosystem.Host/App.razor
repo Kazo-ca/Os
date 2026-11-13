@@ -540,7 +540,7 @@
                     principal,
                     [StoreAppArgumentPrefix + link.AppId]));
 
-            // ADR 0246 §6: the account's case writes app-link.store-opened in the same log as the guest's.
+            // ADR 0258 §6: the account's case writes app-link.store-opened in the same log as the guest's.
             if (opened.IsSuccess)
             {
                 Services.GetService<AppLaunchLinkRunner>()?.RecordStoreOpened(link);

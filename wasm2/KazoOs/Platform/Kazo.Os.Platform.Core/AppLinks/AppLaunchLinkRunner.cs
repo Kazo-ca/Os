@@ -138,7 +138,7 @@ public sealed class AppLaunchLinkRunner : IAppLaunchLinkRunner
     }
 
     /// <summary>
-    /// ADR 0246 §4 and §6: writes <c>app-link.store-opened</c> once the host opened the Kazo OS Store at
+    /// ADR 0258 §4 and §6: writes <c>app-link.store-opened</c> once the host opened the Kazo OS Store at
     /// the app's page for a session that is not the guest's. Nothing is installed in that case.
     /// </summary>
     /// <param name="link">The link read at boot.</param>
