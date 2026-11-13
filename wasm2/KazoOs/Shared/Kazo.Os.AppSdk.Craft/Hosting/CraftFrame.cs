@@ -47,6 +47,15 @@ public sealed class CraftFrame : IAsyncDisposable
     /// </summary>
     public event Func<FrameSave, Task<bool>>? Saving;
 
+    /// <summary>
+    /// Raised for every file the Craft app exports through a browser download link (ADR 0264): a
+    /// copy made for the user (Export, Print to PDF…), never the document, whatever its extension.
+    /// <see cref="FrameSave.SaveAs"/> is <see langword="false"/>. The handler answers whether the
+    /// file reached its destination. The page's downloads go to the window only when this event has
+    /// a handler before <see cref="StartAsync"/>; otherwise the browser downloads them as before.
+    /// </summary>
+    public event Func<FrameSave, Task<bool>>? Exporting;
+
     /// <summary>Raised when the running Craft app reports an error (<see cref="FrameMessages.Error"/>).</summary>
     public event Func<FrameError, Task>? ErrorReported;
 
@@ -77,7 +86,7 @@ public sealed class CraftFrame : IAsyncDisposable
             cancellationToken,
             container,
             _self,
-            options.ToMessage());
+            options.ToMessage(takesExports: Exporting is not null));
     }
 
     /// <summary>Gives the keyboard to the Craft app (the window was activated, or the Craft app is ready).</summary>
@@ -174,6 +183,14 @@ public sealed class CraftFrame : IAsyncDisposable
     [JSInvokable]
     public Task<bool> OnFrameSave(string name, bool saveAs, byte[] bytes) =>
         Saving?.Invoke(new FrameSave(name, saveAs, bytes)) ?? Task.FromResult(false);
+
+    /// <summary>Called by <c>craft-host.js</c> for each file the Craft app exports (ADR 0264).</summary>
+    /// <param name="name">The file name the Craft app gave.</param>
+    /// <param name="bytes">The file's content.</param>
+    /// <returns>Whether the file reached its destination; <see langword="false"/> when nobody handles exports.</returns>
+    [JSInvokable]
+    public Task<bool> OnFrameExport(string name, byte[] bytes) =>
+        Exporting?.Invoke(new FrameSave(name, false, bytes)) ?? Task.FromResult(false);
 
     /// <summary>Called by <c>craft-host.js</c> for each message of the proxy.</summary>
     /// <param name="type">The message name, one of <see cref="FrameMessages"/>.</param>

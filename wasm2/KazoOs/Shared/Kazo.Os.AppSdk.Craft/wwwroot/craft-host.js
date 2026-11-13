@@ -102,6 +102,19 @@ export function create(container, dotnet, options = {}) {
             });
     };
 
+    // An export (ADR 0264): a file the Craft app made for the user, never its document. C# saves it
+    // as a copy; the app is not told anything back, as a browser download tells it nothing.
+    const exportFile = (message) => {
+        if (disposed) {
+            return;
+        }
+
+        const bytes = message.bytes instanceof ArrayBuffer ? new Uint8Array(message.bytes) : new Uint8Array(0);
+        dotnet.invokeMethodAsync("OnFrameExport", String(message.name ?? ""), bytes).catch(() => {
+            // The window is closing: the export is lost with it.
+        });
+    };
+
     const onMessage = (event) => {
         const message = event.data ?? {};
         switch (message.type) {
@@ -122,6 +135,9 @@ export function create(container, dotnet, options = {}) {
                 break;
             case "save":
                 save(message, event.target);
+                break;
+            case "export":
+                exportFile(message);
                 break;
             case "focus":
                 // The window's frame activates it on pointerdown; a click inside the iframe never
@@ -188,6 +204,7 @@ export function create(container, dotnet, options = {}) {
             language: options.language ?? "en",
             reservedKeys: options.reservedKeys ?? [],
             settings,
+            exports: options.exports === true,
         }, window.location.origin, [channel.port2]);
     });
 

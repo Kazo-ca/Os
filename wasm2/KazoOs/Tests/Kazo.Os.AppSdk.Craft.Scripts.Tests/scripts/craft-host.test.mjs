@@ -91,6 +91,7 @@ test("init goes to the page with the window's language, keys and settings, at th
         assert.equal(targetOrigin, "https://os.example");
         assert.deepEqual(init, {
             type: "init", language: "fr", reservedKeys: [{ key: "F4", alt: true, target: "os" }], settings: { "fake.ui": "{}" },
+            exports: false,
         });
         assert.equal(page.iframe.className, "craft-frame-iframe");
         assert.equal(page.iframe.src, "https://os.example/_content/Kazo.Fake/host/index.html");
@@ -136,6 +137,26 @@ test("a save with an id that C# stored is answered with saved", async () => {
         assert.equal(dotnet.calls[0][2], false);
         assert.deepEqual([...dotnet.calls[0][3]], [1, 2, 3]);
         assert.deepEqual(toProxy, [{ type: "saved", id: 9 }]);
+    } finally {
+        frame.dispose();
+        port.close();
+        page.restore();
+    }
+});
+
+test("the window's wish for exports goes in init, and an export reaches C# with no answer to the app", async () => {
+    const dotnet = fakeDotnet(true);
+    const { frame, page, init, port, toProxy } = loaded(dotnet, { exports: true });
+    try {
+        assert.equal(init.exports, true);
+        const bytes = new Uint8Array([4, 5]).buffer;
+        port.postMessage({ type: "export", name: "report.docx", bytes }, [bytes]);
+        await tick();
+
+        assert.equal(dotnet.calls[0][0], "OnFrameExport");
+        assert.equal(dotnet.calls[0][1], "report.docx");
+        assert.deepEqual([...dotnet.calls[0][2]], [4, 5]);
+        assert.deepEqual(toProxy, []);
     } finally {
         frame.dispose();
         port.close();

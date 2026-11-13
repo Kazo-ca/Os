@@ -85,6 +85,7 @@ frame.Saving += OnSavingAsync;        // returns true when the file is written
 frame.ErrorReported += OnErrorAsync;  // error after ready: a notice, the app goes on
 frame.KeyPressed += OnKeyPressedAsync;
 frame.PickRequested += OnPickRequestedAsync;
+frame.Exporting += OnExportingAsync;   // optional: exports through a download link (ADR 0264)
 frame.SettingChanged += OnSettingChangedAsync;
 frame.SchemeChanged += OnSchemeChangedAsync;
 
@@ -102,6 +103,7 @@ await frame.StartAsync(_frameHost, new CraftFrameOptions(CraftFrameOptions.PageP
 | `Failed(error)` | `FrameStartup.OnFailed`: error screen. "Retry": `DisposeAsync` of the frame, `FrameStartup.Retry`, a new `CraftFrame`. |
 | `DirtyChanged(dirty)` | `DocumentSession.SetFrameDirty`, then the title (`DocumentSession.Title`). |
 | `Saving(save)` | `DocumentSession.Decide(name, saveAs)`: rewrite, ask then bind, or copy; the OS save dialog when needed; `KazoFile.WriteAllBytesAsync`; `Saved` or `SaveFailed`. Return `true` only once the file is written: when the app's save carried an `id`, the module answers it `saved` and it clears its changes. |
+| `Exporting(export)` | Optional, to subscribe **before** `StartAsync` ([ADR 0264](../dev/adr/0264-craft-app-exports-reach-the-window.md)): a file the app exports through a download link (`<a download>` on a `blob:`, PdfCraft). `DocumentSession.DecideCopy(name)`: always a copy, whatever the extension; the OS save dialog, `KazoFile.WriteAllBytesAsync`, then a "Copy saved" message. With no subscriber, the browser downloads the file as before. |
 | `ErrorReported(error)` | A notice in the window; the app keeps running. |
 | `KeyPressed(key)` | The chords reserved for the window (`ReservedKeyTarget.App`): Ctrl+N = new window (`KazoApps.LaunchAsync`), F12 or Ctrl+Shift+S = Save As when the app never says it (GridCraft). |
 | `PickRequested(request)` | The OS Open dialog, filtered by `request.Extensions`, then **always** `AnswerPickAsync(request.Id, files or null)`: the app waits for the answer. |
@@ -137,6 +139,7 @@ the OS title bar and the app say the same.
 | Name bound to a path, `saveAs` false, last save succeeded | `Rewrite`: rewrites that path, no dialog. |
 | `saveAs` true, name bound to nothing, or the last save of that name failed | `AskAndBind`: OS dialog, then binding; rename the document in the app when the name changes, then `DocumentSession.Renamed`. |
 | Copy format (`CraftDocumentFormat.IsCopy`) | `AskForCopy`: dialog, the binding does not change. |
+| Export (`Exporting`, `DocumentSession.DecideCopy`) | `AskForCopy`, even for a document's name or format. |
 
 "Modified" = the app says so, **or** a save did not complete (dialog cancelled, write refused): a
 Craft app whose save has no `id` clears "modified" as soon as it hands the save over.

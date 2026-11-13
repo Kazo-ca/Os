@@ -441,6 +441,7 @@ points to its PR.
 | Switch user | Open another session without closing the first one. Stays greyed out in the Power menu by Benoit's choice: one session at a time, Sign out to change account. | [0195](dev/adr/0195-start-menu-power-button.md), [0201](dev/adr/0201-switch-user-stays-greyed.md) | [#290](https://github.com/Kazo-ca/Os/issues/290) |
 | File address served on demand | An app gets an address to read a large file (audio, video) without copying it in memory, with partial reads to seek in a track. | To write | [#379](https://github.com/Kazo-ca/Os/issues/379) |
 | Drag files onto an app | Public SDK contract to receive files dragged from the File Explorer or the desktop. | To write | [#380](https://github.com/Kazo-ca/Os/issues/380) |
+| Craft app exports in Kazo OS | A Craft app's exports (Export, Print to PDF, OCR… of Kazo Pdf) go through the OS save dialog instead of the browser's downloads, and are saved as copies. | [0264](dev/adr/0264-craft-app-exports-reach-the-window.md) | — |
 
 ### Kazo OS Store
 
