@@ -400,7 +400,7 @@ kazopkg info org.example.notes
   (`apps.package.ambiguous`) and the message gives every possible
   `catalog:<name>/<appId>` to type again
   ([ADR 0215](adr/0215-hack-store-answers-notification-and-ambiguous-app-id.md) §2).
-- **The app**: home by categories, search (name, short description, tags, ID,
+- **The app**: home page (below), search (name, short description, tags, ID,
   ignoring case and accents), app page (icon, screenshots, Markdown
   description drawn without HTML, version, size, license, category, date,
   repository, capabilities, trust), Install for me or for everyone, Open,
@@ -411,6 +411,106 @@ kazopkg info org.example.notes
   Store opens that file (ADR [0257](adr/0257-offer-a-store-app-for-an-unsupported-file.md) §5,
   the File Explorer's "View in the Store" button). A Store already open
   receives these arguments too.
+- **Progress** (ADR [0266](adr/0266-store-ux-refresh.md) §7): during an
+  install or an update, the app's page and card show the step the OS reports
+  to `KazoAppPackages.InstallAsync(source, scope, progress)`: preparing,
+  downloading (percent and sizes; the catalog's size when the host announces
+  none), verifying, waiting for an administrator, installing. Only that app's
+  buttons are disabled. The actions that change the installed apps run one at
+  a time, like a package manager holding its lock: the next one shows
+  "Waiting for the other install…". Opening an app does not wait.
+- **Navigation and keyboard** (series `store-ux`, work item 1): every view
+  (home, category, results, Installed, Themes, app page) opens at the top;
+  coming back from an app's page, the list returns to where it was left
+  (`StoreScrollMemory` and `wwwroot/store-scroll.js`: moving the scroll bar is
+  the only thing C# cannot do). The search box also filters the Installed tab
+  (including an app no catalog lists any more, by its name and ID); Enter
+  opens the first result. The tabs follow the WAI-ARIA pattern (← → Home End,
+  `tabpanel`), keyboard focus is visible on every control, and under 640 px
+  the header takes two lines (targets raised to 44 px by work item 6, below). The description
+  does not repeat a first heading equal to the app's name, and a line that
+  follows a list item stays in that item.
+- **The page's screenshots** (`store-ux` series, work item 2): each screenshot
+  is a button (`StoreScreenshots.razor`). A click, Enter or Space opens it in a
+  viewer that covers the Store window (not the screen): previous and next with
+  the buttons, ← and →, Home and End, or a finger swipe; Escape, the Close
+  button, a click beside the image or the OS's Back (the mouse's Back button,
+  Alt+←, the phone's Back) close it, and the focus returns to the thumbnail of
+  the screenshot last shown. The catalog does not give the screenshots' sizes:
+  the thumbnail has a fixed height (240 px, 320 px in a wide window, 200 px on a
+  phone) and a 16:10 width until the image arrives, so the page does not jump.
+  On a phone the portrait screenshots come first (work item 6, below); the
+  viewer follows the thumbnails' order.
+- **An app's page** (`store-ux` series, work item 3,
+  [ADR 0266](adr/0266-store-ux-refresh.md) §4 and §6): the page is a component
+  of its own, `StoreAppPage.razor`, which reads the app and runs the actions of
+  `StoreWindow`. A bar stays at the top while the page scrolls: Back, then the
+  icon, the name and the main button (Install for me, Update or Open) once
+  the header has gone under the bar; the header keeps both install buttons.
+  Capabilities are written in plain language (the Store's
+  `Capability.<id>.Title` and `.Risk` texts, in French and English), grouped
+  (sensitive access first, then files, apps and desktop, network, system and
+  accounts, other); « See the technical identifiers » shows them, and a
+  capability with no known text keeps its identifier (`StoreAppFacts`). The
+  page lists the file types the app opens (the catalog's `fileHandlers`,
+  ADR 0257 §1, exposed by `KazoCatalogAppVersion.FileHandlers`), replaces the
+  raw repository address by a « Source code on GitHub » link (http and https
+  only), and, for an app of the official catalog, a button copies the « Try
+  it » link (`<OS address>?autolaunch=<appId>`, ADR 0258) to the OS clipboard
+  (the Store's `clipboard.write` capability), which passes it to the
+  machine's. The facts panel follows the scroll without growing taller than
+  the window; under 640 px it goes under the description. Long texts (short
+  and long description, capabilities) use the system's sans-serif font
+  (`system-ui`), with no download; titles, buttons and labels keep the theme's
+  font. `StoreAppPage.razor.js` only does what C# cannot see: whether the
+  header is still visible (`IntersectionObserver`), the height of the
+  scrolling area, and the page's address.
+- **Home page** (`store-ux` series, work item 5,
+  [ADR 0266](adr/0266-store-ux-refresh.md) §2, §3 and §5): a « Featured »
+  banner shows one app (icon, name, short description, first screenshot,
+  version, size, license, its button and « See the app's page »). The Store
+  picks it by itself: the most recently published app (`publishedAt` of the
+  version it installs) that is not installed, else the most recently
+  published one (`StoreCatalog.Featured`). Below, one grid lists every app,
+  newest first (an app without a date last, by name), with chips that filter
+  it by category (« All · 6 », then each category with its number of apps; an
+  app whose category no catalog names is under « Other »). The OS's Back
+  removes the filter; the « See all » page is gone. Each card opens the app's
+  page on a click anywhere outside its buttons, and carries one button:
+  « Install » (for me), « Open » or « Update » with its state. For an
+  administrator (`KazoUserInfo.IsAdministrator`), « Install » has a menu
+  button beside it that offers « Install for everyone » (WAI-ARIA menu
+  button: the open menu takes the focus, Escape closes it and gives it back,
+  a click beside it closes it); the OS still asks for an administrator
+  itself (ADR 0189 §4). The app's page keeps its two install buttons. A card
+  shows its trust badge only when the app is not verified; the page always
+  does. The window opens at 1100 × 720 (clamped to the screen). While the
+  catalogs load, the page draws empty cards (a word is read to screen
+  readers). The **Themes** tab is hidden while no catalog offers a pack and
+  no pack is installed; `--page=themes` then opens the home page.
+- **Messages** (`store-ux` series, work item 3, ADR 0266 §6): the result of an
+  action shows at the bottom of the window and closes by itself after 6
+  seconds; an error stays until it is closed (`StoreWindow.Messages.cs`).
+- **Phone** (`store-ux` series, work item 6,
+  [ADR 0266](adr/0266-store-ux-refresh.md) §8): when the Store is 640 px wide
+  or less (a phone, or a narrow window), a container query changes the layout
+  without changing the markup.
+  - The header takes two lines: the brand and Refresh, then the search box.
+  - The tabs move to a bar at the bottom of the window (60 px), an icon above
+    each label, the number of updates on the icon's corner. They are the same
+    buttons of the same `tablist`: the keyboard order and keys do not change.
+    The scrolling area stops above the bar, and messages float above it.
+  - Every touch target is at least 44 × 44 px (search, Refresh, tabs, chips,
+    « Install » buttons and menu, a card's name, the page's links, the
+    viewer's buttons). A link inside a description's text is exempt, as WCAG
+    2.5.8 allows.
+  - Portrait screenshots come before landscape ones, each group in the
+    catalog's order (`StoreScreenshotOrder`). The catalog does not change:
+    `StoreScreenshots.razor.js` reads each screenshot's size in the browser and
+    tells the component whether the Store is narrower than 640 px; a
+    screenshot whose size is not known counts as landscape. A portrait
+    screenshot is shown tall (340 px). Without JavaScript the catalog's order
+    stays.
 - **Updates**: `AppUpdateMonitor` checks at sign-in then every
   `[updates] interval-hours` hours and posts a notification that opens the
   Installed tab. Each check also downloads every catalog of `[catalogs]`, for
@@ -420,10 +520,14 @@ kazopkg info org.example.notes
   the Store is added once, to a new profile as to an existing one, and does
   not come back after an unpin.
 
-Tests: `AppCatalogDocumentTests`, the catalog tests of
-`AppPackageGatewayTests`, `StartMenuPreferencesServiceTests`
-(Platform.Core) and `Kazo.Os.Apps.Store.Tests` (`StoreCatalog`,
-`StoreMarkdown`, manifest).
+Tests: `AppCatalogDocumentTests`, the catalog and progress tests of
+`AppPackageGatewayTests`, `HttpAppPackageDownloaderTests`,
+`StartMenuPreferencesServiceTests` (Platform.Core), `Kazo.Os.Apps.Store.Tests`
+(`StoreCatalog`, `StoreMarkdown`, `StoreNavigationTests`, `StoreOperations`,
+`StoreScreenshotsTests`, `StoreScreenshotOrderTests`, `StoreAppFactsTests`, manifest) and
+`Kazo.Os.UI.E2E.Tests` (`StoreNavigationTests`, `StoreInstallProgressTests`,
+`StoreScreenshotViewerTests`, `StoreAppPageTests`, `StoreHomeTests`,
+`StoreMobileTests`, which measures every control on a 390 × 844 phone).
 
 ## Adding without a restart, signing and transactions
 
@@ -498,3 +602,5 @@ Tests: `AppPackageGatewayTests.Transactions.cs`, `AppDataGuardTests`,
 - [x] Contract tests and documentation.
 - [x] Kazo OS Store: catalogs, `kazopkg install <appId>`, updates by notification, default pin (ADR 0212, ADR 0215).
 - [x] Adding without a restart, signing, transactional install, `kazopkg rollback` and `repair`, data backup (ADR 0214).
+- [x] Install progress in the Store: `IProgress<KazoPackageInstallProgress>`, steps, queue, only the app's own buttons (ADR 0266 §7).
+- [x] Store home page: featured app, grid newest first with category chips, card button with the administrator's menu, empty cards while loading, 1100 × 720 window, Themes tab hidden without a pack (ADR 0266 §2, §3, §5).

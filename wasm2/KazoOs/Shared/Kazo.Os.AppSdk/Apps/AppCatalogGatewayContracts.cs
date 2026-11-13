@@ -192,6 +192,20 @@ public interface IAppManagementGateway
         throw new NotSupportedException("This app-management gateway cannot install packages.");
 
     /// <summary>
+    /// Installs like <see cref="InstallPackageAsync(string, KazoPackageScope, CancellationToken)"/> and
+    /// reports each step to <paramref name="progress"/> (ADR 0266 §7). The default installs without
+    /// reporting, so a gateway that predates ADR 0266 keeps working.
+    /// </summary>
+    /// <param name="source">The repository, optionally followed by <c>@version</c>.</param>
+    /// <param name="scope">For whom; <see cref="KazoPackageScope.Auto"/> picks the personal install when allowed.</param>
+    /// <param name="progress">Receives the steps; <see langword="null"/> reports nothing.</param>
+    /// <param name="cancellationToken">Cancels the download, the approval and the writes.</param>
+    /// <exception cref="NotSupportedException">The gateway predates ADR 0182.</exception>
+    ValueTask<KazoPackageInstallReport> InstallPackageAsync(
+        string source, KazoPackageScope scope, IProgress<KazoPackageInstallProgress>? progress, CancellationToken cancellationToken = default) =>
+        InstallPackageAsync(source, scope, cancellationToken);
+
+    /// <summary>
     /// Removes an app installed from a package: the session user's own copy without an
     /// administrator, a system one after the two-step approval. Settings stay; it leaves the
     /// catalog at once, or at the next start of the OS when it is loaded in the page (ADR 0214 §1).

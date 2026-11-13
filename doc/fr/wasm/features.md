@@ -461,6 +461,7 @@ dans `main`, le lien mène à sa PR.
 | Fonctionnalité | Description | ADR | Issue |
 | --- | --- | --- | --- |
 | Catalogue des applications | Format du catalogue, vérification et publication des applications proposées. | [0188](dev/adr/0188-hack-store-and-app-catalog.md) | [AppMarketPlace #1](https://github.com/Kazo-ca/Os-AppMarketPlace/issues/1) |
+| Nouvel accueil et nouvelle fiche du Store | App « à la une », grille filtrée par catégorie, installation depuis les cartes, visionneuse de captures, capacités en langage clair, progression d'installation, interface du téléphone revue. Déjà dans `store-ux/base` : corrections rapides, visionneuse de captures, nouvelle fiche (barre qui reste en haut, capacités en langage clair, types de fichiers ouverts, lien « Essayer » à copier, messages qui se ferment seuls), progression d'installation, nouvel accueil (app à la une, grille filtrée par catégorie, bouton « Installer » des cartes avec « pour tout le monde » pour un administrateur, onglet Thèmes masqué sans pack), téléphone (onglets en bas, cibles tactiles de 44 px, captures en portrait d'abord). | [0266](dev/adr/0266-store-ux-refresh.md) | Série `store-ux/base` |
 
 ### Personnalisation
 

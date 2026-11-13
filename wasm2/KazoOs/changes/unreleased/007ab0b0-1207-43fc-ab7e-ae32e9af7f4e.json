@@ -1,0 +1,11 @@
+{
+  "id": "007ab0b0-1207-43fc-ab7e-ae32e9af7f4e",
+  "category": "improved",
+  "audience": ["user"],
+  "title": { "en": "The Kazo OS Store fits the phone", "fr": "Le Kazo OS Store s'adapte au téléphone" },
+  "description": {
+    "en": "On a phone, the Store's tabs move to a bar at the bottom of the screen, within reach of the thumb, and the header takes two lines. Every button, tab and link is at least 44 px, large enough to touch. An app's screenshots taken in portrait come first and are shown tall, before the landscape ones.",
+    "fr": "Sur téléphone, les onglets du Store passent dans une barre en bas de l'écran, à portée du pouce, et l'en-tête tient sur deux lignes. Chaque bouton, onglet et lien fait au moins 44 px, assez grand pour le doigt. Les captures d'une app prises en portrait passent en premier et s'affichent en grand, avant celles en paysage."
+  },
+  "links": ["doc/en/wasm/dev/app-installation.md", "doc/en/wasm/dev/adr/0266-store-ux-refresh.md"]
+}

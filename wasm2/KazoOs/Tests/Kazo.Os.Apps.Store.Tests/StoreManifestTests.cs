@@ -19,11 +19,21 @@ public sealed class StoreManifestTests
     }
 
     [Fact]
-    public void Manifest_asks_only_to_manage_and_launch_apps()
+    public void Manifest_asks_only_to_manage_and_launch_apps_and_copy_a_link()
     {
         AppManifest manifest = AppDefinitionMapper.ToManifest(new StoreApp());
 
-        Assert.Equal([AppCapabilities.AppsLaunch, AppCapabilities.AppsManage], manifest.Capabilities.Order(StringComparer.Ordinal));
+        Assert.Equal([AppCapabilities.AppsLaunch, AppCapabilities.AppsManage, AppCapabilities.ClipboardWrite], manifest.Capabilities.Order(StringComparer.Ordinal));
+    }
+
+    [Fact]
+    public void The_window_opens_large_enough_for_the_home_page()
+    {
+        AppManifest manifest = AppDefinitionMapper.ToManifest(new StoreApp());
+
+        Assert.Equal(1100, manifest.Window!.DefaultWidth);
+        Assert.Equal(720, manifest.Window.DefaultHeight);
+        Assert.True(manifest.Window.Resizable);
     }
 
     [Fact]

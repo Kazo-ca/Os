@@ -97,19 +97,85 @@ public sealed class StoreCatalogTests
         Assert.Empty(store.Available);
     }
 
+    /// <summary>An app whose latest version was published at <paramref name="publishedAt"/>, or with no date.</summary>
+    private static KazoCatalogApp Published(string appId, string name, string category, string? publishedAt)
+    {
+        KazoCatalogApp app = App("official", appId, name, category);
+        if (publishedAt is null)
+        {
+            return app;
+        }
+
+        KazoCatalogAppVersion latest = new("1.1.0", 2048, []) { PublishedAt = DateTimeOffset.Parse(publishedAt, CultureInfo.InvariantCulture) };
+        return app with { Versions = [latest] };
+    }
+
     [Fact]
-    public void Home_lists_categories_with_apps_then_the_others()
+    public void Category_filters_count_the_apps_of_each_category_then_the_others()
     {
         StoreCatalog store = new(
             [Catalog("official",
                 App("official", "org.example.a", "Alpha", "utilities"),
+                App("official", "org.example.c", "Gamma", "utilities"),
                 App("official", "org.example.b", "Beta", "unknown"))],
             [], [], new HashSet<string>());
 
-        var home = store.Home();
+        Assert.Equal([("utilities", 2), (StoreCatalog.OtherCategoryId, 1)], store.CategoryFilters());
+        Assert.Equal("Beta", Assert.Single(store.Grid(StoreCatalog.OtherCategoryId)).Name);
+        Assert.Equal(["Alpha", "Gamma"], store.Grid("utilities").Select(entry => entry.Name));
+        Assert.Empty(store.Grid("graphics"));
+        Assert.Equal(3, store.Grid(null).Count);
+    }
 
-        Assert.Equal(["utilities", StoreCatalog.OtherCategoryId], home.Select(section => section.Category.Id));
-        Assert.Equal("Beta", Assert.Single(home[1].Apps).Name);
+    [Fact]
+    public void The_grid_lists_the_newest_app_first_and_undated_apps_last_by_name()
+    {
+        StoreCatalog store = new(
+            [Catalog("official",
+                Published("org.example.old", "Old", "utilities", "2026-01-05T00:00:00Z"),
+                Published("org.example.new", "New", "graphics", "2026-11-01T00:00:00Z"),
+                Published("org.example.zed", "Zed", "utilities", null),
+                Published("org.example.abc", "Abc", "utilities", null))],
+            [], [], new HashSet<string>());
+
+        Assert.Equal(["New", "Old", "Abc", "Zed"], store.Grid(null).Select(entry => entry.Name));
+        Assert.Equal(["Old", "Abc", "Zed"], store.Grid("utilities").Select(entry => entry.Name));
+    }
+
+    [Fact]
+    public void The_featured_app_is_the_newest_one_not_installed()
+    {
+        StoreCatalog store = new(
+            [Catalog("official",
+                Published("org.example.old", "Old", "utilities", "2026-01-05T00:00:00Z"),
+                Published("org.example.mid", "Mid", "utilities", "2026-06-01T00:00:00Z"),
+                Published("org.example.new", "New", "graphics", "2026-11-01T00:00:00Z"))],
+            [new KazoInstalledPackage("org.example.new", "catalog:official/org.example.new", "1.1.0", true)],
+            [], new HashSet<string>());
+
+        Assert.Equal("Mid", store.Featured()!.Name);
+    }
+
+    [Fact]
+    public void The_featured_app_is_the_newest_one_when_every_app_is_installed()
+    {
+        StoreCatalog store = new(
+            [Catalog("official",
+                Published("org.example.old", "Old", "utilities", "2026-01-05T00:00:00Z"),
+                Published("org.example.new", "New", "graphics", "2026-11-01T00:00:00Z"))],
+            [new KazoInstalledPackage("org.example.new", "catalog:official/org.example.new", "1.1.0", true),
+             new KazoInstalledPackage("org.example.old", "catalog:official/org.example.old", "1.1.0", true)],
+            [], new HashSet<string>());
+
+        Assert.Equal("New", store.Featured()!.Name);
+    }
+
+    [Fact]
+    public void No_app_means_no_featured_app_and_no_filter()
+    {
+        Assert.Null(StoreCatalog.Empty.Featured());
+        Assert.Empty(StoreCatalog.Empty.CategoryFilters());
+        Assert.Empty(StoreCatalog.Empty.Grid(null));
     }
 
     [Theory]
@@ -148,5 +214,23 @@ public sealed class StoreCatalogTests
     public void FormatSize_uses_bytes_KB_and_MB(long bytes, string expected)
     {
         Assert.Equal(expected, StoreCatalog.FormatSize(bytes, CultureInfo.InvariantCulture));
+    }
+
+    [Fact]
+    public void The_installed_tab_is_searched_too_even_for_an_app_no_catalog_lists()
+    {
+        StoreCatalog store = new(
+            [Catalog("official",
+                App("official", "org.example.notes", "Notes", "utilities", "Write things down"),
+                App("official", "org.example.paint", "Paint", "graphics", "Draw pictures"))],
+            [new KazoInstalledPackage("org.example.notes", "catalog:official/org.example.notes", "1.1.0", true),
+             new KazoInstalledPackage("org.example.paint", "catalog:official/org.example.paint", "1.1.0", true),
+             new KazoInstalledPackage("org.other.clock", "file:/clock.kazoapp", "1.0.0", true)],
+            [], new HashSet<string>());
+
+        Assert.Equal(3, store.SearchInstalled(null, French).Count);
+        Assert.Equal("org.example.notes", Assert.Single(store.SearchInstalled("WRITE", French)).AppId);
+        Assert.Equal("org.other.clock", Assert.Single(store.SearchInstalled("clock", French)).AppId);
+        Assert.Empty(store.SearchInstalled("zzzz", French));
     }
 }

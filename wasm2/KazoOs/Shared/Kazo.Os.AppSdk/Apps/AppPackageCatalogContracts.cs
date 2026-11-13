@@ -32,6 +32,13 @@ public sealed record KazoCatalogAppVersion(string Version, long SizeBytes, IRead
 
     /// <summary>Gets the languages its long description is written in (read it with <see cref="KazoAppPackages.GetCatalogDescriptionAsync"/>).</summary>
     public IReadOnlyList<string> DescriptionLanguages { get; init; } = [];
+
+    /// <summary>
+    /// Gets the file types it opens, copied by the catalog from the <c>fileHandlers</c> of its
+    /// manifest (ADR 0257 §1); empty when the catalog does not say. The Kazo OS Store shows them on
+    /// the app's page (ADR 0266 §4).
+    /// </summary>
+    public IReadOnlyList<KazoAppFileHandler> FileHandlers { get; init; } = [];
 }
 
 /// <summary>An app of a catalog, as the Kazo OS Store shows it (ADR 0188 §2).</summary>
@@ -63,7 +70,7 @@ public sealed record KazoCatalogApp(
     public KazoCatalogItemKind Kind { get; init; }
 
     /// <summary>
-    /// Gets the source to pass to <see cref="KazoAppPackages.InstallAsync"/> (an app) or
+    /// Gets the source to pass to <see cref="KazoAppPackages.InstallAsync(string, KazoPackageScope, CancellationToken)"/> (an app) or
     /// <see cref="KazoAppPackages.InstallThemePackAsync"/> (a theme pack): <c>catalog:&lt;catalog&gt;/&lt;appId&gt;</c>.
     /// </summary>
     public string Source => $"catalog:{Catalog}/{AppId}";

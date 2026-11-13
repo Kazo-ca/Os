@@ -14,26 +14,40 @@
                aria-label="@L["Search.Label"]"
                placeholder="@L["Search.Placeholder"]"
                value="@_query"
-               @oninput="OnQueryChanged" />
-        <nav class="store-tabs" role="tablist" aria-label="@L["Tabs.Label"]">
-            <button type="button" role="tab" class="store-tab @(IsHomeTab ? "is-active" : null)"
-                    aria-selected="@(IsHomeTab ? "true" : "false")" @onclick="ShowHome">
-                @L["Tabs.Home"]
+               @oninput="OnQueryChanged"
+               @onkeydown="OnSearchKeyDownAsync" />
+        @* ADR 0266 §8: on a phone (a Store narrower than 640 px) the same tabs become a bar at the bottom
+           of the window, with an icon over each label; the markup does not move, so the tab order and
+           the tablist stay the same (StoreWindow.razor.css). *@
+        <nav class="store-tabs" role="tablist" aria-label="@L["Tabs.Label"]" @onkeydown="OnTabKeyDownAsync">
+            <button type="button" role="tab" id="@TabId(StoreView.Home)" class="store-tab @(IsHomeTab ? "is-active" : null)"
+                    aria-selected="@(IsHomeTab ? "true" : "false")" aria-controls="@PanelId" tabindex="@(IsHomeTab ? "0" : "-1")"
+                    @ref="_tabElements[StoreView.Home]" @onclick="ShowHome">
+                <span class="store-tab-icon"><KazoIcon Library="IconLibrary.Lucide" Name="house" Size="20" Title="" /></span>
+                <span class="store-tab-label">@L["Tabs.Home"]</span>
             </button>
-            <button type="button" role="tab" class="store-tab @(_view == StoreView.Themes ? "is-active" : null)"
-                    aria-selected="@(_view == StoreView.Themes ? "true" : "false")" @onclick="ShowThemes">
-                @L["Tabs.Themes"]
-            </button>
-            <button type="button" role="tab" class="store-tab @(_view == StoreView.Installed ? "is-active" : null)"
-                    aria-selected="@(_view == StoreView.Installed ? "true" : "false")" @onclick="ShowInstalled">
-                @L["Tabs.Installed"]
+            @* ADR 0266 §5: hidden while no catalog offers a pack and no pack is installed. *@
+            @if (ShowsThemesTab)
+            {
+                <button type="button" role="tab" id="@TabId(StoreView.Themes)" class="store-tab @(_view == StoreView.Themes ? "is-active" : null)"
+                        aria-selected="@(_view == StoreView.Themes ? "true" : "false")" aria-controls="@PanelId" tabindex="@(_view == StoreView.Themes ? "0" : "-1")"
+                        @ref="_tabElements[StoreView.Themes]" @onclick="ShowThemes">
+                    <span class="store-tab-icon"><KazoIcon Library="IconLibrary.Lucide" Name="palette" Size="20" Title="" /></span>
+                    <span class="store-tab-label">@L["Tabs.Themes"]</span>
+                </button>
+            }
+            <button type="button" role="tab" id="@TabId(StoreView.Installed)" class="store-tab @(_view == StoreView.Installed ? "is-active" : null)"
+                    aria-selected="@(_view == StoreView.Installed ? "true" : "false")" aria-controls="@PanelId" tabindex="@(_view == StoreView.Installed ? "0" : "-1")"
+                    @ref="_tabElements[StoreView.Installed]" @onclick="ShowInstalled">
+                <span class="store-tab-icon"><KazoIcon Library="IconLibrary.Lucide" Name="download" Size="20" Title="" /></span>
+                <span class="store-tab-label">@L["Tabs.Installed"]</span>
                 @if (_store.Updatable.Count > 0)
                 {
                     <span class="store-count">@_store.Updatable.Count</span>
                 }
             </button>
         </nav>
-        <button type="button" class="store-icon-button" title="@L["Refresh"]" aria-label="@L["Refresh"]" disabled="@(_isLoading || _isBusy)" @onclick="RefreshAsync">
+        <button type="button" class="store-icon-button" title="@L["Refresh"]" aria-label="@L["Refresh"]" disabled="@(_isLoading || IsBusy)" @onclick="RefreshAsync">
             <KazoIcon Library="IconLibrary.Lucide" Name="refresh-cw" Size="16" Title="" />
         </button>
     </header>
@@ -43,15 +57,7 @@
         <div class="store-banner is-restart" role="status">
             <KazoIcon Library="IconLibrary.Lucide" Name="rotate-ccw" Size="16" Title="" />
             <span>@L["Restart.Text"]</span>
-            <button type="button" class="store-button is-primary" disabled="@_isBusy" @onclick="RestartAsync">@L["Restart.Button"]</button>
-        </div>
-    }
-
-    @if (_message is not null)
-    {
-        <div class="store-banner @(_messageIsError ? "is-error" : "is-info")" role="@(_messageIsError ? "alert" : "status")">
-            <span>@_message</span>
-            <button type="button" class="store-icon-button" aria-label="@L["Dismiss"]" @onclick="() => _message = null">×</button>
+            <button type="button" class="store-button is-primary" disabled="@IsBusy" @onclick="RestartAsync">@L["Restart.Button"]</button>
         </div>
     }
 
@@ -63,14 +69,15 @@
         </div>
     }
 
-    <main class="store-body">
+    <main class="store-body" id="@PanelId" role="tabpanel" aria-labelledby="@TabId(TabOf(_view))" tabindex="-1">
+        @RenderScrollMemory()
         @if (_isLoading && _store.Available.Count == 0 && _store.Installed.Count == 0)
         {
-            <p class="store-empty">@L["Loading"]</p>
+            @RenderSkeleton()
         }
         else if (_view == StoreView.Detail && Selected is { } entry)
         {
-            @RenderDetail(entry)
+            <StoreAppPage @key="entry.AppId" @ref="_appPage" Store="this" />
         }
         else if (_view == StoreView.Installed)
         {
@@ -89,41 +96,42 @@
                 <p class="store-empty">@L["Search.None", _query ?? string.Empty]</p>
             }
         }
-        else if (_categoryId is { } categoryId)
+        else if (_store.Available.Count == 0)
         {
-            <button type="button" class="store-back" @onclick="ShowHome">
-                <KazoIcon Library="IconLibrary.Lucide" Name="arrow-left" Size="16" Title="" /> @L["Back"]
-            </button>
-            <h2 class="store-section-title">@CategoryLabel(categoryId)</h2>
-            @RenderGrid(categoryId == StoreCatalog.OtherCategoryId ? _store.Home().LastOrDefault().Apps ?? [] : _store.InCategory(categoryId))
+            <p class="store-empty">@L["Home.Empty"]</p>
         }
         else
         {
-            @if (_store.Available.Count == 0)
+            @* ADR 0266 §2: the featured app, the category filters, then every app, newest first. *@
+            @if (_categoryId is null && _store.Featured() is { } featured)
             {
-                <p class="store-empty">@L["Home.Empty"]</p>
+                @RenderFeatured(featured)
             }
-            @foreach ((KazoCatalogCategory category, IReadOnlyList<StoreEntry> apps) in _store.Home())
-            {
-                <section class="store-section" aria-label="@CategoryLabel(category.Id)">
-                    <div class="store-section-head">
-                        <h2 class="store-section-title">@CategoryLabel(category.Id)</h2>
-                        @if (apps.Count > HomeRowSize)
-                        {
-                            <button type="button" class="store-link" @onclick="() => ShowCategory(category.Id)">@L["Home.SeeAll", apps.Count]</button>
-                        }
-                    </div>
-                    @RenderGrid(apps.Take(HomeRowSize).ToList())
-                </section>
-            }
+            @RenderFilters()
+            @RenderGrid(_store.Grid(_categoryId))
         }
     </main>
+
+    @if (_installMenuKey is not null)
+    {
+        @* A click beside the open install menu closes it. *@
+        <div class="store-menu-backdrop" aria-hidden="true" @onclick="CloseInstallMenu"></div>
+    }
+
+    @* ADR 0266 §6: the result of an action closes by itself; an error stays until it is closed. *@
+    <div class="store-toasts" role="@(_messageIsError ? "alert" : "status")" aria-live="@(_messageIsError ? "assertive" : "polite")">
+        @if (_message is not null)
+        {
+            <div class="store-toast @(_messageIsError ? "is-error" : "is-info")">
+                <span class="store-toast-icon"><KazoIcon Library="IconLibrary.Lucide" Name="@(_messageIsError ? "circle-alert" : "circle-check")" Size="16" Title="" /></span>
+                <span class="store-toast-text">@_message</span>
+                <button type="button" class="store-icon-button" aria-label="@L["Dismiss"]" @onclick="DismissMessage">×</button>
+            </div>
+        }
+    </div>
 </div>
 
 @code {
-    /// <summary>Apps shown per category on the home page before « See all ».</summary>
-    private const int HomeRowSize = 6;
-
     private bool IsHomeTab => _view is StoreView.Home or StoreView.Detail;
 
     private RenderFragment RenderThemes() => __builder =>
@@ -193,7 +201,7 @@
 
     private RenderFragment RenderThemePackActions(StoreThemePackEntry pack) => __builder =>
     {
-        bool busy = _isBusy;
+        bool busy = Operations.IsRunning(pack.PackId);
         <div class="store-actions">
             @switch (pack.State)
             {
@@ -215,10 +223,96 @@
                     <button type="button" class="store-button is-danger" disabled="@busy" @onclick="() => RemoveThemePackAsync(pack)">@L["Action.Remove"]</button>
                     break;
             }
-            @if (_busyAppId == pack.PackId)
+            @RenderOperation(pack.PackId)
+        </div>
+    };
+
+    /// <summary>
+    /// While the catalogs load (ADR 0266 §2): the shapes of the banner and of the cards, so the page
+    /// does not jump when they arrive. Screen readers hear the word instead.
+    /// </summary>
+    private RenderFragment RenderSkeleton() => __builder =>
+    {
+        <p class="store-visually-hidden" role="status">@L["Loading"]</p>
+        <div class="store-featured is-skeleton" aria-hidden="true"></div>
+        <ul class="store-grid" aria-hidden="true">
+            @for (int index = 0; index < SkeletonCardCount; index++)
             {
-                <span class="store-progress" role="status">@L["Working"]</span>
+                <li class="store-card is-skeleton">
+                    <span class="store-skeleton-icon"></span>
+                    <span class="store-card-text">
+                        <span class="store-skeleton-line is-title"></span>
+                        <span class="store-skeleton-line is-short"></span>
+                        <span class="store-skeleton-line"></span>
+                    </span>
+                </li>
             }
+        </ul>
+    };
+
+    /// <summary>
+    /// The « Featured » banner (ADR 0266 §2): the newest app not installed, with its first screenshot
+    /// and its install button.
+    /// </summary>
+    private RenderFragment RenderFeatured(StoreEntry entry) => __builder =>
+    {
+        KazoCatalogApp app = entry.App!;
+        string? screenshot = app.Latest.ScreenshotUris.FirstOrDefault();
+        string titleId = _idPrefix + "-featured";
+        <section class="store-featured @(screenshot is null ? "is-text-only" : null)" aria-labelledby="@titleId">
+            <div class="store-featured-text">
+                <span class="store-featured-label">@L["Featured.Label"]</span>
+                <div class="store-featured-title">
+                    @RenderIcon(entry, 56)
+                    <h2 id="@titleId">@entry.Name</h2>
+                </div>
+                <p class="store-featured-description">@app.GetShortDescription(Culture)</p>
+                <div class="store-featured-actions">
+                    @RenderCardActions(entry, featured: true)
+                    <button type="button" class="store-link" @onclick="() => OpenDetailAsync(entry)">@L["Featured.SeeApp"]</button>
+                </div>
+                @RenderOperation(entry.AppId, compact: true)
+                <span class="store-featured-meta">
+                    @L["Featured.Meta", app.LatestVersion, SizeText(app.Latest.SizeBytes), app.License]
+                    @if (app.Trust != KazoPackageTrust.Verified)
+                    {
+                        <span class="store-trust @TrustClass(app.Trust)">@TrustText(app.Trust)</span>
+                    }
+                </span>
+            </div>
+            @if (screenshot is not null)
+            {
+                <img class="store-featured-shot" src="@screenshot" alt="@L["Featured.Screenshot", entry.Name]" loading="lazy" draggable="false" />
+            }
+        </section>
+    };
+
+    /// <summary>
+    /// The category filters (ADR 0266 §2): « All » first with the number of apps, then each category
+    /// that has apps. Shown when there is more than one category to choose from.
+    /// </summary>
+    private RenderFragment RenderFilters() => __builder =>
+    {
+        IReadOnlyList<(string CategoryId, int Count)> filters = _store.CategoryFilters();
+        <div class="store-filters-bar">
+            @if (filters.Count > 1)
+            {
+                <div class="store-filters" role="group" aria-label="@L["Filters.Label"]">
+                    <button type="button" class="store-chip @(_categoryId is null ? "is-active" : null)"
+                            aria-pressed="@(_categoryId is null ? "true" : "false")" @onclick="ShowAllCategories">
+                        @L["Filters.All", _store.Available.Count]
+                    </button>
+                    @foreach ((string categoryId, int count) in filters)
+                    {
+                        bool active = _categoryId == categoryId;
+                        <button type="button" class="store-chip @(active ? "is-active" : null)"
+                                aria-pressed="@(active ? "true" : "false")" @onclick="() => ShowCategory(categoryId)">
+                            @CategoryLabel(categoryId) · @count
+                        </button>
+                    }
+                </div>
+            }
+            <span class="store-sort">@L["Sort.Newest"]</span>
         </div>
     };
 
@@ -227,30 +321,103 @@
         <ul class="store-grid">
             @foreach (StoreEntry entry in entries)
             {
-                <li>
-                    <button type="button" class="store-card" @onclick="() => OpenDetailAsync(entry)">
-                        @RenderIcon(entry, 48)
-                        <span class="store-card-text">
-                            <span class="store-card-name">@entry.Name</span>
-                            <span class="store-card-description">@entry.App?.GetShortDescription(Culture)</span>
-                            <span class="store-card-meta">
-                                @if (entry.App is { } app)
-                                {
-                                    <span class="store-trust @TrustClass(app.Trust)">@TrustText(app.Trust)</span>
-                                }
-                                @if (entry.State != StoreAppState.NotInstalled)
-                                {
-                                    <span class="store-state">@StateText(entry)</span>
-                                }
-                            </span>
+                @* A click anywhere on the card opens the app's page; the name is the button the keyboard
+                   reaches, and its click bubbles to the card. The card's own buttons stop theirs. *@
+                <li @key="entry.AppId" class="store-card @(IsInstallMenuOpen(InstallMenuKey(entry, featured: false)) ? "has-menu" : null)"
+                    @onclick="() => OpenDetailAsync(entry)">
+                    @RenderIcon(entry, 56)
+                    <span class="store-card-text">
+                        <button type="button" class="store-card-name">@entry.Name</button>
+                        <span class="store-card-meta">
+                            @CardCategoryLabel(entry)@(entry.App is { } listed ? " · " + listed.LatestVersion : null)
                         </span>
-                    </button>
+                        <span class="store-card-description">@entry.App?.GetShortDescription(Culture)</span>
+                        <span class="store-card-actions" @onclick:stopPropagation="true">
+                            @RenderCardActions(entry, featured: false)
+                            @if (entry.App is { Trust: not KazoPackageTrust.Verified } untrusted)
+                            {
+                                @* ADR 0266 §2: a card shows its trust only when the app is not verified. *@
+                                <span class="store-trust @TrustClass(untrusted.Trust)">@TrustText(untrusted.Trust)</span>
+                            }
+                        </span>
+                        @RenderOperation(entry.AppId, compact: true)
+                    </span>
                 </li>
             }
         </ul>
     };
 
-    private RenderFragment RenderIcon(StoreEntry entry, int size) => __builder =>
+    /// <summary>
+    /// The button of a card or of the banner (ADR 0266 §2 and §3): « Install » (for me) with, for an
+    /// administrator, a menu « Install for everyone » beside it; « Open »; or « Update ».
+    /// </summary>
+    private RenderFragment RenderCardActions(StoreEntry entry, bool featured) => __builder =>
+    {
+        bool busy = Operations.IsRunning(entry.AppId);
+        string menuKey = InstallMenuKey(entry, featured);
+        string size = featured ? "is-large" : string.Empty;
+        @switch (entry.State)
+        {
+            case StoreAppState.NotInstalled when entry.App is not null:
+                <span class="store-split @size">
+                    <button type="button" class="store-button is-primary store-split-main" disabled="@busy"
+                            @onclick="() => InstallAsync(entry, KazoPackageScope.User)">
+                        <KazoIcon Library="IconLibrary.Lucide" Name="download" Size="14" Title="" /> @L["Action.Install"]
+                    </button>
+                    @if (OffersInstallForEveryone)
+                    {
+                        bool open = IsInstallMenuOpen(menuKey);
+                        string menuId = $"{_idPrefix}-menu-{menuKey.Replace(':', '-').Replace('.', '-')}";
+                        <button type="button" class="store-button is-primary store-split-toggle" disabled="@busy"
+                                aria-haspopup="menu" aria-expanded="@(open ? "true" : "false")" aria-controls="@(open ? menuId : null)"
+                                aria-label="@L["Action.InstallMenu", entry.Name]" title="@L["Action.InstallMenu", entry.Name]"
+                                @ref="_installMenuToggles[menuKey]" @onclick="() => ToggleInstallMenu(menuKey)">
+                            <KazoIcon Library="IconLibrary.Lucide" Name="chevron-down" Size="14" Title="" />
+                        </button>
+                        @if (open)
+                        {
+                            <span class="store-menu" role="menu" id="@menuId" aria-label="@L["Action.InstallMenu", entry.Name]" @onkeydown="OnInstallMenuKeyDownAsync">
+                                <button type="button" role="menuitem" class="store-menu-item" @ref="_installMenuItem"
+                                        @onclick="() => InstallForEveryoneFromMenuAsync(entry)">
+                                    <KazoIcon Library="IconLibrary.Lucide" Name="users" Size="14" Title="" /> @L["Action.InstallForEveryone"]
+                                </button>
+                            </span>
+                        }
+                    }
+                </span>
+                break;
+            case StoreAppState.Installed:
+                <button type="button" class="store-button is-outline @size" disabled="@busy" @onclick="() => OpenAsync(entry)">@L["Action.Open"]</button>
+                <span class="store-card-state">@StateText(entry)</span>
+                break;
+            case StoreAppState.UpdateAvailable:
+                <button type="button" class="store-button is-outline @size" disabled="@busy" @onclick="() => UpdateAsync(entry)">@L["Action.UpdateShort"]</button>
+                <span class="store-card-state is-update">@StateText(entry)</span>
+                break;
+            case StoreAppState.PendingRestart:
+                <span class="store-card-state">@StateText(entry)</span>
+                break;
+        }
+    };
+
+    /// <summary>
+    /// The step and the progress of the action on an app or a pack (ADR 0266 §7). The full form,
+    /// under the buttons, is a live region read by screen readers; the compact form, on a card, is
+    /// only seen, since the page already announces it.
+    /// </summary>
+    private RenderFragment RenderOperation(string id, bool compact = false) => __builder =>
+    {
+        @if (Operations.Find(id) is { } operation)
+        {
+            string text = OperationText(operation, compact);
+            <span class="store-operation @(compact ? "is-compact" : null)" role="@(compact ? null : "status")" data-stage="@operation.Stage">
+                <span class="store-operation-text">@text</span>
+                <progress class="store-operation-bar" max="100" value="@operation.Percent" aria-label="@text"></progress>
+            </span>
+        }
+    };
+
+    internal RenderFragment RenderIcon(StoreEntry entry, int size) => __builder =>
     {
         @if (entry.App?.Latest.IconUri is { } icon)
         {
@@ -264,9 +431,9 @@
         }
     };
 
-    private RenderFragment RenderActions(StoreEntry entry) => __builder =>
+    internal RenderFragment RenderActions(StoreEntry entry) => __builder =>
     {
-        bool busy = _isBusy;
+        bool busy = Operations.IsRunning(entry.AppId);
         <div class="store-actions">
             @switch (entry.State)
             {
@@ -311,125 +478,8 @@
                     }
                     break;
             }
-            @if (_busyAppId == entry.AppId)
-            {
-                <span class="store-progress" role="status">@L["Working"]</span>
-            }
+            @RenderOperation(entry.AppId)
         </div>
-    };
-
-    private RenderFragment RenderDetail(StoreEntry entry) => __builder =>
-    {
-        KazoCatalogApp? app = entry.App;
-        KazoCatalogAppVersion? latest = app?.Latest;
-        <article class="store-detail">
-            <button type="button" class="store-back" @onclick="CloseDetail">
-                <KazoIcon Library="IconLibrary.Lucide" Name="arrow-left" Size="16" Title="" /> @L["Back"]
-            </button>
-            <div class="store-detail-head">
-                @RenderIcon(entry, 96)
-                <div class="store-detail-title">
-                    <h2>@entry.Name</h2>
-                    @if (app is not null)
-                    {
-                        <p class="store-detail-short">@app.GetShortDescription(Culture)</p>
-                        <span class="store-trust @TrustClass(app.Trust)">
-                            <KazoIcon Library="IconLibrary.Lucide" Name="@TrustIcon(app.Trust)" Size="14" Title="" />
-                            @TrustText(app.Trust) · @L["Detail.Catalog", app.Catalog]
-                        </span>
-                    }
-                    @if (entry.State != StoreAppState.NotInstalled)
-                    {
-                        <span class="store-state">@StateText(entry)</span>
-                    }
-                    @RenderActions(entry)
-                    @if (_openAfterInstall is ({ } waitingApp, { } waitingPath) && waitingApp == entry.AppId && entry.State == StoreAppState.NotInstalled)
-                    {
-                        <p class="store-open-after" role="note">
-                            <KazoIcon Library="IconLibrary.Lucide" Name="file-check" Size="14" Title="" /> @L["Detail.OpenAfterInstall", waitingPath]
-                        </p>
-                    }
-                </div>
-            </div>
-
-            @if (latest is { ScreenshotUris.Count: > 0 })
-            {
-                <div class="store-screenshots" aria-label="@L["Detail.Screenshots"]">
-                    @foreach (string screenshot in latest.ScreenshotUris)
-                    {
-                        <img src="@screenshot" alt="@L["Detail.Screenshot", entry.Name]" loading="lazy" />
-                    }
-                </div>
-            }
-
-            <div class="store-detail-columns">
-                <section class="store-detail-description" aria-label="@L["Detail.Description"]">
-                    @if (_isDescriptionLoading)
-                    {
-                        <p class="store-empty">@L["Loading"]</p>
-                    }
-                    else if (_description is not null)
-                    {
-                        <StoreMarkdownView Markdown="@_description" />
-                    }
-                    else if (app is null)
-                    {
-                        <p class="store-empty">@L["Detail.NotInCatalog"]</p>
-                    }
-                </section>
-                <aside class="store-facts" aria-label="@L["Detail.Facts"]">
-                    <dl>
-                        @if (app is not null && latest is not null)
-                        {
-                            <dt>@L["Detail.Version"]</dt>
-                            <dd>@app.LatestVersion</dd>
-                            <dt>@L["Detail.Size"]</dt>
-                            <dd>@SizeText(latest.SizeBytes)</dd>
-                            <dt>@L["Detail.License"]</dt>
-                            <dd>@app.License</dd>
-                            <dt>@L["Detail.Category"]</dt>
-                            <dd>@CategoryLabel(app.Category)</dd>
-                            @if (latest.PublishedAt is { } published)
-                            {
-                                <dt>@L["Detail.Published"]</dt>
-                                <dd>@published.ToString("d", Culture)</dd>
-                            }
-                            <dt>@L["Detail.Source"]</dt>
-                            <dd><a href="@app.Repository" target="_blank" rel="noopener noreferrer">@app.Repository</a></dd>
-                        }
-                        @if (entry.Installed is { } installed)
-                        {
-                            <dt>@L["Detail.Installed"]</dt>
-                            <dd>@installed.Version · @(installed.SystemWide ? L["Scope.Everyone"] : L["Scope.Me"])</dd>
-                        }
-                    </dl>
-                    @if (latest is not null)
-                    {
-                        <h3>@L["Detail.Capabilities"]</h3>
-                        @if (latest.Capabilities.Count == 0)
-                        {
-                            <p class="store-empty">@L["Detail.NoCapability"]</p>
-                        }
-                        else
-                        {
-                            <ul class="store-capabilities">
-                                @foreach (string capability in latest.Capabilities.OrderBy(capability => StoreCatalog.IsDangerous(capability) ? 0 : 1))
-                                {
-                                    bool dangerous = StoreCatalog.IsDangerous(capability);
-                                    <li class="@(dangerous ? "is-dangerous" : null)">
-                                        <code>@capability</code>
-                                        @if (dangerous)
-                                        {
-                                            <span class="store-capability-note">@L["Detail.Dangerous"]</span>
-                                        }
-                                    </li>
-                                }
-                            </ul>
-                        }
-                    }
-                </aside>
-            </div>
-        </article>
     };
 
     private RenderFragment RenderInstalled() => __builder =>
@@ -438,17 +488,21 @@
             <h2 class="store-section-title">@L["Installed.Title"]</h2>
             @if (_store.Updatable.Count > 1)
             {
-                <button type="button" class="store-button is-primary" disabled="@_isBusy" @onclick="UpdateAllAsync">@L["Installed.UpdateAll", _store.Updatable.Count]</button>
+                <button type="button" class="store-button is-primary" disabled="@IsBusy" @onclick="UpdateAllAsync">@L["Installed.UpdateAll", _store.Updatable.Count]</button>
             }
         </div>
         @if (_store.Installed.Count == 0)
         {
             <p class="store-empty">@L["Installed.Empty"]</p>
         }
+        else if (InstalledResults.Count == 0)
+        {
+            <p class="store-empty">@L["Installed.SearchNone", _query ?? string.Empty]</p>
+        }
         else
         {
             <ul class="store-list">
-                @foreach (StoreEntry entry in _store.Installed)
+                @foreach (StoreEntry entry in InstalledResults)
                 {
                     <li class="store-row">
                         <button type="button" class="store-row-main" @onclick="() => OpenDetailAsync(entry)">

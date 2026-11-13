@@ -204,6 +204,8 @@ internal sealed partial class AppManagementGateway
             IconUri = version.Icon is { } icon ? listing.Resolve(icon).AbsoluteUri : null,
             ScreenshotUris = [.. version.Screenshots.Select(path => listing.Resolve(path).AbsoluteUri)],
             DescriptionLanguages = [.. version.Descriptions.Keys.Order(StringComparer.OrdinalIgnoreCase)],
+            FileHandlers = [.. version.FileHandlers.Select(static handler =>
+                new KazoAppFileHandler(handler.MediaType, [.. handler.Extensions], [.. handler.Actions]))],
         })],
         trust)
     {

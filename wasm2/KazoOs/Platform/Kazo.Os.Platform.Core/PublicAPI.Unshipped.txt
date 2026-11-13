@@ -1,2 +1,19 @@
 #nullable enable
 static Kazo.Os.Platform.Core.AppLinks.AppLaunchLink.TryFromAppId(string? appId, out Kazo.Os.Platform.Core.AppLinks.AppLaunchLink? link) -> bool
+Kazo.Os.Platform.Core.Apps.Packages.AppPackageDownloadProgress
+Kazo.Os.Platform.Core.Apps.Packages.AppPackageDownloadProgress.AppPackageDownloadProgress() -> void
+Kazo.Os.Platform.Core.Apps.Packages.AppPackageDownloadProgress.AppPackageDownloadProgress(long BytesReceived, long? TotalBytes) -> void
+Kazo.Os.Platform.Core.Apps.Packages.AppPackageDownloadProgress.BytesReceived.get -> long
+Kazo.Os.Platform.Core.Apps.Packages.AppPackageDownloadProgress.BytesReceived.init -> void
+Kazo.Os.Platform.Core.Apps.Packages.AppPackageDownloadProgress.Deconstruct(out long BytesReceived, out long? TotalBytes) -> void
+Kazo.Os.Platform.Core.Apps.Packages.AppPackageDownloadProgress.Equals(Kazo.Os.Platform.Core.Apps.Packages.AppPackageDownloadProgress other) -> bool
+Kazo.Os.Platform.Core.Apps.Packages.AppPackageDownloadProgress.TotalBytes.get -> long?
+Kazo.Os.Platform.Core.Apps.Packages.AppPackageDownloadProgress.TotalBytes.init -> void
+Kazo.Os.Platform.Core.Apps.Packages.AppPackageInstaller.PrepareAsync(Kazo.Os.Platform.Core.Apps.Packages.AppPackageSource! source, Kazo.Os.Platform.Core.Apps.Packages.AppPackageInstallContext! request, System.IProgress<Kazo.Os.AppSdk.Apps.KazoPackageInstallProgress!>? progress, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.Platform.Core.Apps.Packages.AppPackagePlan!>
+Kazo.Os.Platform.Core.Apps.Packages.HttpAppPackageDownloader.DownloadAsync(System.Uri! uri, long maximumBytes, System.IProgress<Kazo.Os.Platform.Core.Apps.Packages.AppPackageDownloadProgress>? progress, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<byte[]?>
+Kazo.Os.Platform.Core.Apps.Packages.IAppPackageDownloader.DownloadAsync(System.Uri! uri, long maximumBytes, System.IProgress<Kazo.Os.Platform.Core.Apps.Packages.AppPackageDownloadProgress>? progress, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<byte[]?>
+override Kazo.Os.Platform.Core.Apps.Packages.AppPackageDownloadProgress.GetHashCode() -> int
+static Kazo.Os.Platform.Core.Apps.Packages.AppPackageDownloadProgress.operator !=(Kazo.Os.Platform.Core.Apps.Packages.AppPackageDownloadProgress left, Kazo.Os.Platform.Core.Apps.Packages.AppPackageDownloadProgress right) -> bool
+static Kazo.Os.Platform.Core.Apps.Packages.AppPackageDownloadProgress.operator ==(Kazo.Os.Platform.Core.Apps.Packages.AppPackageDownloadProgress left, Kazo.Os.Platform.Core.Apps.Packages.AppPackageDownloadProgress right) -> bool
+~override Kazo.Os.Platform.Core.Apps.Packages.AppPackageDownloadProgress.Equals(object obj) -> bool
+~override Kazo.Os.Platform.Core.Apps.Packages.AppPackageDownloadProgress.ToString() -> string

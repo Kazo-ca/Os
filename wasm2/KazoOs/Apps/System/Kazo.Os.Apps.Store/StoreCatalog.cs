@@ -138,38 +138,77 @@ internal sealed class StoreCatalog
     /// <param name="appId">The app.</param>
     public StoreEntry? Find(string appId) => _entries.GetValueOrDefault(appId);
 
-    /// <summary>Gets the apps of a category, by name.</summary>
-    /// <param name="categoryId">The category.</param>
-    public IReadOnlyList<StoreEntry> InCategory(string categoryId) =>
-        [.. Available.Where(entry => string.Equals(entry.App!.Category, categoryId, StringComparison.Ordinal))];
+    /// <summary>
+    /// Gets the apps a catalog lists, newest first (ADR 0266 §2): by the publication date of the
+    /// version the Store installs, then by name. An app whose catalog gives no date comes last.
+    /// </summary>
+    public IReadOnlyList<StoreEntry> Newest =>
+        [.. Available
+            .OrderByDescending(static entry => PublishedAt(entry) ?? DateTimeOffset.MinValue)
+            .ThenBy(static entry => entry.Name, StringComparer.CurrentCultureIgnoreCase)];
 
     /// <summary>
-    /// The home page (ADR 0188 §2): each category that has apps, in the catalogs' order, then the
-    /// apps whose category no catalog names.
+    /// The app of the « Featured » banner (ADR 0266 §2, Q3 A): the newest app that is not
+    /// installed; when every app is installed, the newest one; <see langword="null"/> when no
+    /// catalog lists an app. Chosen by the Store alone: the catalog has no field for it.
     /// </summary>
-    public IReadOnlyList<(KazoCatalogCategory Category, IReadOnlyList<StoreEntry> Apps)> Home()
+    public StoreEntry? Featured()
     {
-        List<(KazoCatalogCategory, IReadOnlyList<StoreEntry>)> sections = [];
+        IReadOnlyList<StoreEntry> newest = Newest;
+        return newest.FirstOrDefault(static entry => entry.State == StoreAppState.NotInstalled) ?? newest.FirstOrDefault();
+    }
+
+    /// <summary>
+    /// The category filters of the home page (ADR 0266 §2): each category that has apps, in the
+    /// catalogs' order, with its number of apps, then <see cref="OtherCategoryId"/> for the apps
+    /// whose category no catalog names. « All » is not in the list: its count is
+    /// <see cref="Available"/>'s.
+    /// </summary>
+    public IReadOnlyList<(string CategoryId, int Count)> CategoryFilters()
+    {
+        IReadOnlyList<StoreEntry> available = Available;
+        List<(string, int)> filters = [];
         foreach (KazoCatalogCategory category in Categories)
         {
-            IReadOnlyList<StoreEntry> apps = InCategory(category.Id);
-            if (apps.Count > 0)
+            int count = available.Count(entry => string.Equals(entry.App!.Category, category.Id, StringComparison.Ordinal));
+            if (count > 0)
             {
-                sections.Add((category, apps));
+                filters.Add((category.Id, count));
             }
         }
 
-        HashSet<string> named = [.. Categories.Select(static category => category.Id)];
-        IReadOnlyList<StoreEntry> others = [.. Available.Where(entry => !named.Contains(entry.App!.Category))];
-        if (others.Count > 0)
+        int others = available.Count(entry => !IsNamedCategory(entry.App!.Category));
+        if (others > 0)
         {
-            sections.Add((new KazoCatalogCategory(OtherCategoryId, new Dictionary<string, string>()), others));
+            filters.Add((OtherCategoryId, others));
         }
 
-        return sections;
+        return filters;
     }
 
-    /// <summary>ID of the section of apps whose category no catalog names.</summary>
+    /// <summary>
+    /// The home page's grid (ADR 0266 §2): every app, newest first, or only those of
+    /// <paramref name="categoryId"/>; <see cref="OtherCategoryId"/> keeps the apps whose category no
+    /// catalog names.
+    /// </summary>
+    /// <param name="categoryId">The category filter, or <see langword="null"/> for every app.</param>
+    public IReadOnlyList<StoreEntry> Grid(string? categoryId) => categoryId switch
+    {
+        null => Newest,
+        OtherCategoryId => [.. Newest.Where(entry => !IsNamedCategory(entry.App!.Category))],
+        _ => [.. Newest.Where(entry => string.Equals(entry.App!.Category, categoryId, StringComparison.Ordinal))]
+    };
+
+    /// <summary>Gets whether a catalog names <paramref name="categoryId"/>.</summary>
+    /// <param name="categoryId">The category.</param>
+    public bool IsNamedCategory(string categoryId) =>
+        Categories.Any(category => string.Equals(category.Id, categoryId, StringComparison.Ordinal));
+
+    /// <summary>When the catalog published the version the Store installs, if it says.</summary>
+    /// <param name="entry">The app.</param>
+    public static DateTimeOffset? PublishedAt(StoreEntry entry) => entry.App?.Latest.PublishedAt;
+
+    /// <summary>ID of the filter of apps whose category no catalog names.</summary>
     public const string OtherCategoryId = "";
 
     /// <summary>
@@ -179,24 +218,36 @@ internal sealed class StoreCatalog
     /// </summary>
     /// <param name="query">What the user typed.</param>
     /// <param name="culture">Language of the descriptions.</param>
-    public IReadOnlyList<StoreEntry> Search(string? query, CultureInfo culture)
+    public IReadOnlyList<StoreEntry> Search(string? query, CultureInfo culture) => Filter(Available, query, culture);
+
+    /// <summary>
+    /// The « Installed » tab with the same search as <see cref="Search"/>: an app no catalog lists
+    /// any more is found by its name and its ID.
+    /// </summary>
+    /// <param name="query">What the user typed.</param>
+    /// <param name="culture">Language of the descriptions.</param>
+    public IReadOnlyList<StoreEntry> SearchInstalled(string? query, CultureInfo culture) => Filter(Installed, query, culture);
+
+    private static IReadOnlyList<StoreEntry> Filter(IReadOnlyList<StoreEntry> entries, string? query, CultureInfo culture)
     {
         string[] words = Normalize(query).Split(' ', StringSplitOptions.RemoveEmptyEntries);
         if (words.Length == 0)
         {
-            return Available;
+            return entries;
         }
 
-        return [.. Available.Where(entry =>
+        return [.. entries.Where(entry =>
         {
-            KazoCatalogApp app = entry.App!;
-            string haystack = Normalize(string.Join(' ', new[]
-            {
-                app.Name,
-                app.AppId,
-                app.GetShortDescription(culture),
-                app.ShortDescriptions.GetValueOrDefault("en") ?? string.Empty,
-            }.Concat(app.Tags)));
+            IEnumerable<string> fields = entry.App is { } app
+                ? new[]
+                {
+                    app.Name,
+                    app.AppId,
+                    app.GetShortDescription(culture),
+                    app.ShortDescriptions.GetValueOrDefault("en") ?? string.Empty,
+                }.Concat(app.Tags)
+                : [entry.Name, entry.AppId];
+            string haystack = Normalize(string.Join(' ', fields));
             return words.All(word => haystack.Contains(word, StringComparison.Ordinal));
         })];
     }

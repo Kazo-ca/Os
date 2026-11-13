@@ -389,7 +389,8 @@ recompiled. The `kazoos-solution` template needs this version for its
 | Library | Addition | Decision |
 |---|---|---|
 | `Kazo.Os.AppSdk` | `KazoAppPackages`, `KazoPackageSources`, `KazoPackagePolicy`, `KazoPackageTrust`, `KazoPackageScope`, `KazoInstalledPackage`, `KazoPackageInstallReport`, `KazoPackageException`: install an app for oneself or for everyone, trusted sources, block list | ADR 0182, 0208 |
-| `Kazo.Os.AppSdk` | `KazoAppCatalog`, `KazoCatalogApp`, `KazoCatalogAppVersion`, `KazoCatalogCategory`, `KazoCatalogItemKind`, `KazoPackageCatalog`, `KazoPackageUpdate`: Kazo OS Store catalogs and updates | ADR 0189, 0212 |
+| `Kazo.Os.AppSdk` | `KazoPackageInstallProgress`, `KazoPackageInstallStage`: steps and progress of an install, given to `InstallAsync` | ADR 0266 |
+| `Kazo.Os.AppSdk` | `KazoAppCatalog`, `KazoCatalogApp`, `KazoCatalogAppVersion`, `KazoCatalogCategory`, `KazoCatalogItemKind`, `KazoPackageCatalog`, `KazoPackageUpdate`: Kazo OS Store catalogs (with a version's file types, `FileHandlers`) and updates | ADR 0189, 0212, 0257, 0266 |
 | `Kazo.Os.AppSdk` | `KazoInstalledThemePack`, `KazoThemePackInstallReport`, `KazoThemePackParts`: theme packs | ADR 0213 |
 | `Kazo.Os.AppSdk` | `KazoWhatsNew`, `KazoChangeList`, `KazoChangeGroup`, `KazoChangeEntry`, `KazoChangeCategory`: the change list | ADR 0186 |
 | `Kazo.Os.AppSdk` | `KazoScreens`, `KazoScreenInfo` and their types: screens of the extended desktop | ADR 0184 |
