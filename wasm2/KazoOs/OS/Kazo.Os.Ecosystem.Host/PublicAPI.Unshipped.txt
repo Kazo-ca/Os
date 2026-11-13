@@ -1,4 +1,1 @@
 #nullable enable
-Kazo.Os.Ecosystem.EcosystemHostState.PendingAppLaunch.get -> Kazo.Os.Platform.Core.AppLinks.AppLaunchLink?
-Kazo.Os.Ecosystem.EcosystemHostState.SetPendingAppLaunch(Kazo.Os.Platform.Core.AppLinks.AppLaunchLink! link) -> void
-Kazo.Os.Ecosystem.EcosystemHostState.TakePendingAppLaunch() -> Kazo.Os.Platform.Core.AppLinks.AppLaunchLink?

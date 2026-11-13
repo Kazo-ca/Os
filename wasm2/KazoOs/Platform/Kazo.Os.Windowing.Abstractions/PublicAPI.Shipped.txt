@@ -239,6 +239,8 @@ Kazo.Os.Windowing.Abstractions.WindowFocusedEvent.ZOrder.get -> int
 Kazo.Os.Windowing.Abstractions.WindowFocusedEvent.ZOrder.init -> void
 Kazo.Os.Windowing.Abstractions.WindowFrame
 Kazo.Os.Windowing.Abstractions.WindowFrame.<Clone>$() -> Kazo.Os.Windowing.Abstractions.WindowFrame!
+Kazo.Os.Windowing.Abstractions.WindowFrame.CanChangeScreen.get -> bool
+Kazo.Os.Windowing.Abstractions.WindowFrame.CanChangeScreen.init -> void
 Kazo.Os.Windowing.Abstractions.WindowFrame.Deconstruct(out Kazo.Os.Windowing.Abstractions.WindowFrameStyle Style, out bool ShowIcon, out bool MaximizeBox, out bool MinimizeBox, out bool ShowInTaskbar) -> void
 Kazo.Os.Windowing.Abstractions.WindowFrame.Equals(Kazo.Os.Windowing.Abstractions.WindowFrame? other) -> bool
 Kazo.Os.Windowing.Abstractions.WindowFrame.HasTitleBar.get -> bool

@@ -618,6 +618,9 @@ Kazo.Os.Platform.Blazor.Security.DangerousCapabilityApprovalOverlay.Broker.get -
 Kazo.Os.Platform.Blazor.Security.DangerousCapabilityApprovalOverlay.Broker.set -> void
 Kazo.Os.Platform.Blazor.Security.DangerousCapabilityApprovalOverlay.DangerousCapabilityApprovalOverlay() -> void
 Kazo.Os.Platform.Blazor.Security.DangerousCapabilityApprovalOverlay.Dispose() -> void
+Kazo.Os.Platform.Blazor.Shell.AppLaunchProgress
+Kazo.Os.Platform.Blazor.Shell.AppLaunchProgress.AppLaunchProgress() -> void
+Kazo.Os.Platform.Blazor.Shell.AppLaunchProgress.Dispose() -> void
 Kazo.Os.Platform.Blazor.Shell.AppLauncher
 Kazo.Os.Platform.Blazor.Shell.AppLauncher.AppLauncher() -> void
 Kazo.Os.Platform.Blazor.Shell.AppLauncher.Dispose() -> void
@@ -974,6 +977,7 @@ Kazo.Os.Platform.Blazor.Windows.WindowKeyInput.WindowKeyInput(string! Key, strin
 Kazo.Os.Platform.Blazor.Windows.WindowKeyboardCommands
 Kazo.Os.Platform.Blazor.Windows.WindowKeyboardCommands.ActiveBindings.get -> System.Collections.Generic.IReadOnlyList<Kazo.Os.Platform.Core.Shell.WindowKeyBinding!>!
 Kazo.Os.Platform.Blazor.Windows.WindowKeyboardCommands.Bindings.get -> System.Collections.Generic.IReadOnlyList<Kazo.Os.Platform.Core.Shell.WindowKeyBinding!>!
+Kazo.Os.Platform.Blazor.Windows.WindowKeyboardCommands.CanChangeScreen(Kazo.Os.Windowing.Abstractions.WindowId windowId) -> bool
 Kazo.Os.Platform.Blazor.Windows.WindowKeyboardCommands.CanOpenScreen.get -> bool
 Kazo.Os.Platform.Blazor.Windows.WindowKeyboardCommands.Changed -> System.Action?
 Kazo.Os.Platform.Blazor.Windows.WindowKeyboardCommands.CloseMenu() -> void
@@ -998,6 +1002,8 @@ Kazo.Os.Platform.Blazor.Windows.WindowKeyboardCommands.OpenMenu(Kazo.Os.Windowin
 Kazo.Os.Platform.Blazor.Windows.WindowKeyboardCommands.OpenMenu(Kazo.Os.Windowing.Abstractions.WindowId windowId, double? clientX, double? clientY, Kazo.Os.Windowing.Blazor.WindowMenuKind kind) -> void
 Kazo.Os.Platform.Blazor.Windows.WindowKeyboardCommands.OpenScreen.get -> System.Func<System.Threading.Tasks.Task<Kazo.Os.Windowing.Abstractions.DisplayId?>!>?
 Kazo.Os.Platform.Blazor.Windows.WindowKeyboardCommands.OpenScreen.set -> void
+Kazo.Os.Platform.Blazor.Windows.WindowKeyboardCommands.ReportScreenChangeRefused(Kazo.Os.Windowing.Abstractions.WindowId windowId) -> void
+Kazo.Os.Platform.Blazor.Windows.WindowKeyboardCommands.ScreenChangeRefused -> System.Action<Kazo.Os.Windowing.Abstractions.WindowId>?
 Kazo.Os.Platform.Blazor.Windows.WindowKeyboardCommands.SetHostKeyboardState(bool fullScreen, bool locked) -> void
 Kazo.Os.Platform.Blazor.Windows.WindowKeyboardCommands.ShortcutOf(Kazo.Os.Platform.Core.Shell.WindowKeyboardAction action) -> string?
 Kazo.Os.Platform.Blazor.Windows.WindowKeyboardCommands.StartAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
@@ -1177,6 +1183,7 @@ override Kazo.Os.Platform.Blazor.Navigation.HardwareNavigationListener.OnInitial
 override Kazo.Os.Platform.Blazor.Navigation.HardwareNavigationRequest.Equals(object? obj) -> bool
 override Kazo.Os.Platform.Blazor.Navigation.HardwareNavigationRequest.GetHashCode() -> int
 override Kazo.Os.Platform.Blazor.Navigation.HardwareNavigationRequest.ToString() -> string!
+override Kazo.Os.Platform.Blazor.Shell.AppLaunchProgress.OnInitialized() -> void
 override Kazo.Os.Platform.Blazor.Shell.AppLauncher.OnAfterRenderAsync(bool firstRender) -> System.Threading.Tasks.Task!
 override Kazo.Os.Platform.Blazor.Shell.AppLauncher.OnInitializedAsync() -> System.Threading.Tasks.Task!
 override Kazo.Os.Platform.Blazor.Shell.BrowserHostAccessibilityProbe.RawSignals.Equals(object? obj) -> bool
@@ -1333,6 +1340,7 @@ virtual Kazo.Os.Platform.Blazor.Sites.KazoWebSiteHost.StartRenderer.Invoke(strin
 ~override Kazo.Os.Platform.Blazor.Display.ScreenLayer.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
 ~override Kazo.Os.Platform.Blazor.Display.ScreenOverlayHost.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
 ~override Kazo.Os.Platform.Blazor.Navigation.HardwareNavigationListener.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
+~override Kazo.Os.Platform.Blazor.Shell.AppLaunchProgress.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
 ~override Kazo.Os.Platform.Blazor.Shell.AppLauncher.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
 ~override Kazo.Os.Platform.Blazor.Shell.ClockPanel.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
 ~override Kazo.Os.Platform.Blazor.Shell.DesktopShell.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void

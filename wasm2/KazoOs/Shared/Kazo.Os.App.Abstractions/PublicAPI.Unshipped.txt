@@ -1,3 +1,1 @@
 #nullable enable
-Kazo.Os.App.Abstractions.WindowOptions.CanChangeScreen.get -> bool
-Kazo.Os.App.Abstractions.WindowOptions.CanChangeScreen.init -> void

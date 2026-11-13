@@ -91,6 +91,13 @@ This section lists what is released in the `main` branch and online.
   A window that comes to the front does not move in the page: an app in a
   frame (iframe), such as Kazo Word or the browser, keeps its page, also on
   mobile when switching apps. ([ADR 0244](dev/adr/0244-stable-window-order-in-the-page.md))
+- **Windows that stay on their screen** (version 3.3.3): an app can keep its
+  window from changing screen (`window.canChangeScreen: false`). Craft apps in
+  an iframe (Kazo Word and the next ones) stay on their screen with the
+  warning "known issue, a fix is in progress": changing screen reloaded the
+  iframe and lost the document. The real fix planned: build a WebAssembly
+  version of each Craft app ourselves, without an iframe.
+  ([ADR 0263](dev/adr/0263-windows-that-stay-on-their-screen.md), [#482](https://github.com/Kazo-ca/Os/issues/482))
 - **Window styles inspired by WinForms** (version 3.1.0): an app picks the
   `Normal`, `Tool` (close only, the style of the OS dialogs) or `None` style
   (client area only, transparent: a click where the app draws nothing reaches
@@ -275,7 +282,7 @@ This section lists what is released in the `main` branch and online.
   every tab. ([ADR 0174](dev/adr/0174-announce-a-new-version-to-open-sessions.md),
   [ADR 0223](dev/adr/0223-restart-onto-the-new-version.md))
 - **Build number and version status on the sign-in screen**: next to
-  "Kazo OS 3.3.2", the build number (commit count, the same for the site, the
+  "Kazo OS 3.3.3", the build number (commit count, the same for the site, the
   Release and the server) and a badge "Up to date", "Outdated: …" or "Status
   unknown (offline)", checked at boot.
   ([ADR 0236](dev/adr/0236-build-number-and-version-status-at-sign-in.md))
@@ -333,6 +340,12 @@ This section lists what is released in the `main` branch and online.
   terminal, network, background jobs, clipboard, dialogs, Blazor components.
   ([`sdk-reference.md`](framework/sdk-reference.md),
   [`sdk-packages.md`](framework/sdk-packages.md))
+- **Shared module of the Craft apps** (version 3.3.3): `Kazo.Os.AppSdk.Craft`,
+  shipped and served by the OS, holds the iframe frame (proxy, file picker,
+  shortcuts, per-user settings) and the document logic of the Craft apps
+  (Kazo Word, Kazo Spreadsheets…), written once instead of one copy per app.
+  ([ADR 0259](dev/adr/0259-shared-craft-app-host-module.md),
+  [`craft-apps.md`](framework/craft-apps.md))
 - **`dotnet new` templates** for a windowed application, a command, a
   service, a site, a complete host or a whole application repository, shown
   in Visual Studio and Rider.
@@ -384,6 +397,11 @@ This section lists what is released in the `main` branch and online.
   ([ADR 0188](dev/adr/0188-hack-store-and-app-catalog.md),
   [ADR 0212](dev/adr/0212-hack-store-app-build.md),
   [ADR 0215](dev/adr/0215-hack-store-answers-notification-and-ambiguous-app-id.md))
+- **Launch an app from a direct link** (version 3.3.3): the link
+  `https://os.kazo.ca/?autolaunch=<appId>` starts Kazo OS as guest when there
+  is no account, installs the app from the signed official catalog and
+  launches it; with an account, it opens the Store at the app's page.
+  ([ADR 0258](dev/adr/0258-direct-app-launch-link.md), [`app-launch-link.md`](dev/app-launch-link.md))
 - **Installs without a restart, and safe**: an application installed or
   updated opens at once if it was not already loaded. The packages of a source
   that has a key are signed and verified, the install is transactional
@@ -422,15 +440,12 @@ points to its PR.
 | Switch user | Open another session without closing the first one. Stays greyed out in the Power menu by Benoit's choice: one session at a time, Sign out to change account. | [0195](dev/adr/0195-start-menu-power-button.md), [0201](dev/adr/0201-switch-user-stays-greyed.md) | [#290](https://github.com/Kazo-ca/Os/issues/290) |
 | File address served on demand | An app gets an address to read a large file (audio, video) without copying it in memory, with partial reads to seek in a track. | To write | [#379](https://github.com/Kazo-ca/Os/issues/379) |
 | Drag files onto an app | Public SDK contract to receive files dragged from the File Explorer or the desktop. | To write | [#380](https://github.com/Kazo-ca/Os/issues/380) |
-| Windows that stay on their screen | An app can keep its window from changing screen (`window.canChangeScreen: false`). Craft apps in an iframe (Kazo Word and the next ones) stay on their screen with a "known issue, a fix is in progress" warning: changing screen reloaded the iframe and lost the document. The planned real fix: compile our own WebAssembly build of each Craft app, without iframe. | [0263](dev/adr/0263-windows-that-stay-on-their-screen.md) | [#482](https://github.com/Kazo-ca/Os/issues/482) |
 
 ### Kazo OS Store
 
 | Feature | Description | ADR | Issue |
 | --- | --- | --- | --- |
 | Application catalog | Catalog format, checking and publishing of the offered applications. | [0188](dev/adr/0188-hack-store-and-app-catalog.md) | [AppMarketPlace #1](https://github.com/Kazo-ca/Os-AppMarketPlace/issues/1) |
-| Launch an app from a direct link | The link `https://os.kazo.ca/?autolaunch=<appId>` starts Kazo OS as guest when there is no account, installs the app from the signed official catalog and launches it; with an account, it opens the Store at the app's page. | [0258](https://github.com/Kazo-ca/Os/pull/468) | Series `app-link/base`: work items 1 to 3 done, see [`app-launch-link.md`](dev/app-launch-link.md) |
-| Shared module of the Craft apps | `Kazo.Os.AppSdk.Craft`, shipped and served by the OS: the iframe frame (proxy, file picker, shortcuts, per-user settings) and the document logic of the Craft apps (Kazo Word, Kazo Spreadsheets…), written once instead of one copy per app. Library, scripts, end-to-end journey in the published OS and guide [`craft-apps.md`](framework/craft-apps.md) ready in the series; comes with the next OS version. | [0259](dev/adr/0259-shared-craft-app-host-module.md) | Series `craft-host/base` |
 
 ### Personalization
 

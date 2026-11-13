@@ -42,11 +42,14 @@ Kazo.Os.Ecosystem.EcosystemHostState.CompleteLogin() -> void
 Kazo.Os.Ecosystem.EcosystemHostState.EcosystemHostState() -> void
 Kazo.Os.Ecosystem.EcosystemHostState.FatalCorrelationId.get -> System.Guid?
 Kazo.Os.Ecosystem.EcosystemHostState.LoneGuest.get -> Kazo.Os.Simulation.Abstractions.Sessions.LocalUser?
+Kazo.Os.Ecosystem.EcosystemHostState.PendingAppLaunch.get -> Kazo.Os.Platform.Core.AppLinks.AppLaunchLink?
 Kazo.Os.Ecosystem.EcosystemHostState.Recovery.get -> Kazo.Os.Simulation.Abstractions.Recovery.StorageRecoveryPresentation?
 Kazo.Os.Ecosystem.EcosystemHostState.SetAvailableVersion(string! version) -> void
+Kazo.Os.Ecosystem.EcosystemHostState.SetPendingAppLaunch(Kazo.Os.Platform.Core.AppLinks.AppLaunchLink! link) -> void
 Kazo.Os.Ecosystem.EcosystemHostState.SetUpdateAvailable(bool available) -> void
 Kazo.Os.Ecosystem.EcosystemHostState.ShowFatal(System.Guid correlationId) -> void
 Kazo.Os.Ecosystem.EcosystemHostState.ShowRecovery(Kazo.Os.Simulation.Abstractions.Recovery.StorageRecoveryPresentation! recovery) -> void
+Kazo.Os.Ecosystem.EcosystemHostState.TakePendingAppLaunch() -> Kazo.Os.Platform.Core.AppLinks.AppLaunchLink?
 Kazo.Os.Ecosystem.EcosystemHostState.UpdateAvailable.get -> bool
 Kazo.Os.Ecosystem.EcosystemHostState.Users.get -> System.Collections.Generic.IReadOnlyList<Kazo.Os.Simulation.Abstractions.Sessions.LocalUser!>!
 Kazo.Os.Ecosystem.EcosystemHostState.View.get -> Kazo.Os.Ecosystem.EcosystemHostView
