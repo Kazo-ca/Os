@@ -1,1 +1,2 @@
 #nullable enable
+Kazo.Os.Windowing.Core.WindowRuntime.CanChangeScreen(Kazo.Os.Windowing.Abstractions.WindowId id) -> bool

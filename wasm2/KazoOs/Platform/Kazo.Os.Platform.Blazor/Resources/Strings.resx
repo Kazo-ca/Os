@@ -788,6 +788,12 @@
   <data name="Screens.SecureDialog.Action" xml:space="preserve">
     <value>Go to screen 1</value>
   </data>
+  <data name="WindowMenu.ScreenChangeUnavailable" xml:space="preserve">
+    <value>Not available yet for this app: known issue, a fix is in progress</value>
+  </data>
+  <data name="WindowMenu.ScreenChangeRefused.Title" xml:space="preserve">
+    <value>“{0}” stays on its screen</value>
+  </data>
   <data name="WindowMenu.OtherScreen" xml:space="preserve">
     <value>Other screen</value>
   </data>

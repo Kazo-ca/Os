@@ -80,11 +80,12 @@ public sealed class AppManifestJsonSerializerTests
             MinimizeBox = false,
             ShowInTaskbar = false,
             Modal = true,
+            CanChangeScreen = false,
         };
         string plain = AppManifestJsonSerializer.SerializeCanonical(manifest);
         string styled = AppManifestJsonSerializer.SerializeCanonical(manifest with { Window = custom });
 
-        foreach (string key in new[] { "style", "showIcon", "maximizeBox", "minimizeBox", "showInTaskbar", "modal" })
+        foreach (string key in new[] { "style", "showIcon", "maximizeBox", "minimizeBox", "showInTaskbar", "modal", "canChangeScreen" })
         {
             Assert.DoesNotContain($"\"{key}\"", plain, StringComparison.Ordinal);
             Assert.Contains($"\"{key}\"", styled, StringComparison.Ordinal);

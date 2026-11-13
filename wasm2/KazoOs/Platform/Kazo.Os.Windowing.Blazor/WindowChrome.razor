@@ -284,6 +284,12 @@
         if (target != Window.DisplayId)
         {
             await OnGesture.InvokeAsync(new MoveWindowToDisplayCommand(gestureWindowId, target));
+            if (!Window.Frame.CanChangeScreen)
+            {
+                // ADR 0263: the shell refuses the screen change and says why; the window keeps its
+                // place, since the dropped position belongs to the other screen.
+                return;
+            }
         }
 
         await OnGesture.InvokeAsync(new MoveWindowCommand(gestureWindowId, x, y));
