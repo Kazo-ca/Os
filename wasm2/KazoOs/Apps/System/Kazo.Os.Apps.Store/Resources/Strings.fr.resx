@@ -303,4 +303,28 @@
   <data name="Error.OpenAfterInstall" xml:space="preserve">
     <value>{0} n'a pas pu être ouvert ({1}).</value>
   </data>
+  <data name="Progress.Queued" xml:space="preserve">
+    <value>En attente de l'autre installation…</value>
+  </data>
+  <data name="Progress.Preparing" xml:space="preserve">
+    <value>Préparation…</value>
+  </data>
+  <data name="Progress.Downloading" xml:space="preserve">
+    <value>Téléchargement…</value>
+  </data>
+  <data name="Progress.DownloadingBytes" xml:space="preserve">
+    <value>Téléchargement… {0}</value>
+  </data>
+  <data name="Progress.DownloadingPercent" xml:space="preserve">
+    <value>Téléchargement… {0} % ({1} sur {2})</value>
+  </data>
+  <data name="Progress.Verifying" xml:space="preserve">
+    <value>Vérification du paquet…</value>
+  </data>
+  <data name="Progress.AwaitingApproval" xml:space="preserve">
+    <value>En attente d'un administrateur…</value>
+  </data>
+  <data name="Progress.Installing" xml:space="preserve">
+    <value>Installation…</value>
+  </data>
 </root>

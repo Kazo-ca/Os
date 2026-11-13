@@ -3,7 +3,7 @@ namespace Kazo.Os.AppSdk.Apps;
 /// <summary>What an entry of a catalog installs (<c>kind</c> of <c>catalog.json</c>, ADR 0213 §2).</summary>
 public enum KazoCatalogItemKind
 {
-    /// <summary>An app (<c>.kazoapp</c>), installed with <see cref="KazoAppPackages.InstallAsync"/>.</summary>
+    /// <summary>An app (<c>.kazoapp</c>), installed with <see cref="KazoAppPackages.InstallAsync(string, KazoPackageScope, CancellationToken)"/>.</summary>
     App = 0,
 
     /// <summary>A theme pack (<c>.kazotheme</c>), installed with <see cref="KazoAppPackages.InstallThemePackAsync"/>.</summary>

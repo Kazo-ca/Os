@@ -61,8 +61,8 @@ public partial class StoreWindow
     private string? _selectedAppId;
     private string? _categoryId;
     private bool _isLoading = true;
-    private string? _busyAppId;
-    private bool _isBusy;
+    private StoreOperations? _operations;
+    private bool _isRestarting;
     private string? _message;
     private bool _messageIsError;
     private string? _description;
@@ -78,6 +78,15 @@ public partial class StoreWindow
     private CultureInfo Culture => L is KazoStringLocalizer kazo ? kazo.Culture : KazoLocale.DefaultLanguage;
 
     private StoreEntry? Selected => _selectedAppId is null ? null : _store.Find(_selectedAppId);
+
+    /// <summary>
+    /// The actions running or waiting on each app (ADR 0266 §7): only their app's buttons are disabled,
+    /// and each redraws the window as the OS reports its steps.
+    /// </summary>
+    private StoreOperations Operations => _operations ??= new StoreOperations(() => _ = InvokeAsync(StateHasChanged));
+
+    /// <summary>Whether the Store restarts the OS or works on any app: the global buttons wait.</summary>
+    private bool IsBusy => _isRestarting || Operations.Any;
 
     private IReadOnlyList<StoreEntry> SearchResults => _store.Search(_query, Culture);
 
@@ -280,11 +289,13 @@ public partial class StoreWindow
     private Task InstallAsync(StoreEntry entry, KazoPackageScope scope) =>
         RunAsync(entry, async () =>
         {
-            KazoPackageInstallReport report = await KazoAppPackages.InstallAsync(entry.App!.Source, scope);
+            KazoCatalogApp app = entry.App!;
+            KazoPackageInstallReport report = await KazoAppPackages.InstallAsync(
+                app.Source, scope, Operations.ProgressFor(entry.AppId, app.Latest.SizeBytes));
             _removed.Remove(entry.AppId);
             ShowInfo(L[report.SystemWide ? "Message.InstalledForEveryone" : "Message.InstalledForMe", report.Name, report.Version]);
             await OpenFileAfterInstallAsync(report);
-        });
+        }, firstStage: StoreOperationStage.Preparing);
 
     /// <summary>
     /// ADR 0257 §5: the Store was opened for a file no app opened. Once that app is installed, the
@@ -324,11 +335,13 @@ public partial class StoreWindow
         RunAsync(entry, async () =>
         {
             KazoPackageUpdate update = entry.Update!;
+            long? catalogBytes = entry.App?.Versions.FirstOrDefault(version => version.Version == update.AvailableVersion)?.SizeBytes;
             KazoPackageInstallReport report = await KazoAppPackages.InstallAsync(
                 $"{update.Source}@{update.AvailableVersion}",
-                update.SystemWide ? KazoPackageScope.System : KazoPackageScope.User);
+                update.SystemWide ? KazoPackageScope.System : KazoPackageScope.User,
+                Operations.ProgressFor(entry.AppId, catalogBytes));
             ShowInfo(L["Message.Updated", report.Name, report.Version]);
-        });
+        }, firstStage: StoreOperationStage.Preparing);
 
     private async Task UpdateAllAsync()
     {
@@ -367,7 +380,7 @@ public partial class StoreWindow
         });
 
     private Task OpenAsync(StoreEntry entry) =>
-        RunAsync(entry, async () => await KazoApps.LaunchAsync(entry.AppId), reload: false);
+        RunAsync(entry, async () => await KazoApps.LaunchAsync(entry.AppId), reload: false, exclusive: false);
 
     private Task InstallThemePackAsync(StoreThemePackEntry entry, KazoPackageScope scope) =>
         RunAsync(entry.PackId, async () =>
@@ -396,7 +409,7 @@ public partial class StoreWindow
 
     /// <summary>Opens Settings ▸ Appearance, where the pack's theme, wallpaper, icons and cursors are chosen (Q3 A).</summary>
     private Task OpenAppearanceAsync(StoreThemePackEntry entry) =>
-        RunAsync(entry.PackId, async () => await KazoApps.LaunchAsync(SettingsAppId, [AppearancePageArgument]), reload: false);
+        RunAsync(entry.PackId, async () => await KazoApps.LaunchAsync(SettingsAppId, [AppearancePageArgument]), reload: false, exclusive: false);
 
     private const string SettingsAppId = "org.kazoos.settings";
     private const string AppearancePageArgument = "--page=appearance";
@@ -409,7 +422,7 @@ public partial class StoreWindow
 
     private async Task RestartAsync()
     {
-        _isBusy = true;
+        _isRestarting = true;
         try
         {
             await KazoAppPackages.RestartToFinishAsync();
@@ -424,19 +437,30 @@ public partial class StoreWindow
         }
         finally
         {
-            _isBusy = false;
+            _isRestarting = false;
         }
     }
 
     /// <summary>Runs one action on an app, then reads the Store again so every button follows.</summary>
-    private Task RunAsync(StoreEntry entry, Func<Task> action, bool reload = true) => RunAsync(entry.AppId, action, reload);
+    private Task RunAsync(
+        StoreEntry entry, Func<Task> action, bool reload = true, StoreOperationStage firstStage = StoreOperationStage.Working, bool exclusive = true) =>
+        RunAsync(entry.AppId, action, reload, firstStage, exclusive);
 
-    /// <summary>Runs one action on an app or a pack, then reads the Store again so every button follows.</summary>
-    private async Task RunAsync(string id, Func<Task> action, bool reload = true)
+    /// <summary>
+    /// Runs one action on an app or a pack, then reads the Store again so every button follows. An
+    /// action that changes what is installed (<paramref name="exclusive"/>) waits for the one running
+    /// (ADR 0266 §7); a launch does not.
+    /// </summary>
+    private async Task RunAsync(
+        string id, Func<Task> action, bool reload = true, StoreOperationStage firstStage = StoreOperationStage.Working, bool exclusive = true)
     {
-        _busyAppId = id;
-        _isBusy = true;
         _message = null;
+        await Operations.RunAsync(id, firstStage, exclusive, () => RunReportingAsync(action, reload));
+    }
+
+    /// <summary>Runs the action and turns its failure into the Store's message.</summary>
+    private async Task RunReportingAsync(Func<Task> action, bool reload)
+    {
         try
         {
             await action();
@@ -457,12 +481,25 @@ public partial class StoreWindow
         {
             ShowError(L["Error.Generic", exception.Message]);
         }
-        finally
-        {
-            _busyAppId = null;
-            _isBusy = false;
-        }
     }
+
+    /// <summary>
+    /// The step of an action in words (ADR 0266 §7), such as « Téléchargement… 45 % (1,2 Mo sur
+    /// 2,7 Mo) », instead of a bare « Working… ».
+    /// </summary>
+    private string OperationText(StoreOperation operation) => operation.Stage switch
+    {
+        StoreOperationStage.Queued => L["Progress.Queued"],
+        StoreOperationStage.Preparing => L["Progress.Preparing"],
+        StoreOperationStage.Downloading when operation.Percent is { } percent =>
+            L["Progress.DownloadingPercent", percent, SizeText(operation.BytesReceived ?? 0), SizeText(operation.TotalBytes ?? 0)],
+        StoreOperationStage.Downloading when operation.BytesReceived is > 0 and { } received => L["Progress.DownloadingBytes", SizeText(received)],
+        StoreOperationStage.Downloading => L["Progress.Downloading"],
+        StoreOperationStage.Verifying => L["Progress.Verifying"],
+        StoreOperationStage.AwaitingApproval => L["Progress.AwaitingApproval"],
+        StoreOperationStage.Installing => L["Progress.Installing"],
+        _ => L["Working"]
+    };
 
     private string DescribePackageError(KazoPackageException exception) => exception.Code switch
     {

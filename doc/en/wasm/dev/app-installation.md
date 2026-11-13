@@ -411,6 +411,14 @@ kazopkg info org.example.notes
   Store opens that file (ADR [0257](adr/0257-offer-a-store-app-for-an-unsupported-file.md) §5,
   the File Explorer's "View in the Store" button). A Store already open
   receives these arguments too.
+- **Progress** (ADR [0266](adr/0266-store-ux-refresh.md) §7): during an
+  install or an update, the app's page and card show the step the OS reports
+  to `KazoAppPackages.InstallAsync(source, scope, progress)`: preparing,
+  downloading (percent and sizes; the catalog's size when the host announces
+  none), verifying, waiting for an administrator, installing. Only that app's
+  buttons are disabled. The actions that change the installed apps run one at
+  a time, like a package manager holding its lock: the next one shows
+  "Waiting for the other install…". Opening an app does not wait.
 - **Updates**: `AppUpdateMonitor` checks at sign-in then every
   `[updates] interval-hours` hours and posts a notification that opens the
   Installed tab. Each check also downloads every catalog of `[catalogs]`, for
@@ -420,10 +428,11 @@ kazopkg info org.example.notes
   the Store is added once, to a new profile as to an existing one, and does
   not come back after an unpin.
 
-Tests: `AppCatalogDocumentTests`, the catalog tests of
-`AppPackageGatewayTests`, `StartMenuPreferencesServiceTests`
-(Platform.Core) and `Kazo.Os.Apps.Store.Tests` (`StoreCatalog`,
-`StoreMarkdown`, manifest).
+Tests: `AppCatalogDocumentTests`, the catalog and progress tests of
+`AppPackageGatewayTests`, `HttpAppPackageDownloaderTests`,
+`StartMenuPreferencesServiceTests` (Platform.Core), `Kazo.Os.Apps.Store.Tests`
+(`StoreCatalog`, `StoreMarkdown`, `StoreOperations`, manifest) and
+`StoreInstallProgressTests` (UI.E2E).
 
 ## Adding without a restart, signing and transactions
 
@@ -498,3 +507,4 @@ Tests: `AppPackageGatewayTests.Transactions.cs`, `AppDataGuardTests`,
 - [x] Contract tests and documentation.
 - [x] Kazo OS Store: catalogs, `kazopkg install <appId>`, updates by notification, default pin (ADR 0212, ADR 0215).
 - [x] Adding without a restart, signing, transactional install, `kazopkg rollback` and `repair`, data backup (ADR 0214).
+- [x] Install progress in the Store: `IProgress<KazoPackageInstallProgress>`, steps, queue, only the app's own buttons (ADR 0266 §7).
