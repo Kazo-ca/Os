@@ -200,6 +200,13 @@ PC": a cloud session cannot create a repository).
 
 - Icon without the ArtCraft logo, fr and en listing ("based on <App>Craft by the ArtCraft
   team", known limits), screenshots, `THIRD-PARTY-NOTICES.md`, licences in the package.
+- **Repository README**: it repeats the Store listing (text of `store/description.en.md` and
+  `store/description.fr.md`, screenshots), then a "Try it" section (placeholder for the future
+  link `https://os.kazo.ca/?autolunch=<id>`) and a short presentation of Kazo OS with the link
+  to `Kazo-ca/Os`. Template: [`app-repository.md`](../framework/app-repository.md)
+  (`kazoos-solution` template, Kazo-ca/Os#469 and Kazo-ca/Os-AppTemplate#9); full example:
+  Kazo-ca/Os-App-Word#13. The seven Craft repositories were created from the old template:
+  their README is redone in this work item.
 - Minimum OS version in the manifest; Playwright journey in a published OS.
 - Tag through the "Tag a release" workflow (a cloud session cannot push tags), PR to the
   `Os-AppMarketPlace` catalog (signing there only), a row in `features.md`.
@@ -247,4 +254,4 @@ PC": a cloud session cannot create a repository).
 - [ ] Work item 2: open, save, close guard.
 - [ ] Work item 3: picker, shortcuts, theme, language, per-user settings.
 - [ ] Work item 4: build from the fork, workflow.
-- [ ] Work item 5: listing, tag, catalog, `features.md`.
+- [ ] Work item 5: listing, README redone from the listing ("Try it", Kazo OS presentation), tag, catalog, `features.md`.
