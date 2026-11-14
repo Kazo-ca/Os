@@ -2,7 +2,7 @@
 
 # Plan: beta channel and automatic app updates
 
-**Proposed on 2026-11-14**, waiting for Benoit's answers to the questions of
+**Approved on 2026-11-14** by Benoit's answers to Q1 to Q5 (Q6 pending) of
 [ADR 0271](../adr/0271-beta-channel-and-automatic-app-updates.md). Series
 `release-channels/base`. Nothing is coded.
 
@@ -26,7 +26,8 @@ with Benoit.
    automation, compiled and signed by the catalog.
 4. On `os-beta.kazo.ca`, the Store offers the beta versions.
 5. Benoit merges `beta` → `main` with version `3.5.0`. Each app gets a PR
-   "Kazo OS 3.5.0"; once green, it is published according to Q4 and Q5.
+   "Kazo OS 3.5.0"; once green, the automation merges it and publishes the
+   version (minor or major of the SDK; for a patch, verification only).
 
 ## Work items
 
@@ -47,8 +48,8 @@ of `catalog-beta.json` is fixed by 3.
 
 ## What Benoit must do himself
 
-- Answer questions Q1 to Q6.
-- Depending on Q1: create the beta site (Cloudflare Pages project, domain
+- Answer Q6.
+- Create the beta site (Cloudflare Pages project, domain
   `os-beta.kazo.ca`) and the deployment token, as a secret of the `Os`
   repository.
 - Depending on Q6: create the GitHub App (or the token) and the organization
@@ -63,7 +64,7 @@ of `catalog-beta.json` is fixed by 3.
 | Risk | Answer |
 | --- | --- |
 | A broken prerelease blocks the 11 apps | A red app CI only opens an issue; nothing is published, the app's `main` is not touched. |
-| Noise: 11 PRs per stable version | Q4 (publish only for a minor or a major) and Q5 (the automation merges rebuild-only submissions). |
+| Noise: 11 PRs per stable version | Publishing only for a minor or a major, and the automation merges rebuild-only submissions. |
 | An automation signs unreviewed code | "Rebuild only" check: only the submodule and the version change, same capabilities; otherwise human review. |
 | Cloudflare Pages limits (25 MiB per file, 20,000 files) | To measure in work item 2 on the `kazoos-wasm-<version>.zip` archive; fallback: a second GitHub Pages repository. |
 | `beta` drifts away from `main` | `main` is merged into `beta` after each stable version; when in doubt, `beta` is created again from `main`. |

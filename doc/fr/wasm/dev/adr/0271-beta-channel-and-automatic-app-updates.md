@@ -4,10 +4,9 @@
 
 ## Statut
 
-**Proposée** le 2026-11-14 (évaluation, aucun code). Les questions de la
-section [Questions posées à Benoit](#questions-posées-à-benoit) sont posées
-dans le fil ; la décision ci-dessous suit les recommandations en attendant ses
-réponses. Série `release-channels/base`, plan :
+**Acceptée** le 2026-11-14 par Benoit pour Q1 à Q5 (évaluation, aucun code) ;
+Q6 (jeton des automates) attend sa réponse et la décision suit la
+recommandation d'ici là. Voir [Questions posées à Benoit](#questions-posées-à-benoit). Série `release-channels/base`, plan :
 [`release-channels-plan.md`](../plans/release-channels-plan.md).
 
 - **Complète :** l'[ADR 0173](0173-automatic-releases-from-the-version-file.md)
@@ -105,9 +104,10 @@ Un workflow commun **« Kazo OS SDK update »** dans chaque dépôt d'app :
   ouverte dans le dépôt de l'app avec le journal. Rien ne touche `main`.
 - **Sur une version stable :** une PR vers `main` de l'app déplace le
   sous-module et monte la version corrective. La CI tourne toujours : c'est la
-  vérification que l'app compile encore. La publication dans le Store suit la
-  réponse à Q4 (recommandation : pour une mineure ou une majeure du SDK, pas
-  pour une corrective).
+  vérification que l'app compile encore. Pour une mineure ou une majeure du
+  SDK, la PR verte est fusionnée par l'automate, le tag est posé et la version
+  est soumise au catalogue ; pour une corrective, la PR est fermée une fois
+  verte, rien n'est publié (Q4 = B, Q5 = A).
 - **Numéro de version de l'app :** un script du modèle
   (`.github/scripts/bump-app-version.sh`) modifie `Version` de la classe
   `[AppManifest]` ; un changement de fond de l'app reste fait par son auteur.
@@ -124,7 +124,8 @@ Un workflow commun **« Kazo OS SDK update »** dans chaque dépôt d'app :
   commit soumis au dernier commit publié de l'app. Quand seuls le pointeur du
   sous-module et la version du manifeste diffèrent, et que les capacités
   déclarées sont identiques, la PR peut être fusionnée par l'automate une fois
-  la validation verte : aucun code d'app nouveau n'est à relire. Toute autre
+  la validation verte, en bêta comme en stable (Q5 = A) : aucun code d'app
+  nouveau n'est à relire. Toute autre
   soumission attend une relecture humaine, comme aujourd'hui.
 - La signature reste dans le seul dépôt du catalogue
   (`KAZO_STORE_SIGNING_KEY`), bêta comprise.
@@ -157,7 +158,7 @@ Un workflow commun **« Kazo OS SDK update »** dans chaque dépôt d'app :
 | Fusionner dans `main` de `Kazo-ca/Os`, dont `beta` → `main` | Benoit |
 | Choisir le numéro de la prochaine version stable | Benoit |
 | Fusionner dans `main` d'une app et du catalogue une soumission qui change du code ou des capacités | Benoit (ou le fil autorisé, comme pour Os-App-Word) |
-| Fusionner une « reconstruction seule » stable | Selon Q5 |
+| Fusionner une « reconstruction seule », bêta ou stable, dans `main` d'une app et dans le catalogue | Automate (exception voulue par Benoit à la règle sur `main`, pour les dépôts d'apps et le catalogue seulement, jamais pour `Kazo-ca/Os`) |
 | Créer le site bêta, le DNS, les jetons et les secrets | Benoit, une fois |
 | Publier une bêta (changer `<n>` sur `beta`), fusionner dans `beta` | Agents, PR verte |
 | Reconstruire et publier les apps en bêta | Automate |
@@ -201,7 +202,7 @@ Un workflow commun **« Kazo OS SDK update »** dans chaque dépôt d'app :
 
 Posées dans le fil le 2026-11-14 ; la recommandation est en gras.
 
-**Réponses :** Q1 = A avec le nom `os-beta.kazo.ca` (Benoit, 2026-11-14). Q2 à Q6 en attente.
+**Réponses de Benoit (2026-11-14) :** Q1 = A avec le nom `os-beta.kazo.ca` ; Q2 = A ; Q3 = A ; Q4 = B ; Q5 = A. Q6 en attente.
 
 | # | Question | Choix |
 | --- | --- | --- |
@@ -217,5 +218,6 @@ Posées dans le fil le 2026-11-14 ; la recommandation est en gras.
 Voir le plan : [`release-channels-plan.md`](../plans/release-channels-plan.md).
 
 - [x] Évaluation, ADR et plan (chantier 0).
-- [ ] Réponses de Benoit reportées ici.
+- [x] Réponses de Benoit à Q1 à Q5 reportées ici.
+- [ ] Réponse à Q6.
 - [ ] Chantiers 1 à 8 du plan.

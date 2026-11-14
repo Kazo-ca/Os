@@ -4,9 +4,9 @@
 
 ## Status
 
-**Proposed** on 2026-11-14 (evaluation, no code). The questions of the section
-[Questions asked to Benoit](#questions-asked-to-benoit) are asked in the
-thread; the decision below follows the recommendations until he answers.
+**Accepted** on 2026-11-14 by Benoit for Q1 to Q5 (evaluation, no code); Q6
+(token for the automations) waits for his answer and the decision follows the
+recommendation until then. See [Questions asked to Benoit](#questions-asked-to-benoit).
 Series `release-channels/base`, plan:
 [`release-channels-plan.md`](../plans/release-channels-plan.md).
 
@@ -102,8 +102,10 @@ A shared workflow **"Kazo OS SDK update"** in each app repository:
   repository with the log. Nothing touches `main`.
 - **On a stable version:** a PR to the app's `main` moves the submodule and
   raises the patch version. CI always runs: it is the check that the app still
-  compiles. Publishing to the Store follows the answer to Q4 (recommendation:
-  for a minor or a major of the SDK, not for a patch).
+  compiles. For a minor or a major of the SDK, the green PR is merged by the
+  automation, the tag is created and the version is submitted to the catalog;
+  for a patch, the PR is closed once green and nothing is published (Q4 = B,
+  Q5 = A).
 - **App version number:** a script of the template
   (`.github/scripts/bump-app-version.sh`) changes `Version` of the
   `[AppManifest]` class; a real change of the app is still made by its author.
@@ -119,8 +121,8 @@ A shared workflow **"Kazo OS SDK update"** in each app repository:
 - **"Rebuild only" submission:** the catalog tool compares the submitted
   commit with the app's last published commit. When only the submodule pointer
   and the manifest version differ, and the declared capabilities are
-  identical, the PR may be merged by the automation once validation is green:
-  there is no new app code to review. Any other submission waits for a human
+  identical, the PR may be merged by the automation once validation is green,
+  in beta and in stable (Q5 = A): there is no new app code to review. Any other submission waits for a human
   review, as today.
 - Signing stays in the catalog repository only (`KAZO_STORE_SIGNING_KEY`),
   beta included.
@@ -154,7 +156,7 @@ A shared workflow **"Kazo OS SDK update"** in each app repository:
 | Merging into `main` of `Kazo-ca/Os`, including `beta` → `main` | Benoit |
 | Choosing the number of the next stable version | Benoit |
 | Merging into `main` of an app and of the catalog a submission that changes code or capabilities | Benoit (or the authorized thread, as for Os-App-Word) |
-| Merging a stable "rebuild only" | Depends on Q5 |
+| Merging a "rebuild only", beta or stable, into `main` of an app and into the catalog | Automation (an exception Benoit wants to the rule on `main`, for app repositories and the catalog only, never for `Kazo-ca/Os`) |
 | Creating the beta site, the DNS, the tokens and the secrets | Benoit, once |
 | Releasing a beta (changing `<n>` on `beta`), merging into `beta` | Agents, green PR |
 | Rebuilding and publishing the apps in beta | Automation |
@@ -197,7 +199,7 @@ A shared workflow **"Kazo OS SDK update"** in each app repository:
 
 Asked in the thread on 2026-11-14; the recommendation is in bold.
 
-**Answers:** Q1 = A with the name `os-beta.kazo.ca` (Benoit, 2026-11-14). Q2 to Q6 pending.
+**Benoit's answers (2026-11-14):** Q1 = A with the name `os-beta.kazo.ca`; Q2 = A; Q3 = A; Q4 = B; Q5 = A. Q6 pending.
 
 | # | Question | Choices |
 | --- | --- | --- |
@@ -213,5 +215,6 @@ Asked in the thread on 2026-11-14; the recommendation is in bold.
 See the plan: [`release-channels-plan.md`](../plans/release-channels-plan.md).
 
 - [x] Evaluation, ADR and plan (work item 0).
-- [ ] Benoit's answers recorded here.
+- [x] Benoit's answers to Q1 to Q5 recorded here.
+- [ ] Answer to Q6.
 - [ ] Work items 1 to 8 of the plan.

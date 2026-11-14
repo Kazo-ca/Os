@@ -2,7 +2,7 @@
 
 # Plan : canal bêta et mises à jour automatiques des apps
 
-**Proposé le 2026-11-14**, en attente des réponses de Benoit aux questions de
+**Validé le 2026-11-14** par les réponses de Benoit à Q1 à Q5 (Q6 en attente) de
 l'[ADR 0271](../adr/0271-beta-channel-and-automatic-app-updates.md). Série
 `release-channels/base`. Rien n'est codé.
 
@@ -26,7 +26,8 @@ en ligne sur `os-beta.kazo.ca` (et par `os.kazo.ca/beta`) ; les fusions dans
    l'automate, compilée et signée par le catalogue.
 4. Sur `os-beta.kazo.ca`, le Store propose les versions bêta.
 5. Benoit fusionne `beta` → `main` avec la version `3.5.0`. Chaque app reçoit
-   une PR « Kazo OS 3.5.0 » ; verte, elle est publiée selon Q4 et Q5.
+   une PR « Kazo OS 3.5.0 » ; verte, l'automate la fusionne et publie la version
+   (mineure ou majeure du SDK ; pour une corrective, vérification seulement).
 
 ## Chantiers
 
@@ -47,8 +48,8 @@ quand le format de `catalog-beta.json` est fixé par le 3.
 
 ## Ce que Benoit doit faire lui-même
 
-- Répondre aux questions Q1 à Q6.
-- Selon Q1 : créer le site bêta (projet Cloudflare Pages, domaine
+- Répondre à Q6.
+- Créer le site bêta (projet Cloudflare Pages, domaine
   `os-beta.kazo.ca`) et le jeton de déploiement, en secret du dépôt `Os`.
 - Selon Q6 : créer la GitHub App (ou le jeton) et le secret d'organisation.
 - Vérifier que la politique Trusted Publishing de nuget.org accepte les
@@ -61,7 +62,7 @@ quand le format de `catalog-beta.json` est fixé par le 3.
 | Risque | Parade |
 | --- | --- |
 | Une préversion cassée bloque les 11 apps | La CI d'une app rouge n'ouvre qu'une issue ; rien n'est publié, `main` de l'app n'est pas touché. |
-| Bruit : 11 PR par version stable | Q4 (ne publier que pour une mineure ou une majeure) et Q5 (fusion par l'automate des reconstructions seules). |
+| Bruit : 11 PR par version stable | On ne publie que pour une mineure ou une majeure, et l'automate fusionne les reconstructions seules. |
 | Un automate signe du code non relu | Contrôle « reconstruction seule » : seuls le sous-module et la version changent, capacités identiques ; sinon relecture humaine. |
 | Limites de Cloudflare Pages (25 Mio par fichier, 20 000 fichiers) | À mesurer au chantier 2 sur le zip `kazoos-wasm-<version>.zip` ; repli : un second dépôt GitHub Pages. |
 | `beta` s'éloigne de `main` | `main` est fusionnée dans `beta` après chaque version stable ; en cas de doute, `beta` est recréée depuis `main`. |
