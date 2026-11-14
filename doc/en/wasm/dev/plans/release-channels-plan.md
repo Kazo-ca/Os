@@ -53,8 +53,7 @@ of `catalog-beta.json` is fixed by 3.
 - Create the beta site (Cloudflare Pages project, domain
   `os-beta.kazo.ca`) and the deployment token, as a secret of the `Os`
   repository.
-- Create the organization's GitHub App and its secret (steps given in work
-  item 6).
+- Create the organization's GitHub App and its secret (steps in [`releases.md`](../releases.md#setting-up-the-kazo-os-automation-github-app)).
 - Check that nuget.org's Trusted Publishing policy accepts runs of
   `release.yml` from the `beta` branch.
 - Protect the `beta` branch of `Os` (pull request required, green check).
@@ -85,6 +84,6 @@ of `catalog-beta.json` is fixed by 3.
 - [ ] Work item 3: channel in the OS.
 - [ ] Work item 4: catalog beta channel.
 - [x] Work item 5: reusable workflows and template (`kazoos-solution` template, `Os-AppTemplate` regenerated; the `v1` tag is still to create).
-- [ ] Work item 6: notify the apps.
+- [x] Work item 6: notify the apps (`build/app-repositories.txt`, `notify-app-repositories.sh`, job `notify-apps` of `release.yml`; Benoit creates the GitHub App, [`releases.md`](../releases.md)).
 - [ ] Work item 7: align each app repository.
 - [ ] Work item 8: full trial and closing report.

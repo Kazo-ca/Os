@@ -24,6 +24,12 @@ name: Release Kazo OS
 # ADR 0191 §5: once the release exists, the "server" jobs attach the installable Kazo OS server
 # (kazoos-server-<version>-<rid>.zip|tar.gz, build/publish-server.sh) to the same release and
 # push its image ghcr.io/kazo-ca/kazoos-server (:<version> and, for a stable version, :latest).
+#
+# ADR 0271 §4: once a version is released and its packages are on nuget.org, the "notify-apps" job
+# sends repository_dispatch kazoos-sdk-released {version, channel} to the app repositories listed in
+# wasm2/KazoOs/build/app-repositories.txt, with the token of the Kazo OS automation GitHub App
+# (organization secrets KAZO_AUTOMATION_APP_ID, KAZO_AUTOMATION_APP_KEY). Without them: a warning,
+# nothing else (each app still finds the version at its hourly "Kazo OS SDK update" run).
 on:
   workflow_run:
     workflows: [ "Verify Kazo OS WASM" ]
@@ -70,6 +76,7 @@ jobs:
       mode: ${{ steps.plan.outputs.mode }}
       prerelease: ${{ steps.plan.outputs.prerelease }}
       sha: ${{ steps.plan.outputs.sha }}
+      nuget: ${{ steps.nuget-push.outputs.pushed }}
     steps:
       - name: Checkout the verified commit
         uses: actions/checkout@v6
@@ -184,6 +191,7 @@ jobs:
           user: ${{ vars.NUGET_USER }}
 
       - name: Push the packages to nuget.org
+        id: nuget-push
         if: steps.plan.outputs.mode != 'none'
         shell: bash
         env:
@@ -195,6 +203,7 @@ jobs:
           if [[ -z "$key" ]]; then
             echo "::warning title=NuGet::nuget.org publishing is not configured (NUGET_USER variable or NUGET_API_KEY secret): packages are only attached to the GitHub Release."
             echo "NuGet: not configured, nothing pushed." >> "$GITHUB_STEP_SUMMARY"
+            echo "pushed=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
           # dotnet nuget push also pushes the .snupkg next to each .nupkg.
@@ -202,6 +211,7 @@ jobs:
             dotnet nuget push "$package" --api-key "$key" --source "$NUGET_SOURCE" --skip-duplicate
           done
           echo "NuGet: packages pushed to nuget.org." >> "$GITHUB_STEP_SUMMARY"
+          echo "pushed=true" >> "$GITHUB_OUTPUT"
 
       # Last: the tag marks the version as released, so a failure above is retried by
       # rerunning the workflow (the push skips packages already on nuget.org).
@@ -232,6 +242,79 @@ jobs:
           if [[ "$PRERELEASE" == "true" ]]; then flags+=(--prerelease); else flags+=(--latest); fi
           gh release create "$TAG" "${flags[@]}" "$RELEASE_DIR"/assets/*
           echo "Release: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/releases/tag/$TAG" >> "$GITHUB_STEP_SUMMARY"
+
+  # ADR 0271 §4: tells the app repositories, whose "Kazo OS SDK update" moves each app to the
+  # version. Never for a republish (the apps already had that version) and never before the
+  # packages are on nuget.org: the app CI restores them from there, so a too early run would fail
+  # and open a TODO issue in every app.
+  notify-apps:
+    needs: release
+    if: needs.release.outputs.mode == 'release'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      HAS_AUTOMATION_APP: ${{ secrets.KAZO_AUTOMATION_APP_ID != '' && secrets.KAZO_AUTOMATION_APP_KEY != '' }}
+      VERSION: ${{ needs.release.outputs.version }}
+      CHANNEL: ${{ needs.release.outputs.channel }}
+      TAG: ${{ needs.release.outputs.tag }}
+      NUGET_PUSHED: ${{ needs.release.outputs.nuget }}
+    steps:
+      - name: Checkout the released commit
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.release.outputs.sha }}
+
+      - name: Wait for the packages on nuget.org
+        id: packages
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [[ "$NUGET_PUSHED" != "true" ]]; then
+            echo "::warning title=App notification::The packages of Kazo OS $VERSION were not pushed to nuget.org: the apps cannot build on it, so they are not told."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          # Every package attached to the release, as nuget.org's restore API names it (lower case).
+          mapfile -t ids < <(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json assets \
+            --jq '.assets[].name | select(endswith(".nupkg"))' | sed "s/\.$VERSION\.nupkg\$//" | tr '[:upper:]' '[:lower:]')
+          wanted="$(tr '[:upper:]' '[:lower:]' <<< "$VERSION")"
+          for attempt in $(seq 1 40); do
+            missing=0
+            for id in "${ids[@]}"; do
+              curl -fsSL "https://api.nuget.org/v3-flatcontainer/$id/index.json" 2>/dev/null \
+                | grep -q "\"$wanted\"" || missing=$((missing + 1))
+            done
+            if [[ $missing -eq 0 ]]; then
+              echo "${#ids[@]} packages of Kazo OS $VERSION are on nuget.org." >> "$GITHUB_STEP_SUMMARY"
+              echo "ready=true" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            echo "$missing of ${#ids[@]} packages not on nuget.org yet (attempt $attempt of 40)."
+            sleep 60
+          done
+          echo "::warning title=App notification::The packages of Kazo OS $VERSION are still not all on nuget.org after 40 minutes: the apps are not told; they find the version at their hourly run."
+          echo "ready=false" >> "$GITHUB_OUTPUT"
+
+      - name: Get the Kazo OS automation token
+        id: app-token
+        if: steps.packages.outputs.ready == 'true' && env.HAS_AUTOMATION_APP == 'true'
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.KAZO_AUTOMATION_APP_ID }}
+          private-key: ${{ secrets.KAZO_AUTOMATION_APP_KEY }}
+          # Every repository the App is installed on: the list decides which ones are told.
+          owner: ${{ github.repository_owner }}
+
+      - name: Notify the app repositories
+        if: steps.packages.outputs.ready == 'true'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          bash "$KAZOOS_SOLUTION_DIR/build/tools/notify-app-repositories.sh" --version "$VERSION" --channel "$CHANNEL" \
+            | tee "$RUNNER_TEMP/notify.log"
+          echo "Apps: $(sed -n 's/^notified=//p' "$RUNNER_TEMP/notify.log") repositories told about Kazo OS $VERSION ($CHANNEL)." >> "$GITHUB_STEP_SUMMARY"
 
   # ADR 0191 §4-5: the installable server, self-contained in one file, for each system.
   server:

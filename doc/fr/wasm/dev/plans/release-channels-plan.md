@@ -52,7 +52,7 @@ quand le format de `catalog-beta.json` est fixé par le 3.
 
 - Créer le site bêta (projet Cloudflare Pages, domaine
   `os-beta.kazo.ca`) et le jeton de déploiement, en secret du dépôt `Os`.
-- Créer la GitHub App de l'organisation et son secret (étapes données au chantier 6).
+- Créer la GitHub App de l'organisation et son secret (étapes dans [`releases.md`](../releases.md#configurer-la-github-app-kazo-os-automation)).
 - Vérifier que la politique Trusted Publishing de nuget.org accepte les
   exécutions de `release.yml` depuis la branche `beta`.
 - Protéger la branche `beta` de `Os` (PR obligatoire, vérification verte).
@@ -83,6 +83,6 @@ quand le format de `catalog-beta.json` est fixé par le 3.
 - [ ] Chantier 3 : canal dans l'OS.
 - [ ] Chantier 4 : canal bêta du catalogue.
 - [x] Chantier 5 : workflows réutilisables et template (modèle `kazoos-solution`, `Os-AppTemplate` régénéré ; le tag `v1` reste à poser).
-- [ ] Chantier 6 : prévenir les apps.
+- [x] Chantier 6 : prévenir les apps (`build/app-repositories.txt`, `notify-app-repositories.sh`, job `notify-apps` de `release.yml` ; Benoit crée la GitHub App, [`releases.md`](../releases.md)).
 - [ ] Chantier 7 : aligner chaque dépôt d'app.
 - [ ] Chantier 8 : essai complet et bilan.

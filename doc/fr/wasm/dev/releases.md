@@ -67,7 +67,9 @@ WASM* se termine **avec succès** après un push sur `main` ou sur `beta`, puis 
 6. crée le tag et la GitHub Release : titre `Kazo OS <version>`, notes tirées
    de `changes/<version>.json` (ou de `changes/unreleased/` pour une
    préversion), paquets et zip joints ; une préversion est marquée
-   « pre-release », une version stable « latest ».
+   « pre-release », une version stable « latest » ;
+7. prévient les dépôts d'apps (job `notify-apps`, voir
+   [Prévenir les dépôts d'apps](#prévenir-les-dépôts-dapps)).
 
 Le tag est créé en dernier : si une étape échoue, relancer le workflow
 (*Re-run failed jobs*) reprend tout, et les paquets déjà présents sur nuget.org
@@ -117,6 +119,37 @@ chaque version stable, `main` est fusionnée dans `beta` et la version de
 **Coût.** Une préversion pousse les 42 paquets sur nuget.org, où une version
 ne se supprime pas (elle se masque seulement) : publier une préversion quand
 il y a quelque chose à essayer, pas à chaque fusion.
+
+## Prévenir les dépôts d'apps
+
+Une fois une version publiée (stable ou préversion, jamais pour un
+*republish*), le job `notify-apps` de *Release Kazo OS* prévient les dépôts
+d'apps, pour que leur workflow **Kazo OS SDK update** (workflow réutilisable
+d'`Os-AppTemplate`) passe chaque app à cette version tout de suite plutôt qu'à
+son prochain passage horaire
+([ADR 0271](adr/0271-beta-channel-and-automatic-app-updates.md) §4) :
+
+1. il attend que tous les paquets de la version soient sur nuget.org (40
+   minutes au plus) : la CI des apps les restaure de là, un passage plus tôt
+   échouerait et ouvrirait une issue `TODO` dans chaque app. Si les paquets
+   n'ont pas été poussés (NuGet non configuré) ou manquent encore : un
+   avertissement, et aucune app n'est prévenue ;
+2. il obtient un jeton de la GitHub App **Kazo OS automation** (secrets
+   d'organisation `KAZO_AUTOMATION_APP_ID` et `KAZO_AUTOMATION_APP_KEY`) ;
+3. `wasm2/KazoOs/build/tools/notify-app-repositories.sh` envoie à chaque dépôt
+   de `wasm2/KazoOs/build/app-repositories.txt` un `repository_dispatch` de
+   type `kazoos-sdk-released` avec
+   `{"version": "<version>", "channel": "stable" | "beta"}`.
+
+Sans les secrets de l'App : un avertissement, rien d'autre. Un dépôt qui
+refuse l'envoi (App non installée, dépôt renommé) donne un avertissement ; les
+autres sont quand même prévenus et la publication reste verte. Un dépôt absent
+de la liste (une app tierce) trouve le nouveau tag à son passage horaire.
+
+**Ajouter un dépôt d'app :** une ligne `propriétaire/nom` dans
+`build/app-repositories.txt`, et l'App installée sur ce dépôt (ou sur tous les
+dépôts de l'organisation). `notify-app-repositories.sh --version 3.4.0
+--channel stable --dry-run` montre ce qui serait envoyé.
 
 ## Annonce aux sessions ouvertes
 
@@ -190,6 +223,45 @@ publier un paquet `Kazo.Os.*`. Elle se demande par courriel à
 `account@nuget.org` (voir la page *ID prefix reservation* de la documentation
 NuGet), après la première publication.
 
+## Configurer la GitHub App Kazo OS automation
+
+Une GitHub App de l'organisation `Kazo-ca` donne leur jeton aux automates
+(ADR 0271, Q6 = A) : *Release Kazo OS* prévient les apps avec elle, le
+**Kazo OS SDK update** de chaque app ouvre et fusionne ses pull requests avec
+elle, et la publication au Store ouvre la pull request du catalogue avec elle.
+À faire une fois, par un propriétaire de l'organisation :
+
+1. **Créer l'App.** Organisation `Kazo-ca` ▸ *Settings* ▸ *Developer
+   settings* ▸ *GitHub Apps* ▸ *New GitHub App*. Nom `Kazo OS automation`,
+   page d'accueil `https://github.com/Kazo-ca/Os`, *Webhook* décoché (*Active*
+   désactivé). Permissions de dépôt : **Contents : Read and write**, **Pull
+   requests : Read and write**, **Issues : Read and write** (Metadata : Read
+   s'ajoute tout seul). *Where can this GitHub App be installed?* : **Only on
+   this account**. *Create GitHub App*.
+2. **Noter l'App ID** affiché en haut de la page de l'App.
+3. **Créer une clé privée.** Même page ▸ *Private keys* ▸ *Generate a private
+   key* : un fichier `.pem` se télécharge. Ne le mettre dans aucun dépôt.
+4. **Installer l'App.** Menu de gauche ▸ *Install App* ▸ `Kazo-ca` ▸
+   *Install* : *All repositories* (le plus simple), ou *Only select
+   repositories* avec `Os`, `Os-AppMarketPlace` et chaque dépôt de
+   `build/app-repositories.txt`.
+5. **Secrets d'organisation.** `Kazo-ca` ▸ *Settings* ▸ *Secrets and
+   variables* ▸ *Actions* ▸ *New organization secret*, deux fois :
+   `KAZO_AUTOMATION_APP_ID` = l'App ID, `KAZO_AUTOMATION_APP_KEY` = tout le
+   contenu du fichier `.pem` (de `-----BEGIN` à `-----END ...-----`).
+   *Repository access* : **All repositories**, ou la même liste qu'à l'étape
+   4. Avec le forfait GitHub Free, les secrets d'organisation n'atteignent que
+   les dépôts **publics** : un dépôt privé demande les deux secrets comme
+   secrets de dépôt.
+6. **La laisser fusionner les reconstructions** (ADR 0271 Q5 = A). Dans
+   chaque dépôt d'app et dans `Os-AppMarketPlace`, si `main` est protégée :
+   *Settings* ▸ *Rules* ▸ *Rulesets* (ou *Branches*) ▸ la règle de `main` ▸
+   *Bypass list* ▸ *Add bypass* ▸ `Kazo OS automation`. Jamais dans
+   `Kazo-ca/Os`.
+7. **Vérifier.** *Actions* ▸ *Release Kazo OS* de la prochaine version : le
+   job `notify-apps` affiche « N/N repositories told » ; chaque app reçoit un
+   passage *Kazo OS SDK update* lancé par `repository_dispatch`.
+
 ## Vérifier une publication
 
 - **Releases** du dépôt : la Release `Kazo OS <version>`, ses `.nupkg`,
@@ -205,6 +277,7 @@ NuGet), après la première publication.
 | --- | --- |
 | *Release Kazo OS* ne démarre pas | *Verify Kazo OS WASM* a échoué ou a été annulé sur ce commit ; corriger, ou attendre le commit suivant de `main` (même version, pas encore taguée). |
 | « already released » dans le résumé | Le tag `v<version>` existe : changer la version. |
+| `notify-apps` avertit « was not told » | L'App Kazo OS automation n'est pas installée sur ce dépôt, ou le dépôt a été renommé : installer l'App ou corriger `build/app-repositories.txt`. |
 | Erreur « Release channel » | La version ne correspond pas à la branche : `main` veut `X.Y.Z`, `beta` veut `X.Y.Z-preview.<n>`. Corriger `build/Versions.props` dans la PR. |
 | `403` à l'envoi NuGet | Clé expirée, mauvaise portée (glob), ou politique Trusted Publishing qui ne correspond pas au dépôt ou au fichier `release.yml`. |
 | `NuGet/login` échoue | `NUGET_USER` ne correspond pas au nom du profil nuget.org, ou la politique n'existe pas. |
