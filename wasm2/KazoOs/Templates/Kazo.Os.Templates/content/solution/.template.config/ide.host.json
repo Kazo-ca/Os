@@ -5,6 +5,7 @@
   "symbolInfo": [
     { "id": "appId", "name": { "text": "Application id (reverse-DNS)" }, "isVisible": true },
     { "id": "publisherId", "name": { "text": "Publisher id" }, "isVisible": true },
-    { "id": "repository", "name": { "text": "GitHub repository (owner/name)" }, "isVisible": true }
+    { "id": "repository", "name": { "text": "GitHub repository (owner/name)" }, "isVisible": true },
+    { "id": "templateRepository", "name": { "text": "Generate the Kazo-ca/Os-AppTemplate repository itself" }, "isVisible": false }
   ]
 }

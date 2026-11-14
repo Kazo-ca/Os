@@ -299,7 +299,7 @@ public sealed partial class AppPackageInstaller
 
         progress?.Report(new KazoPackageInstallProgress(KazoPackageInstallStage.Preparing));
         AppPackageIndex index = await GetIndexAsync(source, sources, cancellationToken).ConfigureAwait(false);
-        AppPackageIndexEntry entry = (source.Version is { } wanted ? index.Find(wanted) : index.Latest)
+        AppPackageIndexEntry entry = (source.Version is { } wanted ? index.Find(wanted) : AppVersionChoice.Offered(index, _sdkVersion))
             ?? throw new AppPackageException(
                 "apps.package.version-not-found",
                 source.Version is null
@@ -592,7 +592,7 @@ public sealed partial class AppPackageInstaller
             try
             {
                 AppPackageIndex index = await GetIndexAsync(source, sources, cancellationToken).ConfigureAwait(false);
-                AppPackageIndexEntry? newest = source.Version?.PreRelease is null ? index.Latest : index.Versions.FirstOrDefault();
+                AppPackageIndexEntry? newest = AppVersionChoice.Newest(index, _sdkVersion, source.Version);
                 if (newest is not null && source.Version is { } current && newest.Version.CompareTo(current) > 0)
                 {
                     updates.Add(new AppPackageUpdate(appId, source, newest.Version, systemWide));

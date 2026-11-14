@@ -111,6 +111,8 @@ public sealed record AppCatalogEntry(
         new(AppId, [.. Versions.Select(static version => new AppPackageIndexEntry(version.Version, version.Package, version.Sha256)
         {
             Signature = version.Signature,
+            MinimumSdkVersion = version.MinimumSdkVersion,
+            MaximumSdkVersion = version.MaximumSdkVersion,
         })]);
 }
 

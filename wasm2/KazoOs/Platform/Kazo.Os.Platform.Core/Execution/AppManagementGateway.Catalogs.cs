@@ -37,7 +37,7 @@ internal sealed partial class AppManagementGateway
                     name,
                     trust,
                     [.. listing.Categories.Select(static category => new KazoCatalogCategory(category.Id, category.Labels))],
-                    [.. listing.Apps.Select(app => ToPublic(listing, app, trust))]));
+                    [.. listing.Apps.Select(app => ToPublic(listing, app, trust, packages.SdkVersion))]));
             }
             catch (AppPackageException exception)
             {
@@ -187,7 +187,7 @@ internal sealed partial class AppManagementGateway
         return await Translate(() => packages.FindInCatalogsAsync(text, version, sources, cancellationToken)).ConfigureAwait(false);
     }
 
-    private static KazoCatalogApp ToPublic(AppCatalogListing listing, AppCatalogEntry app, KazoPackageTrust trust) => new(
+    private static KazoCatalogApp ToPublic(AppCatalogListing listing, AppCatalogEntry app, KazoPackageTrust trust, SemanticVersion sdkVersion) => new(
         listing.Name,
         app.AppId,
         app.Name,
@@ -196,7 +196,7 @@ internal sealed partial class AppManagementGateway
         app.ShortDescriptions,
         app.License,
         app.Repository,
-        app.LatestVersion.ToString(),
+        AppVersionChoice.Offered(app, sdkVersion).ToString(),
         [.. app.Versions.Select(version => new KazoCatalogAppVersion(version.Version.ToString(), version.Size, version.Capabilities)
         {
             PublishedAt = version.PublishedAt,

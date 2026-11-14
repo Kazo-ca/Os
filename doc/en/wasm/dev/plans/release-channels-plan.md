@@ -5,8 +5,8 @@
 **Approved on 2026-11-14** by Benoit's answers to questions Q1 to Q6 of
 [ADR 0271](../adr/0271-beta-channel-and-automatic-app-updates.md). Series
 `release-channels/base`. Work items 1 (prerelease from `beta`, see
-[`releases.md`](../releases.md#publishing-a-prerelease-beta-channel)) and 2 (beta site, see
-[`beta-site.md`](../beta-site.md)) are coded; the other work items are not yet.
+[`releases.md`](../releases.md#publishing-a-prerelease-beta-channel)), 2 (beta site, see
+[`beta-site.md`](../beta-site.md)), 3 and 5 are coded (see the tasks); the other work items are not yet.
 
 ## Goal
 
@@ -82,9 +82,9 @@ of `catalog-beta.json` is fixed by 3.
 - [x] Work item 0: evaluation, ADR 0271, plan.
 - [x] Work item 1: prerelease from `beta`.
 - [x] Work item 2: beta site ([`beta-site.md`](../beta-site.md); Cloudflare project and secrets to be created by Benoit).
-- [ ] Work item 3: channel in the OS.
+- [x] Work item 3: channel in the OS ([`app-installation.md`](../app-installation.md#beta-channel-and-offered-version-adr-0271), `catalog-beta.json` format included).
 - [ ] Work item 4: catalog beta channel.
-- [ ] Work item 5: reusable workflows and template.
+- [x] Work item 5: reusable workflows and template (`kazoos-solution` template, `Os-AppTemplate` regenerated; the `v1` tag is still to create).
 - [ ] Work item 6: notify the apps.
 - [ ] Work item 7: align each app repository.
 - [ ] Work item 8: full trial and closing report.
