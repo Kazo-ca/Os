@@ -572,6 +572,14 @@ public static class EcosystemServiceCollectionExtensions
             provider.GetRequiredService<ICloudProviderCatalog>(),
             new HttpClient(),
             provider.GetService<IHostActivitySignal>()));
+        // ADR 0267 §6: buckets of S3 compatible services, signed with SigV4 in the OS; the service
+        // and the keys are an s3 cloud account above. Drives mount through NetworkDriveService.
+        services.AddScoped<INetworkDriveSource>(provider => new Kazo.Os.Platform.Core.CloudDrives.S3.S3DriveSource(
+            provider.GetRequiredService<CloudAccountService>(),
+            new HttpClient(),
+            provider.GetService<IEventBus>(),
+            provider.GetService<IHostActivitySignal>(),
+            logger: provider.GetService<ILogger<Kazo.Os.Platform.Core.CloudDrives.S3.S3DriveSource>>()));
 
         // passwd and the Settings "Users" tab (ADR 0120): new credentials hashed through Web Crypto
         // like at login, the login keyring re-sealed or set aside, every attempt in auth.log.

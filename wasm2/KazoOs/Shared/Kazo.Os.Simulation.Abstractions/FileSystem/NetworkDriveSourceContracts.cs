@@ -13,7 +13,32 @@ public sealed record NetworkDriveReference(string Name, string? Key = null, stri
 /// <summary>What the user chose when connecting a drive (ADR 0267 §3 and §8).</summary>
 /// <param name="Account">Reference of the cloud account to use; ignored by the folder of the computer.</param>
 /// <param name="Root">Folder of the service to start at; <see langword="null"/> for the whole storage.</param>
-public sealed record NetworkDriveRequest(string? Account = null, string? Root = null);
+public sealed record NetworkDriveRequest(string? Account = null, string? Root = null)
+{
+    /// <summary>
+    /// Gets the source's own settings the user typed, none of them secret (ADR 0270): for <c>s3</c>,
+    /// <c>endpoint</c>, <c>region</c>, <c>bucket</c>, <c>prefix</c> and <c>addressing</c>
+    /// (<c>path</c> or <c>virtual</c>). Keys are lower case; <see langword="null"/> for none.
+    /// </summary>
+    public IReadOnlyDictionary<string, string>? Options { get; init; }
+
+    /// <summary>
+    /// Gets the secrets the user typed, which the source seals in the user's keyring and never writes
+    /// to the drive list (ADR 0270): for <c>s3</c>, <c>access-key-id</c> and <c>secret-access-key</c>.
+    /// Never printed by <see cref="ToString"/>; <see langword="null"/> for none.
+    /// </summary>
+    public IReadOnlyDictionary<string, string>? Secrets { get; init; }
+
+    /// <summary>Prints the request without the values of <see cref="Secrets"/>, which must never reach a log.</summary>
+    private bool PrintMembers(System.Text.StringBuilder builder)
+    {
+        builder.Append("Account = ").Append(Account)
+            .Append(", Root = ").Append(Root)
+            .Append(", Options = ").Append(Options is null ? "" : string.Join(";", Options.Select(static pair => pair.Key + "=" + pair.Value)))
+            .Append(", Secrets = ").Append(Secrets is null ? "" : string.Join(";", Secrets.Keys.Select(static key => key + "=***")));
+        return true;
+    }
+}
 
 /// <summary>A drive its source just created, not mounted yet.</summary>
 /// <param name="Folder">The drive's content.</param>
