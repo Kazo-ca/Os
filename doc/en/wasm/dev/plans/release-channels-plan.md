@@ -10,7 +10,7 @@
 
 When a beta or stable version of Kazo OS ships, each app rebuilds, tests and
 offers its update with no manual step; a beta of the OS is online at
-`beta.os.kazo.ca` (and through `os.kazo.ca/beta`); merges into `main` stay
+`os-beta.kazo.ca` (and through `os.kazo.ca/beta`); merges into `main` stay
 with Benoit.
 
 ## The intended path
@@ -24,7 +24,7 @@ with Benoit.
    branch to the prerelease, builds, tests, and submits `x.y.z-beta.n` to the
    catalog's beta channel; the "rebuild only" submission is merged by the
    automation, compiled and signed by the catalog.
-4. On `beta.os.kazo.ca`, the Store offers the beta versions.
+4. On `os-beta.kazo.ca`, the Store offers the beta versions.
 5. Benoit merges `beta` → `main` with version `3.5.0`. Each app gets a PR
    "Kazo OS 3.5.0"; once green, it is published according to Q4 and Q5.
 
@@ -49,7 +49,7 @@ of `catalog-beta.json` is fixed by 3.
 
 - Answer questions Q1 to Q6.
 - Depending on Q1: create the beta site (Cloudflare Pages project, domain
-  `beta.os.kazo.ca`) and the deployment token, as a secret of the `Os`
+  `os-beta.kazo.ca`) and the deployment token, as a secret of the `Os`
   repository.
 - Depending on Q6: create the GitHub App (or the token) and the organization
   secret.

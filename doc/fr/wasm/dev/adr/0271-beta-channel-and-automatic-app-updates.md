@@ -74,7 +74,7 @@ Ce qui existe (vérifié dans le code le 2026-11-14) :
 
 ### 3. Le site bêta
 
-- Le site bêta vit sur une **origine séparée, `beta.os.kazo.ca`** ;
+- Le site bêta vit sur une **origine séparée, `os-beta.kazo.ca`** ;
   `os.kazo.ca/beta` y redirige. Raison : sur la même origine, la bêta ouvrirait
   la base `kazoos` de l'utilisateur. Une bêta qui monte le schéma de la base
   rend l'OS stable incapable de la rouvrir (IndexedDB ne redescend pas de
@@ -135,7 +135,7 @@ Un workflow commun **« Kazo OS SDK update »** dans chaque dépôt d'app :
   les versions bêta des apps ; l'OS stable lit `catalog.json` et ne voit
   jamais de version bêta. Pas de réglage à comprendre.
 - Paramètres ▸ À propos de l'OS stable reçoit un lien « Essayer la bêta »
-  vers `beta.os.kazo.ca`, et la bêta un lien « Revenir à la version stable ».
+  vers `os-beta.kazo.ca`, et la bêta un lien « Revenir à la version stable ».
 
 ### 7. Un seul jeu de workflows pour les apps
 
@@ -201,9 +201,11 @@ Un workflow commun **« Kazo OS SDK update »** dans chaque dépôt d'app :
 
 Posées dans le fil le 2026-11-14 ; la recommandation est en gras.
 
+**Réponses :** Q1 = A avec le nom `os-beta.kazo.ca` (Benoit, 2026-11-14). Q2 à Q6 en attente.
+
 | # | Question | Choix |
 | --- | --- | --- |
-| Q1 | Où vit le site bêta ? | **A. `beta.os.kazo.ca`, `os.kazo.ca/beta` redirige** · B. `os.kazo.ca/beta`, même origine, avec isolation à coder (base, caches, worker) · C. `os.kazo.ca/beta`, données partagées avec le stable |
+| Q1 | Où vit le site bêta ? | **A. `os-beta.kazo.ca`, `os.kazo.ca/beta` redirige** · B. `os.kazo.ca/beta`, même origine, avec isolation à coder (base, caches, worker) · C. `os.kazo.ca/beta`, données partagées avec le stable |
 | Q2 | D'où viennent les bêtas ? | **A. Branche permanente `beta`** · B. Une `<série>/base` choisie à la main, une à la fois · C. `main` |
 | Q3 | Quand une préversion NuGet part-elle ? | **A. Quand `<n>` change sur `beta`** · B. À chaque push de `beta`, numéro automatique · C. Workflow lancé à la main |
 | Q4 | Publier une nouvelle version de chaque app à chaque version **stable** du SDK ? | A. Toujours · **B. Vérifier toujours, publier pour une mineure ou une majeure** · C. Vérifier toujours, publier pour une majeure seulement |

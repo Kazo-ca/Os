@@ -71,7 +71,7 @@ What exists (checked in the code on 2026-11-14):
 
 ### 3. The beta site
 
-- The beta site lives on a **separate origin, `beta.os.kazo.ca`**;
+- The beta site lives on a **separate origin, `os-beta.kazo.ca`**;
   `os.kazo.ca/beta` redirects to it. Reason: on the same origin, the beta
   would open the user's `kazoos` database. A beta that raises the database
   schema makes the stable OS unable to open it again (IndexedDB never goes
@@ -131,7 +131,7 @@ A shared workflow **"Kazo OS SDK update"** in each app repository:
   offers the beta versions of apps; the stable OS reads `catalog.json` and
   never sees a beta version. No setting to understand.
 - Settings ▸ About of the stable OS gets a "Try the beta" link to
-  `beta.os.kazo.ca`, and the beta a "Back to the stable version" link.
+  `os-beta.kazo.ca`, and the beta a "Back to the stable version" link.
 
 ### 7. One set of workflows for the apps
 
@@ -197,9 +197,11 @@ A shared workflow **"Kazo OS SDK update"** in each app repository:
 
 Asked in the thread on 2026-11-14; the recommendation is in bold.
 
+**Answers:** Q1 = A with the name `os-beta.kazo.ca` (Benoit, 2026-11-14). Q2 to Q6 pending.
+
 | # | Question | Choices |
 | --- | --- | --- |
-| Q1 | Where does the beta site live? | **A. `beta.os.kazo.ca`, `os.kazo.ca/beta` redirects** · B. `os.kazo.ca/beta`, same origin, with isolation to code (database, caches, worker) · C. `os.kazo.ca/beta`, data shared with stable |
+| Q1 | Where does the beta site live? | **A. `os-beta.kazo.ca`, `os.kazo.ca/beta` redirects** · B. `os.kazo.ca/beta`, same origin, with isolation to code (database, caches, worker) · C. `os.kazo.ca/beta`, data shared with stable |
 | Q2 | Where do betas come from? | **A. Permanent `beta` branch** · B. One `<series>/base` chosen by hand, one at a time · C. `main` |
 | Q3 | When does a NuGet prerelease go out? | **A. When `<n>` changes on `beta`** · B. On every push of `beta`, automatic number · C. Workflow run by hand |
 | Q4 | Publish a new version of each app on each **stable** SDK version? | A. Always · **B. Always check, publish for a minor or a major** · C. Always check, publish for a major only |

@@ -10,7 +10,7 @@ l'[ADR 0271](../adr/0271-beta-channel-and-automatic-app-updates.md). Série
 
 Quand une version bêta ou stable de Kazo OS sort, chaque app se reconstruit,
 se teste et propose sa mise à jour sans geste manuel ; une bêta de l'OS est
-en ligne sur `beta.os.kazo.ca` (et par `os.kazo.ca/beta`) ; les fusions dans
+en ligne sur `os-beta.kazo.ca` (et par `os.kazo.ca/beta`) ; les fusions dans
 `main` restent à Benoit.
 
 ## Le parcours visé
@@ -24,7 +24,7 @@ en ligne sur `beta.os.kazo.ca` (et par `os.kazo.ca/beta`) ; les fusions dans
    la préversion, compile, teste, et soumet `x.y.z-beta.n` au canal bêta du
    catalogue ; la soumission « reconstruction seule » est fusionnée par
    l'automate, compilée et signée par le catalogue.
-4. Sur `beta.os.kazo.ca`, le Store propose les versions bêta.
+4. Sur `os-beta.kazo.ca`, le Store propose les versions bêta.
 5. Benoit fusionne `beta` → `main` avec la version `3.5.0`. Chaque app reçoit
    une PR « Kazo OS 3.5.0 » ; verte, elle est publiée selon Q4 et Q5.
 
@@ -49,7 +49,7 @@ quand le format de `catalog-beta.json` est fixé par le 3.
 
 - Répondre aux questions Q1 à Q6.
 - Selon Q1 : créer le site bêta (projet Cloudflare Pages, domaine
-  `beta.os.kazo.ca`) et le jeton de déploiement, en secret du dépôt `Os`.
+  `os-beta.kazo.ca`) et le jeton de déploiement, en secret du dépôt `Os`.
 - Selon Q6 : créer la GitHub App (ou le jeton) et le secret d'organisation.
 - Vérifier que la politique Trusted Publishing de nuget.org accepte les
   exécutions de `release.yml` depuis la branche `beta`.
