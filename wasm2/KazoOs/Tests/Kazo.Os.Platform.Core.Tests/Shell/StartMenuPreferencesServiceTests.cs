@@ -64,22 +64,24 @@ public sealed class StartMenuPreferencesServiceTests
         Assert.Equal(service.GetPinnedAppIds(alice.UserId), reloaded.GetPinnedAppIds(alice.UserId));
     }
 
+    private static readonly string[] Store = ["org.kazoos.store"];
+
     [Fact]
-    public async Task A_new_profile_starts_with_the_store_pinned()
+    public async Task A_new_profile_gets_the_default_pins_and_records_them()
     {
         SettingsFilesHarness harness = new();
         AuthenticatedPrincipal alice = await harness.LoginAsync(harness.Alice);
-        using StartMenuPreferencesService service = new(harness.Settings, harness.Session);
+        using StartMenuPreferencesService service = new(harness.Settings, harness.Session, ["org.example.welcome"]);
 
         await service.InitializeAsync();
 
-        Assert.Equal(["org.kazoos.store"], service.GetPinnedAppIds(alice.UserId));
+        Assert.Equal(["org.example.welcome"], service.GetPinnedAppIds(alice.UserId));
         string? file = await harness.ReadAsync("/home/alice/.config/kazoos/start-menu.json");
-        Assert.Contains("\"defaultPinsApplied\":[\"org.kazoos.store\"]", file, StringComparison.Ordinal);
+        Assert.Contains("\"defaultPinsApplied\":[\"org.example.welcome\"]", file, StringComparison.Ordinal);
     }
 
     [Fact]
-    public async Task An_existing_profile_gets_the_store_once_after_its_own_pins()
+    public async Task An_existing_profile_gets_a_default_pin_once_after_its_own_pins()
     {
         SettingsFilesHarness harness = new();
         AuthenticatedPrincipal alice = await harness.LoginAsync(harness.Alice);
@@ -89,26 +91,100 @@ public sealed class StartMenuPreferencesServiceTests
             await before.PinAsync(alice.UserId, "org.kazoos.terminal");
         }
 
-        using StartMenuPreferencesService service = new(harness.Settings, harness.Session);
+        using StartMenuPreferencesService service = new(harness.Settings, harness.Session, ["org.example.welcome"]);
         await service.InitializeAsync();
 
-        Assert.Equal(["org.kazoos.terminal", "org.kazoos.store"], service.GetPinnedAppIds(alice.UserId));
+        Assert.Equal(["org.kazoos.terminal", "org.example.welcome"], service.GetPinnedAppIds(alice.UserId));
     }
 
     [Fact]
-    public async Task An_unpinned_store_stays_unpinned()
+    public async Task An_unpinned_default_pin_stays_unpinned()
     {
         SettingsFilesHarness harness = new();
         AuthenticatedPrincipal alice = await harness.LoginAsync(harness.Alice);
-        using (StartMenuPreferencesService service = new(harness.Settings, harness.Session))
+        using (StartMenuPreferencesService service = new(harness.Settings, harness.Session, ["org.example.welcome"]))
         {
             await service.InitializeAsync();
-            Assert.True(await service.UnpinAsync(alice.UserId, "org.kazoos.store"));
+            Assert.True(await service.UnpinAsync(alice.UserId, "org.example.welcome"));
+        }
+
+        using StartMenuPreferencesService reloaded = new(harness.Settings, harness.Session, ["org.example.welcome"]);
+        await reloaded.InitializeAsync();
+
+        Assert.Empty(reloaded.GetPinnedAppIds(alice.UserId));
+    }
+
+    [Fact]
+    public async Task A_new_profile_no_longer_gets_the_store_pinned()
+    {
+        // ADR 0268: the Store lives in the Start menu's Quick access panel.
+        SettingsFilesHarness harness = new();
+        AuthenticatedPrincipal alice = await harness.LoginAsync(harness.Alice);
+        using StartMenuPreferencesService service = new(harness.Settings, harness.Session);
+
+        await service.InitializeAsync();
+
+        Assert.Empty(service.GetPinnedAppIds(alice.UserId));
+        Assert.DoesNotContain("org.kazoos.store", await harness.ReadAsync("/home/alice/.config/kazoos/start-menu.json") ?? string.Empty);
+    }
+
+    [Fact]
+    public async Task A_store_pinned_by_default_is_removed_once_and_the_user_pins_stay()
+    {
+        SettingsFilesHarness harness = new();
+        AuthenticatedPrincipal alice = await harness.LoginAsync(harness.Alice);
+        using (StartMenuPreferencesService before = new(harness.Settings, harness.Session, Store))
+        {
+            await before.InitializeAsync();
+            await before.PinAsync(alice.UserId, "org.kazoos.terminal");
+            Assert.Equal(["org.kazoos.store", "org.kazoos.terminal"], before.GetPinnedAppIds(alice.UserId));
+        }
+
+        using StartMenuPreferencesService service = new(harness.Settings, harness.Session);
+        await service.InitializeAsync();
+
+        Assert.Equal(["org.kazoos.terminal"], service.GetPinnedAppIds(alice.UserId));
+        string? file = await harness.ReadAsync("/home/alice/.config/kazoos/start-menu.json");
+        Assert.DoesNotContain("org.kazoos.store", file, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task A_store_the_user_pins_again_after_the_migration_stays_pinned()
+    {
+        SettingsFilesHarness harness = new();
+        AuthenticatedPrincipal alice = await harness.LoginAsync(harness.Alice);
+        using (StartMenuPreferencesService before = new(harness.Settings, harness.Session, Store))
+        {
+            await before.InitializeAsync();
+        }
+
+        using (StartMenuPreferencesService migrated = new(harness.Settings, harness.Session))
+        {
+            await migrated.InitializeAsync();
+            Assert.Empty(migrated.GetPinnedAppIds(alice.UserId));
+            Assert.True(await migrated.PinAsync(alice.UserId, "org.kazoos.store"));
         }
 
         using StartMenuPreferencesService reloaded = new(harness.Settings, harness.Session);
         await reloaded.InitializeAsync();
 
-        Assert.Empty(reloaded.GetPinnedAppIds(alice.UserId));
+        Assert.Equal(Store, reloaded.GetPinnedAppIds(alice.UserId));
+    }
+
+    [Fact]
+    public async Task A_store_pinned_by_the_user_before_any_default_stays_pinned()
+    {
+        SettingsFilesHarness harness = new();
+        AuthenticatedPrincipal alice = await harness.LoginAsync(harness.Alice);
+        using (StartMenuPreferencesService before = new(harness.Settings, harness.Session, []))
+        {
+            await before.InitializeAsync();
+            await before.PinAsync(alice.UserId, "org.kazoos.store");
+        }
+
+        using StartMenuPreferencesService service = new(harness.Settings, harness.Session);
+        await service.InitializeAsync();
+
+        Assert.Equal(Store, service.GetPinnedAppIds(alice.UserId));
     }
 }

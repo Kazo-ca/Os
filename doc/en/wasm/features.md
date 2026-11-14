@@ -391,7 +391,8 @@ This section lists what is released in the `main` branch and online.
   ([ADR 0189](dev/adr/0189-app-sources-trust-and-per-user-install.md),
   [ADR 0208](dev/adr/0208-hack-store-sources-trust-build.md),
   [ADR 0214](dev/adr/0214-hack-store-hot-add-signing-transactions.md))
-- **Kazo OS Store**: the Kazo OS app store, pinned by default in the Start menu,
+- **Kazo OS Store**: the Kazo OS app store, in the Start menu's Quick access
+  panel ([ADR 0268](dev/adr/0268-store-in-start-menu-quick-access.md)),
   on desktop and mobile. Home by categories, search, app page (screenshots,
   description, size, license, capabilities, trust), install for oneself or for
   everyone, open, update, uninstall, Installed tab and "Restart to finish". It

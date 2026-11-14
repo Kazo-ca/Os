@@ -366,6 +366,9 @@
   <data name="Launcher.OpenSettings" xml:space="preserve">
     <value>Open Settings</value>
   </data>
+  <data name="Launcher.OpenStore" xml:space="preserve">
+    <value>Open Kazo OS Store</value>
+  </data>
   <data name="Launcher.Pin" xml:space="preserve">
     <value>Pin to Start menu</value>
   </data>
@@ -422,6 +425,12 @@
   </data>
   <data name="Launcher.SettingsHint" xml:space="preserve">
     <value>Personalize Kazo OS</value>
+  </data>
+  <data name="Launcher.Store" xml:space="preserve">
+    <value>Store</value>
+  </data>
+  <data name="Launcher.StoreHint" xml:space="preserve">
+    <value>Find and install apps</value>
   </data>
   <data name="Launcher.Title" xml:space="preserve">
     <value>Start menu</value>

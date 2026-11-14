@@ -403,8 +403,9 @@ Cette section liste ce qui est publié dans la branche `main` et en ligne.
   ([ADR 0189](dev/adr/0189-app-sources-trust-and-per-user-install.md),
   [ADR 0208](dev/adr/0208-hack-store-sources-trust-build.md),
   [ADR 0214](dev/adr/0214-hack-store-hot-add-signing-transactions.md))
-- **Kazo OS Store** : le magasin d'applications de Kazo OS, épinglé par défaut
-  dans le menu Démarrer, sur le bureau et le mobile. Accueil par catégories,
+- **Kazo OS Store** : le magasin d'applications de Kazo OS, dans l'Accès rapide
+  du menu Démarrer ([ADR 0268](dev/adr/0268-store-in-start-menu-quick-access.md)),
+  sur le bureau et le mobile. Accueil par catégories,
   recherche, fiche (captures, description, taille, licence, capacités,
   confiance), installation pour soi ou pour tous, ouverture, mise à jour,
   désinstallation, onglet Installées et « Redémarrer pour terminer ». Il

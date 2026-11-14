@@ -371,7 +371,8 @@ run by `build/publish-trimmed.sh`).
 
 ADR [0212](adr/0212-hack-store-app-build.md) builds the **Kazo OS Store** app
 (`org.kazoos.store`, ADR [0188](adr/0188-hack-store-and-app-catalog.md)): a
-system app that cannot be uninstalled, pinned by default in the Start menu.
+system app that cannot be uninstalled, in the Start menu's Quick access panel
+(ADR [0268](adr/0268-store-in-start-menu-quick-access.md); it was pinned by default before).
 
 ```text
 kazopkg install org.example.notes          # looked up in the catalogs
@@ -517,8 +518,11 @@ kazopkg info org.example.notes
   the proposals of ADR 0257. No badge on the Store's icon
   ([ADR 0215](adr/0215-hack-store-answers-notification-and-ambiguous-app-id.md) §1).
 - **Default pin**: `start-menu.json` records `defaultPinsApplied` per profile;
-  the Store is added once, to a new profile as to an existing one, and does
-  not come back after an unpin.
+  a default pin is added once, to a new profile as to an existing one, and does
+  not come back after an unpin. Since ADR
+  [0268](adr/0268-store-in-start-menu-quick-access.md) the list is empty: the
+  Store is a Quick access link, and a profile that received it by default loses
+  that pin once (`RetiredDefaultPinnedAppIds`); a pin added back stays.
 
 Tests: `AppCatalogDocumentTests`, the catalog and progress tests of
 `AppPackageGatewayTests`, `HttpAppPackageDownloaderTests`,
