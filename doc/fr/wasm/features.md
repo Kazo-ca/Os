@@ -455,7 +455,7 @@ dans `main`, le lien mène à sa PR.
 | Adresse de fichier servie à la demande | Une app reçoit une adresse pour lire un gros fichier (audio, vidéo) sans le copier en mémoire, avec lecture partielle pour avancer dans un morceau. | À écrire | [#379](https://github.com/Kazo-ca/Os/issues/379) |
 | Glisser des fichiers vers une app | Contrat public du SDK pour recevoir des fichiers glissés depuis l'explorateur ou le bureau. | À écrire | [#380](https://github.com/Kazo-ca/Os/issues/380) |
 | Exports des apps Craft dans Kazo OS | Les exports d'une app Craft (Exporter, Imprimer en PDF, OCR… de Kazo Pdf) passent par le dialogue d'enregistrement de l'OS au lieu des téléchargements du navigateur, et s'enregistrent comme copies. | [0264](dev/adr/0264-craft-app-exports-reach-the-window.md) | — |
-| Stockage cloud comme lecteur réseau | L'utilisateur connecte son Dropbox, son OneDrive ou un stockage compatible S3 et le retrouve dans `/mnt`, comme un lecteur réseau. Tout se passe dans le navigateur, sans serveur ; il choisit entre tout son stockage et un dossier réservé à Kazo OS. | [0267](dev/adr/0267-cloud-drives-as-network-drives.md) | — |
+| Stockage cloud comme lecteur réseau | L'utilisateur connecte son Dropbox, son OneDrive ou un stockage compatible S3 et le retrouve dans `/mnt`, comme un lecteur réseau. Tout se passe dans le navigateur, sans serveur ; il choisit entre tout son stockage et un dossier réservé à Kazo OS. | [0267](dev/adr/0267-cloud-drives-as-network-drives.md), [0270](dev/adr/0270-cloud-drives-in-the-app-sdk.md) | — |
 
 ### Kazo OS Store
 

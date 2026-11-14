@@ -224,4 +224,5 @@ application" platform) get the same addresses.
 - [x] Published service worker: the callback page with its query.
 - [x] Unit tests and E2E on the published PWA.
 - [x] Wire `ICloudAccountDrives` to `NetworkDriveService` (`ReleaseAsync`).
-- [ ] UI (work item 5) and connectors (work items 3 and 4).
+- [x] UI (work item 5): [`cloud-drives-ui.md`](cloud-drives-ui.md).
+- [ ] Connectors (work items 3 and 4).

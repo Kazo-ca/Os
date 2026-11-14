@@ -45,6 +45,7 @@ classification.
 | `shell.control` | normal (ADR 0051: acts only on the shell of the user who typed the command, see [`shell-commands.md`](../dev/shell-commands.md)) |
 | `screens.manage` | normal (ADR 0184: list, open, restore, close and identify screens through `KazoScreens`, as Settings ▸ Screens does; each call comes from a user click) |
 | `shell.context-menu` | normal (ADR 0151 §6: add entries to file menus; without it, the generator produces `KOSAPP0027` and the OS ignores the entries, see [`context-menu.md`](context-menu.md#app-entries-in-the-file-menus-work-item-4)) |
+| `cloud-accounts.manage` | **dangerous** (`KazoCloudAccounts` and mounting a cloud drive through `KazoDriveInfo.MountNetworkDriveAsync`, ADR 0270; declared by File Explorer, Settings and `mount`) |
 | `permissions.manage` | **dangerous** (`KazoPermissionAdministration`, ADR 0056 §9; declared by Settings) |
 | `server.connection.manage` | **dangerous** (`KazoServerConnection`, ADR 0056 §10; declared by Settings) |
 | `system.power` | **dangerous** (`KazoSystem`: restart, reset, ADR 0056 §11; declared by Settings) |

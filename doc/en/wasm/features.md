@@ -442,7 +442,7 @@ points to its PR.
 | File address served on demand | An app gets an address to read a large file (audio, video) without copying it in memory, with partial reads to seek in a track. | To write | [#379](https://github.com/Kazo-ca/Os/issues/379) |
 | Drag files onto an app | Public SDK contract to receive files dragged from the File Explorer or the desktop. | To write | [#380](https://github.com/Kazo-ca/Os/issues/380) |
 | Craft app exports in Kazo OS | A Craft app's exports (Export, Print to PDF, OCR… of Kazo Pdf) go through the OS save dialog instead of the browser's downloads, and are saved as copies. | [0264](dev/adr/0264-craft-app-exports-reach-the-window.md) | — |
-| Cloud storage as a network drive | The user connects their Dropbox, their OneDrive or an S3-compatible storage and finds it under `/mnt`, like a network drive. Everything happens in the browser, with no server; they choose between their whole storage and a folder reserved for Kazo OS. | [0267](dev/adr/0267-cloud-drives-as-network-drives.md) | — |
+| Cloud storage as a network drive | The user connects their Dropbox, their OneDrive or an S3-compatible storage and finds it under `/mnt`, like a network drive. Everything happens in the browser, with no server; they choose between their whole storage and a folder reserved for Kazo OS. | [0267](dev/adr/0267-cloud-drives-as-network-drives.md), [0270](dev/adr/0270-cloud-drives-in-the-app-sdk.md) | — |
 
 ### Kazo OS Store
 
