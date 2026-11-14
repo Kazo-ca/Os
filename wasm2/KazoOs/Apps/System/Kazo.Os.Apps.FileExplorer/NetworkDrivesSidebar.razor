@@ -3,11 +3,37 @@
 @inherits Kazo.Os.AppSdk.Blazor.KazoComponentBase
 
 @*
-    "Network drives" of the Places sidebar (ADR 0181, section 11): the folders of the computer mounted
-    in /mnt, a disconnected one greyed with a reconnect click, an eject button to unmount, and
-    "Connect a network drive…", shown only where the browser can (Chrome and Edge on a computer).
+    "Network drives" of the Places (ADR 0181 §11, ADR 0267 §11): the folders of the computer and the
+    cloud storage mounted in /mnt, a disconnected one greyed with a reconnect click, an eject button to
+    unmount, and "Connect a network drive…", shown when this OS can mount something here. On a computer
+    it is a sidebar section; on a phone (Compact) the same drives are chips next to Home and Trash.
 *@
-@if (_supported || _drives.Count > 0)
+@if (Compact)
+{
+    @foreach (KazoDriveInfo drive in _drives)
+    {
+        <button type="button" class="network-chip @(drive.IsReady ? "" : "disconnected") @(IsCurrent(drive) ? "active" : "")"
+                @onclick="() => OpenAsync(drive)" disabled="@_busy"
+                title="@(drive.IsReady ? drive.Name : L["Network.Reconnect", drive.VolumeLabel])">
+            <KazoIcon Library="IconLibrary.Lucide" Name="@DriveIcon(drive)" Size="16" /> <span>@drive.VolumeLabel</span>
+        </button>
+        @if (IsCurrent(drive))
+        {
+            <button type="button" class="network-chip-eject" @onclick="() => UnmountAsync(drive)" disabled="@_busy"
+                    aria-label="@L["Network.Disconnect", drive.VolumeLabel]" title="@L["Network.Disconnect", drive.VolumeLabel]">
+                <KazoIcon Library="IconLibrary.Lucide" Name="circle-x" Size="16" />
+            </button>
+        }
+    }
+    @if (_canConnect)
+    {
+        <button type="button" class="network-chip network-connect-chip" @onclick="OpenDialog" disabled="@_busy"
+                aria-label="@L["Network.Connect"]" title="@L["Network.ConnectTooltip"]">
+            <KazoIcon Library="IconLibrary.Lucide" Name="plus" Size="16" /> <span>@L["Network.ConnectShort"]</span>
+        </button>
+    }
+}
+else if (_canConnect || _drives.Count > 0)
 {
     <div class="sidebar-heading network-heading">@L["Network.Heading"]</div>
     @foreach (KazoDriveInfo drive in _drives)
@@ -17,7 +43,7 @@
                     @onclick="() => OpenAsync(drive)"
                     title="@(drive.IsReady ? drive.Name : L["Network.Reconnect", drive.VolumeLabel])"
                     disabled="@_busy">
-                <KazoIcon Library="IconLibrary.Lucide" Name="@(drive.IsReady ? "hard-drive" : "unplug")" Size="16" />
+                <KazoIcon Library="IconLibrary.Lucide" Name="@DriveIcon(drive)" Size="16" />
                 <span>@drive.VolumeLabel</span>
             </button>
             <button class="network-eject" @onclick="() => UnmountAsync(drive)" title="@L["Network.Disconnect", drive.VolumeLabel]"
@@ -26,10 +52,15 @@
             </button>
         </div>
     }
-    @if (_supported)
+    @if (_canConnect)
     {
-        <button class="sidebar-entry network-connect" @onclick="MountAsync" title="@L["Network.ConnectTooltip"]" disabled="@_busy">
+        <button class="sidebar-entry network-connect" @onclick="OpenDialog" title="@L["Network.ConnectTooltip"]" disabled="@_busy">
             <KazoIcon Library="IconLibrary.Lucide" Name="folder-plus" Size="16" /> <span>@L["Network.Connect"]</span>
         </button>
     }
+}
+
+@if (_dialogOpen)
+{
+    <ConnectNetworkDriveDialog Mounted="OnMountedAsync" Closed="CloseDialog" />
 }

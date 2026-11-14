@@ -57,6 +57,8 @@
         <button type="button" class="place-chip @(_showTrash ? "active" : null)" @onclick="ShowTrashAsync">
             <KazoIcon Library="IconLibrary.Lucide" Name="trash-2" Size="16" /> <span>@L["Places.Trash"]</span>
         </button>
+        @* ADR 0267 §11: cloud drives work in every browser, so the phone gets the network drives too. *@
+        <NetworkDrivesSidebar Compact="true" CurrentPath="@(_showTrash ? null : _state.CurrentPath)" Navigate="OpenNetworkDriveAsync" Failed="ReportError" />
     </nav>
 
     @if (_fileView is not null && !_showTrash)

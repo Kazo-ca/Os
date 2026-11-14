@@ -1,1 +1,11 @@
 #nullable enable
+Kazo.Os.Apps.FileExplorer.ConnectNetworkDriveDialog
+Kazo.Os.Apps.FileExplorer.ConnectNetworkDriveDialog.Closed.get -> Microsoft.AspNetCore.Components.EventCallback
+Kazo.Os.Apps.FileExplorer.ConnectNetworkDriveDialog.Closed.set -> void
+Kazo.Os.Apps.FileExplorer.ConnectNetworkDriveDialog.ConnectNetworkDriveDialog() -> void
+Kazo.Os.Apps.FileExplorer.ConnectNetworkDriveDialog.Mounted.get -> Microsoft.AspNetCore.Components.EventCallback<Kazo.Os.AppSdk.IO.KazoDriveInfo!>
+Kazo.Os.Apps.FileExplorer.ConnectNetworkDriveDialog.Mounted.set -> void
+Kazo.Os.Apps.FileExplorer.NetworkDrivesSidebar.Compact.get -> bool
+Kazo.Os.Apps.FileExplorer.NetworkDrivesSidebar.Compact.set -> void
+override Kazo.Os.Apps.FileExplorer.ConnectNetworkDriveDialog.OnInitializedAsync() -> System.Threading.Tasks.Task!
+~override Kazo.Os.Apps.FileExplorer.ConnectNetworkDriveDialog.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void

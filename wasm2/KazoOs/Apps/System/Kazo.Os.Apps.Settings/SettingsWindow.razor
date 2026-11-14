@@ -478,6 +478,13 @@
                 </div>
                 break;
 
+                @* ADR 0267 §11, ADR 0270: the user's cloud accounts, their scope and drives. *@
+            case CloudAccountsPageId:
+                <div class="settings-page">
+                    <CloudAccountsPanel />
+                </div>
+                break;
+
             case "backup":
                 <div class="settings-page">
                     <BackupPanel />
