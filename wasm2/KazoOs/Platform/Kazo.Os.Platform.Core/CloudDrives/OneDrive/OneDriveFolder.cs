@@ -125,6 +125,11 @@ public sealed class OneDriveFolder : IHostFolder, IHostFolderQuota, IConditional
             next = root.TryGetProperty("@odata.nextLink", out JsonElement link) && link.ValueKind == JsonValueKind.String
                 ? link.GetString()
                 : null;
+            if (next is not null && !IsGraphAddress(next))
+            {
+                // The token goes with every page: never to another host than Graph.
+                throw new HostFolderException(HostFolderErrorKind.Failure, "OneDrive sent a next page outside Microsoft Graph.");
+            }
         }
 
         if (entries.Count == 0)
@@ -495,6 +500,11 @@ public sealed class OneDriveFolder : IHostFolder, IHostFolderQuota, IConditional
         string? revision = item.TryGetProperty("eTag", out JsonElement tag) ? tag.GetString() : null;
         return new HostFolderEntry(name, HostFolderEntryKind.File, Math.Max(0, Size(item)), modified) { Revision = revision };
     }
+
+    private static bool IsGraphAddress(string address) =>
+        Uri.TryCreate(address, UriKind.Absolute, out Uri? uri)
+        && uri.Scheme == Uri.UriSchemeHttps
+        && string.Equals(uri.Host, OneDriveGraphClient.GraphBase.Host, StringComparison.OrdinalIgnoreCase);
 
     private static long Size(JsonElement item) =>
         item.TryGetProperty("size", out JsonElement size) && size.TryGetInt64(out long bytes) ? bytes : 0;
