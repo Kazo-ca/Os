@@ -112,11 +112,33 @@ internal sealed class CloudAccountStore
         OAuthTokenSet tokens,
         CancellationToken cancellationToken)
     {
-        byte[] key = await GetKeyAsync(principal, accountId, cancellationToken).ConfigureAwait(false)
-            ?? await CreateKeyAsync(principal, accountId, label, cancellationToken).ConfigureAwait(false);
         byte[] plaintext = JsonSerializer.SerializeToUtf8Bytes(
             new TokenPayload(tokens.AccessToken, tokens.RefreshToken, tokens.ExpiresAtUtc),
             CloudAccountJsonContext.Default.TokenPayload);
+        try
+        {
+            return await SealBytesAsync(principal, accountId, label, plaintext, cancellationToken).ConfigureAwait(false);
+        }
+        finally
+        {
+            CryptographicOperations.ZeroMemory(plaintext);
+        }
+    }
+
+    /// <summary>
+    /// Seals any secret of an account (the tokens of an OAuth account, the keys of an account that
+    /// signs its own requests, such as S3) under the account's key, creating the key in the keyring
+    /// when the account has none yet. The caller clears <paramref name="plaintext"/>.
+    /// </summary>
+    public async ValueTask<SealedTokens> SealBytesAsync(
+        AuthenticatedPrincipal principal,
+        string accountId,
+        string label,
+        byte[] plaintext,
+        CancellationToken cancellationToken)
+    {
+        byte[] key = await GetKeyAsync(principal, accountId, cancellationToken).ConfigureAwait(false)
+            ?? await CreateKeyAsync(principal, accountId, label, cancellationToken).ConfigureAwait(false);
         byte[] nonce = RandomNumberGenerator.GetBytes(NonceLength);
         try
         {
@@ -125,7 +147,6 @@ internal sealed class CloudAccountStore
         }
         finally
         {
-            CryptographicOperations.ZeroMemory(plaintext);
             CryptographicOperations.ZeroMemory(key);
         }
     }
@@ -137,6 +158,35 @@ internal sealed class CloudAccountStore
     /// </summary>
     public async ValueTask<OAuthTokenSet?> UnsealAsync(AuthenticatedPrincipal principal, CloudAccountRecord account, CancellationToken cancellationToken)
     {
+        byte[]? plaintext = await UnsealBytesAsync(principal, account, cancellationToken).ConfigureAwait(false);
+        if (plaintext is null)
+        {
+            return null;
+        }
+
+        try
+        {
+            TokenPayload? payload = JsonSerializer.Deserialize(plaintext, CloudAccountJsonContext.Default.TokenPayload);
+            return payload is { AccessToken.Length: > 0 }
+                ? new OAuthTokenSet(payload.AccessToken, payload.RefreshToken, payload.ExpiresAtUtc)
+                : null;
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+        finally
+        {
+            CryptographicOperations.ZeroMemory(plaintext);
+        }
+    }
+
+    /// <summary>
+    /// Opens the sealed secret of an account, or returns <see langword="null"/> when it cannot be
+    /// opened (no key in the keyring, altered data). The caller clears the returned bytes.
+    /// </summary>
+    public async ValueTask<byte[]?> UnsealBytesAsync(AuthenticatedPrincipal principal, CloudAccountRecord account, CancellationToken cancellationToken)
+    {
         if (account.Tokens is not { } sealedTokens
             || await GetKeyAsync(principal, account.Id, cancellationToken).ConfigureAwait(false) is not { } key)
         {
@@ -145,27 +195,11 @@ internal sealed class CloudAccountStore
 
         try
         {
-            byte[]? plaintext = await _cipher
+            return await _cipher
                 .DecryptAsync(key, Convert.FromBase64String(sealedTokens.Nonce), Convert.FromBase64String(sealedTokens.Data), cancellationToken)
                 .ConfigureAwait(false);
-            if (plaintext is null)
-            {
-                return null;
-            }
-
-            try
-            {
-                TokenPayload? payload = JsonSerializer.Deserialize(plaintext, CloudAccountJsonContext.Default.TokenPayload);
-                return payload is { AccessToken.Length: > 0 }
-                    ? new OAuthTokenSet(payload.AccessToken, payload.RefreshToken, payload.ExpiresAtUtc)
-                    : null;
-            }
-            finally
-            {
-                CryptographicOperations.ZeroMemory(plaintext);
-            }
         }
-        catch (Exception exception) when (exception is FormatException or JsonException)
+        catch (FormatException)
         {
             return null;
         }
@@ -238,7 +272,7 @@ internal sealed record SealedTokens(string Nonce, string Data);
 /// <param name="ProviderAccountId">The provider's id of the account, when it gave one.</param>
 /// <param name="State">Whether the tokens still work.</param>
 /// <param name="ConnectedAtUtc">Last sign-in.</param>
-/// <param name="Tokens">The sealed tokens, or <see langword="null"/> once forgotten.</param>
+/// <param name="Tokens">The sealed tokens (or keys, see <see cref="Credential"/>), or <see langword="null"/> once forgotten.</param>
 internal sealed record CloudAccountRecord(
     string Id,
     string Provider,
@@ -249,6 +283,19 @@ internal sealed record CloudAccountRecord(
     DateTimeOffset ConnectedAtUtc,
     SealedTokens? Tokens)
 {
+    /// <summary>
+    /// How the account proves itself: <see langword="null"/> for OAuth tokens (Dropbox, OneDrive),
+    /// <see cref="KeysCredential"/> for keys the user typed, with which the OS signs each request (S3).
+    /// </summary>
+    public string? Credential { get; init; }
+
+    /// <summary>Value of <see cref="Credential"/> for an account that signs its requests with the user's keys.</summary>
+    public const string KeysCredential = "keys";
+
+    /// <summary>Gets whether the account holds keys rather than OAuth tokens.</summary>
+    [JsonIgnore]
+    public bool HasKeys => string.Equals(Credential, KeysCredential, StringComparison.Ordinal);
+
     public CloudAccount Describe() => new(Id, Provider, Scope, DisplayName, ProviderAccountId, State, ConnectedAtUtc);
 }
 

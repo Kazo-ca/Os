@@ -276,3 +276,13 @@ static Kazo.Os.Platform.Core.CloudAccounts.OAuthTokenSet.operator ==(Kazo.Os.Pla
 static readonly Kazo.Os.Platform.Core.CloudAccounts.CloudAccountService.AuthorizationTimeout -> System.TimeSpan
 static readonly Kazo.Os.Platform.Core.CloudAccounts.CloudAccountService.RenewalMargin -> System.TimeSpan
 Kazo.Os.Platform.Core.FileSystem.HostFolders.NetworkDriveService.ReleaseAsync(string! accountId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Kazo.Os.Platform.Core.CloudDrives.S3.S3DriveSource
+Kazo.Os.Platform.Core.CloudDrives.S3.S3DriveSource.AvailabilityChanged -> System.Action?
+Kazo.Os.Platform.Core.CloudDrives.S3.S3DriveSource.CreateAsync(Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveRequest! request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveCreation?>
+Kazo.Os.Platform.Core.CloudDrives.S3.S3DriveSource.Dispose() -> void
+Kazo.Os.Platform.Core.CloudDrives.S3.S3DriveSource.ForgetAsync(Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveReference! reference, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Kazo.Os.Platform.Core.CloudDrives.S3.S3DriveSource.IsAvailableAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<bool>
+Kazo.Os.Platform.Core.CloudDrives.S3.S3DriveSource.OpenAsync(Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveReference! reference, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.Simulation.Abstractions.FileSystem.IHostFolder?>
+Kazo.Os.Platform.Core.CloudDrives.S3.S3DriveSource.S3DriveSource(Kazo.Os.Platform.Core.CloudAccounts.CloudAccountService! accounts, System.Net.Http.HttpClient! http, Kazo.Os.Simulation.Abstractions.Events.IEventBus? eventBus = null, Kazo.Os.Simulation.Abstractions.FileSystem.IHostActivitySignal? activity = null, System.TimeProvider? timeProvider = null, Microsoft.Extensions.Logging.ILogger<Kazo.Os.Platform.Core.CloudDrives.S3.S3DriveSource!>? logger = null) -> void
+Kazo.Os.Platform.Core.CloudDrives.S3.S3DriveSource.Type.get -> string!
+static readonly Kazo.Os.Platform.Core.CloudDrives.S3.S3DriveSource.RetryInterval -> System.TimeSpan

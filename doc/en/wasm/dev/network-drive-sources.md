@@ -108,6 +108,17 @@ dependency injection: a connector is added with one
    `QueryPermissionAsync`.
 5. Raise `AvailabilityChanged` when the service may be reachable again.
 
+## Sources shipped
+
+| Type | Source | Doc |
+| --- | --- | --- |
+| `hostfs` | `HostFolderDriveSource` | this document, [ADR 0181](adr/0181-host-folder-mounted-as-a-network-drive.md) |
+| `s3` | `S3DriveSource` (work item 6) | [`s3-drives.md`](s3-drives.md) |
+
+A mount request also carries `Options` (settings that are not secret) and
+`Secrets` (which the source keeps in the keyring, never in the drive list); the
+`s3` source reads them.
+
 ## Tests
 
 - `Tests/Kazo.Os.Platform.Core.Tests/FileSystem/HostFolders/NetworkDriveSourceTests.cs`:

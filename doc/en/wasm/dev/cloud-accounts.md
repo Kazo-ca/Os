@@ -181,6 +181,19 @@ Dropbox requires the exact address, port included, and accepts `http` only for
 `localhost`. Both Dropbox apps and the Microsoft registration ("Single-page
 application" platform) get the same addresses.
 
+## Keys accounts (S3)
+
+An S3 account has no sign-in window and no token: the user types the address of
+the service and their keys, and the OS signs every request. The S3 connector
+([`s3-drives.md`](s3-drives.md)) keeps those keys in an account of provider
+`s3` through `SaveKeysAccountAsync` (internal to Platform.Core): they are sealed
+like tokens, under the account's key in the keyring, and the account line has
+`"credential": "keys"`. `GetKeysAsync` opens them again for the connector;
+unreadable keys put the account in `NeedsReconnect`. A keys account refuses
+`GetAccessTokenAsync` and `ReconnectAsync` (`ProviderNotConfigured`): it is
+reconnected by typing its keys again. Removal is the same as for the other
+accounts.
+
 ## Decisions
 
 - **Tokens sealed on the device, key in the keyring**

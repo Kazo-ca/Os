@@ -82,7 +82,13 @@ public enum HostFolderErrorKind
     /// The service cannot be reached (no network) or the account must sign in again (ADR 0267 §9):
     /// the drive is disconnected until its source is available again.
     /// </summary>
-    Unavailable
+    Unavailable,
+
+    /// <summary>
+    /// The file is larger than Kazo OS can read or write at once, 128 MiB (ADR 0245, ADR 0267 §10):
+    /// it shows in the listing, but reading it fails.
+    /// </summary>
+    FileTooLarge = 10
 }
 
 /// <summary>A failed operation on a host folder.</summary>

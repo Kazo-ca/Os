@@ -31,6 +31,7 @@ Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderEntry.Revision.get -> strin
 Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderEntry.Revision.init -> void
 Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderErrorKind.RevisionConflict = 8 -> Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderErrorKind
 Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderErrorKind.Unavailable = 9 -> Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderErrorKind
+Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderErrorKind.FileTooLarge = 10 -> Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderErrorKind
 Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderPermission.Unavailable = 3 -> Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderPermission
 Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderQuota
 Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderQuota.<Clone>$() -> Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderQuota!

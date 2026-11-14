@@ -1,0 +1,11 @@
+{
+  "id": "9b0c4e57-3f2a-4d8e-b6a1-5c7e2d9f8a13",
+  "category": "feature",
+  "audience": ["user", "developer"],
+  "title": { "en": "S3 buckets as network drives", "fr": "Compartiments S3 en lecteurs réseau" },
+  "description": {
+    "en": "A bucket of an S3 compatible service (Cloudflare R2, Backblaze B2, MinIO, AWS S3), or a prefix of it, mounts under /mnt as a network drive. Requests are signed in the OS with the user's keys, which stay sealed on the device in an s3 cloud account; folders are prefixes and writes are guarded by the ETag. The bucket needs a CORS rule for Kazo OS, described in the S3 guide.",
+    "fr": "Un compartiment d'un service compatible S3 (Cloudflare R2, Backblaze B2, MinIO, AWS S3), ou un préfixe de ce compartiment, se monte sous /mnt comme lecteur réseau. Les requêtes sont signées dans l'OS avec les clés de l'utilisateur, qui restent scellées sur l'appareil dans un compte cloud s3 ; les dossiers sont des préfixes et les écritures sont gardées par l'ETag. Le compartiment demande une règle CORS pour Kazo OS, décrite dans le guide S3."
+  },
+  "links": ["doc/en/wasm/dev/s3-drives.md", "doc/en/wasm/dev/adr/0267-cloud-drives-as-network-drives.md"]
+}

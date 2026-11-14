@@ -182,6 +182,19 @@ Dropbox exige l'adresse exacte, port compris, et n'accepte `http` que pour
 `localhost`. Les deux apps Dropbox et l'inscription Microsoft (plateforme
 « Application monopage ») reçoivent les mêmes adresses.
 
+## Comptes à clés (S3)
+
+Un compte S3 n'a ni fenêtre de connexion ni jeton : l'utilisateur saisit
+l'adresse du service et ses clés, et l'OS signe chaque requête. Le connecteur
+S3 ([`s3-drives.md`](s3-drives.md)) range ces clés dans un compte de
+fournisseur `s3` par `SaveKeysAccountAsync` (interne à Platform.Core) : elles
+sont scellées comme des jetons, sous la clé du compte dans le trousseau, et la
+ligne du compte porte `"credential": "keys"`. `GetKeysAsync` les rouvre pour le
+connecteur ; des clés illisibles mettent le compte en `NeedsReconnect`. Un
+compte à clés refuse `GetAccessTokenAsync` et `ReconnectAsync`
+(`ProviderNotConfigured`) : on le reconnecte en saisissant de nouveau ses clés.
+Le retrait est le même que pour les autres comptes.
+
 ## Décisions
 
 - **Jetons scellés sur l'appareil, clé dans le trousseau**

@@ -111,6 +111,17 @@ de dépendances : un connecteur s'ajoute par une ligne
    `QueryPermissionAsync`.
 5. Lever `AvailabilityChanged` quand le service peut redevenir joignable.
 
+## Sources livrées
+
+| Type | Source | Doc |
+| --- | --- | --- |
+| `hostfs` | `HostFolderDriveSource` | ce document, [ADR 0181](adr/0181-host-folder-mounted-as-a-network-drive.md) |
+| `s3` | `S3DriveSource` (chantier 6) | [`s3-drives.md`](s3-drives.md) |
+
+Une demande de montage porte aussi `Options` (réglages non secrets) et
+`Secrets` (que la source range dans le trousseau, jamais dans la liste des
+lecteurs) ; la source `s3` les lit.
+
 ## Tests
 
 - `Tests/Kazo.Os.Platform.Core.Tests/FileSystem/HostFolders/NetworkDriveSourceTests.cs` :
