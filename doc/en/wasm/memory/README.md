@@ -22,6 +22,15 @@ at the end of each series or when a convention changes.
   folded into `PublicAPI.Shipped.txt`, 9 entries in `changes/3.3.4.json`;
   published when the PR lands in `main`. Next: Kazo Pdf in the Store, Kazo
   Photo (open and save files, then the Store).
+- **Beta channel** (series `release-channels/base`, ADR 0271, plan
+  [`release-channels-plan.md`](../dev/plans/release-channels-plan.md)):
+  work item 1 done (`release-channels/1-prerelease-from-beta`). `release.yml`
+  also publishes from the permanent `beta` branch (nuget.org prerelease, tag,
+  "pre-release" GitHub Release) and `build/tools/check-release-channel.sh`
+  refuses a suffix on `main` and its absence on `beta`. Nothing is active
+  before the series reaches `main` (`workflow_run` reads the workflow of
+  `main`); the `beta` branch does not exist yet: creating it and the first
+  prerelease are the trial of work item 8.
 - **Version 3.3.3** (2026-11-13, published). Benoit chose a patch number although the public API grows
   (like 2.2.1); 3.4.0 is kept for the prerelease SDK (TODO #456). Content:
   direct link `?autolaunch=<appId>` (ADR 0258, series `app-link/base`, PR

@@ -1,0 +1,11 @@
+{
+  "id": "14b1b5ed-4a04-4119-95bb-04215b110580",
+  "category": "developer",
+  "audience": ["developer"],
+  "title": { "en": "Kazo OS prereleases are published from the beta branch", "fr": "Les préversions de Kazo OS se publient depuis la branche beta" },
+  "description": {
+    "en": "Changing the preview number in build/Versions.props on the beta branch publishes a prerelease: Kazo.Os.* packages on nuget.org, a v<version> tag and a GitHub pre-release. main only accepts a stable version and beta only a prerelease version.",
+    "fr": "Changer le numéro de préversion dans build/Versions.props sur la branche beta publie une préversion : paquets Kazo.Os.* sur nuget.org, tag v<version> et GitHub Release « pre-release ». main n'accepte qu'une version stable et beta qu'une version de préversion."
+  },
+  "links": ["doc/en/wasm/dev/releases.md", "doc/en/wasm/dev/adr/0271-beta-channel-and-automatic-app-updates.md"]
+}
