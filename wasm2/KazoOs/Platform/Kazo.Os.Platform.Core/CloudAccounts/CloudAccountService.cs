@@ -28,7 +28,7 @@ namespace Kazo.Os.Platform.Core.CloudAccounts;
 /// without PRF) cannot connect an account: <see cref="CloudAccountError.KeyringLocked"/>.
 /// </para>
 /// </remarks>
-public sealed class CloudAccountService : IDisposable
+public sealed class CloudAccountService : IDisposable, CloudDrives.ICloudAccountTokens
 {
     /// <summary>How long the OS waits for the sign-in window's answer.</summary>
     public static readonly TimeSpan AuthorizationTimeout = TimeSpan.FromMinutes(10);
@@ -249,7 +249,35 @@ public sealed class CloudAccountService : IDisposable
     /// (offline: try again later), <see cref="CloudAccountError.KeyringLocked"/> or
     /// <see cref="CloudAccountError.AccountNotFound"/>.
     /// </exception>
-    public async ValueTask<string> GetAccessTokenAsync(string accountId, CancellationToken cancellationToken = default)
+    public ValueTask<string> GetAccessTokenAsync(string accountId, CancellationToken cancellationToken = default) =>
+        GetAccessTokenCoreAsync(accountId, rejectedAccessToken: null, cancellationToken);
+
+    /// <summary>
+    /// Renews the access token of an account the provider just refused (an HTTP 401 before the
+    /// expiry the OS knows: the provider revoked or shortened it). When another request already
+    /// renewed it, the newer token is returned without asking the provider again.
+    /// </summary>
+    /// <param name="accountId">The account.</param>
+    /// <param name="rejectedAccessToken">The token the provider refused.</param>
+    /// <param name="cancellationToken">Cancels the renewal.</param>
+    /// <returns>A new access token.</returns>
+    /// <exception cref="CloudAccountException">As <see cref="GetAccessTokenAsync"/>.</exception>
+    public ValueTask<string> RenewAccessTokenAsync(string accountId, string rejectedAccessToken, CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(rejectedAccessToken);
+        return GetAccessTokenCoreAsync(accountId, rejectedAccessToken, cancellationToken);
+    }
+
+    /// <summary>Finds an account of the signed-in user; <see langword="null"/> when it is not in the list (or nobody is signed in).</summary>
+    /// <param name="accountId">The account.</param>
+    /// <param name="cancellationToken">Cancels the read.</param>
+    public async ValueTask<CloudAccount?> FindAccountAsync(string accountId, CancellationToken cancellationToken = default)
+    {
+        IReadOnlyList<CloudAccount> accounts = await GetAccountsAsync(cancellationToken).ConfigureAwait(false);
+        return accounts.FirstOrDefault(account => string.Equals(account.Id, accountId, StringComparison.Ordinal));
+    }
+
+    private async ValueTask<string> GetAccessTokenCoreAsync(string accountId, string? rejectedAccessToken, CancellationToken cancellationToken)
     {
         AuthenticatedPrincipal principal = RequireKeyring();
         bool changed = false;
@@ -272,7 +300,9 @@ public sealed class CloudAccountService : IDisposable
                 throw ReconnectRequired(account);
             }
 
-            if (tokens.ExpiresAtUtc is not { } expiresAt || expiresAt - _time.GetUtcNow() > RenewalMargin)
+            bool rejected = rejectedAccessToken is not null
+                && string.Equals(tokens.AccessToken, rejectedAccessToken, StringComparison.Ordinal);
+            if (!rejected && (tokens.ExpiresAtUtc is not { } expiresAt || expiresAt - _time.GetUtcNow() > RenewalMargin))
             {
                 return tokens.AccessToken;
             }
