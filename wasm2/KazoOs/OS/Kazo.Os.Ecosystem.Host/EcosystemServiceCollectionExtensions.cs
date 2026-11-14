@@ -13,6 +13,7 @@ using Kazo.Os.Platform.Core.ServerConnection;
 using Kazo.Os.Ecosystem.Administration;
 using Kazo.Os.Platform.Core.Administration;
 using Kazo.Os.Platform.Core.CloudAccounts;
+using Kazo.Os.Platform.Core.CloudDrives.Dropbox;
 using Kazo.Os.Platform.Core.CloudDrives.OneDrive;
 using Kazo.Os.Platform.Core.Power;
 using Kazo.Os.Platform.Core.Backup;
@@ -558,7 +559,14 @@ public static class EcosystemServiceCollectionExtensions
             drives: () => provider.GetService<NetworkDriveService>(),
             provider.GetService<IEventBus>(),
             logger: provider.GetService<ILogger<CloudAccountService>>()));
-        // ADR 0267 §6: OneDrive drives over Microsoft Graph, for the accounts connected above.
+        // ADR 0267 §6: the Dropbox connector, a drive source of the network drive service. It is
+        // offered only when KazoOs:CloudDrives (or /etc/kazoos/cloud-drives.config) has a Dropbox app key.
+        services.AddScoped<INetworkDriveSource>(provider => new DropboxDriveSource(
+            provider.GetRequiredService<CloudAccountService>(),
+            provider.GetRequiredService<ICloudProviderCatalog>(),
+            new HttpClient(),
+            provider.GetService<IHostActivitySignal>()));
+        // ADR 0267 §6: OneDrive drives over Microsoft Graph, offered when OneDrive has an app id.
         services.AddScoped<INetworkDriveSource>(provider => new OneDriveDriveSource(
             provider.GetRequiredService<CloudAccountService>(),
             provider.GetRequiredService<ICloudProviderCatalog>(),

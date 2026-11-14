@@ -98,6 +98,26 @@ public sealed class CloudAccountServiceTests
     }
 
     [Fact]
+    public async Task A_token_the_provider_refused_is_renewed_once_even_before_its_expiry()
+    {
+        await _harness.LoginAsync(_harness.Alice);
+        CloudAccountService accounts = CreateService();
+        CloudAccount account = await accounts.ConnectAsync("dropbox", CloudAccessScope.Full);
+        string refused = await accounts.GetAccessTokenAsync(account.Id);
+
+        string renewed = await accounts.RenewAccessTokenAsync(account.Id, refused);
+        // A second request that saw the same refused token gets the renewed one, without a new renewal.
+        string again = await accounts.RenewAccessTokenAsync(account.Id, refused);
+
+        Assert.NotEqual(refused, renewed);
+        Assert.Equal(renewed, again);
+        Assert.Equal(renewed, await accounts.GetAccessTokenAsync(account.Id));
+        Assert.Equal(["authorization_code", "refresh_token"], _server.TokenRequests.Select(static form => form["grant_type"]));
+        Assert.Equal(account, await accounts.FindAccountAsync(account.Id));
+        Assert.Null(await accounts.FindAccountAsync("nobody"));
+    }
+
+    [Fact]
     public async Task A_refused_renewal_asks_for_a_reconnection_and_keeps_the_drives()
     {
         await _harness.LoginAsync(_harness.Alice);
