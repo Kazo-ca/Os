@@ -1,0 +1,11 @@
+{
+  "id": "ffc0d33e-897d-4013-b8ef-e4dfaba9ba95",
+  "category": "developer",
+  "audience": ["developer"],
+  "title": { "en": "App repositories call shared workflows and follow new Kazo OS versions by themselves", "fr": "Les dépôts d'apps appellent des workflows partagés et suivent seuls les nouvelles versions de Kazo OS" },
+  "description": {
+    "en": "The kazoos-solution template now generates short workflows that call the reusable workflows of Kazo-ca/Os-AppTemplate (@v1), plus a \"Kazo OS SDK update\" workflow: when Kazo OS releases a version, the app moves to it, runs its CI, and is published (beta branch and beta channel for a pre-release; merged and published for a minor or major release; checked only for a patch). A red CI opens a TODO issue. A beta version (1.2.1-beta.1) goes to the beta channel of the catalog, and .github/scripts/bump-app-version.sh changes the app's version.",
+    "fr": "Le modèle kazoos-solution génère maintenant des workflows courts qui appellent les workflows réutilisables de Kazo-ca/Os-AppTemplate (@v1), et un workflow « Kazo OS SDK update » : quand Kazo OS sort une version, l'app passe dessus, lance sa CI et se publie (branche beta et canal bêta pour une préversion ; fusionnée et publiée pour une mineure ou une majeure ; vérifiée seulement pour une corrective). Une CI rouge ouvre une issue TODO. Une version bêta (1.2.1-beta.1) va dans le canal bêta du catalogue, et .github/scripts/bump-app-version.sh change la version de l'app."
+  },
+  "links": ["doc/en/wasm/framework/app-repository.md", "doc/en/wasm/dev/adr/0271-beta-channel-and-automatic-app-updates.md"]
+}

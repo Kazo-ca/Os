@@ -84,7 +84,7 @@ of `catalog-beta.json` is fixed by 3.
 - [ ] Work item 2: beta site.
 - [ ] Work item 3: channel in the OS.
 - [ ] Work item 4: catalog beta channel.
-- [ ] Work item 5: reusable workflows and template.
+- [x] Work item 5: reusable workflows and template (`kazoos-solution` template, `Os-AppTemplate` regenerated; the `v1` tag is still to create).
 - [ ] Work item 6: notify the apps.
 - [ ] Work item 7: align each app repository.
 - [ ] Work item 8: full trial and closing report.

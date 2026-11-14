@@ -23,7 +23,9 @@ For an app in its own repository, start from the solution template
 ([ADR 0176](../dev/adr/0176-app-repository-template.md),
 [ADR 0207](../dev/adr/0207-solution-template-implementation.md)): app, host,
 tests, a Kazo OS submodule that sets the version, the OS sources in `Debug`,
-packages in `Release`, CI and publishing to the Kazo OS Store with a tag.
+packages in `Release`, CI and publishing to the Kazo OS Store with a tag, and
+an automatic update when Kazo OS releases a version (reusable workflows of
+`Kazo-ca/Os-AppTemplate`, [ADR 0271](../dev/adr/0271-beta-channel-and-automatic-app-updates.md)).
 Everything is in [`app-repository.md`](app-repository.md). The rest of this
 guide describes the assembly by hand, useful for a repository with several apps
 or its own host.
@@ -194,6 +196,10 @@ site; the service worker registers only outside `localhost`. See
    rebuild **all** apps, the OS refuses those of the old major.
 4. The regenerated manifests carry the new minimum: a rebuilt app
    no longer loads on an older OS.
+
+A repository made with `kazoos-solution` does not do these steps: its "Kazo OS
+SDK update" workflow moves the submodule, tests and publishes
+([`app-repository.md`](app-repository.md#kazo-os-sdk-update)).
 
 ### Moving to 2.0
 

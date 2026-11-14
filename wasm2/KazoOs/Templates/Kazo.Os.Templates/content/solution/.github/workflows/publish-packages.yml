@@ -1,14 +1,7 @@
-# Publishes the app on the kazoos-packages branch of this repository (ADR 0182 §2, ADR 0219 §4), so
-# that "kazopkg install <owner>/<repo>" installs it without the Kazo OS Store.
-#
-# On a tag v<version> (the app's Version in its [AppManifest] class), this workflow:
-#   1. checks the Kazo OS submodule and that the tag is the manifest version;
-#   2. checks out the kazoos-packages branch (an orphan branch the first time), so the versions
-#      already published stay listed in index.json;
-#   3. packs the app there (KazoOsPack), unsigned: packages are signed only in the marketplace
-#      repository (ADR 0219), so this workflow has no signing key;
-#   4. commits and pushes the branch.
-# This is the only workflow of the repository allowed to write to it.
+# Publishes the app on the kazoos-packages branch of this repository for a tag v<version> (ADR 0182
+# §2, ADR 0219 §4), so that "kazopkg install <owner>/<repo>" installs it without the Kazo OS Store.
+# Unsigned: apps are signed only in the marketplace repository (ADR 0219). The steps live in the
+# reusable workflow kazoos-publish-packages.yml of Kazo-ca/Os-AppTemplate (ADR 0271 §7).
 name: Publish the Kazo OS packages
 
 on:
@@ -19,59 +12,12 @@ on:
 permissions:
   contents: write
 
-concurrency:
-  group: kazoos-packages
-  cancel-in-progress: false
-
-env:
-  APP_DIRECTORY: src/Kazo.Os.Template.Solution
-  PACKAGES_BRANCH: kazoos-packages
-
 jobs:
   publish:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: true
-
-      - uses: actions/setup-dotnet@v4
-        with:
-          global-json-file: global.json
-
-      - name: Check the Kazo OS submodule
-        run: bash .github/scripts/check-kazoos-submodule.sh
-
-      - name: Check out the packages branch
-        run: |
-          if git fetch --depth 1 origin "$PACKAGES_BRANCH"; then
-            git worktree add packages FETCH_HEAD
-            git -C packages checkout -B "$PACKAGES_BRANCH"
-          else
-            git worktree add --orphan -b "$PACKAGES_BRANCH" packages
-          fi
-
-      - name: Build and pack (Release)
-        run: |
-          dotnet build "$APP_DIRECTORY" -c Release -t:KazoOsPack -p:KazoOsPackageOutput="$GITHUB_WORKSPACE/packages"
-
-      - name: Check the tag
-        run: |
-          version="$(jq -r .version "$APP_DIRECTORY/manifest.json")"
-          if [[ "$GITHUB_REF_TYPE" == "tag" && "${GITHUB_REF_NAME#v}" != "$version" ]]; then
-            echo "::error::Tag $GITHUB_REF_NAME does not match the app version $version (manifest.json)."
-            exit 1
-          fi
-          echo "VERSION=$version" >> "$GITHUB_ENV"
-
-      - name: Push the packages branch
-        working-directory: packages
-        run: |
-          git add -A
-          if git diff --cached --quiet; then
-            echo "Nothing new to publish."
-            exit 0
-          fi
-          git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
-            commit -m "Publish $VERSION ($GITHUB_SHA)"
-          git push origin "HEAD:$PACKAGES_BRANCH"
+#if (templateRepository)
+    uses: ./.github/workflows/kazoos-publish-packages.yml
+#else
+    uses: Kazo-ca/Os-AppTemplate/.github/workflows/kazoos-publish-packages.yml@v1
+#endif
+    with:
+      app-directory: src/Kazo.Os.Template.Solution

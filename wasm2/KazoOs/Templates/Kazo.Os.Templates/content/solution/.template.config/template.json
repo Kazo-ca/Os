@@ -5,7 +5,7 @@
   "identity": "Kazo.Os.Templates.Solution",
   "groupIdentity": "Kazo.Os.Templates.Solution",
   "name": "Kazo OS app solution",
-  "description": "A repository for a Kazo OS app: the app, a host that runs it in the OS, its tests, the Kazo OS submodule (sources in Debug, packages in Release), CI and the Kazo OS Store publishing workflow.",
+  "description": "A repository for a Kazo OS app: the app, a host that runs it in the OS, its tests, the Kazo OS submodule (sources in Debug, packages in Release), CI, the Kazo OS Store publishing workflows and the Kazo OS SDK update, as calls to the reusable workflows of Kazo-ca/Os-AppTemplate.",
   "shortName": "kazoos-solution",
   "sourceName": "Kazo.Os.Template.Solution",
   "preferNameDirectory": true,
@@ -16,6 +16,16 @@
     "C8E2A1B3-4D5F-4A6B-9C7D-8E9F0A1B2C73",
     "D1F3B2C4-5E6A-4B7C-8D9E-0F1A2B3C4D84",
     "E2A4C3D5-6F7B-4C8D-9E0F-1A2B3C4D5E95"
+  ],
+  "sources": [
+    {
+      "modifiers": [
+        {
+          "condition": "(!templateRepository)",
+          "exclude": [ ".github/workflows/kazoos-*.yml" ]
+        }
+      ]
+    }
   ],
   "symbols": {
     "appId": {
@@ -31,6 +41,12 @@
       "description": "Publisher id written in the manifest.",
       "defaultValue": "pub.example",
       "replaces": "pub.template"
+    },
+    "templateRepository": {
+      "type": "parameter",
+      "datatype": "bool",
+      "description": "Generate Kazo-ca/Os-AppTemplate itself: also write the reusable workflows (kazoos-*.yml) every app repository calls, and call them from this repository instead of @v1 (ADR 0271 §7).",
+      "defaultValue": "false"
     },
     "repository": {
       "type": "parameter",
