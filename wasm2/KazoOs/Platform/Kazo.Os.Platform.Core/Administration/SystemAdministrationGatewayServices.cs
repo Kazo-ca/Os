@@ -58,6 +58,12 @@ public sealed record SystemAdministrationGatewayServices(
     public Func<GuestAccountRequests>? GuestRequests { get; init; }
 
     /// <summary>
+    /// Gets the cloud account service behind <c>KazoCloudAccounts</c> (ADR 0270); <see langword="null"/>
+    /// on a host without cloud accounts leaves the gateway unsupported.
+    /// </summary>
+    public Func<Kazo.Os.Platform.Core.CloudAccounts.CloudAccountService>? CloudAccounts { get; init; }
+
+    /// <summary>
     /// Gets the service behind <c>KazoComponentProviders</c> (ADR 0156); <see langword="null"/> leaves
     /// the gateway unsupported.
     /// </summary>

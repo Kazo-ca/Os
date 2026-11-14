@@ -7,15 +7,17 @@ using Microsoft.Extensions.Localization;
 namespace Kazo.Os.Apps.FileExplorer;
 
 /// <summary>
-/// Lists the network drives through <see cref="KazoDriveInfo"/> and mounts, reconnects and unmounts
-/// them (ADR 0181, section 11). The browser opens its folder dialog only after a user gesture, so
-/// every action runs straight from the click.
+/// Lists the network drives through <see cref="KazoDriveInfo"/>, reconnects and unmounts them
+/// (ADR 0181 §11), and opens <see cref="ConnectNetworkDriveDialog"/> to mount a folder of the
+/// computer or a cloud storage (ADR 0267 §11, ADR 0270). The browser opens its folder dialog or a
+/// sign-in window only after a user gesture, so every action runs straight from the click.
 /// </summary>
 public partial class NetworkDrivesSidebar
 {
     private IReadOnlyList<KazoDriveInfo> _drives = [];
-    private bool _supported;
+    private bool _canConnect;
     private bool _busy;
+    private bool _dialogOpen;
 
     /// <summary>The explorer's texts in the language of its process (ADR 0104).</summary>
     private IStringLocalizer<Strings> L => AppContext.GetLocalizer<Strings>();
@@ -32,16 +34,21 @@ public partial class NetworkDrivesSidebar
     [Parameter]
     public EventCallback<string> Failed { get; set; }
 
+    /// <summary>Gets or sets whether the drives are chips of the phone's places bar rather than a sidebar section.</summary>
+    [Parameter]
+    public bool Compact { get; set; }
+
     /// <inheritdoc />
     protected override async Task OnInitializedAsync()
     {
         try
         {
-            _supported = await KazoDriveInfo.IsHostFolderSupportedAsync();
+            // ADR 0270: a folder of the computer, or a cloud service this OS is set up for.
+            _canConnect = (await KazoDriveInfo.GetNetworkDriveTypesAsync()).Count > 0;
         }
         catch (NotSupportedException)
         {
-            _supported = false;
+            _canConnect = false;
         }
 
         await ReloadAsync();
@@ -66,14 +73,21 @@ public partial class NetworkDrivesSidebar
     private bool IsCurrent(KazoDriveInfo drive) =>
         CurrentPath is { } path && (path == drive.Name || path.StartsWith(drive.Name + "/", StringComparison.Ordinal));
 
-    private Task MountAsync() => RunAsync(async () =>
+    private void OpenDialog() => _dialogOpen = true;
+
+    private void CloseDialog() => _dialogOpen = false;
+
+    /// <summary>A drive was mounted from the dialog: list it and open it.</summary>
+    private async Task OnMountedAsync(KazoDriveInfo drive)
     {
-        if (await KazoDriveInfo.MountHostFolderAsync() is { } drive)
-        {
-            await ReloadAsync();
-            await Navigate.InvokeAsync(drive.Name);
-        }
-    });
+        _dialogOpen = false;
+        await ReloadAsync();
+        await Navigate.InvokeAsync(drive.Name);
+    }
+
+    /// <summary>The icon of a drive: a cloud for a cloud storage, a disk for a folder of the computer.</summary>
+    private static string DriveIcon(KazoDriveInfo drive) =>
+        !drive.IsReady ? "unplug" : drive.Account is null ? "hard-drive" : "cloud";
 
     private Task OpenAsync(KazoDriveInfo drive) => RunAsync(async () =>
     {

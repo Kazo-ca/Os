@@ -23,7 +23,7 @@ no server and no cost.
 | 2 | `cloud-drives/2-cloud-accounts` | Cloud account service (§5): PKCE, sign-in window, static return page and `BroadcastChannel`, tokens in the keyring, renewal, removal, app identifiers in settings. A fake OAuth server for E2E tests. Checks the keyring of the guest account. Gives Benoit the exact return addresses to register. **Done**: [`cloud-accounts.md`](../cloud-accounts.md). | 0 |
 | 3 | `cloud-drives/3-dropbox` | Dropbox connector (API v2), both scopes (§8), a contract test suite shared by all connectors. **Done** ([`cloud-drive-connectors.md`](../cloud-drive-connectors.md)). | 1, 2 |
 | 4 | `cloud-drives/4-onedrive` | Microsoft Graph connector, both scopes, reconnect after 24 hours. | 1, 2 |
-| 5 | `cloud-drives/5-ui` | "Connect a network drive" dialog with the providers and the scope choice, Settings page for cloud accounts, mobile explorer, `mount` and `umount` commands (§11). Texts in French and English. | 1, 2 |
+| 5 | `cloud-drives/5-ui` | "Connect a network drive" dialog with the providers and the scope choice, Settings page for cloud accounts, mobile explorer, `mount` and `umount` commands (§11). Texts in French and English. **Done** ([`cloud-drives-ui.md`](../cloud-drives-ui.md), [ADR 0270](../adr/0270-cloud-drives-in-the-app-sdk.md)). | 1, 2 |
 | 6 | `cloud-drives/6-s3` | S3-compatible connector (SigV4), keys in the keyring, guide for the CORS rule. | 1 |
 | 7 | `cloud-drives/7-final` | Series check: build, all suites, trimmed publish, trials with real accounts, doc `cloud-drives.md`, `features.md`. | 3 to 6 |
 

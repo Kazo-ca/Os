@@ -18,6 +18,12 @@ public sealed record NetworkDrive(VirtualPath MountPoint, string Name, string Ow
 {
     /// <summary>Gets the filesystem type of the drive's source (ADR 0267 §3): <c>hostfs</c>, <c>dropbox</c>…</summary>
     public string Type { get; init; } = HostFolderFileSystemProvider.FileSystemType;
+
+    /// <summary>Gets the reference of the cloud account the drive belongs to (ADR 0270); <see langword="null"/> for a folder of the computer.</summary>
+    public string? Account { get; init; }
+
+    /// <summary>Gets the folder of the service the drive starts at; <see langword="null"/> for the whole storage.</summary>
+    public string? Root { get; init; }
 }
 
 /// <summary>Why a network drive operation was refused.</summary>
@@ -328,7 +334,7 @@ public sealed class NetworkDriveService : IDisposable, Kazo.Os.Platform.Core.Clo
         }
         catch (ArgumentException exception)
         {
-            throw new NetworkDriveException(NetworkDriveError.InvalidRequest, exception.Message);
+            throw new NetworkDriveException(NetworkDriveError.InvalidRequest, WithoutParameterName(exception));
         }
         catch (InvalidOperationException exception) when (exception is not NetworkDriveException)
         {
@@ -935,7 +941,12 @@ public sealed class NetworkDriveService : IDisposable, Kazo.Os.Platform.Core.Clo
     private sealed record MountedDrive(DriveRecord Record, HostFolderFileSystemProvider Provider)
     {
         public NetworkDrive Describe() =>
-            new(Provider.MountPath, Record.Name, Provider.OwnerId, Provider.IsConnected) { Type = Provider.Type };
+            new(Provider.MountPath, Record.Name, Provider.OwnerId, Provider.IsConnected)
+            {
+                Type = Provider.Type,
+                Account = Record.Account,
+                Root = Record.Root
+            };
     }
 
     private sealed class JsonContent(byte[] content) : IFileSystemContentSource
@@ -946,6 +957,22 @@ public sealed class NetworkDriveService : IDisposable, Kazo.Os.Platform.Core.Clo
 
         public ValueTask<Stream> OpenReadAsync(CancellationToken cancellationToken = default) =>
             ValueTask.FromResult<Stream>(new MemoryStream(content, writable: false));
+    }
+
+    /// <summary>
+    /// The message of a refused request without .NET's parameter suffix (" (Parameter 'bucket')", or
+    /// "Arg_ParamName_Name, bucket" in a trimmed build): the user sees it as it is.
+    /// </summary>
+    internal static string WithoutParameterName(ArgumentException exception)
+    {
+        string message = exception.Message;
+        if (exception.ParamName is not { Length: > 0 } parameter)
+        {
+            return message;
+        }
+
+        string suffix = new ArgumentException(string.Empty, parameter).Message;
+        return suffix.Length > 0 && message.EndsWith(suffix, StringComparison.Ordinal) ? message[..^suffix.Length] : message;
     }
 }
 

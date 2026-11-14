@@ -392,6 +392,13 @@ public interface IAppExecutionContext
     Kazo.Os.AppSdk.Keyring.IAppKeyringGateway Keyring => Kazo.Os.AppSdk.Keyring.UnsupportedAppKeyringGateway.Instance;
 
     /// <summary>
+    /// Gets the session user's cloud accounts, behind <see cref="CloudAccounts.KazoCloudAccounts"/>
+    /// (ADR 0270; capability <c>cloud-accounts.manage</c>). Defaults to a host without cloud accounts
+    /// so existing implementations keep compiling; the trusted platform factory overrides it.
+    /// </summary>
+    CloudAccounts.IAppCloudAccountsGateway CloudAccounts => Kazo.Os.AppSdk.CloudAccounts.UnsupportedAppCloudAccountsGateway.Instance;
+
+    /// <summary>
     /// Gets the session's effective accessibility preferences, behind
     /// <see cref="Accessibility.KazoAccessibility"/> (ADR 0105 section 3; no capability). Defaults to a
     /// gateway answering the defaults so existing implementations keep compiling; the trusted platform

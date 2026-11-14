@@ -175,6 +175,14 @@ public static class AppCapabilities
     public const string UsersManage = "users.manage";
 
     /// <summary>
+    /// Connect, reconnect and remove the user's cloud accounts and mount their storage as network
+    /// drives through <c>KazoCloudAccounts</c> and <c>KazoDriveInfo.MountNetworkDriveAsync</c>
+    /// (ADR 0270). Dangerous: an app with it can add or remove the user's Dropbox, OneDrive or S3
+    /// storage. It never sees a token or a key.
+    /// </summary>
+    public const string CloudAccountsManage = "cloud-accounts.manage";
+
+    /// <summary>
     /// Add entries to the file menus of the OS (ADR 0151 §6): an app declares it with its
     /// <c>[RegisterFileContextMenu]</c> method, and the OS ignores the entries of an app without it.
     /// Normal: an entry only launches the app with its own rights, and the user can hide it in Settings.
@@ -283,7 +291,11 @@ public static class AppCapabilities
         Dangerous(
             UsersManage,
             "Gérer les mots de passe des comptes",
-            "Réinitialiser ou retirer le mot de passe d'un autre compte, et donc ouvrir sa session.")
+            "Réinitialiser ou retirer le mot de passe d'un autre compte, et donc ouvrir sa session."),
+        Dangerous(
+            CloudAccountsManage,
+            "Gérer les comptes cloud",
+            "Connecter ou retirer vos comptes Dropbox, OneDrive ou S3 et monter leur stockage comme lecteurs réseau.")
     }.ToFrozenDictionary(description => description.Capability, StringComparer.Ordinal);
 
     private static readonly FrozenSet<string> KnownIdentifiers = Descriptions.Keys.ToFrozenSet(StringComparer.Ordinal);

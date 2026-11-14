@@ -47,6 +47,11 @@ internal static class RemoteErrors
                 }
 
                 break;
+            case Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccountException cloud:
+                // ADR 0270: the reason travels with the message, so the app shows its own text.
+                writer.WriteString("et", "cloud");
+                writer.WriteNumber("ce", (int)cloud.Error);
+                break;
             case OperationCanceledException:
                 writer.WriteString("et", "cancel");
                 break;
@@ -113,6 +118,8 @@ internal static class RemoteErrors
             "bgfault" => new Kazo.Os.AppSdk.Threading.KazoBackgroundJobException(
                 error.GetOptionalString("ty") ?? "System.Exception", message, error.GetOptionalString("st")),
             "webdb" => new Kazo.Os.AppSdk.WebData.KazoWebDbException(error.GetOptionalString("dn") ?? Kazo.Os.AppSdk.WebData.KazoWebDbException.InvalidStateError, StripName(message, error.GetOptionalString("dn"))),
+            "cloud" => new Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccountException(
+                (Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccountError)(error.GetOptional("ce")?.GetInt32() ?? 0), message),
             "cancel" => new OperationCanceledException(message),
             "arg" => new ArgumentException(message, error.GetOptionalString("pn")),
             "notsup" => new NotSupportedException(message),

@@ -393,7 +393,8 @@ public sealed class AppExecutionContextFactory
                     process.Pid,
                     _metrics?.KernelMemory,
                     _localNetwork is null ? null : new Network.Local.LocalNetworkCaller(_localNetwork, manifest, principal, isRootElevated)),
-            _metrics?.Drives,
+            // ADR 0270: the shared drive gateway, with this app's check of cloud-accounts.manage.
+            _metrics?.Drives is { } drives ? new CapabilityCheckedDriveGateway(drives, capabilities) : null,
             clipboardGateway,
             administration.SystemSettings,
             administration.Permissions,
@@ -435,6 +436,12 @@ public sealed class AppExecutionContextFactory
         {
             // ADR 0120: accounts and passwords, set after construction like the backup gateway.
             context.UserAccounts = administration.UserAccounts;
+        }
+
+        if (_administration?.CloudAccounts is { } cloudAccounts)
+        {
+            // ADR 0270: the session user's cloud accounts, behind cloud-accounts.manage, set like the backup gateway.
+            context.CloudAccounts = new CloudAccounts.AppCloudAccountsGateway(cloudAccounts, capabilities);
         }
 
         if (administration.ComponentProviders is not null)

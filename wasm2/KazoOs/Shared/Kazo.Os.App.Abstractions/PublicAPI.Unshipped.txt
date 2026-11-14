@@ -1,1 +1,2 @@
 #nullable enable
+const Kazo.Os.App.Abstractions.AppCapabilities.CloudAccountsManage = "cloud-accounts.manage" -> string!

@@ -1,0 +1,11 @@
+{
+  "id": "f25d0abe-127b-4321-9e96-4628b6bfbae5",
+  "category": "new",
+  "audience": ["user", "developer"],
+  "title": { "en": "Connect a network drive from File Explorer, Settings or the terminal", "fr": "Connecter un lecteur réseau depuis l'Explorateur, les Paramètres ou le terminal" },
+  "description": {
+    "en": "File Explorer's \"Connect a network drive\" dialog offers a folder of the computer and, once their connectors arrive, Dropbox, OneDrive and S3 compatible storage, with the choice between the whole storage and a folder reserved for Kazo OS. Settings ▸ Cloud accounts lists the accounts, reconnects and removes them. In the terminal, mount -t dropbox, onedrive or s3 mounts the same drives. Apps holding the new cloud-accounts.manage capability reach all of it through KazoCloudAccounts and KazoDriveInfo.MountNetworkDriveAsync.",
+    "fr": "La fenêtre « Connecter un lecteur réseau » de l'Explorateur propose un dossier de l'ordinateur et, dès que leurs connecteurs arrivent, Dropbox, OneDrive et un stockage compatible S3, avec le choix entre tout le stockage et un dossier réservé à Kazo OS. Paramètres ▸ Comptes cloud liste les comptes, les reconnecte et les retire. Dans le terminal, mount -t dropbox, onedrive ou s3 monte les mêmes lecteurs. Les apps qui ont la nouvelle capacité cloud-accounts.manage y accèdent par KazoCloudAccounts et KazoDriveInfo.MountNetworkDriveAsync."
+  },
+  "links": ["doc/en/wasm/dev/cloud-drives-ui.md", "doc/en/wasm/dev/adr/0270-cloud-drives-in-the-app-sdk.md"]
+}

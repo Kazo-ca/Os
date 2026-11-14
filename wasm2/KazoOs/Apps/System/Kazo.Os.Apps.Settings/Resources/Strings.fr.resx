@@ -2052,4 +2052,115 @@
   <data name="SetWallpaper.Error.NotSaved" xml:space="preserve">
     <value>Le fond d'écran ne peut pas être enregistré : {0}</value>
   </data>
+  <data name="Tab.CloudAccounts" xml:space="preserve">
+    <value>Comptes cloud</value>
+  </data>
+  <data name="CloudAccounts.Title" xml:space="preserve">
+    <value>Comptes cloud</value>
+  </data>
+  <data name="CloudAccounts.Description" xml:space="preserve">
+    <value>Les comptes Dropbox, OneDrive et S3 connectés sur cet appareil, et les lecteurs réseau qu'ils portent. Leurs connexions sont scellées sur cet appareil et jamais synchronisées. Pour en ajouter un, ouvrez l'Explorateur de fichiers et choisissez Connecter un lecteur réseau.</value>
+  </data>
+  <data name="CloudAccounts.Loading" xml:space="preserve">
+    <value>Chargement…</value>
+  </data>
+  <data name="CloudAccounts.Unsupported" xml:space="preserve">
+    <value>Ce Kazo OS n'a pas de comptes cloud.</value>
+  </data>
+  <data name="CloudAccounts.NoKeyring" xml:space="preserve">
+    <value>Votre trousseau n'est pas ouvert dans cette session (compte invité, ou clé d'accès qui ne l'ouvre pas) : vous ne pouvez pas connecter ni reconnecter un compte. Définissez un mot de passe avec passwd, puis reconnectez-vous.</value>
+  </data>
+  <data name="CloudAccounts.Empty" xml:space="preserve">
+    <value>Aucun compte cloud pour l'instant.</value>
+  </data>
+  <data name="CloudAccounts.State.Connected" xml:space="preserve">
+    <value>Connecté</value>
+  </data>
+  <data name="CloudAccounts.State.NeedsReconnect" xml:space="preserve">
+    <value>Connexion expirée</value>
+  </data>
+  <data name="CloudAccounts.Scope" xml:space="preserve">
+    <value>Accès</value>
+  </data>
+  <data name="CloudAccounts.Scope.Full" xml:space="preserve">
+    <value>Tout le stockage</value>
+  </data>
+  <data name="CloudAccounts.Scope.AppFolder" xml:space="preserve">
+    <value>Dossier réservé à Kazo OS</value>
+  </data>
+  <data name="CloudAccounts.Drives" xml:space="preserve">
+    <value>Lecteurs</value>
+  </data>
+  <data name="CloudAccounts.NoDrive" xml:space="preserve">
+    <value>Aucun monté</value>
+  </data>
+  <data name="CloudAccounts.Since" xml:space="preserve">
+    <value>Connecté le</value>
+  </data>
+  <data name="CloudAccounts.Reconnect" xml:space="preserve">
+    <value>Reconnecter</value>
+  </data>
+  <data name="CloudAccounts.Remove" xml:space="preserve">
+    <value>Retirer</value>
+  </data>
+  <data name="CloudAccounts.RemoveLabel" xml:space="preserve">
+    <value>Retirer le compte {0}</value>
+  </data>
+  <data name="CloudAccounts.Cancel" xml:space="preserve">
+    <value>Annuler</value>
+  </data>
+  <data name="CloudAccounts.RemoveConfirmTitle" xml:space="preserve">
+    <value>Retirer {0} ?</value>
+  </data>
+  <data name="CloudAccounts.RemoveConfirm" xml:space="preserve">
+    <value>Retirer {0} de cet appareil ? Sa connexion est révoquée quand le service le permet. Vos fichiers restent chez le service.</value>
+  </data>
+  <data name="CloudAccounts.RemoveConfirmDrives" xml:space="preserve">
+    <value>Retirer {0} de cet appareil ? Ses {1} lecteur(s) sont démontés et sa connexion est révoquée quand le service le permet. Vos fichiers restent chez le service.</value>
+  </data>
+  <data name="CloudAccounts.Reconnected" xml:space="preserve">
+    <value>{0} est de nouveau connecté.</value>
+  </data>
+  <data name="CloudAccounts.Removed" xml:space="preserve">
+    <value>{0} a été retiré.</value>
+  </data>
+  <data name="CloudAccounts.Error.NotAllowed" xml:space="preserve">
+    <value>Les Paramètres n'ont pas le droit de gérer les comptes cloud.</value>
+  </data>
+  <data name="CloudAccounts.Error.Failed" xml:space="preserve">
+    <value>L'opération a échoué : {0}</value>
+  </data>
+  <data name="CloudAccounts.Error.NotSignedIn" xml:space="preserve">
+    <value>Personne n'est connecté.</value>
+  </data>
+  <data name="CloudAccounts.Error.KeyringLocked" xml:space="preserve">
+    <value>Votre trousseau est fermé : définissez un mot de passe avec passwd, puis reconnectez-vous.</value>
+  </data>
+  <data name="CloudAccounts.Error.ProviderNotConfigured" xml:space="preserve">
+    <value>Ce Kazo OS n'est plus configuré pour ce service.</value>
+  </data>
+  <data name="CloudAccounts.Error.AccountNotFound" xml:space="preserve">
+    <value>Ce compte n'existe plus.</value>
+  </data>
+  <data name="CloudAccounts.Error.WindowBlocked" xml:space="preserve">
+    <value>Le navigateur a bloqué la fenêtre de connexion. Autorisez les fenêtres surgissantes pour ce site, puis réessayez.</value>
+  </data>
+  <data name="CloudAccounts.Error.Cancelled" xml:space="preserve">
+    <value>La fenêtre de connexion a été fermée avant la fin.</value>
+  </data>
+  <data name="CloudAccounts.Error.Denied" xml:space="preserve">
+    <value>Le service a refusé la connexion.</value>
+  </data>
+  <data name="CloudAccounts.Error.ProviderUnavailable" xml:space="preserve">
+    <value>Le service est injoignable. Vérifiez la connexion et réessayez.</value>
+  </data>
+  <data name="CloudAccounts.Error.InvalidResponse" xml:space="preserve">
+    <value>Le service a envoyé une réponse que Kazo OS ne sait pas lire.</value>
+  </data>
+  <data name="CloudAccounts.Error.ReconnectRequired" xml:space="preserve">
+    <value>La connexion a expiré : reconnectez le compte.</value>
+  </data>
+  <data name="CloudAccounts.Error.AccountMismatch" xml:space="preserve">
+    <value>Vous vous êtes connecté à un autre compte : connectez-vous avec le compte de ces lecteurs.</value>
+  </data>
 </root>

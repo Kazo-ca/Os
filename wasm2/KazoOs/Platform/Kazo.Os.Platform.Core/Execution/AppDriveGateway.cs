@@ -151,11 +151,65 @@ public sealed class AppDriveGateway : IAppDriveGateway
         }
     }
 
+    /// <inheritdoc />
+    /// <remarks>
+    /// Every source of the host that answers it can create a drive now (ADR 0270): <c>hostfs</c> when
+    /// the browser has the folder dialog, a cloud type when its provider is configured.
+    /// </remarks>
+    public async ValueTask<IReadOnlyList<string>> GetNetworkDriveTypesAsync(CancellationToken cancellationToken = default)
+    {
+        if (NetworkDrives?.Invoke() is not { } drives)
+        {
+            return [];
+        }
+
+        List<string> types = [];
+        foreach (string type in drives.SourceTypes)
+        {
+            if (await drives.IsAvailableAsync(type, cancellationToken).ConfigureAwait(false))
+            {
+                types.Add(type);
+            }
+        }
+
+        return types;
+    }
+
+    /// <inheritdoc />
+    /// <remarks>
+    /// No capability is checked here: this gateway is shared by every context, and the per-app
+    /// <see cref="CapabilityCheckedDriveGateway"/> checks <c>cloud-accounts.manage</c> for a cloud type
+    /// before it calls this method (ADR 0270).
+    /// </remarks>
+    public async ValueTask<KazoDriveSnapshot?> MountNetworkDriveAsync(
+        KazoNetworkDriveRequest request,
+        string? mountPoint,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        NetworkDriveService drives = RequireNetworkDrives();
+        NetworkDriveRequest sourceRequest = new(request.Account, request.Root)
+        {
+            Options = request.Options,
+            Secrets = request.Secrets
+        };
+        try
+        {
+            NetworkDrive? drive = await drives.MountAsync(request.Type, mountPoint, sourceRequest, cancellationToken).ConfigureAwait(false);
+            return drive is null ? null : Describe(drive, await drives.GetQuotaAsync(drive.MountPoint, cancellationToken).ConfigureAwait(false));
+        }
+        catch (NetworkDriveException exception)
+        {
+            throw Translate(exception);
+        }
+    }
+
     private static KazoDriveSnapshot Describe(NetworkDrive drive, HostFolderQuota? quota) =>
         new(drive.MountPoint.Value, drive.Type, drive.Name, quota?.TotalBytes ?? 0, quota?.FreeBytes ?? 0)
         {
             DriveType = KazoDriveType.Network,
-            IsReady = drive.IsConnected
+            IsReady = drive.IsConnected,
+            Account = drive.Account
         };
 
     private NetworkDriveService RequireNetworkDrives() =>
@@ -167,6 +221,8 @@ public sealed class AppDriveGateway : IAppDriveGateway
         NetworkDriveError.NotSupported => new NotSupportedException(exception.Message),
         NetworkDriveError.NotOwner or NetworkDriveError.PermissionDenied => new UnauthorizedAccessException(exception.Message),
         NetworkDriveError.InvalidMountPoint or NetworkDriveError.NotMounted => new IOException(exception.Message),
+        // ADR 0270: the source refused what the user typed (wrong keys, a missing bucket, an unknown account).
+        NetworkDriveError.InvalidRequest => new ArgumentException(exception.Message),
         _ => new InvalidOperationException(exception.Message)
     };
 }

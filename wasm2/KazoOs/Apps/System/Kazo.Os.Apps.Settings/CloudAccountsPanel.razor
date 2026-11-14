@@ -1,0 +1,105 @@
+@inherits Kazo.Os.AppSdk.Blazor.KazoComponentBase
+@using Kazo.Os.AppSdk.CloudAccounts
+@using Kazo.Os.AppSdk.IO
+
+@*
+    Settings > Network > Cloud accounts (ADR 0267 §11, ADR 0270): the session user's Dropbox, OneDrive
+    and S3 accounts, their scope, their drives, "Reconnect" when the sign-in expired and "Remove", which
+    unmounts the account's drives first. Accounts are added from the explorer's "Connect a network drive".
+*@
+<div class="setting-group cloud-accounts-panel">
+    <h4>@L["CloudAccounts.Title"]</h4>
+    <p class="setting-desc">@L["CloudAccounts.Description"]</p>
+
+    @if (_loading)
+    {
+        <p class="setting-desc" role="status">@L["CloudAccounts.Loading"]</p>
+    }
+    else if (_unsupported)
+    {
+        <p class="setting-desc" role="status">@L["CloudAccounts.Unsupported"]</p>
+    }
+    else
+    {
+        @if (!_canConnect)
+        {
+            <p class="cloud-note" role="note">@L["CloudAccounts.NoKeyring"]</p>
+        }
+
+        @if (_accounts.Count == 0)
+        {
+            <p class="cloud-empty">@L["CloudAccounts.Empty"]</p>
+        }
+        else
+        {
+            <ul class="cloud-accounts" aria-label="@L["CloudAccounts.Title"]">
+                @foreach (KazoCloudAccount account in _accounts)
+                {
+                    IReadOnlyList<KazoDriveInfo> drives = DrivesOf(account);
+                    <li class="cloud-account @(account.State == KazoCloudAccountState.NeedsReconnect ? "needs-reconnect" : null)">
+                        <div class="cloud-account-head">
+                            <span class="cloud-provider">@ProviderName(account.ProviderId)</span>
+                            <span class="cloud-name">@account.DisplayName</span>
+                            <span class="cloud-state" role="status">
+                                @(account.State == KazoCloudAccountState.NeedsReconnect ? L["CloudAccounts.State.NeedsReconnect"] : L["CloudAccounts.State.Connected"])
+                            </span>
+                        </div>
+                        <dl class="cloud-details">
+                            @if (account.ProviderId != S3Type)
+                            {
+                                <dt>@L["CloudAccounts.Scope"]</dt>
+                                <dd>@(account.Scope == KazoCloudAccessScope.AppFolder ? L["CloudAccounts.Scope.AppFolder"] : L["CloudAccounts.Scope.Full"])</dd>
+                            }
+                            <dt>@L["CloudAccounts.Drives"]</dt>
+                            <dd>
+                                @if (drives.Count == 0)
+                                {
+                                    @L["CloudAccounts.NoDrive"]
+                                }
+                                else
+                                {
+                                    @foreach (KazoDriveInfo drive in drives)
+                                    {
+                                        <code class="cloud-drive">@drive.Name</code>
+                                    }
+                                }
+                            </dd>
+                            <dt>@L["CloudAccounts.Since"]</dt>
+                            <dd>@account.ConnectedAtUtc.ToLocalTime().ToString("g", Formats)</dd>
+                        </dl>
+                        @if (_confirmRemove == account.Id)
+                        {
+                            <div class="cloud-confirm" role="alertdialog" aria-label="@L["CloudAccounts.RemoveConfirmTitle", account.DisplayName]">
+                                <p>@(drives.Count == 0 ? L["CloudAccounts.RemoveConfirm", account.DisplayName] : L["CloudAccounts.RemoveConfirmDrives", account.DisplayName, drives.Count])</p>
+                                <div class="cloud-actions">
+                                    <button type="button" class="btn-secondary" disabled="@_busy" @onclick="() => _confirmRemove = null">@L["CloudAccounts.Cancel"]</button>
+                                    <button type="button" class="btn-danger" disabled="@_busy" @onclick="() => RemoveAsync(account)">@L["CloudAccounts.Remove"]</button>
+                                </div>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="cloud-actions">
+                                @if (account.State == KazoCloudAccountState.NeedsReconnect && account.ProviderId != S3Type)
+                                {
+                                    <button type="button" class="btn-secondary" disabled="@(_busy || !_canConnect)" @onclick="() => ReconnectAsync(account)">
+                                        @L["CloudAccounts.Reconnect"]
+                                    </button>
+                                }
+                                <button type="button" class="btn-danger" disabled="@_busy" @onclick="() => AskRemove(account)"
+                                        aria-label="@L["CloudAccounts.RemoveLabel", account.DisplayName]">
+                                    @L["CloudAccounts.Remove"]
+                                </button>
+                            </div>
+                        }
+                    </li>
+                }
+            </ul>
+        }
+    }
+
+    @if (_message is not null)
+    {
+        <p class="@(_failed ? "dialog-error" : "cloud-result")" role="@(_failed ? "alert" : "status")">@_message</p>
+    }
+</div>

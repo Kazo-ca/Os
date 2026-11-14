@@ -509,16 +509,16 @@
     <value>Connecter un lecteur réseau…</value>
   </data>
   <data name="Network.ConnectTooltip" xml:space="preserve">
-    <value>Monter un dossier de cet ordinateur comme lecteur réseau</value>
+    <value>Monter un dossier de cet ordinateur ou un stockage cloud comme lecteur réseau</value>
   </data>
   <data name="Network.Reconnect" xml:space="preserve">
-    <value>{0} : cliquer pour reconnecter (le navigateur redemande sa permission)</value>
+    <value>{0} : cliquer pour reconnecter</value>
   </data>
   <data name="Network.Disconnect" xml:space="preserve">
     <value>Déconnecter {0}</value>
   </data>
   <data name="Network.PermissionRefused" xml:space="preserve">
-    <value>{0} : le navigateur a refusé l'accès au dossier</value>
+    <value>{0} : le lecteur n'a pas pu être reconnecté</value>
   </data>
   <data name="Network.Error" xml:space="preserve">
     <value>Lecteur réseau : {0}</value>
@@ -594,5 +594,161 @@
   </data>
   <data name="OpenWith.StoreFailed" xml:space="preserve">
     <value>Le Kazo OS Store n'a pas pu être ouvert.</value>
+  </data>
+  <data name="CloudDrive.Title" xml:space="preserve">
+    <value>Connecter un lecteur réseau</value>
+  </data>
+  <data name="CloudDrive.Close" xml:space="preserve">
+    <value>Fermer</value>
+  </data>
+  <data name="CloudDrive.Back" xml:space="preserve">
+    <value>Retour</value>
+  </data>
+  <data name="CloudDrive.Loading" xml:space="preserve">
+    <value>Chargement…</value>
+  </data>
+  <data name="CloudDrive.Accounts" xml:space="preserve">
+    <value>Vos comptes</value>
+  </data>
+  <data name="CloudDrive.New" xml:space="preserve">
+    <value>Ajouter un lecteur</value>
+  </data>
+  <data name="CloudDrive.NothingAvailable" xml:space="preserve">
+    <value>Ce navigateur et ce Kazo OS ne peuvent connecter aucun lecteur réseau.</value>
+  </data>
+  <data name="CloudDrive.HostFolder" xml:space="preserve">
+    <value>Dossier de cet ordinateur</value>
+  </data>
+  <data name="CloudDrive.HostFolderDetail" xml:space="preserve">
+    <value>Choisir un dossier dans la boîte de dialogue du navigateur</value>
+  </data>
+  <data name="CloudDrive.ProviderDetail" xml:space="preserve">
+    <value>Se connecter avec votre compte {0}</value>
+  </data>
+  <data name="CloudDrive.ProviderTitle" xml:space="preserve">
+    <value>Connecter {0}</value>
+  </data>
+  <data name="CloudDrive.S3" xml:space="preserve">
+    <value>Stockage compatible S3</value>
+  </data>
+  <data name="CloudDrive.S3Detail" xml:space="preserve">
+    <value>Amazon S3, Cloudflare R2, Backblaze B2, MinIO…</value>
+  </data>
+  <data name="CloudDrive.AccountDetail" xml:space="preserve">
+    <value>{0}, {1}</value>
+  </data>
+  <data name="CloudDrive.NoKeyring" xml:space="preserve">
+    <value>Les comptes cloud ont besoin de votre trousseau, qui n'est pas ouvert dans cette session (compte invité, ou clé d'accès qui ne l'ouvre pas). Définissez un mot de passe avec passwd, puis reconnectez-vous.</value>
+  </data>
+  <data name="CloudDrive.ScopeLegend" xml:space="preserve">
+    <value>Ce que Kazo OS peut atteindre</value>
+  </data>
+  <data name="CloudDrive.Scope.Full" xml:space="preserve">
+    <value>Tout mon stockage {0}</value>
+  </data>
+  <data name="CloudDrive.Scope.FullDetail" xml:space="preserve">
+    <value>Kazo OS voit tous vos fichiers et dossiers.</value>
+  </data>
+  <data name="CloudDrive.Scope.AppFolder" xml:space="preserve">
+    <value>Un dossier réservé à Kazo OS</value>
+  </data>
+  <data name="CloudDrive.Scope.AppFolderDetail" xml:space="preserve">
+    <value>Kazo OS ne voit que son propre dossier ; vos autres fichiers restent hors d'atteinte.</value>
+  </data>
+  <data name="CloudDrive.Scope.FullShort" xml:space="preserve">
+    <value>tout le stockage</value>
+  </data>
+  <data name="CloudDrive.Scope.AppFolderShort" xml:space="preserve">
+    <value>dossier Kazo OS</value>
+  </data>
+  <data name="CloudDrive.Root" xml:space="preserve">
+    <value>Dossier de départ (facultatif)</value>
+  </data>
+  <data name="CloudDrive.RootPlaceholder" xml:space="preserve">
+    <value>/Documents</value>
+  </data>
+  <data name="CloudDrive.SignInNote" xml:space="preserve">
+    <value>Une fenêtre {0} s'ouvre pour la connexion. Votre connexion reste sur cet appareil ; aucun serveur de Kazo OS ne la reçoit.</value>
+  </data>
+  <data name="CloudDrive.SignInAndMount" xml:space="preserve">
+    <value>Se connecter et monter</value>
+  </data>
+  <data name="CloudDrive.Mount" xml:space="preserve">
+    <value>Monter</value>
+  </data>
+  <data name="CloudDrive.S3.Endpoint" xml:space="preserve">
+    <value>Adresse du service</value>
+  </data>
+  <data name="CloudDrive.S3.Bucket" xml:space="preserve">
+    <value>Compartiment</value>
+  </data>
+  <data name="CloudDrive.S3.Region" xml:space="preserve">
+    <value>Région</value>
+  </data>
+  <data name="CloudDrive.S3.Prefix" xml:space="preserve">
+    <value>Préfixe (facultatif)</value>
+  </data>
+  <data name="CloudDrive.S3.Addressing" xml:space="preserve">
+    <value>Adressage</value>
+  </data>
+  <data name="CloudDrive.S3.AddressingAuto" xml:space="preserve">
+    <value>Automatique</value>
+  </data>
+  <data name="CloudDrive.S3.AddressingPath" xml:space="preserve">
+    <value>Chemin (service/compartiment)</value>
+  </data>
+  <data name="CloudDrive.S3.AddressingVirtual" xml:space="preserve">
+    <value>Hôte virtuel (compartiment.service)</value>
+  </data>
+  <data name="CloudDrive.S3.AccessKey" xml:space="preserve">
+    <value>Identifiant de clé d'accès</value>
+  </data>
+  <data name="CloudDrive.S3.Secret" xml:space="preserve">
+    <value>Clé d'accès secrète</value>
+  </data>
+  <data name="CloudDrive.S3.CorsNote" xml:space="preserve">
+    <value>Le compartiment doit autoriser cette adresse par une règle CORS. Les clés sont scellées sur cet appareil et ne sont plus jamais affichées.</value>
+  </data>
+  <data name="CloudDrive.Error.Refused" xml:space="preserve">
+    <value>Le service a refusé : {0}</value>
+  </data>
+  <data name="CloudDrive.Error.NotAllowed" xml:space="preserve">
+    <value>L'explorateur n'a pas le droit de gérer les comptes cloud.</value>
+  </data>
+  <data name="CloudDrive.Error.NotSignedIn" xml:space="preserve">
+    <value>Personne n'est connecté.</value>
+  </data>
+  <data name="CloudDrive.Error.KeyringLocked" xml:space="preserve">
+    <value>Votre trousseau est fermé : définissez un mot de passe avec passwd, puis reconnectez-vous.</value>
+  </data>
+  <data name="CloudDrive.Error.ProviderNotConfigured" xml:space="preserve">
+    <value>Ce Kazo OS n'est pas configuré pour ce service.</value>
+  </data>
+  <data name="CloudDrive.Error.AccountNotFound" xml:space="preserve">
+    <value>Ce compte n'existe plus.</value>
+  </data>
+  <data name="CloudDrive.Error.WindowBlocked" xml:space="preserve">
+    <value>Le navigateur a bloqué la fenêtre de connexion. Autorisez les fenêtres surgissantes pour ce site, puis réessayez.</value>
+  </data>
+  <data name="CloudDrive.Error.Cancelled" xml:space="preserve">
+    <value>La fenêtre de connexion a été fermée avant la fin.</value>
+  </data>
+  <data name="CloudDrive.Error.Denied" xml:space="preserve">
+    <value>Le service a refusé la connexion.</value>
+  </data>
+  <data name="CloudDrive.Error.ProviderUnavailable" xml:space="preserve">
+    <value>Le service est injoignable. Vérifiez la connexion et réessayez.</value>
+  </data>
+  <data name="CloudDrive.Error.InvalidResponse" xml:space="preserve">
+    <value>Le service a envoyé une réponse que Kazo OS ne sait pas lire.</value>
+  </data>
+  <data name="CloudDrive.Error.ReconnectRequired" xml:space="preserve">
+    <value>La connexion a expiré : reconnectez le compte.</value>
+  </data>
+  <data name="CloudDrive.Error.AccountMismatch" xml:space="preserve">
+    <value>Vous vous êtes connecté à un autre compte que celui de ce lecteur.</value>
+  </data>
+  <data name="Network.ConnectShort" xml:space="preserve">
+    <value>Connecter</value>
   </data>
 </root>

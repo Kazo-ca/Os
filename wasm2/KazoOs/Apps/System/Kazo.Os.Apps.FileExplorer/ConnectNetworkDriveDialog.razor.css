@@ -1,0 +1,258 @@
+/* "Connect a network drive" (ADR 0267 §11): a dark panel over the explorer, a full sheet on a phone. */
+.cnd-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    background: var(--kos-bg-overlay, rgb(4 8 10 / 72%));
+    backdrop-filter: blur(4px);
+}
+
+.cnd-dialog {
+    width: min(100%, 30rem);
+    max-height: 100%;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--kos-border, #3a4b53);
+    border-radius: var(--kos-radius-md, 0.45rem);
+    background: var(--kos-bg-elevated, #1b252a);
+    color: var(--kos-text-primary, #f0f6fc);
+    box-shadow: var(--kos-shadow-lg, 0 20px 48px rgb(0 0 0 / 52%));
+    overflow: hidden;
+}
+
+.cnd-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 0.75rem 0.75rem 1rem;
+    border-bottom: 1px solid var(--kos-border, #3a4b53);
+}
+
+.cnd-title {
+    flex: 1;
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.cnd-icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.35rem;
+    border: none;
+    border-radius: var(--kos-radius-sm, 6px);
+    background: transparent;
+    color: var(--kos-text-secondary, #8b949e);
+    cursor: pointer;
+}
+
+.cnd-icon-btn:hover,
+.cnd-icon-btn:focus-visible {
+    color: var(--kos-text-primary, #f0f6fc);
+    background: var(--kos-list-hover-bg, rgba(66, 211, 146, 0.08));
+}
+
+.cnd-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 1rem;
+    overflow-y: auto;
+}
+
+.cnd-section {
+    margin: 0.25rem 0 0;
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--kos-text-secondary, #8b949e);
+}
+
+.cnd-options {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.cnd-option,
+.cnd-scope {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    /* Themes may center a button's content: the icon and the text start at the left edge. */
+    justify-content: flex-start;
+    gap: 0.75rem;
+    padding: 0.65rem 0.75rem;
+    border: 1px solid var(--kos-border, #3a4b53);
+    border-radius: var(--kos-radius-sm, 6px);
+    background: var(--kos-bg-base, #101417);
+    color: var(--kos-accent, #42d392);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: border-color var(--kos-transition-fast, 120ms ease), background var(--kos-transition-fast, 120ms ease);
+}
+
+.cnd-option:hover:not(:disabled),
+.cnd-option:focus-visible,
+.cnd-scope:hover,
+.cnd-scope.is-selected {
+    border-color: var(--kos-accent, #42d392);
+    background: var(--kos-list-hover-bg, rgba(66, 211, 146, 0.08));
+}
+
+.cnd-option:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.cnd-option-text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    min-width: 0;
+}
+
+.cnd-option-title {
+    color: var(--kos-text-primary, #f0f6fc);
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+
+.cnd-option-detail {
+    color: var(--kos-text-secondary, #8b949e);
+    font-size: 0.82rem;
+}
+
+.cnd-scopes {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    margin: 0;
+    padding: 0;
+    border: none;
+}
+
+.cnd-scopes legend {
+    margin-bottom: 0.4rem;
+    color: var(--kos-text-secondary, #8b949e);
+    font-size: 0.85rem;
+}
+
+.cnd-scope input {
+    accent-color: var(--kos-accent, #42d392);
+}
+
+.cnd-form {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+    gap: 0.6rem;
+}
+
+.cnd-wide {
+    grid-column: 1 / -1;
+}
+
+.cnd-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    font-size: 0.82rem;
+    color: var(--kos-text-secondary, #8b949e);
+}
+
+.cnd-field input,
+.cnd-field select {
+    padding: 0.45rem 0.55rem;
+    border: 1px solid var(--kos-border, #3a4b53);
+    border-radius: var(--kos-radius-sm, 6px);
+    background: var(--kos-input-bg, var(--kos-bg-base, #101417));
+    color: var(--kos-text-primary, #f0f6fc);
+    font-family: var(--kos-font-mono, "JetBrains Mono", ui-monospace, monospace);
+    font-size: 0.85rem;
+}
+
+.cnd-field input:focus-visible,
+.cnd-field select:focus-visible {
+    outline: 2px solid var(--kos-accent, #42d392);
+    outline-offset: 1px;
+}
+
+.cnd-note {
+    margin: 0;
+    color: var(--kos-text-secondary, #8b949e);
+    font-size: 0.82rem;
+}
+
+.cnd-error {
+    margin: 0;
+    padding: 0.55rem 0.7rem;
+    border: 1px solid var(--kos-danger, #f85149);
+    border-radius: var(--kos-radius-sm, 6px);
+    background: color-mix(in srgb, var(--kos-danger, #f85149) 12%, transparent);
+    color: var(--kos-danger-text, var(--kos-text-primary, #f0f6fc));
+    font-size: 0.85rem;
+}
+
+.cnd-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    border-top: 1px solid var(--kos-border, #3a4b53);
+}
+
+.cnd-btn {
+    padding: 0.45rem 0.9rem;
+    border: 1px solid var(--kos-border, #3a4b53);
+    border-radius: var(--kos-radius-sm, 6px);
+    background: transparent;
+    color: var(--kos-text-primary, #f0f6fc);
+    font: inherit;
+    cursor: pointer;
+}
+
+.cnd-btn.primary {
+    border-color: var(--kos-accent, #42d392);
+    background: var(--kos-accent, #42d392);
+    color: var(--kos-accent-contrast, #04140d);
+    font-weight: 600;
+}
+
+.cnd-btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+/* A phone: the dialog fills the screen like the explorer's own sheets. */
+@media (max-width: 600px) {
+    .cnd-backdrop {
+        padding: 0;
+        align-items: stretch;
+    }
+
+    .cnd-dialog {
+        width: 100%;
+        border-radius: 0;
+        border: none;
+    }
+
+    .cnd-option,
+    .cnd-scope {
+        min-height: 3.25rem;
+    }
+}
+
+/* The dialog takes the focus when it opens (Escape closes it); its own outline would frame the whole box. */
+.cnd-dialog:focus {
+    outline: none;
+}

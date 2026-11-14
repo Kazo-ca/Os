@@ -1,0 +1,187 @@
+@using Kazo.Os.AppSdk.CloudAccounts
+@using Kazo.Os.AppSdk.Icons
+@inherits Kazo.Os.AppSdk.Blazor.KazoComponentBase
+
+@*
+    "Connect a network drive" (ADR 0267 §11, ADR 0270): a folder of the computer when the browser has
+    the folder dialog, the cloud services this OS is set up for (Dropbox, OneDrive) with the choice of
+    the scope, and the S3 form. The accounts already connected are offered first: mounting one more
+    drive of an account needs no new sign-in. Every action runs straight from its click: the browser
+    opens a folder dialog or a sign-in window only right after a user gesture.
+*@
+<div class="cnd-backdrop" @onclick="CloseAsync">
+    <div class="cnd-dialog" role="dialog" aria-modal="true" aria-labelledby="@_titleId" tabindex="-1"
+         @ref="_dialog" @onclick:stopPropagation="true" @onkeydown="OnKeyDownAsync">
+        <header class="cnd-header">
+            @if (_step != Step.Choose)
+            {
+                <button type="button" class="cnd-icon-btn" @onclick="Back" disabled="@_busy"
+                        aria-label="@L["CloudDrive.Back"]" title="@L["CloudDrive.Back"]">
+                    <KazoIcon Library="IconLibrary.Lucide" Name="arrow-left" Size="18" />
+                </button>
+            }
+            <h2 id="@_titleId" class="cnd-title">@Title</h2>
+            <button type="button" class="cnd-icon-btn" @onclick="CloseAsync" disabled="@_busy"
+                    aria-label="@L["CloudDrive.Close"]" title="@L["CloudDrive.Close"]">
+                <KazoIcon Library="IconLibrary.Lucide" Name="x" Size="18" />
+            </button>
+        </header>
+
+        <div class="cnd-body">
+            @if (_loading)
+            {
+                <p class="cnd-note" role="status">@L["CloudDrive.Loading"]</p>
+            }
+            else if (_step == Step.Choose)
+            {
+                @if (_accounts.Count > 0)
+                {
+                    <h3 class="cnd-section">@L["CloudDrive.Accounts"]</h3>
+                    <ul class="cnd-options">
+                        @foreach (KazoCloudAccount account in _accounts)
+                        {
+                            <li>
+                                <button type="button" class="cnd-option" disabled="@_busy" @onclick="() => MountAccountAsync(account)">
+                                    <KazoIcon Library="IconLibrary.Lucide" Name="@ProviderIcon(account.ProviderId)" Size="22" />
+                                    <span class="cnd-option-text">
+                                        <span class="cnd-option-title">@account.DisplayName</span>
+                                        <span class="cnd-option-detail">@AccountDetail(account)</span>
+                                    </span>
+                                </button>
+                            </li>
+                        }
+                    </ul>
+                }
+
+                <h3 class="cnd-section">@L["CloudDrive.New"]</h3>
+                @if (!HasAnyChoice)
+                {
+                    <p class="cnd-note">@L["CloudDrive.NothingAvailable"]</p>
+                }
+                <ul class="cnd-options">
+                    @if (_types.Contains(HostFolderType))
+                    {
+                        <li>
+                            <button type="button" class="cnd-option" disabled="@_busy" @onclick="MountHostFolderAsync">
+                                <KazoIcon Library="IconLibrary.Lucide" Name="folder-open" Size="22" />
+                                <span class="cnd-option-text">
+                                    <span class="cnd-option-title">@L["CloudDrive.HostFolder"]</span>
+                                    <span class="cnd-option-detail">@L["CloudDrive.HostFolderDetail"]</span>
+                                </span>
+                            </button>
+                        </li>
+                    }
+                    @foreach (KazoCloudProvider provider in _providers.Where(provider => _types.Contains(provider.Id)))
+                    {
+                        <li>
+                            <button type="button" class="cnd-option" disabled="@(_busy || !_canConnect)" @onclick="() => ChooseProvider(provider)">
+                                <KazoIcon Library="IconLibrary.Lucide" Name="@ProviderIcon(provider.Id)" Size="22" />
+                                <span class="cnd-option-text">
+                                    <span class="cnd-option-title">@provider.DisplayName</span>
+                                    <span class="cnd-option-detail">@L["CloudDrive.ProviderDetail", provider.DisplayName]</span>
+                                </span>
+                            </button>
+                        </li>
+                    }
+                    @if (_types.Contains(S3Type) && _cloudAllowed)
+                    {
+                        <li>
+                            <button type="button" class="cnd-option" disabled="@(_busy || !_canConnect)" @onclick="ChooseS3">
+                                <KazoIcon Library="IconLibrary.Lucide" Name="database" Size="22" />
+                                <span class="cnd-option-text">
+                                    <span class="cnd-option-title">@L["CloudDrive.S3"]</span>
+                                    <span class="cnd-option-detail">@L["CloudDrive.S3Detail"]</span>
+                                </span>
+                            </button>
+                        </li>
+                    }
+                </ul>
+                @if (HasCloudChoice && !_canConnect)
+                {
+                    <p class="cnd-note">@L["CloudDrive.NoKeyring"]</p>
+                }
+            }
+            else if (_step == Step.Provider && _provider is not null)
+            {
+                <fieldset class="cnd-scopes">
+                    <legend>@L["CloudDrive.ScopeLegend"]</legend>
+                    @foreach (KazoCloudAccessScope scope in _provider.Scopes)
+                    {
+                        <label class="cnd-scope @(_scope == scope ? "is-selected" : null)">
+                            <input type="radio" name="@_scopeGroup" checked="@(_scope == scope)" disabled="@_busy"
+                                   @onchange="() => _scope = scope" />
+                            <span class="cnd-option-text">
+                                <span class="cnd-option-title">@ScopeTitle(scope, _provider)</span>
+                                <span class="cnd-option-detail">@ScopeDetail(scope)</span>
+                            </span>
+                        </label>
+                    }
+                </fieldset>
+                <label class="cnd-field">
+                    <span>@L["CloudDrive.Root"]</span>
+                    <input type="text" @bind="_root" placeholder="@L["CloudDrive.RootPlaceholder"]" disabled="@_busy" spellcheck="false" />
+                </label>
+                <p class="cnd-note">@L["CloudDrive.SignInNote", _provider.DisplayName]</p>
+            }
+            else if (_step == Step.S3)
+            {
+                @* The fields update as the user types, so Mount is enabled before the last field loses the focus. *@
+                <div class="cnd-form">
+                    <label class="cnd-field cnd-wide">
+                        <span>@L["CloudDrive.S3.Endpoint"]</span>
+                        <input type="url" @bind="_s3.Endpoint" @bind:event="oninput" placeholder="https://…" required disabled="@_busy" spellcheck="false" />
+                    </label>
+                    <label class="cnd-field">
+                        <span>@L["CloudDrive.S3.Bucket"]</span>
+                        <input type="text" @bind="_s3.Bucket" @bind:event="oninput" required disabled="@_busy" spellcheck="false" />
+                    </label>
+                    <label class="cnd-field">
+                        <span>@L["CloudDrive.S3.Region"]</span>
+                        <input type="text" @bind="_s3.Region" @bind:event="oninput" placeholder="auto" disabled="@_busy" spellcheck="false" />
+                    </label>
+                    <label class="cnd-field">
+                        <span>@L["CloudDrive.S3.Prefix"]</span>
+                        <input type="text" @bind="_s3.Prefix" @bind:event="oninput" disabled="@_busy" spellcheck="false" />
+                    </label>
+                    <label class="cnd-field">
+                        <span>@L["CloudDrive.S3.Addressing"]</span>
+                        <select @bind="_s3.Addressing" disabled="@_busy">
+                            <option value="">@L["CloudDrive.S3.AddressingAuto"]</option>
+                            <option value="path">@L["CloudDrive.S3.AddressingPath"]</option>
+                            <option value="virtual">@L["CloudDrive.S3.AddressingVirtual"]</option>
+                        </select>
+                    </label>
+                    <label class="cnd-field cnd-wide">
+                        <span>@L["CloudDrive.S3.AccessKey"]</span>
+                        <input type="text" @bind="_s3.AccessKeyId" @bind:event="oninput" required disabled="@_busy" autocomplete="off" spellcheck="false" />
+                    </label>
+                    <label class="cnd-field cnd-wide">
+                        <span>@L["CloudDrive.S3.Secret"]</span>
+                        <input type="password" @bind="_s3.SecretAccessKey" @bind:event="oninput" required disabled="@_busy" autocomplete="off" />
+                    </label>
+                </div>
+                <p class="cnd-note">@L["CloudDrive.S3.CorsNote"]</p>
+            }
+
+            @if (_error is not null)
+            {
+                <p class="cnd-error" role="alert">@_error</p>
+            }
+        </div>
+
+        @if (_step != Step.Choose)
+        {
+            <footer class="cnd-actions">
+                <button type="button" class="cnd-btn" @onclick="Back" disabled="@_busy">@L["CloudDrive.Back"]</button>
+                @if (_step == Step.Provider)
+                {
+                    <button type="button" class="cnd-btn primary" @onclick="ConnectProviderAsync" disabled="@_busy">@L["CloudDrive.SignInAndMount"]</button>
+                }
+                else
+                {
+                    <button type="button" class="cnd-btn primary" @onclick="MountS3Async" disabled="@(_busy || !_s3.IsComplete)">@L["CloudDrive.Mount"]</button>
+                }
+            </footer>
+        }
+    </div>
+</div>

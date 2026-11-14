@@ -276,6 +276,14 @@ static Kazo.Os.Platform.Core.CloudAccounts.OAuthTokenSet.operator ==(Kazo.Os.Pla
 static readonly Kazo.Os.Platform.Core.CloudAccounts.CloudAccountService.AuthorizationTimeout -> System.TimeSpan
 static readonly Kazo.Os.Platform.Core.CloudAccounts.CloudAccountService.RenewalMargin -> System.TimeSpan
 Kazo.Os.Platform.Core.FileSystem.HostFolders.NetworkDriveService.ReleaseAsync(string! accountId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Kazo.Os.Platform.Core.Administration.SystemAdministrationGatewayServices.CloudAccounts.get -> System.Func<Kazo.Os.Platform.Core.CloudAccounts.CloudAccountService!>?
+Kazo.Os.Platform.Core.Administration.SystemAdministrationGatewayServices.CloudAccounts.init -> void
+Kazo.Os.Platform.Core.Execution.AppDriveGateway.GetNetworkDriveTypesAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<string!>!>
+Kazo.Os.Platform.Core.Execution.AppDriveGateway.MountNetworkDriveAsync(Kazo.Os.AppSdk.IO.KazoNetworkDriveRequest! request, string? mountPoint, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.IO.KazoDriveSnapshot?>
+Kazo.Os.Platform.Core.FileSystem.HostFolders.NetworkDrive.Account.get -> string?
+Kazo.Os.Platform.Core.FileSystem.HostFolders.NetworkDrive.Account.init -> void
+Kazo.Os.Platform.Core.FileSystem.HostFolders.NetworkDrive.Root.get -> string?
+Kazo.Os.Platform.Core.FileSystem.HostFolders.NetworkDrive.Root.init -> void
 Kazo.Os.Platform.Core.CloudDrives.S3.S3DriveSource
 Kazo.Os.Platform.Core.CloudDrives.S3.S3DriveSource.AvailabilityChanged -> System.Action?
 Kazo.Os.Platform.Core.CloudDrives.S3.S3DriveSource.CreateAsync(Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveRequest! request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveCreation?>

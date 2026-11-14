@@ -245,4 +245,5 @@ Le retrait est le même que pour les autres comptes.
 - [x] Service worker publié : la page de retour avec sa requête.
 - [x] Tests unitaires et E2E sur la PWA publiée.
 - [x] Brancher `ICloudAccountDrives` sur `NetworkDriveService` (`ReleaseAsync`).
-- [ ] Interface (chantier 5) et connecteurs (chantiers 3 et 4).
+- [x] Interface (chantier 5) : [`cloud-drives-ui.md`](cloud-drives-ui.md).
+- [ ] Connecteurs (chantiers 3 et 4).

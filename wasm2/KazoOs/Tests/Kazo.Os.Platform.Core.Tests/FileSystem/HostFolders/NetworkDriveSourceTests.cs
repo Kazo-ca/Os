@@ -291,6 +291,49 @@ public sealed class NetworkDriveSourceTests
         Assert.Contains("host:Projects /mnt/Projects hostfs rw,nosuid,nodev 0 0", mounts, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public async Task Apps_see_the_available_cloud_types_and_mount_one_through_the_sdk()
+    {
+        Harness harness = await Harness.CreateAsync();
+        harness.Cloud.Account(Account).Put("hello", "Docs", "a.txt");
+        AppDriveGateway gateway = new(() => harness.Fixture.Router, VirtualHardwareProfile.Default)
+        {
+            NetworkDrives = () => harness.Drives
+        };
+
+        Assert.Contains("fakecloud", await gateway.GetNetworkDriveTypesAsync());
+        KazoDriveSnapshot? drive = await gateway.MountNetworkDriveAsync(new KazoNetworkDriveRequest("fakecloud", Account, "Docs"), "/mnt/docs");
+        ArgumentException refused = await Assert.ThrowsAsync<ArgumentException>(
+            () => gateway.MountNetworkDriveAsync(new KazoNetworkDriveRequest("fakecloud", "nobody"), null).AsTask());
+        harness.Cloud.Available = false;
+
+        Assert.NotNull(drive);
+        Assert.Equal(("/mnt/docs", "fakecloud", Account, KazoDriveType.Network), (drive.Name, drive.DriveFormat, drive.Account, drive.DriveType));
+        Assert.Equal("hello", await harness.Fixture.ReadTextAsync("/mnt/docs/a.txt", harness.Context));
+        Assert.Contains("nobody", refused.Message, StringComparison.Ordinal);
+        Assert.DoesNotContain("fakecloud", await gateway.GetNetworkDriveTypesAsync());
+        await Assert.ThrowsAsync<NotSupportedException>(
+            () => gateway.MountNetworkDriveAsync(new KazoNetworkDriveRequest("fakecloud", Account), null).AsTask());
+    }
+
+    [Fact]
+    public async Task Without_a_network_drive_service_no_type_is_offered()
+    {
+        Harness harness = await Harness.CreateAsync();
+        AppDriveGateway gateway = new(() => harness.Fixture.Router, VirtualHardwareProfile.Default);
+
+        Assert.Empty(await gateway.GetNetworkDriveTypesAsync());
+        await Assert.ThrowsAsync<NotSupportedException>(
+            () => gateway.MountNetworkDriveAsync(new KazoNetworkDriveRequest("fakecloud", Account), null).AsTask());
+    }
+
+    [Fact]
+    public void A_refused_request_reads_without_the_parameter_suffix()
+    {
+        Assert.Equal("s3: wrong keys", NetworkDriveService.WithoutParameterName(new ArgumentException("s3: wrong keys", "request")));
+        Assert.Equal("no parameter", NetworkDriveService.WithoutParameterName(new ArgumentException("no parameter")));
+    }
+
     private static Task<NetworkDriveException> Refused(Func<ValueTask<NetworkDrive?>> mount) =>
         Assert.ThrowsAsync<NetworkDriveException>(() => mount().AsTask());
 
