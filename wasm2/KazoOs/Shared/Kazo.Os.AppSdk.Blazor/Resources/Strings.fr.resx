@@ -117,4 +117,13 @@
   <data name="Version.Unreachable" xml:space="preserve">
     <value>État inconnu (hors ligne)</value>
   </data>
+  <data name="Version.Beta" xml:space="preserve">
+    <value>Bêta</value>
+  </data>
+  <data name="Version.TryBeta" xml:space="preserve">
+    <value>Essayer la bêta</value>
+  </data>
+  <data name="Version.BackToStable" xml:space="preserve">
+    <value>Revenir à la version stable</value>
+  </data>
 </root>

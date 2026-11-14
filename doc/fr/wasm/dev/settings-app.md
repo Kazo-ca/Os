@@ -59,7 +59,7 @@ Synchronisation), Système (Utilisateurs, Mémoire, Sauvegarde, Nouveautés, À 
 | Mémoire (`memory`) | `MemoryPanel` | Fichier `/etc/kazoos/memory.config`, section `[oom-killer]` (ADR 0126). |
 | Sauvegarde (`backup`) | `BackupPanel` | Présent seulement si `KazoSystemBackup.IsSupportedFor` le permet (ADR 0099). |
 | Nouveautés (`whats-new`) | `WhatsNewPanel` | Liste des changements de l'OS par version, la prochaine en premier, avec un badge **Nouveau** sur ce qui n'a pas été vu ; tout devient vu à la fermeture de la page (`KazoWhatsNew`, ADR 0186). La notification après connexion l'ouvre avec `--page=whats-new`. |
-| À propos (`about`) | (dans la fenêtre) | Autorité, redémarrage (`KazoSystem.RebootAsync`), zone de danger : réinitialisation d'usine (`KazoSystem.FactoryResetAsync`), confirmée par la saisie de `RESET`, qui efface tout ce que l'OS garde dans le navigateur ([ADR 0227](adr/0227-factory-reset-erases-everything.md)). Un bouton **Quoi de neuf ?** à côté de la version ouvre la page Nouveautés. |
+| À propos (`about`) | (dans la fenêtre) | Autorité, redémarrage (`KazoSystem.RebootAsync`), zone de danger : réinitialisation d'usine (`KazoSystem.FactoryResetAsync`), confirmée par la saisie de `RESET`, qui efface tout ce que l'OS garde dans le navigateur ([ADR 0227](adr/0227-factory-reset-erases-everything.md)). Un bouton **Quoi de neuf ?** à côté de la version ouvre la page Nouveautés. Une préversion porte la pastille « Bêta » et le lien « Revenir à la version stable » ; la version stable servie par `os.kazo.ca` a le lien « Essayer la bêta » ([`beta-site.md`](beta-site.md), ADR 0271). |
 | Application (`application`) | `AppDetailsPanel` | Ajouté seulement avec `--app=<id>` (ADR 0096) : détails et réglages d'une app. |
 
 ## Arguments de lancement

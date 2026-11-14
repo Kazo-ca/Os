@@ -498,6 +498,8 @@
                             <span>@L["About.OsVersion"]</span> @* ADR 0236: the shared version label (version and build number). *@
                             <Kazo.Os.AppSdk.Blazor.Components.KazoOsVersionLabel />
                             <button type="button" class="btn-secondary about-whats-new" @onclick="() => SelectPage(WhatsNewPageId)">@L["About.WhatsNew"]</button>
+                            @* ADR 0271 §6: « Try the beta » on os.kazo.ca, « Back to the stable version » on a beta. *@
+                            <Kazo.Os.AppSdk.Blazor.Components.KazoOsChannelLink />
                         </div>
                         <div class="info-line"><span>@L["About.Author"]</span> <a class="about-author" href="https://kazo.ca" target="_blank" rel="noopener noreferrer">Benoit Robin</a></div>
                         <div class="info-line">
