@@ -82,7 +82,7 @@ of `catalog-beta.json` is fixed by 3.
 - [x] Work item 0: evaluation, ADR 0271, plan.
 - [ ] Work item 1: prerelease from `beta`.
 - [ ] Work item 2: beta site.
-- [ ] Work item 3: channel in the OS.
+- [x] Work item 3: channel in the OS ([`app-installation.md`](../app-installation.md#beta-channel-and-offered-version-adr-0271), `catalog-beta.json` format included).
 - [ ] Work item 4: catalog beta channel.
 - [x] Work item 5: reusable workflows and template (`kazoos-solution` template, `Os-AppTemplate` regenerated; the `v1` tag is still to create).
 - [ ] Work item 6: notify the apps.

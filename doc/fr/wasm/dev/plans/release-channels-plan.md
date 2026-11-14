@@ -80,7 +80,7 @@ quand le format de `catalog-beta.json` est fixé par le 3.
 - [x] Chantier 0 : évaluation, ADR 0271, plan.
 - [ ] Chantier 1 : préversion depuis `beta`.
 - [ ] Chantier 2 : site bêta.
-- [ ] Chantier 3 : canal dans l'OS.
+- [x] Chantier 3 : canal dans l'OS ([`app-installation.md`](../app-installation.md#canal-bêta-et-version-proposée-adr-0271), format de `catalog-beta.json` compris).
 - [ ] Chantier 4 : canal bêta du catalogue.
 - [x] Chantier 5 : workflows réutilisables et template (modèle `kazoos-solution`, `Os-AppTemplate` régénéré ; le tag `v1` reste à poser).
 - [ ] Chantier 6 : prévenir les apps.

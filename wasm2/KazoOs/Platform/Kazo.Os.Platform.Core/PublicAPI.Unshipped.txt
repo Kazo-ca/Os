@@ -1,3 +1,10 @@
 #nullable enable
 static Kazo.Os.Platform.Core.Shell.StartMenuSettingsDocuments.RetiredDefaultPinnedAppIds.get -> System.Collections.Generic.IReadOnlyList<string!>!
 Kazo.Os.Platform.Core.Shell.StartMenuPreferencesService.StartMenuPreferencesService(Kazo.Os.Platform.Core.Settings.IOsSettingsService! settings, Kazo.Os.Simulation.Abstractions.Sessions.ISessionService! session, System.Collections.Generic.IReadOnlyList<string!>! defaultPins, System.Collections.Generic.IReadOnlyList<string!>! retiredDefaultPins) -> void
+const Kazo.Os.Platform.Core.Apps.Packages.AppPackageDefaults.OfficialBetaCatalogAddress = "https://raw.githubusercontent.com/Kazo-ca/Os-AppMarketPlace/packages/catalog-beta.json" -> string!
+static Kazo.Os.Platform.Core.Apps.Packages.AppPackageDefaults.OfficialCatalogAddressFor(Kazo.Os.App.Abstractions.SemanticVersion sdkVersion) -> string!
+static Kazo.Os.Platform.Core.Apps.Packages.AppPackageDefaults.IsOfficialCatalogAddress(System.Uri! address) -> bool
+Kazo.Os.Platform.Core.Apps.Packages.AppPackageIndexEntry.MinimumSdkVersion.get -> string?
+Kazo.Os.Platform.Core.Apps.Packages.AppPackageIndexEntry.MinimumSdkVersion.init -> void
+Kazo.Os.Platform.Core.Apps.Packages.AppPackageIndexEntry.MaximumSdkVersion.get -> string?
+Kazo.Os.Platform.Core.Apps.Packages.AppPackageIndexEntry.MaximumSdkVersion.init -> void

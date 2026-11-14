@@ -15,7 +15,7 @@ public sealed class AppSourcesAndPolicyTests
         AppSourcesConfig config = AppSourcesConfigDocument.Read(AppSourcesConfigDocument.DefaultContent);
 
         Assert.Empty(config.Warnings);
-        Assert.Equal(new Uri(AppPackageDefaults.OfficialCatalogAddress), config.Catalogs["official"]);
+        Assert.Equal(new Uri(AppPackageDefaults.OfficialCatalogAddressFor(KazoOsSdk.SemanticVersion)), config.Catalogs["official"]);
         Assert.Equal(AppSourceTrust.Verified, config.GetCatalogTrust("official"));
         Assert.Equal(AppSourceTrust.Trusted, config.GetTrust(new AppPackageSource("Kazo-ca", "Anything")));
         Assert.Equal(AppPackageDefaults.DefaultUpdateIntervalHours, config.UpdateIntervalHours);
@@ -33,7 +33,7 @@ public sealed class AppSourcesAndPolicyTests
         AppSourcesConfig config = AppSourcesConfigDocument.Read(Written);
 
         Assert.Empty(config.Warnings);
-        Assert.Equal(new Uri(AppPackageDefaults.OfficialCatalogAddress), config.Catalogs["official"]);
+        Assert.Equal(new Uri(AppPackageDefaults.OfficialCatalogAddressFor(KazoOsSdk.SemanticVersion)), config.Catalogs["official"]);
         Assert.Equal(AppSourceTrust.Verified, config.GetCatalogTrust("official"));
         Assert.NotEmpty(config.GetSigningKeys(AppPackageSource.ForCatalog("official", "ca.kazo.chess")));
     }
@@ -43,7 +43,7 @@ public sealed class AppSourcesAndPolicyTests
     {
         AppSourcesConfig config = AppSourcesConfigDocument.Read("[trusted]\ncatalog:official=false\n");
 
-        Assert.Equal(new Uri(AppPackageDefaults.OfficialCatalogAddress), config.Catalogs["official"]);
+        Assert.Equal(new Uri(AppPackageDefaults.OfficialCatalogAddressFor(KazoOsSdk.SemanticVersion)), config.Catalogs["official"]);
         Assert.Equal(AppSourceTrust.Untrusted, config.GetCatalogTrust("official"));
     }
 

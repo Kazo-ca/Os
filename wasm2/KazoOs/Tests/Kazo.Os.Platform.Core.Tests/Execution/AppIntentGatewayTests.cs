@@ -135,7 +135,7 @@ public sealed class AppIntentGatewayTests
     private sealed class CatalogDownloader : IAppPackageDownloader
     {
         public ValueTask<byte[]?> DownloadAsync(Uri uri, long maximumBytes, CancellationToken cancellationToken = default) =>
-            ValueTask.FromResult<byte[]?>(uri.AbsoluteUri == AppPackageDefaults.OfficialCatalogAddress
+            ValueTask.FromResult<byte[]?>(uri.AbsoluteUri == AppPackageDefaults.OfficialCatalogAddressFor(KazoOsSdk.SemanticVersion)
                 ? System.Text.Encoding.UTF8.GetBytes($$$"""
                     {"schemaVersion":1,"apps":[{"appId":"ca.kazo.word","name":"Kazo Word","category":"productivity","latestVersion":"0.1.0",
                      "shortDescriptions":{"en":"A word processor","fr":"Un traitement de texte"},

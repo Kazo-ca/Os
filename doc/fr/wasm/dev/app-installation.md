@@ -548,6 +548,75 @@ d'`AppPackageGatewayTests`, `HttpAppPackageDownloaderTests`,
 `StoreScreenshotViewerTests`, `StoreAppPageTests`, `StoreHomeTests`,
 `StoreMobileTests`, qui mesure chaque contrôle sur un téléphone de 390 × 844).
 
+## Canal bêta et version proposée (ADR 0271)
+
+Chantier 3 de la série `release-channels/base`
+([ADR 0271](adr/0271-beta-channel-and-automatic-app-updates.md) §5 et §6,
+[plan](plans/release-channels-plan.md)).
+
+- **Le canal suit l'OS.** Un OS dont la version a un suffixe
+  (`3.5.0-preview.1`, `KazoOsSdk.SemanticVersion.PreRelease`) lit le canal
+  bêta du catalogue officiel,
+  `https://raw.githubusercontent.com/Kazo-ca/Os-AppMarketPlace/packages/catalog-beta.json`
+  (`AppPackageDefaults.OfficialBetaCatalogAddress`) ; un OS stable lit
+  `catalog.json`. `AppPackageDefaults.OfficialCatalogAddressFor(version)` donne
+  l'adresse, et `AppPackageDefaults.Standard` l'utilise : c'est ce qui est écrit
+  dans un nouveau `/etc/kazoos/app-sources.config`. Aucun réglage.
+- **Migration de `/etc/kazoos`.** L'OS ne réécrit jamais un fichier existant. À
+  la lecture, une ligne de `[catalogs]` qui désigne le catalogue officiel de
+  l'un ou l'autre canal est lue comme le catalogue officiel du canal de l'OS
+  (`AppSourcesConfigDocument.Read`) : un fichier écrit par un OS stable donne
+  `catalog-beta.json` à une préversion, et l'inverse. Une autre adresse (miroir,
+  catalogue d'entreprise, ou `official=` changé par un administrateur) est
+  gardée telle quelle, et un hôte compilé avec ses propres catalogues
+  (`KazoOsAppCatalogs`) ne déplace rien.
+- **Version proposée.** Le Store (`KazoCatalogApp.LatestVersion`, la version
+  installée par défaut), `kazopkg info` et `kazopkg install <app>` sans
+  version, la vérification des mises à jour (`AppUpdateMonitor`, `kazopkg update`), les liens « Essayer » (ADR 0258) et les propositions pour un
+  fichier (ADR 0257) choisissent la **version la plus récente dont
+  `sdkCompatibility` accepte le SDK de l'OS** (`AppVersionChoice`), et non plus
+  la dernière publiée : une app reconstruite sur un SDK plus récent ne bloque
+  pas un OS plus ancien, qui garde la version précédente. Une version sans
+  plage connue (un `index.json` de dépôt GitHub n'en donne pas) compte comme
+  compatible ; l'installation revérifie le manifeste. Quand aucune version ne
+  convient, la plus récente reste affichée et l'installation la refuse avec
+  `apps.package.sdk-incompatible`, qui dit quel SDK elle demande.
+- **Préversions d'apps.** Proposées quand l'OS est lui-même une préversion, ou
+  quand la version installée en est une (comme avant) ; sinon seules les
+  versions stables le sont, sauf pour une app qui n'a publié que des
+  préversions. `1.0.1` remplace `1.0.1-beta.2` (ordre SemVer).
+
+### Format de `catalog-beta.json`
+
+Fixé par ce chantier pour le chantier 4 (`Os-AppMarketPlace`), qui l'écrit :
+
+- Même dossier que `catalog.json` (racine de la branche `packages`), **même
+  format** (`schemaVersion` 1, mêmes champs, mêmes règles de lecture, 8 Mio au
+  plus) : l'OS le lit avec `AppCatalogDocument.Parse`, sans cas particulier.
+- **Contenu** : tout `catalog.json` (catégories, apps, versions stables), plus
+  les versions bêta des apps, ajoutées dans `versions` de l'app. Une app qui
+  n'a encore qu'une version bêta y figure aussi, avec ses champs de fiche.
+- **Version bêta** : SemVer avec suffixe `<prochaine corrective>-beta.<n>`
+  (`1.0.1-beta.1`), dossier de paquet
+  `packages/<appId>/<version>/<appId>-<version>.kazoapp` et ressources
+  `assets/<appId>/<version>/` comme une version stable, signée avec la même clé
+  (`KAZO_STORE_SIGNING_KEY`), `sdkCompatibility.minimumVersion` = la préversion
+  du SDK sur laquelle elle a été compilée (`3.5.0-preview.1`).
+- **Ordre** : versions de la plus récente à la plus ancienne en SemVer
+  (`1.0.1` > `1.0.1-beta.2` > `1.0.1-beta.1` > `1.0.0`).
+- **`latestVersion`** : la plus récente version **stable**, comme dans
+  `catalog.json` ; la plus récente bêta seulement pour une app sans version
+  stable. L'OS ne s'en sert que quand aucune version n'est compatible.
+- Les champs de fiche (`name`, `shortDescriptions`…) viennent de la version
+  donnée par `latestVersion`, pour que la fiche d'une app ne change pas avec
+  une bêta.
+- Une version bêta ne compte pas dans les 3 versions gardées ; elle est retirée
+  quand la version stable qu'elle précède est publiée (ADR 0271 §5).
+
+Tests : `ReleaseChannelTests` et `AppPackageGatewayTests.ReleaseChannels`
+(Platform.Core) ; les tests E2E du Store et du lien « Essayer » servent les deux
+adresses du catalogue officiel.
+
 ## Ajout sans redémarrage, signature et transactions
 
 L'ADR [0214](adr/0214-hack-store-hot-add-signing-transactions.md) (issue #251)
