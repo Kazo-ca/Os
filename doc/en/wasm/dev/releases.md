@@ -67,7 +67,9 @@ ends **successfully** after a push to `main` or to `beta`, then:
 6. creates the tag and the GitHub Release: title `Kazo OS <version>`, notes
    taken from `changes/<version>.json` (or from `changes/unreleased/` for a
    prerelease), packages and zip attached; a prerelease is marked
-   "pre-release", a stable version "latest".
+   "pre-release", a stable version "latest";
+7. tells the app repositories (job `notify-apps`, see
+   [Telling the app repositories](#telling-the-app-repositories)).
 
 The tag is created last: if a step fails, rerunning the workflow (*Re-run
 failed jobs*) starts over, and packages already on nuget.org are skipped
@@ -116,6 +118,35 @@ After each stable version, `main` is merged into `beta` and the version of
 **Cost.** A prerelease pushes the 42 packages to nuget.org, where a version
 cannot be deleted (only unlisted): publish a prerelease when there is
 something to try, not on every merge.
+
+## Telling the app repositories
+
+Once a version is released (stable or prerelease, never for a *republish*),
+the `notify-apps` job of *Release Kazo OS* tells the app repositories, so
+their **Kazo OS SDK update** workflow (reusable workflow of `Os-AppTemplate`)
+moves each app to it at once instead of at its next hourly run
+([ADR 0271](adr/0271-beta-channel-and-automatic-app-updates.md) §4):
+
+1. it waits until every package of the version is on nuget.org (at most 40
+   minutes): the app CI restores them from there, so an earlier run would fail
+   and open a `TODO` issue in every app. When the packages were not pushed
+   (NuGet not configured) or are still missing, a warning, and no app is told;
+2. it gets a token of the **Kazo OS automation** GitHub App
+   (organization secrets `KAZO_AUTOMATION_APP_ID` and `KAZO_AUTOMATION_APP_KEY`);
+3. `wasm2/KazoOs/build/tools/notify-app-repositories.sh` sends to each
+   repository of `wasm2/KazoOs/build/app-repositories.txt` a
+   `repository_dispatch` of type `kazoos-sdk-released` with
+   `{"version": "<version>", "channel": "stable" | "beta"}`.
+
+Without the App secrets: a warning and nothing else. A repository that refuses
+the dispatch (App not installed, repository renamed) gets a warning; the
+others are still told and the release stays green. A repository not listed
+(a third-party app) finds the new tag at its hourly run.
+
+**Adding an app repository:** one `owner/name` line in
+`build/app-repositories.txt`, and the App installed on that repository (or on
+all the repositories of the organization). `notify-app-repositories.sh
+--version 3.4.0 --channel stable --dry-run` shows what would be sent.
 
 ## Announcement to open sessions
 
@@ -188,6 +219,43 @@ publishing a `Kazo.Os.*` package. It is requested by email to
 `account@nuget.org` (see the *ID prefix reservation* page of the NuGet
 documentation), after the first release.
 
+## Setting up the Kazo OS automation GitHub App
+
+One GitHub App of the `Kazo-ca` organization gives the automations their
+token (ADR 0271, Q6 = A): *Release Kazo OS* tells the apps with it, the
+**Kazo OS SDK update** of each app opens and merges its pull requests with it,
+and the publication to the Store opens the catalog pull request with it. Done
+once, by an owner of the organization:
+
+1. **Create the App.** `Kazo-ca` organization ▸ *Settings* ▸ *Developer
+   settings* ▸ *GitHub Apps* ▸ *New GitHub App*. Name `Kazo OS automation`,
+   homepage `https://github.com/Kazo-ca/Os`, *Webhook* unchecked (*Active*
+   off). Repository permissions: **Contents: Read and write**, **Pull
+   requests: Read and write**, **Issues: Read and write** (Metadata: Read is
+   added by itself). *Where can this GitHub App be installed?*: **Only on this
+   account**. *Create GitHub App*.
+2. **Note the App ID** shown at the top of the App page.
+3. **Create a private key.** Same page ▸ *Private keys* ▸ *Generate a private
+   key*: a `.pem` file downloads. Keep it out of every repository.
+4. **Install the App.** Left menu ▸ *Install App* ▸ `Kazo-ca` ▸ *Install*:
+   *All repositories* (simplest), or *Only select repositories* with `Os`,
+   `Os-AppMarketPlace` and every repository of `build/app-repositories.txt`.
+5. **Organization secrets.** `Kazo-ca` ▸ *Settings* ▸ *Secrets and variables*
+   ▸ *Actions* ▸ *New organization secret*, twice:
+   `KAZO_AUTOMATION_APP_ID` = the App ID, `KAZO_AUTOMATION_APP_KEY` = the whole
+   content of the `.pem` file (from `-----BEGIN` to `-----END ...-----`).
+   *Repository access*: **All repositories**, or the same list as step 4. On
+   the GitHub Free plan, organization secrets only reach **public**
+   repositories: a private repository needs both secrets as repository
+   secrets.
+6. **Let it merge the rebuilds** (ADR 0271 Q5 = A). In each app repository
+   and in `Os-AppMarketPlace`, if `main` is protected: *Settings* ▸ *Rules* ▸
+   *Rulesets* (or *Branches*) ▸ the rule of `main` ▸ *Bypass list* ▸ *Add
+   bypass* ▸ `Kazo OS automation`. Never in `Kazo-ca/Os`.
+7. **Check.** *Actions* ▸ *Release Kazo OS* of the next version: the
+   `notify-apps` job shows "N/N repositories told"; each app gets a *Kazo OS
+   SDK update* run started by `repository_dispatch`.
+
 ## Checking a release
 
 - Repository **Releases**: the `Kazo OS <version>` Release, its `.nupkg`,
@@ -203,6 +271,7 @@ documentation), after the first release.
 | --- | --- |
 | *Release Kazo OS* does not start | *Verify Kazo OS WASM* failed or was cancelled on that commit; fix it, or wait for the next commit of `main` (same version, not tagged yet). |
 | "already released" in the summary | The `v<version>` tag exists: change the version. |
+| `notify-apps` warns "was not told" | The Kazo OS automation App is not installed on that repository, or the repository was renamed: install the App or fix `build/app-repositories.txt`. |
 | "Release channel" error | The version does not fit the branch: `main` wants `X.Y.Z`, `beta` wants `X.Y.Z-preview.<n>`. Fix `build/Versions.props` in the PR. |
 | `403` on the NuGet push | Expired key, wrong scope (glob), or a Trusted Publishing policy that does not match the repository or the `release.yml` file. |
 | `NuGet/login` fails | `NUGET_USER` does not match the nuget.org profile name, or the policy does not exist. |
