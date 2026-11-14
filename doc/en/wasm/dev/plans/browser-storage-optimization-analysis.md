@@ -5,7 +5,7 @@
 Analysis done on 2026-11-14 on `main` (version 3.3.4). **No code is changed** and no ADR
 number is taken: this document describes what the OS keeps in the browser, what it
 costs, and the ways to do better. Each avenue that is kept will need its ADR before the
-code.
+code. Benoit's decisions are in §7.
 
 ## 1. Summary
 
@@ -199,22 +199,24 @@ Two leads for the search:
 | 7 | 7, 11. Compression, streamed backup | Targeted gains. |
 | 8 | 8, 9, 12 | Only if a measured need asks for it. |
 
-Avenues 1 and 3 can start as two independent `TODO` issues. The rest would make a
-`storage/base` series, with its ADRs before the code.
+Avenues 1 and 3 start as two independent `TODO` issues (#537 and #538). The rest
+makes a `storage/base` series, with its ADRs before the code.
 
-## 7. Open questions
+## 7. Benoit's decisions (2026-11-14)
 
-1. **Where to start?** Two `TODO` issues (avenues 1 and 3) now and a `storage/base`
-   series for the rest (recommended), only the issues, or keep the analysis without
-   starting anything.
-2. **Where do an installed app's files live?** Option A of avenue 6 (recommended: the
-   file system stays the only source, as on a real machine), option B, or keep the
-   current copies.
-3. **How long to keep an orphan content?** Short, from a few hours to a day, and at
-   once when space is low (recommended), 30 days as today, or always immediate
-   deletion. The retention is a safety net if a reference is written late; removing it
-   needs proof that no path writes the content before its reference in another
-   transaction.
+The three questions of the analysis were asked to Benoit, who kept the
+recommendations.
+
+1. **Where to start.** Two `TODO` issues now:
+   [#537](https://github.com/Kazo-ca/Os/issues/537) (avenue 1, reclaim space) and
+   [#538](https://github.com/Kazo-ca/Os/issues/538) (avenue 3, profile #520). The rest
+   makes a `storage/base` series, with its ADRs before the code.
+2. **Where an installed app's files live.** Option A of avenue 6: the file system stays
+   the only source, as on a real machine; the service worker serves `_content/…` from
+   the file store, and the copy in Cache Storage goes away.
+3. **How long to keep an orphan content.** Short, from a few hours to a day, and at
+   once when space is low. The exact value is set by the ADR that replaces the 30-day
+   retention of ADR 0099.
 
 ## 8. Limits
 

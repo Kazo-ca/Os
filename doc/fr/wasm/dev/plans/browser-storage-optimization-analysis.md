@@ -5,7 +5,7 @@
 Analyse faite le 2026-11-14 sur `main` (version 3.3.4). **Aucun code n'est changé** et
 aucun numéro d'ADR n'est pris : ce document décrit ce que l'OS garde dans le navigateur,
 ce que ça coûte, et les pistes pour faire mieux. Chaque piste retenue demandera son ADR
-avant le code.
+avant le code. Les décisions de Benoit sont au §7.
 
 ## 1. Résumé
 
@@ -203,22 +203,25 @@ Deux indices pour chercher :
 | 7 | 7, 11. Compression, sauvegarde en flux | Gains ciblés. |
 | 8 | 8, 9, 12 | Seulement si un besoin mesuré le demande. |
 
-Les pistes 1 et 3 peuvent partir comme deux issues `TODO` indépendantes. Le reste
-ferait une série `storage/base`, avec ses ADR avant le code.
+Les pistes 1 et 3 partent comme deux issues `TODO` indépendantes (#537 et #538). Le
+reste fait une série `storage/base`, avec ses ADR avant le code.
 
-## 7. Questions ouvertes
+## 7. Décisions de Benoit (2026-11-14)
 
-1. **Par où commencer ?** Deux issues `TODO` (pistes 1 et 3) tout de suite et une série
-   `storage/base` pour le reste (recommandé), seulement les issues, ou garder l'analyse
-   sans rien lancer.
-2. **Où vivent les fichiers d'une app installée ?** Option A de la piste 6
-   (recommandé : le système de fichiers reste la seule source, comme sur une vraie
-   machine), option B, ou garder les copies actuelles.
-3. **Combien de temps garder un contenu orphelin ?** Court, de quelques heures à un
-   jour, et tout de suite quand l'espace est faible (recommandé), 30 jours comme
-   aujourd'hui, ou suppression immédiate toujours. La rétention sert de filet si une
-   référence est écrite en retard ; la supprimer demande de prouver qu'aucun chemin
-   n'écrit le contenu avant sa référence dans une autre transaction.
+Les trois questions de l'analyse ont été posées à Benoit, qui a retenu les
+recommandations.
+
+1. **Par où commencer.** Deux issues `TODO` tout de suite :
+   [#537](https://github.com/Kazo-ca/Os/issues/537) (piste 1, récupérer l'espace) et
+   [#538](https://github.com/Kazo-ca/Os/issues/538) (piste 3, profiler #520). Le reste
+   fait une série `storage/base`, avec ses ADR avant le code.
+2. **Où vivent les fichiers d'une app installée.** Option A de la piste 6 : le système
+   de fichiers reste la seule source, comme sur une vraie machine ; le service worker
+   sert `_content/…` depuis le magasin de fichiers, et la copie dans Cache Storage
+   disparaît.
+3. **Combien de temps garder un contenu orphelin.** Court, de quelques heures à un
+   jour, et tout de suite quand l'espace est faible. La valeur exacte est fixée par
+   l'ADR qui remplace la rétention de 30 jours de l'ADR 0099.
 
 ## 8. Limites
 
