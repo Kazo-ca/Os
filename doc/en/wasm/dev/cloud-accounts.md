@@ -133,6 +133,10 @@ await accounts.RemoveAsync(account.Id);                           // unmounts, r
   unmounts and forgets the account's drives), revokes the token at Dropbox
   (Microsoft has no revocation for a public client), erases the keyring key
   and the account's row.
+- Connectors go through `ICloudAccountTokens` (work item 3,
+  [`cloud-drive-connectors.md`](cloud-drive-connectors.md));
+  `RenewAccessTokenAsync` renews a token the provider refused (401) before its
+  known expiry, once for several requests.
 
 ## App ids
 
