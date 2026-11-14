@@ -4,9 +4,8 @@
 
 ## Status
 
-**Accepted** on 2026-11-14 by Benoit for Q1 to Q5 (evaluation, no code); Q6
-(token for the automations) waits for his answer and the decision follows the
-recommendation until then. See [Questions asked to Benoit](#questions-asked-to-benoit).
+**Accepted** on 2026-11-14 by Benoit, who answered the six questions
+(evaluation, no code). See [Questions asked to Benoit](#questions-asked-to-benoit).
 Series `release-channels/base`, plan:
 [`release-channels-plan.md`](../plans/release-channels-plan.md).
 
@@ -144,8 +143,8 @@ A shared workflow **"Kazo OS SDK update"** in each app repository:
 - The `kazoos-solution` template (in this repository) generates those calls;
   the template repository is regenerated, then the 11 app repositories are
   aligned.
-- **Token:** an organization secret replaces the per-repository secrets
-  (answer to Q6), which also fixes the repositories without
+- **Token:** a GitHub App of the organization, whose key is an organization
+  secret, replaces the per-repository secrets (Q6 = A), which also fixes the repositories without
   `HACK_STORE_TOKEN`. For a `Kazo-ca` repository, the catalog PR comes from a
   branch of the catalog, with no fork; the fork path stays for third parties.
 
@@ -199,7 +198,7 @@ A shared workflow **"Kazo OS SDK update"** in each app repository:
 
 Asked in the thread on 2026-11-14; the recommendation is in bold.
 
-**Benoit's answers (2026-11-14):** Q1 = A with the name `os-beta.kazo.ca`; Q2 = A; Q3 = A; Q4 = B; Q5 = A. Q6 pending.
+**Benoit's answers (2026-11-14):** Q1 = A with the name `os-beta.kazo.ca`; Q2 = A; Q3 = A; Q4 = B; Q5 = A; Q6 = A (GitHub App of the organization).
 
 | # | Question | Choices |
 | --- | --- | --- |
@@ -216,5 +215,5 @@ See the plan: [`release-channels-plan.md`](../plans/release-channels-plan.md).
 
 - [x] Evaluation, ADR and plan (work item 0).
 - [x] Benoit's answers to Q1 to Q5 recorded here.
-- [ ] Answer to Q6.
+- [x] Answer to Q6.
 - [ ] Work items 1 to 8 of the plan.

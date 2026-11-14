@@ -2,7 +2,7 @@
 
 # Plan: beta channel and automatic app updates
 
-**Approved on 2026-11-14** by Benoit's answers to Q1 to Q5 (Q6 pending) of
+**Approved on 2026-11-14** by Benoit's answers to questions Q1 to Q6 of
 [ADR 0271](../adr/0271-beta-channel-and-automatic-app-updates.md). Series
 `release-channels/base`. Nothing is coded.
 
@@ -48,12 +48,11 @@ of `catalog-beta.json` is fixed by 3.
 
 ## What Benoit must do himself
 
-- Answer Q6.
 - Create the beta site (Cloudflare Pages project, domain
   `os-beta.kazo.ca`) and the deployment token, as a secret of the `Os`
   repository.
-- Depending on Q6: create the GitHub App (or the token) and the organization
-  secret.
+- Create the organization's GitHub App and its secret (steps given in work
+  item 6).
 - Check that nuget.org's Trusted Publishing policy accepts runs of
   `release.yml` from the `beta` branch.
 - Protect the `beta` branch of `Os` (pull request required, green check).

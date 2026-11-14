@@ -4,9 +4,8 @@
 
 ## Statut
 
-**Acceptée** le 2026-11-14 par Benoit pour Q1 à Q5 (évaluation, aucun code) ;
-Q6 (jeton des automates) attend sa réponse et la décision suit la
-recommandation d'ici là. Voir [Questions posées à Benoit](#questions-posées-à-benoit). Série `release-channels/base`, plan :
+**Acceptée** le 2026-11-14 par Benoit, qui a répondu aux six questions
+(évaluation, aucun code). Voir [Questions posées à Benoit](#questions-posées-à-benoit). Série `release-channels/base`, plan :
 [`release-channels-plan.md`](../plans/release-channels-plan.md).
 
 - **Complète :** l'[ADR 0173](0173-automatic-releases-from-the-version-file.md)
@@ -146,8 +145,8 @@ Un workflow commun **« Kazo OS SDK update »** dans chaque dépôt d'app :
   dépôt. Un changement futur se fait une fois, dans le template.
 - Le modèle `kazoos-solution` (dans ce dépôt) génère ces appels ; le dépôt
   template est régénéré, puis les 11 dépôts d'apps sont alignés.
-- **Jeton :** un secret d'organisation remplace les secrets par dépôt (réponse
-  à Q6), ce qui règle aussi les dépôts sans `HACK_STORE_TOKEN`. Pour un dépôt
+- **Jeton :** une GitHub App de l'organisation, dont la clé est un secret
+  d'organisation, remplace les secrets par dépôt (Q6 = A), ce qui règle aussi les dépôts sans `HACK_STORE_TOKEN`. Pour un dépôt
   de `Kazo-ca`, la PR du catalogue part d'une branche du catalogue, sans fork ;
   le chemin par fork reste pour les tiers.
 
@@ -202,7 +201,7 @@ Un workflow commun **« Kazo OS SDK update »** dans chaque dépôt d'app :
 
 Posées dans le fil le 2026-11-14 ; la recommandation est en gras.
 
-**Réponses de Benoit (2026-11-14) :** Q1 = A avec le nom `os-beta.kazo.ca` ; Q2 = A ; Q3 = A ; Q4 = B ; Q5 = A. Q6 en attente.
+**Réponses de Benoit (2026-11-14) :** Q1 = A avec le nom `os-beta.kazo.ca` ; Q2 = A ; Q3 = A ; Q4 = B ; Q5 = A ; Q6 = A (GitHub App de l'organisation).
 
 | # | Question | Choix |
 | --- | --- | --- |
@@ -219,5 +218,5 @@ Voir le plan : [`release-channels-plan.md`](../plans/release-channels-plan.md).
 
 - [x] Évaluation, ADR et plan (chantier 0).
 - [x] Réponses de Benoit à Q1 à Q5 reportées ici.
-- [ ] Réponse à Q6.
+- [x] Réponse à Q6.
 - [ ] Chantiers 1 à 8 du plan.
