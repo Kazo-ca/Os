@@ -30,6 +30,7 @@ aux chantiers 3, 4 et 6, l'interface au chantier 5.
 | `IHostFolderQuota`, `HostFolderQuota` | `FileSystem/HostFolderContracts.cs` | Interface facultative d'un `IHostFolder` : taille et espace libre. |
 | `IConditionalHostFolder`, `HostFolderEntry.Revision` | idem | Interface facultative : révision du service (`rev`, `eTag`, `ETag`) et écriture conditionnelle. |
 | `HostFolderErrorKind.RevisionConflict`, `.Unavailable`, `HostFolderPermission.Unavailable` | idem | Le refus d'une écriture conditionnelle ; un service injoignable ou une connexion expirée. |
+| `HostFolderErrorKind.FileTooLarge` | idem | Un fichier du service de plus de 128 Mio (ADR 0245, ADR 0267 §10) : listé, mais sa lecture répond `FileTooLarge` (`EFBIG`). Ajouté au chantier 4 ([`onedrive-drives.md`](onedrive-drives.md)). |
 | `HostFolderDriveSource` | `Kazo.Os.Platform.Core` (`FileSystem/HostFolders/`) | La source `hostfs`, au-dessus de `IHostFolderAccess` (dialogue de dossiers, poignées dans IndexedDB). Comportement inchangé. |
 | `NetworkDriveService` | idem | Reçoit la liste des sources ; monte, restaure, reconnecte et oublie par la source du lecteur. |
 | `HostFolderFileSystemProvider` | idem | Fournisseur de tous les lecteurs réseau : `Type`, `MountSource`, `GetQuotaAsync`, révision du service. |

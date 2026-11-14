@@ -1,0 +1,11 @@
+{
+  "id": "1f1c6036-7bc8-481a-9300-65a1576cb43c",
+  "category": "developer",
+  "audience": ["developer"],
+  "title": { "en": "Cloud drives: OneDrive connector", "fr": "Lecteurs cloud : connecteur OneDrive" },
+  "description": {
+    "en": "A connected Microsoft account's OneDrive can be mounted in /mnt as a network drive, over Microsoft Graph from the browser: the whole OneDrive or the folder reserved for Kazo OS, service revisions with If-Match, large files sent in pieces, quota in df. After 24 hours the drive asks to reconnect. Nothing is offered until a OneDrive app id is set; the dialog comes with the next step of the series.",
+    "fr": "Le OneDrive d'un compte Microsoft connecté se monte dans /mnt comme un lecteur réseau, par Microsoft Graph depuis le navigateur : tout le OneDrive ou le dossier réservé à Kazo OS, révisions du service avec If-Match, gros fichiers envoyés en morceaux, quota dans df. Après 24 heures, le lecteur demande de se reconnecter. Rien n'est proposé tant qu'un identifiant d'app OneDrive n'est pas inscrit ; le dialogue arrive avec le chantier suivant de la série."
+  },
+  "links": ["doc/en/wasm/dev/onedrive-drives.md", "doc/en/wasm/dev/adr/0267-cloud-drives-as-network-drives.md"]
+}
