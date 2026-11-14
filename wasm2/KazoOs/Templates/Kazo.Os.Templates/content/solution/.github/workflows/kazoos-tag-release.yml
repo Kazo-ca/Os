@@ -1,0 +1,129 @@
+# Reusable workflow (ADR 0271 §7), called by the tag-release.yml of every app repository and by the
+# Kazo OS SDK update.
+#
+# Creates the release tag v<version> (the "version" of the app's manifest.json) on a commit of
+# main (or of beta for a beta version), from GitHub: a person runs the caller from the Actions tab,
+# an agent through the GitHub API. Nobody has to push a tag from a computer.
+#
+# The tag is pushed with the workflow token, which starts no other workflow (a GitHub rule): when
+# "publish" is on, this workflow runs the two publishing workflows on the new tag itself. Turn
+# "publish" off to tag a version that is already published.
+name: Tag a release
+
+on:
+  workflow_call:
+    inputs:
+      app-directory:
+        description: Folder of the app project (the one with manifest.json), for example src/Contoso.Notes
+        type: string
+        required: true
+      commit:
+        description: Commit of the branch to tag (empty for its head)
+        type: string
+        default: ''
+      branch:
+        description: Branch the commit must be on (main, or beta for a beta version)
+        type: string
+        default: main
+      publish:
+        description: Run the publishing workflows on the tag
+        type: boolean
+        default: true
+    secrets:
+      KAZO_AUTOMATION_APP_ID:
+        required: false
+      KAZO_AUTOMATION_APP_KEY:
+        required: false
+      HACK_STORE_TOKEN:
+        required: false
+    outputs:
+      tag:
+        description: The tag created (or already there)
+        value: ${{ jobs.tag.outputs.tag }}
+      pull-request:
+        description: Address of the catalog pull request (empty when none was opened)
+        value: ${{ jobs.store.outputs.pull-request }}
+
+permissions:
+  contents: write
+
+jobs:
+  tag:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: tag-release-${{ github.repository }}
+      cancel-in-progress: false
+    outputs:
+      tag: ${{ steps.tag.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.branch }}
+          fetch-depth: 0
+
+      - name: Create the tag
+        id: tag
+        env:
+          COMMIT: ${{ inputs.commit }}
+          BRANCH: ${{ inputs.branch }}
+          APP_DIRECTORY: ${{ inputs.app-directory }}
+        run: |
+          if [[ "$BRANCH" != main && "$BRANCH" != beta ]]; then
+            echo "::error::Releases are tagged on main or beta, not on $BRANCH."
+            exit 1
+          fi
+          if [[ -n "$COMMIT" && ! "$COMMIT" =~ ^[0-9a-f]{7,40}$ ]]; then
+            echo "::error::\"$COMMIT\" is not a commit hash."
+            exit 1
+          fi
+          commit="$(git rev-parse --verify "${COMMIT:-HEAD}^{commit}")"
+          if ! git merge-base --is-ancestor "$commit" HEAD; then
+            echo "::error::Commit $commit is not on $BRANCH."
+            exit 1
+          fi
+          version="$(git show "$commit:$APP_DIRECTORY/manifest.json" | jq -r .version)"
+          # ADR 0271 §1: a version with a suffix is a beta version, published from beta only, and
+          # main publishes stable versions only.
+          if [[ "$BRANCH" == main && "$version" == *-* ]]; then
+            echo "::error::$version is a beta version: it is published from the beta branch, not from main."
+            exit 1
+          fi
+          if [[ "$BRANCH" == beta && "$version" != *-* ]]; then
+            echo "::error::$version has no suffix: a stable version is published from main, not from beta."
+            exit 1
+          fi
+          tag="v$version"
+          if existing="$(git rev-parse -q --verify "refs/tags/$tag^{commit}")"; then
+            if [[ "$existing" != "$commit" ]]; then
+              echo "::error::Tag $tag already exists on $existing: change the version in the manifest first."
+              exit 1
+            fi
+            echo "Tag $tag is already on $commit."
+          else
+            git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+              tag -a "$tag" -m "Version $version" "$commit"
+            git push origin "refs/tags/$tag"
+            echo "Tag $tag created on $commit."
+          fi
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
+  packages:
+    needs: tag
+    if: inputs.publish
+    permissions:
+      contents: write
+    uses: Kazo-ca/Os-AppTemplate/.github/workflows/kazoos-publish-packages.yml@v1
+    with:
+      app-directory: ${{ inputs.app-directory }}
+      ref: ${{ needs.tag.outputs.tag }}
+
+  store:
+    needs: tag
+    if: inputs.publish
+    permissions:
+      contents: read
+    uses: Kazo-ca/Os-AppTemplate/.github/workflows/kazoos-publish-to-store.yml@v1
+    with:
+      app-directory: ${{ inputs.app-directory }}
+      ref: ${{ needs.tag.outputs.tag }}
+    secrets: inherit

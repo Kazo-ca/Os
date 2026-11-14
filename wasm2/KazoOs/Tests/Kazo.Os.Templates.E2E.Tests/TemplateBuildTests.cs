@@ -58,6 +58,22 @@ public sealed class TemplateBuildTests(TemplateWorkspace workspace)
         Assert.Contains("*.pem", File.ReadAllText(Path.Combine(directory, ".gitignore")), StringComparison.Ordinal);
         // The release tagging workflow reads the version from the app's own manifest.
         Assert.Contains("src/Contoso.Board", File.ReadAllText(Path.Combine(directory, ".github", "workflows", "tag-release.yml")), StringComparison.Ordinal);
+        // ADR 0271 §7: an app repository calls the reusable workflows of Kazo-ca/Os-AppTemplate at
+        // @v1 and holds no copy of them; ADR 0271 §4: it has the Kazo OS SDK update.
+        string workflows = Path.Combine(directory, ".github", "workflows");
+        foreach (string name in new[] { "ci", "publish-packages", "publish-to-kazoos-store", "tag-release", "sdk-update" })
+        {
+            Assert.Matches(@"uses: Kazo-ca/Os-AppTemplate/\.github/workflows/kazoos-[a-z-]+\.yml@v1", File.ReadAllText(Path.Combine(workflows, name + ".yml")));
+        }
+        Assert.Empty(Directory.GetFiles(workflows, "kazoos-*.yml"));
+        string sdkUpdate = File.ReadAllText(Path.Combine(workflows, "sdk-update.yml"));
+        Assert.Contains("kazoos-sdk-released", sdkUpdate, StringComparison.Ordinal);
+        Assert.Contains("app-directory: src/Contoso.Board", sdkUpdate, StringComparison.Ordinal);
+
+        // The version script the SDK update runs: the [AppManifest] class changes, and the build
+        // generates the manifest from it.
+        Assert.Equal("1.0.1", (await RunBashAsync(directory, ".github/scripts/bump-app-version.sh", "src/Contoso.Board", "patch")).Trim());
+        Assert.Contains("Version => \"1.0.1\"", File.ReadAllText(Path.Combine(directory, "src", "Contoso.Board", "TemplateSolutionApp.cs")), StringComparison.Ordinal);
 
         (int missingExit, string missingOutput) = await workspace.RunAsync(directory, "build", "-c", "Release");
         Assert.NotEqual(0, missingExit);
@@ -75,6 +91,7 @@ public sealed class TemplateBuildTests(TemplateWorkspace workspace)
         using (JsonDocument manifest = JsonDocument.Parse(File.ReadAllText(Path.Combine(directory, "src", "Contoso.Board", "manifest.json"))))
         {
             Assert.Equal("com.contoso.board", manifest.RootElement.GetProperty("id").GetString());
+            Assert.Equal("1.0.1", manifest.RootElement.GetProperty("version").GetString());
             Assert.Equal(workspace.Version, manifest.RootElement.GetProperty("sdkCompatibility").GetProperty("minimumVersion").GetString());
         }
 
@@ -88,6 +105,54 @@ public sealed class TemplateBuildTests(TemplateWorkspace workspace)
         // The publishing workflow packs the app the same way (ADR 0188 §7, ADR 0182).
         await workspace.RunCheckedAsync(directory, "build", Path.Combine("src", "Contoso.Board"), "-c", "Release", "-t:KazoOsPack", sourceRoot);
         Assert.True(File.Exists(Path.Combine(directory, "src", "Contoso.Board", "bin", "kazoos-packages", "index.json")));
+    }
+
+    /// <summary>
+    /// ADR 0271 §7: with <c>--templateRepository true</c> (how Kazo-ca/Os-AppTemplate is
+    /// regenerated) the solution also holds the reusable workflows, and its own workflows call
+    /// them locally, so a change of the template repository is tested before it is tagged.
+    /// </summary>
+    [Fact]
+    public async Task The_template_repository_holds_the_reusable_workflows()
+    {
+        string directory = Path.Combine(workspace.Root, "Kazo.Os.App");
+        await workspace.RunCheckedAsync(workspace.Root, "new", "kazoos-solution", "-n", "Kazo.Os.App", "-o", directory, "--templateRepository", "true");
+
+        string workflows = Path.Combine(directory, ".github", "workflows");
+        foreach (string name in new[] { "kazoos-ci", "kazoos-publish-packages", "kazoos-publish-to-store", "kazoos-tag-release", "kazoos-sdk-update" })
+        {
+            Assert.Contains("workflow_call:", File.ReadAllText(Path.Combine(workflows, name + ".yml")), StringComparison.Ordinal);
+        }
+        foreach (string name in new[] { "ci", "publish-packages", "publish-to-kazoos-store", "tag-release", "sdk-update" })
+        {
+            string caller = File.ReadAllText(Path.Combine(workflows, name + ".yml"));
+            Assert.Matches(@"uses: \./\.github/workflows/kazoos-[a-z-]+\.yml", caller);
+            Assert.DoesNotContain("@v1", caller, StringComparison.Ordinal);
+        }
+        Assert.True(File.Exists(Path.Combine(directory, ".github", "scripts", "bump-app-version.sh")));
+    }
+
+    /// <summary>Runs a bash script of a generated repository and returns its output; fails on a non-zero exit.</summary>
+    private static async Task<string> RunBashAsync(string directory, params string[] arguments)
+    {
+        System.Diagnostics.ProcessStartInfo start = new("bash")
+        {
+            WorkingDirectory = directory,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false
+        };
+        foreach (string argument in arguments)
+        {
+            start.ArgumentList.Add(argument);
+        }
+
+        using System.Diagnostics.Process process = System.Diagnostics.Process.Start(start)!;
+        Task<string> stdout = process.StandardOutput.ReadToEndAsync();
+        Task<string> stderr = process.StandardError.ReadToEndAsync();
+        await process.WaitForExitAsync();
+        Assert.True(process.ExitCode == 0, $"bash {string.Join(' ', arguments)} exited with {process.ExitCode}:\n{await stdout}\n{await stderr}");
+        return await stdout;
     }
 
     /// <summary>Every Kazo OS library of a restore output has the expected type (<c>project</c> or <c>package</c>).</summary>

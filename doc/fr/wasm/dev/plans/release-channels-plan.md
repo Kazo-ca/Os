@@ -80,7 +80,7 @@ quand le format de `catalog-beta.json` est fixé par le 3.
 - [ ] Chantier 2 : site bêta.
 - [ ] Chantier 3 : canal dans l'OS.
 - [ ] Chantier 4 : canal bêta du catalogue.
-- [ ] Chantier 5 : workflows réutilisables et template.
+- [x] Chantier 5 : workflows réutilisables et template (modèle `kazoos-solution`, `Os-AppTemplate` régénéré ; le tag `v1` reste à poser).
 - [ ] Chantier 6 : prévenir les apps.
 - [ ] Chantier 7 : aligner chaque dépôt d'app.
 - [ ] Chantier 8 : essai complet et bilan.

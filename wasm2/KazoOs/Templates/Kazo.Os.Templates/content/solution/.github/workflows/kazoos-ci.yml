@@ -1,0 +1,90 @@
+# Reusable workflow (ADR 0271 §7): the CI of a Kazo OS app repository. It lives in
+# Kazo-ca/Os-AppTemplate and every app repository calls it with one line
+# (uses: Kazo-ca/Os-AppTemplate/.github/workflows/kazoos-ci.yml@v1), so a change is made once here.
+#
+# Builds and tests the Release profile: the Kazo OS packages from nuget.org, at the version of the
+# submodule (ADR 0176 §4, §6). This is what the Kazo OS Store compiles. Only the Kazo OS submodule
+# is fetched: another submodule of the app (the sources of an engine whose build is committed, for
+# example) is not needed to build or test it.
+name: Kazo OS app CI
+
+on:
+  workflow_call:
+    inputs:
+      ref:
+        description: Branch, tag or commit to check out (empty for the commit that started the caller)
+        type: string
+        default: ''
+      solution:
+        description: Solution or project to build and test (empty for the one at the root)
+        type: string
+        default: ''
+      npm-test:
+        description: Run "npm ci" then "npm test" (JavaScript tests of the app)
+        type: boolean
+        default: false
+      e2e-test:
+        description: Run "npm run test:e2e" with Playwright Chromium (end-to-end tests of the app)
+        type: boolean
+        default: false
+      timeout-minutes:
+        description: Time limit of the job
+        type: number
+        default: 40
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: ${{ inputs.timeout-minutes }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.ref }}
+
+      - name: Fetch the Kazo OS submodule
+        run: git submodule update --init --depth 1 external/KazoOs
+
+      - uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+
+      - uses: actions/setup-node@v6
+        if: inputs.npm-test || inputs.e2e-test
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Check the Kazo OS submodule
+        run: bash .github/scripts/check-kazoos-submodule.sh
+
+      - name: Check the README shows the Store listing
+        run: node .github/scripts/store-readme.mjs --check
+
+      - name: Build (Release, packages)
+        env:
+          SOLUTION: ${{ inputs.solution }}
+        run: dotnet build $SOLUTION -c Release
+
+      - name: Test
+        env:
+          SOLUTION: ${{ inputs.solution }}
+        run: dotnet test $SOLUTION -c Release --no-build
+
+      - name: Install the JavaScript test tools
+        if: inputs.npm-test || inputs.e2e-test
+        run: npm ci
+
+      - name: JavaScript tests
+        if: inputs.npm-test
+        run: npm test
+
+      - name: Install Playwright Chromium
+        if: inputs.e2e-test
+        run: npx playwright install --with-deps chromium
+
+      - name: End-to-end tests
+        if: inputs.e2e-test
+        run: npm run test:e2e
