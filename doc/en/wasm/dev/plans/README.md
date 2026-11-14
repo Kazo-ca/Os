@@ -19,5 +19,6 @@ summarized in [`../../memory/README.md`](../../memory/README.md).
 | [`wasm-v3-migration-analyse.md`](wasm-v3-migration-analyse.md) | Analysis of the wasm v3 migration (starting point of the end-of-migration plan). Historical. |
 | [`authentication-task-list.md`](authentication-task-list.md) | Former task list for WebAssembly authentication. Historical. |
 | [`kazoos-store.md`](kazoos-store.md) | **Kazo OS Store** plan, **approved on 2026-10-29**: system app (in the style of the Play Store) pinned by default, reviewed `Kazo-ca/Os-AppMarketPlace` catalog, trusted sources and per-user install, theme packs in v2; ADRs [0188](../adr/0188-hack-store-and-app-catalog.md) to [0190](../adr/0190-theme-packs.md) and the ordered list of work items (none started). |
+| [`browser-storage-optimization-analysis.md`](browser-storage-optimization-analysis.md) | **Analysis of storage in the browser** (2026-11-14, no code): what the OS keeps in IndexedDB and Cache Storage, measurements (base64 against binary, OPFS, SHA-256, published site), findings (orphan contents never collected, 1.34 times the size, three copies of installed apps, `persist()` never called), twelve ordered avenues and three open questions; linked to issues #520 and #379 and to ADR 0250. |
 
 Parent folder index: [`../README.md`](../README.md).
