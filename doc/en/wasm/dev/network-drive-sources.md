@@ -29,6 +29,7 @@ and 6, the interface in work item 5.
 | `IHostFolderQuota`, `HostFolderQuota` | `FileSystem/HostFolderContracts.cs` | Optional interface of an `IHostFolder`: size and free space. |
 | `IConditionalHostFolder`, `HostFolderEntry.Revision` | same | Optional interface: the service's revision (`rev`, `eTag`, `ETag`) and conditional writes. |
 | `HostFolderErrorKind.RevisionConflict`, `.Unavailable`, `HostFolderPermission.Unavailable` | same | A refused conditional write; a service that cannot be reached or an expired sign-in. |
+| `HostFolderErrorKind.FileTooLarge` | same | A file of the service over 128 MiB (ADR 0245, ADR 0267 §10): listed, but reading it answers `FileTooLarge` (`EFBIG`). Added in work item 4 ([`onedrive-drives.md`](onedrive-drives.md)). |
 | `HostFolderDriveSource` | `Kazo.Os.Platform.Core` (`FileSystem/HostFolders/`) | The `hostfs` source, over `IHostFolderAccess` (folder dialog, handles in IndexedDB). Unchanged behaviour. |
 | `NetworkDriveService` | same | Takes the list of sources; mounts, restores, reconnects and forgets through the drive's source. |
 | `HostFolderFileSystemProvider` | same | Provider of every network drive: `Type`, `MountSource`, `GetQuotaAsync`, service revision. |
