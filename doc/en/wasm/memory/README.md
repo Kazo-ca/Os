@@ -30,7 +30,12 @@ at the end of each series or when a convention changes.
   refuses a suffix on `main` and its absence on `beta`. Nothing is active
   before the series reaches `main` (`workflow_run` reads the workflow of
   `main`); the `beta` branch does not exist yet: creating it and the first
-  prerelease are the trial of work item 8.
+  prerelease are the trial of work item 8. Work item 2 done
+  (`release-channels/2-beta-site`, [`beta-site.md`](../dev/beta-site.md)):
+  `deploy-beta-site.yml` deploys `beta` to Cloudflare Pages
+  (`os-beta.kazo.ca`, project `kazo-os-beta`, secrets `CLOUDFLARE_API_TOKEN`
+  and `CLOUDFLARE_ACCOUNT_ID` to be created by Benoit), `os.kazo.ca/beta`
+  redirects, "Beta" badge and links between channels read from the version.
 - **Version 3.3.3** (2026-11-13, published). Benoit chose a patch number although the public API grows
   (like 2.2.1); 3.4.0 is kept for the prerelease SDK (TODO #456). Content:
   direct link `?autolaunch=<appId>` (ADR 0258, series `app-link/base`, PR

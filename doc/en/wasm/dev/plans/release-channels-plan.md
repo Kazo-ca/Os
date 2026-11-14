@@ -4,9 +4,9 @@
 
 **Approved on 2026-11-14** by Benoit's answers to questions Q1 to Q6 of
 [ADR 0271](../adr/0271-beta-channel-and-automatic-app-updates.md). Series
-`release-channels/base`. Work item 1 is coded (prerelease from `beta`, see
-[`releases.md`](../releases.md#publishing-a-prerelease-beta-channel)); the other
-work items are not yet.
+`release-channels/base`. Work items 1 (prerelease from `beta`, see
+[`releases.md`](../releases.md#publishing-a-prerelease-beta-channel)) and 2 (beta site, see
+[`beta-site.md`](../beta-site.md)) are coded; the other work items are not yet.
 
 ## Goal
 
@@ -80,8 +80,8 @@ of `catalog-beta.json` is fixed by 3.
 ## Tasks
 
 - [x] Work item 0: evaluation, ADR 0271, plan.
-- [ ] Work item 1: prerelease from `beta`.
-- [ ] Work item 2: beta site.
+- [x] Work item 1: prerelease from `beta`.
+- [x] Work item 2: beta site ([`beta-site.md`](../beta-site.md); Cloudflare project and secrets to be created by Benoit).
 - [ ] Work item 3: channel in the OS.
 - [ ] Work item 4: catalog beta channel.
 - [ ] Work item 5: reusable workflows and template.

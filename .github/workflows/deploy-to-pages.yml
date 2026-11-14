@@ -19,6 +19,7 @@ on:
       - 'tsconfig*.json'
       - 'webpack.config.js'
       - 'wasm2/KazoOs/build/assemble-pages.ps1'
+      - 'wasm2/KazoOs/build/pages/**'
       - '.github/workflows/deploy-to-pages.yml'
   workflow_dispatch:
 

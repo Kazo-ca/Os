@@ -1,0 +1,11 @@
+{
+  "id": "b0bc6228-a678-40f5-9d66-6c25237c6143",
+  "category": "new",
+  "audience": ["user"],
+  "title": { "en": "A beta of Kazo OS on os-beta.kazo.ca", "fr": "Une bêta de Kazo OS sur os-beta.kazo.ca" },
+  "description": {
+    "en": "Prereleases of Kazo OS run on their own site, os-beta.kazo.ca (os.kazo.ca/beta leads there), with their own data. A beta shows a \"Beta\" badge next to its version and, in Settings > About, a link back to the stable version; the stable site offers a \"Try the beta\" link.",
+    "fr": "Les préversions de Kazo OS tournent sur leur propre site, os-beta.kazo.ca (os.kazo.ca/beta y mène), avec leurs propres données. Une bêta affiche une pastille « Bêta » à côté de sa version et, dans Paramètres > À propos, un lien pour revenir à la version stable ; le site stable propose un lien « Essayer la bêta »."
+  },
+  "links": ["doc/en/wasm/dev/beta-site.md", "doc/en/wasm/dev/adr/0271-beta-channel-and-automatic-app-updates.md"]
+}

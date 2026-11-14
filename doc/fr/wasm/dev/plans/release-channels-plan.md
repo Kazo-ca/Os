@@ -4,9 +4,9 @@
 
 **Validé le 2026-11-14** par les réponses de Benoit aux questions Q1 à Q6 de
 l'[ADR 0271](../adr/0271-beta-channel-and-automatic-app-updates.md). Série
-`release-channels/base`. Chantier 1 codé (préversion depuis `beta`, voir
-[`releases.md`](../releases.md#publier-une-préversion-canal-bêta)) ; les autres
-chantiers ne le sont pas encore.
+`release-channels/base`. Chantiers 1 (préversion depuis `beta`, voir
+[`releases.md`](../releases.md#publier-une-préversion-canal-bêta)) et 2 (site bêta, voir
+[`beta-site.md`](../beta-site.md)) codés ; les autres chantiers ne le sont pas encore.
 
 ## But
 
@@ -78,8 +78,8 @@ quand le format de `catalog-beta.json` est fixé par le 3.
 ## Tâches
 
 - [x] Chantier 0 : évaluation, ADR 0271, plan.
-- [ ] Chantier 1 : préversion depuis `beta`.
-- [ ] Chantier 2 : site bêta.
+- [x] Chantier 1 : préversion depuis `beta`.
+- [x] Chantier 2 : site bêta ([`beta-site.md`](../beta-site.md) ; projet Cloudflare et secrets à créer par Benoit).
 - [ ] Chantier 3 : canal dans l'OS.
 - [ ] Chantier 4 : canal bêta du catalogue.
 - [ ] Chantier 5 : workflows réutilisables et template.

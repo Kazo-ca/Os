@@ -31,7 +31,12 @@ jour à la fin de chaque série ou quand une convention change.
   refuse un suffixe sur `main` et son absence sur `beta`. Rien n'est actif
   avant que la série arrive dans `main` (`workflow_run` lit le workflow de
   `main`) ; la branche `beta` n'existe pas encore : sa création et la
-  première préversion sont l'essai du chantier 8.
+  première préversion sont l'essai du chantier 8. Chantier 2 fait
+  (`release-channels/2-beta-site`, [`beta-site.md`](../dev/beta-site.md)) :
+  `deploy-beta-site.yml` déploie `beta` sur Cloudflare Pages
+  (`os-beta.kazo.ca`, projet `kazo-os-beta`, secrets `CLOUDFLARE_API_TOKEN`
+  et `CLOUDFLARE_ACCOUNT_ID` à créer par Benoit), `os.kazo.ca/beta` redirige,
+  pastille « Bêta » et liens entre canaux lus de la version.
 - **Version 3.3.3** (2026-11-13, publiée). Benoit a choisi un numéro correctif bien que l'API publique
   grandisse (comme la 2.2.1) ; la 3.4.0 reste réservée au SDK en préversion
   (TODO #456). Contenu : lien direct `?autolaunch=<appId>` (ADR 0258, série

@@ -1,0 +1,5 @@
+/* ADR 0271 §6: a quiet pill-shaped link; the beta direction is tinted like the « Beta » badge. */
+.kos-channel-link { display: inline-flex; align-items: center; gap: .35rem; padding: .1rem .65rem; border: 1px solid currentColor; border-radius: 999px; font-size: .85em; font-weight: 600; text-decoration: none; }
+.kos-channel-link.is-to-beta { color: var(--kos-beta, #c792ea); }
+.kos-channel-link.is-to-stable { color: var(--kos-accent, #42d392); }
+.kos-channel-link:hover, .kos-channel-link:focus-visible { text-decoration: underline; }
