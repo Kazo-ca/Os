@@ -125,22 +125,23 @@
             }
             else if (_step == Step.S3)
             {
+                @* The fields update as the user types, so Mount is enabled before the last field loses the focus. *@
                 <div class="cnd-form">
                     <label class="cnd-field cnd-wide">
                         <span>@L["CloudDrive.S3.Endpoint"]</span>
-                        <input type="url" @bind="_s3.Endpoint" placeholder="https://…" required disabled="@_busy" spellcheck="false" />
+                        <input type="url" @bind="_s3.Endpoint" @bind:event="oninput" placeholder="https://…" required disabled="@_busy" spellcheck="false" />
                     </label>
                     <label class="cnd-field">
                         <span>@L["CloudDrive.S3.Bucket"]</span>
-                        <input type="text" @bind="_s3.Bucket" required disabled="@_busy" spellcheck="false" />
+                        <input type="text" @bind="_s3.Bucket" @bind:event="oninput" required disabled="@_busy" spellcheck="false" />
                     </label>
                     <label class="cnd-field">
                         <span>@L["CloudDrive.S3.Region"]</span>
-                        <input type="text" @bind="_s3.Region" placeholder="auto" disabled="@_busy" spellcheck="false" />
+                        <input type="text" @bind="_s3.Region" @bind:event="oninput" placeholder="auto" disabled="@_busy" spellcheck="false" />
                     </label>
                     <label class="cnd-field">
                         <span>@L["CloudDrive.S3.Prefix"]</span>
-                        <input type="text" @bind="_s3.Prefix" disabled="@_busy" spellcheck="false" />
+                        <input type="text" @bind="_s3.Prefix" @bind:event="oninput" disabled="@_busy" spellcheck="false" />
                     </label>
                     <label class="cnd-field">
                         <span>@L["CloudDrive.S3.Addressing"]</span>
@@ -152,11 +153,11 @@
                     </label>
                     <label class="cnd-field cnd-wide">
                         <span>@L["CloudDrive.S3.AccessKey"]</span>
-                        <input type="text" @bind="_s3.AccessKeyId" required disabled="@_busy" autocomplete="off" spellcheck="false" />
+                        <input type="text" @bind="_s3.AccessKeyId" @bind:event="oninput" required disabled="@_busy" autocomplete="off" spellcheck="false" />
                     </label>
                     <label class="cnd-field cnd-wide">
                         <span>@L["CloudDrive.S3.Secret"]</span>
-                        <input type="password" @bind="_s3.SecretAccessKey" required disabled="@_busy" autocomplete="off" />
+                        <input type="password" @bind="_s3.SecretAccessKey" @bind:event="oninput" required disabled="@_busy" autocomplete="off" />
                     </label>
                 </div>
                 <p class="cnd-note">@L["CloudDrive.S3.CorsNote"]</p>

@@ -327,6 +327,13 @@ public sealed class NetworkDriveSourceTests
             () => gateway.MountNetworkDriveAsync(new KazoNetworkDriveRequest("fakecloud", Account), null).AsTask());
     }
 
+    [Fact]
+    public void A_refused_request_reads_without_the_parameter_suffix()
+    {
+        Assert.Equal("s3: wrong keys", NetworkDriveService.WithoutParameterName(new ArgumentException("s3: wrong keys", "request")));
+        Assert.Equal("no parameter", NetworkDriveService.WithoutParameterName(new ArgumentException("no parameter")));
+    }
+
     private static Task<NetworkDriveException> Refused(Func<ValueTask<NetworkDrive?>> mount) =>
         Assert.ThrowsAsync<NetworkDriveException>(() => mount().AsTask());
 

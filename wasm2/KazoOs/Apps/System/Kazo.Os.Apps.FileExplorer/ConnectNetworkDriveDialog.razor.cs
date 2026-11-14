@@ -78,11 +78,18 @@ public partial class ConnectNetworkDriveDialog
     /// <summary>The dialog element, focused when it opens so that Escape and Tab stay inside it.</summary>
     private ElementReference _dialog;
 
+    /// <summary>
+    /// Set when a failed action re-enables the form: its button was disabled while it ran, so the
+    /// browser moved the focus out of the dialog, and Escape would no longer reach it.
+    /// </summary>
+    private bool _refocus;
+
     /// <inheritdoc />
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender)
+        if (firstRender || _refocus)
         {
+            _refocus = false;
             try
             {
                 await _dialog.FocusAsync();
@@ -214,6 +221,7 @@ public partial class ConnectNetworkDriveDialog
             or InvalidOperationException or IOException or UnauthorizedAccessException or AppGatewayAccessDeniedException)
         {
             _error = ErrorText(exception);
+            _refocus = true;
         }
         finally
         {

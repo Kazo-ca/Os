@@ -334,7 +334,7 @@ public sealed class NetworkDriveService : IDisposable, Kazo.Os.Platform.Core.Clo
         }
         catch (ArgumentException exception)
         {
-            throw new NetworkDriveException(NetworkDriveError.InvalidRequest, exception.Message);
+            throw new NetworkDriveException(NetworkDriveError.InvalidRequest, WithoutParameterName(exception));
         }
         catch (InvalidOperationException exception) when (exception is not NetworkDriveException)
         {
@@ -957,6 +957,22 @@ public sealed class NetworkDriveService : IDisposable, Kazo.Os.Platform.Core.Clo
 
         public ValueTask<Stream> OpenReadAsync(CancellationToken cancellationToken = default) =>
             ValueTask.FromResult<Stream>(new MemoryStream(content, writable: false));
+    }
+
+    /// <summary>
+    /// The message of a refused request without .NET's parameter suffix (" (Parameter 'bucket')", or
+    /// "Arg_ParamName_Name, bucket" in a trimmed build): the user sees it as it is.
+    /// </summary>
+    internal static string WithoutParameterName(ArgumentException exception)
+    {
+        string message = exception.Message;
+        if (exception.ParamName is not { Length: > 0 } parameter)
+        {
+            return message;
+        }
+
+        string suffix = new ArgumentException(string.Empty, parameter).Message;
+        return suffix.Length > 0 && message.EndsWith(suffix, StringComparison.Ordinal) ? message[..^suffix.Length] : message;
     }
 }
 

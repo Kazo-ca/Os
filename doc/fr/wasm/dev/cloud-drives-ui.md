@@ -98,7 +98,11 @@ umount /mnt/nom
   comptes et fournisseurs à travers le worker.
 - `SettingsWindowTests` : la page est dans le groupe Réseau.
 - E2E `CloudDrivesUiTests` : fenêtre (bureau et mobile) et page Paramètres,
-  axe sans défaut grave, captures dans `Tests/TestResults/cloud-drives/`.
+  axe sans défaut grave, captures dans `Tests/TestResults/cloud-drives/`. Le
+  test donne à l'OS de faux identifiants d'app Dropbox et OneDrive (en
+  réécrivant `appsettings.json`) et répond lui-même à une fausse adresse S3 :
+  étape Dropbox avec les deux étendues, formulaire S3 et refus du service
+  affiché dans la fenêtre. Aucune requête ne quitte la machine.
 
 ## Liste des tâches
 
@@ -108,4 +112,4 @@ umount /mnt/nom
 - [x] Page Paramètres « Comptes cloud ».
 - [x] `mount -t dropbox|onedrive|s3`, `-o remount`, `umount`.
 - [x] Textes français et anglais, axe, captures.
-- [ ] Captures des étapes fournisseur et S3 avec les vrais connecteurs (chantier 7).
+- [x] Captures des étapes fournisseur (Dropbox) et S3 avec les connecteurs des chantiers 3, 4 et 6.

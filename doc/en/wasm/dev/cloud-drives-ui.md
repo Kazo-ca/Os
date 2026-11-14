@@ -97,7 +97,11 @@ umount /mnt/name
   secrets, accounts and providers across the worker.
 - `SettingsWindowTests`: the page is in the Network group.
 - E2E `CloudDrivesUiTests`: dialog (desktop and phone) and Settings page, axe
-  with no serious finding, screenshots in `Tests/TestResults/cloud-drives/`.
+  with no serious finding, screenshots in `Tests/TestResults/cloud-drives/`. The
+  test gives the OS fake Dropbox and OneDrive app ids (by rewriting
+  `appsettings.json`) and answers a fake S3 address itself: Dropbox step with
+  both scopes, S3 form and the service's refusal shown in the dialog. No
+  request leaves the machine.
 
 ## Task list
 
@@ -107,4 +111,4 @@ umount /mnt/name
 - [x] Settings page "Cloud accounts".
 - [x] `mount -t dropbox|onedrive|s3`, `-o remount`, `umount`.
 - [x] French and English texts, axe, screenshots.
-- [ ] Screenshots of the provider and S3 steps with the real connectors (work item 7).
+- [x] Screenshots of the provider (Dropbox) and S3 steps with the connectors of work items 3, 4 and 6.
