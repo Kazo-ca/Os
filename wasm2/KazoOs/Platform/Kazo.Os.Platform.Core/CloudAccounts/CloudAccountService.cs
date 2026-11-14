@@ -195,6 +195,11 @@ public sealed class CloudAccountService : IDisposable, CloudDrives.ICloudAccount
         // The account list is read before the window opens; it is a local read, which completes
         // within the click's activation.
         CloudAccountRecord current = await FindAccountAsync(principal, accountId, cancellationToken).ConfigureAwait(false);
+        if (current.HasKeys)
+        {
+            throw KeysAccount(current);
+        }
+
         CloudOAuthProvider provider = await FindProviderAsync(current.Provider, cancellationToken).ConfigureAwait(false);
         (OAuthTokenSet tokens, CloudIdentity identity) = await SignInAsync(provider, current.Scope, cancellationToken).ConfigureAwait(false);
         if (current.ProviderAccountId is { } expected && identity.AccountId is { } actual && expected != actual)
@@ -287,6 +292,11 @@ public sealed class CloudAccountService : IDisposable, CloudDrives.ICloudAccount
             List<CloudAccountRecord> records = await _store.LoadAsync(principal, cancellationToken).ConfigureAwait(false);
             CloudAccountRecord account = records.FirstOrDefault(record => record.Id == accountId)
                 ?? throw NotFound(accountId);
+            if (account.HasKeys)
+            {
+                throw KeysAccount(account);
+            }
+
             if (account.State == CloudAccountState.NeedsReconnect)
             {
                 throw ReconnectRequired(account);
@@ -331,6 +341,108 @@ public sealed class CloudAccountService : IDisposable, CloudDrives.ICloudAccount
             records[records.IndexOf(account)] = account with { Tokens = sealedTokens };
             await _store.SaveAsync(principal, records, cancellationToken).ConfigureAwait(false);
             return renewed.AccessToken;
+        }
+        finally
+        {
+            _gate.Release();
+            if (changed)
+            {
+                Changed?.Invoke();
+            }
+        }
+    }
+
+    /// <summary>
+    /// Adds an account that signs its own requests with keys the user typed (S3, ADR 0267 section 6),
+    /// or gives new keys to the account of the same provider with the same
+    /// <paramref name="providerAccountId"/> (the access key and the address), which connects it again.
+    /// The keys are sealed like tokens (ADR 0269): on the device, under a key of the keyring.
+    /// </summary>
+    /// <param name="providerId">The provider, e.g. <c>s3</c>.</param>
+    /// <param name="displayName">What the account list shows, e.g. the address of the service.</param>
+    /// <param name="providerAccountId">The provider's id of the account; never a secret.</param>
+    /// <param name="secret">The keys, as the connector serializes them; cleared by the caller.</param>
+    /// <param name="cancellationToken">Cancels the write.</param>
+    /// <returns>The account.</returns>
+    /// <exception cref="CloudAccountException"><see cref="CloudAccountError.KeyringLocked"/> or <see cref="CloudAccountError.NotSignedIn"/>.</exception>
+    internal async ValueTask<CloudAccount> SaveKeysAccountAsync(
+        string providerId,
+        string displayName,
+        string providerAccountId,
+        byte[] secret,
+        CancellationToken cancellationToken = default)
+    {
+        AuthenticatedPrincipal principal = RequireKeyring();
+        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        CloudAccountRecord saved;
+        try
+        {
+            List<CloudAccountRecord> records = await _store.LoadAsync(principal, cancellationToken).ConfigureAwait(false);
+            CloudAccountRecord? existing = records.FirstOrDefault(record =>
+                record.HasKeys && record.Provider == providerId && record.ProviderAccountId == providerAccountId);
+            string id = existing?.Id ?? NewAccountId();
+            SealedTokens sealedKeys = await _store
+                .SealBytesAsync(principal, id, $"{displayName} (cloud drive)", secret, cancellationToken)
+                .ConfigureAwait(false);
+            saved = new CloudAccountRecord(
+                id, providerId, CloudAccessScope.Full, displayName, providerAccountId, CloudAccountState.Connected, _time.GetUtcNow(), sealedKeys)
+            {
+                Credential = CloudAccountRecord.KeysCredential
+            };
+            records.RemoveAll(record => record.Id == id);
+            records.Add(saved);
+            await _store.SaveAsync(principal, records, cancellationToken).ConfigureAwait(false);
+        }
+        finally
+        {
+            _gate.Release();
+        }
+
+        Changed?.Invoke();
+        return saved.Describe();
+    }
+
+    /// <summary>
+    /// Opens the keys of an account added by <see cref="SaveKeysAccountAsync"/>, for its connector.
+    /// The caller clears the returned bytes.
+    /// </summary>
+    /// <param name="accountId">The account.</param>
+    /// <param name="providerId">The provider the connector expects; another provider reads as not found.</param>
+    /// <param name="cancellationToken">Cancels the read.</param>
+    /// <returns>The account and its keys.</returns>
+    /// <exception cref="CloudAccountException">
+    /// <see cref="CloudAccountError.ReconnectRequired"/> when the keys cannot be opened any more (the
+    /// account is now <see cref="CloudAccountState.NeedsReconnect"/> until the user types them again),
+    /// <see cref="CloudAccountError.KeyringLocked"/> or <see cref="CloudAccountError.AccountNotFound"/>.
+    /// </exception>
+    internal async ValueTask<(CloudAccount Account, byte[] Secret)> GetKeysAsync(
+        string accountId,
+        string providerId,
+        CancellationToken cancellationToken = default)
+    {
+        AuthenticatedPrincipal principal = RequireKeyring();
+        bool changed = false;
+        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            List<CloudAccountRecord> records = await _store.LoadAsync(principal, cancellationToken).ConfigureAwait(false);
+            CloudAccountRecord account = records.FirstOrDefault(record =>
+                    record.Id == accountId && record.HasKeys && record.Provider == providerId)
+                ?? throw NotFound(accountId);
+            if (account.State == CloudAccountState.NeedsReconnect)
+            {
+                throw ReconnectRequired(account);
+            }
+
+            byte[]? secret = await _store.UnsealBytesAsync(principal, account, cancellationToken).ConfigureAwait(false);
+            if (secret is null)
+            {
+                _logger.LogWarning("The keys of cloud account {AccountId} cannot be opened; they must be typed again.", accountId);
+                changed = await MarkNeedsReconnectAsync(principal, records, account, cancellationToken).ConfigureAwait(false);
+                throw ReconnectRequired(account);
+            }
+
+            return (account.Describe(), secret);
         }
         finally
         {
@@ -485,6 +597,10 @@ public sealed class CloudAccountService : IDisposable, CloudDrives.ICloudAccount
 
     private static CloudAccountException NotFound(string accountId) =>
         new(CloudAccountError.AccountNotFound, $"No cloud account '{accountId}'.");
+
+    private static CloudAccountException KeysAccount(CloudAccountRecord account) =>
+        new(CloudAccountError.ProviderNotConfigured,
+            $"'{account.DisplayName}' signs its requests with keys and has no token; type its keys again to reconnect it.");
 
     private static CloudAccountException ReconnectRequired(CloudAccountRecord account, Exception? inner = null) =>
         new(CloudAccountError.ReconnectRequired, $"'{account.DisplayName}' must be signed in again.", inner);
