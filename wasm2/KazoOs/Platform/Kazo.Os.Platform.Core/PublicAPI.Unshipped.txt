@@ -284,3 +284,57 @@ Kazo.Os.Platform.Core.FileSystem.HostFolders.NetworkDrive.Account.get -> string?
 Kazo.Os.Platform.Core.FileSystem.HostFolders.NetworkDrive.Account.init -> void
 Kazo.Os.Platform.Core.FileSystem.HostFolders.NetworkDrive.Root.get -> string?
 Kazo.Os.Platform.Core.FileSystem.HostFolders.NetworkDrive.Root.init -> void
+Kazo.Os.Platform.Core.CloudAccounts.CloudAccountService.FindAccountAsync(string! accountId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.Platform.Core.CloudAccounts.CloudAccount?>
+Kazo.Os.Platform.Core.CloudAccounts.CloudAccountService.RenewAccessTokenAsync(string! accountId, string! rejectedAccessToken, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<string!>
+Kazo.Os.Platform.Core.CloudDrives.CloudDriveConnection
+Kazo.Os.Platform.Core.CloudDrives.CloudDriveConnection.AccountId.get -> string!
+Kazo.Os.Platform.Core.CloudDrives.CloudDriveConnection.CloudDriveConnection(Kazo.Os.Platform.Core.CloudDrives.ICloudAccountTokens! tokens, string! accountId, System.Net.Http.HttpClient! http) -> void
+Kazo.Os.Platform.Core.CloudDrives.CloudDriveConnection.QueryPermissionAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderPermission>
+Kazo.Os.Platform.Core.CloudDrives.CloudDriveConnection.RequestPermissionAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderPermission>
+Kazo.Os.Platform.Core.CloudDrives.CloudDriveConnection.SendAsync(System.Func<System.Net.Http.HttpRequestMessage!>! build, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<System.Net.Http.HttpResponseMessage!>
+Kazo.Os.Platform.Core.CloudDrives.CloudDriveConnection.Tokens.get -> Kazo.Os.Platform.Core.CloudDrives.ICloudAccountTokens!
+Kazo.Os.Platform.Core.CloudDrives.CloudDriveSource
+Kazo.Os.Platform.Core.CloudDrives.CloudDriveSource.AvailabilityChanged -> System.Action?
+Kazo.Os.Platform.Core.CloudDrives.CloudDriveSource.CloudDriveSource(Kazo.Os.Platform.Core.CloudDrives.ICloudAccountTokens! tokens, Kazo.Os.Platform.Core.CloudAccounts.ICloudProviderCatalog! catalog, System.Net.Http.HttpClient! http, Kazo.Os.Simulation.Abstractions.FileSystem.IHostActivitySignal? activity = null) -> void
+Kazo.Os.Platform.Core.CloudDrives.CloudDriveSource.CreateAsync(Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveRequest! request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveCreation?>
+Kazo.Os.Platform.Core.CloudDrives.CloudDriveSource.Dispose() -> void
+Kazo.Os.Platform.Core.CloudDrives.CloudDriveSource.ForgetAsync(Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveReference! reference, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Kazo.Os.Platform.Core.CloudDrives.CloudDriveSource.Http.get -> System.Net.Http.HttpClient!
+Kazo.Os.Platform.Core.CloudDrives.CloudDriveSource.IsAvailableAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<bool>
+Kazo.Os.Platform.Core.CloudDrives.CloudDriveSource.OpenAsync(Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveReference! reference, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.Simulation.Abstractions.FileSystem.IHostFolder?>
+Kazo.Os.Platform.Core.CloudDrives.CloudDriveSource.Tokens.get -> Kazo.Os.Platform.Core.CloudDrives.ICloudAccountTokens!
+Kazo.Os.Platform.Core.CloudDrives.ICloudAccountTokens
+Kazo.Os.Platform.Core.CloudDrives.ICloudAccountTokens.Changed -> System.Action?
+Kazo.Os.Platform.Core.CloudDrives.ICloudAccountTokens.FindAccountAsync(string! accountId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.Platform.Core.CloudAccounts.CloudAccount?>
+Kazo.Os.Platform.Core.CloudDrives.ICloudAccountTokens.GetAccessTokenAsync(string! accountId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<string!>
+Kazo.Os.Platform.Core.CloudDrives.ICloudAccountTokens.ReconnectAsync(string! accountId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.Platform.Core.CloudAccounts.CloudAccount!>
+Kazo.Os.Platform.Core.CloudDrives.ICloudAccountTokens.RenewAccessTokenAsync(string! accountId, string! rejectedAccessToken, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<string!>
+abstract Kazo.Os.Platform.Core.CloudDrives.CloudDriveSource.CreateFolder(Kazo.Os.Platform.Core.CloudDrives.CloudDriveConnection! connection, Kazo.Os.Platform.Core.CloudAccounts.CloudAccount! account, string? root) -> Kazo.Os.Simulation.Abstractions.FileSystem.IHostFolder!
+abstract Kazo.Os.Platform.Core.CloudDrives.CloudDriveSource.DefaultMountName.get -> string!
+abstract Kazo.Os.Platform.Core.CloudDrives.CloudDriveSource.ProviderId.get -> string!
+abstract Kazo.Os.Platform.Core.CloudDrives.CloudDriveSource.Type.get -> string!
+static Kazo.Os.Platform.Core.CloudDrives.CloudDriveConnection.ToHostFolderException(Kazo.Os.Platform.Core.CloudAccounts.CloudAccountException! exception) -> Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderException!
+virtual Kazo.Os.Platform.Core.CloudDrives.CloudDriveSource.Dispose(bool disposing) -> void
+virtual Kazo.Os.Platform.Core.CloudDrives.CloudDriveSource.NormalizeRoot(string? root) -> string?
+Kazo.Os.Platform.Core.CloudDrives.Dropbox.DropboxDriveSource
+Kazo.Os.Platform.Core.CloudDrives.Dropbox.DropboxDriveSource.DropboxDriveSource(Kazo.Os.Platform.Core.CloudDrives.ICloudAccountTokens! tokens, Kazo.Os.Platform.Core.CloudAccounts.ICloudProviderCatalog! catalog, System.Net.Http.HttpClient! http, Kazo.Os.Simulation.Abstractions.FileSystem.IHostActivitySignal? activity = null) -> void
+Kazo.Os.Platform.Core.CloudDrives.Dropbox.DropboxFolder
+Kazo.Os.Platform.Core.CloudDrives.Dropbox.DropboxFolder.CreateAsync(System.Collections.Generic.IReadOnlyList<string!>! path, Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderEntryKind kind, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Kazo.Os.Platform.Core.CloudDrives.Dropbox.DropboxFolder.DeleteAsync(System.Collections.Generic.IReadOnlyList<string!>! path, bool recursive, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Kazo.Os.Platform.Core.CloudDrives.Dropbox.DropboxFolder.DisposeAsync() -> System.Threading.Tasks.ValueTask
+Kazo.Os.Platform.Core.CloudDrives.Dropbox.DropboxFolder.DropboxFolder(Kazo.Os.Platform.Core.CloudDrives.CloudDriveConnection! connection, string! name, string? root) -> void
+Kazo.Os.Platform.Core.CloudDrives.Dropbox.DropboxFolder.GetQuotaAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderQuota?>
+Kazo.Os.Platform.Core.CloudDrives.Dropbox.DropboxFolder.ListAsync(System.Collections.Generic.IReadOnlyList<string!>! path, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderEntry!>!>
+Kazo.Os.Platform.Core.CloudDrives.Dropbox.DropboxFolder.Name.get -> string!
+Kazo.Os.Platform.Core.CloudDrives.Dropbox.DropboxFolder.QueryPermissionAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderPermission>
+Kazo.Os.Platform.Core.CloudDrives.Dropbox.DropboxFolder.ReadAsync(System.Collections.Generic.IReadOnlyList<string!>! path, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<byte[]!>
+Kazo.Os.Platform.Core.CloudDrives.Dropbox.DropboxFolder.RequestPermissionAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderPermission>
+Kazo.Os.Platform.Core.CloudDrives.Dropbox.DropboxFolder.Root.get -> string?
+Kazo.Os.Platform.Core.CloudDrives.Dropbox.DropboxFolder.StatAsync(System.Collections.Generic.IReadOnlyList<string!>! path, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderEntry!>
+Kazo.Os.Platform.Core.CloudDrives.Dropbox.DropboxFolder.TryMoveAsync(System.Collections.Generic.IReadOnlyList<string!>! source, System.Collections.Generic.IReadOnlyList<string!>! destination, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<bool>
+Kazo.Os.Platform.Core.CloudDrives.Dropbox.DropboxFolder.WriteAsync(System.Collections.Generic.IReadOnlyList<string!>! path, byte[]! content, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Kazo.Os.Platform.Core.CloudDrives.Dropbox.DropboxFolder.WriteIfMatchAsync(System.Collections.Generic.IReadOnlyList<string!>! path, byte[]! content, string! expectedRevision, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+const Kazo.Os.Platform.Core.CloudDrives.Dropbox.DropboxDriveSource.FileSystemType = "dropbox" -> string!
+override Kazo.Os.Platform.Core.CloudDrives.Dropbox.DropboxDriveSource.DefaultMountName.get -> string!
+override Kazo.Os.Platform.Core.CloudDrives.Dropbox.DropboxDriveSource.ProviderId.get -> string!
+override Kazo.Os.Platform.Core.CloudDrives.Dropbox.DropboxDriveSource.Type.get -> string!

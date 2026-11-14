@@ -134,6 +134,10 @@ await accounts.RemoveAsync(account.Id);                           // démonte, r
   démonte et oublie les lecteurs du compte), révoque le jeton chez
   Dropbox (Microsoft n'a pas de révocation pour un client public), efface la
   clé du trousseau et la ligne du compte.
+- Les connecteurs passent par `ICloudAccountTokens` (chantier 3,
+  [`cloud-drive-connectors.md`](cloud-drive-connectors.md)) ;
+  `RenewAccessTokenAsync` renouvelle un jeton que le fournisseur a refusé
+  (401) avant son expiration connue, une seule fois pour plusieurs requêtes.
 
 ## Identifiants d'app
 
