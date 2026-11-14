@@ -6,6 +6,9 @@ Une nouvelle version se publie en changeant **un seul fichier** :
 `wasm2/KazoOs/build/Versions.props`. Une fois la modification fusionnée dans
 `main`, GitHub Actions crée le tag, la GitHub Release et pousse les paquets sur
 nuget.org ([ADR 0173](adr/0173-automatic-releases-from-the-version-file.md)).
+Une préversion se publie de la même façon depuis la branche permanente `beta`
+([ADR 0271](adr/0271-beta-channel-and-automatic-app-updates.md), voir
+[Publier une préversion](#publier-une-préversion-canal-bêta)).
 
 ## Le fichier de version
 
@@ -27,7 +30,12 @@ Choisir le numéro selon SemVer
 | Correctif, aucune API publique ajoutée | `2.1.0` → `2.1.1` |
 | Ajout dans l'API publique (`PublicAPI.Unshipped.txt` non vide) | `2.1.1` → `2.2.0` |
 | Rupture du SDK (`*REMOVED*` dans un paquet du SDK) | `2.2.0` → `3.0.0` |
-| Préversion (Release marquée « pre-release ») | `2.2.0-preview.1` |
+| Préversion (Release marquée « pre-release »), **seulement sur `beta`** | `3.4.0-preview.1` |
+
+Chaque branche a son canal, vérifié par `build/tools/check-release-channel.sh`
+dans *Verify Kazo OS WASM* (push et PR vers la branche) et dans *Release Kazo
+OS* : `main` refuse une version avec suffixe, `beta` refuse une version sans
+suffixe. Les autres branches (`<série>/base`, chantiers) acceptent les deux.
 
 ## Publier, pas à pas
 
@@ -47,16 +55,19 @@ Choisir le numéro selon SemVer
 ## Ce que fait le workflow `Release Kazo OS`
 
 Fichier : `.github/workflows/release.yml`. Il démarre quand *Verify Kazo OS
-WASM* se termine **avec succès** après un push sur `main`, puis :
+WASM* se termine **avec succès** après un push sur `main` ou sur `beta`, puis :
 
-1. lit `KazoOsVersion` du commit vérifié ; si le tag `v<version>` existe
-   déjà, il s'arrête (rien à publier) ;
+1. lit `KazoOsVersion` du commit vérifié et la refuse si elle ne correspond
+   pas au canal de la branche (`check-release-channel.sh`) ; si le tag
+   `v<version>` existe déjà, il s'arrête (rien à publier) ;
 2. empaquette avec `build/pack-local.sh --ci` ;
 3. garde uniquement les `Kazo.Os.*.<version>.nupkg` et `.snupkg` ;
 4. publie la PWA (`dotnet publish`) et la zippe en `kazoos-wasm-<version>.zip` ;
 5. pousse les paquets sur nuget.org si c'est configuré (voir plus bas) ;
-6. crée le tag et la GitHub Release : titre `Kazo OS <version>`, notes
-   générées par GitHub depuis les PR fusionnées, paquets et zip joints.
+6. crée le tag et la GitHub Release : titre `Kazo OS <version>`, notes tirées
+   de `changes/<version>.json` (ou de `changes/unreleased/` pour une
+   préversion), paquets et zip joints ; une préversion est marquée
+   « pre-release », une version stable « latest ».
 
 Le tag est créé en dernier : si une étape échoue, relancer le workflow
 (*Re-run failed jobs*) reprend tout, et les paquets déjà présents sur nuget.org
@@ -64,12 +75,48 @@ sont sautés (`--skip-duplicate`).
 
 ### Lancer à la main
 
-Onglet **Actions** ▸ *Release Kazo OS* ▸ *Run workflow* (branche `main`) :
+Onglet **Actions** ▸ *Release Kazo OS* ▸ *Run workflow* (branche `main` ou
+`beta`) :
 
-- sans option : publie la version de `main` si elle n'est pas encore taguée ;
+- sans option : publie la version de la branche si elle n'est pas encore
+  taguée ;
 - avec **republish** : ré-empaquette la version déjà taguée et la pousse sur
   nuget.org. Sert quand une Release a été créée avant la configuration de
   NuGet.
+
+## Publier une préversion (canal bêta)
+
+La branche permanente `beta` publie le SDK en préversion comme `main` publie
+la version stable ([ADR 0271](adr/0271-beta-channel-and-automatic-app-updates.md) §1-2).
+Sa version porte toujours un suffixe : `<prochaine version>-preview.<n>`.
+
+1. Fusionner dans `beta` les séries à essayer (PR vertes ; un agent peut
+   fusionner dans `beta`, jamais dans `main`).
+2. Dans une PR vers `beta`, changer `<n>` dans `build/Versions.props`
+   (`3.4.0-preview.1` → `3.4.0-preview.2`). **Ne pas** lancer
+   `ship-public-api.sh` ni `collect-changes.sh` : l'API publique reste dans
+   `PublicAPI.Unshipped.txt` et les entrées dans `changes/unreleased/`
+   jusqu'à la version stable.
+3. Après la fusion, *Verify Kazo OS WASM* tourne sur `beta`, puis *Release
+   Kazo OS* : paquets `Kazo.Os.*` poussés sur nuget.org en préversion, tag
+   `v3.4.0-preview.2`, GitHub Release « pre-release » avec le zip du site,
+   image `ghcr.io/kazo-ca/kazoos-server:3.4.0-preview.2` (sans `:latest`).
+4. Les notes de la Release reprennent toutes les entrées de
+   `changes/unreleased/` : elles sont cumulatives d'une préversion à l'autre.
+
+Un push sur `beta` qui ne change pas la version ne publie rien (le tag existe
+déjà). Le site bêta (`os-beta.kazo.ca`) suivra chaque push de `beta`
+(chantier 2 de la série `release-channels`).
+
+**Passer en stable.** Une PR `beta` → `main` retire le suffixe, verse l'API
+publique et regroupe `changes/unreleased/` comme une version ordinaire (voir
+[Publier, pas à pas](#publier-pas-à-pas)) ; Benoit seul la fusionne. Après
+chaque version stable, `main` est fusionnée dans `beta` et la version de
+`beta` passe à la préversion suivante.
+
+**Coût.** Une préversion pousse les 42 paquets sur nuget.org, où une version
+ne se supprime pas (elle se masque seulement) : publier une préversion quand
+il y a quelque chose à essayer, pas à chaque fusion.
 
 ## Annonce aux sessions ouvertes
 
@@ -158,6 +205,7 @@ NuGet), après la première publication.
 | --- | --- |
 | *Release Kazo OS* ne démarre pas | *Verify Kazo OS WASM* a échoué ou a été annulé sur ce commit ; corriger, ou attendre le commit suivant de `main` (même version, pas encore taguée). |
 | « already released » dans le résumé | Le tag `v<version>` existe : changer la version. |
+| Erreur « Release channel » | La version ne correspond pas à la branche : `main` veut `X.Y.Z`, `beta` veut `X.Y.Z-preview.<n>`. Corriger `build/Versions.props` dans la PR. |
 | `403` à l'envoi NuGet | Clé expirée, mauvaise portée (glob), ou politique Trusted Publishing qui ne correspond pas au dépôt ou au fichier `release.yml`. |
 | `NuGet/login` échoue | `NUGET_USER` ne correspond pas au nom du profil nuget.org, ou la politique n'existe pas. |
 

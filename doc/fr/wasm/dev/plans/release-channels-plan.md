@@ -4,7 +4,9 @@
 
 **Validé le 2026-11-14** par les réponses de Benoit aux questions Q1 à Q6 de
 l'[ADR 0271](../adr/0271-beta-channel-and-automatic-app-updates.md). Série
-`release-channels/base`. Rien n'est codé.
+`release-channels/base`. Chantier 1 codé (préversion depuis `beta`, voir
+[`releases.md`](../releases.md#publier-une-préversion-canal-bêta)) ; les autres
+chantiers ne le sont pas encore.
 
 ## But
 

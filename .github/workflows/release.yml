@@ -9,8 +9,16 @@ name: Release Kazo OS
 # The tag is the "already released" marker: a commit of main whose version is already
 # tagged releases nothing, so only a change of the version publishes.
 #
-# Manual run (workflow_dispatch, on main): releases the version of main if it is not tagged
-# yet; with "republish" checked, packs the tagged version again and pushes it to nuget.org
+# ADR 0271 §2: the same workflow publishes the beta channel. A verified push to the permanent
+# beta branch whose version (always X.Y.Z-preview.<n>) has no tag yet publishes a prerelease: the
+# packages go to nuget.org as a prerelease, the tag v<version> and a GitHub "pre-release" are created,
+# and the server image gets no :latest. build/tools/check-release-channel.sh refuses a version with a
+# suffix on main and a version without one on beta before anything is built. A prerelease never runs
+# ship-public-api.sh nor collect-changes.sh: its notes come from changes/unreleased/. Keep this file
+# name: the Trusted Publishing policy of nuget.org names release.yml.
+#
+# Manual run (workflow_dispatch, on main or beta): releases the version of the branch if it is not
+# tagged yet; with "republish" checked, packs the tagged version again and pushes it to nuget.org
 # (packages already there are skipped), for a release made before NuGet was configured.
 #
 # ADR 0191 §5: once the release exists, the "server" jobs attach the installable Kazo OS server
@@ -20,7 +28,7 @@ on:
   workflow_run:
     workflows: [ "Verify Kazo OS WASM" ]
     types: [ completed ]
-    branches: [ main ]
+    branches: [ main, beta ]
   workflow_dispatch:
     inputs:
       republish:
@@ -48,7 +56,8 @@ env:
 jobs:
   release:
     if: >-
-      (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') ||
+      (github.event_name == 'workflow_dispatch' &&
+       (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/beta')) ||
       (github.event_name == 'workflow_run' &&
        github.event.workflow_run.conclusion == 'success' &&
        github.event.workflow_run.event == 'push')
@@ -57,6 +66,7 @@ jobs:
     outputs:
       version: ${{ steps.plan.outputs.version }}
       tag: ${{ steps.plan.outputs.tag }}
+      channel: ${{ steps.plan.outputs.channel }}
       mode: ${{ steps.plan.outputs.mode }}
       prerelease: ${{ steps.plan.outputs.prerelease }}
       sha: ${{ steps.plan.outputs.sha }}
@@ -72,10 +82,16 @@ jobs:
         shell: bash
         env:
           REPUBLISH: ${{ github.event.inputs.republish || 'false' }}
+          # The branch of the verified commit: main (stable) or beta (prerelease), ADR 0271.
+          BRANCH: ${{ github.event.workflow_run.head_branch || github.ref_name }}
         run: |
-          version="$(sed -n 's:.*<KazoOsVersion>\(.*\)</KazoOsVersion>.*:\1:p' "$KAZOOS_SOLUTION_DIR/build/Versions.props")"
-          if ! [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
-            echo "::error title=Version::build/Versions.props has no valid KazoOsVersion ('$version')."
+          # Refuses a version that does not fit the channel (exit 1 with the reason).
+          channel_info="$(bash "$KAZOOS_SOLUTION_DIR/build/tools/check-release-channel.sh" "$BRANCH")"
+          version="$(sed -n 's/^version=//p' <<< "$channel_info")"
+          channel="$(sed -n 's/^channel=//p' <<< "$channel_info")"
+          prerelease="$(sed -n 's/^prerelease=//p' <<< "$channel_info")"
+          if [[ "$channel" != "stable" && "$channel" != "beta" ]]; then
+            echo "::error title=Release channel::Only main and beta publish a version, not '$BRANCH'."
             exit 1
           fi
           tag="v$version"
@@ -89,18 +105,17 @@ jobs:
           else
             mode="release"
           fi
-          prerelease="false"
-          [[ "$version" == *-* ]] && prerelease="true"
           {
             echo "version=$version"
             echo "tag=$tag"
+            echo "channel=$channel"
             echo "mode=$mode"
             echo "prerelease=$prerelease"
             echo "sha=$(git rev-parse HEAD)"
           } >> "$GITHUB_OUTPUT"
           case "$mode" in
             none) echo "### Kazo OS $version is already released ($tag): nothing to do." >> "$GITHUB_STEP_SUMMARY" ;;
-            release) echo "### Releasing Kazo OS $version ($tag)" >> "$GITHUB_STEP_SUMMARY" ;;
+            release) echo "### Releasing Kazo OS $version ($tag), $channel channel" >> "$GITHUB_STEP_SUMMARY" ;;
             republish) echo "### Pushing the packages of Kazo OS $version ($tag) to nuget.org again" >> "$GITHUB_STEP_SUMMARY" ;;
           esac
 
@@ -202,8 +217,10 @@ jobs:
         run: |
           # ADR 0186 §7: the text comes from changes/<version>.json (every entry, in English);
           # GitHub's generated notes only for a version released before the change list existed.
+          # ADR 0271 §2: a prerelease is never collected, so its notes are changes/unreleased/
+          # (the notes tool falls back to it when changes/<X.Y.Z>.json does not exist).
           notes="$RELEASE_DIR/release-notes.md"
-          if [[ -f "$KAZOOS_SOLUTION_DIR/changes/$VERSION.json" ]]; then
+          if [[ "$PRERELEASE" == "true" || -f "$KAZOOS_SOLUTION_DIR/changes/$VERSION.json" ]]; then
             dotnet run --project "$KAZOOS_SOLUTION_DIR/Tools/Kazo.Os.Tools.ChangeList/Kazo.Os.Tools.ChangeList.csproj" -c Release -- \
               notes --changes "$KAZOOS_SOLUTION_DIR/changes" --version "$VERSION" --kind release \
               --repository "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY" --output "$notes"

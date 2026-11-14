@@ -23,6 +23,15 @@ jour à la fin de chaque série ou quand une convention change.
   `PublicAPI.Shipped.txt`, 9 entrées dans `changes/3.3.4.json` ; publiée
   quand la PR arrive dans `main`. Ensuite : Kazo Pdf dans le Store, Kazo
   Photo (ouvrir et enregistrer des fichiers, puis le Store).
+- **Canal bêta** (série `release-channels/base`, ADR 0271, plan
+  [`release-channels-plan.md`](../dev/plans/release-channels-plan.md)) :
+  chantier 1 fait (`release-channels/1-prerelease-from-beta`). `release.yml`
+  publie aussi depuis la branche permanente `beta` (préversion nuget.org, tag,
+  GitHub Release « pre-release ») et `build/tools/check-release-channel.sh`
+  refuse un suffixe sur `main` et son absence sur `beta`. Rien n'est actif
+  avant que la série arrive dans `main` (`workflow_run` lit le workflow de
+  `main`) ; la branche `beta` n'existe pas encore : sa création et la
+  première préversion sont l'essai du chantier 8.
 - **Version 3.3.3** (2026-11-13, publiée). Benoit a choisi un numéro correctif bien que l'API publique
   grandisse (comme la 2.2.1) ; la 3.4.0 reste réservée au SDK en préversion
   (TODO #456). Contenu : lien direct `?autolaunch=<appId>` (ADR 0258, série

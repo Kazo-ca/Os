@@ -4,7 +4,9 @@
 
 **Approved on 2026-11-14** by Benoit's answers to questions Q1 to Q6 of
 [ADR 0271](../adr/0271-beta-channel-and-automatic-app-updates.md). Series
-`release-channels/base`. Nothing is coded.
+`release-channels/base`. Work item 1 is coded (prerelease from `beta`, see
+[`releases.md`](../releases.md#publishing-a-prerelease-beta-channel)); the other
+work items are not yet.
 
 ## Goal
 
