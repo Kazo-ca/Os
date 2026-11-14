@@ -1,6 +1,6 @@
 {
   "id": "9b0c4e57-3f2a-4d8e-b6a1-5c7e2d9f8a13",
-  "category": "feature",
+  "category": "new",
   "audience": ["user", "developer"],
   "title": { "en": "S3 buckets as network drives", "fr": "Compartiments S3 en lecteurs réseau" },
   "description": {
