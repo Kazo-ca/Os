@@ -85,10 +85,10 @@ public enum HostFolderErrorKind
     Unavailable,
 
     /// <summary>
-    /// The file is larger than Kazo OS can read or write at once, 128 MiB (ADR 0245, ADR 0267 §10):
-    /// it shows in the listing, but reading it fails.
+    /// The file is larger than the largest file Kazo OS reads or writes whole in memory, 128 MiB
+    /// (ADR 0245, ADR 0267 §10): Linux <c>EFBIG</c>. The file stays listed.
     /// </summary>
-    FileTooLarge = 10
+    FileTooLarge
 }
 
 /// <summary>A failed operation on a host folder.</summary>
