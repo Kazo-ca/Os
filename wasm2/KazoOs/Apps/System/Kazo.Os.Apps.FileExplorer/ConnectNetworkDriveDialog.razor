@@ -10,8 +10,8 @@
     opens a folder dialog or a sign-in window only right after a user gesture.
 *@
 <div class="cnd-backdrop" @onclick="CloseAsync">
-    <div class="cnd-dialog" role="dialog" aria-modal="true" aria-labelledby="@_titleId"
-         @onclick:stopPropagation="true" @onkeydown="OnKeyDownAsync">
+    <div class="cnd-dialog" role="dialog" aria-modal="true" aria-labelledby="@_titleId" tabindex="-1"
+         @ref="_dialog" @onclick:stopPropagation="true" @onkeydown="OnKeyDownAsync">
         <header class="cnd-header">
             @if (_step != Step.Choose)
             {

@@ -249,3 +249,8 @@
         min-height: 3.25rem;
     }
 }
+
+/* The dialog takes the focus when it opens (Escape closes it); its own outline would frame the whole box. */
+.cnd-dialog:focus {
+    outline: none;
+}

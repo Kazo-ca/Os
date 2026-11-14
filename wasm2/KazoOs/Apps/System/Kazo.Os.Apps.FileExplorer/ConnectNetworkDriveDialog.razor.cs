@@ -5,6 +5,7 @@ using Kazo.Os.Simulation.Abstractions.Gateways;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.Localization;
+using Microsoft.JSInterop;
 
 namespace Kazo.Os.Apps.FileExplorer;
 
@@ -73,6 +74,25 @@ public partial class ConnectNetworkDriveDialog
         Step.S3 => L["CloudDrive.S3"],
         _ => L["CloudDrive.Title"]
     };
+
+    /// <summary>The dialog element, focused when it opens so that Escape and Tab stay inside it.</summary>
+    private ElementReference _dialog;
+
+    /// <inheritdoc />
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                await _dialog.FocusAsync();
+            }
+            catch (JSException)
+            {
+                // The dialog closed before its first render finished: nothing to focus.
+            }
+        }
+    }
 
     /// <inheritdoc />
     protected override async Task OnInitializedAsync()
