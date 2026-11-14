@@ -1,6 +1,8 @@
 using Kazo.Os.App.Abstractions;
 using Kazo.Os.AppSdk;
 using Kazo.Os.AppSdk.Apps;
+using Kazo.Os.AppSdk.CloudAccounts;
+using Kazo.Os.AppSdk.IO;
 using Kazo.Os.Commands.Df;
 using Kazo.Os.Commands.Mount;
 using Kazo.Os.Commands.Umount;
@@ -130,11 +132,172 @@ public sealed class MountCommandTests
         Assert.Equal(["host:work", "hostfs", "-", "-", "-", "-", "/mnt/work"], Row("host:work"));
     }
 
+    [Fact]
+    public async Task Options_are_trimmed_and_a_value_may_hold_an_equals_sign()
+    {
+        FakeAppDriveGateway drives = new() { NetworkTypes = { "dropbox" } };
+        FakeAppCloudAccountsGateway accounts = new FakeAppCloudAccountsGateway()
+            .WithProvider("dropbox", "Dropbox")
+            .WithAccount("a1", "dropbox", "alice");
+
+        Run run = await RunCloudAsync(drives, accounts, string.Empty, "-t", "dropbox", "-o", " account=a1 , root=/a=b ");
+
+        Assert.Equal(0, run.ExitCode);
+        Assert.Equal(new KazoNetworkDriveRequest("dropbox", "a1", "/a=b"), drives.LastNetworkRequest);
+    }
+
+    [Fact]
+    public async Task Mount_t_dropbox_uses_the_only_account_with_its_root()
+    {
+        FakeAppDriveGateway drives = new() { NetworkTypes = { "dropbox" } };
+        FakeAppCloudAccountsGateway accounts = new FakeAppCloudAccountsGateway()
+            .WithProvider("dropbox", "Dropbox")
+            .WithAccount("a1", "dropbox", "alice@example.com");
+
+        Run run = await RunCloudAsync(drives, accounts, string.Empty, "-t", "dropbox", "-o", "root=/Documents", "/mnt/db");
+
+        Assert.Equal(0, run.ExitCode);
+        Assert.Equal(new KazoNetworkDriveRequest("dropbox", "a1", "/Documents"), drives.LastNetworkRequest);
+        Assert.Contains(drives.Drives, static drive => drive.Name == "/mnt/db" && drive.Account == "a1");
+        Assert.Equal(0, accounts.SignIns);
+    }
+
+    [Fact]
+    public async Task Mount_t_onedrive_signs_in_when_there_is_no_account_and_asks_for_the_scope()
+    {
+        FakeAppDriveGateway drives = new() { NetworkTypes = { "onedrive" } };
+        FakeAppCloudAccountsGateway accounts = new FakeAppCloudAccountsGateway()
+            .WithProvider("onedrive", "OneDrive", KazoCloudAccessScope.Full, KazoCloudAccessScope.AppFolder);
+
+        Run noScope = await RunCloudAsync(drives, accounts, string.Empty, "-t", "onedrive");
+        Run app = await RunCloudAsync(drives, accounts, string.Empty, "-t", "onedrive", "-o", "scope=app");
+        Run bad = await RunCloudAsync(drives, accounts, string.Empty, "-t", "onedrive", "-o", "scope=everything");
+
+        Assert.Equal(32, noScope.ExitCode);
+        Assert.Contains("scope=full", noScope.Stderr, StringComparison.Ordinal);
+        Assert.Equal(0, app.ExitCode);
+        Assert.Equal(1, accounts.SignIns);
+        Assert.Equal(KazoCloudAccessScope.AppFolder, accounts.Accounts.Single().Scope);
+        Assert.Equal(1, bad.ExitCode);
+    }
+
+    [Fact]
+    public async Task Mount_t_dropbox_refuses_an_unknown_or_ambiguous_account()
+    {
+        FakeAppDriveGateway drives = new() { NetworkTypes = { "dropbox" } };
+        FakeAppCloudAccountsGateway accounts = new FakeAppCloudAccountsGateway()
+            .WithProvider("dropbox", "Dropbox")
+            .WithAccount("a1", "dropbox", "alice")
+            .WithAccount("a2", "dropbox", "bob");
+
+        Run several = await RunCloudAsync(drives, accounts, string.Empty, "-t", "dropbox");
+        Run unknown = await RunCloudAsync(drives, accounts, string.Empty, "-t", "dropbox", "-o", "account=carol");
+        Run byName = await RunCloudAsync(drives, accounts, string.Empty, "-t", "dropbox", "-o", "account=BOB");
+
+        Assert.Equal(32, several.ExitCode);
+        Assert.Contains("alice, bob", several.Stderr, StringComparison.Ordinal);
+        Assert.Equal(32, unknown.ExitCode);
+        Assert.Equal(0, byName.ExitCode);
+        Assert.Equal("a2", drives.LastNetworkRequest?.Account);
+    }
+
+    [Fact]
+    public async Task Mount_t_s3_reads_the_keys_from_standard_input_and_never_echoes_them()
+    {
+        FakeAppDriveGateway drives = new() { NetworkTypes = { "s3" } };
+
+        Run run = await RunCloudAsync(
+            drives, new FakeAppCloudAccountsGateway(), "AKIDEXAMPLE\nsecret-value\n",
+            "-t", "s3", "-o", "endpoint=https://s3.example.com,bucket=photos,addressing=path");
+
+        Assert.Equal(0, run.ExitCode);
+        KazoNetworkDriveRequest request = Assert.IsType<KazoNetworkDriveRequest>(drives.LastNetworkRequest);
+        Assert.Equal("https://s3.example.com", request.Options!["endpoint"]);
+        Assert.Equal("path", request.Options["addressing"]);
+        Assert.Equal("AKIDEXAMPLE", request.Secrets!["access-key-id"]);
+        Assert.Equal("secret-value", request.Secrets["secret-access-key"]);
+        Assert.DoesNotContain("secret-value", run.Stdout, StringComparison.Ordinal);
+        Assert.DoesNotContain("secret-value", request.ToString(), StringComparison.Ordinal);
+        Assert.Contains("/mnt/photos", run.Stdout, StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData("endpoint=https://s3.example.com")]
+    [InlineData("bucket=photos")]
+    [InlineData("endpoint=https://s3.example.com,bucket=photos,password=x")]
+    public async Task Mount_t_s3_needs_an_endpoint_and_a_bucket_and_no_unknown_option(string options)
+    {
+        Run run = await RunCloudAsync(new FakeAppDriveGateway { NetworkTypes = { "s3" } }, new FakeAppCloudAccountsGateway(), string.Empty, "-t", "s3", "-o", options);
+
+        Assert.Equal(1, run.ExitCode);
+        Assert.Contains("endpoint=", run.Stderr, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Mount_t_s3_without_keys_fails_with_32()
+    {
+        Run run = await RunCloudAsync(
+            new FakeAppDriveGateway { NetworkTypes = { "s3" } }, new FakeAppCloudAccountsGateway(), string.Empty,
+            "-t", "s3", "-o", "endpoint=https://s3.example.com,bucket=photos");
+
+        Assert.Equal(32, run.ExitCode);
+    }
+
+    [Fact]
+    public async Task Mount_t_s3_with_an_account_reuses_its_keys()
+    {
+        FakeAppDriveGateway drives = new() { NetworkTypes = { "s3" } };
+
+        Run run = await RunCloudAsync(
+            drives, new FakeAppCloudAccountsGateway(), string.Empty,
+            "-t", "s3", "-o", "endpoint=https://s3.example.com,bucket=photos,account=s3-1");
+
+        Assert.Equal(0, run.ExitCode);
+        Assert.Equal("s3-1", drives.LastNetworkRequest?.Account);
+        Assert.Null(drives.LastNetworkRequest?.Secrets);
+        Assert.False(drives.LastNetworkRequest!.Options!.ContainsKey("account"));
+    }
+
+    [Fact]
+    public async Task A_refused_cloud_mount_fails_with_32()
+    {
+        FakeAppDriveGateway drives = new()
+        {
+            NetworkTypes = { "dropbox" },
+            NextFailure = new KazoCloudAccountException(KazoCloudAccountError.ReconnectRequired, "sign in again")
+        };
+        FakeAppCloudAccountsGateway accounts = new FakeAppCloudAccountsGateway().WithProvider("dropbox", "Dropbox").WithAccount("a1", "dropbox", "alice");
+
+        Run run = await RunCloudAsync(drives, accounts, string.Empty, "-t", "dropbox");
+
+        Assert.Equal(32, run.ExitCode);
+        Assert.Contains("sign in again", run.Stderr, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Hostfs_with_options_is_a_usage_error()
+    {
+        Run run = await RunAsync(new MountApp(), static manifest => new MountCommand(manifest), new FakeAppDriveGateway(), "-t", "hostfs", "-o", "root=/x");
+
+        Assert.Equal(1, run.ExitCode);
+    }
+
+    private static Task<Run> RunCloudAsync(FakeAppDriveGateway drives, FakeAppCloudAccountsGateway accounts, string input, params string[] arguments) =>
+        RunAsync(new MountApp(), static manifest => new MountCommand(manifest), drives, arguments, accounts, input);
+
+    private static Task<Run> RunAsync(
+        AppDefinition definition,
+        Func<AppManifest, TerminalAppBase> command,
+        FakeAppDriveGateway drives,
+        params string[] arguments) => RunAsync(definition, command, drives, arguments, null, string.Empty);
+
     private static async Task<Run> RunAsync(
         AppDefinition definition,
         Func<AppManifest, TerminalAppBase> command,
         FakeAppDriveGateway drives,
-        params string[] arguments)
+        string[] arguments,
+        FakeAppCloudAccountsGateway? accounts,
+        string input)
     {
         AppManifest manifest = AppDefinitionMapper.ToManifest(definition);
         FakeAppFileSystemGateway fileSystem = new FakeAppFileSystemGateway()
@@ -142,11 +305,11 @@ public sealed class MountCommandTests
             .WithDirectory("/home/alice");
         MinimalAppExecutionContext app = new(
             manifest, fileSystem: fileSystem, homeDirectory: "/home/alice",
-            environment: new FakeAppEnvironmentGateway("/home/alice"), drives: drives);
+            environment: new FakeAppEnvironmentGateway("/home/alice"), drives: drives, cloudAccounts: accounts);
         StringWriter stdout = new();
         StringWriter stderr = new();
         TerminalExecutionContext context = new(
-            app, arguments, new StringReader(string.Empty), stdout, stderr,
+            app, arguments, new StringReader(input), stdout, stderr,
             "/home/alice", new Dictionary<string, string> { ["HOME"] = "/home/alice" });
 
         using IDisposable scope = KazoExecutionContext.Enter(app);

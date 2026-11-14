@@ -22,6 +22,12 @@ public sealed class FakeAppDriveGateway : IAppDriveGateway
     /// <summary>Gets or sets whether a reconnect is granted.</summary>
     public bool GrantOnReconnect { get; set; } = true;
 
+    /// <summary>Network drive types the OS offers (ADR 0270); empty by default, as the SDK's default.</summary>
+    public List<string> NetworkTypes { get; } = [];
+
+    /// <summary>Gets the last request <see cref="MountNetworkDriveAsync"/> received.</summary>
+    public KazoNetworkDriveRequest? LastNetworkRequest { get; private set; }
+
     /// <summary>Gets the mounted drives.</summary>
     public IReadOnlyList<KazoDriveSnapshot> Drives => _drives;
 
@@ -58,6 +64,26 @@ public sealed class FakeAppDriveGateway : IAppDriveGateway
         }
 
         KazoDriveSnapshot drive = Network(mountPoint ?? $"/mnt/{name}", name, ready: true);
+        _drives.Add(drive);
+        return ValueTask.FromResult<KazoDriveSnapshot?>(drive);
+    }
+
+    public ValueTask<IReadOnlyList<string>> GetNetworkDriveTypesAsync(CancellationToken cancellationToken = default) =>
+        ValueTask.FromResult<IReadOnlyList<string>>([.. NetworkTypes]);
+
+    public ValueTask<KazoDriveSnapshot?> MountNetworkDriveAsync(
+        KazoNetworkDriveRequest request, string? mountPoint, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        ThrowPending();
+        LastNetworkRequest = request;
+        string label = request.Options?.GetValueOrDefault("bucket") ?? request.Type;
+        KazoDriveSnapshot drive = new(mountPoint ?? $"/mnt/{label}", request.Type, label, 0, 0)
+        {
+            DriveType = KazoDriveType.Network,
+            IsReady = true,
+            Account = request.Account
+        };
         _drives.Add(drive);
         return ValueTask.FromResult<KazoDriveSnapshot?>(drive);
     }
