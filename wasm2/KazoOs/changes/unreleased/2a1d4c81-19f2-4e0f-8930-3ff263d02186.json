@@ -1,0 +1,11 @@
+{
+  "id": "2a1d4c81-19f2-4e0f-8930-3ff263d02186",
+  "category": "improved",
+  "audience": ["user"],
+  "title": { "en": "Search and categories in the \"Open with\" box", "fr": "Recherche et catégories dans la boîte « Ouvrir avec »" },
+  "description": {
+    "en": "The File Explorer's \"Open with\" box now has a search box and a category selector to find an installed app quickly. Each app's id no longer spills below its row, on a computer as on a phone.",
+    "fr": "La boîte « Ouvrir avec » de l'Explorateur de fichiers a maintenant une boîte de recherche et un sélecteur de catégorie pour trouver vite une application installée. L'identifiant de chaque application ne déborde plus sous sa ligne, sur ordinateur comme sur téléphone."
+  },
+  "links": ["doc/en/wasm/dev/file-explorer.md"]
+}

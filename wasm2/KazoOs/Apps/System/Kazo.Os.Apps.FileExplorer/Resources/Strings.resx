@@ -595,4 +595,49 @@
   <data name="OpenWith.StoreFailed" xml:space="preserve">
     <value>The Kazo OS Store could not be opened.</value>
   </data>
+  <data name="OpenWith.SearchLabel" xml:space="preserve">
+    <value>Search the installed apps</value>
+  </data>
+  <data name="OpenWith.SearchPlaceholder" xml:space="preserve">
+    <value>Search an app…</value>
+  </data>
+  <data name="OpenWith.CategoryLabel" xml:space="preserve">
+    <value>Category</value>
+  </data>
+  <data name="OpenWith.AllCategories" xml:space="preserve">
+    <value>All categories</value>
+  </data>
+  <data name="OpenWith.NoMatch" xml:space="preserve">
+    <value>No installed app matches this search.</value>
+  </data>
+  <data name="Category.Developer" xml:space="preserve">
+    <value>Development</value>
+  </data>
+  <data name="Category.Editors" xml:space="preserve">
+    <value>Editors</value>
+  </data>
+  <data name="Category.Graphics" xml:space="preserve">
+    <value>Graphics</value>
+  </data>
+  <data name="Category.Internet" xml:space="preserve">
+    <value>Internet</value>
+  </data>
+  <data name="Category.Multimedia" xml:space="preserve">
+    <value>Multimedia</value>
+  </data>
+  <data name="Category.Network" xml:space="preserve">
+    <value>Network</value>
+  </data>
+  <data name="Category.Office" xml:space="preserve">
+    <value>Office</value>
+  </data>
+  <data name="Category.Productivity" xml:space="preserve">
+    <value>Productivity</value>
+  </data>
+  <data name="Category.System" xml:space="preserve">
+    <value>System</value>
+  </data>
+  <data name="Category.Utilities" xml:space="preserve">
+    <value>Utilities</value>
+  </data>
 </root>
