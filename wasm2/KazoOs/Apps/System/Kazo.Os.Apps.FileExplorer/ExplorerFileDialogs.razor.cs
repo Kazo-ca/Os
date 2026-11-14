@@ -31,6 +31,13 @@ public sealed partial class ExplorerFileDialogs
     private IReadOnlyList<KazoAppInfo> _installed = [];
     private string? _openWithPath;
 
+    // "Open with": the search box and the category selector over the installed apps
+    private readonly string _searchId = $"explorer-open-with-search-{Guid.NewGuid():N}";
+    private readonly string _categoryId = $"explorer-open-with-category-{Guid.NewGuid():N}";
+    private string _search = string.Empty;
+    private string _category = string.Empty;
+    private IReadOnlyList<string> _categories = [];
+
     // "Open with": the Store apps that open the file (ADR 0257 §4)
     private readonly string _storeHeadingId = $"explorer-store-apps-{Guid.NewGuid():N}";
     private readonly HashSet<string> _brokenIcons = new(StringComparer.Ordinal);
@@ -116,7 +123,38 @@ public sealed partial class ExplorerFileDialogs
         _apps = request.CandidateAppIds is { } candidates
             ? [.. candidates.Select(id => installed.FirstOrDefault(app => app.Id == id)).OfType<KazoAppInfo>()]
             : [.. installed.Where(app => app.Kind == AppKind.Window && !app.IsHidden).OrderBy(app => app.Name, StringComparer.CurrentCultureIgnoreCase)];
+        _categories = OpenWithAppFilter.Categories(_apps, CategoryLabel);
         _selectedAppId = _apps.FirstOrDefault()?.Id;
+    }
+
+    /// <summary>The apps the list shows: those of <see cref="_apps"/> that match the search and the category.</summary>
+    private IReadOnlyList<KazoAppInfo> VisibleApps => _apps is null ? [] : OpenWithAppFilter.Apply(_apps, _search, _category);
+
+    /// <summary>The search box and the category selector are offered once there is more than one app to tell apart.</summary>
+    private bool ShowFilters => _apps is { Count: > 1 };
+
+    /// <summary>
+    /// After the search or the category changes: a selected app the filter hides is no longer the one
+    /// « Open » would open, so the first app still listed becomes the selection (none when nothing matches).
+    /// </summary>
+    private void OnFilterChanged()
+    {
+        IReadOnlyList<KazoAppInfo> visible = VisibleApps;
+        if (!visible.Any(app => app.Id == _selectedAppId))
+        {
+            _selectedAppId = visible.FirstOrDefault()?.Id;
+        }
+    }
+
+    /// <summary>
+    /// The shown name of a manifest category: the usual ids are translated (<c>Category.Utilities</c>…),
+    /// any other id is shown title-cased, as the Start menu does.
+    /// </summary>
+    private string CategoryLabel(string category)
+    {
+        string titled = CultureInfo.InvariantCulture.TextInfo.ToTitleCase(category.Replace('-', ' '));
+        LocalizedString text = L["Category." + titled.Replace(" ", string.Empty, StringComparison.Ordinal)];
+        return text.ResourceNotFound ? titled : text.Value;
     }
 
     /// <summary>
@@ -277,7 +315,8 @@ public sealed partial class ExplorerFileDialogs
     /// <summary>Arrow keys move the choice, Enter opens it, Escape cancels, like a list box.</summary>
     private async Task OnAppListKeyDown(KeyboardEventArgs e)
     {
-        if (_apps is not { Count: > 0 } apps)
+        IReadOnlyList<KazoAppInfo> apps = VisibleApps;
+        if (apps.Count == 0)
         {
             return;
         }

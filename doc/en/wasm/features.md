@@ -170,6 +170,10 @@ This section lists what is released in the `main` branch and online.
   `.docx`) in the File Explorer and "Open with", with "View in the Store"; the
   file opens after the install. `open` in the terminal shows the `kazopkg
   install` command. ([ADR 0257](dev/adr/0257-offer-a-store-app-for-an-unsupported-file.md))
+- **Search and categories in "Open with"**: the File Explorer's box filters the
+  installed apps by name, id or description, and by category; each row keeps
+  its name and its id inside its border, on a computer as on a phone.
+  ([`file-explorer.md`](dev/file-explorer.md))
 - **Computer folder mounted as a network drive**: a real folder of the
   computer appears in the OS (Chrome and Edge on desktop).
   ([ADR 0181](dev/adr/0181-host-folder-mounted-as-a-network-drive.md))

@@ -175,6 +175,10 @@ Cette section liste ce qui est publié dans la branche `main` et en ligne.
   avec », avec « Voir dans le Store » ; le fichier s'ouvre après
   l'installation. `open` dans le terminal affiche la commande `kazopkg
   install`. ([ADR 0257](dev/adr/0257-offer-a-store-app-for-an-unsupported-file.md))
+- **Recherche et catégories dans « Ouvrir avec »** : la boîte de l'Explorateur
+  filtre les apps installées par nom, identifiant ou description, et par
+  catégorie ; chaque ligne garde son nom et son identifiant dans sa bordure,
+  sur ordinateur comme sur téléphone. ([`file-explorer.md`](dev/file-explorer.md))
 - **Dossier de l'ordinateur monté comme lecteur réseau** : un vrai dossier de
   l'ordinateur apparaît dans l'OS (Chrome et Edge sur ordinateur).
   ([ADR 0181](dev/adr/0181-host-folder-mounted-as-a-network-drive.md))

@@ -26,9 +26,11 @@
     overflow-y: auto;
 }
 
+/* `flex-shrink: 0`: as an item of the scrolling list, the button would shrink to its min-height and its lines would spill below its border. */
 button.app-chooser-option {
+    flex-shrink: 0;
     display: grid;
-    grid-template-columns: 1.4rem 1fr;
+    grid-template-columns: 1.4rem minmax(0, 1fr);
     grid-template-areas: "mark name" "mark description" "mark id";
     align-items: center;
     width: 100%;
@@ -57,6 +59,15 @@ button.app-chooser-option.selected {
     grid-area: description;
     font-size: 0.8rem;
     color: var(--kos-text-secondary, #9ac3b2);
+}
+
+.app-chooser-name,
+.app-chooser-description,
+.app-chooser-id {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .app-chooser-id {
