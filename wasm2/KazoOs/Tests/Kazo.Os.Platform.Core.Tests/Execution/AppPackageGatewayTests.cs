@@ -398,7 +398,7 @@ public sealed partial class AppPackageGatewayTests
     public async Task An_unsigned_package_of_the_official_catalog_is_refused()
     {
         Harness harness = await Harness.CreateAsync();
-        harness.PublishCatalogAt(AppPackageDefaults.OfficialCatalogAddress, signed: false, "1.0.0");
+        harness.PublishCatalogAt(AppPackageDefaults.OfficialCatalogAddressFor(KazoOsSdk.SemanticVersion), signed: false, "1.0.0");
 
         KazoPackageException refused = await Assert.ThrowsAsync<KazoPackageException>(async () =>
             await (await harness.CreateGatewayAsync(new CountingAgent(succeed: true))).InstallPackageAsync(AppPackageTests.AppId));
@@ -661,6 +661,12 @@ public sealed partial class AppPackageGatewayTests
 
         internal AppPackageInstaller Installer => _installer;
 
+        /// <summary>
+        /// The <c>sdkCompatibility.minimumVersion</c> the catalog gives each version (ADR 0271 §6);
+        /// <c>2.0.0</c> by default, which the installer's SDK 2.1.0 accepts.
+        /// </summary>
+        internal Func<string, string> MinimumSdkFor { get; set; } = static _ => "2.0.0";
+
         /// <summary>The installer's clock: a test moves it past the catalog cache (5 minutes).</summary>
         internal DateTimeOffset Now { get; set; } = new(2026, 10, 31, 0, 0, 0, TimeSpan.Zero);
 
@@ -695,7 +701,7 @@ public sealed partial class AppPackageGatewayTests
         /// <c>packages</c> branch of the catalog repository, each version in its own folder.
         /// </summary>
         internal void PublishCatalog(string latest, params string[] older) =>
-            PublishCatalogAt(AppPackageDefaults.OfficialCatalogAddress, latest, older);
+            PublishCatalogAt(AppPackageDefaults.OfficialCatalogAddressFor(KazoOsSdk.SemanticVersion), latest, older);
 
         // The "signature" field of a catalog version (ADR 0214 §2), or nothing for an unsigned one.
         private static string Signature(byte[] package, bool signed) => signed
@@ -712,7 +718,7 @@ public sealed partial class AppPackageGatewayTests
         /// <summary>Publishes the sample app in a catalog, its versions signed with the harness's catalog key or not.</summary>
         internal void PublishCatalogAt(string address, bool signed, string latest, params string[] older)
         {
-            string root = address[..^"catalog.json".Length];
+            string root = address[..(address.LastIndexOf('/') + 1)];
             List<string> versions = [];
             foreach (string version in older.Prepend(latest))
             {
@@ -725,7 +731,7 @@ public sealed partial class AppPackageGatewayTests
                 versions.Add($$$"""
                     {"version":"{{{version}}}","commit":"abc","package":"{{{folder}}}/{{{AppPackageTests.AppId}}}-{{{version}}}.kazoapp",
                      "sha256":"{{{AppPackage.Sha256(package)}}}","size":{{{package.Length}}},"publishedAt":"2026-10-30T00:00:00Z",{{{Signature(package, signed)}}}
-                     "capabilities":[],"sdkCompatibility":{"minimumVersion":"2.0.0"},"icon":"{{{folder}}}/icon.svg",
+                     "capabilities":[],"sdkCompatibility":{"minimumVersion":"{{{MinimumSdkFor(version)}}}"},"icon":"{{{folder}}}/icon.svg",
                      "fileHandlers":[{"extensions":[".sample"],"actions":["open"]}],
                      "screenshots":["{{{folder}}}/screenshots/1.png"],"descriptions":{"en":"{{{folder}}}/description.en.md"}}
                     """);

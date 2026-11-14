@@ -14,7 +14,8 @@ namespace Kazo.Os.UI.E2E.Tests;
 /// </summary>
 public sealed class OpenWithStoreTests(ITestOutputHelper output)
 {
-    private const string OfficialCatalogAddress = "https://raw.githubusercontent.com/Kazo-ca/Os-AppMarketPlace/packages/catalog.json";
+    // Both channels of the official catalog (ADR 0271 §6): a prerelease OS reads catalog-beta.json.
+    private const string OfficialCatalogAddress = "https://raw.githubusercontent.com/Kazo-ca/Os-AppMarketPlace/packages/catalog{.json,-beta.json}";
     private const string PackagesRoot = "https://raw.githubusercontent.com/Kazo-ca/Os-AppMarketPlace/packages/packages/";
     private const string AppId = "org.e2e.documents";
 

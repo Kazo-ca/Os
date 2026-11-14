@@ -1,3 +1,4 @@
+using Kazo.Os.App.Abstractions;
 using Kazo.Os.Platform.Core.Apps.Packages;
 
 namespace Kazo.Os.Platform.Core.Tests.Apps.Packages;
@@ -21,7 +22,7 @@ public sealed class RenamedAppRepositoriesTests
         AppSourcesConfig config = AppSourcesConfigDocument.Read($"[catalogs]\nofficial={written}\n");
 
         Assert.Empty(config.Warnings);
-        Assert.Equal(new Uri(AppPackageDefaults.OfficialCatalogAddress), config.Catalogs["official"]);
+        Assert.Equal(new Uri(AppPackageDefaults.OfficialCatalogAddressFor(KazoOsSdk.SemanticVersion)), config.Catalogs["official"]);
     }
 
     [Fact]
