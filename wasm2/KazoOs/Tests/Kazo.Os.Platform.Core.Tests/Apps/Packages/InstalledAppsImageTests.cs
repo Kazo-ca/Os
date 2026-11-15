@@ -52,6 +52,61 @@ public sealed class InstalledAppsImageTests
         Assert.Contains(image.Warnings, warning => warning.Contains("not org.kazo.sample 2.0.0", StringComparison.Ordinal));
     }
 
+    [Fact]
+    public async Task The_libraries_of_an_installed_app_are_read_from_its_package_description()
+    {
+        // ADR 0261 §1: kazoos-package.json is written with the app; its libraries are loaded before the app.
+        string zero = new('0', 64);
+        InstalledAppsImage image = await InstalledAppsImage.LoadAsync(Reader(new()
+        {
+            ["/etc/kazoos/apps.config"] = "[installed]\norg.kazo.sample=github:Kazo-ca/Sample@1.0.0\n",
+            ["/usr/lib/kazoos/apps/org.kazo.sample/1.0.0/manifest.json"] = AppPackageTests.ManifestJson(),
+            ["/usr/lib/kazoos/apps/org.kazo.sample/1.0.0/kazoos-package.json"] =
+                "{\"appId\":\"org.kazo.sample\",\"version\":\"1.0.0\",\"files\":{},\"libraries\":["
+                + "{\"name\":\"Kazo.Sample.Protocol\",\"version\":\"1.0.0.0\",\"sha256\":\"" + zero + "\",\"shared\":false},"
+                + "{\"name\":\"Kazo.Sample.Contracts\",\"version\":\"1.2.0.0\",\"sha256\":\"" + zero + "\",\"shared\":true}]}",
+        }));
+
+        InstalledApp app = Assert.Single(image.Apps);
+        Assert.Empty(image.Warnings);
+        Assert.Equal(
+            [("Kazo.Sample.Protocol", new Version(1, 0, 0, 0), false), ("Kazo.Sample.Contracts", new Version(1, 2, 0, 0), true)],
+            app.Libraries.Select(static library => (library.Name, library.Version, library.Shared)));
+        Assert.Equal("/usr/lib/kazoos/apps/org.kazo.sample/1.0.0/lib/Kazo.Sample.Protocol.dll", app.GetAssemblyPath(app.Libraries[0].FileName).Value);
+        // The libraries are not assemblies the manifest declares: the lazy loader never asks for them by name.
+        Assert.Equal(["Kazo.Sample.dll"], app.AssemblyNames);
+    }
+
+    [Fact]
+    public async Task An_app_installed_before_the_list_of_libraries_has_none()
+    {
+        InstalledAppsImage image = await InstalledAppsImage.LoadAsync(Reader(new()
+        {
+            ["/etc/kazoos/apps.config"] = "[installed]\norg.kazo.sample=github:Kazo-ca/Sample@1.0.0\n",
+            ["/usr/lib/kazoos/apps/org.kazo.sample/1.0.0/manifest.json"] = AppPackageTests.ManifestJson(),
+            ["/usr/lib/kazoos/apps/org.kazo.sample/1.0.0/kazoos-package.json"] = "{\"appId\":\"org.kazo.sample\",\"version\":\"1.0.0\",\"files\":{}}",
+        }));
+
+        Assert.Empty(Assert.Single(image.Apps).Libraries);
+        Assert.Empty(image.Warnings);
+    }
+
+    [Fact]
+    public async Task An_app_whose_list_of_libraries_is_malformed_is_skipped_with_a_warning()
+    {
+        InstalledAppsImage image = await InstalledAppsImage.LoadAsync(Reader(new()
+        {
+            ["/etc/kazoos/apps.config"] = "[installed]\norg.kazo.sample=github:Kazo-ca/Sample@1.0.0\n",
+            ["/usr/lib/kazoos/apps/org.kazo.sample/1.0.0/manifest.json"] = AppPackageTests.ManifestJson(),
+            ["/usr/lib/kazoos/apps/org.kazo.sample/1.0.0/kazoos-package.json"] = "{\"libraries\":[{\"name\":\"Kazo.Sample.Protocol\"}]}",
+        }));
+
+        Assert.Empty(image.Apps);
+        string warning = Assert.Single(image.Warnings);
+        Assert.Contains("kazoos-package.json is not valid", warning, StringComparison.Ordinal);
+        Assert.Contains("app org.kazo.sample skipped", warning, StringComparison.Ordinal);
+    }
+
     private static InstalledAppHomeLister Homes(params string[] homes) => _ => ValueTask.FromResult<IReadOnlyList<string>>(homes);
 
     [Fact]
@@ -79,6 +134,52 @@ public sealed class InstalledAppsImageTests
         Assert.True(catalog.IsVisibleTo("org.kazoos.calculator", "/home/bob"));
         Assert.Equal(["org.kazo.sample"], catalog.GetHiddenFor("/home/bob"));
         Assert.Empty(catalog.GetHiddenFor("/home/alice"));
+    }
+
+    [Fact]
+    public async Task An_installed_feature_is_read_with_the_children_its_description_lists()
+    {
+        const string folder = "/usr/lib/kazoos/apps/org.kazo.feature/1.0.0";
+        InstalledAppsImage image = await InstalledAppsImage.LoadAsync(Reader(new()
+        {
+            ["/etc/kazoos/apps.config"] = "[installed]\norg.kazo.feature=github:Kazo-ca/Feature@1.0.0\n",
+            [$"{folder}/manifest.json"] = AppPackageTests.FeatureManifestJson(),
+            [$"{folder}/kazoos-package.json"] = "{\"appId\":\"org.kazo.feature\",\"version\":\"1.0.0\",\"files\":{},\"manifests\":[\"entrypoints/cli.json\",\"entrypoints/daemon.json\"]}",
+            [$"{folder}/entrypoints/cli.json"] = AppPackageTests.FeatureChildJson("cli", "terminal", "\"filesystem.system.read\"", "x86"),
+            [$"{folder}/entrypoints/daemon.json"] = AppPackageTests.FeatureChildJson("daemon", "service", string.Empty),
+        }));
+
+        InstalledApp app = Assert.Single(image.Apps);
+        Assert.Empty(image.Warnings);
+        Assert.Equal(["org.kazo.feature.cli", "org.kazo.feature.daemon"], app.Children.Select(child => child.Id));
+        Assert.True(app.Owns("org.kazo.feature.daemon"));
+        Assert.Equal(["Kazo.Feature.dll"], app.AssemblyNames);
+
+        InstalledPackageCatalog catalog = new();
+        catalog.Apply(image.Apps);
+        Assert.True(catalog.Contains("org.kazo.feature.cli"));
+        Assert.True(catalog.IsVisibleTo("org.kazo.feature.cli", "/home/bob"));
+    }
+
+    [Fact]
+    public async Task A_feature_whose_child_manifest_is_missing_or_outside_the_set_is_skipped_with_a_warning()
+    {
+        const string folder = "/usr/lib/kazoos/apps/org.kazo.feature/1.0.0";
+        Dictionary<string, string> files = new()
+        {
+            ["/etc/kazoos/apps.config"] = "[installed]\norg.kazo.feature=github:Kazo-ca/Feature@1.0.0\n",
+            [$"{folder}/manifest.json"] = AppPackageTests.FeatureManifestJson(),
+            [$"{folder}/kazoos-package.json"] = "{\"appId\":\"org.kazo.feature\",\"version\":\"1.0.0\",\"files\":{},\"manifests\":[\"entrypoints/cli.json\"]}",
+        };
+
+        InstalledAppsImage missing = await InstalledAppsImage.LoadAsync(Reader(files));
+        files[$"{folder}/entrypoints/cli.json"] = AppPackageTests.FeatureChildJson("cli", "terminal", "\"filesystem.system.write\"", "x86");
+        InstalledAppsImage greedy = await InstalledAppsImage.LoadAsync(Reader(files));
+
+        Assert.Empty(missing.Apps);
+        Assert.Contains("is missing", Assert.Single(missing.Warnings), StringComparison.Ordinal);
+        Assert.Empty(greedy.Apps);
+        Assert.Contains("filesystem.system.write", Assert.Single(greedy.Warnings), StringComparison.Ordinal);
     }
 
     [Fact]

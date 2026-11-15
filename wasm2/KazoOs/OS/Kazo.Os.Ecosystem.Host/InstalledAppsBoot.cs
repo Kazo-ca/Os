@@ -190,9 +190,9 @@ public sealed class InstalledAppsBoot
     public InstalledApp? FindByAssembly(string assemblyName) =>
         Current.Installed.FirstOrDefault(app => app.AssemblyNames.Contains(assemblyName));
 
-    /// <summary>Finds an installed app by ID.</summary>
+    /// <summary>Finds an installed app by ID: its own, or that of one of its children (ADR 0260 §2).</summary>
     public InstalledApp? Find(string appId) =>
-        Current.Installed.FirstOrDefault(app => string.Equals(app.AppId, appId, StringComparison.Ordinal));
+        Current.Installed.FirstOrDefault(app => app.Owns(appId));
 
     /// <summary>Reads one installed file.</summary>
     internal ValueTask<byte[]?> ReadAsync(VirtualPath path, CancellationToken cancellationToken) =>
@@ -213,6 +213,12 @@ public sealed class InstalledAppsActivator(
     ILogger<InstalledAppsActivator>? logger = null) : IInstalledAppsActivator
 {
     private readonly SemaphoreSlim _gate = new(1, 1);
+
+    /// <summary>
+    /// Gets the loader of the installed apps' libraries (ADR 0261 §3): after each change it writes to
+    /// the log which app waits for a restart to get its copy of a shared library.
+    /// </summary>
+    public InstalledAppLibraries? Libraries { get; init; }
 
     /// <inheritdoc />
     public async ValueTask<InstalledAppsActivation> ActivateAsync(CancellationToken cancellationToken = default)
@@ -238,6 +244,8 @@ public sealed class InstalledAppsActivator(
                     string.Join(", ", activation.WaitingForRestart));
             }
 
+            // ADR 0261 §3: a feature just installed may carry a newer copy of a library already in the page.
+            Libraries?.ReportPendingRestarts();
             return activation;
         }
         finally
@@ -277,6 +285,12 @@ public sealed class InstalledAppAssemblyTransport(IBuildKnownAssemblyTransport i
     /// <summary>Gets the loader of their satellite assemblies (ADR 0222 §2); <see langword="null"/> loads none.</summary>
     public InstalledAppSatellites? Satellites { get; init; }
 
+    /// <summary>
+    /// Gets the loader of the libraries their packages carry (ADR 0261 §1): they are in the page
+    /// before the app's own assembly. <see langword="null"/> loads none.
+    /// </summary>
+    public InstalledAppLibraries? Libraries { get; init; }
+
     /// <inheritdoc />
     [RequiresUnreferencedCode("Installed assemblies arrive after publishing; AppPackageApiCheck verified their references at install time.")]
     public async Task<IReadOnlyList<Assembly>> LoadAsync(IReadOnlyList<string> assemblyNames, CancellationToken cancellationToken)
@@ -303,6 +317,12 @@ public sealed class InstalledAppAssemblyTransport(IBuildKnownAssemblyTransport i
             {
                 loaded.Add(existing);
                 continue;
+            }
+
+            if (Libraries is { } libraries)
+            {
+                // ADR 0261 §1: what the app's code refers to is in the runtime before that code.
+                await libraries.LoadForAsync(app, cancellationToken).ConfigureAwait(false);
             }
 
             byte[] bytes = await installed.ReadAsync(app.GetAssemblyPath(name), cancellationToken).ConfigureAwait(false)

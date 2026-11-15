@@ -48,6 +48,22 @@ public sealed class ManifestWriterTests : IDisposable
     }
 
     [Fact]
+    public void A_feature_writes_one_file_per_child_under_entrypoints_and_an_app_removes_them()
+    {
+        IReadOnlyList<string> files = ManifestWriter.Write(_directory, Generate(typeof(ValidFeature)));
+
+        Assert.Equal([Path.GetFullPath(Path.Combine(_directory, "manifest.json"))], files);
+        Assert.Equal(
+            ["cli.json", "console.json", "daemon.json"],
+            Directory.EnumerateFiles(Path.Combine(_directory, "entrypoints")).Select(Path.GetFileName).Order(StringComparer.Ordinal));
+        Assert.Contains("\"parent\":\"org.kazoos.tests.feature\"", File.ReadAllText(Path.Combine(_directory, "entrypoints", "cli.json")), StringComparison.Ordinal);
+
+        ManifestWriter.Write(_directory, Generate(typeof(ValidCommandApp)));
+
+        Assert.False(Directory.Exists(Path.Combine(_directory, "entrypoints")));
+    }
+
+    [Fact]
     public void Identical_content_is_not_rewritten_and_hand_edits_are_overwritten()
     {
         string path = Path.Combine(_directory, "manifest.json");

@@ -255,6 +255,14 @@ public interface IAppExecutionContext
     IAppManagementGateway AppManagement => new UnsupportedAppManagementGateway();
 
     /// <summary>
+    /// Gets the services of the optional features of the OS this app may use, behind
+    /// <see cref="Features.KazoFeatures"/> (ADR 0262 §2). Defaults to a gateway where every contract
+    /// is « not installed », so existing implementations keep compiling; the trusted platform
+    /// factory overrides it.
+    /// </summary>
+    Features.IAppFeatureGateway Features => new Features.UnsupportedAppFeatureGateway();
+
+    /// <summary>
     /// Gets this instance's access to the OS's own settings documents, behind
     /// <see cref="KazoSettings.OpenSystemAsync(string, CancellationToken)"/> (ADR 0056, section 8; no
     /// capability, file permissions decide). Defaults to an unsupported gateway so existing
