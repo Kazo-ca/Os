@@ -340,6 +340,11 @@ Cette section liste ce qui est publié dans la branche `main` et en ligne.
   qui montrent ce que fait chaque app, et le menu Démarrer, le bureau et
   l'explorateur affichent l'icône propre de chaque app, y compris installée.
   ([ADR 0232](dev/adr/0232-illustrated-app-icons-everywhere.md))
+- **Assistant de bienvenue** : à la première connexion, l'utilisateur choisit
+  sa langue, son thème, son fond d'écran et son fuseau horaire avant le
+  bureau ; chaque choix s'applique tout de suite et l'assistant peut être
+  passé. ([`welcome-wizard.md`](dev/welcome-wizard.md),
+  [ADR 0276](dev/adr/0276-welcome-wizard-at-first-sign-in.md))
 - **Thèmes** de l'OS, et éditeur pour créer les siens.
   ([`theme-files.md`](framework/theme-files.md))
 - **Fonds d'écran en image** : une image PNG, JPEG ou WebP (4 livrées avec

@@ -327,6 +327,11 @@ This section lists what is released in the `main` branch and online.
   each app does, and the Start menu, the desktop and the explorer show each
   app's own icon, installed apps included.
   ([ADR 0232](dev/adr/0232-illustrated-app-icons-everywhere.md))
+- **Welcome wizard**: at the first sign-in, users choose their language,
+  theme, wallpaper and time zone before the desktop; each choice applies at
+  once and the wizard can be skipped.
+  ([`welcome-wizard.md`](dev/welcome-wizard.md),
+  [ADR 0276](dev/adr/0276-welcome-wizard-at-first-sign-in.md))
 - **OS themes**, and an editor to create your own.
   ([`theme-files.md`](framework/theme-files.md))
 - **Image wallpapers**: a PNG, JPEG or WebP image (4 shipped with the OS,

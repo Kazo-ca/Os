@@ -12,8 +12,10 @@ créer son propre compte en gardant ou non le travail de l'invité. Décision :
 ## Pour l'utilisateur
 
 1. **Premier démarrage.** Sous le formulaire de création du premier compte,
-   le bouton **Démarrer en invité** ouvre tout de suite le bureau. Il n'est
-   proposé que si aucun compte n'existe encore.
+   le bouton **Démarrer en invité** ouvre tout de suite la session, sans
+   mot de passe. Il n'est proposé que si aucun compte n'existe encore. Comme
+   pour tout compte, la première session passe par
+   l'[assistant de bienvenue](welcome-wizard.md), qu'on peut passer.
 2. **Visites suivantes.** Tant que l'invité est le seul compte, l'écran de
    connexion affiche « Invité » avec **Continuer en invité** (pas de mot de
    passe) et le lien **Créer mon compte**.

@@ -264,4 +264,82 @@
   <data name="AppLink.StoreAfterLogin" xml:space="preserve">
     <value>{0} s'ouvrira dans le Kazo OS Store après la connexion.</value>
   </data>
+  <data name="Welcome.Kicker" xml:space="preserve">
+    <value>Bienvenue dans Kazo OS</value>
+  </data>
+  <data name="Welcome.Progress" xml:space="preserve">
+    <value>Étape {0} sur {1}</value>
+  </data>
+  <data name="Welcome.Language.Title" xml:space="preserve">
+    <value>Choisissez votre langue</value>
+  </data>
+  <data name="Welcome.Language.Intro" xml:space="preserve">
+    <value>Kazo OS et ses applications parlent la langue que vous choisissez.</value>
+  </data>
+  <data name="Welcome.Language.System" xml:space="preserve">
+    <value>Suivre la langue du système</value>
+  </data>
+  <data name="Welcome.Theme.Title" xml:space="preserve">
+    <value>Choisissez votre thème</value>
+  </data>
+  <data name="Welcome.Theme.Intro" xml:space="preserve">
+    <value>Choisissez une apparence. Tout l'écran change dès que vous choisissez.</value>
+  </data>
+  <data name="Welcome.Wallpaper.Title" xml:space="preserve">
+    <value>Choisissez votre fond d'écran</value>
+  </data>
+  <data name="Welcome.Wallpaper.Intro" xml:space="preserve">
+    <value>Gardez le fond de votre thème ou choisissez une image. Vous pourrez utiliser vos propres images plus tard dans les Paramètres.</value>
+  </data>
+  <data name="Welcome.Wallpaper.Theme" xml:space="preserve">
+    <value>Fond du thème</value>
+  </data>
+  <data name="Welcome.Wallpaper.hacker-grid" xml:space="preserve">
+    <value>Grille</value>
+  </data>
+  <data name="Welcome.Wallpaper.circuit" xml:space="preserve">
+    <value>Circuit</value>
+  </data>
+  <data name="Welcome.Wallpaper.aurora" xml:space="preserve">
+    <value>Aurore</value>
+  </data>
+  <data name="Welcome.Wallpaper.nebula" xml:space="preserve">
+    <value>Nébuleuse</value>
+  </data>
+  <data name="Welcome.TimeZone.Title" xml:space="preserve">
+    <value>Choisissez votre fuseau horaire</value>
+  </data>
+  <data name="Welcome.TimeZone.Intro" xml:space="preserve">
+    <value>L'horloge et les applications affichent l'heure de ce fuseau.</value>
+  </data>
+  <data name="Welcome.TimeZone.Automatic" xml:space="preserve">
+    <value>Automatique (le fuseau de cet appareil)</value>
+  </data>
+  <data name="Welcome.TimeZone.Search" xml:space="preserve">
+    <value>Chercher un fuseau horaire</value>
+  </data>
+  <data name="Welcome.TimeZone.Now" xml:space="preserve">
+    <value>Il est {0} à {1}.</value>
+  </data>
+  <data name="Welcome.TimeZone.More" xml:space="preserve">
+    <value>{0} autres fuseaux. Tapez dans la recherche pour en trouver un.</value>
+  </data>
+  <data name="Welcome.SettingsHint" xml:space="preserve">
+    <value>Vous pourrez changer tout cela plus tard dans les Paramètres.</value>
+  </data>
+  <data name="Welcome.Skip" xml:space="preserve">
+    <value>Passer</value>
+  </data>
+  <data name="Welcome.Back" xml:space="preserve">
+    <value>Précédent</value>
+  </data>
+  <data name="Welcome.Next" xml:space="preserve">
+    <value>Suivant</value>
+  </data>
+  <data name="Welcome.Finish" xml:space="preserve">
+    <value>Terminer</value>
+  </data>
+  <data name="Welcome.Error" xml:space="preserve">
+    <value>Ce choix n'a pas pu être enregistré : {0}</value>
+  </data>
 </root>

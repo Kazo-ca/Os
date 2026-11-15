@@ -45,6 +45,7 @@ public sealed class FrenchSessionTests(ITestOutputHelper output)
             await page.ReloadAsync();
             await page.GetByLabel("Password", new() { Exact = true }).FillAsync(E2ESupport.Password, new() { Timeout = 60000 });
             await page.GetByRole(AriaRole.Button, new() { Name = "Start session", Exact = true }).ClickAsync();
+            await E2ESupport.PassWelcomeAsync(page);
 
             ILocator launcher = page.GetByRole(AriaRole.Button, new() { Name = "Lanceur d'applications", Exact = true });
             await launcher.WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 60000 });
