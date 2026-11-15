@@ -20,3 +20,8 @@ static Kazo.Os.Platform.Core.Welcome.WelcomeSetupService.ThemeKey(Kazo.Os.Themin
 static Kazo.Os.Platform.Core.Welcome.WelcomeSetupService.WallpaperKey(Kazo.Os.Theming.Abstractions.ThemePlatform platform) -> string!
 static readonly Kazo.Os.Platform.Core.Welcome.WelcomeSetupService.StateFile -> Kazo.Os.Platform.Core.Settings.OsSettingsFile!
 static readonly Kazo.Os.Platform.Core.Welcome.WelcomeSetupService.UserLocaleFile -> Kazo.Os.Platform.Core.Settings.OsSettingsFile!
+Kazo.Os.Platform.Core.Storage.StorageSpaceMonitor.Reclaimer.get -> Kazo.Os.Simulation.Abstractions.Metrics.IStorageReclaimer?
+Kazo.Os.Platform.Core.Storage.StorageSpaceMonitor.Reclaimer.init -> void
+static readonly Kazo.Os.Platform.Core.Storage.StorageSpaceMonitor.ReclaimRequestDelay -> System.TimeSpan
+Kazo.Os.Platform.Core.Storage.StorageSpaceMonitor.RequestReclaim() -> void
+static readonly Kazo.Os.Platform.Core.Storage.StorageSpaceMonitor.ReclaimInterval -> System.TimeSpan
