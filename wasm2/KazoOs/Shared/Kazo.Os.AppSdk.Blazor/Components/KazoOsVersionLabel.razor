@@ -2,12 +2,18 @@
 
 @*
     ADR 0236: the one place that shows the version of Kazo OS: « Kazo OS 3.2.1 », the build
-    number (« build 1234 », « build dev » for a local build) and, when the host knows it, whether
+    number (« build 1234 », « build dev » for a local build), the « Beta » badge of a
+    prerelease (ADR 0271) and, when the host knows it, whether
     this is the version the origin serves now. Used by the sign-in screen and Settings ▸ About.
 *@
 <span class="kos-version">
     <span class="kos-version-name">Kazo OS @Version</span>
     <span class="kos-version-build">@BuildText</span>
+    @if (KazoOsChannelLink.IsBeta(Version))
+    {
+        @* ADR 0271 §3: a prerelease says so wherever its version is shown. *@
+        <span class="kos-version-channel">@L["Version.Beta"]</span>
+    }
     @if (Status != KazoOsVersionStatus.None)
     {
         <span class="kos-version-status @StatusClass" role="status">@StatusText</span>

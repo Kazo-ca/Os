@@ -11,7 +11,7 @@ namespace Kazo.Os.Platform.Core.Tests.Apps.Packages;
 /// </summary>
 public sealed class CatalogAppSuggestionsTests
 {
-    private static readonly Uri Address = new(AppPackageDefaults.OfficialCatalogAddress);
+    private static readonly Uri Address = new(AppPackageDefaults.OfficialCatalogAddressFor(KazoOsSdk.SemanticVersion));
     private static readonly SemanticVersion Sdk = SemanticVersion.Parse("3.3.0");
     private static readonly AppPolicy NoBlock = Policy();
     private static readonly IReadOnlySet<string> NothingInstalled = new HashSet<string>(StringComparer.Ordinal);
