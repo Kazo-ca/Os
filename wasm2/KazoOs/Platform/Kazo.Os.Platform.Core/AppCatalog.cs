@@ -195,6 +195,27 @@ public sealed class AppCatalog
         return Manifests.TryGetValue(appId, out AppManifest? manifest) ? manifest.Parent : null;
     }
 
+    /// <summary>
+    /// Gets the features that provide a contract (ADR 0262 §1), ordered by feature id: one at most
+    /// when the installer did its work (<c>apps.package.service-already-provided</c>); the first one
+    /// is the provider.
+    /// </summary>
+    /// <param name="contractType">Full name of the contract, e.g. <c>OsX86.Interface.Ix86</c>.</param>
+    public IReadOnlyList<AppServiceProvider> GetServiceProviders(string contractType)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(contractType);
+        return [.. Manifests.Values
+            .Where(static manifest => manifest.Kind == AppKind.Feature)
+            .OrderBy(static manifest => manifest.Id, StringComparer.Ordinal)
+            .SelectMany(manifest => (manifest.ProvidedServices ?? [])
+                .Where(service => string.Equals(service.ContractType, contractType, StringComparison.Ordinal))
+                .Select(service => new AppServiceProvider(manifest, service)))];
+    }
+
+    /// <summary>Gets the provider of a contract (ADR 0262 §1), or <see langword="null"/> when no feature provides it.</summary>
+    /// <param name="contractType">Full name of the contract.</param>
+    public AppServiceProvider? FindServiceProvider(string contractType) => GetServiceProviders(contractType) is [var first, ..] ? first : null;
+
     /// <summary>Gets the children of a feature, in activation order; empty for any other app.</summary>
     /// <param name="featureId">The feature's identifier.</param>
     public IReadOnlyList<string> GetFeatureChildren(string featureId)
@@ -617,9 +638,12 @@ public sealed class AppCatalog
                     ? null
                     : SemanticVersion.Parse(dependency.MaximumVersion);
 
-                if (installedVersion.CompareTo(minimumVersion) < 0
-                    || maximumVersion is SemanticVersion maximum
-                    && installedVersion.CompareTo(maximum) > 0)
+                // ADR 0262 §3: an optional dependency out of range is absent, not a reason to leave
+                // the catalog; KazoFeatures answers VersionMismatch and null instead.
+                if (!dependency.Optional
+                    && (installedVersion.CompareTo(minimumVersion) < 0
+                        || maximumVersion is SemanticVersion maximum
+                        && installedVersion.CompareTo(maximum) > 0))
                 {
                     errors.Add(new AppCatalogError(
                         "catalog.dependency.incompatible",
@@ -753,3 +777,7 @@ public sealed record AppCatalogBuildResult(
     /// <summary>Gets whether catalog construction succeeded.</summary>
     public bool IsSuccess => Catalog is not null && Errors.Count == 0;
 }
+/// <summary>A feature of the catalog and one service it provides (ADR 0262 §1).</summary>
+/// <param name="Feature">The feature's manifest.</param>
+/// <param name="Service">The service.</param>
+public sealed record AppServiceProvider(AppManifest Feature, AppProvidedServiceManifest Service);

@@ -18,7 +18,22 @@ public sealed class InstalledLibrariesTests
         Libraries = libraries,
     };
 
-    internal static InstalledApp Feature(string appId, params AppPackageLibrary[] libraries) => new(
+    /// <summary>
+    /// A feature that carries <paramref name="libraries"/> and provides one contract of each shared
+    /// one (ADR 0262 §1): the provider of those libraries.
+    /// </summary>
+    internal static InstalledApp Feature(string appId, params AppPackageLibrary[] libraries) =>
+        CarryingFeature(appId, libraries) with
+        {
+            Manifest = CarryingFeature(appId, libraries).Manifest with
+            {
+                ProvidedServices = [.. libraries.Where(static library => library.Shared).Select(static library =>
+                    new AppProvidedServiceManifest($"{library.Name}.IContract, {library.Name}", "Kazo.Feature.Service, Kazo.Feature"))],
+            },
+        };
+
+    /// <summary>A feature that carries <paramref name="libraries"/> without providing any of their contracts: a client.</summary>
+    internal static InstalledApp CarryingFeature(string appId, params AppPackageLibrary[] libraries) => new(
         new AppPackageSource("Kazo-ca", appId, SemanticVersion.Parse("1.0.0")),
         Parse(AppPackageTests.FeatureManifestJson().Replace(AppPackageTests.FeatureId, appId, StringComparison.Ordinal)))
     {
@@ -54,6 +69,20 @@ public sealed class InstalledLibrariesTests
         Assert.Equal("org.kazo.x86", choice.Copy.Owner.AppId);
         Assert.Equal(SharedLibraryChoiceReason.Feature, choice.Reason);
         Assert.Equal("feature org.kazo.x86", choice.Describe());
+    }
+
+    [Fact]
+    public void A_feature_that_carries_the_library_without_providing_a_contract_of_it_is_no_provider()
+    {
+        // ADR 0262 replaces the provisional rule of ADR 0256 §5: the provider declares a service.
+        InstalledApp app = App("org.kazo.app", Shared("1.3.0.0"));
+        InstalledApp carrier = CarryingFeature("org.kazo.other", Shared("1.2.0.0"));
+
+        SharedLibraryChoice choice = InstalledLibraries.Choose(app, app.Libraries[0], [app, carrier]);
+
+        Assert.Null(InstalledLibraries.FindProvider(Contract, [app, carrier]));
+        Assert.Equal("org.kazo.app", choice.Copy.Owner.AppId);
+        Assert.Equal(SharedLibraryChoiceReason.NewestCompatible, choice.Reason);
     }
 
     [Fact]

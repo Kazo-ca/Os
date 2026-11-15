@@ -58,6 +58,7 @@ public static partial class AppManifestValidator
         }
 
         ValidateRealNetworkPorts(manifest, errors);
+        ValidateProvidedServices(manifest, errors);
         ValidateDeclaredTopicPermissions(manifest.Id, manifest.DeclaredTopicPermissions, errors);
         ValidateDependencies(manifest.Dependencies, errors);
         ValidateAssets(manifest.Assets, errors);
@@ -149,7 +150,57 @@ public static partial class AppManifestValidator
             }
         }
 
+        // ADR 0262 §1: a service runs with the capabilities of one child of the feature, or with the whole set.
+        HashSet<string> childIds = new(children.Select(static child => child.Id ?? string.Empty), StringComparer.Ordinal);
+        foreach (AppProvidedServiceManifest service in (feature.ProvidedServices ?? []).Where(service => service.EntryPoint is not null && !childIds.Contains(service.EntryPoint)))
+        {
+            AddError(errors, "manifest.service.entry-point", "providedServices", $"The service {service.Contract} names '{service.EntryPoint}' as its entry point, which is not a child of '{feature.Id}'.");
+        }
+
         return new ManifestValidationResult(errors);
+    }
+
+    /// <summary>
+    /// ADR 0262 §1 on one manifest: only a feature provides services; each names its contract and
+    /// its implementation as <c>Full.Type.Name, Assembly</c>, provides a contract once, and the
+    /// implementation lives in another assembly than the contract (the contract is in a shared
+    /// library, the implementation in the feature's own code). Whether the entry point is a child
+    /// is checked with the children (<see cref="ValidateFeature"/>).
+    /// </summary>
+    private static void ValidateProvidedServices(AppManifest manifest, List<ManifestValidationError> errors)
+    {
+        if (manifest.ProvidedServices is not { Count: > 0 } services)
+        {
+            return;
+        }
+
+        if (manifest.Kind != AppKind.Feature)
+        {
+            AddError(errors, "manifest.service.not-feature", "providedServices", "Only a feature provides services to other apps (ADR 0262).");
+            return;
+        }
+
+        HashSet<string> contracts = new(StringComparer.Ordinal);
+        foreach (AppProvidedServiceManifest service in services)
+        {
+            bool contractOk = AppProvidedServiceManifest.TryParseName(service.Contract, out string contractType, out string contractAssembly);
+            bool implementationOk = AppProvidedServiceManifest.TryParseName(service.Implementation, out _, out string implementationAssembly);
+            if (!contractOk || !implementationOk)
+            {
+                AddError(errors, "manifest.service.type", "providedServices", $"Write the contract and the implementation of a service as 'Full.Type.Name, Assembly' ('{service.Contract}', '{service.Implementation}').");
+                continue;
+            }
+
+            if (!contracts.Add(contractType))
+            {
+                AddError(errors, "manifest.service.duplicate", "providedServices", $"The contract {contractType} is provided twice: a feature provides a contract once.");
+            }
+
+            if (string.Equals(contractAssembly, implementationAssembly, StringComparison.OrdinalIgnoreCase))
+            {
+                AddError(errors, "manifest.service.contract-assembly", "providedServices", $"The contract {contractType} is in {contractAssembly}, the assembly of its implementation: a contract lives in a shared library its clients carry (ADR 0261).");
+            }
+        }
     }
 
     /// <summary>

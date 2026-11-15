@@ -156,6 +156,21 @@ public static class GeneratorCodes
     /// </summary>
     public const string FeatureOnly = "KOSAPP0033";
 
+    /// <summary>
+    /// An app calls <c>KazoFeatures</c> (ADR 0262 §3) without declaring any dependency in its
+    /// manifest: the OS answers only for a feature the app declares, so the call would always give
+    /// <see langword="null"/>.
+    /// </summary>
+    public const string FeatureDependency = "KOSAPP0034";
+
+    /// <summary>
+    /// A service a feature provides (ADR 0262 §1) is not one the OS can create: the contract is not
+    /// an interface of another assembly, or the implementation is not a concrete class of the
+    /// feature's assembly that implements it with a public constructor taking an
+    /// <c>IFeatureServiceContext</c> or none, or the service entry point is not a child.
+    /// </summary>
+    public const string FeatureService = "KOSAPP0035";
+
     /// <summary>The tool was called with invalid arguments.</summary>
     public const string InvalidArguments = "KOSAPP0090";
 

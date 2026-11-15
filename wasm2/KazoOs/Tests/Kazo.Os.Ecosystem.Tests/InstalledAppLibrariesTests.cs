@@ -42,12 +42,24 @@ public sealed class InstalledAppLibrariesTests
     private static InstalledApp App(string id, params byte[][] libraries) =>
         new(new AppPackageSource("Kazo-ca", "Sample", SemanticVersion.Parse("1.0.0")), Window(id)) { Libraries = Describe(libraries) };
 
-    private static InstalledApp Feature(string id, params byte[][] libraries) =>
-        new(new AppPackageSource("Kazo-ca", "Feature", SemanticVersion.Parse("1.0.0")), FeatureManifest(id))
+    /// <summary>
+    /// A feature that carries <paramref name="libraries"/> and provides a contract of each shared
+    /// one (ADR 0262 §1): the provider of those libraries (ADR 0261 §2, rule 1).
+    /// </summary>
+    private static InstalledApp Feature(string id, params byte[][] libraries)
+    {
+        AppPackageLibrary[] described = Describe(libraries);
+        AppManifest manifest = FeatureManifest(id) with
+        {
+            ProvidedServices = [.. described.Where(static library => library.Shared).Select(static library =>
+                new AppProvidedServiceManifest($"{library.Name}.IContract, {library.Name}", "Kazo.Feature.Service, Kazo.Feature"))],
+        };
+        return new(new AppPackageSource("Kazo-ca", "Feature", SemanticVersion.Parse("1.0.0")), manifest)
         {
             Children = [Child(id)],
-            Libraries = Describe(libraries),
+            Libraries = described,
         };
+    }
 
     private static AppPackageLibrary[] Describe(byte[][] libraries) =>
         [.. libraries.Select(static bytes => AppPackageLibrary.Describe("library.dll", bytes))];

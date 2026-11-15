@@ -451,6 +451,15 @@ manifestes enfants) est dans
   désinstaller ou réinstaller se fait sur la fonctionnalité. La fiche d'une
   app (`KazoAppInfo.ParentId`) nomme sa fonctionnalité. La section
   « Fonctionnalités » des Paramètres est l'ADR 0249, pas encore codée.
+- **Services fournis** ([ADR 0262](adr/0262-feature-service-registry-and-async-resolution.md),
+  [`feature-services.md`](../framework/feature-services.md)) : le manifeste de
+  la fonctionnalité liste `providedServices` ; leur code est un assemblage
+  déclaré du paquet. `AppPackage.Read` refuse un contrat qui n'est pas dans
+  une bibliothèque partagée du paquet (`apps.package.service-contract-not-shared`),
+  et l'installeur une fonctionnalité qui fournit un contrat qu'une autre
+  fonctionnalité du catalogue fournit déjà (`apps.package.service-already-provided`).
+  `AppCatalog` ne retire plus une app pour une dépendance **facultative** hors
+  plage : `KazoFeatures` lui répond `VersionMismatch`.
 
 Tests : `FeatureDefinitionTests` (App.Abstractions), `AppDefinitionInspectorTests`
 et `ManifestWriterTests` (Tools.ManifestGenerator), `AppCatalogTests`,
@@ -541,9 +550,12 @@ en ajuste la mise en œuvre. Côté auteur : [`app-repository.md`](../framework/
   première chargée sert les deux, la seconde est notée dans le journal, rien
   d'autre. Deux versions **majeures** d'une bibliothèque partagée sont
   installées ensemble, mais une seule est dans la page à la fois : l'app de
-  l'autre majeure demande un redémarrage. Tant que les fonctionnalités ne
-  déclarent pas les services qu'elles fournissent (ADR 0262), une
-  fonctionnalité qui embarque la bibliothèque partagée en est le fournisseur.
+  l'autre majeure demande un redémarrage. Le fournisseur d'une bibliothèque
+  partagée est la fonctionnalité installée qui l'embarque **et déclare
+  fournir une de ses interfaces** (`providedServices`, ADR 0262) ; la règle
+  provisoire de l'ADR 0256 §5 (toute fonctionnalité qui l'embarque) est
+  retirée : une fonctionnalité qui embarque la bibliothèque sans en fournir
+  de contrat est une cliente comme une app.
 
 Tests : `AppPackageLibraryTests`, `InstalledLibrariesTests`,
 `InstalledAppsImageTests` et `AppPackageGatewayTests` (Platform.Core),

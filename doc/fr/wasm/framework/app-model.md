@@ -172,6 +172,26 @@ désactivation et au retrait, et la commande d'un enfant `Terminal` passe avant
 celle d'une app ordinaire de même nom (après les apps système). Voir
 [`app-installation.md`](../dev/app-installation.md#fonctionnalités-adr-0260).
 
+#### Services fournis : `ProvidedServices` (ADR 0262)
+
+Une fonctionnalité fournit des **services** aux autres apps : chacun associe un
+contrat (une interface d'une bibliothèque partagée, que ses clientes
+embarquent) au type de la fonctionnalité qui l'implémente.
+
+```csharp
+public override IReadOnlyList<FeatureService> ProvidedServices =>
+    [new(typeof(OsX86.Interface.Ix86), typeof(X86Service))];
+
+// Facultatif : les services tournent avec les permissions de cet enfant.
+public override string? ServiceEntryPoint => "daemon";
+```
+
+Le manifeste les écrit dans `providedServices`
+(`"contract": "OsX86.Interface.Ix86, Os-x86.Interface"`,
+`"implementation": "OsX86.X86Service, OsX86"`). Une app les obtient par
+`KazoFeatures.GetServiceAsync<T>()`, qui rend `null` quand la fonctionnalité
+est absente ou désactivée : voir [`feature-services.md`](feature-services.md).
+
 ### Intents et schémas d'URI (ADR 0096)
 
 - `Intents` (`AppIntentDeclarationManifest(IntentId, PayloadSchemaAssetPath)`)

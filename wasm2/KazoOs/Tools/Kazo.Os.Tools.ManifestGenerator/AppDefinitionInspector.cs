@@ -310,6 +310,8 @@ public static class AppDefinitionInspector
                     entryPointTypes.Add(mobile);
                 }
             }
+
+            CheckProvidedServices(feature, assembly, subject, diagnostics);
         }
 
         if (diagnostics.Count > before)
@@ -398,6 +400,65 @@ public static class AppDefinitionInspector
             diagnostics.Add(new(GeneratorCodes.DefinitionThrew, subject,
                 $"The constructor or a getter threw {root.GetType().Name}: {root.Message}"));
             return false;
+        }
+    }
+
+    /// <summary>Full name of the context a service's constructor may take (ADR 0262 §1), compared by name across load contexts.</summary>
+    private const string FeatureServiceContextTypeName = "Kazo.Os.AppSdk.Features.IFeatureServiceContext";
+
+    /// <summary>
+    /// ADR 0262 §1 (<c>KOSAPP0035</c>): each service of a feature pairs an interface of another
+    /// assembly (a shared library its clients carry) with a concrete class of the feature's assembly
+    /// that implements it and that the OS can create: a public constructor taking an
+    /// <c>IFeatureServiceContext</c>, or none. Its entry point, when set, is one of the children.
+    /// </summary>
+    private static void CheckProvidedServices(FeatureDefinition feature, Assembly assembly, string subject, List<GeneratorDiagnostic> diagnostics)
+    {
+        foreach (FeatureService service in feature.ProvidedServices)
+        {
+            string where = $"ProvidedServices[{service.Contract?.Name}]";
+            if (service.Contract is not { IsInterface: true } contract)
+            {
+                diagnostics.Add(new(GeneratorCodes.FeatureService, subject, $"{where}: the contract must be an interface."));
+                continue;
+            }
+
+            if (contract.Assembly == assembly)
+            {
+                diagnostics.Add(new(GeneratorCodes.FeatureService, subject,
+                    $"{where}: {contract.FullName} lives in the feature's assembly; a contract lives in a shared library its clients carry (ADR 0261)."));
+            }
+
+            if (service.Implementation is not { IsClass: true, IsAbstract: false } implementation)
+            {
+                diagnostics.Add(new(GeneratorCodes.FeatureService, subject, $"{where}: the implementation must be a concrete class."));
+                continue;
+            }
+
+            if (implementation.Assembly != assembly)
+            {
+                diagnostics.Add(new(GeneratorCodes.FeatureService, subject,
+                    $"{where}: {implementation.FullName} lives in '{implementation.Assembly.GetName().Name}', not in the feature's assembly '{assembly.GetName().Name}'."));
+            }
+
+            if (!contract.IsAssignableFrom(implementation))
+            {
+                diagnostics.Add(new(GeneratorCodes.FeatureService, subject, $"{where}: {implementation.FullName} does not implement {contract.FullName}."));
+            }
+
+            bool creatable = implementation.GetConstructors().Any(static constructor =>
+                constructor.GetParameters() is { } parameters
+                && (parameters.Length == 0 || (parameters.Length == 1 && parameters[0].ParameterType.FullName == FeatureServiceContextTypeName)));
+            if (!creatable)
+            {
+                diagnostics.Add(new(GeneratorCodes.FeatureService, subject,
+                    $"{where}: {implementation.FullName} needs a public constructor taking an IFeatureServiceContext, or none."));
+            }
+        }
+
+        if (feature.ServiceEntryPoint is { } suffix && !feature.EntryPoints.Any(entry => string.Equals(entry.Suffix, suffix, StringComparison.Ordinal)))
+        {
+            diagnostics.Add(new(GeneratorCodes.FeatureService, subject, $"ServiceEntryPoint '{suffix}' is not the suffix of one of the feature's EntryPoints."));
         }
     }
 

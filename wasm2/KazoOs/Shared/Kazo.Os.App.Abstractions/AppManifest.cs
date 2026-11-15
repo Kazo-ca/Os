@@ -80,6 +80,15 @@ public sealed record AppManifest
     public IReadOnlyList<string>? RealNetworkPorts { get; init; }
 
     /// <summary>
+    /// Gets the services a <see cref="AppKind.Feature"/> provides to other apps (ADR 0262 §1), each a
+    /// contract (an interface of a shared library) and the type that implements it, or
+    /// <see langword="null"/> (omitted from <c>manifest.json</c>) when it provides none, so existing
+    /// manifests keep their exact bytes. Only a feature provides; any app consumes through
+    /// <c>KazoFeatures.GetServiceAsync&lt;T&gt;()</c>.
+    /// </summary>
+    public IReadOnlyList<AppProvidedServiceManifest>? ProvidedServices { get; init; }
+
+    /// <summary>
     /// Gets the custom topic permissions this app declares and exports, gating its own shared messaging
     /// channels. Purely optional per <c>doc/en/wasm/dev/adr/0040-declared-topic-permissions.md</c> — most apps
     /// declare none and rely on the default owner-only/open channel access instead. Every identifier must
@@ -267,3 +276,82 @@ public sealed record TerminalCommandManifest(
     string Name,
     IReadOnlyList<string> Aliases,
     string Usage);
+/// <summary>
+/// One service a feature provides (ADR 0262 §1): the contract other apps ask for and the type that
+/// implements it in an assembly of the feature. Both are written as assembly-qualified names with
+/// the simple assembly name, <c>OsX86.Interface.Ix86, Os-x86.Interface</c>.
+/// </summary>
+/// <param name="Contract">The contract, an interface of a shared library (ADR 0261 §2).</param>
+/// <param name="Implementation">The implementing type, in an assembly of the feature.</param>
+public sealed record AppProvidedServiceManifest(string Contract, string Implementation)
+{
+    /// <summary>
+    /// Gets the id of the feature's child whose capabilities the implementation runs with
+    /// (ADR 0262 §1, the feature's <c>ServiceEntryPoint</c>), or <see langword="null"/> for the
+    /// feature's whole set.
+    /// </summary>
+    public string? EntryPoint { get; init; }
+
+    /// <summary>Gets the full name of the contract type, e.g. <c>OsX86.Interface.Ix86</c>.</summary>
+
+    [System.Text.Json.Serialization.JsonIgnore]
+    public string ContractType => Split(Contract).TypeName;
+
+    /// <summary>Gets the simple assembly name of the contract, e.g. <c>Os-x86.Interface</c>.</summary>
+
+    [System.Text.Json.Serialization.JsonIgnore]
+    public string ContractAssembly => Split(Contract).AssemblyName;
+
+    /// <summary>Gets the full name of the implementing type.</summary>
+
+    [System.Text.Json.Serialization.JsonIgnore]
+    public string ImplementationType => Split(Implementation).TypeName;
+
+    /// <summary>Gets the simple assembly name of the implementing type, e.g. <c>OsX86</c>.</summary>
+
+    [System.Text.Json.Serialization.JsonIgnore]
+    public string ImplementationAssembly => Split(Implementation).AssemblyName;
+
+    /// <summary>Writes a type as the manifest names it: <c>Full.Type.Name, Assembly</c>.</summary>
+    /// <param name="type">A type with a full name.</param>
+    public static string NameOf(Type type)
+    {
+        ArgumentNullException.ThrowIfNull(type);
+        string fullName = type.FullName ?? throw new ArgumentException($"'{type}' has no full name.", nameof(type));
+        return $"{fullName}, {type.Assembly.GetName().Name}";
+    }
+
+    /// <summary>
+    /// Reads a name written <c>Full.Type.Name, Assembly</c>: exactly one comma, a type name and a
+    /// simple assembly name, neither empty, no version, culture or key.
+    /// </summary>
+    /// <param name="value">The name.</param>
+    /// <param name="typeName">The full type name.</param>
+    /// <param name="assemblyName">The simple assembly name.</param>
+    /// <returns><see langword="true"/> when the name has that form.</returns>
+    public static bool TryParseName(string? value, out string typeName, out string assemblyName)
+    {
+        typeName = string.Empty;
+        assemblyName = string.Empty;
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return false;
+        }
+
+        string[] parts = value.Split(',');
+        if (parts.Length != 2)
+        {
+            return false;
+        }
+
+        typeName = parts[0].Trim();
+        assemblyName = parts[1].Trim();
+        return typeName.Length > 0
+            && assemblyName.Length > 0
+            && !typeName.Any(char.IsWhiteSpace)
+            && !assemblyName.Any(static c => char.IsWhiteSpace(c) || c is '=' or '/' or '\\');
+    }
+
+    private static (string TypeName, string AssemblyName) Split(string value) =>
+        TryParseName(value, out string typeName, out string assemblyName) ? (typeName, assemblyName) : (value, string.Empty);
+}

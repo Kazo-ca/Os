@@ -24,7 +24,8 @@ public sealed class ManifestSchemaConformanceTests
         "web-blazor.valid.json",
         "window-sized.valid.json",
         "feature.valid.json",
-        "feature-child-terminal.valid.json"
+        "feature-child-terminal.valid.json",
+        "feature-provides-service.valid.json"
     };
 
     public static TheoryData<string> InvalidFixtureNames => new()
@@ -42,7 +43,8 @@ public sealed class ManifestSchemaConformanceTests
         "invalid-web-missing-web-block.json",
         "invalid-web-on-service.json",
         "invalid-window-on-service.json",
-        "invalid-feature-with-entrypoint.json"
+        "invalid-feature-with-entrypoint.json",
+        "invalid-services-on-service.json"
     };
 
     [Theory]

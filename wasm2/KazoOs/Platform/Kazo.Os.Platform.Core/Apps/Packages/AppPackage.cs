@@ -241,8 +241,27 @@ public sealed class AppPackage
 
         IReadOnlyList<AppManifest> children = ReadChildren(manifest, description, files);
         CheckLibraries(description.Libraries, GetDeclaredAssemblies(children.Prepend(manifest)), files);
+        CheckServiceContracts(manifest, description.Libraries);
         CheckContents(manifest, children, description.Libraries, files);
         return new AppPackage(manifest, children, description.Version, files, description.Libraries);
+    }
+
+    /// <summary>
+    /// ADR 0262 §1: the contract of a service a feature provides is an interface of a library the
+    /// package carries and that its author marked as shared (ADR 0261 §2); otherwise every client
+    /// app would hold its own copy of the contract, a type the feature's instance does not implement.
+    /// </summary>
+    private static void CheckServiceContracts(AppManifest manifest, IReadOnlyList<AppPackageLibrary> libraries)
+    {
+        foreach (AppProvidedServiceManifest service in manifest.ProvidedServices ?? [])
+        {
+            if (!libraries.Any(library => library.Shared && string.Equals(library.Name, service.ContractAssembly, StringComparison.OrdinalIgnoreCase)))
+            {
+                throw new AppPackageException(
+                    "apps.package.service-contract-not-shared",
+                    $"{manifest.Id} provides {service.ContractType} from {service.ContractAssembly}, which is not a shared library of the package: mark the contracts' project with KazoOsSharedLibrary (ADR 0262 §1, ADR 0256 §2).");
+            }
+        }
     }
 
     /// <summary>
@@ -541,6 +560,8 @@ public sealed class AppPackage
             }
 
             assemblies.UnionWith((manifest.Components ?? []).Select(static component => component.Assembly));
+            // ADR 0262 §1: the code of a feature's services is the feature's.
+            assemblies.UnionWith((manifest.ProvidedServices ?? []).Select(static service => service.ImplementationAssembly + ".dll"));
         }
 
         return assemblies;

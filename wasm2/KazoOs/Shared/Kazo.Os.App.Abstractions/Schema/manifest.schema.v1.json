@@ -240,6 +240,20 @@
         }
       }
     },
+    "providedServices": {
+      "description": "Services a feature provides to other apps (ADR 0262 §1): a contract, an interface of a shared library, and the type that implements it, both written 'Full.Type.Name, Assembly'. Only a feature declares them.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["contract", "implementation"],
+        "properties": {
+          "contract": { "type": "string", "pattern": "^[^,\\s]+, *[^,\\s=/\\\\]+$" },
+          "implementation": { "type": "string", "pattern": "^[^,\\s]+, *[^,\\s=/\\\\]+$" },
+          "entryPoint": { "type": "string", "pattern": "^[a-z][a-z0-9-]*(\\.[a-z][a-z0-9-]*){3,}$" }
+        }
+      }
+    },
     "contextMenus": {
       "description": "Entries the app adds to the OS file menus (ADR 0151, ADR 0159), in declaration order.",
       "type": "array",
@@ -376,6 +390,14 @@
         "properties": { "kind": { "not": { "const": "window" } } }
       },
       "then": { "not": { "required": ["window"] } }
+    },
+    {
+      "description": "Only a feature provides services to other apps (ADR 0262 §1).",
+      "if": {
+        "required": ["kind"],
+        "properties": { "kind": { "not": { "const": "feature" } } }
+      },
+      "then": { "not": { "required": ["providedServices"] } }
     },
     {
       "description": "A feature (ADR 0260) has no entry point of its own; every other kind has exactly one of entryPoint (legacy, single-platform) or platform (MOB-003, multi-platform). See doc/en/wasm/dev/old/mobile-interface-platform-plan.md §4.3.",

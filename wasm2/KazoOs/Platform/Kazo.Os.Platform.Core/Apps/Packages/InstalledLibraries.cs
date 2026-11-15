@@ -82,21 +82,28 @@ public static class InstalledLibraries
     }
 
     /// <summary>
-    /// Gets the copy an installed feature carries (ADR 0261 §2, rule 1), the newest one when several
-    /// features carry it; <see langword="null"/> when no feature does.
+    /// Gets the copy of the provider of a shared library (ADR 0261 §2, rule 1): an installed feature
+    /// that carries the library <b>and declares that it provides one of its interfaces</b>
+    /// (<c>providedServices</c>, ADR 0262 §1), the newest one when several do;
+    /// <see langword="null"/> when none does.
     /// </summary>
     /// <remarks>
-    /// Until features declare the services they provide (ADR 0262), a feature that carries the
-    /// shared library is its provider.
+    /// ADR 0262 replaces the provisional rule of ADR 0256 §5 (any feature that carries the library):
+    /// a feature that carries a library without providing any of its contracts is a client like an
+    /// app, and its copy is chosen by the newest-compatible rule.
     /// </remarks>
     /// <param name="name">Simple assembly name.</param>
     /// <param name="apps">The installed apps of the running catalog.</param>
     public static InstalledLibraryCopy? FindProvider(string name, IEnumerable<InstalledApp> apps) =>
         GetSharedCopies(name, apps)
-            .Where(static copy => copy.Owner.Manifest.Kind == AppKind.Feature)
+            .Where(copy => copy.Owner.Manifest.Kind == AppKind.Feature && ProvidesContractOf(copy.Owner.Manifest, name))
             .OrderByDescending(static copy => copy.Library.Version)
             .ThenBy(static copy => copy.Owner.AppId, StringComparer.Ordinal)
             .FirstOrDefault();
+
+    /// <summary>Gets whether a feature declares a service whose contract lives in the library <paramref name="name"/>.</summary>
+    private static bool ProvidesContractOf(AppManifest feature, string name) =>
+        (feature.ProvidedServices ?? []).Any(service => SameName(service.ContractAssembly, name));
 
     /// <summary>Chooses the copy of a shared library that serves an app (ADR 0261 §2).</summary>
     /// <param name="requester">The app being launched.</param>

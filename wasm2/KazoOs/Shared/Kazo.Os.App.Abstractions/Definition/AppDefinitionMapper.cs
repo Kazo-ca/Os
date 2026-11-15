@@ -142,7 +142,9 @@ public static class AppDefinitionMapper
             Assets = [.. definition.Assets],
             // ADR 0260 §1: nothing of the feature runs; the host of its children is theirs.
             Execution = AppExecutionHost.MainThread,
-            OomScoreAdj = definition.OomScoreAdjust
+            OomScoreAdj = definition.OomScoreAdjust,
+            // ADR 0262 §1: the services the feature provides, in its own assemblies.
+            ProvidedServices = ToProvidedServices(definition)
         };
 
         IReadOnlyList<FeatureEntryPoint> entryPoints = definition.EntryPoints
@@ -194,6 +196,28 @@ public static class AppDefinitionMapper
         }
 
         return new FeatureManifests(feature, children);
+    }
+
+    private static IReadOnlyList<AppProvidedServiceManifest>? ToProvidedServices(FeatureDefinition definition)
+    {
+        IReadOnlyList<FeatureService> services = definition.ProvidedServices
+            ?? throw new InvalidOperationException($"'{definition.GetType().FullName}' returned null ProvidedServices.");
+        if (services.Count == 0)
+        {
+            return null;
+        }
+
+        string? entryPoint = definition.ServiceEntryPoint is { } suffix ? $"{definition.Id}.{suffix}" : null;
+        return [.. services.Select(service =>
+        {
+            ArgumentNullException.ThrowIfNull(service);
+            Type contract = service.Contract ?? throw new InvalidOperationException($"A service of '{definition.Id}' has a null Contract.");
+            Type implementation = service.Implementation ?? throw new InvalidOperationException($"A service of '{definition.Id}' has a null Implementation.");
+            return new AppProvidedServiceManifest(AppProvidedServiceManifest.NameOf(contract), AppProvidedServiceManifest.NameOf(implementation))
+            {
+                EntryPoint = entryPoint,
+            };
+        })];
     }
 
     /// <summary>
