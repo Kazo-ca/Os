@@ -125,6 +125,25 @@ Questions à reposer au démarrage : où vivent les visionneuses, portée de
 - Code Editor **reste une app système**.
 - Le remplacement de l'éditeur de texte reste **sans expressions régulières**.
 
+## Stockage dans le navigateur (décisions du 2026-11-14)
+
+Analyse : [`../dev/plans/browser-storage-optimization-analysis.md`](../dev/plans/browser-storage-optimization-analysis.md).
+Seul #537 est codé ; la série `storage/base` reste à bâtir.
+
+- Deux issues `TODO` d'abord : #537 (récupérer l'espace des contenus orphelins ;
+  fait le 2026-11-15, ADR 0273) et #538 (profiler #520 dans l'OS réel ; rendu le
+  2026-11-15 : en Release, 96 % du temps est dans le dépôt de contenu, les 43 s
+  venaient d'un hôte Debug).
+- Ensuite une série `storage/base`, ADR avant le code : contenu binaire au lieu
+  de base64, ADR 0250 à bâtir, une seule copie des fichiers d'app, lecture
+  partielle et adresse de fichier (#379).
+- Fichiers d'une app installée : le système de fichiers reste la seule source ;
+  le service worker sert `_content/…` depuis le magasin de fichiers et la copie
+  dans Cache Storage disparaît.
+- Rétention des contenus orphelins : courte, et suppression rapide quand l'espace
+  est faible. Fait par l'ADR 0273 (1 jour, 5 minutes si l'espace est faible), qui
+  remplace les 30 jours de l'ADR 0094.
+
 ## Questions posées, réponse à confirmer
 
 - **« Nouveau dossier » dans les dialogues** (ADR 0175) : rendre

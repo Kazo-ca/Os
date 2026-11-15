@@ -106,6 +106,20 @@ pas de quota). `StorageSpacePolicy` fixe les seuils :
 écriture ne l'attend jamais : `FileSystemService` lit seulement l'état en
 cache `IsRootReserveReached`.
 
+### Récupération des contenus orphelins (Os#537)
+
+Le `Reclaimer` du moniteur (`IStorageReclaimer`, implémenté par
+`IndexedDbFileSystemMaintenance`) rend l'espace de l'ancien contenu des fichiers
+réécrits et supprimés, avec une rétention de 1 jour : quand le bureau s'affiche
+(`EcosystemBootCoordinator` appelle `RequestReclaim`), après une suppression dans
+la corbeille (`FileSystemService`), puis toutes les heures (`ReclaimInterval`).
+`RequestReclaim` attend `ReclaimRequestDelay` (2 s) : vider une corbeille de
+plusieurs éléments ne lance qu'une récupération. Quand l'espace **devient** faible, le moniteur récupère
+d'abord avec la rétention de 5 minutes, mesure de nouveau, et n'avertit que si
+l'espace est encore faible. Une passe en échec est ignorée et retentée à la
+prochaine exécution. Détails :
+[`browser-infrastructure.md`](browser-infrastructure.md#points-à-connaître).
+
 ### Notification
 
 Quand l'espace devient faible, l'utilisateur de la session reçoit **une**
@@ -201,6 +215,7 @@ Vidages des versions 2 et 3 dans `Tests/fixtures/indexeddb/` (la version 1 n'a j
 - [x] `QuotaExceededError` et contenu de plus de 16 Mio traduits par le fournisseur IndexedDB.
 - [x] Archive `.kosbak` (gzip), validation complète, fusion par écrasement.
 - [x] `StorageSpaceMonitor` : mesure, notification unique, réserve de root.
+- [x] Contenus orphelins récupérés au démarrage, toutes les heures et quand l'espace devient faible (Os#537).
 - [x] Réserve appliquée par `FileSystemService` ; `df` avec les vrais chiffres.
 - [x] `LogFileWriter` : lignes perdues comptées puis signalées.
 - [x] `KazoSystemBackup`, passerelle, `SystemBackupService`, appareil du navigateur, `pickFile.js`.
