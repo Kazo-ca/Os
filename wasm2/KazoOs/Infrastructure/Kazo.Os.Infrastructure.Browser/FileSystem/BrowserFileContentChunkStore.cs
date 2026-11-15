@@ -54,12 +54,9 @@ internal sealed partial class BrowserFileContentChunkStore : IFileContentChunkSt
                 chunkSize,
                 createdUtcMs).ConfigureAwait(true);
         }
-        catch (JSException exception) when (exception.Message.Contains("QuotaExceededError", StringComparison.Ordinal))
+        catch (JSException exception) when (IsQuotaExceeded(exception))
         {
-            // Same contract as the JSON adapter: a full storage aborts the whole transaction (ADR 0099).
-            throw new BrowserStorageQuotaException(
-                "Browser storage quota was exhausted; the file content transaction was not committed.",
-                exception);
+            throw QuotaExceeded(exception);
         }
     }
 
@@ -86,6 +83,14 @@ internal sealed partial class BrowserFileContentChunkStore : IFileContentChunkSt
         {
             throw new InvalidDataException($"Persisted file content is damaged: {problem}.");
         }
+    }
+
+    /// <inheritdoc />
+    public async ValueTask<IStagedFileContent> BeginStagedWriteAsync(CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        await ImportAsync().ConfigureAwait(true);
+        return new StagedFileContent(BeginStagedWrite());
     }
 
     /// <summary>
@@ -141,6 +146,29 @@ internal sealed partial class BrowserFileContentChunkStore : IFileContentChunkSt
         [JSMarshalAs<JSType.MemoryView>] ArraySegment<byte> destination,
         int chunkSize);
 
+    [JSImport("beginStagedWrite", ModuleName)]
+    private static partial int BeginStagedWrite();
+
+    [JSImport("appendStagedWrite", ModuleName)]
+    private static partial double AppendStagedWrite(int id, [JSMarshalAs<JSType.MemoryView>] ArraySegment<byte> bytes);
+
+    [JSImport("hashStagedWrite", ModuleName)]
+    private static partial Task<string> HashStagedWrite(int id);
+
+    [JSImport("writeStagedChunks", ModuleName)]
+    private static partial Task<int> WriteStagedChunks(
+        string databaseName,
+        int version,
+        int id,
+        string contentHash,
+        int firstIndex,
+        int count,
+        int chunkSize,
+        double createdUtcMs);
+
+    [JSImport("releaseStagedWrite", ModuleName)]
+    private static partial void ReleaseStagedWrite(int id);
+
     [JSImport("convertLegacyContent", ModuleName)]
     private static partial Task<string> ConvertLegacyContent(
         string databaseName,
@@ -148,4 +176,82 @@ internal sealed partial class BrowserFileContentChunkStore : IFileContentChunkSt
         int batchBytes,
         [JSMarshalAs<JSType.Function<JSType.Number, JSType.Number>>] Action<double, double> progress,
         [JSMarshalAs<JSType.Function>] Action waiting);
+
+    /// <summary>Same contract as the JSON adapter: a full storage aborts the whole transaction (ADR 0099).</summary>
+    private static bool IsQuotaExceeded(JSException exception) =>
+        exception.Message.Contains("QuotaExceededError", StringComparison.Ordinal);
+
+    private static BrowserStorageQuotaException QuotaExceeded(JSException exception) => new(
+        "Browser storage quota was exhausted; the file content transaction was not committed.",
+        exception);
+
+    /// <summary>
+    /// A pending write of <c>fileContent.js</c>: each batch is copied into a <c>Blob</c> of the page
+    /// as soon as it is appended, so the .NET side never holds more than the batch it is filling.
+    /// </summary>
+    private sealed class StagedFileContent(int id) : IStagedFileContent
+    {
+        private bool _released;
+
+        /// <inheritdoc />
+        public long Length { get; private set; }
+
+        /// <inheritdoc />
+        public ValueTask AppendAsync(ArraySegment<byte> bytes, CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            ObjectDisposedException.ThrowIf(_released, this);
+            Length = (long)AppendStagedWrite(id, bytes);
+            return ValueTask.CompletedTask;
+        }
+
+        /// <inheritdoc />
+        public async ValueTask<string> HashAsync(CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            ObjectDisposedException.ThrowIf(_released, this);
+            return await HashStagedWrite(id).ConfigureAwait(true);
+        }
+
+        /// <inheritdoc />
+        public async ValueTask<int> WriteChunksAsync(
+            string contentHash,
+            int firstIndex,
+            int count,
+            int chunkSize,
+            long createdUtcMs,
+            CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            ObjectDisposedException.ThrowIf(_released, this);
+            try
+            {
+                return await WriteStagedChunks(
+                    KazoOsIndexedDbSchema.DatabaseName,
+                    KazoOsIndexedDbSchema.CurrentVersion,
+                    id,
+                    contentHash,
+                    firstIndex,
+                    count,
+                    chunkSize,
+                    createdUtcMs).ConfigureAwait(true);
+            }
+            catch (JSException exception) when (IsQuotaExceeded(exception))
+            {
+                throw QuotaExceeded(exception);
+            }
+        }
+
+        /// <inheritdoc />
+        public ValueTask DisposeAsync()
+        {
+            if (!_released)
+            {
+                _released = true;
+                ReleaseStagedWrite(id);
+            }
+
+            return ValueTask.CompletedTask;
+        }
+    }
 }

@@ -157,15 +157,16 @@ they do not change for speed.
 
 ## Tasks
 
-- [ ] Range read in `IndexedDbFileContentRepository`, tests.
-- [ ] On-demand read stream for files over 16 MiB; memory measured before and
-  after.
+- [x] Range read in `IndexedDbFileContentRepository`, tests (work item 3).
+- [x] On-demand read stream for files over 16 MiB; memory measured before and
+  after (work item 3: reading 52.5 MiB allocates 17 MiB instead of 53 MiB, a
+  seek and a 4 KiB read 1 MiB).
 - [ ] `_kazo/files/` route of the service worker, resolved by the page,
   `Range`, `ETag`, `If-Range`.
 - [ ] `KazoFile.CreateUrlAsync`, `KazoFileUrl`, release with the instance;
   apps in a Web Worker; `blob:` fallback.
 - [ ] `/` disk and network drives.
-- [ ] Streamed write; memory measured before and after.
+- [x] Streamed write; memory measured before and after (work item 6, `storage/6-streamed-write`).
 - [ ] `PublicAPI.Unshipped.txt`, SDK compatibility fixture, framework docs (FR
   and EN), `features.md`, change entry.
 - [ ] Issue in Os-App-Webamp.

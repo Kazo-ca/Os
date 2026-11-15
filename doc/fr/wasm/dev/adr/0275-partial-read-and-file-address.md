@@ -161,15 +161,16 @@ cette écriture en flux enlève les autres. Le passage de l'iframe à .NET et
 
 ## Tâches
 
-- [ ] Lecture d'une plage dans `IndexedDbFileContentRepository`, tests.
-- [ ] Flux de lecture à la demande pour les fichiers de plus de 16 Mio ; mesure
-  de la mémoire avant et après.
+- [x] Lecture d'une plage dans `IndexedDbFileContentRepository`, tests (chantier 3).
+- [x] Flux de lecture à la demande pour les fichiers de plus de 16 Mio ; mesure
+  de la mémoire avant et après (chantier 3 : lire 52,5 Mio alloue 17 Mio au
+  lieu de 53 Mio, un `Seek` suivi d'une lecture de 4 Kio en alloue 1).
 - [ ] Route `_kazo/files/` du service worker, résolution par la page, `Range`,
   `ETag`, `If-Range`.
 - [ ] `KazoFile.CreateUrlAsync`, `KazoFileUrl`, libération avec l'instance ;
   apps en Web Worker ; repli `blob:`.
 - [ ] Disque `/` et lecteurs réseau.
-- [ ] Écriture en flux ; mesure de la mémoire avant et après.
+- [x] Écriture en flux ; mesure de la mémoire avant et après (chantier 6, `storage/6-streamed-write`).
 - [ ] `PublicAPI.Unshipped.txt`, fixture de compatibilité du SDK, docs du
   framework (FR et EN), `features.md`, entrée de changement.
 - [ ] Issue dans Os-App-Webamp.

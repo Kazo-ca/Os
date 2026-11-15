@@ -100,7 +100,11 @@ export async function sha256(view) {
  * @returns {Promise<number>} How many chunks were added.
  */
 export async function writeChunks(databaseName, version, contentHash, firstIndex, view, chunkSize, createdUtcMs) {
-    const bytes = takeBytes(view);
+    return storeChunks(databaseName, version, contentHash, firstIndex, takeBytes(view), chunkSize, createdUtcMs);
+}
+
+/** Stores the chunks of bytes, numbered from firstIndex, in one transaction; see writeChunks. */
+async function storeChunks(databaseName, version, contentHash, firstIndex, bytes, chunkSize, createdUtcMs) {
     if (!(chunkSize > 0)) {
         throw new Error("The chunk size must be positive.");
     }
@@ -154,6 +158,95 @@ export async function writeChunks(databaseName, version, contentHash, firstIndex
         await completion.catch(() => {});
         throw error;
     }
+}
+
+// Writes held on the browser side (ADR 0275 §4). The key of a content is the SHA-256 of the whole
+// file, known only at the end, so the chunks of a file larger than one batch cannot be stored as
+// they arrive. Each batch is copied out of the .NET heap into a Blob as soon as it is handed over:
+// the .NET side keeps only one batch at a time, and the page holds the file once, when it is hashed.
+const stagedWrites = new Map();
+let nextStagedWrite = 1;
+
+function stagedWrite(id) {
+    const staged = stagedWrites.get(id);
+    if (staged === undefined) {
+        throw new Error(`No pending file write ${id}.`);
+    }
+    return staged;
+}
+
+/**
+ * Starts a pending write.
+ * @returns {number} Its number, for the calls that follow.
+ */
+export function beginStagedWrite() {
+    const id = nextStagedWrite++;
+    stagedWrites.set(id, { parts: [], length: 0, bytes: null });
+    return id;
+}
+
+/**
+ * Copies the next bytes of a pending write out of the .NET heap.
+ * @param {number} id The pending write.
+ * @param {IMemoryView} view The bytes, on the .NET heap; released before returning.
+ * @returns {number} The bytes appended so far.
+ */
+export function appendStagedWrite(id, view) {
+    const bytes = takeBytes(view);
+    const staged = stagedWrite(id);
+    if (staged.bytes !== null) {
+        throw new Error("A pending file write cannot grow after it was hashed.");
+    }
+    staged.parts.push(new Blob([bytes]));
+    staged.length += bytes.length;
+    return staged.length;
+}
+
+/**
+ * Joins the bytes of a pending write and returns their SHA-256, in lowercase hexadecimal.
+ * @param {number} id The pending write.
+ * @returns {Promise<string>}
+ */
+export async function hashStagedWrite(id) {
+    const staged = stagedWrite(id);
+    if (staged.bytes === null) {
+        const joined = new Uint8Array(await new Blob(staged.parts).arrayBuffer());
+        if (joined.length !== staged.length) {
+            throw new Error("A pending file write lost bytes.");
+        }
+        staged.bytes = joined;
+        staged.parts = [];
+    }
+    return sha256Hex(staged.bytes);
+}
+
+/**
+ * Stores count chunks of a hashed pending write from firstIndex, in one transaction (see
+ * writeChunks).
+ * @returns {Promise<number>} How many chunks were added.
+ */
+export async function writeStagedChunks(databaseName, version, id, contentHash, firstIndex, count, chunkSize, createdUtcMs) {
+    const staged = stagedWrite(id);
+    if (staged.bytes === null) {
+        throw new Error("A pending file write must be hashed before its chunks are stored.");
+    }
+    if (!(chunkSize > 0) || !(count > 0) || !(firstIndex >= 0)) {
+        throw new Error("The chunks of a pending file write are out of range.");
+    }
+    const start = firstIndex * chunkSize;
+    const end = Math.min(staged.bytes.length, (firstIndex + count) * chunkSize);
+    if (start >= end && !(start === 0 && staged.bytes.length === 0)) {
+        throw new Error("The chunks of a pending file write are out of range.");
+    }
+    return storeChunks(databaseName, version, contentHash, firstIndex, staged.bytes.subarray(start, end), chunkSize, createdUtcMs);
+}
+
+/**
+ * Releases what a pending write holds. Releasing an unknown or released write does nothing.
+ * @param {number} id The pending write.
+ */
+export function releaseStagedWrite(id) {
+    stagedWrites.delete(id);
 }
 
 /**

@@ -12,6 +12,7 @@ namespace Kazo.Os.Infrastructure.Browser.Tests;
 public sealed class IndexedDbFileContentRepositoryTests
 {
     private const int ChunkBytes = 256 * 1024;
+    private const int BatchBytes = FileContentStoragePolicy.ChunksPerTransaction * ChunkBytes;
 
     [Fact]
     public async Task WriteAsync_FileOfOneBatch_UsesOneTransaction()
@@ -162,6 +163,80 @@ public sealed class IndexedDbFileContentRepositoryTests
         Assert.Equal(1, store.WriteCalls);
     }
 
+    [Fact]
+    public async Task WriteAsync_FileOfOneBatch_IsStoredWithoutAPendingWrite()
+    {
+        MemoryFileContentChunkStore store = new();
+        await using IndexedDbFileContentRepository repository = Repository(store);
+
+        await repository.WriteAsync(new MemoryStream(Pattern(BatchBytes)));
+        await repository.WriteAsync(new ForwardOnlyStream(Pattern(ChunkBytes + 7)));
+
+        Assert.Equal(0, store.StagedWrites);
+    }
+
+    [Fact]
+    public async Task WriteAsync_FileLargerThanOneBatch_IsHandedToTheBrowserOneBatchAtATime()
+    {
+        MemoryFileContentChunkStore store = new();
+        await using IndexedDbFileContentRepository repository = Repository(store);
+        byte[] original = Pattern((2 * BatchBytes) + 12345);
+
+        IndexedDbFileContentWrite write = await repository.WriteAsync(new ForwardOnlyStream(original));
+        await using Stream read = await repository.ReadAsync(write.ContentHash, write.Length);
+
+        Assert.Equal(1, store.StagedWrites);
+        Assert.Equal(0, store.OpenStagedWrites);
+        Assert.Equal(BatchBytes + 1, store.LargestAppend);
+        Assert.Equal(3, store.WriteCalls);
+        Assert.Equal(MemoryFileContentChunkStore.Hex(original), write.ContentHash);
+        Assert.Equal(original, ((MemoryStream)read).ToArray());
+    }
+
+    [Fact]
+    public async Task WriteAsync_StreamThatGrowsPastItsLength_IsStoredWhole()
+    {
+        MemoryFileContentChunkStore store = new();
+        await using IndexedDbFileContentRepository repository = Repository(store);
+        byte[] original = Pattern(BatchBytes + ChunkBytes + 3);
+
+        IndexedDbFileContentWrite write = await repository.WriteAsync(new UnderstatedLengthStream(original, 10));
+
+        Assert.Equal(original.Length, write.Length);
+        Assert.Equal(MemoryFileContentChunkStore.Hex(original), write.ContentHash);
+        Assert.Equal(BatchBytes + 1, store.LargestAppend);
+    }
+
+    [Fact]
+    public async Task WriteAsync_StreamPastTheLimitAfterSeveralBatches_StoresNothingAndReleasesThePendingWrite()
+    {
+        MemoryFileContentChunkStore store = new();
+        long limit = BatchBytes + ChunkBytes;
+        FileContentStoragePolicy policy = new(limit, ChunkBytes, "SHA-256", true, TimeSpan.FromDays(1));
+        await using IndexedDbFileContentRepository repository = new(new ModuleRuntime(), policy, chunks: store);
+
+        await Assert.ThrowsAsync<FileContentTooLargeException>(
+            async () => await repository.WriteAsync(new ForwardOnlyStream(Pattern((int)limit + 1))));
+
+        Assert.Equal(0, store.WriteCalls);
+        Assert.Empty(store.Chunks);
+        Assert.Equal(1, store.StagedWrites);
+        Assert.Equal(0, store.OpenStagedWrites);
+    }
+
+    [Fact]
+    public async Task WriteAsync_SourceFailingAfterTheFirstBatch_ReleasesThePendingWrite()
+    {
+        MemoryFileContentChunkStore store = new();
+        await using IndexedDbFileContentRepository repository = Repository(store);
+
+        await Assert.ThrowsAsync<IOException>(
+            async () => await repository.WriteAsync(new FailingStream(Pattern(BatchBytes + ChunkBytes), BatchBytes)));
+
+        Assert.Equal(0, store.WriteCalls);
+        Assert.Equal(0, store.OpenStagedWrites);
+    }
+
     private static IndexedDbFileContentRepository Repository(MemoryFileContentChunkStore store) =>
         new(new ModuleRuntime(), chunks: store);
 
@@ -193,7 +268,7 @@ public sealed class IndexedDbFileContentRepositoryTests
         public override DateTimeOffset GetUtcNow() => Now;
     }
 
-    private static byte[] Pattern(int length)
+    internal static byte[] Pattern(int length)
     {
         byte[] bytes = new byte[length];
         for (int index = 0; index < length; index++)
@@ -205,7 +280,7 @@ public sealed class IndexedDbFileContentRepositoryTests
     }
 
     /// <summary>The JSON adapter's runtime: only opens the database here.</summary>
-    private sealed class ModuleRuntime : IJSRuntime, IJSObjectReference
+    internal sealed class ModuleRuntime : IJSRuntime, IJSObjectReference
     {
         public ValueTask DisposeAsync() => ValueTask.CompletedTask;
 
@@ -246,6 +321,72 @@ public sealed class IndexedDbFileContentRepositoryTests
         }
 
         public override int Read(byte[] buffer, int offset, int count) => _inner.Read(buffer, offset, Math.Min(count, 1000));
+
+        public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+
+        public override void SetLength(long value) => throw new NotSupportedException();
+
+        public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+    }
+
+    /// <summary>A seekable stream whose length says less than it holds, like a file that grows while it is read.</summary>
+    private sealed class UnderstatedLengthStream(byte[] content, long statedLength) : Stream
+    {
+        private readonly MemoryStream _inner = new(content);
+
+        public override bool CanRead => true;
+
+        public override bool CanSeek => true;
+
+        public override bool CanWrite => false;
+
+        public override long Length => statedLength;
+
+        public override long Position
+        {
+            get => _inner.Position;
+            set => _inner.Position = value;
+        }
+
+        public override void Flush()
+        {
+        }
+
+        public override int Read(byte[] buffer, int offset, int count) => _inner.Read(buffer, offset, count);
+
+        public override long Seek(long offset, SeekOrigin origin) => _inner.Seek(offset, origin);
+
+        public override void SetLength(long value) => throw new NotSupportedException();
+
+        public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+    }
+
+    /// <summary>A forward-only stream that fails once <paramref name="failAfter"/> bytes were read.</summary>
+    private sealed class FailingStream(byte[] content, int failAfter) : Stream
+    {
+        private readonly MemoryStream _inner = new(content);
+
+        public override bool CanRead => true;
+
+        public override bool CanSeek => false;
+
+        public override bool CanWrite => false;
+
+        public override long Length => throw new NotSupportedException();
+
+        public override long Position
+        {
+            get => throw new NotSupportedException();
+            set => throw new NotSupportedException();
+        }
+
+        public override void Flush()
+        {
+        }
+
+        public override int Read(byte[] buffer, int offset, int count) => _inner.Position >= failAfter
+            ? throw new IOException("The source broke.")
+            : _inner.Read(buffer, offset, (int)Math.Min(count, failAfter - _inner.Position));
 
         public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
 

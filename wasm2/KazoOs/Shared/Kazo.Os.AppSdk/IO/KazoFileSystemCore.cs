@@ -105,9 +105,62 @@ internal static class KazoFileSystemCore
         }
 
         await using FileSystemContentReadHandle handle = result.Value!;
+        byte[] bytes = await ReadToEndAsync(handle.Content, cancellationToken).ConfigureAwait(false);
+        return new KazoFileContent(bytes, handle.Descriptor, handle.Entry);
+    }
+
+    /// <summary>
+    /// Reads the rest of <paramref name="content"/>. A stream that knows its length is read straight
+    /// into an array of that size, one copy instead of two (ADR 0275 §2); another stream is buffered.
+    /// </summary>
+    internal static async ValueTask<byte[]> ReadToEndAsync(Stream content, CancellationToken cancellationToken)
+    {
+        long remaining = -1;
+        if (content.CanSeek)
+        {
+            try
+            {
+                remaining = content.Length - content.Position;
+            }
+            catch (NotSupportedException)
+            {
+                remaining = -1;
+            }
+        }
+
+        if (remaining >= 0 && remaining <= Array.MaxLength)
+        {
+            byte[] exact = new byte[remaining];
+            int filled = 0;
+            while (filled < exact.Length)
+            {
+                int read = await content.ReadAsync(exact.AsMemory(filled), cancellationToken).ConfigureAwait(false);
+                if (read == 0)
+                {
+                    // Shorter than announced: keep what was there.
+                    return exact.AsSpan(0, filled).ToArray();
+                }
+
+                filled += read;
+            }
+
+            byte[] probe = new byte[1];
+            if (await content.ReadAsync(probe, cancellationToken).ConfigureAwait(false) == 0)
+            {
+                return exact;
+            }
+
+            // Longer than announced: finish the generic way.
+            using MemoryStream rest = new();
+            rest.Write(exact);
+            rest.Write(probe);
+            await content.CopyToAsync(rest, cancellationToken).ConfigureAwait(false);
+            return rest.ToArray();
+        }
+
         using MemoryStream buffer = new();
-        await handle.Content.CopyToAsync(buffer, cancellationToken).ConfigureAwait(false);
-        return new KazoFileContent(buffer.ToArray(), handle.Descriptor, handle.Entry);
+        await content.CopyToAsync(buffer, cancellationToken).ConfigureAwait(false);
+        return buffer.ToArray();
     }
 
     /// <summary>
