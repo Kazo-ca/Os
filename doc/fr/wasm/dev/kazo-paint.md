@@ -20,7 +20,7 @@ images du système de fichiers simulé.
 | Ouvrir | PNG, JPEG, BMP, GIF (première image), WebP |
 | Enregistrer | PNG par défaut ; JPEG quand le nom finit par `.jpg`/`.jpeg` (qualité 10 à 100, 92 par défaut, image aplatie sur du blanc) |
 
-- Taille maximale : 4 096 × 4 096 pixels et 16 Mio par fichier (ADR 0094).
+- Taille maximale : 4 096 × 4 096 pixels et 16 Mio par fichier (ADR 0103 ; l'OS lui-même accepte des fichiers jusqu'à 128 Mio, ADR 0245).
   L'en-tête est lu en C# (`ImageFileFormat.TryReadHeader`) **avant** tout
   décodage : un fichier trop grand, endommagé ou d'un autre format donne un
   message, sans figer l'app.

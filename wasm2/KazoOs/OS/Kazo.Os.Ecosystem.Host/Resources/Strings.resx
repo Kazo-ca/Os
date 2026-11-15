@@ -261,4 +261,7 @@
   <data name="FactoryReset.Confirm" xml:space="preserve">
     <value>Erase and restart</value>
   </data>
+  <data name="AppLink.StoreAfterLogin" xml:space="preserve">
+    <value>{0} will open in the Kazo OS Store after you sign in.</value>
+  </data>
 </root>

@@ -74,6 +74,11 @@ public sealed partial class ExplorerFileView
             case AppIntentOpenFileOutcome.ChooserRequired:
                 await ChooseAppAsync(path, result.CandidateAppIds ?? []);
                 break;
+            case AppIntentOpenFileOutcome.NoHandler when result.SuggestedCatalogApps.Count > 0 && Dialogs is not null:
+                // ADR 0257 §4: the Store has apps for it. The "Open with" box says no installed app
+                // opens it, still lists every app, and shows the Store apps with « View in the Store ».
+                await ChooseAppAsync(path, null);
+                break;
             case AppIntentOpenFileOutcome.NoHandler:
                 await ReportErrorAsync(L["Error.NoHandler"]);
                 break;

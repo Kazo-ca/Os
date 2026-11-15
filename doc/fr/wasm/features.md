@@ -92,6 +92,16 @@ Cette section liste ce qui est publié dans la branche `main` et en ligne.
   bords de l'écran, avec des animations sobres pour ouvrir, fermer, minimiser
   vers la barre, agrandir et ancrer, coupées par « Réduire les animations ».
   ([`window-model.md`](framework/window-model.md), [`window-animations.md`](dev/window-animations.md))
+  Une fenêtre qui passe devant ne bouge pas dans la page : une app dans un
+  cadre (iframe), comme Kazo Word ou le navigateur, garde sa page, aussi sur
+  mobile quand on change d'app. ([ADR 0244](dev/adr/0244-stable-window-order-in-the-page.md))
+- **Fenêtres qui restent sur leur écran** (version 3.3.3) : une app peut
+  empêcher sa fenêtre de changer d'écran (`window.canChangeScreen: false`).
+  Les apps Craft dans un iframe (Kazo Word et les suivantes) restent sur leur
+  écran avec l'avertissement « problème connu, une solution est en cours » :
+  changer d'écran rechargeait l'iframe et faisait perdre le document. La vraie
+  solution prévue : compiler nous-mêmes une version WebAssembly de chaque app
+  Craft, sans iframe. ([ADR 0263](dev/adr/0263-windows-that-stay-on-their-screen.md), [#482](https://github.com/Kazo-ca/Os/issues/482))
 - **Styles de fenêtre inspirés de WinForms** (version 3.1.0) : une app choisit
   le style `Normal`, `Tool` (fermer seulement, celui des dialogues de l'OS) ou
   `None` (zone cliente seule, transparente : un clic là où l'app ne dessine rien
@@ -142,8 +152,9 @@ Cette section liste ce qui est publié dans la branche `main` et en ligne.
 ### Fichiers
 
 - **Système de fichiers persistant** gardé dans le navigateur, avec dossiers
-  personnels, permissions et propriétaires comme sous Linux.
-  ([`project-overview.md`](dev/project-overview.md#système-de-fichiers))
+  personnels, permissions et propriétaires comme sous Linux. Un fichier peut
+  faire jusqu'à 128 Mio (version 3.3.2). ([`project-overview.md`](dev/project-overview.md#système-de-fichiers),
+  [ADR 0245](dev/adr/0245-raise-the-maximum-file-size.md))
 - **Explorateur de fichiers** avec vues, recherche, glisser-déposer,
   téléversement et téléchargement. ([`file-explorer.md`](dev/file-explorer.md))
 - **Explorateur amélioré** : panneau de gauche redimensionnable, bulles au
@@ -158,6 +169,16 @@ Cette section liste ce qui est publié dans la branche `main` et en ligne.
 - **Corbeille** avec restauration. ([`trash.md`](dev/trash.md))
 - **Applications par défaut** par type de fichier, propres à chaque
   utilisateur. ([`user-file-associations.md`](dev/user-file-associations.md))
+- **App du Store proposée pour un fichier** : ouvrir un fichier qu'aucune app
+  installée ne prend en charge propose les apps du Store qui déclarent ce type
+  (par exemple Kazo Word pour un `.docx`) dans l'Explorateur et « Ouvrir
+  avec », avec « Voir dans le Store » ; le fichier s'ouvre après
+  l'installation. `open` dans le terminal affiche la commande `kazopkg
+  install`. ([ADR 0257](dev/adr/0257-offer-a-store-app-for-an-unsupported-file.md))
+- **Recherche et catégories dans « Ouvrir avec »** : la boîte de l'Explorateur
+  filtre les apps installées par nom, identifiant ou description, et par
+  catégorie ; chaque ligne garde son nom et son identifiant dans sa bordure,
+  sur ordinateur comme sur téléphone. ([`file-explorer.md`](dev/file-explorer.md))
 - **Dossier de l'ordinateur monté comme lecteur réseau** : un vrai dossier de
   l'ordinateur apparaît dans l'OS (Chrome et Edge sur ordinateur).
   ([ADR 0181](dev/adr/0181-host-folder-mounted-as-a-network-drive.md))
@@ -273,8 +294,11 @@ Cette section liste ce qui est publié dans la branche `main` et en ligne.
   « Redémarrer pour mettre à jour » l'ouvre dans tous les onglets.
   ([ADR 0174](dev/adr/0174-announce-a-new-version-to-open-sessions.md),
   [ADR 0223](dev/adr/0223-restart-onto-the-new-version.md))
+- **Aperçu de partage** : un lien vers `os.kazo.ca` partagé sur Facebook,
+  LinkedIn ou X montre l'image de Kazo OS, son titre et sa description.
+  ([`github-pages-deployment.md`](dev/github-pages-deployment.md#aperçu-de-partage-facebook-linkedin-x))
 - **Numéro de build et état de la version sur l'écran de connexion** : à côté
-  de « Kazo OS 3.2.1 », le numéro de build (nombre de commits, le même pour le
+  de « Kazo OS 3.3.3 », le numéro de build (nombre de commits, le même pour le
   site, la Release et le serveur) et une pastille « À jour », « Obsolète : … »
   ou « État inconnu (hors ligne) », vérifiée dès le démarrage.
   ([ADR 0236](dev/adr/0236-build-number-and-version-status-at-sign-in.md))
@@ -334,6 +358,17 @@ Cette section liste ce qui est publié dans la branche `main` et en ligne.
   fenêtres, terminal, réseau, tâches de fond, presse-papiers, dialogues,
   composants Blazor. ([`sdk-reference.md`](framework/sdk-reference.md),
   [`sdk-packages.md`](framework/sdk-packages.md))
+- **Module commun des apps Craft** (version 3.3.3) : `Kazo.Os.AppSdk.Craft`,
+  livré et servi par l'OS, réunit le cadre de l'iframe (proxy, sélecteur de
+  fichiers, raccourcis, réglages par utilisateur) et la logique des documents
+  des apps Craft (Kazo Word, Kazo Spreadsheets…), écrits une fois au lieu d'une
+  copie par app. ([ADR 0259](dev/adr/0259-shared-craft-app-host-module.md),
+  [`craft-apps.md`](framework/craft-apps.md))
+- **Exports des apps Craft dans Kazo OS** (version 3.3.4) : les exports d'une
+  app Craft (Exporter, Imprimer en PDF, OCR… de Kazo Pdf) passent par le
+  dialogue d'enregistrement de l'OS au lieu des téléchargements du navigateur,
+  et s'enregistrent comme copies.
+  ([ADR 0264](dev/adr/0264-craft-app-exports-reach-the-window.md))
 - **Modèles `dotnet new`** pour une application fenêtrée, une commande, un
   service, un site, un hôte complet ou un dépôt d'application entier, visibles
   dans Visual Studio et Rider.
@@ -357,6 +392,13 @@ Cette section liste ce qui est publié dans la branche `main` et en ligne.
   Ses traductions (assemblages satellites des `.resx` par culture) sont dans son
   paquet et chargées par l'OS : installée, elle parle français comme compilée
   dans l'OS. ([ADR 0222](dev/adr/0222-installed-app-satellite-assemblies.md))
+  Elle trouve toute la bibliothèque de base de .NET (`System.Private.CoreLib`
+  n'est pas élaguée), et l'installation refuse avec la méthode exacte une app
+  qui appelle une méthode que l'OS publié n'a pas, au lieu de la laisser
+  planter. ([ADR 0242](dev/adr/0242-framework-api-for-installed-apps.md))
+  Elle peut afficher ses propres pages HTML dans une iframe, avec des paramètres
+  dans l'adresse, aussi une fois l'OS publié et hors ligne.
+  ([ADR 0243](dev/adr/0243-serve-installed-app-pages.md))
 - **Sources de confiance et installation pour soi** : une application d'une
   source de confiance s'installe pour soi sans administrateur ; une source non
   fiable, une application de la liste noire ou une installation pour tous
@@ -368,17 +410,29 @@ Cette section liste ce qui est publié dans la branche `main` et en ligne.
   ([ADR 0189](dev/adr/0189-app-sources-trust-and-per-user-install.md),
   [ADR 0208](dev/adr/0208-hack-store-sources-trust-build.md),
   [ADR 0214](dev/adr/0214-hack-store-hot-add-signing-transactions.md))
-- **Kazo OS Store** : le magasin d'applications de Kazo OS, épinglé par défaut
-  dans le menu Démarrer, sur le bureau et le mobile. Accueil par catégories,
+- **Kazo OS Store** : le magasin d'applications de Kazo OS, dans l'Accès rapide
+  du menu Démarrer ([ADR 0268](dev/adr/0268-store-in-start-menu-quick-access.md)),
+  sur le bureau et le mobile. Accueil par catégories,
   recherche, fiche (captures, description, taille, licence, capacités,
   confiance), installation pour soi ou pour tous, ouverture, mise à jour,
   désinstallation, onglet Installées et « Redémarrer pour terminer ». Il
   vérifie les mises à jour à l'ouverture de session puis toutes les 6 heures,
   et le signale par une notification ; `kazopkg install <appId>` lit les mêmes
-  catalogues et demande de choisir quand plusieurs listent l'app.
+  catalogues et demande de choisir quand plusieurs listent l'app. Depuis la
+  version 3.3.4 : app « à la une », grille filtrée par catégorie, bouton
+  « Installer » sur les cartes, visionneuse de captures, fiche avec une barre
+  qui reste en haut et les capacités en langage clair, progression
+  d'installation, et sur le téléphone des onglets en bas et des cibles
+  tactiles de 44 px ([ADR 0266](dev/adr/0266-store-ux-refresh.md)).
   ([ADR 0188](dev/adr/0188-hack-store-and-app-catalog.md),
   [ADR 0212](dev/adr/0212-hack-store-app-build.md),
   [ADR 0215](dev/adr/0215-hack-store-answers-notification-and-ambiguous-app-id.md))
+- **Lancer une app par un lien direct** (version 3.3.3) : le lien
+  `https://os.kazo.ca/?autolaunch=<appId>` démarre Kazo OS en invité s'il n'y
+  a aucun compte, installe l'app depuis le catalogue officiel signé et la
+  lance ; avec un compte, il ouvre le Store à la page de l'app. Le lien survit
+  au redémarrage pour une mise à jour (version 3.3.4, [ADR 0265](dev/adr/0265-direct-link-survives-update-restart.md)).
+  ([ADR 0258](dev/adr/0258-direct-app-launch-link.md), [`app-launch-link.md`](dev/app-launch-link.md))
 - **Installations sans redémarrage et sûres** : une application installée ou
   mise à jour s'ouvre tout de suite si elle n'était pas déjà chargée. Les
   paquets d'une source qui a une clé sont signés et vérifiés, l'installation
@@ -418,6 +472,7 @@ dans `main`, le lien mène à sa PR.
 | Changer d'utilisateur | Ouvrir une autre session sans fermer la première. Reste grisé dans le menu Marche/arrêt par choix de Benoit : une session à la fois, Se déconnecter pour changer de compte. | [0195](dev/adr/0195-start-menu-power-button.md), [0201](dev/adr/0201-switch-user-stays-greyed.md) | [#290](https://github.com/Kazo-ca/Os/issues/290) |
 | Adresse de fichier servie à la demande | Une app reçoit une adresse pour lire un gros fichier (audio, vidéo) sans le copier en mémoire, avec lecture partielle pour avancer dans un morceau. | À écrire | [#379](https://github.com/Kazo-ca/Os/issues/379) |
 | Glisser des fichiers vers une app | Contrat public du SDK pour recevoir des fichiers glissés depuis l'explorateur ou le bureau. | À écrire | [#380](https://github.com/Kazo-ca/Os/issues/380) |
+| Récupérer l'espace des fichiers réécrits ou supprimés | L'ancien contenu d'un fichier réécrit ou supprimé est effacé après 1 jour, ou après 5 minutes quand l'espace est faible, au lieu de rester pour toujours dans le navigateur. | [0273](dev/adr/0273-short-orphan-content-retention.md) | [#537](https://github.com/Kazo-ca/Os/issues/537) |
 
 ### Kazo OS Store
 
@@ -472,9 +527,17 @@ par `kazopkg` puis par le Kazo OS Store.
 | --- | --- | --- | --- |
 | Chess | Échecs, basés sur chess.js ; première application prévue du catalogue. | [Os-App-Chess](https://github.com/Kazo-ca/Os-App-Chess) | [#2](https://github.com/Kazo-ca/Os-App-Chess/issues/2), [#3](https://github.com/Kazo-ca/Os-App-Chess/issues/3) |
 | Webamp | Lecteur de musique dans le style de Winamp, associé aux fichiers audio, aux listes `.m3u`/`.pls` et aux skins `.wsz` ; ouvre aussi les fichiers des lecteurs réseau (ADR 0231). Plan en discussion. | [Os-App-Webamp](https://github.com/Kazo-ca/Os-App-Webamp) | [#1](https://github.com/Kazo-ca/Os-App-Webamp/issues/1), [#381](https://github.com/Kazo-ca/Os/issues/381) |
-| IRC | Client de discussion IRC natif (C# et Blazor) pour les vrais réseaux IRC, ordinateur et mobile : WebSocket sans serveur, et TCP avec TLS par le relais quand le serveur est connecté ([ADR 0235](dev/adr/0235-real-network-for-chat-apps.md)). **Disponible dans le Kazo OS Store** (version 1.0.0, Kazo OS 3.2.0 ou plus ; `kazopkg install Kazo-ca/Os-App-IRC`). | [Os-App-IRC](https://github.com/Kazo-ca/Os-App-IRC) | [#395](https://github.com/Kazo-ca/Os/issues/395), [#393](https://github.com/Kazo-ca/Os/issues/393), [#394](https://github.com/Kazo-ca/Os/issues/394) |
+| IRC | Client de discussion IRC natif (C# et Blazor) pour les vrais réseaux IRC, ordinateur et mobile : WebSocket sans serveur, et TCP avec TLS par le relais quand le serveur est connecté ([ADR 0235](dev/adr/0235-real-network-for-chat-apps.md)). **Disponible dans le Kazo OS Store** (version 1.0.1, Kazo OS 3.2.0 ou plus ; `kazopkg install Kazo-ca/Os-App-IRC`). | [Os-App-IRC](https://github.com/Kazo-ca/Os-App-IRC) | [#395](https://github.com/Kazo-ca/Os/issues/395), [#393](https://github.com/Kazo-ca/Os/issues/393), [#394](https://github.com/Kazo-ca/Os/issues/394) |
+| Kazo Word | Traitement de texte pour les documents `.docx` et `.odt`, basé sur WordCraft de l'équipe ArtCraft (MIT ou Apache-2.0), affiché dans une fenêtre de Kazo OS et associé aux fichiers de documents (double-clic, « Ouvrir avec »). Version 0.1.0, en alpha comme WordCraft : orthographe en anglais seulement, polices asiatiques limitées, WebGPU ou WebGL 2 nécessaire. Kazo OS 3.3.2 ou plus ([ADR 0243](dev/adr/0243-serve-installed-app-pages.md), [ADR 0244](dev/adr/0244-stable-window-order-in-the-page.md), [ADR 0245](dev/adr/0245-raise-the-maximum-file-size.md)). **Disponible dans le Kazo OS Store** (version 0.1.0 ; `kazopkg install Kazo-ca/Os-App-Word`). | [Os-App-Word](https://github.com/Kazo-ca/Os-App-Word) | [Plan](https://github.com/Kazo-ca/Os-App-Word/blob/main/doc/fr/plan.md) |
 | EmulatorJS | Émulateur de consoles rétro. | [Os-App-EmulatorJS](https://github.com/Kazo-ca/Os-App-EmulatorJS) | À venir |
 | BoxedWine | Exécuter d'anciens programmes Windows dans l'OS. | [Os-App-BoxedWine](https://github.com/Kazo-ca/Os-App-BoxedWine) | À venir |
+| Kazo Spreadsheets | Tableur pour les classeurs `.xlsx` et `.ods` (et `.csv`), basé sur GridCraft de l'équipe ArtCraft (MIT ou Apache-2.0), compilé depuis les sources, affiché dans une fenêtre de Kazo OS par le module commun des apps Craft et associé aux fichiers de classeurs (double-clic, « Ouvrir avec »), selon le [guide de portage des apps Craft](dev/craft-app-port-guide.md). Version 0.1.0, en alpha comme GridCraft ; WebGPU ou WebGL 2 nécessaire. Kazo OS 3.3.3 ou plus ([ADR 0259](dev/adr/0259-shared-craft-app-host-module.md), [ADR 0263](dev/adr/0263-windows-that-stay-on-their-screen.md)). **Disponible dans le Kazo OS Store** (version 0.1.0 ; `kazopkg install Kazo-ca/Os-App-Spreadsheets`). | [Os-App-Spreadsheets](https://github.com/Kazo-ca/Os-App-Spreadsheets) | [Plan](https://github.com/Kazo-ca/Os-App-Spreadsheets/blob/main/doc/fr/plan.md) |
+| Kazo Pdf | Lecteur et éditeur de PDF (annoter, remplir et créer des formulaires, signer, organiser les pages, reconnaissance de texte), basé sur PdfCraft de l'équipe ArtCraft (MIT ou Apache-2.0), compilé depuis les sources avec ses modèles OCR (CC-BY-SA-4.0), affiché dans une fenêtre de Kazo OS par le module commun des apps Craft et associé aux fichiers `.pdf` (double-clic), selon le [guide de portage des apps Craft](dev/craft-app-port-guide.md). Ses exports passent par le dialogue « Enregistrer une copie » de l'OS. Version 0.1.0, en alpha comme PdfCraft ; WebGL 2 nécessaire. Kazo OS 3.3.4 ou plus ([ADR 0259](dev/adr/0259-shared-craft-app-host-module.md), [ADR 0263](dev/adr/0263-windows-that-stay-on-their-screen.md), [ADR 0264](dev/adr/0264-craft-app-exports-reach-the-window.md)). **Disponible dans le Kazo OS Store** (version 0.1.0 ; `kazopkg install Kazo-ca/Os-App-PDF`). | [Os-App-PDF](https://github.com/Kazo-ca/Os-App-PDF) | [Plan](https://github.com/Kazo-ca/Os-App-PDF/blob/main/doc/fr/plan.md) |
+| Kazo Fig | Design d'interfaces et prototypage pour les fichiers `.figcraft` (et `.fig`, `.sketch`, `.penpot`, `.jam`), basé sur FigCraft de l'équipe ArtCraft (MIT ou Apache-2.0), compilé depuis les sources, affiché dans une fenêtre de Kazo OS par le module commun des apps Craft et associé aux fichiers de design (double-clic, « Ouvrir avec »), chaque onglet lié à son propre fichier, selon le [guide de portage des apps Craft](dev/craft-app-port-guide.md). Version 0.1.0, en alpha comme FigCraft ; WebGPU ou WebGL 2 nécessaire. Kazo OS 3.3.3 ou plus ([ADR 0259](dev/adr/0259-shared-craft-app-host-module.md), [ADR 0263](dev/adr/0263-windows-that-stay-on-their-screen.md)). **Disponible dans le Kazo OS Store** (version 0.1.0 ; `kazopkg install Kazo-ca/Os-App-Fig`). | [Os-App-Fig](https://github.com/Kazo-ca/Os-App-Fig) | [Plan](https://github.com/Kazo-ca/Os-App-Fig/blob/main/doc/fr/plan.md) |
+| Kazo Deck | Éditeur de présentations (masques et dispositions, thèmes, formes, tableaux, graphiques, images, transitions, animations, diaporama), basé sur DeckCraft de l'équipe ArtCraft (MIT ou Apache-2.0), compilé depuis notre fork sans modification, affiché dans une fenêtre de Kazo OS par le module commun des apps Craft et associé aux fichiers `.pptx`, `.ppsx`, `.potx` et `.deckcraft` (double-clic, « Ouvrir avec » pour `.txt`, `.md`, `.rtf`), une présentation par fenêtre liée à son fichier, selon le [guide de portage des apps Craft](dev/craft-app-port-guide.md). Diaporama en plein écran du navigateur (F5, Maj+F5, « Present »), mode présentateur coupé pour l'instant ; exports par le dialogue « Enregistrer une copie » de l'OS. Version 0.1.0, en alpha comme DeckCraft, interface en anglais ; WebGPU ou WebGL 2 nécessaire. Kazo OS 3.3.4 ou plus ([ADR 0259](dev/adr/0259-shared-craft-app-host-module.md), [ADR 0263](dev/adr/0263-windows-that-stay-on-their-screen.md), [ADR 0264](dev/adr/0264-craft-app-exports-reach-the-window.md)). **Disponible dans le Kazo OS Store** (version 0.1.0 ; `kazopkg install Kazo-ca/Os-App-Deck`). | [Os-App-Deck](https://github.com/Kazo-ca/Os-App-Deck) | [Plan](https://github.com/Kazo-ca/Os-App-Deck/blob/main/doc/fr/plan.md) |
+| Kazo Vector | Dessin vectoriel (plume et courbes de Bézier, formes, opérations exactes sur les tracés, dégradés, effets en direct, texte, plans de travail, calques, symboles), basé sur VectorCraft de l'équipe ArtCraft (MIT ou Apache-2.0), compilé depuis notre fork avec son mode hébergé, affiché dans une fenêtre de Kazo OS par le module commun des apps Craft et associé aux fichiers `.svg`, `.svgz`, `.ai`, `.eps`, `.dxf`, `.emf`, `.wmf` et `.vectorcraft` (double-clic, « Ouvrir avec » pour `.pdf` et `.afdesign`), chaque onglet lié à son propre fichier, selon le [guide de portage des apps Craft](dev/craft-app-port-guide.md). Ses exports passent par le dialogue « Enregistrer une copie » de l'OS ; pas de récupération après un arrêt brutal pour l'instant. Version 0.1.0, en alpha comme VectorCraft ; WebGPU ou WebGL 2 nécessaire. Kazo OS 3.3.4 ou plus ([ADR 0259](dev/adr/0259-shared-craft-app-host-module.md), [ADR 0263](dev/adr/0263-windows-that-stay-on-their-screen.md), [ADR 0264](dev/adr/0264-craft-app-exports-reach-the-window.md)). **Disponible dans le Kazo OS Store** (version 0.1.0 ; `kazopkg install Kazo-ca/Os-App-Vector`). | [Os-App-Vector](https://github.com/Kazo-ca/Os-App-Vector) | [Plan](https://github.com/Kazo-ca/Os-App-Vector/blob/main/doc/fr/plan.md) |
+| Kazo Photo | Éditeur d'images à calques (calques de réglage, masques, styles, sélections, filtres, texte, formes), basé sur PhotoCraft de l'équipe ArtCraft (MIT ou Apache-2.0), compilé depuis notre fork avec son mode hébergé, affiché dans une fenêtre de Kazo OS par le module commun des apps Craft et associé aux fichiers `.psd`, `.psb`, RAW, Krita, GIMP, OpenRaster… (double-clic, « Ouvrir avec » pour PNG, JPEG, WebP…), chaque onglet lié à son propre fichier, selon le [guide de portage des apps Craft](dev/craft-app-port-guide.md). Ses exports passent par le dialogue « Enregistrer une copie » de l'OS ; une quinzaine de familles de polices OFL livrées avec l'app. Version 0.1.0, en alpha comme PhotoCraft ; WebGPU ou WebGL 2 nécessaire. Kazo OS 3.3.4 ou plus ([ADR 0259](dev/adr/0259-shared-craft-app-host-module.md), [ADR 0263](dev/adr/0263-windows-that-stay-on-their-screen.md), [ADR 0264](dev/adr/0264-craft-app-exports-reach-the-window.md)). **Disponible dans le Kazo OS Store** (version 0.1.0 ; `kazopkg install Kazo-ca/Os-App-Photo`). | [Os-App-Photo](https://github.com/Kazo-ca/Os-App-Photo) | [Plan](https://github.com/Kazo-ca/Os-App-Photo/blob/main/doc/fr/plan.md) |
+| Kazo Design | Mise en page, portage de [DesignCraft](https://github.com/storytold/designcraft) (équipe ArtCraft) selon le [guide de portage des apps Craft](dev/craft-app-port-guide.md). Planifiée. | [Os-App-Design](https://github.com/Kazo-ca/Os-App-Design) | [#1](https://github.com/Kazo-ca/Os-App-Design/issues/1) |
 
 ## Garder ce document à jour
 

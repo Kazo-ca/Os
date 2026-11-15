@@ -117,7 +117,7 @@ public override WindowOptions? Window => new()
   CSS. Sans déclaration : `WindowOptions.Default`, 800×560 et minimum 360×240, comme avant.
 - Manifeste : objet facultatif `window` (`defaultWidth`, `defaultHeight`, `minWidth`, `minHeight`,
   `maxWidth`, `maxHeight`, `resizable`, et depuis le SDK 3.1 `style`, `showIcon`, `maximizeBox`,
-  `minimizeBox`, `showInTaskbar`, `modal`, voir §6), produit par le générateur et absent si l'app ne déclare
+  `minimizeBox`, `showInTaskbar`, `modal`, voir §6, et après le SDK 3.3.2 `canChangeScreen`, ADR 0263), produit par le générateur et absent si l'app ne déclare
   rien. Un champ omis prend sa valeur par défaut. Le schéma `manifest.schema.v1.json` interdit
   `window` hors des apps de genre `window`.
 - Codes du validateur :
@@ -323,6 +323,7 @@ public override WindowOptions? Window => new()
     MinimizeBox = true,           // bouton Réduire
     ShowInTaskbar = true,         // bouton dans la barre des tâches
     Modal = false,                // fenêtres enfants (chantier 5)
+    CanChangeScreen = true,       // après le SDK 3.3.2, ADR 0263 : l'utilisateur peut l'envoyer sur un autre écran
 };
 ```
 
@@ -340,6 +341,12 @@ public override WindowOptions? Window => new()
 - `MaximizeBox = false` retire aussi le double-clic sur la barre ; `MinimizeBox = false` retire
   aussi « Réduire » du menu de fenêtre et de la commande clavier. `Tool` et `None` retirent les
   poignées, Agrandir et Réduire ; le menu de fenêtre reste au clic droit sur la barre et à Alt+Espace.
+- `CanChangeScreen = false` ([ADR 0263](../dev/adr/0263-windows-that-stay-on-their-screen.md)) garde la
+  fenêtre sur son écran : elle s'ouvre sur l'écran 1, « Autre écran » ne propose qu'une entrée grisée
+  « Pas encore disponible pour cette app : problème connu, une solution est en cours », et un
+  raccourci d'écran ou un lâcher sur un autre écran affiche ce texte dans une notification. Changer
+  d'écran déplace la fenêtre dans un autre document du navigateur, ce qui recharge tout iframe
+  qu'elle contient : chaque app Craft la déclare dans son manifeste.
 - Sans icône (`ShowIcon = false` ou `Tool`), le clic droit sur le titre ouvre le menu de fenêtre.
 - Une fenêtre `None` se déplace par tout élément marqué `data-kazo-window-drag` (les champs, liens
   et éléments éditables à l'intérieur restent cliquables).

@@ -25,6 +25,9 @@ jobs:
       - name: Check the Kazo OS submodule
         run: bash .github/scripts/check-kazoos-submodule.sh
 
+      - name: Check the README shows the Store listing
+        run: node .github/scripts/store-readme.mjs --check
+
       - name: Build (Release, packages)
         run: dotnet build -c Release
 

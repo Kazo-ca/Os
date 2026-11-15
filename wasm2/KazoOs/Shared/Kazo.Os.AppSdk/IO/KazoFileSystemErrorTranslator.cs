@@ -65,7 +65,7 @@ internal static class KazoFileSystemErrorTranslator
             FileSystemErrorCode.NoSpace => new KazoIOException(
                 $"No space left on device while writing '{path}'.", error.Code, path),
             FileSystemErrorCode.FileTooLarge => new KazoIOException(
-                $"The file '{path}' is too large (16 MiB at most).", error.Code, path),
+                $"The file '{path}' is too large (128 MiB at most).", error.Code, path),
             // ADR 0125: EMFILE, the process holds as many descriptors as its nofile limit allows.
             FileSystemErrorCode.TooManyOpenFiles => new KazoIOException(
                 $"{path}: Too many open files", error.Code, path),

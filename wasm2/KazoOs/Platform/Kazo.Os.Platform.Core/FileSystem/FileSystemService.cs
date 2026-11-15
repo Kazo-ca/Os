@@ -528,6 +528,13 @@ public sealed class FileSystemService : IFileSystemService, IExternalFileSystemC
         CancellationToken cancellationToken = default)
     {
         FileSystemMutationResult result = await DeleteCoreAsync(request, context, cancellationToken).ConfigureAwait(false);
+        if (result.Succeeded && IsInTrash(request.Path) && _spaceGuard is Storage.StorageSpaceMonitor monitor)
+        {
+            // An element deleted from the trash for good (emptying it): its content can go now
+            // (ADR 0273 section 4). The monitor joins a burst of these into one reclaim.
+            monitor.RequestReclaim();
+        }
+
         if (_audit is not null && FileSystemAuditPolicy.IsAudited(request.Path))
         {
             _audit.Record("delete", request.Path, null, context.OperationContext, result);
@@ -847,6 +854,10 @@ public sealed class FileSystemService : IFileSystemService, IExternalFileSystemC
         _spaceGuard.RequestRefresh();
         return new FileSystemError(operation, FileSystemErrorCode.NoSpace, path);
     }
+
+    /// <summary>Gets whether a path is inside a user's trash (<c>~/.local/share/Trash</c>, ADR 0052).</summary>
+    private static bool IsInTrash(VirtualPath path) =>
+        path.Value.Contains("/" + ServerConnection.SyncFileOperations.TrashRelativePath + "/", StringComparison.Ordinal);
 
     /// <summary>A persistent mutation changed the used space, or hit the real limit: ask for a new measure.</summary>
     private void NoteSpaceUse(FileSystemMutationResult result, IFileSystemProvider target)

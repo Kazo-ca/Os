@@ -397,7 +397,7 @@ public sealed class FileAssociationResolver
     /// shared <c>VirtualPath</c> filename helper, so the last path segment and its last dot are
     /// located manually. A dotfile with no further dot (e.g. <c>.bashrc</c>) has no extension.
     /// </summary>
-    private static string? GetExtension(VirtualPath path)
+    internal static string? GetExtension(VirtualPath path)
     {
         string value = path.Value;
         int lastSlash = value.LastIndexOf('/');

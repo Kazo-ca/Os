@@ -59,6 +59,22 @@ Decided on 2026-10-28:
   the OS; an app wrapping JavaScript needs the installed apps' `wwwroot` work
   item (issue #247, built by ADR 0206 in the `todo/base` series: files served
   at `_content/<assembly>/` by the service worker, Web Workers included).
+- Craft suite (Benoit, 2026-11-13): after Kazo Word (`Os-App-Word`, WordCraft),
+  one repository per Craft app of the ArtCraft team: `Os-App-Spreadsheets` (Kazo
+  Spreadsheets, GridCraft), `Os-App-PDF` (Kazo Pdf, PdfCraft), `Os-App-Fig`
+  (Kazo Fig, FigCraft), `Os-App-Photo` (Kazo Photo, PhotoCraft),
+  `Os-App-Design` (Kazo Design, DesignCraft), `Os-App-Deck` (Kazo Deck,
+  DeckCraft), `Os-App-Vector` (Kazo Vector, VectorCraft). Kazo Spreadsheets
+  starts as soon as Kazo Word is published in the Store, with Word's methods.
+  Common method: [`craft-app-port-guide.md`](../dev/craft-app-port-guide.md);
+  one `TODO` issue per app.
+- Shared code of the Craft apps (Benoit, 2026-11-13, Kazo Word's decision 8):
+  an SDK module shipped and served by the OS, `Kazo.Os.AppSdk.Craft` (iframe
+  frame, proxy, picker, shortcuts, settings, `DocumentSession`); each app
+  keeps its window. [ADR 0259](../dev/adr/0259-shared-craft-app-host-module.md),
+  series `craft-host/base`: work items 2 (C# library), 3 (scripts) and 4 (end-to-end journey with the test package `Tests/fixtures/craft-app`, guide [`craft-apps.md`](../framework/craft-apps.md), port guide rewritten) done; reaches `main` with the next OS version (number picked by Benoit), which becomes the minimum version of the Craft apps on the module. The `host` message (`autosave: true`) is to be sent once craft-libs#713 ships. Kazo Word ships with its copy and
+  moves to the module afterwards; Kazo Spreadsheets uses it from its work
+  item 1.
 
 ## Server-hosted apps ("server sandbox")
 
@@ -104,6 +120,25 @@ viewers live, scope of `?app=`, Eruda or not.
 
 - Code Editor **stays a system app**.
 - The text editor's replace stays **without regular expressions**.
+
+## Storage in the browser (decisions of 2026-11-14)
+
+Analysis: [`../dev/plans/browser-storage-optimization-analysis.md`](../dev/plans/browser-storage-optimization-analysis.md).
+Only #537 is coded; the `storage/base` series is still to build.
+
+- Two `TODO` issues first: #537 (reclaim the space of orphan contents; done on
+  2026-11-15, ADR 0273) and #538 (profile #520 in the real OS; delivered on
+  2026-11-15: in Release, 96 % of the time is in the content repository, the
+  43 s came from a Debug host).
+- Then a `storage/base` series, ADRs before the code: binary content instead of
+  base64, ADR 0250 to build, a single copy of app files, partial read and file
+  address (#379).
+- Files of an installed app: the file system stays the only source; the
+  service worker serves `_content/…` from the file store and the copy in Cache
+  Storage goes away.
+- Retention of orphan contents: short, and quick deletion when space is low. Done
+  by ADR 0273 (1 day, 5 minutes when space is low), which replaces the 30 days of
+  ADR 0094.
 
 ## Questions asked, answer to confirm
 

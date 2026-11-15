@@ -117,6 +117,13 @@ public sealed class WindowKeyboardCommands : IDisposable
     /// <summary>Raised when the mode, the switcher, the menu or the active bindings changed.</summary>
     public event Action? Changed;
 
+    /// <summary>
+    /// Raised when the user asked to send a window to another screen that it cannot change
+    /// (ADR 0263): « Autre écran », a screen shortcut, or a drop on another screen. The shell tells
+    /// the user why with a notification.
+    /// </summary>
+    public event Action<WindowId>? ScreenChangeRefused;
+
     /// <summary>Gets what the keyboard is doing right now.</summary>
     public WindowKeyboardMode Mode { get; private set; }
 
@@ -416,7 +423,7 @@ public sealed class WindowKeyboardCommands : IDisposable
     /// <param name="windowId">Window.</param>
     public IReadOnlyList<WindowScreenMenuItem> GetScreenMenuItems(WindowId windowId)
     {
-        if (Find(windowId) is not { } window)
+        if (Find(windowId) is not { } window || !_runtime.CanChangeScreen(windowId))
         {
             return [];
         }
@@ -429,6 +436,20 @@ public sealed class WindowKeyboardCommands : IDisposable
                 display != window.DisplayId)),
         ];
     }
+
+    /// <summary>
+    /// Gets whether the user may send <paramref name="windowId"/> to another screen (ADR 0263). When
+    /// it cannot, « Autre écran » only shows a disabled entry that says why.
+    /// </summary>
+    /// <param name="windowId">Window.</param>
+    public bool CanChangeScreen(WindowId windowId) => Find(windowId) is not null && _runtime.CanChangeScreen(windowId);
+
+    /// <summary>
+    /// Tells the shell that the user asked to send <paramref name="windowId"/> to a screen it cannot
+    /// go to (ADR 0263), for example by dropping it on another screen: raises <see cref="ScreenChangeRefused"/>.
+    /// </summary>
+    /// <param name="windowId">Window.</param>
+    public void ReportScreenChangeRefused(WindowId windowId) => ScreenChangeRefused?.Invoke(windowId);
 
     /// <summary>Gets whether « Nouvel écran » can open one more screen.</summary>
     public bool CanOpenScreen => OpenScreen is not null && _runtime.NextDisplayId.Number <= ScreensSettingsDocuments.MaxScreenNumber;
@@ -443,6 +464,12 @@ public sealed class WindowKeyboardCommands : IDisposable
         if (Find(windowId) is not { } window || window.DisplayId == display || _runtime.IsInteractionBlocked(windowId)
             || !_runtime.Displays.Contains(display))
         {
+            return false;
+        }
+
+        if (!_runtime.CanChangeScreen(windowId))
+        {
+            ReportScreenChangeRefused(windowId);
             return false;
         }
 
@@ -466,6 +493,13 @@ public sealed class WindowKeyboardCommands : IDisposable
         CloseMenu();
         if (!CanOpenScreen || Find(windowId) is null || _runtime.IsInteractionBlocked(windowId))
         {
+            return false;
+        }
+
+        if (!_runtime.CanChangeScreen(windowId))
+        {
+            // ADR 0263: no screen opens for a window that could not go there.
+            ReportScreenChangeRefused(windowId);
             return false;
         }
 

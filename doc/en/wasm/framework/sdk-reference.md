@@ -50,6 +50,7 @@ minor; those that are known are listed in [`sdk-packages.md`](sdk-packages.md#ad
 | `Shared/Kazo.Os.AppSdk.Terminal` | `Kazo.Os.AppSdk.Terminal` | xterm.js terminal. |
 | `Shared/Kazo.Os.AppSdk.Web` | `Kazo.Os.AppSdk.Web.Hosting`, `.Http`, `.Routing`, `.Mvc`, `.Views`, `.Antiforgery`, `.Sessions`, `.Diagnostics`, `.Data`, `.Logging` | ASP.Kazo internal sites in the style of ASP.NET Core MVC ([ASP.Kazo guide](asp-kazo-developer-guide.md), [`asp-kazo-mvc.md`](asp-kazo-mvc.md)). |
 | `Shared/Kazo.Os.AppSdk.Web.Blazor` | `Kazo.Os.AppSdk.Web.Blazor.Sites` | Interactive Blazor sites drawn in the browser ([`blazor-sites.md`](blazor-sites.md)). |
+| `Shared/Kazo.Os.AppSdk.Craft` | `Kazo.Os.AppSdk.Craft` | Craft apps: a Rust app compiled to WebAssembly in an iframe of the window ([ADR 0259](../dev/adr/0259-shared-craft-app-host-module.md)). |
 | `Shared/Kazo.Os.AppSdk.Icons` | `Kazo.Os.AppSdk.Icons` | Icons. |
 | `Shared/Kazo.Os.AppSdk.VirtualKeyboard` | `Kazo.Os.AppSdk.VirtualKeyboard` | Virtual keyboard. |
 
@@ -59,7 +60,7 @@ minor; those that are known are listed in [`sdk-packages.md`](sdk-packages.md#ad
 |---|---|
 | `[AppManifest]` | Marks the class that describes the app; the build generates `manifest.json` from it. `Execution` (`AppExecutionHost`) chooses where a process without an interface runs (ADR 0070). |
 | `AppExecutionHost`, `AppExecutionHosts` | `Default`, `MainThread`, `Pool`, `Dedicated`; `DefaultFor(kind)` (command → `Pool`, service → `Dedicated`, window → `MainThread`), `Resolve`, `Of(manifest)`, `IsWorker`. Manifest: `"execution": "mainThread" \| "pool" \| "dedicated"`. See [`worker-processes.md`](../dev/worker-processes.md), [`app-execution-hosts.md`](app-execution-hosts.md). |
-| `AppDefinition` | Base class. Required: `Id`, `Name`, `Kind`, `EntryPoint`. Optional: `Version`, `Description`, `PublisherId`, `Category`, `LaunchVisibility`, `Icons`, `Capabilities`, `FileHandlers`, `Terminal`, `Components`, `MobileEntryPoint`, `SingleInstancePerUser`, `AutoStart`, `SupportsBack`, `Window` (`WindowOptions`, ADR 0095, [`window-model.md`](window-model.md); `RememberGeometry`, SDK 1.1, ADR 0116, [`window-geometry.md`](../dev/window-geometry.md); `Style` (`WindowStyle`), `ShowIcon`, `MaximizeBox`, `MinimizeBox`, `ShowInTaskbar`, `Modal`, SDK 3.1, ADR 0234, [`window-model.md`](window-model.md) §6), `Resources`, `Settings`, `Dependencies`, `Intents`, `DeclaredTopicPermissions`, `Localizations`, `Assets`, `OomScoreAdjust` (SDK 1.2, ADR 0126 §4, [`oom-killer.md`](../dev/oom-killer.md)), `RealNetworkPorts` (ADR 0235 §3, [network relay](../dev/server-network-relay.md)). |
+| `AppDefinition` | Base class. Required: `Id`, `Name`, `Kind`, `EntryPoint`. Optional: `Version`, `Description`, `PublisherId`, `Category`, `LaunchVisibility`, `Icons`, `Capabilities`, `FileHandlers`, `Terminal`, `Components`, `MobileEntryPoint`, `SingleInstancePerUser`, `AutoStart`, `SupportsBack`, `Window` (`WindowOptions`, ADR 0095, [`window-model.md`](window-model.md); `RememberGeometry`, SDK 1.1, ADR 0116, [`window-geometry.md`](../dev/window-geometry.md); `Style` (`WindowStyle`), `ShowIcon`, `MaximizeBox`, `MinimizeBox`, `ShowInTaskbar`, `Modal`, SDK 3.1, ADR 0234, [`window-model.md`](window-model.md) §6; `CanChangeScreen`, ADR 0263), `Resources`, `Settings`, `Dependencies`, `Intents`, `DeclaredTopicPermissions`, `Localizations`, `Assets`, `OomScoreAdjust` (SDK 1.2, ADR 0126 §4, [`oom-killer.md`](../dev/oom-killer.md)), `RealNetworkPorts` (ADR 0235 §3, [network relay](../dev/server-network-relay.md)). |
 | `AppKind` | `Window`, `Terminal`, `Service`. |
 | `AppLaunchVisibility` | `Visible`, `Hidden` (absent from the launcher). |
 | `FileHandler(MediaType, Extensions, Actions, Priority)` | File type the app opens. |
@@ -134,7 +135,7 @@ parameter of `RunCoreAsync` for a service, `context.App` for a command).
 | `Clock` | Simulated time: `UtcNow`, `CurrentTick`, `DelayAsync`, `Schedule`. |
 | `Processes` | Processes of the app and of others (`OwnProcess`, `ListProcesses`, `StopAsync`, `Kill`). Prefer `KazoProcess`. Descendants of the app's process (its `KazoBackground` jobs) count as its own, without `process.list` or `process.manage` (ADR 0140 §7). In a worker, `ListProcesses` and `Kill` of another process require an isolated page (ADR 0143 §5), otherwise `NotSupportedException`. |
 | `Background` | Background jobs gateway (`IAppBackgroundGateway.RunAsync`, SDK 1.2, ADR 0128); behind `KazoBackground`. By default (a context the OS did not build), the job runs inline with the same serialization. |
-| `Intents`, `Catalog`, `AppManagement` | Behind `KazoApps` and `KazoAppManagement`. `IAppIntentGateway`: `LaunchAsync`, `OpenFileAsync`, `EditFileAsync`, `RevealFileAsync`, `OpenUriAsync`, `ShowAppSettingsAsync`, `SendIntentAsync` → `AppIntentResult` (`AppIntentOutcome`, ADR 0096). |
+| `Intents`, `Catalog`, `AppManagement` | Behind `KazoApps` and `KazoAppManagement`. `IAppIntentGateway`: `LaunchAsync`, `OpenFileAsync`, `EditFileAsync`, `RevealFileAsync`, `OpenUriAsync`, `ShowAppSettingsAsync`, `SendIntentAsync` → `AppIntentResult` (`AppIntentOutcome`, ADR 0096); `OpenFileAsync` and `EditFileAsync` → `AppIntentOpenFileResult`, with `SuggestedCatalogApps` (`AppIntentSuggestedCatalogApp`: id, name, catalog, `ShortDescriptions`, `IconUri`) on `NoHandler`; `SuggestCatalogAppsAsync(path)` gives them alone for "Open with" (ADR 0257). |
 | `Intent`, `IntentReceived` | Intent that launched the instance (`AppIntentDelivery`: `IntentId`, `PayloadJson`, `SenderAppId`, `Arguments`); event raised when the OS hands an intent or a second activation to the already open instance (ADR 0096 §5). See [`app-intents.md`](app-intents.md). |
 | `Environment` | Behind `KazoEnvironment`. |
 | `Culture`, `FormatCulture` | Language of texts (`en` or `fr`, from the process's `LC_ALL`/`LC_MESSAGES`/`LANG`) and format culture (`fr-CA`, from `LC_TIME`); default members reread on each call (ADR 0104). `context.GetLocalizer<Strings>()` gives an `IStringLocalizer<Strings>` bound to this language ([`localization.md`](localization.md)). |
@@ -189,7 +190,7 @@ carries the engine code, and `ShellErrorText.Describe` gives the Linux message.
 | Code (`FileSystemErrorCode`) | Errno | When | Shell message |
 |---|---|---|---|
 | `NoSpace` (1800) | `ENOSPC` | The browser refuses the write (quota reached), or less than the root reserve remains and the caller is not an administrator | `No space left on device` |
-| `FileTooLarge` (1801) | `EFBIG` | The content exceeds 16 MiB (maximum file size) | `File too large` |
+| `FileTooLarge` (1801) | `EFBIG` | The content exceeds 128 MiB (maximum file size, ADR 0245) | `File too large` |
 | `TooManyOpenFiles` (1802, SDK 1.2) | `EMFILE` | The process has reached its `nofile` limit of open descriptors (ADR 0125, [`process-limits.md`](../dev/process-limits.md)) | `Too many open files` |
 
 ### Settings (`Kazo.Os.AppSdk.Settings`)
@@ -222,12 +223,12 @@ carries the engine code, and `ShellErrorText.Describe` gives the Linux message.
 
 | API | Members | Capability | Document |
 |---|---|---|---|
-| `KazoApps` | `GetInstalledAsync`, `GetHandlersAsync(path)`, `LaunchAsync(appId, args)`, `OpenFileAsync(path)`, `EditFileAsync(path)`, `RevealFileAsync(path)`, `OpenUriAsync(uri, appId)`, `ShowSettingsAsync(appId)`, `SendIntentAsync(intentId, payloadJson, targetAppId, rememberChoice)`, `GetDefaultHandlersAsync()`, `SetDefaultHandlerAsync(target, appId, action)`, `ResetDefaultHandlerAsync(target, action)` (ADR 0121), `Changed`; `KazoFileAssociation`, `KazoFileAssociationLayer`, `KazoDefaultHandlerStatus`, `KazoAppInfo` (with `Capabilities`), `KazoOpenFileResult` (`FellBackToOpen`), `KazoIntentResult` (`KazoIntentStatus`), `KazoAppLaunchException` | reading and `ShowSettingsAsync`: none; defaults: `file-associations.read` (and `filesystem.user-home.write` to write); the rest: `apps.launch` | [`app-sdk.md`](app-sdk.md#app-catalog-adr-0056-2), [`app-intents.md`](app-intents.md), [`file-associations-api.md`](file-associations-api.md), [`user-file-associations.md`](../dev/user-file-associations.md) |
+| `KazoApps` | `GetInstalledAsync`, `GetHandlersAsync(path)`, `LaunchAsync(appId, args)`, `OpenFileAsync(path)`, `EditFileAsync(path)`, `RevealFileAsync(path)`, `OpenUriAsync(uri, appId)`, `ShowSettingsAsync(appId)`, `SendIntentAsync(intentId, payloadJson, targetAppId, rememberChoice)`, `GetDefaultHandlersAsync()`, `SetDefaultHandlerAsync(target, appId, action)`, `ResetDefaultHandlerAsync(target, action)` (ADR 0121), `GetSuggestedCatalogAppsAsync(path)` and `StoreAppId` (ADR 0257), `Changed`; `KazoFileAssociation`, `KazoFileAssociationLayer`, `KazoDefaultHandlerStatus`, `KazoAppInfo` (with `Capabilities`), `KazoOpenFileResult` (`FellBackToOpen`, `SuggestedCatalogApps` → `KazoSuggestedCatalogApp` with `IconUri` and `GetShortDescription(culture)`, ADR 0257), `KazoIntentResult` (`KazoIntentStatus`), `KazoAppLaunchException` | reading and `ShowSettingsAsync`: none; defaults: `file-associations.read` (and `filesystem.user-home.write` to write); the rest: `apps.launch` | [`app-sdk.md`](app-sdk.md#app-catalog-adr-0056-2), [`app-intents.md`](app-intents.md), [`file-associations-api.md`](file-associations-api.md), [`user-file-associations.md`](../dev/user-file-associations.md) |
 | `KazoAppIcons` | `LucideName(appId, category)`: an app's Lucide icon, fallback of the Start menu and shortcuts when the app declares no image; SDK 2.0 (ADR 0160, ADR 0232) | none | [`desktop.md`](../dev/desktop.md) |
 | `KazoAppAssets` | `RelativeUrl(manifest, assetPath)`: the `_content/<assembly>/<path>` URL of a file an app declares; used by `KazoAppInfo.IconUrl` (ADR 0232) | none | [ADR 0232](../dev/adr/0232-illustrated-app-icons-everywhere.md) |
 | `KazoBrowser` | `OpenAsync(url)`, `OpenDetachedAsync(url)` (detached window, ADR 0078); `AppId`, `DetachedArgument` (`--detached`) | `apps.launch` | [`detached-display-windows.md`](../dev/detached-display-windows.md), [`display-surface-api.md`](display-surface-api.md) |
 | `KazoAppManagement` | `GetAllAsync`, `UninstallAsync`, `ReinstallAsync`; `KazoInstallScope`, `KazoAppInstallState` | `apps.manage` | [`app-installation.md`](../dev/app-installation.md) |
-| `KazoAppPackages` | `GetSourcesAsync`, `GetInstalledAsync` (with `PreviousVersion`), `GetInfoAsync`, `InstallAsync`, `RemoveAsync`, `RollbackAsync(appId, scope)` and `RepairAsync(system)` (ADR 0214), sources, block list, catalogs, updates, `RestartToFinishAsync`, theme packs | `apps.manage` | [`app-installation.md`](../dev/app-installation.md#adding-without-a-restart-signing-and-transactions) |
+| `KazoAppPackages` | `GetSourcesAsync`, `GetInstalledAsync` (with `PreviousVersion`), `GetInfoAsync`, `InstallAsync` (with an optional `IProgress<KazoPackageInstallProgress>`, ADR 0266), `RemoveAsync`, `RollbackAsync(appId, scope)` and `RepairAsync(system)` (ADR 0214), sources, block list, catalogs, updates, `RestartToFinishAsync`, theme packs | `apps.manage` | [`app-installation.md`](../dev/app-installation.md#adding-without-a-restart-signing-and-transactions) |
 
 ### Processes and services
 
@@ -490,6 +491,39 @@ for a 1.x app is in [`sdk-packages.md`](sdk-packages.md#sdk-20).
 |---|---|---|
 | `TerminalPanel` | `CallerAppId`, `InitialUsername`, `InitialCwd`, `UseVirtualKeyboard`, `ShowBanner`, `FocusOnStart`, `OnExitRequested`, `OnTitleChanged`; hosts an `hsh` (capability `shell.host`); implements `IKazoTerminal` (`RunCommandAsync`, `SetWorkingDirectoryAsync`, `SendInputAsync`, `ReadOutput`, `ClearAsync`, events) | [`terminal-emulator.md`](../dev/terminal-emulator.md), [`terminal-api.md`](terminal-api.md), [`shell-host.md`](shell-host.md) |
 | `TerminalTabs` | `CallerAppId`, `InitialCwd`, `OnLastTabClosed`; one `hsh` per tab | [`terminal-console.md`](../dev/terminal-console.md) |
+
+### Craft apps (`Kazo.Os.AppSdk.Craft`)
+
+Module shipped and served by the OS ([ADR 0259](../dev/adr/0259-shared-craft-app-host-module.md)):
+`Kazo.Os.Platform.Blazor` references it, every host publishes it and serves its
+scripts at `_content/Kazo.Os.AppSdk.Craft/`. A Craft app references it to
+compile and does not carry it in its package. It keeps its Razor window, its
+list of formats and its iframe page (`wwwroot/host/index.html`).
+
+| Type | Members |
+|---|---|
+| `CraftFrame` | The C# side of one iframe: `StartAsync(container, CraftFrameOptions, token)` imports `ModulePath` (`craft-host.js`) and creates the iframe; `OpenAsync(name, bytes)`, `RequestAsync(method, parameters, timeout)` (`window.<app>.request`, a failure is a `FrameCommandResult`, never an exception), `AnswerPickAsync(id, files)`, `FocusAsync`, `GetColorSchemeAsync`, `DisposeAsync`; events `Ready`, `Failed`, `ErrorReported` (`FrameError`), `DirtyChanged`, `Saving` (`Func<FrameSave, Task<bool>>`: `true` once the file is written, the app then gets `saved` when its save carried an `id`), `KeyPressed`, `PickRequested` (`PickRequest`), `SettingChanged`, `SchemeChanged`. One instance per iframe: "Retry" creates another. |
+| `CraftFrameOptions` | `PagePath` (`PagePathOf(assembly)` = `_content/<assembly>/host/index.html`), `Title`, `Language`, `Parameters` (added to the page address, for example `author`, `webgl`), `ReservedKeys`, `Settings` |
+| `FrameStartup`, `FrameState` | Loading screen, app, or error screen with "Retry": `OnReady`, `OnFailed`, `OnTimeout(attempt)`, `Retry`, `Timeout` (60 s) |
+| `ReservedKeys`, `ReservedKey`, `ReservedKeyTarget` | Chords the iframe gives back: `Os` (window manager), `NewWindow` (`Ctrl+N`, for the window), `All`, `Parse(chord, target)` |
+| `CraftLanguage` | `Pick(culture, available)`: the Craft app's language code (regional such as `pt-br`, or two letters such as `pt` when the app lists only those), else `en` |
+| `CraftDocumentFormat`, `CraftDocumentFormats` | The app's list of formats: `All`, `OpenExtensions`, `FileHandlers` (for the manifest), `Find`, `IsCopy`; paths: `ExtensionOf`, `FileNameOf`, `FolderOf`, `WithExtensionOf` |
+| `DocumentSession`, `SaveDecision`, `SaveAction` | A window's documents and their files: `Opened`, `SetFrameDirty`, `Decide(name, saveAs)` (`Rewrite`, `AskAndBind`, `AskForCopy`), `Saved`, `SaveFailed`, `Renamed`, `WithUnsavedWork`, `Title(untitled)`, `IsDirty`, `IsUntouchedBlank` |
+| `OpenDocument`, `OpenRequest` | `OpenDocument.ListFrom(ui.inspect, nameOfTitle)` (WordCraft shape `documents[].id` or GridCraft shape `windows[].doc`); `OpenRequest.FromArguments(arguments)` (first absolute path, `--webgl`) |
+| `WebStorageFile` | The app's settings for one Kazo user: `~/.config/<appId>/web-storage.json`; `LoadAsync`, `Set`, `SaveAsync` (one write at a time), `Entries` |
+| `PickRequest`, `PickedFile` | The app's file picker: `Extensions`, `AcceptsAny`, `AcceptsOnly`, `FromJson` |
+
+The contract with the module's scripts: `create(container, dotnet, { page, title, language, parameters, reservedKeys, settings })`,
+callbacks `OnFrameMessage(type, value)` (`FrameMessages`) and `OnFrameSave(name, saveAs, bytes)`.
+
+What differs from one Craft app to another stays in the app's window: the
+theme and language commands (`ui.theme` for WordCraft, `ui.set` and
+`app.language.set` for GridCraft) go through `RequestAsync`; a "Save As" of
+the window's own (GridCraft never sends `saveAs`) is a reserved chord targeting
+`App` (`ReservedKeys.Parse("F12", ReservedKeyTarget.App)`), then
+`Decide(name, saveAs: true)`; a save whose extension changes (`Budget.ods`
+opened, `Budget.xlsx` saved) asks for a path once, then rewrites that file;
+`dirty` covers everything the page shows.
 
 ### Icons and virtual keyboard
 

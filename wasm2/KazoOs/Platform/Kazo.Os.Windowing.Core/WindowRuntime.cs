@@ -149,10 +149,15 @@ public sealed class WindowRuntime
             throw new InvalidOperationException($"Owner window '{ownerId}' is not registered.");
         }
 
-        // A modal window shows on its owner's screen (ADR 0178 §2); any other window on the screen it names.
-        DisplayId displayId = initialState is { Modality: WindowModality.OwnerModal, OwnerId: WindowId modalOwner }
-            ? _windows[modalOwner].DisplayId
-            : initialState.DisplayId;
+        // A modal window shows on its owner's screen (ADR 0178 §2); a window that cannot change
+        // screen on screen 1 (ADR 0263: its iframe would reload when the portal moves it); any other
+        // window on the screen it names.
+        DisplayId displayId = initialState switch
+        {
+            { Modality: WindowModality.OwnerModal, OwnerId: WindowId modalOwner } => _windows[modalOwner].DisplayId,
+            { Frame.CanChangeScreen: false } => DisplayId.Primary,
+            _ => initialState.DisplayId,
+        };
         WindowBounds area = GetWorkArea(displayId);
 
         WindowId? previousFocus = _windows.Values.SingleOrDefault(window => window.IsFocused)?.Id;
@@ -444,6 +449,12 @@ public sealed class WindowRuntime
     {
         _ = Get(id);
         _ = GetWorkArea(displayId);
+        if (!CanChangeScreen(id))
+        {
+            // ADR 0263: the family stays on its screen; the shell tells the user why.
+            return [];
+        }
+
         List<WindowEvent> events = [];
         foreach (WindowRuntimeState window in ModalFamily(id).Where(window => window.DisplayId != displayId))
         {
@@ -490,6 +501,15 @@ public sealed class WindowRuntime
     }
 
     /// <summary>Gets the windows linked to <paramref name="id"/> by owner-modal relations, back to front.</summary>
+    /// <summary>
+    /// Gets whether the user may send <paramref name="id"/> to another screen (ADR 0263): every window
+    /// of its owner-modal family, which changes screen together (ADR 0178 §2), allows it
+    /// (<see cref="WindowFrame.CanChangeScreen"/>).
+    /// </summary>
+    /// <param name="id">The window.</param>
+    /// <returns><see langword="false"/> when one window of the family must stay on its screen.</returns>
+    public bool CanChangeScreen(WindowId id) => ModalFamily(id).All(static window => window.Frame.CanChangeScreen);
+
     private IReadOnlyList<WindowRuntimeState> ModalFamily(WindowId id)
     {
         WindowRuntimeState root = Get(id);

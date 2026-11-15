@@ -11,11 +11,21 @@ namespace Kazo.Os.Infrastructure.Browser.Schema;
 /// </remarks>
 public sealed record FileContentStoragePolicy
 {
-    /// <summary>Gets the default maximum size of a single file in bytes.</summary>
-    public const long DefaultMaxFileSizeBytes = 16 * 1024 * 1024;
+    /// <summary>
+    /// Gets the default maximum size of a single file in bytes: 128 MiB, the largest content an app
+    /// package may extract (ADR 0245, which supersedes the 16 MiB of ADR 0094).
+    /// </summary>
+    public const long DefaultMaxFileSizeBytes = 128L * 1024 * 1024;
 
     /// <summary>Gets the default maximum size of one content chunk in bytes.</summary>
     public const long DefaultMaxChunkSizeBytes = 256 * 1024;
+
+    /// <summary>
+    /// Gets how many chunks one IndexedDB transaction writes or reads at most: 64 chunks of 256 KiB,
+    /// 16 MiB, the old file limit. A larger file is moved in several transactions so the browser
+    /// never holds the base64 copy of the whole file at once (ADR 0245).
+    /// </summary>
+    internal const int ChunksPerTransaction = 64;
 
     /// <summary>Gets the default content hashing algorithm name.</summary>
     public const string DefaultContentHashAlgorithm = "SHA-256";
@@ -23,8 +33,18 @@ public sealed record FileContentStoragePolicy
     /// <summary>Gets whether identical content chunks are reused by hash.</summary>
     public const bool DefaultDeduplicateChunks = true;
 
-    /// <summary>Gets the default retention window for orphaned content chunks.</summary>
-    public static readonly TimeSpan DefaultOrphanRetention = TimeSpan.FromDays(30);
+    /// <summary>
+    /// Gets the default retention window for orphaned content chunks: one day (decided
+    /// 2026-11-14, replaces the 30 days of ADR 0094). A chunk written or reused less than this ago
+    /// is kept even when no file points to it yet: its write may still be in progress.
+    /// </summary>
+    public static readonly TimeSpan DefaultOrphanRetention = TimeSpan.FromDays(1);
+
+    /// <summary>
+    /// Gets the retention window used when the storage is low (ADR 0099 section 2): five minutes,
+    /// long enough to cover a write whose metadata is not committed yet.
+    /// </summary>
+    public static readonly TimeSpan DefaultLowSpaceOrphanRetention = TimeSpan.FromMinutes(5);
 
     /// <summary>Initializes a validated content-storage policy.</summary>
     /// <param name="maxFileSizeBytes">Maximum supported file size in bytes; must be positive.</param>
@@ -95,6 +115,23 @@ public sealed record FileContentStoragePolicy
 
     /// <summary>Gets the retention window for orphaned content chunks before cleanup.</summary>
     public TimeSpan OrphanRetention { get; }
+
+    /// <summary>
+    /// Gets the retention window for orphaned content chunks when the storage is low; never longer
+    /// than <see cref="OrphanRetention"/> in effect.
+    /// </summary>
+    /// <exception cref="ArgumentOutOfRangeException">The value is not positive.</exception>
+    public TimeSpan LowSpaceOrphanRetention
+    {
+        get => _lowSpaceOrphanRetention < OrphanRetention ? _lowSpaceOrphanRetention : OrphanRetention;
+        init
+        {
+            ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(value, TimeSpan.Zero);
+            _lowSpaceOrphanRetention = value;
+        }
+    }
+
+    private readonly TimeSpan _lowSpaceOrphanRetention = DefaultLowSpaceOrphanRetention;
 
     /// <summary>Determines whether a file requires chunking at the configured chunk size.</summary>
     public bool RequiresChunking(long fileSizeBytes)

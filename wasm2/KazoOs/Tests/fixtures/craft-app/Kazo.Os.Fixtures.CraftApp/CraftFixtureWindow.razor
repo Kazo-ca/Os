@@ -1,0 +1,26 @@
+@inherits WindowAppBase
+
+<div class="craft-fixture" role="application" aria-label="Craft Fixture">
+    @* craft-host.js (module Kazo.Os.AppSdk.Craft) puts the iframe here; hidden until the app is ready. *@
+    <div class="craft-fixture-frame @(_startup.State == FrameState.Running ? "running" : string.Empty)" @ref="_frameHost"></div>
+
+    @if (_startup.State == FrameState.Loading)
+    {
+        <div class="craft-fixture-screen" role="status" data-craft-fixture-state="loading">Loading the Craft app…</div>
+    }
+    else if (_startup.State == FrameState.Failed)
+    {
+        <div class="craft-fixture-screen failed" role="alert" data-craft-fixture-state="failed">
+            <p>The Craft app did not start.</p>
+            <p class="craft-fixture-detail">@FailureText</p>
+            <button type="button" @onclick="RetryAsync">Retry</button>
+        </div>
+    }
+
+    @if (_notice is not null)
+    {
+        <div class="craft-fixture-notice @(_noticeIsError ? "error" : string.Empty)" role="@(_noticeIsError ? "alert" : "status")" data-craft-fixture-notice>
+            @_notice
+        </div>
+    }
+</div>

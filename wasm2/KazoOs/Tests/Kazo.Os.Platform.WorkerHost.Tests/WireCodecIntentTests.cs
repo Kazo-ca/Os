@@ -36,6 +36,38 @@ public sealed class WireCodecIntentTests
     }
 
     [Fact]
+    public void Open_file_result_keeps_the_proposed_store_apps()
+    {
+        AppIntentOpenFileResult result = new(AppIntentOpenFileOutcome.NoHandler, ErrorCode: "intent.open-file.no-handler")
+        {
+            SuggestedCatalogApps = [new AppIntentSuggestedCatalogApp("ca.kazo.word", "Kazo Word", "official")],
+        };
+
+        AppIntentOpenFileResult copy = RoundTrip(writer => WireCodec.WriteOpenFileResult(writer, result), WireCodec.ReadOpenFileResult);
+
+        Assert.Equal(result.SuggestedCatalogApps, copy.SuggestedCatalogApps);
+        Assert.Null(Assert.Single(copy.SuggestedCatalogApps).IconUri);
+        Assert.Empty(RoundTrip(writer => WireCodec.WriteOpenFileResult(writer, new AppIntentOpenFileResult(AppIntentOpenFileOutcome.Opened)), WireCodec.ReadOpenFileResult).SuggestedCatalogApps);
+    }
+
+    [Fact]
+    public void Open_file_result_keeps_the_icon_and_short_descriptions_of_the_store_apps()
+    {
+        AppIntentSuggestedCatalogApp word = new("ca.kazo.word", "Kazo Word", "official")
+        {
+            IconUri = "https://example.test/packages/ca.kazo.word/0.1.0/icon.png",
+            ShortDescriptions = new Dictionary<string, string> { ["en"] = "A word processor", ["fr"] = "Un traitement de texte" },
+        };
+        AppIntentOpenFileResult result = new(AppIntentOpenFileOutcome.NoHandler) { SuggestedCatalogApps = [word] };
+
+        AppIntentOpenFileResult copy = RoundTrip(writer => WireCodec.WriteOpenFileResult(writer, result), WireCodec.ReadOpenFileResult);
+
+        AppIntentSuggestedCatalogApp read = Assert.Single(copy.SuggestedCatalogApps);
+        Assert.Equal(word, read);
+        Assert.Equal("Un traitement de texte", read.ShortDescriptions["fr"]);
+    }
+
+    [Fact]
     public void Intent_delivery_keeps_id_payload_sender_and_arguments()
     {
         AppIntentDelivery delivery = new("org.test.intent.share.v1", "{\"text\":\"hi\"}", "org.kazoos.shell")

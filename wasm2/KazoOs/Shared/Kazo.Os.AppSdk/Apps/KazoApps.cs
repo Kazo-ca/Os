@@ -167,7 +167,7 @@ public static class KazoApps
         {
             AppIntentOpenFileOutcome.Opened => new KazoOpenFileResult(KazoOpenFileStatus.Opened, []),
             AppIntentOpenFileOutcome.ChooserRequired => new KazoOpenFileResult(KazoOpenFileStatus.ChooserRequired, result.CandidateAppIds ?? []),
-            AppIntentOpenFileOutcome.NoHandler => new KazoOpenFileResult(KazoOpenFileStatus.NoHandler, []),
+            AppIntentOpenFileOutcome.NoHandler => new KazoOpenFileResult(KazoOpenFileStatus.NoHandler, []) { SuggestedCatalogApps = ToPublic(result.SuggestedCatalogApps) },
             _ => throw new KazoAppLaunchException($"'{target.Value}' could not be opened ({result.ErrorCode}).", errorCode: result.ErrorCode)
         };
     }
@@ -190,10 +190,42 @@ public static class KazoApps
         {
             AppIntentOpenFileOutcome.Opened => new KazoOpenFileResult(KazoOpenFileStatus.Opened, []) { FellBackToOpen = result.FellBackToOpen },
             AppIntentOpenFileOutcome.ChooserRequired => new KazoOpenFileResult(KazoOpenFileStatus.ChooserRequired, result.CandidateAppIds ?? []) { FellBackToOpen = result.FellBackToOpen },
-            AppIntentOpenFileOutcome.NoHandler => new KazoOpenFileResult(KazoOpenFileStatus.NoHandler, []),
+            AppIntentOpenFileOutcome.NoHandler => new KazoOpenFileResult(KazoOpenFileStatus.NoHandler, []) { SuggestedCatalogApps = ToPublic(result.SuggestedCatalogApps) },
             _ => throw new KazoAppLaunchException($"'{target.Value}' could not be edited ({result.ErrorCode}).", errorCode: result.ErrorCode)
         };
     }
+
+    /// <summary>
+    /// Lists the apps of the Kazo OS Store catalogs, not installed yet, that open <paramref name="path"/>
+    /// (ADR 0257 §4): what an "Open with" box shows under the installed apps, with a way to the Store
+    /// (<see cref="StoreAppId"/> with <c>--app=&lt;AppId&gt;</c> and <c>--open-after-install=&lt;path&gt;</c>).
+    /// Reads only the catalogs the OS already downloaded: never waits for the network, and is empty
+    /// offline.
+    /// </summary>
+    /// <param name="path">Absolute, relative or <c>~</c>-prefixed path of the file.</param>
+    /// <param name="cancellationToken">Cancels the request.</param>
+    /// <exception cref="ArgumentException">The path is empty or malformed.</exception>
+    /// <exception cref="KazoUnauthorizedAccessException">This app lacks <c>apps.launch</c>.</exception>
+    /// <exception cref="KazoExecutionContextMissingException">No app context is active.</exception>
+    public static async Task<IReadOnlyList<KazoSuggestedCatalogApp>> GetSuggestedCatalogAppsAsync(string path, CancellationToken cancellationToken = default)
+    {
+        VirtualPath target = KazoPath.Resolve(path, nameof(path));
+        return ToPublic(await Call(intents => intents.SuggestCatalogAppsAsync(target, null, cancellationToken)).ConfigureAwait(false));
+    }
+
+    /// <summary>
+    /// The id of the Kazo OS Store. Launch it with <c>--app=&lt;appId&gt;</c> to show an app's page, and
+    /// add <c>--open-after-install=&lt;path&gt;</c> to open a file once the user installed it (ADR 0257 §5).
+    /// </summary>
+    public const string StoreAppId = "org.kazoos.store";
+
+    /// <summary>Copies the catalog apps the OS proposes for a file (ADR 0257 §3) into the SDK's type.</summary>
+    private static IReadOnlyList<KazoSuggestedCatalogApp> ToPublic(IReadOnlyList<AppIntentSuggestedCatalogApp>? apps) =>
+        apps is null ? [] : [.. apps.Select(static app => new KazoSuggestedCatalogApp(app.AppId, app.Name, app.Catalog)
+        {
+            ShortDescriptions = app.ShortDescriptions,
+            IconUri = app.IconUri,
+        })];
 
     /// <summary>
     /// Shows a file in its folder, selected (ADR 0096, section 1), like "Show in folder": the default

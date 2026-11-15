@@ -1,6 +1,4 @@
 #nullable enable
-static Kazo.Os.App.Abstractions.KazoOsSdk.BuildNumber.get -> int?
-static Kazo.Os.App.Abstractions.KazoOsSdk.ReadBuildNumber(System.Reflection.Assembly? assembly) -> int?
 Kazo.Os.App.Abstractions.AppKind.Feature = 4 -> Kazo.Os.App.Abstractions.AppKind
 Kazo.Os.App.Abstractions.AppManifest.Parent.get -> string?
 Kazo.Os.App.Abstractions.AppManifest.Parent.init -> void

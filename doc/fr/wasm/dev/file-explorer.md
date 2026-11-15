@@ -50,7 +50,7 @@ Le manifeste (`FileExplorerApp.Components`) inscrit deux composants :
 | Contrat | Composant | Rôle |
 |---|---|---|
 | `kazoos.file-view` | `ExplorerFileView` | `FileView` (implémentation interne, ADR 0155 §1) liée au menu de l'OS, avec la corbeille, le presse-papiers, les transferts et leurs conflits, l'ouverture et « Ouvrir avec ». Contrôleur `IKazoFileView`. |
-| `kazoos.file-dialogs` | `ExplorerFileDialogs` | « Ouvrir avec » (« Toujours utiliser »), « Propriétés », conflit de noms, en markup natif. |
+| `kazoos.file-dialogs` | `ExplorerFileDialogs` | « Ouvrir avec » (« Toujours utiliser », recherche et filtre par catégorie), « Propriétés », conflit de noms, en markup natif. |
 
 ```text
 App hôte ──► KazoFileView (SDK) ──► registre ──► ExplorerFileView (explorateur)
@@ -447,3 +447,75 @@ l'explorateur sur l'archive (le manifeste déclare `application/zip`, `.zip` dan
   l'archive, refus des changements, menus.
 - [x] `fileHandlers` du manifeste pour `.zip`.
 - [x] Tests : `ZipArchiveBrowsingTests` (unitaires), `ZipArchiveFolderTests` (UI.E2E).
+
+## Apps du Store pour un fichier sans app (ADR 0257)
+
+Chantier `open-with-store/3-explorer-and-store` de
+l'[ADR 0257](adr/0257-offer-a-store-app-for-an-unsupported-file.md) ; la
+recherche dans les catalogues est décrite dans
+[`user-file-associations.md`](user-file-associations.md#aucune-app-installée--les-apps-du-store-adr-0257).
+
+**Comportement.**
+
+- Double-clic (ou Ouvrir) sur un fichier qu'aucune app installée n'ouvre :
+  si l'OS propose des apps du Store (`AppIntentOpenFileResult.SuggestedCatalogApps`),
+  l'explorateur ouvre la boîte « Ouvrir avec » au lieu du simple message
+  d'erreur. Elle dit « Aucune application installée ne peut ouvrir ce type de
+  fichier. », liste toutes les apps installées comme avant, puis la section
+  « Disponible dans le Kazo OS Store ». Sans proposition (hors ligne, rien dans
+  les catalogues), le message d'erreur reste celui d'avant.
+- « Ouvrir avec » (menu, barre d'outils ou choix demandé par l'OS) montre la
+  même section sous les apps installées, quand des apps du Store déclarent ce
+  type. La boîte la demande par
+  `IAppIntentGateway.SuggestCatalogAppsAsync(path)`, avec les droits de l'app qui
+  a ouvert la boîte (`apps.launch`) ; sans ce droit, rien n'est proposé.
+- Chaque app proposée montre son icône (adresse `IconUri` du catalogue ; une
+  icône Lucide `package` quand elle manque ou ne se charge pas), son nom, sa
+  description courte dans la langue de l'explorateur (sinon l'anglais) et le
+  bouton « Voir dans le Store ».
+- « Voir dans le Store » lance `org.kazoos.store` avec `--app=<appId>` et
+  `--open-after-install=<chemin>`, puis ferme la boîte sans rien ouvrir.
+  L'installation garde le consentement habituel du Store (capacités, portée,
+  administrateur). Si le Store ne peut pas être lancé, la boîte reste ouverte
+  avec « Le Kazo OS Store n'a pas pu être ouvert. ».
+- Le Store, une fois l'app installée, rouvre le fichier par
+  `KazoApps.OpenFileAsync` ; si une autre app l'ouvre aussi (choix demandé),
+  il le lance avec l'app installée. Une app qui attend un redémarrage ne peut
+  pas l'ouvrir : le Store le dit. Le Store déjà ouvert reçoit ces arguments
+  (fenêtre unique par utilisateur).
+
+**Tâches.**
+
+- [x] Section « Disponible dans le Kazo OS Store » dans `ExplorerFileDialogs`
+  (icône, nom, description courte, « Voir dans le Store »), textes en anglais
+  et en français.
+- [x] `NoHandler` avec des propositions ouvre « Ouvrir avec » (`ExplorerFileView.Operations.cs`).
+- [x] `IAppIntentGateway.SuggestCatalogAppsAsync` et `KazoApps.GetSuggestedCatalogAppsAsync` ;
+  `AppIntentSuggestedCatalogApp` et `KazoSuggestedCatalogApp` gagnent
+  `ShortDescriptions` et `IconUri`.
+- [x] Store : `--open-after-install` (`StoreLaunchArguments`), arguments reçus
+  par le Store déjà ouvert.
+- [x] Tests : `AppIntentGatewayTests.SuggestCatalogAppsAsync_*`,
+  `WireCodecIntentTests`, `KazoAppsIntentTests`, `StoreLaunchArgumentsTests`,
+  `OpenWithStoreTests` (UI.E2E, catalogue de test qui déclare `.docx`).
+
+## Tâches du chantier `open-with/search-filter`
+
+La boîte « Ouvrir avec » de l'explorateur (`ExplorerFileDialogs`) :
+
+- [x] Chaque ligne d'app garde son nom et son identifiant dans sa bordure : le
+  bouton, élément d'une liste flex qui défile, rétrécissait jusqu'à sa hauteur
+  minimale (2,25 rem) et l'identifiant débordait dessous. `flex-shrink: 0` et
+  des textes coupés par « … » (le texte entier en bulle). Même correction dans
+  le sélecteur d'app de l'OS (`AppChooserDialog`).
+- [x] Une boîte de recherche filtre par nom, identifiant ou description
+  (chaque mot doit se trouver, sans tenir compte de la casse).
+- [x] Un sélecteur de catégorie, affiché quand les apps listées ont au moins
+  deux catégories, utilise la catégorie du manifeste (`presentation.category`)
+  ; les catégories courantes sont traduites, les autres affichées avec une
+  majuscule, comme le menu Démarrer.
+- [x] Si le filtre cache l'app choisie, la première app encore listée est
+  choisie ; aucune app trouvée : un message, et « Ouvrir » est désactivé.
+- [x] Les flèches et Entrée suivent la liste filtrée.
+- [x] Tests : `OpenWithAppFilterTests` (unitaires) et `OpenWithFilterTests`
+  (E2E, ordinateur et téléphone, axe).

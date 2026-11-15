@@ -47,7 +47,9 @@ d'affichage ([`detached-display-windows.md`](detached-display-windows.md)).
   après le déplacement. `WindowHost.razor.js` lit le focus dans le document de la
   fenêtre (`ownerDocument`), pour les écrans dans une surface.
 - **Iframes.** Une iframe déplacée se recharge (ADR 0078 §4, ADR 0178 §3) : le navigateur
-  de l'OS réécrit sa page, les autres apps à iframe perdent l'état JS de l'iframe.
+  de l'OS réécrit sa page, les autres apps à iframe perdent l'état JS de l'iframe. Passer
+  devant ne déplace pas la fenêtre : la page garde l'ordre d'ouverture et seul le `z-index`
+  suit le `ZOrder` ([ADR 0244](adr/0244-stable-window-order-in-the-page.md)).
 
 ## 4. Tests
 

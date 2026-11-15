@@ -12,7 +12,8 @@ namespace Kazo.Os.Apps.Store;
 /// A system app (the host references it with <c>IsSystemApp="true"</c>), so it cannot be
 /// uninstalled, like Settings. It uses only the public SDK: <c>KazoAppPackages</c> (<c>apps.manage</c>,
 /// dangerous, granted to system apps without a prompt) and <c>KazoApps.LaunchAsync</c>
-/// (<c>apps.launch</c>) for « Open ».
+/// (<c>apps.launch</c>) for « Open », and <c>KazoClipboard</c> (<c>clipboard.write</c>) for the « Try it »
+/// link of an app's page (ADR 0266 §4).
 /// </remarks>
 [AppManifest]
 public sealed class StoreApp : AppDefinition
@@ -52,10 +53,20 @@ public sealed class StoreApp : AppDefinition
     public override string Category => "system";
 
     /// <inheritdoc />
-    public override IReadOnlyList<string> Capabilities => [AppCapabilities.AppsManage, AppCapabilities.AppsLaunch];
+    public override IReadOnlyList<string> Capabilities => [AppCapabilities.AppsManage, AppCapabilities.AppsLaunch, AppCapabilities.ClipboardWrite];
 
     /// <inheritdoc />
     public override bool SingleInstancePerUser => true;
+
+    /// <summary>
+    /// Large enough by default for the featured app, three cards per row and an app's page with its
+    /// information panel (ADR 0266 §2); the window still shrinks to a phone-like width.
+    /// </summary>
+    public override WindowOptions? Window => new()
+    {
+        DefaultWidth = 1100,
+        DefaultHeight = 720
+    };
 
     /// <inheritdoc />
     public override AppResourceProfileManifest Resources => new(

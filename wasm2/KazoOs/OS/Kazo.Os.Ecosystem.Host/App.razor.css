@@ -334,3 +334,13 @@ code {
     color: var(--kos-warning, #d5a84f);
     font-size: 0.875rem;
 }
+
+/* ADR 0258 §4: the app a direct link will open in the Store after sign-in. */
+.app-link-notice {
+    margin: 0 0 0.75rem;
+    padding: 0.5rem 0.75rem;
+    border-left: 3px solid var(--kos-accent, #3ad6c4);
+    background: color-mix(in srgb, var(--kos-accent, #3ad6c4) 10%, transparent);
+    color: var(--kos-text-primary, #f4f7f8);
+    font-size: 0.9rem;
+}

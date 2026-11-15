@@ -39,6 +39,16 @@ internal static class WindowMenuDefinitions
         }
 
         KazoMenuItemDefinition otherScreen = definition.AddGroup().Add(WindowManagerOverlays.OtherScreenItemId, text["WindowMenu.OtherScreen"]);
+        if (!commands.CanChangeScreen(windowId))
+        {
+            // ADR 0263: the window must stay on its screen; the submenu says why instead of listing screens.
+            KazoMenuGroupDefinition unavailable = new();
+            KazoMenuItemDefinition reason = unavailable.Add(WindowManagerOverlays.ScreenChangeUnavailableItemId, text["WindowMenu.ScreenChangeUnavailable"]);
+            reason.IsDisabled = true;
+            otherScreen.Children.Add(unavailable);
+            return;
+        }
+
         KazoMenuGroupDefinition screens = new();
         foreach (WindowScreenMenuItem screen in commands.GetScreenMenuItems(windowId))
         {

@@ -240,6 +240,9 @@ export function attachWindowGestures(root, dotNetReference) {
         const layerBox = host.offsetParent?.getBoundingClientRect() ?? null;
         const grab = [startX - hostRect.left, startY - hostRect.top];
         const dropState = { preview: null };
+        // ADR 0263: a window that must stay on its screen gets no outline on another screen; a drop
+        // there is still reported, and C# refuses it with a notification.
+        const singleScreen = host.dataset.windowSingleScreen === "true";
         let drop = null;
 
         const clearPreview = () => {
@@ -251,7 +254,7 @@ export function attachWindowGestures(root, dotNetReference) {
             drop = found && found.display !== currentDisplay
                 ? { ...found, x: found.x - grab[0], y: Math.max(0, found.y - grab[1]) }
                 : null;
-            showDropPreview(dropState, drop, sourceDocument, origin[2], origin[3]);
+            if (!singleScreen) showDropPreview(dropState, drop, sourceDocument, origin[2], origin[3]);
         };
         const cleanup = () => {
             cancelAnimationFrame(frame);

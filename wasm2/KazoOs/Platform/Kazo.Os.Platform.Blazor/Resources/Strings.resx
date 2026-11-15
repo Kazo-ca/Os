@@ -366,6 +366,9 @@
   <data name="Launcher.OpenSettings" xml:space="preserve">
     <value>Open Settings</value>
   </data>
+  <data name="Launcher.OpenStore" xml:space="preserve">
+    <value>Open Kazo OS Store</value>
+  </data>
   <data name="Launcher.Pin" xml:space="preserve">
     <value>Pin to Start menu</value>
   </data>
@@ -422,6 +425,12 @@
   </data>
   <data name="Launcher.SettingsHint" xml:space="preserve">
     <value>Personalize Kazo OS</value>
+  </data>
+  <data name="Launcher.Store" xml:space="preserve">
+    <value>Store</value>
+  </data>
+  <data name="Launcher.StoreHint" xml:space="preserve">
+    <value>Find and install apps</value>
   </data>
   <data name="Launcher.Title" xml:space="preserve">
     <value>Start menu</value>
@@ -788,6 +797,12 @@
   <data name="Screens.SecureDialog.Action" xml:space="preserve">
     <value>Go to screen 1</value>
   </data>
+  <data name="WindowMenu.ScreenChangeUnavailable" xml:space="preserve">
+    <value>Not available yet for this app: known issue, a fix is in progress</value>
+  </data>
+  <data name="WindowMenu.ScreenChangeRefused.Title" xml:space="preserve">
+    <value>“{0}” stays on its screen</value>
+  </data>
   <data name="WindowMenu.OtherScreen" xml:space="preserve">
     <value>Other screen</value>
   </data>
@@ -952,5 +967,26 @@
   </data>
   <data name="InstallApproval.Feature.Capabilities" xml:space="preserve">
     <value>Capabilities of the feature (the whole set)</value>
+  </data>
+  <data name="AppLink.Progress.Title" xml:space="preserve">
+    <value>Installing {0}…</value>
+  </data>
+  <data name="AppLink.Progress.OpeningTitle" xml:space="preserve">
+    <value>Opening {0}…</value>
+  </data>
+  <data name="AppLink.Progress.Publisher" xml:space="preserve">
+    <value>Published by {0}</value>
+  </data>
+  <data name="AppLink.Progress.Looking" xml:space="preserve">
+    <value>Looking for the app in the Kazo OS Store…</value>
+  </data>
+  <data name="AppLink.Progress.Installing" xml:space="preserve">
+    <value>Downloading and checking the app…</value>
+  </data>
+  <data name="AppLink.Progress.InstallingVersion" xml:space="preserve">
+    <value>Downloading and checking version {0}…</value>
+  </data>
+  <data name="AppLink.Progress.Launching" xml:space="preserve">
+    <value>Starting the app…</value>
   </data>
 </root>

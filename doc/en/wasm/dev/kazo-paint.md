@@ -19,7 +19,7 @@ Draw (brush, color, size, zoom, grid, move, crop, rotate, undo and redo) and
 | Open | PNG, JPEG, BMP, GIF (first frame), WebP |
 | Save | PNG by default; JPEG when the name ends in `.jpg`/`.jpeg` (quality 10 to 100, 92 by default, image flattened onto white) |
 
-- Maximum size: 4,096 × 4,096 pixels and 16 MiB per file (ADR 0094).
+- Maximum size: 4,096 × 4,096 pixels and 16 MiB per file (ADR 0103; the OS itself accepts files up to 128 MiB, ADR 0245).
   The header is read in C# (`ImageFileFormat.TryReadHeader`) **before** any
   decoding: a file that is too large, damaged, or of another format yields a
   message, without freezing the app.

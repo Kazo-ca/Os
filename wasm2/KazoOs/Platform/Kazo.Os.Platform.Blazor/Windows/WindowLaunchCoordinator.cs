@@ -269,7 +269,9 @@ public sealed class WindowLaunchCoordinator
                 return true;
             }
 
-            if (!_windows.Displays.Contains(display))
+            // ADR 0263: a window that cannot change screen opens on screen 1, even from the Start
+            // menu of a secondary screen (the portal would reload its iframe).
+            if (!_windows.Displays.Contains(display) || !options.CanChangeScreen)
             {
                 display = DisplayId.Primary;
             }
@@ -354,7 +356,10 @@ public sealed class WindowLaunchCoordinator
             options.ShowIcon,
             options.MaximizeBox,
             options.MinimizeBox,
-            options.ShowInTaskbar);
+            options.ShowInTaskbar)
+        {
+            CanChangeScreen = options.CanChangeScreen,
+        };
     }
 
     /// <summary>

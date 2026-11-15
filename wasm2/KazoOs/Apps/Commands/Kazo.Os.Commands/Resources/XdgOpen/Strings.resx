@@ -48,4 +48,13 @@
   <data name="Usage" xml:space="preserve">
     <value>usage: xdg-open { file | URL }</value>
   </data>
+  <data name="SuggestedHeader" xml:space="preserve">
+    <value>these apps of the Store can open it:</value>
+  </data>
+  <data name="SuggestedApp" xml:space="preserve">
+    <value>  {0} ({1}, catalog {2})</value>
+  </data>
+  <data name="SuggestedInstall" xml:space="preserve">
+    <value>install one with: kazopkg install catalog:{0}/{1}</value>
+  </data>
 </root>

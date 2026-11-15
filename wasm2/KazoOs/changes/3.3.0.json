@@ -1,0 +1,134 @@
+{
+  "version": "3.3.0",
+  "date": "2026-11-11",
+  "entries": [
+    {
+      "id": "25168401-7a1e-45de-ae9f-ee418ff402fd",
+      "category": "new",
+      "audience": [
+        "user"
+      ],
+      "title": {
+        "en": "The sign-in screen shows the build number and whether Kazo OS is up to date",
+        "fr": "L'écran de connexion affiche le numéro de build et si Kazo OS est à jour"
+      },
+      "description": {
+        "en": "Next to the version, the sign-in screen shows the build number and a badge: up to date, outdated (with the version or build available), or status unknown when offline. A new build of the same version is now announced as an update too.",
+        "fr": "À côté de la version, l'écran de connexion affiche le numéro de build et une pastille : à jour, obsolète (avec la version ou le build disponible) ou état inconnu hors ligne. Un nouveau build de la même version est maintenant annoncé comme une mise à jour lui aussi."
+      },
+      "links": [
+        "doc/en/wasm/dev/adr/0236-build-number-and-version-status-at-sign-in.md"
+      ]
+    },
+    {
+      "id": "0bcf3d3d-ffa2-4379-b77c-349e90ccde69",
+      "category": "improved",
+      "audience": [
+        "user"
+      ],
+      "title": {
+        "en": "Kazo OS and its apps start on the latest version",
+        "fr": "Kazo OS et ses apps démarrent sur la dernière version"
+      },
+      "description": {
+        "en": "When a newer version is available, Kazo OS shows Updating Kazo OS at start and restarts onto it. An app opened on an outdated copy does not start: a dialog offers to restart to update.",
+        "fr": "Quand une nouvelle version est disponible, Kazo OS affiche Mise à jour de Kazo OS au démarrage et redémarre dessus. Une app ouverte sur une copie obsolète ne démarre pas : une boîte propose de redémarrer pour mettre à jour."
+      },
+      "links": [
+        "doc/en/wasm/dev/adr/0239-start-on-the-latest-version.md"
+      ]
+    },
+    {
+      "id": "7848a56b-7d82-4098-aa28-b54587e9a993",
+      "category": "improved",
+      "audience": [
+        "user"
+      ],
+      "title": {
+        "en": "The error page shows what failed, with passwords and tokens masked",
+        "fr": "La page d'erreur montre ce qui a échoué, avec les mots de passe et les jetons masqués"
+      },
+      "description": {
+        "en": "When Kazo OS meets an unexpected error, the page now shows the app and method at fault, the exception and its message, the time and the correlation ID (which used to be empty), with the full stack under \"Technical details\". \"Copy details\" puts a report ready to paste in an issue on the clipboard, and \"Reload\" starts Kazo OS again. Passwords and tokens are masked, on the page and in /var/log/syslog.",
+        "fr": "Quand Kazo OS rencontre une erreur inattendue, la page affiche maintenant l'app et la méthode en cause, l'exception et son message, l'heure et l'identifiant de corrélation (qui était vide), avec la pile complète sous « Détails techniques ». « Copier les détails » met dans le presse-papiers un rapport prêt à coller dans une issue, et « Recharger » relance Kazo OS. Les mots de passe et les jetons sont masqués, sur la page et dans /var/log/syslog."
+      },
+      "links": [
+        "doc/en/wasm/dev/adr/0240-detailed-error-page.md"
+      ]
+    },
+    {
+      "id": "82186f19-ada5-4885-b4a0-c5a2e35fa2c8",
+      "category": "fixed",
+      "audience": [
+        "user"
+      ],
+      "title": {
+        "en": "A crashing app no longer takes the whole OS down",
+        "fr": "Une app qui plante ne fait plus tomber tout l'OS"
+      },
+      "description": {
+        "en": "When an app fails, only its window shows what happened, with Try again and Close the app; the other windows and the taskbar keep running. An installed app also finds its files right after a new version of Kazo OS was deployed, even on a page opened with Ctrl+F5.",
+        "fr": "Quand une app plante, seule sa fenêtre affiche ce qui s'est passé, avec Réessayer et Fermer l'application ; les autres fenêtres et la barre des tâches continuent. Une app installée trouve aussi ses fichiers juste après le déploiement d'une nouvelle version de Kazo OS, même sur une page ouverte avec Ctrl+F5."
+      },
+      "links": [
+        "doc/en/wasm/dev/adr/0238-an-app-failure-stays-in-its-window.md",
+        "doc/en/wasm/dev/adr/0237-activate-the-worker-of-a-newer-page.md"
+      ]
+    },
+    {
+      "id": "41a0cc4f-a5c5-490b-9f5a-9e0abecd2824",
+      "category": "fixed",
+      "audience": [
+        "user"
+      ],
+      "title": {
+        "en": "Allowing a permission you had refused now takes effect",
+        "fr": "Autoriser une permission que vous aviez refusée fonctionne"
+      },
+      "description": {
+        "en": "In Settings > Permissions, Allow for the machine on a capability marked Refused by you also withdraws your refusal, so the capability becomes allowed instead of staying refused.",
+        "fr": "Dans Paramètres > Permissions, Autoriser pour la machine sur une capacité marquée Refusée par vous retire aussi votre refus : la capacité devient autorisée au lieu de rester refusée."
+      },
+      "links": [
+        "doc/en/wasm/dev/dangerous-capability-approval.md"
+      ]
+    },
+    {
+      "id": "9dcdd164-6d62-41c8-aa77-958e8c5491d4",
+      "category": "fixed",
+      "audience": [
+        "user"
+      ],
+      "title": {
+        "en": "F5 no longer goes back to an older version",
+        "fr": "F5 ne revient plus à une ancienne version"
+      },
+      "description": {
+        "en": "A page loaded with Ctrl+F5 now replaces the service worker of an older version, so the next F5 stays on the latest version instead of the first one seen in this browser.",
+        "fr": "Une page chargée avec Ctrl+F5 remplace maintenant le service worker d'une ancienne version : le F5 suivant reste sur la dernière version au lieu de la première vue dans ce navigateur."
+      },
+      "links": [
+        "doc/en/wasm/dev/adr/0241-replace-an-older-worker-at-boot.md"
+      ]
+    },
+    {
+      "id": "9a0f708d-0bf4-4a4e-a62d-80e536f5397f",
+      "category": "fixed",
+      "audience": [
+        "user",
+        "developer"
+      ],
+      "title": {
+        "en": "Installed apps find the .NET methods they need",
+        "fr": "Les apps installées trouvent les méthodes .NET dont elles ont besoin"
+      },
+      "description": {
+        "en": "The published Kazo OS keeps the whole .NET core library, so an app installed from the Store, such as IRC, no longer stops on a method the OS removed. The install check now compares exact method signatures and names the missing one.",
+        "fr": "Kazo OS publié garde toute la bibliothèque de base de .NET : une app installée depuis le Store, comme IRC, ne s'arrête plus sur une méthode que l'OS avait retirée. La vérification à l'installation compare maintenant les signatures exactes et nomme la méthode manquante."
+      },
+      "links": [
+        "doc/en/wasm/dev/adr/0242-framework-api-for-installed-apps.md"
+      ]
+    }
+  ]
+}

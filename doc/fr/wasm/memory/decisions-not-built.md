@@ -62,6 +62,21 @@ Décidé le 2026-10-28 :
   du chantier `wwwroot` des apps installées (issue #247, fait par l'ADR 0206
   dans la série `todo/base` : fichiers servis à `_content/<assemblage>/` par le
   service worker, Web Workers compris).
+- Suite Craft (Benoit, 2026-11-13) : après Kazo Word (`Os-App-Word`, WordCraft),
+  un dépôt par app Craft de l'équipe ArtCraft : `Os-App-Spreadsheets` (Kazo
+  Spreadsheets, GridCraft), `Os-App-PDF` (Kazo Pdf, PdfCraft), `Os-App-Fig`
+  (Kazo Fig, FigCraft), `Os-App-Photo` (Kazo Photo, PhotoCraft),
+  `Os-App-Design` (Kazo Design, DesignCraft), `Os-App-Deck` (Kazo Deck,
+  DeckCraft), `Os-App-Vector` (Kazo Vector, VectorCraft). Kazo Spreadsheets
+  commence dès que Kazo Word est publié au Store, avec les méthodes de Word.
+  Méthode commune : [`craft-app-port-guide.md`](../dev/craft-app-port-guide.md) ;
+  une issue `TODO` par app.
+- Code commun des apps Craft (Benoit, 2026-11-13, décision 8 de Kazo Word) :
+  un module du SDK livré et servi par l'OS, `Kazo.Os.AppSdk.Craft` (cadre de
+  l'iframe, proxy, sélecteur, raccourcis, réglages, `DocumentSession`) ;
+  chaque app garde sa fenêtre. [ADR 0259](../dev/adr/0259-shared-craft-app-host-module.md),
+  série `craft-host/base` : chantiers 2 (bibliothèque C#), 3 (scripts) et 4 (parcours de bout en bout avec le paquet de test `Tests/fixtures/craft-app`, guide [`craft-apps.md`](../framework/craft-apps.md), guide de portage réécrit) faits ; arrive dans `main` avec la prochaine version de l'OS (numéro choisi par Benoit), qui sera la version minimale des apps Craft sur le module. Message `host` (`autosave: true`) à envoyer quand craft-libs#713 sortira. Kazo Word sort avec sa copie et
+  passe au module ensuite ; Kazo Spreadsheets l'utilise dès son chantier 1.
 
 ## Apps hébergées par le serveur (« bac à sable serveur »)
 
@@ -109,6 +124,25 @@ Questions à reposer au démarrage : où vivent les visionneuses, portée de
 
 - Code Editor **reste une app système**.
 - Le remplacement de l'éditeur de texte reste **sans expressions régulières**.
+
+## Stockage dans le navigateur (décisions du 2026-11-14)
+
+Analyse : [`../dev/plans/browser-storage-optimization-analysis.md`](../dev/plans/browser-storage-optimization-analysis.md).
+Seul #537 est codé ; la série `storage/base` reste à bâtir.
+
+- Deux issues `TODO` d'abord : #537 (récupérer l'espace des contenus orphelins ;
+  fait le 2026-11-15, ADR 0273) et #538 (profiler #520 dans l'OS réel ; rendu le
+  2026-11-15 : en Release, 96 % du temps est dans le dépôt de contenu, les 43 s
+  venaient d'un hôte Debug).
+- Ensuite une série `storage/base`, ADR avant le code : contenu binaire au lieu
+  de base64, ADR 0250 à bâtir, une seule copie des fichiers d'app, lecture
+  partielle et adresse de fichier (#379).
+- Fichiers d'une app installée : le système de fichiers reste la seule source ;
+  le service worker sert `_content/…` depuis le magasin de fichiers et la copie
+  dans Cache Storage disparaît.
+- Rétention des contenus orphelins : courte, et suppression rapide quand l'espace
+  est faible. Fait par l'ADR 0273 (1 jour, 5 minutes si l'espace est faible), qui
+  remplace les 30 jours de l'ADR 0094.
 
 ## Questions posées, réponse à confirmer
 

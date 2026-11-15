@@ -42,6 +42,17 @@ public sealed class AppExecutionContextTests
     }
 
     [Fact]
+    public async Task The_os_gets_no_management_gateway_from_a_host_that_cannot_manage_apps()
+    {
+        // ADR 0258 §3: without the app-catalog services the direct link has nothing to install with.
+        Fixture fixture = new();
+        await fixture.CreateContextAsync([]);
+        AuthenticatedPrincipal principal = fixture.Session.CurrentPrincipal!;
+
+        Assert.Null(fixture.Factory.CreateManagementGateway(principal, "org.kazoos.store"));
+    }
+
+    [Fact]
     public async Task Notification_post_succeeds_once_the_capability_is_granted()
     {
         Fixture fixture = new();

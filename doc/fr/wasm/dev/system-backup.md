@@ -15,7 +15,7 @@ Chantier `v3/7-storage-backup`, d'après l'[ADR 0099](adr/0099-os-backup-and-low
   chiffres du navigateur, une réserve pour root comme les blocs réservés
   d'ext4.
 - **Plus de place** : codes `NoSpace` (`ENOSPC`) et `FileTooLarge` (`EFBIG`,
-  16 Mio par fichier, ADR 0094), jusqu'au message Linux du shell ; les
+  128 Mio par fichier, ADR 0245), jusqu'au message Linux du shell ; les
   journaux comptent les lignes perdues.
 - **Cache PWA abîmé** et **montées de version IndexedDB testées** : voir
   [Cache PWA](#cache-pwa-abîmé-adr-0099-3) et
@@ -37,7 +37,7 @@ mkdir: cannot create directory 'projets': No space left on device
 | SDK | `Shared/Kazo.Os.AppSdk/Administration/KazoSystemBackup.cs`, `SystemBackupContracts.cs` (`IAppSystemBackupGateway`, `KazoBackupRestoreMode`, `KazoBackupInfo`, `KazoBackupInvalidException`) ; `IO/KazoFileSystemErrorTranslator.cs` et `ShellErrorText.cs` pour les deux codes |
 | SDK Blazor | `Interop/BrowserFilePicker.cs` et `wwwroot/pickFile.js` (pendant de `download.js` pour ouvrir un fichier de l'hôte) |
 | Platform Core | `Backup/SystemBackupService.cs` (`ISystemBackupDevice`, séquence), `Administration/AppSystemBackupGateway.cs`, `Storage/StorageSpaceMonitor.cs`, `FileSystem/FileSystemService.cs` (réserve), `Diagnostics/LogFileWriter.cs` (lignes perdues), `Power/SystemPowerService.cs` (`RestartAfterAsync`) |
-| Infrastructure.Browser | `Backup/IndexedDbBackupService.cs` (gzip, `ReadArchive`, `Inspect`, fusion par `put`), `Storage/BrowserStorageManager.cs` (`IStorageCapacityProbe`), `FileSystem/IndexedDbFileSystemProvider.cs` (`QuotaExceededError` → `NoSpace`), `IndexedDbFileContentRepository.cs` (16 Mio → `FileTooLarge`), `IndexedDbStorageUsageProvider.cs` (`df`) |
+| Infrastructure.Browser | `Backup/IndexedDbBackupService.cs` (gzip, `ReadArchive`, `Inspect`, fusion par `put`), `Storage/BrowserStorageManager.cs` (`IStorageCapacityProbe`), `FileSystem/IndexedDbFileSystemProvider.cs` (`QuotaExceededError` → `NoSpace`), `IndexedDbFileContentRepository.cs` (128 Mio → `FileTooLarge`, ADR 0245), `IndexedDbStorageUsageProvider.cs` (`df`) |
 | Hôte Ecosystem | `Administration/BrowserSystemBackupDevice.cs`, `EcosystemServiceCollectionExtensions.cs` (enregistrements), `EcosystemBootCoordinator.cs` (surveillance de l'espace, entrée d'audit d'une restauration) |
 | Apps | `Apps/System/Kazo.Os.Apps.Settings/BackupPanel.razor` (onglet *Backup*), `Apps/Commands/Kazo.Os.Commands/Kazobackup/` ; `Platform/Kazo.Os.Platform.Blazor/Shell/ClockPanel.razor` (boutons d'action des notifications) |
 
@@ -106,6 +106,20 @@ pas de quota). `StorageSpacePolicy` fixe les seuils :
 écriture ne l'attend jamais : `FileSystemService` lit seulement l'état en
 cache `IsRootReserveReached`.
 
+### Récupération des contenus orphelins (Os#537)
+
+Le `Reclaimer` du moniteur (`IStorageReclaimer`, implémenté par
+`IndexedDbFileSystemMaintenance`) rend l'espace de l'ancien contenu des fichiers
+réécrits et supprimés, avec une rétention de 1 jour : quand le bureau s'affiche
+(`EcosystemBootCoordinator` appelle `RequestReclaim`), après une suppression dans
+la corbeille (`FileSystemService`), puis toutes les heures (`ReclaimInterval`).
+`RequestReclaim` attend `ReclaimRequestDelay` (2 s) : vider une corbeille de
+plusieurs éléments ne lance qu'une récupération. Quand l'espace **devient** faible, le moniteur récupère
+d'abord avec la rétention de 5 minutes, mesure de nouveau, et n'avertit que si
+l'espace est encore faible. Une passe en échec est ignorée et retentée à la
+prochaine exécution. Détails :
+[`browser-infrastructure.md`](browser-infrastructure.md#points-à-connaître).
+
 ### Notification
 
 Quand l'espace devient faible, l'utilisateur de la session reçoit **une**
@@ -172,7 +186,7 @@ Vidages des versions 2 et 3 dans `Tests/fixtures/indexeddb/` (la version 1 n'a j
   écriture, fusion par `put` sans `clear`, aller-retour gzip et JSON brut,
   gzip abîmé, autre version de schéma) ; `RenamedStorageMigrationTests`
   (sauvegarde d'avant 3.0.0 migrée, falsifiée refusée) ; `IndexedDbFileSystemProviderTests`
-  (`QuotaExceededError` → `NoSpace` sans rien écrire, plus de 16 Mio →
+  (`QuotaExceededError` → `NoSpace` sans rien écrire, plus de 128 Mio (ADR 0245) →
   `FileTooLarge` avant toute écriture).
 - `Tests/Kazo.Os.Platform.Core.Tests` : `SystemAdministrationGatewayTests`
   (capacité, hôte sans sauvegarde, création téléchargée et journalisée, refus
@@ -201,6 +215,7 @@ Vidages des versions 2 et 3 dans `Tests/fixtures/indexeddb/` (la version 1 n'a j
 - [x] `QuotaExceededError` et contenu de plus de 16 Mio traduits par le fournisseur IndexedDB.
 - [x] Archive `.kosbak` (gzip), validation complète, fusion par écrasement.
 - [x] `StorageSpaceMonitor` : mesure, notification unique, réserve de root.
+- [x] Contenus orphelins récupérés au démarrage, toutes les heures et quand l'espace devient faible (Os#537).
 - [x] Réserve appliquée par `FileSystemService` ; `df` avec les vrais chiffres.
 - [x] `LogFileWriter` : lignes perdues comptées puis signalées.
 - [x] `KazoSystemBackup`, passerelle, `SystemBackupService`, appareil du navigateur, `pickFile.js`.

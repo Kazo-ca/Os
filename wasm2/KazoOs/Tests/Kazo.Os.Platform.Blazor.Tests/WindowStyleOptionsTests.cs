@@ -127,6 +127,19 @@ public sealed class WindowStyleOptionsTests
     }
 
     [Fact]
+    public async Task Can_change_screen_reaches_the_frame_from_the_manifest_and_at_run_time()
+    {
+        // ADR 0263: Craft apps declare it in their manifest; an app may also change it at run time.
+        (WindowRuntime declared, _, _) = await LaunchAsync(new WindowOptions { CanChangeScreen = false });
+        Assert.False(Assert.Single(declared.Windows).Frame.CanChangeScreen);
+
+        (WindowRuntime runtime, IAppWindowGateway gateway, WindowOptions options) = await LaunchAsync(new WindowOptions());
+        Assert.True(Assert.Single(runtime.Windows).Frame.CanChangeScreen);
+        Assert.True(await gateway.SetOptionsAsync(options with { CanChangeScreen = false }));
+        Assert.False(Assert.Single(runtime.Windows).Frame.CanChangeScreen);
+    }
+
+    [Fact]
     public async Task Requests_on_a_closed_window_return_false()
     {
         (WindowRuntime runtime, IAppWindowGateway gateway, WindowOptions declared) = await LaunchAsync(new WindowOptions { Resizable = true });

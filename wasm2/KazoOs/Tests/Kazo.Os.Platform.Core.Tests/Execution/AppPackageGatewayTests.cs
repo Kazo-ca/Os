@@ -561,6 +561,9 @@ public sealed partial class AppPackageGatewayTests
         Assert.Equal("1.1.0", app.Latest.Version);
         Assert.StartsWith("https://raw.githubusercontent.com/Kazo-ca/Os-AppMarketPlace/packages/packages/org.kazo.sample/1.1.0/", app.Latest.IconUri, StringComparison.Ordinal);
         Assert.Equal(["en"], app.Latest.DescriptionLanguages);
+        KazoAppFileHandler handler = Assert.Single(app.Latest.FileHandlers);
+        Assert.Equal([".sample"], handler.Extensions);
+        Assert.Equal(["open"], handler.Actions);
     }
 
     [Fact]
@@ -806,6 +809,7 @@ public sealed partial class AppPackageGatewayTests
                     {"version":"{{{version}}}","commit":"abc","package":"{{{folder}}}/{{{AppPackageTests.AppId}}}-{{{version}}}.kazoapp",
                      "sha256":"{{{AppPackage.Sha256(package)}}}","size":{{{package.Length}}},"publishedAt":"2026-10-30T00:00:00Z",{{{Signature(package, signed)}}}
                      "capabilities":[],"sdkCompatibility":{"minimumVersion":"2.0.0"},"icon":"{{{folder}}}/icon.svg",
+                     "fileHandlers":[{"extensions":[".sample"],"actions":["open"]}],
                      "screenshots":["{{{folder}}}/screenshots/1.png"],"descriptions":{"en":"{{{folder}}}/description.en.md"}}
                     """);
             }

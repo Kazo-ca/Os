@@ -4,30 +4,39 @@
 
 <main class="single-surface-area" aria-label="@L["Surface.Application"]">
     @* ADR 0171 §3: an owner-modal dialog fills the screen above its window, which stays rendered (and
-       inert) under it so the app awaiting the dialog keeps its state. *@
-    @{ IReadOnlyList<WindowRuntimeState> stack = SingleSurfacePresentationPolicy.SelectSurfaceStack(Windows); }
-    @for (int index = 0; index < stack.Count; index++)
+       inert) under it so the app awaiting the dialog keeps its state.
+       ADR 0244 §3: every window stays in the page, in opening order, so switching apps never removes
+       or moves a window (an iframe would reload); the windows off screen are hidden in their slot. *@
+    @{
+        IReadOnlyList<WindowRuntimeState> stack = SingleSurfacePresentationPolicy.SelectSurfaceStack(Windows);
+        WindowId? top = stack.Count > 0 ? stack[^1].Id : null;
+    }
+    @foreach (WindowRuntimeState window in _documentOrder.Arrange(Windows))
     {
-        WindowRuntimeState window = stack[index];
-        <WindowHost @key="window.Id"
-                    Window="window"
-                    ShowChrome="false"
-                    IsInteractionBlocked="@(index < stack.Count - 1)"
-                    OnFocus="OnFocus"
-                    OnMinimize="OnMinimize"
-                    OnToggleMaximize="OnToggleMaximize"
-                    OnClose="OnClose"
-                    OnGesture="OnGesture"
-                    Overlay="@(WindowOverlay?.Invoke(window))">
-            @if (WindowContent is not null)
-            {
-                @WindowContent(window)
-            }
-        </WindowHost>
+        bool shown = stack.Any(candidate => candidate.Id == window.Id);
+        <div @key="window.Id" class="surface-slot" hidden="@(shown ? null : true)">
+            <WindowHost Window="window"
+                        ShowChrome="false"
+                        IsInteractionBlocked="@(window.Id != top)"
+                        OnFocus="OnFocus"
+                        OnMinimize="OnMinimize"
+                        OnToggleMaximize="OnToggleMaximize"
+                        OnClose="OnClose"
+                        OnGesture="OnGesture"
+                        Overlay="@(WindowOverlay?.Invoke(window))">
+                @if (WindowContent is not null)
+                {
+                    @WindowContent(window)
+                }
+            </WindowHost>
+        </div>
     }
 </main>
 
 @code {
+    /// <summary>The page order of the windows: the order they opened in (ADR 0244 §1).</summary>
+    private readonly WindowDocumentOrder _documentOrder = new();
+
     /// <summary>
     /// Gets or sets stable window snapshots ordered back-to-front — the same shape
     /// <see cref="DesktopArea.Windows"/> takes, so a host can switch presentation modes without
@@ -36,7 +45,11 @@
     [Parameter, EditorRequired]
     public IReadOnlyList<WindowRuntimeState> Windows { get; set; } = [];
 
-    /// <summary>Gets or sets content rendered for the single visible window snapshot.</summary>
+    /// <summary>
+    /// Gets or sets content rendered for each window snapshot. Only the window on screen (and its
+    /// owners under a dialog) is visible; the others stay rendered, hidden, so their state and
+    /// their iframes survive an app switch (ADR 0244 §3).
+    /// </summary>
     [Parameter]
     public RenderFragment<WindowRuntimeState>? WindowContent { get; set; }
 

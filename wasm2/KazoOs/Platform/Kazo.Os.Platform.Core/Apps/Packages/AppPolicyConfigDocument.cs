@@ -196,6 +196,25 @@ public sealed record AppPolicy(
     }
 
     /// <summary>
+    /// Finds the rule that blocks an app of a catalog before it is downloaded (ADR 0257 §2): its id,
+    /// its catalog category, or one capability its version declares.
+    /// </summary>
+    /// <param name="appId">The app id.</param>
+    /// <param name="category">Its catalog category, if any.</param>
+    /// <param name="capabilities">The capabilities its version declares.</param>
+    public AppBlockReason? FindBlock(string appId, string? category, IReadOnlyList<string> capabilities)
+    {
+        ArgumentNullException.ThrowIfNull(capabilities);
+        if (FindBlock(appId, category) is { } blocked)
+        {
+            return blocked;
+        }
+
+        string? capability = capabilities.FirstOrDefault(BlockedCapabilities.Contains);
+        return capability is null ? null : new AppBlockReason(AppBlockKind.Capability, capability);
+    }
+
+    /// <summary>
     /// Finds the rule that blocks a theme pack (ADR 0213 §4): its id in <c>[blocked-apps]</c> or its
     /// catalog category in <c>[blocked-categories]</c>. A pack has no capability.
     /// </summary>

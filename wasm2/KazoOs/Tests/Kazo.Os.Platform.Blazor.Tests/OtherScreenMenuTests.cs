@@ -149,6 +149,43 @@ public sealed class OtherScreenMenuTests
         Assert.Equal(DisplayId.Primary, runtime.Windows.Single().DisplayId);
     }
 
+    [Fact]
+    public async Task A_window_that_must_stay_on_its_screen_lists_no_screen_and_refuses_every_move()
+    {
+        // ADR 0263: a Craft app's iframe would reload in the other screen's document.
+        (WindowRuntime runtime, WindowKeyboardCommands commands, WindowId id) = Create(screens: 3, canChangeScreen: false);
+        List<WindowId> refused = [];
+        commands.ScreenChangeRefused += refused.Add;
+        bool screenOpened = false;
+        commands.OpenScreen = () =>
+        {
+            screenOpened = true;
+            return Task.FromResult<DisplayId?>(null);
+        };
+
+        Assert.False(commands.CanChangeScreen(id));
+        Assert.Empty(commands.GetScreenMenuItems(id));
+        Assert.False(commands.MoveToScreen(id, DisplayId.FromNumber(2)));
+        Assert.False(await commands.ExecuteAsync(WindowKeyboardAction.MoveToNextScreen));
+        Assert.False(await commands.MoveToNewScreenAsync(id));
+
+        Assert.False(screenOpened);
+        Assert.Equal([id, id, id], refused);
+        Assert.Equal(DisplayId.Primary, runtime.Windows.Single().DisplayId);
+    }
+
+    [Fact]
+    public void A_window_that_may_change_screen_raises_no_refusal()
+    {
+        (_, WindowKeyboardCommands commands, WindowId id) = Create(screens: 2);
+        List<WindowId> refused = [];
+        commands.ScreenChangeRefused += refused.Add;
+
+        Assert.True(commands.CanChangeScreen(id));
+        Assert.True(commands.MoveToScreen(id, DisplayId.FromNumber(2)));
+        Assert.Empty(refused);
+    }
+
     [Theory]
     [InlineData("window.screen.2", 2)]
     [InlineData("window.screen.9", 9)]
@@ -159,7 +196,7 @@ public sealed class OtherScreenMenuTests
     public void The_veil_reads_the_screen_number_of_the_highlighted_entry(string? itemId, int? expected) =>
         Assert.Equal(expected, ScreenIdentifyVeil.TargetOf(itemId));
 
-    private static (WindowRuntime Runtime, WindowKeyboardCommands Commands, WindowId Id) Create(int screens)
+    private static (WindowRuntime Runtime, WindowKeyboardCommands Commands, WindowId Id) Create(int screens, bool canChangeScreen = true)
     {
         WindowRuntime runtime = new(Area);
         for (int number = 2; number <= screens; number++)
@@ -177,7 +214,10 @@ public sealed class OtherScreenMenuTests
             null,
             0,
             WindowVisualState.Normal,
-            new WindowConstraints(true, 320, 240));
+            new WindowConstraints(true, 320, 240))
+        {
+            Frame = WindowFrame.Default with { CanChangeScreen = canChangeScreen },
+        };
         runtime.Apply(new CreateWindowCommand(state));
         runtime.Apply(new FocusWindowCommand(state.Id));
         return (runtime, new WindowKeyboardCommands(runtime), state.Id);

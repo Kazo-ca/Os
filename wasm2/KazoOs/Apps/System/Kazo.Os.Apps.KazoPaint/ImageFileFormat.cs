@@ -44,7 +44,7 @@ public static class ImageFileFormat
     /// <summary>Largest width or height Kazo Paint edits, in pixels.</summary>
     public const int MaxDimension = 4096;
 
-    /// <summary>Largest image file Kazo Paint opens, in bytes (16 MiB, the OS file size limit of ADR 0094).</summary>
+    /// <summary>Largest image file Kazo Paint opens, in bytes (16 MiB, ADR 0103; the OS file limit is 128 MiB since ADR 0245).</summary>
     public const int MaxFileBytes = 16 * 1024 * 1024;
 
     /// <summary>Extensions Kazo Paint opens, for dialogs and file associations.</summary>

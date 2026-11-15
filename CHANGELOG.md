@@ -6,6 +6,85 @@ The changes of Kazo OS, by version. This file is generated from `wasm2/KazoOs/ch
 `wasm2/KazoOs/build/tools/collect-changes.sh` (ADR 0186): do not edit it by hand. Changes already
 deployed but not released yet are in the Settings ▸ What's new page of the OS.
 
+## 3.3.4 (2026-11-13)
+
+### New
+
+- **KazoAppPackages.InstallAsync reports its progress.** A new overload InstallAsync(source, scope, IProgress<KazoPackageInstallProgress>?, cancellationToken) reports each KazoPackageInstallStage (Preparing, Downloading with BytesReceived and TotalBytes, Verifying, AwaitingApproval, Installing). The existing overload is unchanged; IAppManagementGateway gets a matching member with a default body. A cref to KazoAppPackages.InstallAsync without parameters is now ambiguous: name the overload. ([0266-store-ux-refresh.md](doc/en/wasm/dev/adr/0266-store-ux-refresh.md), [app-installation.md](doc/en/wasm/dev/app-installation.md))
+
+### Improved
+
+- **A clearer app page in the Kazo OS Store.** An app's page says in plain words what the app can do, sensitive access first, with the technical identifiers one click away. It lists the files the app opens, links to its source code, and copies a « Try it » link to share. A bar keeps Back, the app and its button at the top while you scroll, the information panel stays in view, and messages close by themselves (errors stay until you close them). ([app-installation.md](doc/en/wasm/dev/app-installation.md), [0266-store-ux-refresh.md](doc/en/wasm/dev/adr/0266-store-ux-refresh.md))
+- **A new home page for the Kazo OS Store.** The Store opens larger, on a « Featured » banner with the newest app you have not installed, then one grid of every app, newest first, with chips to filter by category. Each card installs the app for you in one click, or opens or updates it; an administrator also finds « Install for everyone » in the menu beside « Install ». Empty cards show while the catalogs load, a card shows its trust only when the app is not verified, and the Themes tab stays hidden until a theme pack exists. ([app-installation.md](doc/en/wasm/dev/app-installation.md), [0266-store-ux-refresh.md](doc/en/wasm/dev/adr/0266-store-ux-refresh.md))
+- **Enlarge an app's screenshots in the Store.** Click a screenshot on an app's page to see it at the size of the Store window, then move between them with the arrows, the keyboard or a swipe. Escape or Back closes it. ([app-installation.md](doc/en/wasm/dev/app-installation.md))
+- **The Kazo OS Store fits the phone.** On a phone, the Store's tabs move to a bar at the bottom of the screen, within reach of the thumb, and the header takes two lines. Every button, tab and link is at least 44 px, large enough to touch. An app's screenshots taken in portrait come first and are shown tall, before the landscape ones. ([app-installation.md](doc/en/wasm/dev/app-installation.md), [0266-store-ux-refresh.md](doc/en/wasm/dev/adr/0266-store-ux-refresh.md))
+- **The Store shows where an install stands.** While the Kazo OS Store installs or updates an app, its page and its card show the step (preparing, downloading with the percent and sizes, verifying, waiting for an administrator, installing) instead of « Working… ». Only that app's buttons wait: another app can be opened or queued, and it shows « Waiting for the other install… » until its turn. ([0266-store-ux-refresh.md](doc/en/wasm/dev/adr/0266-store-ux-refresh.md), [app-installation.md](doc/en/wasm/dev/app-installation.md))
+
+### Fixed
+
+- **The Kazo OS Store scrolls, searches and reads better.** An app's page opens at the top, and Back returns to the list where you left it. A list item written on two lines in a description stays one item, and the description no longer repeats the app's name. The search box also filters the Installed tab, and Enter opens the first result. Keyboard focus is visible everywhere, the arrow keys move between the tabs, and on a phone the header takes two lines with larger touch targets. ([app-installation.md](doc/en/wasm/dev/app-installation.md))
+- **The Try it link survives a restart for an update.** A link ending in ?autolaunch=<app id> was lost when the tab restarted onto a newer Kazo OS before the app opened. The tab now keeps the link until the app is open (or the Store, or an error is shown), so the app opens after the restart. ([0265-direct-link-survives-update-restart.md](doc/en/wasm/dev/adr/0265-direct-link-survives-update-restart.md), [app-launch-link.md](doc/en/wasm/dev/app-launch-link.md))
+
+### For developers
+
+- **A Craft app's exports reach its window as copies.** A Craft app that exports through a browser download link (an <a download> on a blob: address, as PdfCraft does) no longer sends the file to the real computer's Downloads folder: when the window subscribes to the new CraftFrame.Exporting event, the Kazo.Os.AppSdk.Craft module takes the file and the window saves it as a copy through the OS save dialog (DocumentSession.DecideCopy). A window that does not subscribe keeps the browser download. ([0264-craft-app-exports-reach-the-window.md](doc/en/wasm/dev/adr/0264-craft-app-exports-reach-the-window.md))
+
+## 3.3.3 (2026-11-13)
+
+### New
+
+- **A direct link installs a Store app and opens it.** With a link ending in ?autolaunch=<app id>, the guest gets the app from the official Kazo OS Store, installed for them only, and it opens. A progress window shows the app and offers Cancel; if anything fails, a notification explains why and opens the Store at the app's page. ([0258-direct-app-launch-link.md](doc/en/wasm/dev/adr/0258-direct-app-launch-link.md))
+- **A link opens Kazo OS straight into an app.** An address such as https://os.kazo.ca/?autolaunch=ca.kazo.word is read once at startup and removed from the address bar. With no account, Kazo OS starts as the guest without a click (the guest continues the same way on a later visit); with an account, the sign-in screen says which app will open, and the Kazo OS Store opens on its page after sign-in. ([0258-direct-app-launch-link.md](doc/en/wasm/dev/adr/0258-direct-app-launch-link.md))
+- **Kazo.Os.AppSdk.Craft: the shared module of the Craft apps.** A new SDK library shipped and served by Kazo OS for the apps that show a Craft app (Rust compiled to WebAssembly) in an iframe of their window: CraftFrame (the iframe and its messages), DocumentSession and SaveDecision (bound files, changes, title, close), CraftDocumentFormats, WebStorageFile (per-user settings in ~/.config/<appId>/), PickRequest, ReservedKeys and CraftLanguage. Taken from Kazo Word and made generic (ADR 0259). ([0259-shared-craft-app-host-module.md](doc/en/wasm/dev/adr/0259-shared-craft-app-host-module.md), [sdk-reference.md](doc/en/wasm/framework/sdk-reference.md))
+- **Opening a file no app supports names the Store apps that can open it.** When no installed app opens a file, the OS looks in the Store catalogs it already downloaded for the apps that declare the file type, without waiting for the network. xdg-open lists them with the kazopkg install command, and KazoApps.OpenFileAsync returns them in KazoOpenFileResult.SuggestedCatalogApps. ([0257-offer-a-store-app-for-an-unsupported-file.md](doc/en/wasm/dev/adr/0257-offer-a-store-app-for-an-unsupported-file.md), [user-file-associations.md](doc/en/wasm/dev/user-file-associations.md))
+- **The File Explorer proposes Store apps for a file no app opens.** Opening a file no installed app supports now shows the Open with box with the Store apps that declare its type: icon, name, short description and a View in the Store button. The Store opens on the app's page and, once the app is installed, opens the file. Open with shows the same section under the installed apps. Apps can ask for the list with KazoApps.GetSuggestedCatalogAppsAsync. ([0257-offer-a-store-app-for-an-unsupported-file.md](doc/en/wasm/dev/adr/0257-offer-a-store-app-for-an-unsupported-file.md), [file-explorer.md](doc/en/wasm/dev/file-explorer.md))
+
+### Improved
+
+- **App repositories show their Store listing in the README.** The kazoos-solution template's README starts with the app's Kazo OS Store listing, a Try it section and a short presentation of Kazo OS. .github/scripts/store-readme.mjs copies the description, icon and screenshots of store/ into README.md and readme-fr.md, and CI fails when a README differs from store/. ([app-repository.md](doc/en/wasm/framework/app-repository.md))
+- **Kazo.Os.AppSdk.Craft reads GridCraft's documents and languages.** OpenDocument.ListFrom now reads both shapes of ui.inspect (WordCraft's documents with ids, GridCraft's windows pointing at documents), with a new overload that names a document with no path from its title. CraftLanguage.Pick falls back to the two-letter code when the Craft app lists only those. The Craft app guide adds the pitfalls of the close guard and the missing window menu. ([craft-apps.md](doc/en/wasm/framework/craft-apps.md), [sdk-reference.md](doc/en/wasm/framework/sdk-reference.md))
+
+### Fixed
+
+- **Craft apps stay on their screen instead of losing their document.** Sending a window to another screen reloaded the iframe of Craft apps such as Kazo Word, which lost the open document. A window can now declare window.canChangeScreen: false (WindowOptions.CanChangeScreen): it opens on screen 1, Other screen shows a greyed-out entry, and a screen shortcut or a drop on another screen shows a notification: known issue, a fix is in progress. ([0263-windows-that-stay-on-their-screen.md](doc/en/wasm/dev/adr/0263-windows-that-stay-on-their-screen.md))
+
+### For developers
+
+- **Guide and end-to-end test for Craft apps on the Kazo.Os.AppSdk.Craft module.** A new guide, framework/craft-apps.md, shows how to write a Craft app window on the module: the iframe page, the CraftFrame events, the save rule, the minimum OS version. build/publish-trimmed.sh now packs a Craft test package (a window around a fake Craft app), installs it with kazopkg in the trimmed OS and drives it: open, save, Save As through a reserved chord, changes, an error after ready, theme, file picker, close guard and per-user settings. The Craft app port guide is rewritten on the module. ([craft-apps.md](doc/en/wasm/framework/craft-apps.md), [craft-app-port-guide.md](doc/en/wasm/dev/craft-app-port-guide.md))
+- **Shared scripts for the Craft apps' iframe.** The Kazo.Os.AppSdk.Craft module serves craft-host.js (OS side) and craft-proxy.js (in the iframe, with its file picker, reserved shortcuts and settings modules), taken from Kazo Word. An app's iframe page names its app with data-craft-app and its build with data-craft-build; saves with an id get saved back, and errors after ready reach the window as error. ([craft-module-scripts.md](doc/en/wasm/dev/craft-module-scripts.md))
+- **The direct link logs the Store opened for an account, and is tested end to end.** /var/log/apps/org.kazoos.app-link.log gets an app-link.store-opened line when an account signs in and the Store opens at the app's page. build/publish-trimmed.sh now runs three direct link journeys (no account, account, missing app and cancel) against the official catalog served locally and signed by a key created for the run. ([app-launch-link.md](doc/en/wasm/dev/app-launch-link.md))
+
+## 3.3.2 (2026-11-13)
+
+### Improved
+
+- **Files can now be up to 128 MiB.** The largest file Kazo OS stores goes from 16 MiB to 128 MiB, the most an app package may hold once extracted, so larger apps such as Kazo Word install. Large files are written and read in 16 MiB steps so the browser does not hold the whole file twice. A larger file still fails with File too large (EFBIG). ([0245-raise-the-maximum-file-size.md](doc/en/wasm/dev/adr/0245-raise-the-maximum-file-size.md))
+
+## 3.3.1 (2026-11-13)
+
+### Fixed
+
+- **A window that comes to the front no longer reloads its frames.** Windows keep their place in the page and only their stacking changes, so an app shown in a frame, such as Kazo Word or the browser, keeps its document or page when you click another window, and on mobile when you switch apps. A window that receives the keyboard focus, with Tab or a click in its frame, now comes to the front. ([0244-stable-window-order-in-the-page.md](doc/en/wasm/dev/adr/0244-stable-window-order-in-the-page.md))
+- **An installed app's page opens in its window, not a second Kazo OS.** An installed app that shows one of its own web pages in a frame, such as Kazo Word, now gets that page, with the parameters in its address, online and offline. Before, the published Kazo OS answered with its own start page and a second Kazo OS started inside the window. ([0243-serve-installed-app-pages.md](doc/en/wasm/dev/adr/0243-serve-installed-app-pages.md))
+
+## 3.3.0 (2026-11-11)
+
+### New
+
+- **The sign-in screen shows the build number and whether Kazo OS is up to date.** Next to the version, the sign-in screen shows the build number and a badge: up to date, outdated (with the version or build available), or status unknown when offline. A new build of the same version is now announced as an update too. ([0236-build-number-and-version-status-at-sign-in.md](doc/en/wasm/dev/adr/0236-build-number-and-version-status-at-sign-in.md))
+
+### Improved
+
+- **Kazo OS and its apps start on the latest version.** When a newer version is available, Kazo OS shows Updating Kazo OS at start and restarts onto it. An app opened on an outdated copy does not start: a dialog offers to restart to update. ([0239-start-on-the-latest-version.md](doc/en/wasm/dev/adr/0239-start-on-the-latest-version.md))
+- **The error page shows what failed, with passwords and tokens masked.** When Kazo OS meets an unexpected error, the page now shows the app and method at fault, the exception and its message, the time and the correlation ID (which used to be empty), with the full stack under "Technical details". "Copy details" puts a report ready to paste in an issue on the clipboard, and "Reload" starts Kazo OS again. Passwords and tokens are masked, on the page and in /var/log/syslog. ([0240-detailed-error-page.md](doc/en/wasm/dev/adr/0240-detailed-error-page.md))
+
+### Fixed
+
+- **A crashing app no longer takes the whole OS down.** When an app fails, only its window shows what happened, with Try again and Close the app; the other windows and the taskbar keep running. An installed app also finds its files right after a new version of Kazo OS was deployed, even on a page opened with Ctrl+F5. ([0238-an-app-failure-stays-in-its-window.md](doc/en/wasm/dev/adr/0238-an-app-failure-stays-in-its-window.md), [0237-activate-the-worker-of-a-newer-page.md](doc/en/wasm/dev/adr/0237-activate-the-worker-of-a-newer-page.md))
+- **Allowing a permission you had refused now takes effect.** In Settings > Permissions, Allow for the machine on a capability marked Refused by you also withdraws your refusal, so the capability becomes allowed instead of staying refused. ([dangerous-capability-approval.md](doc/en/wasm/dev/dangerous-capability-approval.md))
+- **F5 no longer goes back to an older version.** A page loaded with Ctrl+F5 now replaces the service worker of an older version, so the next F5 stays on the latest version instead of the first one seen in this browser. ([0241-replace-an-older-worker-at-boot.md](doc/en/wasm/dev/adr/0241-replace-an-older-worker-at-boot.md))
+- **Installed apps find the .NET methods they need.** The published Kazo OS keeps the whole .NET core library, so an app installed from the Store, such as IRC, no longer stops on a method the OS removed. The install check now compares exact method signatures and names the missing one. ([0242-framework-api-for-installed-apps.md](doc/en/wasm/dev/adr/0242-framework-api-for-installed-apps.md))
+
 ## 3.2.1 (2026-11-08)
 
 ### Fixed

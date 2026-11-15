@@ -48,11 +48,11 @@ Deux façons, même résultat :
 | `Directory.Build.targets` | import du mode source externe, contrôle du sous-module |
 | `.gitmodules` | `external/KazoOs`, clone superficiel |
 | `store/` | `icon.png` (256×256), `short_description.{en,fr}.txt`, `description.{en,fr}.md`, `store.json`, `screenshots/` facultatif |
-| `.github/workflows/ci.yml` | CI : sous-module vérifié, build et tests en `Release` |
+| `.github/workflows/ci.yml` | CI : sous-module vérifié, README conforme à `store/` (`.github/scripts/store-readme.mjs --check`), build et tests en `Release` |
 | `.github/workflows/publish-to-kazoos-store.yml` | soumission au catalogue sur un tag `v*` |
 | `.github/workflows/tag-release.yml` | pose sur un commit de `main` le tag de la version du manifeste et lance les deux workflows ci-dessus (`workflow_dispatch`) |
 | `.github/workflows/publish-packages.yml` | paquet non signé poussé sur la branche `kazoos-packages` sur un tag `v*` ([ADR 0219](../dev/adr/0219-app-authors-signing-tool.md)) |
-| `README.md`, `readme-fr.md` | ces étapes, pour le dépôt créé |
+| `README.md`, `readme-fr.md` | en haut, la fiche du Store de l'app (le texte de `store/description.{en,fr}.md` et les captures), une section « Essayer » et une courte présentation de Kazo OS avec le lien vers son dépôt ; puis ces étapes, pour le dépôt créé |
 
 ## La version de Kazo OS
 
@@ -174,6 +174,17 @@ Détail côté OS : [`app-installation.md`](../dev/app-installation.md#biblioth�
    `--repository` ; `project` nomme le `.csproj` de l'app, que le catalogue
    compile (à la racine, `KazoOsPack` tournerait aussi sur le projet de tests,
    qui n'a pas cette cible).
+   Lancer ensuite `node .github/scripts/store-readme.mjs` (`npm run
+   store:readme` dans un dépôt qui a un `package.json`) : il copie les
+   descriptions, l'icône et les captures en haut de `README.md` et de
+   `readme-fr.md`, entre les commentaires `Store listing` / `Fiche du Store`,
+   pour que le dépôt montre la même fiche que le Store, suivie d'un lien vers
+   Kazo OS. La CI le lance avec `--check` et échoue quand un README diffère de
+   `store/`. La section
+   « Essayer » pointe vers `https://os.kazo.ca/?autolaunch=<id de l'app>`
+   ([ADR 0258](../dev/adr/0258-direct-app-launch-link.md), Kazo OS 3.3.3) : le
+   lien démarre Kazo OS, installe l'app depuis le Store officiel et l'ouvre.
+   Le modèle `kazoos-solution` y écrit l'id donné par `--appId`.
 2. Changer `Version` dans la classe `[AppManifest]`, valider dans `main`, puis
    poser le tag : lancer le workflow **Tag a release** (`tag-release.yml`, depuis
    l'onglet Actions ou, pour un agent, via l'API GitHub), ou poser le tag

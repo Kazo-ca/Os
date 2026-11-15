@@ -1,0 +1,212 @@
+{
+  "version": "3.3.3",
+  "date": "2026-11-13",
+  "entries": [
+    {
+      "id": "6a5d3c22-c906-47de-a53f-76c3198e3e0f",
+      "category": "new",
+      "audience": [
+        "user"
+      ],
+      "title": {
+        "en": "A direct link installs a Store app and opens it",
+        "fr": "Un lien direct installe une app du Store et l'ouvre"
+      },
+      "description": {
+        "en": "With a link ending in ?autolaunch=<app id>, the guest gets the app from the official Kazo OS Store, installed for them only, and it opens. A progress window shows the app and offers Cancel; if anything fails, a notification explains why and opens the Store at the app's page.",
+        "fr": "Avec un lien qui se termine par ?autolaunch=<id de l'app>, l'invité reçoit l'app du Kazo OS Store officiel, installée pour lui seul, et elle s'ouvre. Une fenêtre de progression montre l'app et propose Annuler ; en cas d'échec, une notification dit pourquoi et ouvre le Store à la page de l'app."
+      },
+      "links": [
+        "doc/en/wasm/dev/adr/0258-direct-app-launch-link.md"
+      ]
+    },
+    {
+      "id": "cd51cfa9-8ba9-4e99-90c7-53bed60027dc",
+      "category": "new",
+      "audience": [
+        "user"
+      ],
+      "title": {
+        "en": "A link opens Kazo OS straight into an app",
+        "fr": "Un lien ouvre Kazo OS directement sur une app"
+      },
+      "description": {
+        "en": "An address such as https://os.kazo.ca/?autolaunch=ca.kazo.word is read once at startup and removed from the address bar. With no account, Kazo OS starts as the guest without a click (the guest continues the same way on a later visit); with an account, the sign-in screen says which app will open, and the Kazo OS Store opens on its page after sign-in.",
+        "fr": "Une adresse comme https://os.kazo.ca/?autolaunch=ca.kazo.word est lue une fois au démarrage, puis retirée de la barre d'adresse. Sans compte, Kazo OS démarre en invité sans clic (l'invité continue de la même façon à la visite suivante) ; avec un compte, l'écran de connexion dit quelle app s'ouvrira, et le Kazo OS Store s'ouvre à sa page après la connexion."
+      },
+      "links": [
+        "doc/en/wasm/dev/adr/0258-direct-app-launch-link.md"
+      ]
+    },
+    {
+      "id": "4ad7a2e8-0164-4389-8278-cbb29d1ccd9b",
+      "category": "new",
+      "audience": [
+        "developer"
+      ],
+      "title": {
+        "en": "Kazo.Os.AppSdk.Craft: the shared module of the Craft apps",
+        "fr": "Kazo.Os.AppSdk.Craft : le module commun des apps Craft"
+      },
+      "description": {
+        "en": "A new SDK library shipped and served by Kazo OS for the apps that show a Craft app (Rust compiled to WebAssembly) in an iframe of their window: CraftFrame (the iframe and its messages), DocumentSession and SaveDecision (bound files, changes, title, close), CraftDocumentFormats, WebStorageFile (per-user settings in ~/.config/<appId>/), PickRequest, ReservedKeys and CraftLanguage. Taken from Kazo Word and made generic (ADR 0259).",
+        "fr": "Une nouvelle bibliothèque du SDK, livrée et servie par Kazo OS, pour les apps qui affichent une app Craft (Rust compilé en WebAssembly) dans une iframe de leur fenêtre : CraftFrame (l'iframe et ses messages), DocumentSession et SaveDecision (fichiers liés, modifications, titre, fermeture), CraftDocumentFormats, WebStorageFile (réglages par utilisateur dans ~/.config/<appId>/), PickRequest, ReservedKeys et CraftLanguage. Reprise de Kazo Word et rendue générique (ADR 0259)."
+      },
+      "links": [
+        "doc/en/wasm/dev/adr/0259-shared-craft-app-host-module.md",
+        "doc/en/wasm/framework/sdk-reference.md"
+      ]
+    },
+    {
+      "id": "19c54077-d470-48ea-ada1-59ae84bdd785",
+      "category": "new",
+      "audience": [
+        "user",
+        "developer"
+      ],
+      "title": {
+        "en": "Opening a file no app supports names the Store apps that can open it",
+        "fr": "Ouvrir un fichier qu'aucune app ne prend en charge nomme les apps du Store qui l'ouvrent"
+      },
+      "description": {
+        "en": "When no installed app opens a file, the OS looks in the Store catalogs it already downloaded for the apps that declare the file type, without waiting for the network. xdg-open lists them with the kazopkg install command, and KazoApps.OpenFileAsync returns them in KazoOpenFileResult.SuggestedCatalogApps.",
+        "fr": "Quand aucune app installée n'ouvre un fichier, l'OS cherche dans les catalogues du Store déjà téléchargés les apps qui déclarent ce type de fichier, sans attendre le réseau. xdg-open les liste avec la commande kazopkg install, et KazoApps.OpenFileAsync les rend dans KazoOpenFileResult.SuggestedCatalogApps."
+      },
+      "links": [
+        "doc/en/wasm/dev/adr/0257-offer-a-store-app-for-an-unsupported-file.md",
+        "doc/en/wasm/dev/user-file-associations.md"
+      ]
+    },
+    {
+      "id": "85627f0e-6b0c-48e0-bbf6-26fc34520bfd",
+      "category": "new",
+      "audience": [
+        "user",
+        "developer"
+      ],
+      "title": {
+        "en": "The File Explorer proposes Store apps for a file no app opens",
+        "fr": "L'Explorateur propose les apps du Store pour un fichier qu'aucune app n'ouvre"
+      },
+      "description": {
+        "en": "Opening a file no installed app supports now shows the Open with box with the Store apps that declare its type: icon, name, short description and a View in the Store button. The Store opens on the app's page and, once the app is installed, opens the file. Open with shows the same section under the installed apps. Apps can ask for the list with KazoApps.GetSuggestedCatalogAppsAsync.",
+        "fr": "Ouvrir un fichier qu'aucune app installée ne prend en charge montre maintenant la boîte Ouvrir avec et les apps du Store qui déclarent ce type : icône, nom, description courte et bouton Voir dans le Store. Le Store s'ouvre sur la page de l'app et, une fois l'app installée, ouvre le fichier. Ouvrir avec montre la même section sous les apps installées. Les apps obtiennent la liste par KazoApps.GetSuggestedCatalogAppsAsync."
+      },
+      "links": [
+        "doc/en/wasm/dev/adr/0257-offer-a-store-app-for-an-unsupported-file.md",
+        "doc/en/wasm/dev/file-explorer.md"
+      ]
+    },
+    {
+      "id": "0626af17-0550-4440-81ea-91d8a19a9f64",
+      "category": "improved",
+      "audience": [
+        "developer"
+      ],
+      "title": {
+        "en": "App repositories show their Store listing in the README",
+        "fr": "Les dépôts d'app montrent leur fiche du Store dans le README"
+      },
+      "description": {
+        "en": "The kazoos-solution template's README starts with the app's Kazo OS Store listing, a Try it section and a short presentation of Kazo OS. .github/scripts/store-readme.mjs copies the description, icon and screenshots of store/ into README.md and readme-fr.md, and CI fails when a README differs from store/.",
+        "fr": "Le README du modèle kazoos-solution commence par la fiche du Kazo OS Store de l'app, une section Essayer et une courte présentation de Kazo OS. .github/scripts/store-readme.mjs copie la description, l'icône et les captures de store/ dans README.md et readme-fr.md, et la CI échoue quand un README diffère de store/."
+      },
+      "links": [
+        "doc/en/wasm/framework/app-repository.md"
+      ]
+    },
+    {
+      "id": "a9fd7720-f454-4eeb-8b8f-fcfd632449d9",
+      "category": "improved",
+      "audience": [
+        "developer"
+      ],
+      "title": {
+        "en": "Kazo.Os.AppSdk.Craft reads GridCraft's documents and languages",
+        "fr": "Kazo.Os.AppSdk.Craft lit les documents et les langues de GridCraft"
+      },
+      "description": {
+        "en": "OpenDocument.ListFrom now reads both shapes of ui.inspect (WordCraft's documents with ids, GridCraft's windows pointing at documents), with a new overload that names a document with no path from its title. CraftLanguage.Pick falls back to the two-letter code when the Craft app lists only those. The Craft app guide adds the pitfalls of the close guard and the missing window menu.",
+        "fr": "OpenDocument.ListFrom lit maintenant les deux formes de ui.inspect (les documents à identifiant de WordCraft, les fenêtres de GridCraft qui pointent vers les documents), avec une nouvelle surcharge qui nomme un document sans chemin d'après son titre. CraftLanguage.Pick se replie sur le code à deux lettres quand l'app Craft ne liste que ceux-là. Le guide des apps Craft ajoute les pièges de la garde de fermeture et du menu de fenêtre absent."
+      },
+      "links": [
+        "doc/en/wasm/framework/craft-apps.md",
+        "doc/en/wasm/framework/sdk-reference.md"
+      ]
+    },
+    {
+      "id": "d3271875-45d6-48bc-9d1a-5590023358eb",
+      "category": "fixed",
+      "audience": [
+        "user",
+        "developer"
+      ],
+      "title": {
+        "en": "Craft apps stay on their screen instead of losing their document",
+        "fr": "Les apps Craft restent sur leur écran au lieu de perdre leur document"
+      },
+      "description": {
+        "en": "Sending a window to another screen reloaded the iframe of Craft apps such as Kazo Word, which lost the open document. A window can now declare window.canChangeScreen: false (WindowOptions.CanChangeScreen): it opens on screen 1, Other screen shows a greyed-out entry, and a screen shortcut or a drop on another screen shows a notification: known issue, a fix is in progress.",
+        "fr": "Envoyer une fenêtre sur un autre écran rechargeait l'iframe des apps Craft comme Kazo Word, qui perdaient le document ouvert. Une fenêtre peut maintenant déclarer window.canChangeScreen: false (WindowOptions.CanChangeScreen) : elle s'ouvre sur l'écran 1, Autre écran affiche une entrée grisée, et un raccourci d'écran ou un lâcher sur un autre écran affiche une notification : problème connu, une solution est en cours."
+      },
+      "links": [
+        "doc/en/wasm/dev/adr/0263-windows-that-stay-on-their-screen.md"
+      ]
+    },
+    {
+      "id": "d01556eb-c528-47ca-bc6d-c4532a7e77f5",
+      "category": "developer",
+      "audience": [
+        "developer"
+      ],
+      "title": {
+        "en": "Guide and end-to-end test for Craft apps on the Kazo.Os.AppSdk.Craft module",
+        "fr": "Guide et test de bout en bout des apps Craft sur le module Kazo.Os.AppSdk.Craft"
+      },
+      "description": {
+        "en": "A new guide, framework/craft-apps.md, shows how to write a Craft app window on the module: the iframe page, the CraftFrame events, the save rule, the minimum OS version. build/publish-trimmed.sh now packs a Craft test package (a window around a fake Craft app), installs it with kazopkg in the trimmed OS and drives it: open, save, Save As through a reserved chord, changes, an error after ready, theme, file picker, close guard and per-user settings. The Craft app port guide is rewritten on the module.",
+        "fr": "Un nouveau guide, framework/craft-apps.md, montre comment écrire une fenêtre d'app Craft sur le module : la page de l'iframe, les événements de CraftFrame, la règle d'enregistrement, la version minimale de l'OS. build/publish-trimmed.sh emballe maintenant un paquet de test Craft (une fenêtre autour d'une fausse app Craft), l'installe par kazopkg dans l'OS réduit et le conduit : ouvrir, enregistrer, Enregistrer sous par une touche réservée, modifications, erreur après ready, thème, sélecteur de fichiers, garde de fermeture et réglages par utilisateur. Le guide de portage des apps Craft est réécrit sur le module."
+      },
+      "links": [
+        "doc/en/wasm/framework/craft-apps.md",
+        "doc/en/wasm/dev/craft-app-port-guide.md"
+      ]
+    },
+    {
+      "id": "747afbed-99df-4a92-bae7-935d7f8058e4",
+      "category": "developer",
+      "audience": [
+        "developer"
+      ],
+      "title": {
+        "en": "Shared scripts for the Craft apps' iframe",
+        "fr": "Scripts communs pour l'iframe des apps Craft"
+      },
+      "description": {
+        "en": "The Kazo.Os.AppSdk.Craft module serves craft-host.js (OS side) and craft-proxy.js (in the iframe, with its file picker, reserved shortcuts and settings modules), taken from Kazo Word. An app's iframe page names its app with data-craft-app and its build with data-craft-build; saves with an id get saved back, and errors after ready reach the window as error.",
+        "fr": "Le module Kazo.Os.AppSdk.Craft sert craft-host.js (côté OS) et craft-proxy.js (dans l'iframe, avec ses modules sélecteur de fichiers, raccourcis réservés et réglages), repris de Kazo Word. La page de l'iframe d'une app nomme son app par data-craft-app et son build par data-craft-build ; une sauvegarde avec un id reçoit saved, et une erreur après ready arrive à la fenêtre comme error."
+      },
+      "links": [
+        "doc/en/wasm/dev/craft-module-scripts.md"
+      ]
+    },
+    {
+      "id": "6bcad809-1a66-4d48-929f-ba2b5267321b",
+      "category": "developer",
+      "audience": [
+        "developer"
+      ],
+      "title": {
+        "en": "The direct link logs the Store opened for an account, and is tested end to end",
+        "fr": "Le lien direct journalise le Store ouvert pour un compte, et il est testé de bout en bout"
+      },
+      "description": {
+        "en": "/var/log/apps/org.kazoos.app-link.log gets an app-link.store-opened line when an account signs in and the Store opens at the app's page. build/publish-trimmed.sh now runs three direct link journeys (no account, account, missing app and cancel) against the official catalog served locally and signed by a key created for the run.",
+        "fr": "/var/log/apps/org.kazoos.app-link.log reçoit une ligne app-link.store-opened quand un compte se connecte et que le Store s'ouvre à la page de l'app. build/publish-trimmed.sh lance maintenant trois parcours du lien direct (sans compte, avec un compte, app absente et annulation) contre le catalogue officiel servi localement et signé par une clé créée pour l'exécution."
+      },
+      "links": [
+        "doc/en/wasm/dev/app-launch-link.md"
+      ]
+    }
+  ]
+}

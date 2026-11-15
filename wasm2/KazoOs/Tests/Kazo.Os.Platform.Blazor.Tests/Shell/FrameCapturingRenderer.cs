@@ -14,6 +14,8 @@ namespace Kazo.Os.Platform.Blazor.Tests.Shell;
 /// </summary>
 internal sealed class FrameCapturingRenderer(IServiceProvider services) : Renderer(services, NullLoggerFactory.Instance)
 {
+    private readonly Dictionary<IComponent, int> _rootIds = new(ReferenceEqualityComparer.Instance);
+
     public override Dispatcher Dispatcher { get; } = Dispatcher.CreateDefault();
 
     protected override void HandleException(Exception exception) =>
@@ -26,9 +28,13 @@ internal sealed class FrameCapturingRenderer(IServiceProvider services) : Render
         Dispatcher.InvokeAsync(async () =>
         {
             int componentId = AssignRootComponentId(component);
+            _rootIds[component] = componentId;
             await RenderRootComponentAsync(componentId);
             return GetCurrentRenderTreeFrames(componentId);
         });
+
+    /// <summary>Returns the current frames of a root component attached by <see cref="RenderAsync{TComponent}"/>, after a later render.</summary>
+    public ArrayRange<RenderTreeFrame> RootFrames(IComponent component) => GetCurrentRenderTreeFrames(_rootIds[component]);
 
     /// <summary>Returns the current frames of a child component, found through its parent's component frame.</summary>
     public ArrayRange<RenderTreeFrame> FramesOf(int componentId) => GetCurrentRenderTreeFrames(componentId);

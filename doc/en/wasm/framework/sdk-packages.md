@@ -52,7 +52,7 @@ library lists its surface in `PublicAPI.Shipped.txt` (1.0, frozen) and
 
 | Packages | Content |
 |---|---|
-| `Kazo.Os.App.Abstractions`, `Kazo.Os.Simulation.Abstractions`, `Kazo.Os.Theming.Abstractions`, `Kazo.Os.AppSdk`, `.Blazor`, `.Terminal`, `.Web`, `.Web.Blazor`, `.Icons`, `.VirtualKeyboard` | the public SDK, what an app references (`.FileView` is no longer part of it since 2.0: its code is in the file explorer); `Kazo.Os.AppSdk` also carries the `KOSBG` analyzer for `KazoBackground` in `analyzers/dotnet/cs/` (ADR 0140, [`background-jobs.md`](background-jobs.md)) |
+| `Kazo.Os.App.Abstractions`, `Kazo.Os.Simulation.Abstractions`, `Kazo.Os.Theming.Abstractions`, `Kazo.Os.AppSdk`, `.Blazor`, `.Terminal`, `.Web`, `.Web.Blazor`, `.Craft`, `.Icons`, `.VirtualKeyboard` | the public SDK, what an app references (`.Craft`: module of the Craft apps, shipped with the OS, ADR 0259) (`.FileView` is no longer part of it since 2.0: its code is in the file explorer); `Kazo.Os.AppSdk` also carries the `KOSBG` analyzer for `KazoBackground` in `analyzers/dotnet/cs/` (ADR 0140, [`background-jobs.md`](background-jobs.md)) |
 | `Kazo.Os.App.Build` | the build integration (see below) |
 | `Kazo.Os.Platform.Core`, `.Blazor`, `.ResourceAccounting`, `.WorkerHost`, `Kazo.Os.Infrastructure.Browser`, `Kazo.Os.Windowing.Abstractions`, `.Core`, `.Blazor`, `Kazo.Os.Taskbar.Blazor`, `Kazo.Os.Theming.Blazor`, `Kazo.Os.MobileShell.Blazor`, `Kazo.Os.Server.Contracts` | the platform, what a host composes (`Server.Contracts` is a dependency of `Platform.Core`) |
 | `Kazo.Os.Ecosystem.Host` | the OS itself: desktop, startup, services, browser adapters, design tokens |
@@ -402,7 +402,8 @@ recompiled. The `kazoos-solution` template needs this version for its
 | Library | Addition | Decision |
 |---|---|---|
 | `Kazo.Os.AppSdk` | `KazoAppPackages`, `KazoPackageSources`, `KazoPackagePolicy`, `KazoPackageTrust`, `KazoPackageScope`, `KazoInstalledPackage`, `KazoPackageInstallReport`, `KazoPackageException`: install an app for oneself or for everyone, trusted sources, block list | ADR 0182, 0208 |
-| `Kazo.Os.AppSdk` | `KazoAppCatalog`, `KazoCatalogApp`, `KazoCatalogAppVersion`, `KazoCatalogCategory`, `KazoCatalogItemKind`, `KazoPackageCatalog`, `KazoPackageUpdate`: Kazo OS Store catalogs and updates | ADR 0189, 0212 |
+| `Kazo.Os.AppSdk` | `KazoPackageInstallProgress`, `KazoPackageInstallStage`: steps and progress of an install, given to `InstallAsync` | ADR 0266 |
+| `Kazo.Os.AppSdk` | `KazoAppCatalog`, `KazoCatalogApp`, `KazoCatalogAppVersion`, `KazoCatalogCategory`, `KazoCatalogItemKind`, `KazoPackageCatalog`, `KazoPackageUpdate`: Kazo OS Store catalogs (with a version's file types, `FileHandlers`) and updates | ADR 0189, 0212, 0257, 0266 |
 | `Kazo.Os.AppSdk` | `KazoInstalledThemePack`, `KazoThemePackInstallReport`, `KazoThemePackParts`: theme packs | ADR 0213 |
 | `Kazo.Os.AppSdk` | `KazoWhatsNew`, `KazoChangeList`, `KazoChangeGroup`, `KazoChangeEntry`, `KazoChangeCategory`: the change list | ADR 0186 |
 | `Kazo.Os.AppSdk` | `KazoScreens`, `KazoScreenInfo` and their types: screens of the extended desktop | ADR 0184 |
@@ -533,6 +534,11 @@ repository, against the packages of its version, and **never rebuilt**:
 The tests load the current major's app (3.0.0) into the OS; those of
 1.x and 2.x remain as proof of the **refusal** of an app from another major
 (ADR 0149 §5, ADR 0228).
+
+The module of the Craft apps (`Kazo.Os.AppSdk.Craft`, ADR 0259) has no
+compatibility app yet: it is compiled against the packages of the first
+published version that contains the module (`produce-fixture.sh`), at that
+release.
 
 ```bash
 build/pack-local.sh

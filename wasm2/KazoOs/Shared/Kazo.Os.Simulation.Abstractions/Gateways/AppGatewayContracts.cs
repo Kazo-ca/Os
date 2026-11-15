@@ -450,7 +450,53 @@ public sealed record AppIntentOpenFileResult(
     AppIntentOpenFileOutcome Outcome,
     IReadOnlyList<string>? CandidateAppIds = null,
     string? ErrorCode = null,
-    bool FellBackToOpen = false);
+    bool FellBackToOpen = false)
+{
+    /// <summary>
+    /// Gets the apps of the Store catalogs that declare this file type, for
+    /// <see cref="AppIntentOpenFileOutcome.NoHandler"/> (ADR 0257 §3): official catalog first, then
+    /// the order of <c>[catalogs]</c>. Empty when nothing is proposed, offline, or for another outcome.
+    /// </summary>
+    public IReadOnlyList<AppIntentSuggestedCatalogApp> SuggestedCatalogApps { get; init; } = [];
+}
+
+/// <summary>
+/// An app of a Store catalog that can open a file no installed app opens (ADR 0257 §2, §3). The
+/// Store installs it (<c>--app=&lt;AppId&gt;</c>), or <c>kazopkg install catalog:&lt;Catalog&gt;/&lt;AppId&gt;</c>.
+/// </summary>
+/// <param name="AppId">App identifier.</param>
+/// <param name="Name">Its name in the catalog.</param>
+/// <param name="Catalog">Name of the catalog of <c>[catalogs]</c> that publishes it.</param>
+public sealed record AppIntentSuggestedCatalogApp(string AppId, string Name, string Catalog)
+{
+    /// <summary>
+    /// Gets the short description of the app per language code (<c>en</c>, <c>fr</c>, …) as its
+    /// catalog writes it, so the box that proposes it can say what it is (ADR 0257 §4); empty when
+    /// the catalog gives none.
+    /// </summary>
+    public IReadOnlyDictionary<string, string> ShortDescriptions { get; init; } = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// Gets the absolute address of the 256×256 PNG icon of the proposed version, or
+    /// <see langword="null"/> when the catalog has none. Offline the image does not load: show a
+    /// generic icon then.
+    /// </summary>
+    public string? IconUri { get; init; }
+
+    /// <summary>Compares every field, the descriptions by their content (a record would compare the map by reference).</summary>
+    /// <param name="other">The other app.</param>
+    public bool Equals(AppIntentSuggestedCatalogApp? other) =>
+        other is not null
+        && string.Equals(AppId, other.AppId, StringComparison.Ordinal)
+        && string.Equals(Name, other.Name, StringComparison.Ordinal)
+        && string.Equals(Catalog, other.Catalog, StringComparison.Ordinal)
+        && string.Equals(IconUri, other.IconUri, StringComparison.Ordinal)
+        && ShortDescriptions.Count == other.ShortDescriptions.Count
+        && ShortDescriptions.All(pair => other.ShortDescriptions.TryGetValue(pair.Key, out string? text) && string.Equals(text, pair.Value, StringComparison.Ordinal));
+
+    /// <inheritdoc />
+    public override int GetHashCode() => HashCode.Combine(AppId, Name, Catalog, IconUri, ShortDescriptions.Count);
+}
 
 /// <summary>Identifies the stable outcome of one reveal, URI, app-settings or app-defined intent (ADR 0096).</summary>
 public enum AppIntentOutcome
@@ -537,6 +583,21 @@ public interface IAppIntentGateway
     ValueTask<AppIntentOpenFileResult> EditFileAsync(
         VirtualPath path, string? mediaType = null, CancellationToken cancellationToken = default) =>
         throw new NotSupportedException("This intents gateway does not support editing files.");
+
+    /// <summary>
+    /// Lists the apps of the Store catalogs, not installed yet, that declare <paramref name="path"/>'s
+    /// type for <c>open</c> (ADR 0257 §2, §4): the "Open with" box shows them under the installed
+    /// apps, with a way to the Store. Only the catalogs this OS already downloaded are read, so the
+    /// call never waits for the network; offline, or in a gateway that does not support it, the list
+    /// is empty.
+    /// </summary>
+    /// <param name="path">The file.</param>
+    /// <param name="mediaType">Its media type, when the caller knows it.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <exception cref="AppGatewayAccessDeniedException">Policy denies <see cref="AppCapabilities.AppsLaunch"/>.</exception>
+    ValueTask<IReadOnlyList<AppIntentSuggestedCatalogApp>> SuggestCatalogAppsAsync(
+        VirtualPath path, string? mediaType = null, CancellationToken cancellationToken = default) =>
+        ValueTask.FromResult<IReadOnlyList<AppIntentSuggestedCatalogApp>>([]);
 
     /// <summary>
     /// Requests that the default folder handler open the parent of <paramref name="path"/> and select

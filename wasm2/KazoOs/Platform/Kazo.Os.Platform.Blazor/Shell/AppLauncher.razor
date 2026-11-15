@@ -244,6 +244,27 @@
                         <small>@L["Launcher.FileExplorerHint"]</small>
                     </span>
                 </button>
+                @* ADR 0268: the Store sits in Quick access, not among the default pins, between File Explorer and Settings. *@
+                <button type="button"
+                        class="quick-link"
+                        disabled="@(StoreApp is null)"
+                        aria-label="@L["Launcher.OpenStore"]"
+                        @onclick="() => LaunchQuickAppAsync(StoreAppId)">
+                    <span class="quick-icon" aria-hidden="true">
+                        @if (StoreApp is { } storeApp)
+                        {
+                            <ShellAppIcon App="storeApp" Size="22" />
+                        }
+                        else
+                        {
+                            <KazoIcon Library="IconLibrary.Lucide" Name="store" Size="22" Title="" />
+                        }
+                    </span>
+                    <span>
+                        <strong>@L["Launcher.Store"]</strong>
+                        <small>@L["Launcher.StoreHint"]</small>
+                    </span>
+                </button>
                 <button type="button"
                         class="quick-link"
                         disabled="@(SettingsApp is null)"

@@ -1,0 +1,1 @@
+{ "glue": "fakecraft.js", "wasm": "fakecraft_bg.wasm", "note": "Fake Craft app of the Kazo OS Craft test package (ADR 0259); not a real build." }

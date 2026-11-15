@@ -1,5 +1,6 @@
 using Kazo.Os.App.Abstractions;
 using Kazo.Os.Ecosystem;
+using Kazo.Os.Platform.Core.AppLinks;
 using Kazo.Os.Simulation.Abstractions.Recovery;
 using Kazo.Os.Simulation.Abstractions.Sessions;
 
@@ -20,6 +21,23 @@ public sealed class EcosystemHostStateTests
 
         Assert.Equal(EcosystemHostView.Login, state.View);
         Assert.Equal(["admin", "zed"], state.Users.Select(user => user.LoginName.Value));
+    }
+
+    [Fact]
+    public void A_pending_app_launch_link_is_taken_once()
+    {
+        EcosystemHostState state = new();
+        Assert.Null(state.TakePendingAppLaunch());
+        Assert.True(AppLaunchLink.TryParse("/?autolaunch=ca.kazo.word", out AppLaunchLink? link));
+
+        state.SetPendingAppLaunch(link!);
+        // A sign-in screen shown again (sign-out, retry) keeps the link until a desktop takes it.
+        state.CompleteIdentityLoad([]);
+        Assert.Same(link, state.PendingAppLaunch);
+
+        Assert.Same(link, state.TakePendingAppLaunch());
+        Assert.Null(state.PendingAppLaunch);
+        Assert.Null(state.TakePendingAppLaunch());
     }
 
     [Fact]

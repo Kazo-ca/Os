@@ -74,7 +74,7 @@ alice@kazoos:~$ watch -n 1 'ps | wc -l'
 | `df` | `-h -T -a` | `KazoDriveInfo` disks (`/dev/hda` on `/`): real browser usage and quota since ADR 0099 §2; `-a` adds the pseudo-filesystems of `/proc/mounts`. |
 | `zip` | `-r -q -j -d -0…-9` | Real deflate archive readable by any zip tool; updates an existing archive; Unix modes are stored in the external attributes. |
 | `unzip` | `-l -t -p -o -n -q -j`, `-d DOSSIER`, `[MOTIFS]` | Restores modes (`+x`); refuses an entry that would escape the folder (`../`, "zip slip"); does not replace a file without `-o`. |
-| `xdg-open` | `FICHIER`, `DOSSIER` or `URI` (a single argument) | Like freedesktop (ADR 0096 §3): a path opens with its association (a folder in the file manager, `inode/directory`), a URI with the handler of its scheme (`x-scheme-handler/<scheme>`, the browser for `http`/`https`, the file for `file://`). Returns as soon as it is sent. `xdg-open` codes: 0 sent, 1 command line, 3 no app, 4 missing file or failure; several apps with no default give 4 and the list of candidates (a terminal has no picker and the OS does not guess). `apps.launch`. |
+| `xdg-open` | `FICHIER`, `DOSSIER` or `URI` (a single argument) | Like freedesktop (ADR 0096 §3): a path opens with its association (a folder in the file manager, `inode/directory`), a URI with the handler of its scheme (`x-scheme-handler/<scheme>`, the browser for `http`/`https`, the file for `file://`). Returns as soon as it is sent. `xdg-open` codes: 0 sent, 1 command line, 3 no app (under the error, the Store apps that open this type and the line `kazopkg install catalog:<catalog>/<appId>`, ADR 0257), 4 missing file or failure; several apps with no default give 4 and the list of candidates (a terminal has no picker and the OS does not guess). `apps.launch`. |
 | `xdg-mime` | `query default TYPE`, `query filetype FICHIER`, `default APP TYPE…` | Like freedesktop (ADR 0121 §5): `query default` prints the app that opens this type for this user (nothing without a default); `default` writes the user's choice to `~/.config/kazoos/file-associations.json` (a trailing `.desktop` is ignored; the app must declare the type); `query filetype` gives `inode/directory`, the media type declared for the extension, the extension, or `application/octet-stream`. Only the `open` action. Codes: 0, 1 command line or invalid target, 2 missing file, 4 refusal. `file-associations.read`, `filesystem.user-home.write`. |
 
 ## Processes and services
@@ -114,7 +114,7 @@ alice@kazoos:~$ watch -n 1 'ps | wc -l'
 | `passwd` | `[NOM]`, `-d NOM`, `-S [NOM]`, `-h` | Changes the password (ADR 0120, [`sensitive-settings.md`](sensitive-settings.md)): `Current password:`, `New password:`, `Retype new password:`, read with echo off; `passwd: password updated successfully`. Wrong current password: `Authentication token manipulation error`, code 10; different confirmation: `Sorry, passwords do not match.`, code 10; fewer than 8 characters: `BAD PASSWORD`, code 1. Another account or `-d` requires `sudo` (`You may not view or modify password information for NOM.`), without asking for the old password; the account's keyring is set aside. `sudo passwd` without a name refuses (no root password). `-S` prints `NOM P\|NP\|L AAAA-MM-JJ 0 99999 7 -1`. On the main thread (terminal input). |
 
 Out of space: a refused write prints `No space left on device`
-(`ENOSPC`), a file over 16 MiB `File too large` (`EFBIG`).
+(`ENOSPC`), a file over 128 MiB `File too large` (`EFBIG`).
 
 ## Network
 

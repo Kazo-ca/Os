@@ -9,6 +9,8 @@ Accepted on 2026-10-30; Benoit confirmed choice A of question Q1 on
 [#247](https://github.com/Kazo-ca/Os/issues/247), work item 2 of the
 [Hack Store plan](../plans/kazoos-store.md), `todo/base` series.
 
+- **Complemented by:** [ADR 0243](0243-serve-installed-app-pages.md) (the
+  page load of one of these files, an iframe, is served too).
 - **Lifts:** the first limit of [ADR 0182](0182-install-apps-from-github.md)
   ("the `wwwroot/` resources of an installed app are not served").
 - **Complements:** [ADR 0098](0098-sdk-versions-packages-and-manifest-checks.md) §5

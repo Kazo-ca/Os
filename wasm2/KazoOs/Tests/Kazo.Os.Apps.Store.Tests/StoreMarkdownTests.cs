@@ -49,4 +49,42 @@ public sealed class StoreMarkdownTests
         Assert.Equal(StoreMarkdownSpanKind.Text, span.Kind);
         Assert.Equal("<script>x</script>", span.Text);
     }
+
+    [Fact]
+    public void A_line_that_goes_on_after_a_list_item_stays_in_that_item()
+    {
+        IReadOnlyList<StoreMarkdownBlock> blocks = StoreMarkdown.Parse(
+            "- Headers,\n  footers, page numbers\n- Tables\nwith merged cells\n\nAfter.");
+
+        Assert.Equal([StoreMarkdownBlockKind.BulletList, StoreMarkdownBlockKind.Paragraph], blocks.Select(block => block.Kind));
+        Assert.Equal(
+            ["Headers, footers, page numbers", "Tables with merged cells"],
+            blocks[0].Items.Select(item => string.Concat(item.Select(span => span.Text))));
+    }
+
+    [Fact]
+    public void A_numbered_item_keeps_its_continuation_and_a_heading_ends_the_list()
+    {
+        IReadOnlyList<StoreMarkdownBlock> blocks = StoreMarkdown.Parse("1. First\n   step\n2. Second\n## Next");
+
+        Assert.Equal([StoreMarkdownBlockKind.NumberedList, StoreMarkdownBlockKind.Heading], blocks.Select(block => block.Kind));
+        Assert.Equal("First step", Assert.Single(blocks[0].Items[0]).Text);
+    }
+
+    [Theory]
+    [InlineData("# Kazo Word\n\nA word processor.", "\nA word processor.")]
+    [InlineData("\n\n## **Kazo word**\nText", "Text")]
+    public void A_first_heading_that_repeats_the_apps_name_is_dropped(string markdown, string expected)
+    {
+        Assert.Equal(expected, StoreMarkdown.WithoutRepeatedTitle(markdown, "Kazo Word"));
+    }
+
+    [Theory]
+    [InlineData("# Kazo Word for teams\nText")]
+    [InlineData("Kazo Word\nText")]
+    [InlineData("Intro\n# Kazo Word")]
+    public void Any_other_description_is_kept_as_it_is(string markdown)
+    {
+        Assert.Equal(markdown, StoreMarkdown.WithoutRepeatedTitle(markdown, "Kazo Word"));
+    }
 }

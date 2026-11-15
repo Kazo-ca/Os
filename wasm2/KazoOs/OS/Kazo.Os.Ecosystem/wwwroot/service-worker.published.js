@@ -3,7 +3,8 @@
 // asset integrity checking, and safe update activation (P2-PWA-002 through P2-PWA-005),
 // plus the corrupted-cache recovery of ADR 0099 §3 (RESET_CACHE message, see onMessage)
 // and the cross-origin isolation headers of ADR 0131 §2 (see withIsolationHeaders), and the
-// wwwroot/ files of installed apps of ADR 0206 (see installedAppAssets.sw.js).
+// wwwroot/ files of installed apps of ADR 0206 (see installedAppAssets.sw.js), page loads of
+// those files included (ADR 0243, an iframe pointed at an installed app's page).
 
 self.importScripts('./service-worker-assets.js');
 self.importScripts('./_content/Kazo.Os.Infrastructure.Browser/installedAppAssets.sw.js');
@@ -37,7 +38,8 @@ const cacheName = `${cacheNamePrefix}${self.assetsManifest.version}`;
 const offlineAssetsInclude = [ /\.dll$/, /\.pdb$/, /\.wasm/, /\.html/, /\.js$/, /\.json$/, /\.css$/, /\.woff2?$/, /\.ttf$/, /\.svg$/, /\.webp$/, /\.png$/, /\.jpe?g$/, /\.gif$/, /\.ico$/, /\.blat$/, /\.dat$/, /\.webmanifest$/ ];
 // kazoos-host.json is never cached (ADR 0137): Kazo.Os.Server answers that path itself
 // ("a server delivered this OS"), so its bytes differ from the static file's integrity hash.
-const offlineAssetsExclude = [ /^service-worker\.js$/, /^kazoos-host\.json$/ ];
+// social-preview.png is only read by link previews (Facebook…), never by the OS: not cached offline.
+const offlineAssetsExclude = [ /^service-worker\.js$/, /^kazoos-host\.json$/, /^social-preview\.png$/ ];
 // appsettings.json is cached without its integrity hash (ADR 0226 §4): whoever deploys the OS
 // edits it in the published files (KazoOs:SignIn:FactoryReset, CrossOriginIsolation…) without
 // rebuilding, and an edited file must not make the whole release cache fail to install.
@@ -159,17 +161,21 @@ async function onFetch(event) {
 }
 
 async function fetchShellOrAsset(event) {
-    // Cache-First strategy for static assets and HTML shell (P2-PWA-004)
-    const shouldServeIndexHtml = event.request.mode === 'navigate'
-        && !manifestUrlList.some(url => url === event.request.url);
-
     // ADR 0206: an installed app's file, copied by the OS, comes before the release cache.
-    if (!shouldServeIndexHtml && installedAppAssets.handles(event.request)) {
+    // ADR 0243: a page load (navigation) too, so an iframe pointed at an installed app's page
+    // (_content/<assembly>/host/index.html?author=…) shows that page, not a second Kazo OS; the
+    // query stays on the frame's address for the page to read. An address under _content/ that no
+    // installed app holds still falls back to index.html below.
+    if (installedAppAssets.handles(event.request)) {
         const installed = await installedAppAssets.match(event.request);
         if (installed) {
             return installed;
         }
     }
+
+    // Cache-First strategy for static assets and HTML shell (P2-PWA-004)
+    const shouldServeIndexHtml = event.request.mode === 'navigate'
+        && !manifestUrlList.some(url => url === event.request.url);
 
     const request = shouldServeIndexHtml ? 'index.html' : event.request;
     const cache = await caches.open(cacheName);

@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+  <!--
+    Test package of ADR 0259 (series craft-host/base, work item 4), not part of the solution:
+    build/publish-trimmed.sh packs it with `dotnet build -c Release -t:KazoOsPack`, and
+    Kazo.Os.TrimmedPublish.E2E.Tests installs it with kazopkg, then drives it end to end.
+    It is a Craft app window built on the Kazo.Os.AppSdk.Craft module, as the guide
+    doc/en/wasm/framework/craft-apps.md describes, around a fake Craft app ("fakecraft",
+    wwwroot/fakecraft/) that speaks the craft-web-host and craft-web-api contracts. The module is
+    referenced to compile only: the package carries neither its assembly nor its _content/ files,
+    the OS serves them.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <KazoOsAppProject>true</KazoOsAppProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="10.0.14" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\Shared\Kazo.Os.App.Abstractions\Kazo.Os.App.Abstractions.csproj" />
+    <ProjectReference Include="..\..\..\..\Shared\Kazo.Os.AppSdk\Kazo.Os.AppSdk.csproj" />
+    <ProjectReference Include="..\..\..\..\Shared\Kazo.Os.AppSdk.Blazor\Kazo.Os.AppSdk.Blazor.csproj" />
+    <ProjectReference Include="..\..\..\..\Shared\Kazo.Os.AppSdk.Craft\Kazo.Os.AppSdk.Craft.csproj" />
+  </ItemGroup>
+</Project>

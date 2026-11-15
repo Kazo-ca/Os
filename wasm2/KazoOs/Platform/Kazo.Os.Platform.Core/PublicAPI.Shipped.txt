@@ -131,6 +131,40 @@ Kazo.Os.Platform.Core.AppComponentProvider.Component.get -> Kazo.Os.App.Abstract
 Kazo.Os.Platform.Core.AppComponentProvider.Component.init -> void
 Kazo.Os.Platform.Core.AppComponentProvider.Deconstruct(out string! AppId, out Kazo.Os.App.Abstractions.AppComponentManifest! Component) -> void
 Kazo.Os.Platform.Core.AppComponentProvider.Equals(Kazo.Os.Platform.Core.AppComponentProvider? other) -> bool
+Kazo.Os.Platform.Core.AppLinks.AppLaunchLink
+Kazo.Os.Platform.Core.AppLinks.AppLaunchLink.<Clone>$() -> Kazo.Os.Platform.Core.AppLinks.AppLaunchLink!
+Kazo.Os.Platform.Core.AppLinks.AppLaunchLink.AppId.get -> string!
+Kazo.Os.Platform.Core.AppLinks.AppLaunchLink.Equals(Kazo.Os.Platform.Core.AppLinks.AppLaunchLink? other) -> bool
+Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkOperation
+Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkOperation.<Clone>$() -> Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkOperation!
+Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkOperation.AppId.get -> string!
+Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkOperation.AppId.init -> void
+Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkOperation.AppLaunchLinkOperation(string! AppId, string! Name, string? Publisher, string? Version, Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkStep Step) -> void
+Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkOperation.CanCancel.get -> bool
+Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkOperation.Deconstruct(out string! AppId, out string! Name, out string? Publisher, out string? Version, out Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkStep Step) -> void
+Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkOperation.Equals(Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkOperation? other) -> bool
+Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkOperation.Name.get -> string!
+Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkOperation.Name.init -> void
+Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkOperation.Percent.get -> int
+Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkOperation.Publisher.get -> string?
+Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkOperation.Publisher.init -> void
+Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkOperation.Step.get -> Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkStep
+Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkOperation.Step.init -> void
+Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkOperation.Version.get -> string?
+Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkOperation.Version.init -> void
+Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkRunner
+Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkRunner.AppLaunchLinkRunner(System.Func<Kazo.Os.Simulation.Abstractions.Sessions.AuthenticatedPrincipal?>! currentUser, System.Func<Kazo.Os.Simulation.Abstractions.Sessions.AuthenticatedPrincipal!, Kazo.Os.AppSdk.Apps.IAppManagementGateway?>! packages, System.Func<Kazo.Os.Simulation.Abstractions.Sessions.AuthenticatedPrincipal!, string!, System.Threading.Tasks.Task<Kazo.Os.Platform.Core.Lifecycle.AppLaunchResult!>!>! launch, Kazo.Os.Simulation.Abstractions.Gateways.IAppLoggingGateway! log, Kazo.Os.Simulation.Abstractions.Notifications.INotificationQueue? notifications = null, System.Func<System.Globalization.CultureInfo!>? language = null, System.TimeProvider? time = null) -> void
+Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkRunner.Cancel() -> void
+Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkRunner.Changed -> System.Action?
+Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkRunner.Current.get -> Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkOperation?
+Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkRunner.RecordStoreOpened(Kazo.Os.Platform.Core.AppLinks.AppLaunchLink! link) -> void
+Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkRunner.RunAsync(Kazo.Os.Platform.Core.AppLinks.AppLaunchLink! link, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkStep
+Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkStep.Installing = 1 -> Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkStep
+Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkStep.Launching = 2 -> Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkStep
+Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkStep.Looking = 0 -> Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkStep
+Kazo.Os.Platform.Core.AppLinks.IAppLaunchLinkRunner
+Kazo.Os.Platform.Core.AppLinks.IAppLaunchLinkRunner.RunAsync(Kazo.Os.Platform.Core.AppLinks.AppLaunchLink! link, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 Kazo.Os.Platform.Core.Appearance.AccessibilityMode
 Kazo.Os.Platform.Core.Appearance.AccessibilityMode.Auto = 0 -> Kazo.Os.Platform.Core.Appearance.AccessibilityMode
 Kazo.Os.Platform.Core.Appearance.AccessibilityMode.Off = 2 -> Kazo.Os.Platform.Core.Appearance.AccessibilityMode
@@ -435,6 +469,9 @@ Kazo.Os.Platform.Core.Apps.Packages.AppCatalogVersion.Deconstruct(out Kazo.Os.Ap
 Kazo.Os.Platform.Core.Apps.Packages.AppCatalogVersion.Descriptions.get -> System.Collections.Generic.IReadOnlyDictionary<string!, string!>!
 Kazo.Os.Platform.Core.Apps.Packages.AppCatalogVersion.Descriptions.init -> void
 Kazo.Os.Platform.Core.Apps.Packages.AppCatalogVersion.Equals(Kazo.Os.Platform.Core.Apps.Packages.AppCatalogVersion? other) -> bool
+Kazo.Os.Platform.Core.Apps.Packages.AppCatalogVersion.FileHandlers.get -> System.Collections.Generic.IReadOnlyList<Kazo.Os.App.Abstractions.FileHandlerManifest!>!
+Kazo.Os.Platform.Core.Apps.Packages.AppCatalogVersion.FileHandlers.init -> void
+Kazo.Os.Platform.Core.Apps.Packages.AppCatalogVersion.HandlesFile(string? extension, string? mediaType, string! action) -> bool
 Kazo.Os.Platform.Core.Apps.Packages.AppCatalogVersion.Icon.get -> string?
 Kazo.Os.Platform.Core.Apps.Packages.AppCatalogVersion.Icon.init -> void
 Kazo.Os.Platform.Core.Apps.Packages.AppCatalogVersion.MaximumSdkVersion.get -> string?
@@ -485,6 +522,15 @@ Kazo.Os.Platform.Core.Apps.Packages.AppPackageDefaults.TrustedKeys.get -> System
 Kazo.Os.Platform.Core.Apps.Packages.AppPackageDefaults.TrustedKeys.init -> void
 Kazo.Os.Platform.Core.Apps.Packages.AppPackageDefaults.UpdateIntervalHours.get -> int
 Kazo.Os.Platform.Core.Apps.Packages.AppPackageDefaults.UpdateIntervalHours.init -> void
+Kazo.Os.Platform.Core.Apps.Packages.AppPackageDownloadProgress
+Kazo.Os.Platform.Core.Apps.Packages.AppPackageDownloadProgress.AppPackageDownloadProgress() -> void
+Kazo.Os.Platform.Core.Apps.Packages.AppPackageDownloadProgress.AppPackageDownloadProgress(long BytesReceived, long? TotalBytes) -> void
+Kazo.Os.Platform.Core.Apps.Packages.AppPackageDownloadProgress.BytesReceived.get -> long
+Kazo.Os.Platform.Core.Apps.Packages.AppPackageDownloadProgress.BytesReceived.init -> void
+Kazo.Os.Platform.Core.Apps.Packages.AppPackageDownloadProgress.Deconstruct(out long BytesReceived, out long? TotalBytes) -> void
+Kazo.Os.Platform.Core.Apps.Packages.AppPackageDownloadProgress.Equals(Kazo.Os.Platform.Core.Apps.Packages.AppPackageDownloadProgress other) -> bool
+Kazo.Os.Platform.Core.Apps.Packages.AppPackageDownloadProgress.TotalBytes.get -> long?
+Kazo.Os.Platform.Core.Apps.Packages.AppPackageDownloadProgress.TotalBytes.init -> void
 Kazo.Os.Platform.Core.Apps.Packages.AppPackageException
 Kazo.Os.Platform.Core.Apps.Packages.AppPackageException.AppPackageException(string! code, string! message) -> void
 Kazo.Os.Platform.Core.Apps.Packages.AppPackageException.Code.get -> string!
@@ -546,8 +592,10 @@ Kazo.Os.Platform.Core.Apps.Packages.AppPackageInstaller.FindPersonalThemePackCop
 Kazo.Os.Platform.Core.Apps.Packages.AppPackageInstaller.FindPreviousVersionAsync(Kazo.Os.Simulation.Abstractions.Gateways.IAppFileSystemGateway! fileSystem, string! appId, Kazo.Os.App.Abstractions.SemanticVersion current, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken), string? home = null) -> System.Threading.Tasks.ValueTask<Kazo.Os.App.Abstractions.SemanticVersion?>
 Kazo.Os.Platform.Core.Apps.Packages.AppPackageInstaller.FindThemePackInCatalogsAsync(string! packId, Kazo.Os.App.Abstractions.SemanticVersion? version, Kazo.Os.Platform.Core.Apps.Packages.AppSourcesConfig! sources, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.Platform.Core.Apps.Packages.AppPackageSource!>
 Kazo.Os.Platform.Core.Apps.Packages.AppPackageInstaller.FindUpdatesAsync(Kazo.Os.Platform.Core.Apps.Packages.AppSourcesConfig! sources, Kazo.Os.Platform.Core.Apps.InstalledAppsReadResult! systemInstalled, Kazo.Os.Platform.Core.Apps.InstalledAppsReadResult! personalInstalled, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.Platform.Core.Apps.Packages.AppPackageUpdateReport!>
+Kazo.Os.Platform.Core.Apps.Packages.AppPackageInstaller.GetCachedCatalog(string! name, Kazo.Os.Platform.Core.Apps.Packages.AppSourcesConfig! sources) -> Kazo.Os.Platform.Core.Apps.Packages.AppCatalogListing?
 Kazo.Os.Platform.Core.Apps.Packages.AppPackageInstaller.GetCatalogAsync(string! name, Kazo.Os.Platform.Core.Apps.Packages.AppSourcesConfig! sources, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken), bool refresh = false) -> System.Threading.Tasks.ValueTask<Kazo.Os.Platform.Core.Apps.Packages.AppCatalogListing!>
 Kazo.Os.Platform.Core.Apps.Packages.AppPackageInstaller.GetIndexAsync(Kazo.Os.Platform.Core.Apps.Packages.AppPackageSource! source, Kazo.Os.Platform.Core.Apps.Packages.AppSourcesConfig! sources, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.Platform.Core.Apps.Packages.AppPackageIndex!>
+Kazo.Os.Platform.Core.Apps.Packages.AppPackageInstaller.PrepareAsync(Kazo.Os.Platform.Core.Apps.Packages.AppPackageSource! source, Kazo.Os.Platform.Core.Apps.Packages.AppPackageInstallContext! request, System.IProgress<Kazo.Os.AppSdk.Apps.KazoPackageInstallProgress!>? progress, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.Platform.Core.Apps.Packages.AppPackagePlan!>
 Kazo.Os.Platform.Core.Apps.Packages.AppPackageInstaller.PrepareAsync(Kazo.Os.Platform.Core.Apps.Packages.AppPackageSource! source, Kazo.Os.Platform.Core.Apps.Packages.AppPackageInstallContext! request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.Platform.Core.Apps.Packages.AppPackagePlan!>
 Kazo.Os.Platform.Core.Apps.Packages.AppPackageInstaller.PrepareThemePackAsync(Kazo.Os.Platform.Core.Apps.Packages.AppPackageSource! source, Kazo.Os.Platform.Core.Apps.Packages.AppSourcesConfig! sources, Kazo.Os.Platform.Core.Apps.Packages.AppPolicy! policy, Kazo.Os.Platform.Core.Apps.Packages.AppPackageScope scope, string? home, System.Collections.Generic.IReadOnlyList<Kazo.Os.Platform.Core.Apps.Packages.InstalledThemePack!>! systemInstalled, System.Collections.Generic.IReadOnlyList<Kazo.Os.Platform.Core.Apps.Packages.InstalledThemePack!>! personalInstalled, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.Platform.Core.Apps.Packages.ThemePackPlan!>
 Kazo.Os.Platform.Core.Apps.Packages.AppPackageInstaller.ReadInstalledAsync(Kazo.Os.Simulation.Abstractions.Gateways.IAppFileSystemGateway! fileSystem, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.Platform.Core.Apps.InstalledAppsReadResult!>
@@ -556,10 +604,12 @@ Kazo.Os.Platform.Core.Apps.Packages.AppPackageInstaller.ReadPersonalInstalledAsy
 Kazo.Os.Platform.Core.Apps.Packages.AppPackageInstaller.ReadPolicyAsync(Kazo.Os.Simulation.Abstractions.Gateways.IAppFileSystemGateway! fileSystem, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.Platform.Core.Apps.Packages.AppPolicy!>
 Kazo.Os.Platform.Core.Apps.Packages.AppPackageInstaller.ReadSourcesAsync(Kazo.Os.Simulation.Abstractions.Gateways.IAppFileSystemGateway! fileSystem, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.Platform.Core.Apps.Packages.AppSourcesConfig!>
 Kazo.Os.Platform.Core.Apps.Packages.AppPackageInstaller.RecoverAsync(Kazo.Os.Simulation.Abstractions.Gateways.IAppFileSystemGateway! writer, string! appId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken), string? home = null) -> System.Threading.Tasks.ValueTask<string?>
+Kazo.Os.Platform.Core.Apps.Packages.AppPackageInstaller.RefreshCatalogsAsync(Kazo.Os.Platform.Core.Apps.Packages.AppSourcesConfig! sources, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
 Kazo.Os.Platform.Core.Apps.Packages.AppPackageInstaller.RemoveAsync(Kazo.Os.Simulation.Abstractions.Gateways.IAppFileSystemGateway! writer, string! appId, string! by, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken), string? home = null) -> System.Threading.Tasks.ValueTask<Kazo.Os.Platform.Core.Apps.Packages.AppPackageSource!>
 Kazo.Os.Platform.Core.Apps.Packages.AppPackageInstaller.RemoveThemePackAsync(Kazo.Os.Simulation.Abstractions.Gateways.IAppFileSystemGateway! writer, string! packId, string! by, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken), string? home = null) -> System.Threading.Tasks.ValueTask<Kazo.Os.Platform.Core.Apps.Packages.InstalledThemePack!>
 Kazo.Os.Platform.Core.Apps.Packages.AppPackageInstaller.RepairAsync(Kazo.Os.Simulation.Abstractions.Gateways.IAppFileSystemGateway! writer, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken), string? home = null) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<string!>!>
 Kazo.Os.Platform.Core.Apps.Packages.AppPackageInstaller.RollbackAsync(Kazo.Os.Simulation.Abstractions.Gateways.IAppFileSystemGateway! writer, string! appId, string! by, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken), string? home = null) -> System.Threading.Tasks.ValueTask<(Kazo.Os.Platform.Core.Apps.Packages.AppPackageSource! From, Kazo.Os.Platform.Core.Apps.Packages.AppPackageSource! To)>
+Kazo.Os.Platform.Core.Apps.Packages.AppPackageInstaller.SdkVersion.get -> Kazo.Os.App.Abstractions.SemanticVersion
 Kazo.Os.Platform.Core.Apps.Packages.AppPackagePlan
 Kazo.Os.Platform.Core.Apps.Packages.AppPackagePlan.<Clone>$() -> Kazo.Os.Platform.Core.Apps.Packages.AppPackagePlan!
 Kazo.Os.Platform.Core.Apps.Packages.AppPackagePlan.AppPackagePlan(Kazo.Os.Platform.Core.Apps.Packages.AppPackageSource! Source, Kazo.Os.Platform.Core.Apps.Packages.AppPackage! Package, Kazo.Os.App.Abstractions.SemanticVersion? PreviousVersion, bool Trusted) -> void
@@ -646,6 +696,7 @@ Kazo.Os.Platform.Core.Apps.Packages.AppPolicy.BlockedCategories.init -> void
 Kazo.Os.Platform.Core.Apps.Packages.AppPolicy.Deconstruct(out System.Collections.Generic.IReadOnlySet<string!>! BlockedApps, out System.Collections.Generic.IReadOnlySet<string!>! BlockedCategories, out System.Collections.Generic.IReadOnlySet<string!>! BlockedCapabilities, out System.Collections.Generic.IReadOnlyList<string!>! Warnings) -> void
 Kazo.Os.Platform.Core.Apps.Packages.AppPolicy.Equals(Kazo.Os.Platform.Core.Apps.Packages.AppPolicy? other) -> bool
 Kazo.Os.Platform.Core.Apps.Packages.AppPolicy.FindBlock(Kazo.Os.App.Abstractions.AppManifest! manifest) -> Kazo.Os.Platform.Core.Apps.Packages.AppBlockReason?
+Kazo.Os.Platform.Core.Apps.Packages.AppPolicy.FindBlock(string! appId, string? category, System.Collections.Generic.IReadOnlyList<string!>! capabilities) -> Kazo.Os.Platform.Core.Apps.Packages.AppBlockReason?
 Kazo.Os.Platform.Core.Apps.Packages.AppPolicy.FindBlock(string! packId, string? category) -> Kazo.Os.Platform.Core.Apps.Packages.AppBlockReason?
 Kazo.Os.Platform.Core.Apps.Packages.AppPolicy.Warnings.get -> System.Collections.Generic.IReadOnlyList<string!>!
 Kazo.Os.Platform.Core.Apps.Packages.AppPolicy.Warnings.init -> void
@@ -701,10 +752,15 @@ Kazo.Os.Platform.Core.Apps.Packages.AppUpdateMonitor.Pending.get -> System.Colle
 Kazo.Os.Platform.Core.Apps.Packages.AppUpdateMonitor.Publish(System.Collections.Generic.IReadOnlyList<Kazo.Os.Platform.Core.Apps.Packages.AppPackageUpdate!>! updates) -> void
 Kazo.Os.Platform.Core.Apps.Packages.AppUpdateMonitor.Start() -> void
 Kazo.Os.Platform.Core.Apps.Packages.AppUpdateMonitor.Stop() -> void
+Kazo.Os.Platform.Core.Apps.Packages.CatalogAppSuggestions
+Kazo.Os.Platform.Core.Apps.Packages.CatalogAppSuggestions.CatalogAppSuggestions(Kazo.Os.Platform.Core.Apps.Packages.AppPackageInstaller! installer, System.Func<Kazo.Os.Simulation.Abstractions.Gateways.IAppFileSystemGateway!>! systemReader, Kazo.Os.Platform.Core.AppCatalog! running, Microsoft.Extensions.Logging.ILogger<Kazo.Os.Platform.Core.Apps.Packages.CatalogAppSuggestions!>? logger = null) -> void
+Kazo.Os.Platform.Core.Apps.Packages.CatalogAppSuggestions.FindAsync(Kazo.Os.App.Abstractions.VirtualPath path, string? mediaType, string! action, Kazo.Os.Simulation.Abstractions.Sessions.AuthenticatedPrincipal? user, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<Kazo.Os.Simulation.Abstractions.Gateways.AppIntentSuggestedCatalogApp!>!>
 Kazo.Os.Platform.Core.Apps.Packages.HttpAppPackageDownloader
+Kazo.Os.Platform.Core.Apps.Packages.HttpAppPackageDownloader.DownloadAsync(System.Uri! uri, long maximumBytes, System.IProgress<Kazo.Os.Platform.Core.Apps.Packages.AppPackageDownloadProgress>? progress, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<byte[]?>
 Kazo.Os.Platform.Core.Apps.Packages.HttpAppPackageDownloader.DownloadAsync(System.Uri! uri, long maximumBytes, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<byte[]?>
 Kazo.Os.Platform.Core.Apps.Packages.HttpAppPackageDownloader.HttpAppPackageDownloader(System.Net.Http.HttpClient! http) -> void
 Kazo.Os.Platform.Core.Apps.Packages.IAppPackageDownloader
+Kazo.Os.Platform.Core.Apps.Packages.IAppPackageDownloader.DownloadAsync(System.Uri! uri, long maximumBytes, System.IProgress<Kazo.Os.Platform.Core.Apps.Packages.AppPackageDownloadProgress>? progress, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<byte[]?>
 Kazo.Os.Platform.Core.Apps.Packages.IAppPackageDownloader.DownloadAsync(System.Uri! uri, long maximumBytes, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<byte[]?>
 Kazo.Os.Platform.Core.Apps.Packages.IAppPackageSignatureVerifier
 Kazo.Os.Platform.Core.Apps.Packages.IAppPackageSignatureVerifier.VerifyAsync(byte[]! publicKey, byte[]! data, byte[]! signature, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<bool>
@@ -713,6 +769,7 @@ Kazo.Os.Platform.Core.Apps.Packages.IInstalledAppsActivator.ActivateAsync(System
 Kazo.Os.Platform.Core.Apps.Packages.IRuntimeApiSurface
 Kazo.Os.Platform.Core.Apps.Packages.IRuntimeApiSurface.HasAssembly(string! assemblyName) -> bool
 Kazo.Os.Platform.Core.Apps.Packages.IRuntimeApiSurface.HasField(string! assemblyName, string! typeName, string! fieldName) -> bool
+Kazo.Os.Platform.Core.Apps.Packages.IRuntimeApiSurface.HasMethod(string! assemblyName, string! typeName, string! methodName, int genericArity, System.Collections.Generic.IReadOnlyList<string!>! parameterTypes) -> bool
 Kazo.Os.Platform.Core.Apps.Packages.IRuntimeApiSurface.HasMethod(string! assemblyName, string! typeName, string! methodName, int genericArity, int parameterCount) -> bool
 Kazo.Os.Platform.Core.Apps.Packages.IRuntimeApiSurface.HasType(string! assemblyName, string! typeName) -> bool
 Kazo.Os.Platform.Core.Apps.Packages.InstalledApp
@@ -789,6 +846,7 @@ Kazo.Os.Platform.Core.Apps.Packages.InstalledThemePack.Version.init -> void
 Kazo.Os.Platform.Core.Apps.Packages.LoadedRuntimeApiSurface
 Kazo.Os.Platform.Core.Apps.Packages.LoadedRuntimeApiSurface.HasAssembly(string! assemblyName) -> bool
 Kazo.Os.Platform.Core.Apps.Packages.LoadedRuntimeApiSurface.HasField(string! assemblyName, string! typeName, string! fieldName) -> bool
+Kazo.Os.Platform.Core.Apps.Packages.LoadedRuntimeApiSurface.HasMethod(string! assemblyName, string! typeName, string! methodName, int genericArity, System.Collections.Generic.IReadOnlyList<string!>! parameterTypes) -> bool
 Kazo.Os.Platform.Core.Apps.Packages.LoadedRuntimeApiSurface.HasMethod(string! assemblyName, string! typeName, string! methodName, int genericArity, int parameterCount) -> bool
 Kazo.Os.Platform.Core.Apps.Packages.LoadedRuntimeApiSurface.HasType(string! assemblyName, string! typeName) -> bool
 Kazo.Os.Platform.Core.Apps.Packages.ManagedAppPackageSignatureVerifier
@@ -1146,6 +1204,7 @@ Kazo.Os.Platform.Core.Diagnostics.LogRotationPolicy
 Kazo.Os.Platform.Core.Diagnostics.SensitiveKeyDiagnosticRedactor
 Kazo.Os.Platform.Core.Diagnostics.SensitiveKeyDiagnosticRedactor.Redact(string! propertyKey, string! value) -> string!
 Kazo.Os.Platform.Core.Diagnostics.SensitiveKeyDiagnosticRedactor.SensitiveKeyDiagnosticRedactor() -> void
+Kazo.Os.Platform.Core.Diagnostics.SensitiveTextRedactor
 Kazo.Os.Platform.Core.Discovery.AppDescriptor
 Kazo.Os.Platform.Core.Discovery.AppDescriptor.<Clone>$() -> Kazo.Os.Platform.Core.Discovery.AppDescriptor!
 Kazo.Os.Platform.Core.Discovery.AppDescriptor.AppDescriptor(Kazo.Os.App.Abstractions.AppManifest! Manifest, System.Type! EntryPointType, System.Reflection.Assembly! Assembly) -> void
@@ -1399,6 +1458,7 @@ Kazo.Os.Platform.Core.Execution.AppExecutionContextFactory.AppExecutionContextFa
 Kazo.Os.Platform.Core.Execution.AppExecutionContextFactory.BackgroundJobs.get -> System.Func<Kazo.Os.Platform.Core.Execution.BackgroundJobService!>?
 Kazo.Os.Platform.Core.Execution.AppExecutionContextFactory.BackgroundJobs.init -> void
 Kazo.Os.Platform.Core.Execution.AppExecutionContextFactory.Create(Kazo.Os.App.Abstractions.AppManifest! manifest, Kazo.Os.Simulation.Abstractions.Sessions.AuthenticatedPrincipal! principal, Kazo.Os.Simulation.Abstractions.Processes.ProcessRecord! process, System.Collections.Generic.IReadOnlySet<string!>! grantedCapabilities, System.Guid? instanceId = null, bool isRootElevated = false, Kazo.Os.App.Abstractions.OneShotElevationGrantSet? oneShotElevation = null) -> Kazo.Os.AppSdk.IAppExecutionContext!
+Kazo.Os.Platform.Core.Execution.AppExecutionContextFactory.CreateManagementGateway(Kazo.Os.Simulation.Abstractions.Sessions.AuthenticatedPrincipal! principal, string! callerAppId, System.Func<System.Globalization.CultureInfo!>? language = null) -> Kazo.Os.AppSdk.Apps.IAppManagementGateway?
 Kazo.Os.Platform.Core.Execution.AppExecutionContextFactory.TimeZones.get -> Kazo.Os.Platform.Core.Globalization.SessionTimeZoneService?
 Kazo.Os.Platform.Core.Execution.AppExecutionContextFactory.TimeZones.init -> void
 Kazo.Os.Platform.Core.Execution.AppFileSystemGateway
@@ -1803,6 +1863,8 @@ Kazo.Os.Platform.Core.Intents.AppIntentDispatchResult.StandardOutput.get -> stri
 Kazo.Os.Platform.Core.Intents.AppIntentDispatchResult.StandardOutput.init -> void
 Kazo.Os.Platform.Core.Intents.AppIntentDispatchResult.Status.get -> Kazo.Os.Platform.Core.Intents.AppIntentDispatchStatus
 Kazo.Os.Platform.Core.Intents.AppIntentDispatchResult.Status.init -> void
+Kazo.Os.Platform.Core.Intents.AppIntentDispatchResult.SuggestedCatalogApps.get -> System.Collections.Generic.IReadOnlyList<Kazo.Os.Simulation.Abstractions.Gateways.AppIntentSuggestedCatalogApp!>!
+Kazo.Os.Platform.Core.Intents.AppIntentDispatchResult.SuggestedCatalogApps.init -> void
 Kazo.Os.Platform.Core.Intents.AppIntentDispatchStatus
 Kazo.Os.Platform.Core.Intents.AppIntentDispatchStatus.AccessDenied = 8 -> Kazo.Os.Platform.Core.Intents.AppIntentDispatchStatus
 Kazo.Os.Platform.Core.Intents.AppIntentDispatchStatus.CapabilityDenied = 1 -> Kazo.Os.Platform.Core.Intents.AppIntentDispatchStatus
@@ -1816,6 +1878,8 @@ Kazo.Os.Platform.Core.Intents.AppIntentDispatchStatus.NotFound = 2 -> Kazo.Os.Pl
 Kazo.Os.Platform.Core.Intents.AppIntentDispatchStatus.TargetInvalid = 5 -> Kazo.Os.Platform.Core.Intents.AppIntentDispatchStatus
 Kazo.Os.Platform.Core.Intents.AppIntentDispatcher
 Kazo.Os.Platform.Core.Intents.AppIntentDispatcher.AppIntentDispatcher(Kazo.Os.Platform.Core.Lifecycle.AppLifecycleOrchestrator! orchestrator, Kazo.Os.Platform.Core.AppCatalog! catalog, Kazo.Os.Platform.Core.Lifecycle.IAppEnablementRegistry! enablement, Kazo.Os.Platform.Core.Intents.FileAssociationResolver! associations, Kazo.Os.App.Abstractions.Policy.ICapabilityGrantRepository! grants, Kazo.Os.Simulation.Abstractions.FileSystem.IFileSystemService! fileSystem) -> void
+Kazo.Os.Platform.Core.Intents.AppIntentDispatcher.CatalogSuggestions.get -> System.Func<Kazo.Os.Platform.Core.Apps.Packages.CatalogAppSuggestions?>?
+Kazo.Os.Platform.Core.Intents.AppIntentDispatcher.CatalogSuggestions.init -> void
 Kazo.Os.Platform.Core.Intents.AppIntentDispatcher.DispatchAsync(Kazo.Os.App.Abstractions.AppIntentRequest! request, Kazo.Os.Simulation.Abstractions.Sessions.AuthenticatedPrincipal! principal, Kazo.Os.AppSdk.IFullScreenTerminalSession? fullScreen = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken), Kazo.Os.Platform.Core.Policy.IDangerousCapabilityApprovalPrompt? approvalPrompt = null, Kazo.Os.AppSdk.IAppExecutionContext? callerContext = null) -> System.Threading.Tasks.ValueTask<Kazo.Os.Platform.Core.Intents.AppIntentDispatchResult!>
 Kazo.Os.Platform.Core.Intents.AppIntentDispatcher.GetServiceStartModeAsync(string! callerAppId, string! userId, string! targetAppId, Kazo.Os.Simulation.Abstractions.Sessions.AuthenticatedPrincipal! principal) -> System.Threading.Tasks.ValueTask<(Kazo.Os.Platform.Core.Intents.ServiceControlDispatchResult! Result, Kazo.Os.App.Abstractions.ServiceStartMode Mode)>
 Kazo.Os.Platform.Core.Intents.AppIntentDispatcher.GetServiceStatus(string! targetAppId) -> Kazo.Os.Simulation.Abstractions.Gateways.ServiceStatusSnapshot!
@@ -1823,6 +1887,7 @@ Kazo.Os.Platform.Core.Intents.AppIntentDispatcher.ResetFailedService(string! cal
 Kazo.Os.Platform.Core.Intents.AppIntentDispatcher.SetServiceStartModeAsync(string! callerAppId, string! userId, string! targetAppId, Kazo.Os.Simulation.Abstractions.Sessions.AuthenticatedPrincipal! principal, Kazo.Os.App.Abstractions.ServiceStartMode mode) -> System.Threading.Tasks.ValueTask<Kazo.Os.Platform.Core.Intents.ServiceControlDispatchResult!>
 Kazo.Os.Platform.Core.Intents.AppIntentDispatcher.StartServiceAsync(string! callerAppId, string! userId, string! targetAppId, Kazo.Os.Simulation.Abstractions.Sessions.AuthenticatedPrincipal! principal) -> System.Threading.Tasks.ValueTask<Kazo.Os.Platform.Core.Intents.ServiceControlDispatchResult!>
 Kazo.Os.Platform.Core.Intents.AppIntentDispatcher.StopServiceAsync(string! callerAppId, string! userId, string! targetAppId, Kazo.Os.Simulation.Abstractions.Sessions.AuthenticatedPrincipal! principal) -> System.Threading.Tasks.ValueTask<Kazo.Os.Platform.Core.Intents.ServiceControlDispatchResult!>
+Kazo.Os.Platform.Core.Intents.AppIntentDispatcher.SuggestCatalogAppsForAsync(string! callerAppId, Kazo.Os.App.Abstractions.VirtualPath path, string? mediaType, Kazo.Os.Simulation.Abstractions.Sessions.AuthenticatedPrincipal! principal) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<Kazo.Os.Simulation.Abstractions.Gateways.AppIntentSuggestedCatalogApp!>?>
 Kazo.Os.Platform.Core.Intents.ConfiguredFileAssociation
 Kazo.Os.Platform.Core.Intents.ConfiguredFileAssociation.<Clone>$() -> Kazo.Os.Platform.Core.Intents.ConfiguredFileAssociation!
 Kazo.Os.Platform.Core.Intents.ConfiguredFileAssociation.Action.get -> string!
@@ -2027,6 +2092,15 @@ Kazo.Os.Platform.Core.Lifecycle.AppEnablementRegistry.DisabledAppIds.get -> Syst
 Kazo.Os.Platform.Core.Lifecycle.AppEnablementRegistry.IsEnabled(string! appId) -> bool
 Kazo.Os.Platform.Core.Lifecycle.AppEnablementRegistry.MarkDisabled(System.Collections.Generic.IEnumerable<string!>! appIds) -> void
 Kazo.Os.Platform.Core.Lifecycle.AppEnablementRegistry.MarkEnabled(string! appId) -> void
+Kazo.Os.Platform.Core.Lifecycle.AppLaunchRefusal
+Kazo.Os.Platform.Core.Lifecycle.AppLaunchRefusal.<Clone>$() -> Kazo.Os.Platform.Core.Lifecycle.AppLaunchRefusal!
+Kazo.Os.Platform.Core.Lifecycle.AppLaunchRefusal.AppLaunchRefusal(string! ErrorCode, string! Message) -> void
+Kazo.Os.Platform.Core.Lifecycle.AppLaunchRefusal.Deconstruct(out string! ErrorCode, out string! Message) -> void
+Kazo.Os.Platform.Core.Lifecycle.AppLaunchRefusal.Equals(Kazo.Os.Platform.Core.Lifecycle.AppLaunchRefusal? other) -> bool
+Kazo.Os.Platform.Core.Lifecycle.AppLaunchRefusal.ErrorCode.get -> string!
+Kazo.Os.Platform.Core.Lifecycle.AppLaunchRefusal.ErrorCode.init -> void
+Kazo.Os.Platform.Core.Lifecycle.AppLaunchRefusal.Message.get -> string!
+Kazo.Os.Platform.Core.Lifecycle.AppLaunchRefusal.Message.init -> void
 Kazo.Os.Platform.Core.Lifecycle.AppLaunchRequest
 Kazo.Os.Platform.Core.Lifecycle.AppLaunchRequest.<Clone>$() -> Kazo.Os.Platform.Core.Lifecycle.AppLaunchRequest!
 Kazo.Os.Platform.Core.Lifecycle.AppLaunchRequest.AppId.get -> string!
@@ -2101,6 +2175,7 @@ Kazo.Os.Platform.Core.Lifecycle.AppLaunchStatus.EntryPointFault = 4 -> Kazo.Os.P
 Kazo.Os.Platform.Core.Lifecycle.AppLaunchStatus.FocusedExisting = 1 -> Kazo.Os.Platform.Core.Lifecycle.AppLaunchStatus
 Kazo.Os.Platform.Core.Lifecycle.AppLaunchStatus.Launched = 0 -> Kazo.Os.Platform.Core.Lifecycle.AppLaunchStatus
 Kazo.Os.Platform.Core.Lifecycle.AppLaunchStatus.NotFound = 2 -> Kazo.Os.Platform.Core.Lifecycle.AppLaunchStatus
+Kazo.Os.Platform.Core.Lifecycle.AppLaunchStatus.UpdateRequired = 6 -> Kazo.Os.Platform.Core.Lifecycle.AppLaunchStatus
 Kazo.Os.Platform.Core.Lifecycle.AppLifecycleOrchestrator
 Kazo.Os.Platform.Core.Lifecycle.AppLifecycleOrchestrator.AppLifecycleOrchestrator(Kazo.Os.Platform.Core.AppCatalog! catalog, System.Collections.Generic.IReadOnlyDictionary<string!, Kazo.Os.Platform.Core.Discovery.AppDescriptor!>! descriptors, Kazo.Os.Platform.Core.Lifecycle.AppEnablementRegistry! enablement, Kazo.Os.Simulation.Abstractions.Processes.IProcessManager! processManager, Kazo.Os.App.Abstractions.Policy.ICapabilityGrantRepository! grants, Kazo.Os.Platform.Core.Execution.AppExecutionContextFactory! contextFactory, Kazo.Os.Simulation.Abstractions.Events.IEventBus? eventBus = null, Kazo.Os.Platform.Core.Lifecycle.IAppDescriptorLoader? descriptorLoader = null, System.IServiceProvider? services = null, Kazo.Os.Simulation.Abstractions.FileSystem.IFileSystemService? fileSystem = null, Kazo.Os.App.Abstractions.Policy.IElevationTicketStore? elevationTickets = null, Kazo.Os.Platform.Core.Policy.IDangerousCapabilityGate? dangerousCapabilityGate = null, Kazo.Os.Platform.Core.Processes.LoginEnvironmentProvider? loginEnvironment = null, Kazo.Os.Platform.Core.Execution.IRemoteProcessHost? remoteHost = null, Kazo.Os.Simulation.Abstractions.Time.ISimulationClock? clock = null, Microsoft.Extensions.Logging.ILogger<Kazo.Os.Platform.Core.Lifecycle.AppLifecycleOrchestrator!>? logger = null) -> void
 Kazo.Os.Platform.Core.Lifecycle.AppLifecycleOrchestrator.CompleteShellProcess(Kazo.Os.Simulation.Abstractions.Processes.ProcessId pid, int exitCode) -> void
@@ -2153,6 +2228,8 @@ Kazo.Os.Platform.Core.Lifecycle.IAppEnablementRegistry
 Kazo.Os.Platform.Core.Lifecycle.IAppEnablementRegistry.Changed -> System.EventHandler?
 Kazo.Os.Platform.Core.Lifecycle.IAppEnablementRegistry.DisabledAppIds.get -> System.Collections.Generic.IReadOnlyCollection<string!>!
 Kazo.Os.Platform.Core.Lifecycle.IAppEnablementRegistry.IsEnabled(string! appId) -> bool
+Kazo.Os.Platform.Core.Lifecycle.IAppLaunchGate
+Kazo.Os.Platform.Core.Lifecycle.IAppLaunchGate.CheckAsync(Kazo.Os.App.Abstractions.AppManifest! manifest, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Kazo.Os.Platform.Core.Lifecycle.AppLaunchRefusal?>
 Kazo.Os.Platform.Core.Lifecycle.ServiceStartupCoordinator
 Kazo.Os.Platform.Core.Lifecycle.ServiceStartupCoordinator.Dispose() -> void
 Kazo.Os.Platform.Core.Lifecycle.ServiceStartupCoordinator.ServiceStartupCoordinator(Kazo.Os.Platform.Core.Lifecycle.AppLifecycleOrchestrator! orchestrator, Kazo.Os.Simulation.Abstractions.Events.IEventBus! eventBus, Kazo.Os.Simulation.Abstractions.Sessions.ISessionService! session, Kazo.Os.Simulation.Abstractions.Processes.IProcessManager! processManager, Kazo.Os.Platform.Core.Apps.AppInstallationService? installation = null, System.Func<System.DateTimeOffset>? clock = null, Microsoft.Extensions.Logging.ILogger<Kazo.Os.Platform.Core.Lifecycle.ServiceStartupCoordinator!>? logger = null) -> void
@@ -3991,6 +4068,11 @@ abstract Kazo.Os.Platform.Core.Network.Websites.SimulatedWebsiteControllerBase.S
 abstract Kazo.Os.Platform.Core.Network.Websites.SimulatedWebsiteControllerBase.Theme.get -> string!
 abstract Kazo.Os.Platform.Core.Shell.ShellCommand.<Clone>$() -> Kazo.Os.Platform.Core.Shell.ShellCommand!
 abstract Kazo.Os.Platform.Core.Shell.ShellWordPart.<Clone>$() -> Kazo.Os.Platform.Core.Shell.ShellWordPart!
+const Kazo.Os.Platform.Core.AppLinks.AppLaunchLink.MaxAppIdLength = 128 -> int
+const Kazo.Os.Platform.Core.AppLinks.AppLaunchLink.ParameterName = "autolaunch" -> string!
+const Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkOperation.StepCount = 3 -> int
+const Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkRunner.SourceAppId = "org.kazoos.app-link" -> string!
+const Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkRunner.StoreAppId = "org.kazoos.store" -> string!
 const Kazo.Os.Platform.Core.Appearance.AccessibilitySettingsDocuments.HighContrastKey = "highContrast" -> string!
 const Kazo.Os.Platform.Core.Appearance.AccessibilitySettingsDocuments.ReducedMotionKey = "reducedMotion" -> string!
 const Kazo.Os.Platform.Core.Appearance.AccessibilitySettingsDocuments.TextScaleKey = "textScale" -> string!
@@ -4012,6 +4094,8 @@ const Kazo.Os.Platform.Core.Apps.AppsConfigDocument.Section = "uninstalled" -> s
 const Kazo.Os.Platform.Core.Apps.AppsConfigDocument.UserDefaultContent = "# Apps you uninstalled for yourself (ADR 0048). Same format as /etc/kazoos/apps.config.\n[uninstalled]\n" -> string!
 const Kazo.Os.Platform.Core.Apps.Packages.AppCatalogDocument.AppKind = "app" -> string!
 const Kazo.Os.Platform.Core.Apps.Packages.AppCatalogDocument.MaximumBytes = 8388608 -> int
+const Kazo.Os.Platform.Core.Apps.Packages.AppCatalogDocument.MaximumFileHandlerValues = 64 -> int
+const Kazo.Os.Platform.Core.Apps.Packages.AppCatalogDocument.MaximumFileHandlers = 64 -> int
 const Kazo.Os.Platform.Core.Apps.Packages.AppCatalogDocument.SupportedSchemaVersion = 1 -> int
 const Kazo.Os.Platform.Core.Apps.Packages.AppCatalogDocument.ThemePackKind = "theme-pack" -> string!
 const Kazo.Os.Platform.Core.Apps.Packages.AppDataGuard.BackupsUnderHome = ".local/share/kazoos/app-backups" -> string!
@@ -4065,6 +4149,7 @@ const Kazo.Os.Platform.Core.Apps.Packages.AppSourcesConfigDocument.TrustedSectio
 const Kazo.Os.Platform.Core.Apps.Packages.AppSourcesConfigDocument.UpdatesSection = "updates" -> string!
 const Kazo.Os.Platform.Core.Apps.Packages.AppUpdateMonitor.StoreAppId = "org.kazoos.store" -> string!
 const Kazo.Os.Platform.Core.Apps.Packages.AppUpdateMonitor.UpdatesPageArgument = "--page=installed" -> string!
+const Kazo.Os.Platform.Core.Apps.Packages.CatalogAppSuggestions.MaximumSuggestions = 8 -> int
 const Kazo.Os.Platform.Core.Apps.Packages.InstalledAppsLayout.HomesRoot = "/home" -> string!
 const Kazo.Os.Platform.Core.Apps.Packages.InstalledAppsLayout.PersonalConfigDefaultContent = "# Apps you installed for yourself (ADR 0189 section 3), read when your session opens.\n# Use kazopkg install --user | remove --user to change this list.\n[installed]\n" -> string!
 const Kazo.Os.Platform.Core.Apps.Packages.InstalledAppsLayout.PersonalConfigUnderHome = ".config/kazoos/installed-apps.config" -> string!
@@ -4101,6 +4186,7 @@ const Kazo.Os.Platform.Core.Diagnostics.LogFileWriter.LoggingCategory = "logging
 const Kazo.Os.Platform.Core.Diagnostics.LogFileWriter.QueueCapacity = 10000 -> int
 const Kazo.Os.Platform.Core.Diagnostics.LogRotationPolicy.MaxArchives = 5 -> int
 const Kazo.Os.Platform.Core.Diagnostics.LogRotationPolicy.MaxFileBytes = 1048576 -> long
+const Kazo.Os.Platform.Core.Diagnostics.SensitiveTextRedactor.Placeholder = "***redacted***" -> string!
 const Kazo.Os.Platform.Core.Elevation.AdministratorAuthenticationAgent.AuditAction = "admin.authenticate" -> string!
 const Kazo.Os.Platform.Core.Elevation.AdministratorAuthenticationPromptRequest.MaxAttempts = 3 -> int
 const Kazo.Os.Platform.Core.Events.KernelPublisherIdentity.AppId = "kernel" -> string!
@@ -4142,6 +4228,7 @@ const Kazo.Os.Platform.Core.Keyring.UserKeyringService.DefaultIterations = 21000
 const Kazo.Os.Platform.Core.Keyring.UserKeyringService.KeyringDirectory = ".local/share/keyrings" -> string!
 const Kazo.Os.Platform.Core.Keyring.UserKeyringService.LoginKeyringName = "login.keyring" -> string!
 const Kazo.Os.Platform.Core.Keyring.UserKeyringService.PrfKeyPrefix = "kazoos-keyring-prf-v1" -> string!
+const Kazo.Os.Platform.Core.Lifecycle.AppLaunchRefusal.UpdateRequiredCode = "lifecycle.os.update-required" -> string!
 const Kazo.Os.Platform.Core.Lifecycle.AppLifecycleOrchestrator.ProcessLimitErrorCode = "lifecycle.process.eagain" -> string!
 const Kazo.Os.Platform.Core.Metrics.BlockDeviceStatistics.SectorSize = 512 -> int
 const Kazo.Os.Platform.Core.Metrics.CpuTimeAccounting.UserHz = 100 -> int
@@ -4273,6 +4360,12 @@ override Kazo.Os.Platform.Core.AppCatalogRejection.ToString() -> string!
 override Kazo.Os.Platform.Core.AppComponentProvider.Equals(object? obj) -> bool
 override Kazo.Os.Platform.Core.AppComponentProvider.GetHashCode() -> int
 override Kazo.Os.Platform.Core.AppComponentProvider.ToString() -> string!
+override Kazo.Os.Platform.Core.AppLinks.AppLaunchLink.Equals(object? obj) -> bool
+override Kazo.Os.Platform.Core.AppLinks.AppLaunchLink.GetHashCode() -> int
+override Kazo.Os.Platform.Core.AppLinks.AppLaunchLink.ToString() -> string!
+override Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkOperation.Equals(object? obj) -> bool
+override Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkOperation.GetHashCode() -> int
+override Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkOperation.ToString() -> string!
 override Kazo.Os.Platform.Core.Appearance.AccessibilitySettings.Equals(object? obj) -> bool
 override Kazo.Os.Platform.Core.Appearance.AccessibilitySettings.GetHashCode() -> int
 override Kazo.Os.Platform.Core.Appearance.AccessibilitySettings.ToString() -> string!
@@ -4318,6 +4411,7 @@ override Kazo.Os.Platform.Core.Apps.Packages.AppCatalogVersion.ToString() -> str
 override Kazo.Os.Platform.Core.Apps.Packages.AppPackageDefaults.Equals(object? obj) -> bool
 override Kazo.Os.Platform.Core.Apps.Packages.AppPackageDefaults.GetHashCode() -> int
 override Kazo.Os.Platform.Core.Apps.Packages.AppPackageDefaults.ToString() -> string!
+override Kazo.Os.Platform.Core.Apps.Packages.AppPackageDownloadProgress.GetHashCode() -> int
 override Kazo.Os.Platform.Core.Apps.Packages.AppPackageIndex.Equals(object? obj) -> bool
 override Kazo.Os.Platform.Core.Apps.Packages.AppPackageIndex.GetHashCode() -> int
 override Kazo.Os.Platform.Core.Apps.Packages.AppPackageIndex.ToString() -> string!
@@ -4505,6 +4599,9 @@ override Kazo.Os.Platform.Core.Lifecycle.AppDisableResult.ToString() -> string!
 override Kazo.Os.Platform.Core.Lifecycle.AppEnableResult.Equals(object? obj) -> bool
 override Kazo.Os.Platform.Core.Lifecycle.AppEnableResult.GetHashCode() -> int
 override Kazo.Os.Platform.Core.Lifecycle.AppEnableResult.ToString() -> string!
+override Kazo.Os.Platform.Core.Lifecycle.AppLaunchRefusal.Equals(object? obj) -> bool
+override Kazo.Os.Platform.Core.Lifecycle.AppLaunchRefusal.GetHashCode() -> int
+override Kazo.Os.Platform.Core.Lifecycle.AppLaunchRefusal.ToString() -> string!
 override Kazo.Os.Platform.Core.Lifecycle.AppLaunchRequest.Equals(object? obj) -> bool
 override Kazo.Os.Platform.Core.Lifecycle.AppLaunchRequest.GetHashCode() -> int
 override Kazo.Os.Platform.Core.Lifecycle.AppLaunchRequest.ToString() -> string!
@@ -4815,6 +4912,14 @@ static Kazo.Os.Platform.Core.AppCatalogRejection.operator !=(Kazo.Os.Platform.Co
 static Kazo.Os.Platform.Core.AppCatalogRejection.operator ==(Kazo.Os.Platform.Core.AppCatalogRejection? left, Kazo.Os.Platform.Core.AppCatalogRejection? right) -> bool
 static Kazo.Os.Platform.Core.AppComponentProvider.operator !=(Kazo.Os.Platform.Core.AppComponentProvider? left, Kazo.Os.Platform.Core.AppComponentProvider? right) -> bool
 static Kazo.Os.Platform.Core.AppComponentProvider.operator ==(Kazo.Os.Platform.Core.AppComponentProvider? left, Kazo.Os.Platform.Core.AppComponentProvider? right) -> bool
+static Kazo.Os.Platform.Core.AppLinks.AppLaunchLink.IsValidAppId(string? appId) -> bool
+static Kazo.Os.Platform.Core.AppLinks.AppLaunchLink.RemoveFromAddress(string! address) -> string!
+static Kazo.Os.Platform.Core.AppLinks.AppLaunchLink.TryFromAppId(string? appId, out Kazo.Os.Platform.Core.AppLinks.AppLaunchLink? link) -> bool
+static Kazo.Os.Platform.Core.AppLinks.AppLaunchLink.TryParse(string? address, out Kazo.Os.Platform.Core.AppLinks.AppLaunchLink? link) -> bool
+static Kazo.Os.Platform.Core.AppLinks.AppLaunchLink.operator !=(Kazo.Os.Platform.Core.AppLinks.AppLaunchLink? left, Kazo.Os.Platform.Core.AppLinks.AppLaunchLink? right) -> bool
+static Kazo.Os.Platform.Core.AppLinks.AppLaunchLink.operator ==(Kazo.Os.Platform.Core.AppLinks.AppLaunchLink? left, Kazo.Os.Platform.Core.AppLinks.AppLaunchLink? right) -> bool
+static Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkOperation.operator !=(Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkOperation? left, Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkOperation? right) -> bool
+static Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkOperation.operator ==(Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkOperation? left, Kazo.Os.Platform.Core.AppLinks.AppLaunchLinkOperation? right) -> bool
 static Kazo.Os.Platform.Core.Appearance.AccessibilitySettings.Default.get -> Kazo.Os.Platform.Core.Appearance.AccessibilitySettings!
 static Kazo.Os.Platform.Core.Appearance.AccessibilitySettings.operator !=(Kazo.Os.Platform.Core.Appearance.AccessibilitySettings? left, Kazo.Os.Platform.Core.Appearance.AccessibilitySettings? right) -> bool
 static Kazo.Os.Platform.Core.Appearance.AccessibilitySettings.operator ==(Kazo.Os.Platform.Core.Appearance.AccessibilitySettings? left, Kazo.Os.Platform.Core.Appearance.AccessibilitySettings? right) -> bool
@@ -4897,6 +5002,8 @@ static Kazo.Os.Platform.Core.Apps.Packages.AppPackageDefaults.FromMetadata(Syste
 static Kazo.Os.Platform.Core.Apps.Packages.AppPackageDefaults.Standard.get -> Kazo.Os.Platform.Core.Apps.Packages.AppPackageDefaults!
 static Kazo.Os.Platform.Core.Apps.Packages.AppPackageDefaults.operator !=(Kazo.Os.Platform.Core.Apps.Packages.AppPackageDefaults? left, Kazo.Os.Platform.Core.Apps.Packages.AppPackageDefaults? right) -> bool
 static Kazo.Os.Platform.Core.Apps.Packages.AppPackageDefaults.operator ==(Kazo.Os.Platform.Core.Apps.Packages.AppPackageDefaults? left, Kazo.Os.Platform.Core.Apps.Packages.AppPackageDefaults? right) -> bool
+static Kazo.Os.Platform.Core.Apps.Packages.AppPackageDownloadProgress.operator !=(Kazo.Os.Platform.Core.Apps.Packages.AppPackageDownloadProgress left, Kazo.Os.Platform.Core.Apps.Packages.AppPackageDownloadProgress right) -> bool
+static Kazo.Os.Platform.Core.Apps.Packages.AppPackageDownloadProgress.operator ==(Kazo.Os.Platform.Core.Apps.Packages.AppPackageDownloadProgress left, Kazo.Os.Platform.Core.Apps.Packages.AppPackageDownloadProgress right) -> bool
 static Kazo.Os.Platform.Core.Apps.Packages.AppPackageIndex.Parse(byte[]! bytes) -> Kazo.Os.Platform.Core.Apps.Packages.AppPackageIndex!
 static Kazo.Os.Platform.Core.Apps.Packages.AppPackageIndex.operator !=(Kazo.Os.Platform.Core.Apps.Packages.AppPackageIndex? left, Kazo.Os.Platform.Core.Apps.Packages.AppPackageIndex? right) -> bool
 static Kazo.Os.Platform.Core.Apps.Packages.AppPackageIndex.operator ==(Kazo.Os.Platform.Core.Apps.Packages.AppPackageIndex? left, Kazo.Os.Platform.Core.Apps.Packages.AppPackageIndex? right) -> bool
@@ -4941,6 +5048,7 @@ static Kazo.Os.Platform.Core.Apps.Packages.AppSourcesConfigDocument.MachinePath.
 static Kazo.Os.Platform.Core.Apps.Packages.AppSourcesConfigDocument.Read(string? content) -> Kazo.Os.Platform.Core.Apps.Packages.AppSourcesConfig!
 static Kazo.Os.Platform.Core.Apps.Packages.AppSourcesConfigDocument.Read(string? content, Kazo.Os.Platform.Core.Apps.Packages.AppPackageDefaults! defaults) -> Kazo.Os.Platform.Core.Apps.Packages.AppSourcesConfig!
 static Kazo.Os.Platform.Core.Apps.Packages.AppSourcesConfigDocument.RemoveSource(string? content, Kazo.Os.Platform.Core.Apps.Packages.AppSourceSpecification! source) -> string!
+static Kazo.Os.Platform.Core.Apps.Packages.CatalogAppSuggestions.Select(System.Collections.Generic.IReadOnlyList<(string! Name, Kazo.Os.Platform.Core.Apps.Packages.AppCatalogListing! Listing)>! catalogs, string? extension, string? mediaType, string! action, System.Collections.Generic.IReadOnlySet<string!>! installed, Kazo.Os.Platform.Core.Apps.Packages.AppPolicy! policy, Kazo.Os.App.Abstractions.SemanticVersion sdkVersion) -> System.Collections.Generic.IReadOnlyList<Kazo.Os.Simulation.Abstractions.Gateways.AppIntentSuggestedCatalogApp!>!
 static Kazo.Os.Platform.Core.Apps.Packages.InstalledApp.operator !=(Kazo.Os.Platform.Core.Apps.Packages.InstalledApp? left, Kazo.Os.Platform.Core.Apps.Packages.InstalledApp? right) -> bool
 static Kazo.Os.Platform.Core.Apps.Packages.InstalledApp.operator ==(Kazo.Os.Platform.Core.Apps.Packages.InstalledApp? left, Kazo.Os.Platform.Core.Apps.Packages.InstalledApp? right) -> bool
 static Kazo.Os.Platform.Core.Apps.Packages.InstalledAppsActivation.None.get -> Kazo.Os.Platform.Core.Apps.Packages.InstalledAppsActivation!
@@ -5030,6 +5138,7 @@ static Kazo.Os.Platform.Core.Diagnostics.LogFileTarget.ForDaemon(string! relativ
 static Kazo.Os.Platform.Core.Diagnostics.LogFileTarget.operator !=(Kazo.Os.Platform.Core.Diagnostics.LogFileTarget? left, Kazo.Os.Platform.Core.Diagnostics.LogFileTarget? right) -> bool
 static Kazo.Os.Platform.Core.Diagnostics.LogFileTarget.operator ==(Kazo.Os.Platform.Core.Diagnostics.LogFileTarget? left, Kazo.Os.Platform.Core.Diagnostics.LogFileTarget? right) -> bool
 static Kazo.Os.Platform.Core.Diagnostics.LogRotationPolicy.ShouldRotate(long currentBytes, long batchBytes) -> bool
+static Kazo.Os.Platform.Core.Diagnostics.SensitiveTextRedactor.Redact(string? text) -> string!
 static Kazo.Os.Platform.Core.Discovery.AppDescriptor.operator !=(Kazo.Os.Platform.Core.Discovery.AppDescriptor? left, Kazo.Os.Platform.Core.Discovery.AppDescriptor? right) -> bool
 static Kazo.Os.Platform.Core.Discovery.AppDescriptor.operator ==(Kazo.Os.Platform.Core.Discovery.AppDescriptor? left, Kazo.Os.Platform.Core.Discovery.AppDescriptor? right) -> bool
 static Kazo.Os.Platform.Core.Discovery.AppDiscoveryError.operator !=(Kazo.Os.Platform.Core.Discovery.AppDiscoveryError? left, Kazo.Os.Platform.Core.Discovery.AppDiscoveryError? right) -> bool
@@ -5124,6 +5233,8 @@ static Kazo.Os.Platform.Core.Lifecycle.AppDisableResult.operator !=(Kazo.Os.Plat
 static Kazo.Os.Platform.Core.Lifecycle.AppDisableResult.operator ==(Kazo.Os.Platform.Core.Lifecycle.AppDisableResult? left, Kazo.Os.Platform.Core.Lifecycle.AppDisableResult? right) -> bool
 static Kazo.Os.Platform.Core.Lifecycle.AppEnableResult.operator !=(Kazo.Os.Platform.Core.Lifecycle.AppEnableResult? left, Kazo.Os.Platform.Core.Lifecycle.AppEnableResult? right) -> bool
 static Kazo.Os.Platform.Core.Lifecycle.AppEnableResult.operator ==(Kazo.Os.Platform.Core.Lifecycle.AppEnableResult? left, Kazo.Os.Platform.Core.Lifecycle.AppEnableResult? right) -> bool
+static Kazo.Os.Platform.Core.Lifecycle.AppLaunchRefusal.operator !=(Kazo.Os.Platform.Core.Lifecycle.AppLaunchRefusal? left, Kazo.Os.Platform.Core.Lifecycle.AppLaunchRefusal? right) -> bool
+static Kazo.Os.Platform.Core.Lifecycle.AppLaunchRefusal.operator ==(Kazo.Os.Platform.Core.Lifecycle.AppLaunchRefusal? left, Kazo.Os.Platform.Core.Lifecycle.AppLaunchRefusal? right) -> bool
 static Kazo.Os.Platform.Core.Lifecycle.AppLaunchRequest.operator !=(Kazo.Os.Platform.Core.Lifecycle.AppLaunchRequest? left, Kazo.Os.Platform.Core.Lifecycle.AppLaunchRequest? right) -> bool
 static Kazo.Os.Platform.Core.Lifecycle.AppLaunchRequest.operator ==(Kazo.Os.Platform.Core.Lifecycle.AppLaunchRequest? left, Kazo.Os.Platform.Core.Lifecycle.AppLaunchRequest? right) -> bool
 static Kazo.Os.Platform.Core.Lifecycle.AppLaunchResult.operator !=(Kazo.Os.Platform.Core.Lifecycle.AppLaunchResult? left, Kazo.Os.Platform.Core.Lifecycle.AppLaunchResult? right) -> bool
@@ -5472,6 +5583,8 @@ virtual Kazo.Os.Platform.Core.Shell.ShellWordPart.EqualityContract.get -> System
 virtual Kazo.Os.Platform.Core.Shell.ShellWordPart.Equals(Kazo.Os.Platform.Core.Shell.ShellWordPart? other) -> bool
 virtual Kazo.Os.Platform.Core.Shell.ShellWordPart.IsQuoted.get -> bool
 virtual Kazo.Os.Platform.Core.Shell.ShellWordPart.PrintMembers(System.Text.StringBuilder! builder) -> bool
+~override Kazo.Os.Platform.Core.Apps.Packages.AppPackageDownloadProgress.Equals(object obj) -> bool
+~override Kazo.Os.Platform.Core.Apps.Packages.AppPackageDownloadProgress.ToString() -> string
 ~override Kazo.Os.Platform.Core.Processes.Accounting.ResourceAccountingBuildSupport.Equals(object obj) -> bool
 ~override Kazo.Os.Platform.Core.Processes.Accounting.ResourceAccountingBuildSupport.ToString() -> string
 ~override Kazo.Os.Platform.Core.Processes.ProcessMemoryReading.Equals(object obj) -> bool

@@ -100,12 +100,29 @@ internal static class IndexedDbFileSystemMutationPlanner
     }
 
     /// <summary>Publishes one immutable content hash under an optimistic entry revision.</summary>
+    /// <param name="entry">The file entry as read, whose revision is asserted.</param>
+    /// <param name="contentHash">Hash of the content already written to <c>fsContent</c>.</param>
+    /// <param name="length">Content length in bytes.</param>
+    /// <param name="descriptor">Content kind, media type and encoding.</param>
+    /// <param name="committedAtUtc">Commit time (UTC).</param>
+    /// <param name="chunkCount">
+    /// When set, the transaction first checks that exactly this many chunks of
+    /// <paramref name="contentHash"/> are present and fails with <c>filesystem.content-missing</c>
+    /// otherwise: an entry never points at content an orphan pass removed (ADR 0273 section 3).
+    /// The plan then runs in the <c>FileSystemContentPublish</c> boundary.
+    /// </param>
+    /// <param name="reclaimPrevious">
+    /// When <see langword="true"/> (the system rewriting its own file, ADR 0273 section 5), the
+    /// previous content is deleted in the same transaction if nothing references it any more.
+    /// </param>
     internal static IReadOnlyList<IndexedDbOperation> PlanWrite(
         IndexedDbFileSystemEntryRecord entry,
         string contentHash,
         long length,
         FileSystemContentDescriptor descriptor,
-        DateTimeOffset committedAtUtc)
+        DateTimeOffset committedAtUtc,
+        int? chunkCount = null,
+        bool reclaimPrevious = false)
     {
         ArgumentNullException.ThrowIfNull(entry);
         ArgumentException.ThrowIfNullOrWhiteSpace(contentHash);
@@ -128,12 +145,38 @@ internal static class IndexedDbFileSystemMutationPlanner
             MediaType = descriptor.MediaType,
             EncodingName = descriptor.EncodingName
         };
-        return
-        [
-            RevisionAssertion(entry),
-            new IndexedDbOperation("put", KazoOsIndexedDbSchema.FileSystemEntryStoreName, Value: updated)
-        ];
+        List<IndexedDbOperation> operations = [RevisionAssertion(entry)];
+        if (chunkCount is { } expectedChunks)
+        {
+            operations.Add(new IndexedDbOperation(
+                "assertCount",
+                KazoOsIndexedDbSchema.FileContentStoreName,
+                IndexName: "contentHash",
+                Query: contentHash,
+                ExpectedValue: expectedChunks,
+                FailureCode: ContentMissingFailureCode));
+        }
+
+        operations.Add(new IndexedDbOperation("put", KazoOsIndexedDbSchema.FileSystemEntryStoreName, Value: updated));
+        if (reclaimPrevious
+            && entry.ContentHash is { Length: > 0 } previous
+            && !StringComparer.Ordinal.Equals(previous, contentHash))
+        {
+            // After the put, so this entry no longer counts as a reference to the old content.
+            operations.Add(new IndexedDbOperation(
+                "deleteAllByIndexIfUnreferenced",
+                KazoOsIndexedDbSchema.FileContentStoreName,
+                IndexName: "contentHash",
+                Query: previous,
+                ReferenceObjectStoreName: KazoOsIndexedDbSchema.FileSystemEntryStoreName,
+                ReferenceIndexName: "contentHash"));
+        }
+
+        return operations;
     }
+
+    /// <summary>Failure code of a write whose content chunks are not all present.</summary>
+    internal const string ContentMissingFailureCode = "filesystem.content-missing";
 
     /// <summary>Builds an all-or-nothing entry-link move with entry and parent revision updates.</summary>
     internal static IReadOnlyList<IndexedDbOperation> PlanMove(

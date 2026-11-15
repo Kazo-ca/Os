@@ -13,7 +13,34 @@ public interface IAppPackageDownloader
     /// <returns>The body, or <see langword="null"/> when the host answers 404.</returns>
     /// <exception cref="AppPackageException"><c>apps.package.download-failed</c> or <c>apps.package.too-large</c>.</exception>
     ValueTask<byte[]?> DownloadAsync(Uri uri, long maximumBytes, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Downloads one file and reports the bytes received (ADR 0266 §7). The default downloads in one
+    /// piece and reports the whole size once, so a downloader that cannot stream still answers.
+    /// </summary>
+    /// <param name="uri">Absolute <c>https</c> address.</param>
+    /// <param name="maximumBytes">Largest accepted body; a larger one is refused.</param>
+    /// <param name="progress">Receives the bytes received so far and the announced size, when known.</param>
+    /// <param name="cancellationToken">Cancels the download.</param>
+    /// <returns>The body, or <see langword="null"/> when the host answers 404.</returns>
+    /// <exception cref="AppPackageException"><c>apps.package.download-failed</c> or <c>apps.package.too-large</c>.</exception>
+    async ValueTask<byte[]?> DownloadAsync(
+        Uri uri, long maximumBytes, IProgress<AppPackageDownloadProgress>? progress, CancellationToken cancellationToken = default)
+    {
+        byte[]? body = await DownloadAsync(uri, maximumBytes, cancellationToken).ConfigureAwait(false);
+        if (body is not null)
+        {
+            progress?.Report(new AppPackageDownloadProgress(body.Length, body.Length));
+        }
+
+        return body;
+    }
 }
+
+/// <summary>Bytes of a download received so far, and its size when the host announced it.</summary>
+/// <param name="BytesReceived">Bytes received so far.</param>
+/// <param name="TotalBytes">The <c>Content-Length</c>, or <see langword="null"/> when the host sent none.</param>
+public readonly record struct AppPackageDownloadProgress(long BytesReceived, long? TotalBytes);
 
 /// <summary>
 /// <see cref="IAppPackageDownloader"/> over the browser's <c>fetch</c> (an <see cref="HttpClient"/>
@@ -26,7 +53,12 @@ public sealed class HttpAppPackageDownloader(HttpClient http) : IAppPackageDownl
     private readonly HttpClient _http = http ?? throw new ArgumentNullException(nameof(http));
 
     /// <inheritdoc />
-    public async ValueTask<byte[]?> DownloadAsync(Uri uri, long maximumBytes, CancellationToken cancellationToken = default)
+    public ValueTask<byte[]?> DownloadAsync(Uri uri, long maximumBytes, CancellationToken cancellationToken = default) =>
+        DownloadAsync(uri, maximumBytes, progress: null, cancellationToken);
+
+    /// <inheritdoc />
+    public async ValueTask<byte[]?> DownloadAsync(
+        Uri uri, long maximumBytes, IProgress<AppPackageDownloadProgress>? progress, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(uri);
         if (!uri.IsAbsoluteUri || uri.Scheme != Uri.UriSchemeHttps)
@@ -50,10 +82,13 @@ public sealed class HttpAppPackageDownloader(HttpClient http) : IAppPackageDownl
                     "apps.package.download-failed", $"{uri} answered {(int)response.StatusCode} {response.ReasonPhrase}.");
             }
 
-            if (response.Content.Headers.ContentLength > maximumBytes)
+            long? total = response.Content.Headers.ContentLength;
+            if (total > maximumBytes)
             {
                 throw TooLarge(uri, maximumBytes);
             }
+
+            progress?.Report(new AppPackageDownloadProgress(0, total));
 
             await using Stream body = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
             using MemoryStream buffer = new();
@@ -67,6 +102,7 @@ public sealed class HttpAppPackageDownloader(HttpClient http) : IAppPackageDownl
                 }
 
                 buffer.Write(chunk, 0, read);
+                progress?.Report(new AppPackageDownloadProgress(buffer.Length, total));
             }
 
             return buffer.ToArray();

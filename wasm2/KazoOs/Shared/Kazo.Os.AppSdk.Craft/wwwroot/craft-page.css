@@ -1,0 +1,38 @@
+/*
+ * The iframe page of a Craft app (ADR 0259, module Kazo.Os.AppSdk.Craft): the app's canvas fills
+ * it. The app's page links this file next to craft-proxy.js:
+ *   <link rel="stylesheet" href="../../Kazo.Os.AppSdk.Craft/craft-page.css">
+ * The Kazo window draws its own loading and error screens over the iframe; an element the Craft
+ * app writes its start error into can carry data-craft-loading to sit over the canvas.
+ */
+html,
+body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #1b2233;
+}
+
+canvas[data-craft-app] {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+    outline: none;
+}
+
+[data-craft-loading] {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    color: #c9d6ee;
+    font: 14px system-ui, sans-serif;
+    text-align: center;
+    pointer-events: none;
+}

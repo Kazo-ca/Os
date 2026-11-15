@@ -52,6 +52,38 @@ public sealed class XdgOpenCommandTests
     }
 
     [Fact]
+    public async Task A_file_no_app_can_open_lists_the_store_apps_and_the_install_command()
+    {
+        FakeAppIntentGateway intents = new FakeAppIntentGateway()
+            .WithOpenResult("/home/alice/notes.txt", new AppIntentOpenFileResult(AppIntentOpenFileOutcome.NoHandler)
+            {
+                SuggestedCatalogApps =
+                [
+                    new AppIntentSuggestedCatalogApp("ca.kazo.word", "Kazo Word", "official"),
+                    new AppIntentSuggestedCatalogApp("org.example.docs", "Docs", "mirror"),
+                ],
+            });
+
+        Run run = await RunAsync(intents, "notes.txt");
+
+        Assert.Equal(3, run.ExitCode);
+        Assert.Contains("Kazo Word (ca.kazo.word, catalog official)", run.Stderr, StringComparison.Ordinal);
+        Assert.Contains("Docs (org.example.docs, catalog mirror)", run.Stderr, StringComparison.Ordinal);
+        Assert.Contains("kazopkg install catalog:official/ca.kazo.word", run.Stderr, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task A_file_no_app_can_open_and_no_store_app_says_only_the_error()
+    {
+        FakeAppIntentGateway intents = new FakeAppIntentGateway()
+            .WithOpenResult("/home/alice/notes.txt", new AppIntentOpenFileResult(AppIntentOpenFileOutcome.NoHandler));
+
+        Run run = await RunAsync(intents, "notes.txt");
+
+        Assert.DoesNotContain("kazopkg", run.Stderr, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task Several_handlers_and_no_default_exit_4_and_list_them()
     {
         FakeAppIntentGateway intents = new FakeAppIntentGateway()

@@ -72,7 +72,7 @@ ne sont jamais concernés.
 |---|---|---|
 | `QuotaExceededError` d'IndexedDB (transaction annulée en entier) | `NoSpace` | `No space left on device` |
 | Réserve de root | `NoSpace` | `No space left on device` |
-| Contenu de plus de 16 Mio | `FileTooLarge` | `File too large` |
+| Contenu de plus de 128 Mio (ADR 0245) | `FileTooLarge` | `File too large` |
 
 `KazoFile`/`KazoFileStream` lèvent `KazoIOException` avec `ErrorCode` ;
 `ShellErrorText.Describe` et les commandes (`chmod`, `mkdir`…) affichent le

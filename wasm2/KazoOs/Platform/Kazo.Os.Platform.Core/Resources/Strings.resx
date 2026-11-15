@@ -744,4 +744,40 @@ Cancel: decide at the next launch.</value>
   <data name="Admin.App.RepairPackages" xml:space="preserve">
     <value>Repair the apps installed for all users</value>
   </data>
+  <data name="AppLink.Notification.Title" xml:space="preserve">
+    <value>The app could not be opened</value>
+  </data>
+  <data name="AppLink.Notification.OpenStore" xml:space="preserve">
+    <value>Open the Kazo OS Store</value>
+  </data>
+  <data name="AppLink.Error.NotOffered" xml:space="preserve">
+    <value>The Kazo OS Store does not offer the app {0}.</value>
+  </data>
+  <data name="AppLink.Error.Unreachable" xml:space="preserve">
+    <value>The Kazo OS Store cannot be reached. Try again once online.</value>
+  </data>
+  <data name="AppLink.Error.Blocked" xml:space="preserve">
+    <value>This app is blocked on this computer.</value>
+  </data>
+  <data name="AppLink.Error.Incompatible" xml:space="preserve">
+    <value>This version is not compatible: {0}</value>
+  </data>
+  <data name="AppLink.Error.Signature" xml:space="preserve">
+    <value>The package's signature was refused: it was not installed.</value>
+  </data>
+  <data name="AppLink.Error.NotApproved" xml:space="preserve">
+    <value>The installation was not approved.</value>
+  </data>
+  <data name="AppLink.Error.NoSession" xml:space="preserve">
+    <value>No session is open.</value>
+  </data>
+  <data name="AppLink.Error.Unsupported" xml:space="preserve">
+    <value>This Kazo OS cannot install apps.</value>
+  </data>
+  <data name="AppLink.Error.Launch" xml:space="preserve">
+    <value>The app was installed but did not start: {0}</value>
+  </data>
+  <data name="AppLink.Error.Generic" xml:space="preserve">
+    <value>The installation failed: {0}</value>
+  </data>
 </root>

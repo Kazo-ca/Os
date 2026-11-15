@@ -744,4 +744,40 @@ Annuler : décider au prochain lancement.</value>
   <data name="Admin.App.RepairPackages" xml:space="preserve">
     <value>Réparer les apps installées pour tous les utilisateurs</value>
   </data>
+  <data name="AppLink.Notification.Title" xml:space="preserve">
+    <value>L'app n'a pas pu être ouverte</value>
+  </data>
+  <data name="AppLink.Notification.OpenStore" xml:space="preserve">
+    <value>Ouvrir le Kazo OS Store</value>
+  </data>
+  <data name="AppLink.Error.NotOffered" xml:space="preserve">
+    <value>Le Kazo OS Store ne propose pas l'app {0}.</value>
+  </data>
+  <data name="AppLink.Error.Unreachable" xml:space="preserve">
+    <value>Le Kazo OS Store est injoignable. Réessayez une fois en ligne.</value>
+  </data>
+  <data name="AppLink.Error.Blocked" xml:space="preserve">
+    <value>Cette app est bloquée sur cet ordinateur.</value>
+  </data>
+  <data name="AppLink.Error.Incompatible" xml:space="preserve">
+    <value>Cette version n'est pas compatible : {0}</value>
+  </data>
+  <data name="AppLink.Error.Signature" xml:space="preserve">
+    <value>La signature du paquet a été refusée : il n'a pas été installé.</value>
+  </data>
+  <data name="AppLink.Error.NotApproved" xml:space="preserve">
+    <value>L'installation n'a pas été approuvée.</value>
+  </data>
+  <data name="AppLink.Error.NoSession" xml:space="preserve">
+    <value>Aucune session n'est ouverte.</value>
+  </data>
+  <data name="AppLink.Error.Unsupported" xml:space="preserve">
+    <value>Ce Kazo OS ne peut pas installer d'apps.</value>
+  </data>
+  <data name="AppLink.Error.Launch" xml:space="preserve">
+    <value>L'app est installée mais n'a pas démarré : {0}</value>
+  </data>
+  <data name="AppLink.Error.Generic" xml:space="preserve">
+    <value>L'installation a échoué : {0}</value>
+  </data>
 </root>

@@ -22,6 +22,7 @@ public sealed class StartMenuPreferencesService : IDisposable
     private readonly ISessionService _session;
     private readonly SemaphoreSlim _gate = new(1, 1);
     private readonly IReadOnlyList<string> _defaultPins;
+    private readonly IReadOnlyList<string> _retiredDefaultPins;
     private Dictionary<LocalUserId, IReadOnlyList<string>> _profiles = [];
     private Dictionary<LocalUserId, IReadOnlyList<string>> _defaultPinsApplied = [];
     private bool _initialized;
@@ -30,7 +31,11 @@ public sealed class StartMenuPreferencesService : IDisposable
     /// <param name="settings">OS settings files.</param>
     /// <param name="session">Session service identifying whose pins are loaded.</param>
     public StartMenuPreferencesService(IOsSettingsService settings, ISessionService session)
-        : this(settings, session, StartMenuSettingsDocuments.DefaultPinnedAppIds)
+        : this(
+            settings,
+            session,
+            StartMenuSettingsDocuments.DefaultPinnedAppIds,
+            StartMenuSettingsDocuments.RetiredDefaultPinnedAppIds)
     {
     }
 
@@ -42,10 +47,28 @@ public sealed class StartMenuPreferencesService : IDisposable
     /// afterwards stays unpinned.
     /// </param>
     public StartMenuPreferencesService(IOsSettingsService settings, ISessionService session, IReadOnlyList<string> defaultPins)
+        : this(settings, session, defaultPins, [])
+    {
+    }
+
+    /// <summary>Creates the service with the apps pinned by default and the retired ones (ADR 0268).</summary>
+    /// <param name="settings">OS settings files.</param>
+    /// <param name="session">Session service identifying whose pins are loaded.</param>
+    /// <param name="defaultPins">Apps pinned once to each profile, new or existing, at its first load.</param>
+    /// <param name="retiredDefaultPins">
+    /// Apps that used to be default pins: a profile that received one by default loses that pin once,
+    /// and a pin the user adds back afterwards stays.
+    /// </param>
+    public StartMenuPreferencesService(
+        IOsSettingsService settings,
+        ISessionService session,
+        IReadOnlyList<string> defaultPins,
+        IReadOnlyList<string> retiredDefaultPins)
     {
         _settings = settings ?? throw new ArgumentNullException(nameof(settings));
         _session = session ?? throw new ArgumentNullException(nameof(session));
         _defaultPins = defaultPins ?? throw new ArgumentNullException(nameof(defaultPins));
+        _retiredDefaultPins = retiredDefaultPins ?? throw new ArgumentNullException(nameof(retiredDefaultPins));
         _settings.DocumentChanged += OnDocumentChanged;
     }
 
@@ -281,9 +304,10 @@ public sealed class StartMenuPreferencesService : IDisposable
             .TryGetValue(principal.UserId, out IReadOnlyList<string>? done) ? done : EmptyPins;
         _defaultPinsApplied = new() { [principal.UserId] = applied };
         string[] missing = [.. _defaultPins.Where(appId => !applied.Contains(appId, StringComparer.Ordinal))];
-        if (missing.Length > 0)
+        string[] retired = [.. _retiredDefaultPins.Where(appId => applied.Contains(appId, StringComparer.Ordinal))];
+        if (missing.Length > 0 || retired.Length > 0)
         {
-            await ApplyDefaultPinsAsync(principal.UserId, own, applied, missing, cancellationToken).ConfigureAwait(false);
+            await ApplyDefaultPinsAsync(principal.UserId, own, applied, missing, retired, cancellationToken).ConfigureAwait(false);
         }
 
         ApplyProfiles(own, raiseEvent);
@@ -293,17 +317,22 @@ public sealed class StartMenuPreferencesService : IDisposable
     /// <summary>
     /// ADR 0212 §6 (ADR 0188 §1, Q2 A): pins the default apps not yet added to this profile, after its
     /// own pins, and records them in <c>defaultPinsApplied</c> so an unpin is kept. A new profile
-    /// starts with them; an existing one gets them once. A failed write keeps them in memory only,
-    /// and the next load tries again.
+    /// starts with them; an existing one gets them once. ADR 0268: a retired default pin still listed
+    /// in <c>defaultPinsApplied</c> is unpinned and removed from that list, once. A failed write keeps
+    /// the result in memory only, and the next load tries again.
     /// </summary>
     private async Task ApplyDefaultPinsAsync(
         LocalUserId userId,
         Dictionary<LocalUserId, IReadOnlyList<string>> own,
         IReadOnlyList<string> applied,
         IReadOnlyList<string> missing,
+        IReadOnlyList<string> retired,
         CancellationToken cancellationToken)
     {
-        List<string> pins = own.TryGetValue(userId, out IReadOnlyList<string>? existing) ? [.. existing] : [];
+        bool hadProfile = own.TryGetValue(userId, out IReadOnlyList<string>? existing);
+        List<string> pins = hadProfile
+            ? [.. existing!.Where(appId => !retired.Contains(appId, StringComparer.Ordinal))]
+            : [];
         foreach (string appId in missing)
         {
             if (!pins.Contains(appId, StringComparer.Ordinal) && pins.Count < StartMenuSettingsDocuments.MaximumPinnedAppCount)
@@ -312,12 +341,18 @@ public sealed class StartMenuPreferencesService : IDisposable
             }
         }
 
-        if (pins.Count > 0)
+        if (hadProfile || pins.Count > 0)
         {
             own[userId] = Array.AsReadOnly(pins.ToArray());
         }
 
-        _defaultPinsApplied = new() { [userId] = Array.AsReadOnly(applied.Concat(missing).ToArray()) };
+        _defaultPinsApplied = new()
+        {
+            [userId] = Array.AsReadOnly(applied
+                .Where(appId => !retired.Contains(appId, StringComparer.Ordinal))
+                .Concat(missing)
+                .ToArray()),
+        };
         try
         {
             await _settings.WriteFileAsync(
