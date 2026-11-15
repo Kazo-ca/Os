@@ -18,6 +18,9 @@ internal sealed class MemoryFileContentChunkStore : IFileContentChunkStore
     /// <summary>Gets how many read calls (transactions) were made.</summary>
     public int ReadCalls { get; private set; }
 
+    /// <summary>Gets how many chunks every read call loaded in total.</summary>
+    public int ChunksRead { get; private set; }
+
     /// <summary>Gets the most chunks one call wrote or read.</summary>
     public int LargestCallChunks { get; private set; }
 
@@ -72,6 +75,7 @@ internal sealed class MemoryFileContentChunkStore : IFileContentChunkStore
         CancellationToken cancellationToken)
     {
         ReadCalls++;
+        ChunksRead += count;
         LargestCallChunks = Math.Max(LargestCallChunks, count);
         List<byte[]> chunks = [];
         for (int index = 0; index < count; index++)
@@ -122,6 +126,20 @@ internal sealed class MemoryFileContentChunkStore : IFileContentChunkStore
     {
         string hash = Hex(content);
         Chunks[Key(hash, 0)] = new StoredChunk(content, hash, 1);
+        return hash;
+    }
+
+    /// <summary>Stores <paramref name="content"/> as chunks of <paramref name="chunkSize"/> bytes, as the repository does.</summary>
+    public string PutChunked(byte[] content, int chunkSize)
+    {
+        string hash = Hex(content);
+        int count = Math.Max(1, (content.Length + chunkSize - 1) / chunkSize);
+        for (int index = 0; index < count; index++)
+        {
+            byte[] data = content.AsSpan(index * chunkSize, Math.Min(chunkSize, content.Length - (index * chunkSize))).ToArray();
+            Chunks[Key(hash, index)] = new StoredChunk(data, Hex(data), 1);
+        }
+
         return hash;
     }
 

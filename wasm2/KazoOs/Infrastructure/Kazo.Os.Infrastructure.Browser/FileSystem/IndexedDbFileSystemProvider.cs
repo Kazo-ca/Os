@@ -55,6 +55,13 @@ public sealed class IndexedDbFileSystemProvider : IFileSystemProvider, IFileSyst
         _transactionIdFactory = transactionIdFactory ?? Guid.NewGuid;
     }
 
+    /// <summary>
+    /// Gets the size above which a file is read as it is consumed instead of whole: one batch of
+    /// <see cref="Schema.FileContentStoragePolicy.ChunksPerTransaction"/> chunks, 16 MiB (ADR 0275 §2).
+    /// </summary>
+    internal const long StreamedReadThresholdBytes =
+        Schema.FileContentStoragePolicy.ChunksPerTransaction * Schema.FileContentStoragePolicy.DefaultMaxChunkSizeBytes;
+
     /// <inheritdoc />
     public string ProviderId => "indexeddb";
 
@@ -99,12 +106,20 @@ public sealed class IndexedDbFileSystemProvider : IFileSystemProvider, IFileSyst
             // that is a legitimate empty file, not a corrupt entry, matching FromMetadata's
             // defaults (ContentKind=Binary, MediaType=application/octet-stream) and how
             // InMemoryFileSystemRepository already treats an unwritten file's content as empty.
+            // A file over one batch (16 MiB) is read as it is consumed (ADR 0275 §2): only a window
+            // of its chunks is in memory, and seeking loads only the chunks it reaches.
             Stream content = entry.ContentHash is null
                 ? Stream.Null
-                : await _contentRepository.ReadAsync(
-                    entry.ContentHash,
-                    entry.Length,
-                    cancellationToken).ConfigureAwait(false);
+                : entry.Length > StreamedReadThresholdBytes
+                    ? await ChunkedContentReadStream.OpenAsync(
+                        _contentRepository,
+                        entry.ContentHash,
+                        entry.Length,
+                        cancellationToken).ConfigureAwait(false)
+                    : await _contentRepository.ReadAsync(
+                        entry.ContentHash,
+                        entry.Length,
+                        cancellationToken).ConfigureAwait(false);
             FileSystemContentDescriptor descriptor = (FileSystemContentKind)entry.ContentKind switch
             {
                 FileSystemContentKind.Binary => FileSystemContentDescriptor.Binary(entry.MediaType),

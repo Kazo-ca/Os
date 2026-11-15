@@ -165,6 +165,16 @@ Rien n'est codé.
   52,5 Mio par `cat` dans le Terminal n'a pas fini dans le temps du parcours,
   donc la lecture n'est pas mesurée. Suite : chantiers 3, 4 et 6 en parallèle,
   puis 5.
+- **Chantier 3 fait le 2026-11-15** (branche `storage/3-partial-read`, PR vers
+  `storage/base`) : `IndexedDbFileContentRepository.ReadRangeAsync` ne charge
+  que les blocs d'une plage ; un fichier de plus de 16 Mio s'ouvre en
+  `ChunkedContentReadStream` (fenêtre de 1 Mio qui grandit jusqu'à 16 Mio quand
+  la lecture continue, de nouveau 1 Mio après un `Seek`) ; une lecture synchrone
+  au-delà de la fenêtre chargée lève `NotSupportedException` ;
+  `KazoFile.ReadAllBytesAsync` fait une copie de moins. Mesuré par les
+  allocations .NET avec le magasin de blocs en mémoire (pas dans le
+  navigateur) : lire 52,5 Mio alloue 17 Mio au lieu de 53, un `Seek` suivi
+  d'une lecture de 4 Kio en alloue 1. Aucun changement de l'API publique.
 
 ## Questions posées, réponse à confirmer
 

@@ -49,7 +49,8 @@ internal sealed class IndexedDbFileContentRepository : IAsyncDisposable
         _disk = disk;
     }
 
-    private int ChunkSize => checked((int)_policy.MaxChunkSizeBytes);
+    /// <summary>Gets the bytes of one chunk; only the last chunk of a file may be shorter.</summary>
+    internal int ChunkSize => checked((int)_policy.MaxChunkSizeBytes);
 
     /// <summary>
     /// Consumes a stream once and stores its deduplicated chunks: the SHA-256 of the file and of
@@ -234,20 +235,106 @@ internal sealed class IndexedDbFileContentRepository : IAsyncDisposable
         long expectedLength,
         CancellationToken cancellationToken = default)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(contentHash);
-        ArgumentOutOfRangeException.ThrowIfNegative(expectedLength);
-        if (expectedLength > _policy.MaxFileSizeBytes)
+        ValidateLength(contentHash, expectedLength);
+        byte[] content = new byte[checked((int)expectedLength)];
+        if (expectedLength == 0)
         {
-            throw new InvalidDataException("Persisted file length exceeds the browser limit.");
+            // An empty file still has one, empty, chunk, read and checked like the others.
+            await _adapter.OpenAsync(IndexedDbMigrationPlan.CreateCurrent(), cancellationToken).ConfigureAwait(false);
+            await ReadChunkSpanAsync(contentHash, 0, 1, new ArraySegment<byte>(content), cancellationToken)
+                .ConfigureAwait(false);
+        }
+        else
+        {
+            await ReadRangeAsync(contentHash, expectedLength, 0, new ArraySegment<byte>(content), cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        return new MemoryStream(content, 0, content.Length, writable: false, publiclyVisible: true);
+    }
+
+    /// <summary>
+    /// Reads the bytes of a content from <paramref name="offset"/> into <paramref name="destination"/>
+    /// (ADR 0275 §1): only the chunks that cover the range are loaded, in batches of at most
+    /// <see cref="FileContentStoragePolicy.ChunksPerTransaction"/> chunks, each one checked by its
+    /// own hash (ADR 0272 §4).
+    /// </summary>
+    /// <param name="contentHash">SHA-256 of the whole file.</param>
+    /// <param name="fileLength">Length of the whole file, as its entry records it.</param>
+    /// <param name="offset">First byte to read; at or past the end, nothing is read.</param>
+    /// <param name="destination">Receives the bytes; fewer are read when the file ends before it is full.</param>
+    /// <param name="cancellationToken">Observed between batches.</param>
+    /// <returns>How many bytes were read.</returns>
+    /// <exception cref="InvalidDataException">A chunk of the range is missing, out of order or damaged.</exception>
+    internal async ValueTask<int> ReadRangeAsync(
+        string contentHash,
+        long fileLength,
+        long offset,
+        ArraySegment<byte> destination,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateLength(contentHash, fileLength);
+        ArgumentOutOfRangeException.ThrowIfNegative(offset);
+        int count = (int)Math.Min(destination.Count, Math.Max(0, fileLength - offset));
+        if (count == 0)
+        {
+            return 0;
         }
 
         await _adapter.OpenAsync(IndexedDbMigrationPlan.CreateCurrent(), cancellationToken).ConfigureAwait(false);
-        byte[] content = new byte[checked((int)expectedLength)];
-        int chunkCount = ChunkCountFor(content.Length);
-        for (int first = 0; first < chunkCount; first += FileContentStoragePolicy.ChunksPerTransaction)
+        long end = offset + count;
+        int firstChunk = (int)(offset / ChunkSize);
+        int lastChunk = (int)((end - 1) / ChunkSize);
+        long spanStart = (long)firstChunk * ChunkSize;
+        long spanEnd = Math.Min(fileLength, ((long)lastChunk + 1) * ChunkSize);
+        ArraySegment<byte> target = destination.Slice(0, count);
+        if (spanStart == offset && spanEnd == end)
         {
-            int count = Math.Min(FileContentStoragePolicy.ChunksPerTransaction, chunkCount - first);
-            ArraySegment<byte> batch = BatchOf(content, first, count);
+            // Aligned on chunks (what the read stream asks for): the chunks land in place.
+            await ReadChunkSpanAsync(contentHash, firstChunk, lastChunk - firstChunk + 1, target, cancellationToken)
+                .ConfigureAwait(false);
+            return count;
+        }
+
+        int spanLength = (int)(spanEnd - spanStart);
+        byte[] span = ArrayPool<byte>.Shared.Rent(spanLength);
+        try
+        {
+            await ReadChunkSpanAsync(
+                contentHash,
+                firstChunk,
+                lastChunk - firstChunk + 1,
+                new ArraySegment<byte>(span, 0, spanLength),
+                cancellationToken).ConfigureAwait(false);
+            span.AsSpan((int)(offset - spanStart), count).CopyTo(target);
+            return count;
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(span);
+        }
+    }
+
+    /// <summary>
+    /// Reads the consecutive chunks <paramref name="firstChunk"/> to <paramref name="firstChunk"/> +
+    /// <paramref name="chunkCount"/> into <paramref name="destination"/>, which holds exactly their
+    /// bytes, one transaction per batch.
+    /// </summary>
+    private async ValueTask ReadChunkSpanAsync(
+        string contentHash,
+        int firstChunk,
+        int chunkCount,
+        ArraySegment<byte> destination,
+        CancellationToken cancellationToken)
+    {
+        int written = 0;
+        for (int done = 0; done < chunkCount; done += FileContentStoragePolicy.ChunksPerTransaction)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            int count = Math.Min(FileContentStoragePolicy.ChunksPerTransaction, chunkCount - done);
+            int length = (int)Math.Min(destination.Count - written, (long)count * ChunkSize);
+            ArraySegment<byte> batch = destination.Slice(written, length);
+            int first = firstChunk + done;
             await MeasureAsync(
                 BlockIoDirection.Read,
                 batch.Count,
@@ -257,9 +344,18 @@ internal sealed class IndexedDbFileContentRepository : IAsyncDisposable
                         .ConfigureAwait(false);
                     return 0;
                 }).ConfigureAwait(false);
+            written += length;
         }
+    }
 
-        return new MemoryStream(content, 0, content.Length, writable: false, publiclyVisible: true);
+    private void ValidateLength(string contentHash, long length)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(contentHash);
+        ArgumentOutOfRangeException.ThrowIfNegative(length);
+        if (length > _policy.MaxFileSizeBytes)
+        {
+            throw new InvalidDataException("Persisted file length exceeds the browser limit.");
+        }
     }
 
     /// <summary>Number of chunks of a file: an empty file still has one, empty, chunk.</summary>

@@ -158,6 +158,15 @@ Nothing is coded.
   available in the container); reading 52.5 MiB with `cat` in the Terminal did
   not finish within the journey's time, so the read was not measured. Next:
   work items 3, 4 and 6 in parallel, then 5.
+- **Work item 3 done on 2026-11-15** (branch `storage/3-partial-read`, PR to
+  `storage/base`): `IndexedDbFileContentRepository.ReadRangeAsync` loads only
+  the chunks of a range; a file over 16 MiB opens as a `ChunkedContentReadStream`
+  (window of 1 MiB growing to 16 MiB on straight reads, back to 1 MiB after a
+  seek); a synchronous read past the loaded window throws
+  `NotSupportedException`; `KazoFile.ReadAllBytesAsync` makes one copy less.
+  Measured with .NET allocations and the in-memory chunk store (not in the
+  browser): reading 52.5 MiB allocates 17 MiB instead of 53 MiB, a seek and a
+  4 KiB read 1 MiB. No public API change.
 
 ## Questions asked, answer to confirm
 
