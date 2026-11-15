@@ -125,6 +125,13 @@ Questions à reposer au démarrage : où vivent les visionneuses, portée de
 - Code Editor **reste une app système**.
 - Le remplacement de l'éditeur de texte reste **sans expressions régulières**.
 
+## Rétention des contenus orphelins (issue #537, 2026-11-15)
+
+- Benoit a choisi **1 jour**, et **5 minutes quand l'espace est faible**. C'est
+  codé dans la PR de #537 (`FileContentStoragePolicy`). L'ADR de la série
+  `storage/base` qui remplace les 30 jours de l'ADR 0094 doit le noter ; la PR de
+  #537 attend sa fusion.
+
 ## Questions posées, réponse à confirmer
 
 - **« Nouveau dossier » dans les dialogues** (ADR 0175) : rendre

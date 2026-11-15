@@ -64,8 +64,16 @@ dans [`system-backup.md`](system-backup.md).
 - Les mutations de métadonnées sont des lots d'opérations IndexedDB ordonnés,
   construits par `IndexedDbFileSystemMutationPlanner` pour être atomiques. Les
   blocs de contenu sont adressés par hachage ; ceux qui ne sont plus référencés
-  sont ramassés par une passe bornée, après une période de rétention
-  (`OrphanRetention`), et jamais sans revalidation de leurs références.
+  (fichiers réécrits ou supprimés) sont ramassés par une passe bornée
+  (`IndexedDbFileSystemMaintenance`, `IStorageReclaimer`), après une période de
+  rétention : 1 jour (`OrphanRetention`), 5 minutes quand l'espace est faible
+  (`LowSpaceOrphanRetention`). `StorageSpaceMonitor` la lance en arrière-plan 30 s
+  après le démarrage, toutes les heures, et quand l'espace devient faible, avant
+  d'avertir (Os#537). La passe ne lit que les clés et les blocs des contenus non
+  référencés, jamais tout le magasin `fsContent` ; sa transaction de suppression
+  revérifie les références et l'âge. Une écriture qui réutilise un contenu déjà
+  stocké donne la nouvelle date à son bloc 0 : la passe ne peut pas retirer un contenu
+  qu'une écriture est en train de prendre.
 - Le chemin d'un fichier se résout en une requête (`resolvePath`, ADR 0090,
   [`filesystem-path-lookup.md`](filesystem-path-lookup.md)).
 - Les scripts `wwwroot/*.js` sont testés en contrat par

@@ -121,6 +121,13 @@ viewers live, scope of `?app=`, Eruda or not.
 - Code Editor **stays a system app**.
 - The text editor's replace stays **without regular expressions**.
 
+## Orphan content retention (issue #537, 2026-11-15)
+
+- Benoit chose **1 day**, and **5 minutes when storage is low**. It is coded in
+  the PR of #537 (`FileContentStoragePolicy`). The `storage/base` series ADR that
+  replaces the 30 days of ADR 0094 must record it; the PR of #537 waits for it to
+  be merged.
+
 ## Questions asked, answer to confirm
 
 - **"New folder" in dialogs** (ADR 0175): make

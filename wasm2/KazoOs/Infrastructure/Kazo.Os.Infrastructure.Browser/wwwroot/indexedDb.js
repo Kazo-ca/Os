@@ -148,6 +148,36 @@ export async function openDatabase(databaseName, version, migrationPlan = {}) {
     connections.set(cacheKey, database);
 }
 
+/**
+ * Reads the records of one index value with a cursor, one at a time, and returns the largest
+ * `property` among them, or null when a record has none (undated) or there is no record.
+ */
+function newestProperty(index, query, property) {
+    return new Promise((resolve, reject) => {
+        const request = index.openCursor(query);
+        let newest = null;
+        let any = false;
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => {
+            const cursor = request.result;
+            if (!cursor) {
+                resolve(any ? newest : null);
+                return;
+            }
+
+            const value = cursor.value?.[property];
+            if (typeof value !== "number") {
+                resolve(null);
+                return;
+            }
+
+            any = true;
+            newest = newest === null ? value : Math.max(newest, value);
+            cursor.continue();
+        };
+    });
+}
+
 async function executeOperation(transaction, operation) {
     const store = transaction.objectStore(operation.objectStoreName);
     const source = operation.indexName ? store.index(operation.indexName) : store;
@@ -269,6 +299,77 @@ async function executeOperation(transaction, operation) {
             });
             return { deleted };
         }
+        case "addIfAbsentElseTouch": {
+            // Like addIfAbsent, but an existing record gets the new value of `compareProperty`
+            // (its creation time). A write that reuses content an orphan pass already found old
+            // makes it young again, so the pass's age check in its own transaction keeps it.
+            if (!operation.compareProperty) {
+                throw new Error("addIfAbsentElseTouch requires compareProperty.");
+            }
+
+            const current = await requestResult(store.get(operation.key));
+            if (current === undefined) {
+                await requestResult(store.keyPath !== null || operation.key === undefined
+                    ? store.add(operation.value)
+                    : store.add(operation.value, operation.key));
+                return { added: true };
+            }
+
+            const touched = operation.value[operation.compareProperty];
+            if (current[operation.compareProperty] !== touched) {
+                current[operation.compareProperty] = touched;
+                await requestResult(store.keyPath !== null || operation.key === undefined
+                    ? store.put(current)
+                    : store.put(current, operation.key));
+            }
+            return { added: false };
+        }
+        case "findUnreferencedOlderThan": {
+            // Orphan discovery without loading every record: the primary keys of the store give
+            // the values of `indexName` (the first key part), each is counted in the reference
+            // index, and only the records of an unreferenced value are read, one at a time, to
+            // learn their newest `compareProperty` (creation time). `expectedValue` is the cutoff,
+            // `count` the most values returned. A value with an undated record is never returned.
+            if (!operation.indexName || !operation.referenceObjectStoreName ||
+                !operation.referenceIndexName || !operation.compareProperty ||
+                typeof operation.expectedValue !== "number" ||
+                !Number.isInteger(operation.count) || operation.count < 1) {
+                throw new Error("findUnreferencedOlderThan requires indexes, a cutoff and a positive count.");
+            }
+
+            const referenceIndex = transaction.objectStore(operation.referenceObjectStoreName)
+                .index(operation.referenceIndexName);
+            const keys = await requestResult(store.getAllKeys());
+            const values = [];
+            const seen = new Set();
+            for (const key of keys) {
+                const value = Array.isArray(key) ? key[0] : key;
+                if (!seen.has(value)) {
+                    seen.add(value);
+                    values.push(value);
+                }
+            }
+
+            const candidates = [];
+            let unreferenced = 0;
+            for (const value of values) {
+                if (candidates.length >= operation.count) {
+                    break;
+                }
+
+                if (await requestResult(referenceIndex.count(value)) !== 0) {
+                    continue;
+                }
+
+                unreferenced++;
+                const newest = await newestProperty(store.index(operation.indexName), value, operation.compareProperty);
+                if (newest !== null && newest <= operation.expectedValue) {
+                    candidates.push(value);
+                }
+            }
+
+            return { candidates, scannedValues: values.length, unreferenced };
+        }
         case "deleteAllByIndexIfUnreferenced": {
             if (!operation.indexName || !operation.referenceObjectStoreName ||
                 !operation.referenceIndexName) {
@@ -280,6 +381,17 @@ async function executeOperation(transaction, operation) {
                 referenceStore.index(operation.referenceIndexName).count(operation.query));
             if (referenceCount !== 0) {
                 return { deleted: 0, referenced: true };
+            }
+
+            // Optional age check in this same transaction: when `compareProperty` and a numeric
+            // `expectedValue` (cutoff) are given, records written or touched after the cutoff
+            // keep the whole value (a write reusing this content is in progress).
+            if (operation.compareProperty && typeof operation.expectedValue === "number") {
+                const newest = await newestProperty(
+                    store.index(operation.indexName), operation.query, operation.compareProperty);
+                if (newest === null || newest > operation.expectedValue) {
+                    return { deleted: 0, referenced: false, young: true };
+                }
             }
 
             const keys = await requestResult(store.index(operation.indexName).getAllKeys(operation.query));

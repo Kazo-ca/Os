@@ -12,10 +12,8 @@ public sealed class IndexedDbFileSystemMaintenanceTests
     [Fact]
     public async Task CleanupAsync_DeletesOldOrphanButRetainsConcurrentlyReferencedHash()
     {
-        long oldUtcMs = new DateTimeOffset(2026, 6, 1, 0, 0, 0, TimeSpan.Zero).ToUnixTimeMilliseconds();
         ScriptedModule module = new(
-            One($"[{{\"contentHash\":\"orphan\",\"chunkIndex\":0,\"dataBase64\":\"\",\"createdUtcMs\":{oldUtcMs}}}," +
-                $"{{\"contentHash\":\"used\",\"chunkIndex\":0,\"dataBase64\":\"\",\"createdUtcMs\":{oldUtcMs}}}]"),
+            One("{\"candidates\":[\"orphan\",\"used\"],\"scannedValues\":3,\"unreferenced\":2}"),
             [Parse("{\"deleted\":1,\"referenced\":false}"), Parse("{\"deleted\":0,\"referenced\":true}")]);
         await using IndexedDbFileSystemMaintenance maintenance = new(
             new FakeJsRuntime(module),
@@ -34,16 +32,15 @@ public sealed class IndexedDbFileSystemMaintenanceTests
             Assert.Equal("deleteAllByIndexIfUnreferenced", operation.Kind);
             Assert.Equal(KazoOsIndexedDbSchema.FileSystemEntryStoreName, operation.ReferenceObjectStoreName);
             Assert.Equal("contentHash", operation.ReferenceIndexName);
+            Assert.Equal("createdUtcMs", operation.CompareProperty);
+            Assert.Equal(CutoffMs(FileContentStoragePolicy.DefaultOrphanRetention), operation.ExpectedValue);
         });
     }
 
     [Fact]
-    public async Task InitializeAsync_IgnoresRecentAndUndatedLegacyChunks()
+    public async Task Discovery_reads_keys_and_references_in_javascript_not_the_whole_content_store()
     {
-        long recentUtcMs = new DateTimeOffset(2026, 8, 1, 0, 0, 0, TimeSpan.Zero).ToUnixTimeMilliseconds();
-        ScriptedModule module = new(One(
-            $"[{{\"contentHash\":\"recent\",\"chunkIndex\":0,\"dataBase64\":\"\",\"createdUtcMs\":{recentUtcMs}}}," +
-            "{\"contentHash\":\"legacy\",\"chunkIndex\":0,\"dataBase64\":\"\"}]"));
+        ScriptedModule module = new(One("{\"candidates\":[],\"scannedValues\":0,\"unreferenced\":0}"));
         await using IndexedDbFileSystemMaintenance maintenance = new(
             new FakeJsRuntime(module),
             FileContentStoragePolicy.Default,
@@ -52,8 +49,74 @@ public sealed class IndexedDbFileSystemMaintenanceTests
         IndexedDbFileContentCleanupResult result = await maintenance.InitializeAsync();
 
         Assert.Equal(new IndexedDbFileContentCleanupResult(0, 0, 0), result);
-        Assert.Single(module.ExecuteArguments);
+        IndexedDbOperation discovery = Assert.Single(
+            Assert.IsAssignableFrom<IReadOnlyList<IndexedDbOperation>>(Assert.Single(module.ExecuteArguments)[4]));
+        Assert.Equal("findUnreferencedOlderThan", discovery.Kind);
+        Assert.Equal(KazoOsIndexedDbSchema.FileContentStoreName, discovery.ObjectStoreName);
+        Assert.Equal(KazoOsIndexedDbSchema.FileSystemEntryStoreName, discovery.ReferenceObjectStoreName);
+        Assert.Equal(IndexedDbFileSystemMaintenance.HashesPerPass, discovery.Count);
+        Assert.Equal(CutoffMs(FileContentStoragePolicy.DefaultOrphanRetention), discovery.ExpectedValue);
     }
+
+    [Fact]
+    public async Task ReclaimAsync_with_low_space_uses_the_short_retention()
+    {
+        ScriptedModule module = new(One("{\"candidates\":[],\"scannedValues\":0,\"unreferenced\":0}"));
+        await using IndexedDbFileSystemMaintenance maintenance = new(
+            new FakeJsRuntime(module),
+            FileContentStoragePolicy.Default,
+            new FixedTimeProvider());
+
+        long deleted = await maintenance.ReclaimAsync(lowSpace: true);
+
+        Assert.Equal(0, deleted);
+        IndexedDbOperation discovery = Assert.Single(
+            Assert.IsAssignableFrom<IReadOnlyList<IndexedDbOperation>>(Assert.Single(module.ExecuteArguments)[4]));
+        Assert.Equal(CutoffMs(FileContentStoragePolicy.DefaultLowSpaceOrphanRetention), discovery.ExpectedValue);
+    }
+
+    [Fact]
+    public async Task ReclaimAsync_runs_passes_until_one_is_not_full()
+    {
+        string full = "{\"candidates\":[" + string.Join(
+            ",",
+            Enumerable.Range(0, IndexedDbFileSystemMaintenance.HashesPerPass).Select(index => $"\"h{index}\"")) + "]}";
+        JsonElement[] deletions = [.. Enumerable.Range(0, IndexedDbFileSystemMaintenance.HashesPerPass)
+            .Select(_ => Parse("{\"deleted\":2,\"referenced\":false}"))];
+        ScriptedModule module = new(
+            One(full),
+            deletions,
+            One("{\"candidates\":[\"last\"]}"),
+            [Parse("{\"deleted\":1,\"referenced\":false}")]);
+        await using IndexedDbFileSystemMaintenance maintenance = new(
+            new FakeJsRuntime(module),
+            FileContentStoragePolicy.Default,
+            new FixedTimeProvider());
+
+        long deleted = await maintenance.ReclaimAsync(lowSpace: false);
+
+        Assert.Equal((IndexedDbFileSystemMaintenance.HashesPerPass * 2) + 1, deleted);
+        Assert.Equal(4, module.ExecuteArguments.Count);
+    }
+
+    [Fact]
+    public void The_low_space_retention_is_never_longer_than_the_normal_one()
+    {
+        FileContentStoragePolicy policy = new(
+            FileContentStoragePolicy.DefaultMaxFileSizeBytes,
+            FileContentStoragePolicy.DefaultMaxChunkSizeBytes,
+            FileContentStoragePolicy.DefaultContentHashAlgorithm,
+            deduplicateChunks: true,
+            orphanRetention: TimeSpan.FromMinutes(1));
+
+        Assert.Equal(TimeSpan.FromMinutes(1), policy.LowSpaceOrphanRetention);
+        Assert.Equal(TimeSpan.FromDays(1), FileContentStoragePolicy.Default.OrphanRetention);
+        Assert.Equal(TimeSpan.FromMinutes(5), FileContentStoragePolicy.Default.LowSpaceOrphanRetention);
+        Assert.Throws<ArgumentOutOfRangeException>(() => policy with { LowSpaceOrphanRetention = TimeSpan.Zero });
+    }
+
+    private static long CutoffMs(TimeSpan retention) =>
+        (new FixedTimeProvider().GetUtcNow() - retention).ToUnixTimeMilliseconds();
 
     private static JsonElement[] One(string json) => [Parse(json)];
 

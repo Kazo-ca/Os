@@ -490,6 +490,100 @@ public sealed partial class IndexedDbBrowserContractTests
         }
     }
 
+    /// <summary>
+    /// Verifies the orphan-content operations (Os#537) on Chromium's IndexedDB: discovery skips
+    /// referenced, young and undated contents, a reused content becomes young again, and the delete
+    /// checks reference and age again in its own transaction.
+    /// </summary>
+    [Fact]
+    public async Task Orphan_content_discovery_and_delete_respect_references_and_age()
+    {
+        string solutionDirectory = FindSolutionDirectory();
+        int port = ReservePort();
+        string address = $"http://127.0.0.1:{port}";
+        using Process server = StartHarness(solutionDirectory, address);
+
+        try
+        {
+            using IPlaywright playwright = await Playwright.CreateAsync();
+            await using IBrowser browser = await ChromiumLauncher.LaunchAsync(playwright,
+                new BrowserTypeLaunchOptions { Channel = "chrome", Headless = true });
+            IPage page = await browser.NewPageAsync();
+            await NavigateWhenReadyAsync(page, address);
+
+            JsonElement result = await page.EvaluateAsync<JsonElement>(
+                """
+                async () => {
+                    const module = await import('/_content/Kazo.Os.Infrastructure.Browser/indexedDb.js');
+                    const name = `kazoos-orphans-${crypto.randomUUID()}`;
+                    await module.openDatabase(name, 1, {
+                        steps: [{
+                            targetVersion: 1,
+                            createObjectStores: [
+                                { name: 'fsContent', keyPath: ['contentHash', 'chunkIndex'], autoIncrement: false,
+                                  indexes: [{ name: 'contentHash', keyPath: 'contentHash', unique: false }] },
+                                { name: 'fsEntries', keyPath: 'id', autoIncrement: false,
+                                  indexes: [{ name: 'contentHash', keyPath: 'contentHash', unique: false }] }
+                            ]
+                        }]
+                    });
+                    const stores = ['fsContent', 'fsEntries'];
+                    const chunk = (hash, index, createdUtcMs) => ({
+                        kind: 'add', objectStoreName: 'fsContent',
+                        value: createdUtcMs === undefined
+                            ? { contentHash: hash, chunkIndex: index, dataBase64: '' }
+                            : { contentHash: hash, chunkIndex: index, dataBase64: '', createdUtcMs }
+                    });
+                    await module.executeTransaction(name, 1, stores, 'readwrite', [
+                        chunk('old', 0, 100), chunk('old', 1, 100),
+                        chunk('used', 0, 100),
+                        chunk('young', 0, 900),
+                        chunk('legacy', 0, undefined),
+                        chunk('reused', 0, 100),
+                        { kind: 'add', objectStoreName: 'fsEntries', value: { id: 'file', contentHash: 'used' } }
+                    ]);
+                    const find = { kind: 'findUnreferencedOlderThan', objectStoreName: 'fsContent',
+                        indexName: 'contentHash', count: 10, compareProperty: 'createdUtcMs', expectedValue: 500,
+                        referenceObjectStoreName: 'fsEntries', referenceIndexName: 'contentHash' };
+                    const [found] = await module.executeTransaction(name, 1, stores, 'readonly', [find]);
+
+                    // A write reuses 'reused' after discovery: chunk 0 gets the new time.
+                    const [touch] = await module.executeTransaction(name, 1, ['fsContent'], 'readwrite', [{
+                        kind: 'addIfAbsentElseTouch', objectStoreName: 'fsContent', key: ['reused', 0],
+                        compareProperty: 'createdUtcMs',
+                        value: { contentHash: 'reused', chunkIndex: 0, dataBase64: 'x', createdUtcMs: 1000 } }]);
+                    const del = hash => ({ kind: 'deleteAllByIndexIfUnreferenced', objectStoreName: 'fsContent',
+                        indexName: 'contentHash', query: hash, compareProperty: 'createdUtcMs', expectedValue: 500,
+                        referenceObjectStoreName: 'fsEntries', referenceIndexName: 'contentHash' });
+                    const deleted = await module.executeTransaction(name, 1, stores, 'readwrite',
+                        [del('old'), del('reused'), del('used')]);
+                    const [remaining] = await module.executeTransaction(name, 1, ['fsContent'], 'readonly',
+                        [{ kind: 'getAllKeys', objectStoreName: 'fsContent' }]);
+                    const [reused] = await module.executeTransaction(name, 1, ['fsContent'], 'readonly',
+                        [{ kind: 'get', objectStoreName: 'fsContent', key: ['reused', 0] }]);
+                    await module.deleteDatabase(name);
+                    return { found, touch, deleted, remaining: remaining.map(key => key[0]).sort(), reused };
+                }
+                """);
+
+            JsonElement found = result.GetProperty("found");
+            Assert.Equal(["old", "reused"], found.GetProperty("candidates").EnumerateArray().Select(e => e.GetString()).Order());
+            Assert.Equal(5, found.GetProperty("scannedValues").GetInt32());
+            Assert.False(result.GetProperty("touch").GetProperty("added").GetBoolean());
+            JsonElement[] deleted = [.. result.GetProperty("deleted").EnumerateArray()];
+            Assert.Equal(2, deleted[0].GetProperty("deleted").GetInt32());
+            Assert.True(deleted[1].GetProperty("young").GetBoolean());
+            Assert.True(deleted[2].GetProperty("referenced").GetBoolean());
+            Assert.Equal(["legacy", "reused", "used", "young"], result.GetProperty("remaining").EnumerateArray().Select(e => e.GetString()));
+            Assert.Equal(1000, result.GetProperty("reused").GetProperty("createdUtcMs").GetInt64());
+            Assert.Equal(string.Empty, result.GetProperty("reused").GetProperty("dataBase64").GetString());
+        }
+        finally
+        {
+            StopProcess(server);
+        }
+    }
+
     /// <summary>Verifies that two tabs cannot both commit the same expected revision.</summary>
     [Fact]
     public async Task Multi_tab_revision_conflict_allows_exactly_one_commit()

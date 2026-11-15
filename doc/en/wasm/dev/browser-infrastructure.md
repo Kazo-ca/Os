@@ -64,8 +64,15 @@ in [`system-backup.md`](system-backup.md).
 - Metadata mutations are ordered batches of IndexedDB operations,
   built by `IndexedDbFileSystemMutationPlanner` to be atomic. Content
   chunks are addressed by hash; those that are no longer referenced
-  are collected by a bounded pass, after a retention period
-  (`OrphanRetention`), and never without revalidating their references.
+  (rewritten or deleted files) are collected by a bounded pass
+  (`IndexedDbFileSystemMaintenance`, `IStorageReclaimer`), after a retention period:
+  1 day (`OrphanRetention`), 5 minutes when storage is low
+  (`LowSpaceOrphanRetention`). `StorageSpaceMonitor` runs it in the background 30 s
+  after boot, every hour, and when storage becomes low, before warning (Os#537). The
+  pass reads keys only and the chunks of unreferenced contents, never the whole
+  `fsContent` store; its delete transaction checks references and age again. A write
+  that reuses stored content gives its chunk 0 the new time, so the pass cannot remove
+  content a write is taking.
 - A file's path is resolved in one request (`resolvePath`, ADR 0090,
   [`filesystem-path-lookup.md`](filesystem-path-lookup.md)).
 - The `wwwroot/*.js` scripts are contract-tested by
