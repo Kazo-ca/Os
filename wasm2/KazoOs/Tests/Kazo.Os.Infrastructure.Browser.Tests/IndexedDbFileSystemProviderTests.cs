@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Kazo.Os.App.Abstractions;
 using Kazo.Os.Infrastructure.Browser.FileSystem;
+using Kazo.Os.Infrastructure.Browser.Schema;
 using Kazo.Os.Simulation.Abstractions.FileSystem;
 using Microsoft.JSInterop;
 
@@ -96,6 +97,69 @@ public sealed class IndexedDbFileSystemProviderTests
         Assert.Equal(FileSystemContentKind.Text, handle.Descriptor.Kind);
         Assert.Equal(4, handle.Entry.Metadata.Revision);
         Assert.Equal(1, chunks.ReadCalls);
+    }
+
+    [Fact]
+    public async Task ReadAsync_FileOverOneBatch_IsReadAsItIsConsumed()
+    {
+        MemoryFileContentChunkStore chunks = new();
+        byte[] original = IndexedDbFileContentRepositoryTests.Pattern((int)IndexedDbFileSystemProvider.StreamedReadThresholdBytes + 1);
+        string contentHash = chunks.PutChunked(original, (int)FileContentStoragePolicy.DefaultMaxChunkSizeBytes);
+        ScriptedModule module = new(
+            Walk(Entry(ChildId, FileSystemEntryKind.File, revision: 2, length: original.Length, contentHash: contentHash)));
+        await using IndexedDbFileSystemProvider provider = WithChunks(module, chunks);
+
+        FileSystemResult<FileSystemContentReadHandle> result = await provider.ReadAsync(
+            new FileSystemReadRequest(VirtualPath.Parse("/large.bin")),
+            Context());
+
+        Assert.True(result.Succeeded);
+        await using FileSystemContentReadHandle handle = result.Value!;
+        Assert.IsType<ChunkedContentReadStream>(handle.Content);
+        Assert.Equal(ChunkedContentReadStream.InitialWindowChunks, chunks.ChunksRead);
+        using MemoryStream copy = new();
+        await handle.Content.CopyToAsync(copy);
+        Assert.Equal(original, copy.ToArray());
+    }
+
+    [Fact]
+    public async Task ReadAsync_FileOfOneBatch_IsReadWhole()
+    {
+        MemoryFileContentChunkStore chunks = new();
+        byte[] original = IndexedDbFileContentRepositoryTests.Pattern((int)IndexedDbFileSystemProvider.StreamedReadThresholdBytes);
+        string contentHash = chunks.PutChunked(original, (int)FileContentStoragePolicy.DefaultMaxChunkSizeBytes);
+        ScriptedModule module = new(
+            Walk(Entry(ChildId, FileSystemEntryKind.File, revision: 2, length: original.Length, contentHash: contentHash)));
+        await using IndexedDbFileSystemProvider provider = WithChunks(module, chunks);
+
+        FileSystemResult<FileSystemContentReadHandle> result = await provider.ReadAsync(
+            new FileSystemReadRequest(VirtualPath.Parse("/batch.bin")),
+            Context());
+
+        await using FileSystemContentReadHandle handle = result.Value!;
+        Assert.IsType<MemoryStream>(handle.Content);
+        Assert.Equal(FileContentStoragePolicy.ChunksPerTransaction, chunks.ChunksRead);
+    }
+
+    [Fact]
+    public async Task ReadAsync_FileOverOneBatchWhoseContentIsGone_FailsAtOpen()
+    {
+        MemoryFileContentChunkStore chunks = new();
+        ScriptedModule module = new(
+            Walk(Entry(
+                ChildId,
+                FileSystemEntryKind.File,
+                revision: 2,
+                length: IndexedDbFileSystemProvider.StreamedReadThresholdBytes + 1,
+                contentHash: new string('a', 64))));
+        await using IndexedDbFileSystemProvider provider = WithChunks(module, chunks);
+
+        FileSystemResult<FileSystemContentReadHandle> result = await provider.ReadAsync(
+            new FileSystemReadRequest(VirtualPath.Parse("/gone.bin")),
+            Context());
+
+        Assert.False(result.Succeeded);
+        Assert.Equal(FileSystemErrorCode.ProviderFailure, result.Error!.Code);
     }
 
     [Fact]

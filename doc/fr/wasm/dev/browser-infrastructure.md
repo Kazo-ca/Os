@@ -55,6 +55,17 @@ navigateur, dans la composition de l'hôte.
   avec WebCrypto, puis range 64 blocs par transaction ; une lecture vérifie chaque bloc
   (numéro, longueur, `chunkHash`) et refuse un fichier abîmé au lieu de rendre de faux
   octets.
+- Lecture partielle (ADR 0275 §1 et §2) : `ReadRangeAsync` lit une plage
+  `[début, longueur]` en ne chargeant que les blocs qui la couvrent, par lots de 64.
+  Un fichier de plus de 16 Mio (`IndexedDbFileSystemProvider.StreamedReadThresholdBytes`)
+  s'ouvre en `ChunkedContentReadStream` : un flux positionnable qui garde une seule
+  fenêtre de blocs en mémoire, comme la lecture anticipée d'un vrai disque. La fenêtre
+  fait 4 blocs (1 Mio) à l'ouverture et après un `Seek` ailleurs, et double à chaque
+  lecture qui continue, jusqu'à 64 blocs (16 Mio). Le premier lot est lu à
+  l'ouverture, donc un contenu disparu échoue toujours à l'ouverture ; un bloc perdu
+  plus loin fait échouer la lecture avec une `IOException`. Une lecture synchrone
+  n'est servie que depuis la fenêtre chargée et lève `NotSupportedException` au-delà.
+  En dessous de 16 Mio, le fichier est lu d'un coup, comme avant.
 - L'adaptateur JSON (`indexedDb.js`) voit toujours les blocs sous leur forme base64 :
   `binaryChunks.js` change un bloc binaire qu'il lit en `dataBase64`, et une opération
   marquée `BinaryChunk` (restauration d'une sauvegarde, migration du renommage) de
