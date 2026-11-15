@@ -294,6 +294,9 @@ Cette section liste ce qui est publié dans la branche `main` et en ligne.
   « Redémarrer pour mettre à jour » l'ouvre dans tous les onglets.
   ([ADR 0174](dev/adr/0174-announce-a-new-version-to-open-sessions.md),
   [ADR 0223](dev/adr/0223-restart-onto-the-new-version.md))
+- **Aperçu de partage** : un lien vers `os.kazo.ca` partagé sur Facebook,
+  LinkedIn ou X montre l'image de Kazo OS, son titre et sa description.
+  ([`github-pages-deployment.md`](dev/github-pages-deployment.md#aperçu-de-partage-facebook-linkedin-x))
 - **Numéro de build et état de la version sur l'écran de connexion** : à côté
   de « Kazo OS 3.3.3 », le numéro de build (nombre de commits, le même pour le
   site, la Release et le serveur) et une pastille « À jour », « Obsolète : … »
@@ -455,6 +458,9 @@ Cette section liste ce qui est publié dans la branche `main` et en ligne.
 - **Tests navigateur chaque nuit** : les suites Playwright tournent la nuit sur
   `main` quand il a changé ; un échec ouvre une issue.
   ([`ci-workflows.md`](dev/ci-workflows.md#tests-navigateur-chaque-nuit))
+- **Fonctionnalités installables (type « Feature »)** : une fonctionnalité facultative de l'OS installée pour toute la machine par un administrateur, avec ses points d'entrée enfants. ([ADR 0260](dev/adr/0260-feature-app-type.md), [`app-installation.md`](dev/app-installation.md#fonctionnalités-adr-0260))
+- **Bibliothèques d'app et versions partagées** : un paquet emporte les bibliothèques de l'app, et une bibliothèque partagée (`KazoOsSharedLibrary`) est chargée une seule fois, dans sa version compatible la plus récente. ([ADR 0261](dev/adr/0261-app-libraries-and-shared-versions.md), [ADR 0256](dev/adr/0256-app-libraries-implementation-adjustments.md))
+- **Services des Features** : une app demande une interface qu'une Feature fournit, avec `KazoFeatures.GetServiceAsync<T>()`, sans dépendance dans son binaire. ([ADR 0262](dev/adr/0262-feature-service-registry-and-async-resolution.md), [`feature-services.md`](framework/feature-services.md))
 
 ## En cours de développement
 
@@ -469,13 +475,14 @@ dans `main`, le lien mène à sa PR.
 | Changer d'utilisateur | Ouvrir une autre session sans fermer la première. Reste grisé dans le menu Marche/arrêt par choix de Benoit : une session à la fois, Se déconnecter pour changer de compte. | [0195](dev/adr/0195-start-menu-power-button.md), [0201](dev/adr/0201-switch-user-stays-greyed.md) | [#290](https://github.com/Kazo-ca/Os/issues/290) |
 | Adresse de fichier servie à la demande | Une app reçoit une adresse pour lire un gros fichier (audio, vidéo) sans le copier en mémoire, avec lecture partielle pour avancer dans un morceau. | À écrire | [#379](https://github.com/Kazo-ca/Os/issues/379) |
 | Glisser des fichiers vers une app | Contrat public du SDK pour recevoir des fichiers glissés depuis l'explorateur ou le bureau. | À écrire | [#380](https://github.com/Kazo-ca/Os/issues/380) |
+| Récupérer l'espace des fichiers réécrits ou supprimés | L'ancien contenu d'un fichier réécrit ou supprimé est effacé après 1 jour, ou après 5 minutes quand l'espace est faible, au lieu de rester pour toujours dans le navigateur. | [0273](dev/adr/0273-short-orphan-content-retention.md) | [#537](https://github.com/Kazo-ca/Os/issues/537) |
 
 ### Kazo OS Store
 
 | Fonctionnalité | Description | ADR | Issue |
 | --- | --- | --- | --- |
 | Catalogue des applications | Format du catalogue, vérification et publication des applications proposées. | [0188](dev/adr/0188-hack-store-and-app-catalog.md) | [AppMarketPlace #1](https://github.com/Kazo-ca/Os-AppMarketPlace/issues/1) |
-| Canal bêta et mises à jour automatiques des apps | Une version bêta de Kazo OS en ligne (`os-beta.kazo.ca`), le SDK en préversion sur nuget.org, et chaque app qui se reconstruit et propose sa mise à jour quand le SDK sort. Décidé le 2026-11-14, rien n'est codé. | [0271](dev/adr/0271-beta-channel-and-automatic-app-updates.md), [plan](dev/plans/release-channels-plan.md) | [#456](https://github.com/Kazo-ca/Os/issues/456) |
+| Canal bêta et mises à jour automatiques des apps | Une version bêta de Kazo OS en ligne (`os-beta.kazo.ca`), le SDK en préversion sur nuget.org, et chaque app qui se reconstruit et propose sa mise à jour quand le SDK sort. Côté OS, c'est fait : la branche `beta`, le site bêta avec sa pastille « Bêta », le catalogue bêta et les workflows réutilisables des apps. La préversion 3.4.0-preview.1 est sortie le 2026-11-15. Il reste à aligner chaque dépôt d'app (chantier 7). | [0271](dev/adr/0271-beta-channel-and-automatic-app-updates.md), [plan](dev/plans/release-channels-plan.md) | [#456](https://github.com/Kazo-ca/Os/issues/456) |
 
 ### Personnalisation
 
@@ -488,6 +495,28 @@ dans `main`, le lien mène à sa PR.
 | Fonctionnalité | Description | ADR | Issue |
 | --- | --- | --- | --- |
 | HackerOS devient Kazo OS | Le nom HackerOS est déjà pris par une distribution Linux. Tout est renommé : nom affiché, espaces de noms et paquets `Kazo.Os.*` (SDK 3.0.0), préfixe `Kazo` au lieu de `Hack`, commandes, extensions et chemins ; les données des utilisateurs sont migrées au premier démarrage. | [0228](dev/adr/0228-rename-to-kazoos.md), [0229](dev/adr/0229-kazo-os-display-name-and-new-address.md), [0230](dev/adr/0230-rename-migration-by-previous-version.md) | Série `rename/base` |
+
+### Fonctionnalités installables (Features) et Os-x86
+
+Os-x86 ([Os-x86](https://github.com/Kazo-ca/Os-x86)) est une fonctionnalité
+facultative de l'OS, installée au niveau système par un administrateur, qui
+fait tourner des machines virtuelles x86 dans le navigateur (Linux, FreeDOS,
+programmes Windows par Wine) ; l'app BoxedWine en est l'interface. Elle
+demande à l'OS le type d'app « Feature » et les points d'extension ci-dessous
+(lot 1, série `feature/base`, ADR 0246 à 0256 et 0260 à 0262 ; une ligne par ADR).
+
+| Fonctionnalité | Description | ADR | Issue |
+| --- | --- | --- | --- |
+| Permissions déclarées par une Feature | Une Feature déclare ses propres permissions, dangereuses comprises ; elles suivent les règles du catalogue de l'OS et ne sont jamais accordées en silence. | [0246](dev/adr/0246-provider-declared-permissions.md) | — |
+| Rôles déclarés par une Feature | Une Feature déclare des rôles qu'un administrateur attribue ; chaque opération sensible passe par l'authentification de l'OS. | [0247](dev/adr/0247-feature-declared-roles.md) | — |
+| Résolution des dépendances | Le Store et `kazopkg` installent les dépendances déclarées dans le manifeste, avec un seul consentement ; retirer un paquet avertit et désactive les apps dépendantes. | [0248](dev/adr/0248-store-and-kazopkg-dependency-resolution.md) | — |
+| Section « Fonctionnalités » des Paramètres | Paramètres liste les Features installées et affiche les pages qu'elles fournissent, selon le rôle de l'usager. | [0249](dev/adr/0249-settings-features-section.md) | — |
+| Persistance et éviction du stockage | L'OS demande au navigateur de ne pas effacer son stockage, affiche le quota et avertit quand le navigateur a tout de même effacé des données. | [0250](dev/adr/0250-storage-persistence-and-eviction.md) | — |
+| Route du shell vers les apps à capacité d'exécution | `./programme.exe` au terminal est typé par le détecteur de format d'une Feature puis confié à l'app qui déclare `execute` pour ce type MIME, sans bit d'exécution ni lecture comme script. | [0251](dev/adr/0251-shell-route-to-execute-capable-apps.md) | — |
+| Le Terminal affiche un programme invité | Un programme console d'une Feature (shell Linux, programme DOS texte) s'affiche dans le Terminal de Kazo : couleurs par cellule, touches de fonction, Ctrl+C au programme. | [0252](dev/adr/0252-terminal-shows-a-guest-program.md) | — |
+| Expéditeur marqué | Une app lancée ou un fichier ouvert par une autre app connaît l'expéditeur, marqué par l'OS, pour son journal. | [0253](dev/adr/0253-marked-sender-on-launch-and-open.md) | — |
+| Événements par usager | Un journal d'événements par usager (permission accordée, mise à jour, conflit résolu), visible par l'usager et les administrateurs. | [0254](dev/adr/0254-per-user-events.md) | — |
+| Relais : identités et décisions d'une Feature | Le relais du serveur accepte d'une Feature une identité par flux, une décision et des limites, et journalise par identité. | [0255](dev/adr/0255-relay-identities-and-decisions-of-a-feature.md) | — |
 
 ### Applications optionnelles portées
 

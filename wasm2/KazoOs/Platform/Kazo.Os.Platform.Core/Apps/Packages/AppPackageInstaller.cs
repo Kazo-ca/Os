@@ -87,6 +87,19 @@ public sealed record AppPackageInstallContext(
 {
     /// <summary>Gets the catalog apps that came from a package rather than with the OS.</summary>
     public IReadOnlySet<string> PackagedAppIds { get; init; } = new HashSet<string>(StringComparer.Ordinal);
+
+    /// <summary>
+    /// Gets the apps installed from packages in the running catalog, with the libraries each one
+    /// carries (ADR 0261 §2): a shared library of the new package is compared with theirs.
+    /// </summary>
+    public IReadOnlyCollection<InstalledApp> InstalledApps { get; init; } = [];
+
+    /// <summary>
+    /// Gets the simple names of the libraries the page loaded from installed packages
+    /// (<see cref="IInstalledLibraryState.LoadedFromPackages"/>): the runtime has them, yet they are
+    /// not assemblies of the OS (ADR 0261 §1).
+    /// </summary>
+    public IReadOnlySet<string> LoadedPackageLibraries { get; init; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 }
 
 /// <summary>
@@ -330,9 +343,15 @@ public sealed partial class AppPackageInstaller
 
         AppPackageSource pinned = source.WithVersion(package.Version);
         AppBlockReason? blocked = request.Policy.FindBlock(package.Manifest);
-        bool systemWide = ChooseSystemWide(package.AppId, trust, blocked, request);
+        bool systemWide = ChooseSystemWide(package, trust, blocked, request);
         SemanticVersion? previous = Check(
-            package, pinned, request.Catalog, systemWide ? request.SystemInstalled : request.PersonalInstalled, request.PackagedAppIds);
+            package,
+            pinned,
+            request.Catalog,
+            systemWide ? request.SystemInstalled : request.PersonalInstalled,
+            request.PackagedAppIds,
+            request.InstalledApps,
+            request.LoadedPackageLibraries);
         return new AppPackagePlan(pinned, package, previous, trust != AppSourceTrust.Untrusted)
         {
             Trust = trust,
@@ -623,12 +642,24 @@ public sealed partial class AppPackageInstaller
     /// blocked app cannot be installed for oneself; <see cref="AppPackageScope.Auto"/> picks the
     /// personal install whenever it is allowed.
     /// </summary>
-    private static bool ChooseSystemWide(string appId, AppSourceTrust trust, AppBlockReason? blocked, AppPackageInstallContext request)
+    private static bool ChooseSystemWide(AppPackage package, AppSourceTrust trust, AppBlockReason? blocked, AppPackageInstallContext request)
     {
+        string appId = package.AppId;
         bool forSystem = request.SystemInstalled.Sources.ContainsKey(appId);
+        if (package.IsFeature && request.Scope == AppPackageScope.User)
+        {
+            // ADR 0260 §4: a feature acts on the whole machine (its commands, its permissions); two
+            // users with two versions would give two behaviors of the shell.
+            throw new AppPackageException(
+                "apps.package.feature-system-only",
+                $"{appId} is a feature: a feature is installed for the whole machine, by an administrator (use --system).");
+        }
+
         switch (request.Scope)
         {
             case AppPackageScope.System:
+                return true;
+            case AppPackageScope.Auto when package.IsFeature:
                 return true;
             case AppPackageScope.User when forSystem:
                 throw new AppPackageException(
@@ -661,7 +692,17 @@ public sealed partial class AppPackageInstaller
     /// <exception cref="AppPackageException">The package is refused.</exception>
     /// <param name="packagedAppIds">Catalog apps that came from a package (another user's personal apps among them), not built in.</param>
     public SemanticVersion? Check(
-        AppPackage package, AppPackageSource source, AppCatalog catalog, InstalledAppsReadResult installed, IReadOnlySet<string>? packagedAppIds = null)
+        AppPackage package, AppPackageSource source, AppCatalog catalog, InstalledAppsReadResult installed, IReadOnlySet<string>? packagedAppIds = null) =>
+        Check(package, source, catalog, installed, packagedAppIds, [], new HashSet<string>(StringComparer.OrdinalIgnoreCase));
+
+    private SemanticVersion? Check(
+        AppPackage package,
+        AppPackageSource source,
+        AppCatalog catalog,
+        InstalledAppsReadResult installed,
+        IReadOnlySet<string>? packagedAppIds,
+        IReadOnlyCollection<InstalledApp> installedApps,
+        IReadOnlySet<string> loadedPackageLibraries)
     {
         ArgumentNullException.ThrowIfNull(package);
         ArgumentNullException.ThrowIfNull(source);
@@ -709,13 +750,28 @@ public sealed partial class AppPackageInstaller
         }
 
         // A Web Worker cannot load an assembly from the file system: installed apps run on the page.
-        if (AppExecutionHosts.Of(manifest) != AppExecutionHost.MainThread)
+        // ADR 0260 §2: the children of a feature run too, so each of them must say so.
+        foreach (AppManifest runnable in package.Manifests)
         {
-            throw new AppPackageException(
-                "apps.package.worker-unsupported",
-                $"{package.AppId} runs in a Web Worker ({AppExecutionHosts.Of(manifest)}); an installed app must declare Execution = MainThread.");
+            if (AppExecutionHosts.Of(runnable) != AppExecutionHost.MainThread)
+            {
+                throw new AppPackageException(
+                    "apps.package.worker-unsupported",
+                    $"{runnable.Id} runs in a Web Worker ({AppExecutionHosts.Of(runnable)}); an installed app must declare Execution = MainThread.");
+            }
         }
 
+        // ADR 0260 §2: a feature's children carry ids of their own; none may be taken already.
+        foreach (AppManifest child in package.Children)
+        {
+            if (catalog.Manifests.ContainsKey(child.Id) && packagedAppIds?.Contains(child.Id) != true)
+            {
+                throw new AppPackageException("apps.package.built-in", $"{child.Id}, an entry point of {package.AppId}, is an app of this OS; a package cannot replace it.");
+            }
+        }
+
+        CheckLibraries(package, catalog, packagedAppIds, installedApps, loadedPackageLibraries);
+        CheckProvidedServices(package, catalog);
         IReadOnlyList<MissingRuntimeApi> missing = AppPackageApiCheck.FindMissing(package.Assemblies, _runtime);
         if (missing.Count > 0)
         {
@@ -726,6 +782,50 @@ public sealed partial class AppPackageInstaller
         }
 
         return previous;
+    }
+
+    /// <summary>
+    /// ADR 0261 §1 and §2, ADR 0256: the OS does not let a package replace one of its assemblies
+    /// (any library, by its name), and a <b>shared</b> library may not have another major version
+    /// than the copy an installed feature carries. A library that is not shared is not compared
+    /// with anything: it goes with its app.
+    /// </summary>
+    private void CheckLibraries(
+        AppPackage package,
+        AppCatalog catalog,
+        IReadOnlySet<string>? packagedAppIds,
+        IReadOnlyCollection<InstalledApp> installedApps,
+        IReadOnlySet<string> loadedPackageLibraries)
+    {
+        if (package.Libraries.Count == 0)
+        {
+            return;
+        }
+
+        // The assemblies of the apps the OS was built with; they may not be loaded yet, so the runtime cannot tell.
+        IReadOnlySet<string> osAssemblies = AppPackage.GetDeclaredAssemblies(
+            catalog.Manifests.Values.Where(manifest => packagedAppIds?.Contains(manifest.Id) != true));
+        HashSet<string> fromPackages = new(loadedPackageLibraries, StringComparer.OrdinalIgnoreCase);
+        fromPackages.UnionWith(installedApps.SelectMany(static app => app.Libraries).Select(static library => library.Name));
+        InstalledLibraries.CheckReservedNames(package, _runtime, osAssemblies, fromPackages);
+        InstalledLibraries.CheckMajorVersions(package, installedApps);
+    }
+
+    /// <summary>
+    /// ADR 0262 §1: one provider per contract. A feature that provides a contract another feature of
+    /// the catalog already provides is refused; an update of the same feature is not compared with itself.
+    /// </summary>
+    internal static void CheckProvidedServices(AppPackage package, AppCatalog catalog)
+    {
+        foreach (AppProvidedServiceManifest service in package.Manifest.ProvidedServices ?? [])
+        {
+            if (catalog.GetServiceProviders(service.ContractType).FirstOrDefault(provider => !string.Equals(provider.Feature.Id, package.AppId, StringComparison.Ordinal)) is { } other)
+            {
+                throw new AppPackageException(
+                    "apps.package.service-already-provided",
+                    $"{package.AppId} provides {service.ContractType}, which the feature {other.Feature.Name} ({other.Feature.Id}) already provides: a contract has one provider (ADR 0262 §1).");
+            }
+        }
     }
 
     /// <summary>

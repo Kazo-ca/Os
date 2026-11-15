@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "Kazo.Os.Windowing.SampleHost": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "https://localhost:54978;http://localhost:54980"
+    }
+  }
+}

@@ -100,6 +100,32 @@ strategy.
 - Package metadata also points to the new repository. The common version is
   defined once in `build/Versions.props` (`2.2.2`).
 
+## Share preview (Facebook, LinkedIn, X)
+
+When `https://os.kazo.ca/` is shared on Facebook, LinkedIn, Slack or X, the
+network reads the Open Graph tags of `OS/Kazo.Os.Ecosystem/wwwroot/index.html`
+without running JavaScript, then downloads the image they name:
+
+- `social-preview.png` (1280 × 640, the same image as the GitHub repository's
+  social preview), served at the site root;
+- `og:type`, `og:site_name`, `og:title`, `og:description`, `og:image` (absolute
+  address `https://os.kazo.ca/social-preview.png`, required by Facebook),
+  `og:image:type`, `og:image:width`, `og:image:height`, `og:image:alt`, and
+  `twitter:card` `summary_large_image` with `twitter:title` and `twitter:image`.
+
+There is on purpose no `og:url` and no `canonical` link: without them, each site
+keeps the address it is shared from, and the beta (`os-beta.kazo.ca`, same
+`index.html`) does not announce the stable site. It shows the same image,
+served by `os.kazo.ca`. The service worker does not cache the image offline
+(`offlineAssetsExclude` in `service-worker.published.js`): the OS never shows
+it. `SocialPreviewTests` (Kazo.Os.Ecosystem.Tests) checks the tags, the image
+size and that exclusion.
+
+Facebook caches its preview. After a publication that changes the image or the
+texts, open the [Sharing Debugger](https://developers.facebook.com/tools/debug/),
+paste `https://os.kazo.ca/` and click **Scrape Again**. LinkedIn has the same
+tool: [Post Inspector](https://www.linkedin.com/post-inspector/).
+
 ## Local verification
 
 From the repository root, on an output folder that is still empty:

@@ -84,6 +84,33 @@ public sealed class IndexedDbFileContentRepositoryTests
             async () => await repository.WriteAsync(new MemoryStream(Pattern((4 * ChunkBytes) + 1))));
     }
 
+    [Fact]
+    public async Task WriteAsync_ReusingStoredContent_RefreshesItsCreationTime()
+    {
+        ChunkStoreModule module = new();
+        MovableTimeProvider time = new(new DateTimeOffset(2026, 11, 1, 0, 0, 0, TimeSpan.Zero));
+        await using IndexedDbFileContentRepository repository = new(
+            new ModuleRuntime(module), FileContentStoragePolicy.Default, time);
+        byte[] content = Pattern((2 * ChunkBytes) + 1);
+        IndexedDbFileContentWrite first = await repository.WriteAsync(new MemoryStream(content));
+
+        // Two days later the old content is an orphan past its retention; writing the same bytes
+        // again reuses it and must make it young, or a concurrent orphan pass could delete it.
+        time.Now = time.Now.AddDays(2);
+        await repository.WriteAsync(new MemoryStream(content));
+
+        long expected = time.Now.ToUnixTimeMilliseconds();
+        Assert.Equal(expected, module.Chunks[$"{first.ContentHash}/0"].GetProperty("createdUtcMs").GetInt64());
+        Assert.Equal(3, module.Chunks.Count);
+    }
+
+    private sealed class MovableTimeProvider(DateTimeOffset now) : TimeProvider
+    {
+        public DateTimeOffset Now { get; set; } = now;
+
+        public override DateTimeOffset GetUtcNow() => Now;
+    }
+
     private static byte[] Pattern(int length)
     {
         byte[] bytes = new byte[length];
@@ -157,6 +184,22 @@ public sealed class IndexedDbFileContentRepositoryTests
                 {
                     string key = Key(operation.Key);
                     bool added = Chunks.TryAdd(key, JsonSerializer.SerializeToElement(operation.Value, Web));
+                    return JsonSerializer.SerializeToElement(new { added }, Web);
+                }
+
+                case "addIfAbsentElseTouch":
+                {
+                    string key = Key(operation.Key);
+                    JsonElement value = JsonSerializer.SerializeToElement(operation.Value, Web);
+                    bool added = Chunks.TryAdd(key, value);
+                    if (!added)
+                    {
+                        System.Text.Json.Nodes.JsonObject current =
+                            System.Text.Json.Nodes.JsonObject.Create(Chunks[key])!;
+                        current[operation.CompareProperty!] = value.GetProperty(operation.CompareProperty!).GetInt64();
+                        Chunks[key] = JsonSerializer.SerializeToElement(current);
+                    }
+
                     return JsonSerializer.SerializeToElement(new { added }, Web);
                 }
 

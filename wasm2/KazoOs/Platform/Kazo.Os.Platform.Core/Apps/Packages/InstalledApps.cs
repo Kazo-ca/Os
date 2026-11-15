@@ -140,10 +140,30 @@ public sealed record InstalledApp(AppPackageSource Source, AppManifest Manifest)
         ? InstalledAppsLayout.GetDirectory(AppId, Version)
         : InstalledAppsLayout.GetPersonalDirectory(FilesHome, AppId, Version);
 
-    /// <summary>Gets the assembly file names the manifest declares (all in <c>lib/</c>).</summary>
-    public IReadOnlySet<string> AssemblyNames => AppPackage.GetDeclaredAssemblies(Manifest);
+    /// <summary>
+    /// Gets the children of a feature (ADR 0260 §2), read from <c>entrypoints/*.json</c> of its folder;
+    /// empty for any other app. They join the catalog with the feature and run from its folder.
+    /// </summary>
+    public IReadOnlyList<AppManifest> Children { get; init; } = [];
 
-    /// <summary>Gets the path of one assembly.</summary>
+    /// <summary>Gets the manifest followed by its children: every catalog manifest this install brings.</summary>
+    public IEnumerable<AppManifest> Manifests => Children.Prepend(Manifest);
+
+    /// <summary>Gets whether <paramref name="appId"/> is this app or one of its children.</summary>
+    public bool Owns(string appId) => string.Equals(AppId, appId, StringComparison.Ordinal)
+        || Children.Any(child => string.Equals(child.Id, appId, StringComparison.Ordinal));
+
+    /// <summary>Gets the assembly file names the manifest and its children declare (all in <c>lib/</c>).</summary>
+    public IReadOnlySet<string> AssemblyNames => AppPackage.GetDeclaredAssemblies(Manifests);
+
+    /// <summary>
+    /// Gets the libraries its package carries (ADR 0261 §1), read from <c>libraries</c> of the
+    /// <c>kazoos-package.json</c> of its folder; empty for an app without a library, and for an app
+    /// installed before the list existed. They are loaded before the app's own assemblies.
+    /// </summary>
+    public IReadOnlyList<AppPackageLibrary> Libraries { get; init; } = [];
+
+    /// <summary>Gets the path of one assembly: a declared one or a library, all in <c>lib/</c>.</summary>
     public VirtualPath GetAssemblyPath(string fileName) => VirtualPath.Parse($"{Directory.Value}/{AppPackage.LibraryFolder}{fileName}");
 
     /// <summary>
@@ -284,6 +304,91 @@ public sealed record InstalledAppsImage(IReadOnlyList<InstalledApp> Apps, IReadO
             return null;
         }
 
-        return new InstalledApp(source, manifest) { FilesHome = home };
+        // The package description written with the app lists its libraries (ADR 0261 §1) and, for a
+        // feature, its children (ADR 0260 §2).
+        VirtualPath descriptionPath = VirtualPath.Parse($"{directory.Value}/{AppPackage.DescriptionFileName}");
+        string what = manifest.Kind == AppKind.Feature ? "feature" : "app";
+        List<string> childPaths = [];
+        IReadOnlyList<AppPackageLibrary> libraries;
+        try
+        {
+            byte[]? description = await read(descriptionPath, cancellationToken).ConfigureAwait(false);
+            using System.Text.Json.JsonDocument document = System.Text.Json.JsonDocument.Parse(description ?? "{}"u8.ToArray());
+            if (document.RootElement.TryGetProperty("manifests", out System.Text.Json.JsonElement listed) && listed.ValueKind == System.Text.Json.JsonValueKind.Array)
+            {
+                childPaths.AddRange(listed.EnumerateArray().Select(static item => item.GetString() ?? string.Empty));
+            }
+
+            libraries = AppPackageLibrary.ReadList(document.RootElement);
+        }
+        catch (Exception exception) when (exception is System.Text.Json.JsonException or AppPackageException)
+        {
+            warnings.Add($"apps: {descriptionPath.Value} is not valid ({exception.Message}), {what} {manifest.Id} skipped");
+            return null;
+        }
+
+        if (manifest.Kind != AppKind.Feature)
+        {
+            return new InstalledApp(source, manifest) { FilesHome = home, Libraries = libraries };
+        }
+
+        IReadOnlyList<AppManifest>? children = await ReadChildrenAsync(read, directory, descriptionPath, manifest, childPaths, warnings, cancellationToken).ConfigureAwait(false);
+        return children is null ? null : new InstalledApp(source, manifest) { FilesHome = home, Children = children, Libraries = libraries };
+    }
+
+    private static async Task<IReadOnlyList<AppManifest>?> ReadChildrenAsync(
+        InstalledAppFileReader read,
+        VirtualPath directory,
+        VirtualPath descriptionPath,
+        AppManifest feature,
+        IReadOnlyList<string> paths,
+        List<string> warnings,
+        CancellationToken cancellationToken)
+    {
+        List<AppManifest> children = [];
+        foreach (string path in paths)
+        {
+            if (!AppPackage.IsSafeRelativePath(path) || !path.StartsWith(AppPackage.EntryPointsFolder, StringComparison.Ordinal))
+            {
+                warnings.Add($"apps: {descriptionPath.Value} lists the child manifest '{path}' outside {AppPackage.EntryPointsFolder}, feature {feature.Id} skipped");
+                return null;
+            }
+
+            VirtualPath childPath = VirtualPath.Parse($"{directory.Value}/{path}");
+            byte[]? bytes = await read(childPath, cancellationToken).ConfigureAwait(false);
+            if (bytes is null)
+            {
+                warnings.Add($"apps: {childPath.Value} is missing, feature {feature.Id} skipped");
+                return null;
+            }
+
+            try
+            {
+                AppManifest child = AppManifestJsonSerializer.NormalizeOptionalCollections(
+                    AppManifestJsonSerializer.DeserializeStrict(Encoding.UTF8.GetString(bytes)));
+                ManifestValidationResult validation = AppManifestValidator.Validate(child);
+                if (!validation.IsValid)
+                {
+                    warnings.Add($"apps: {childPath.Value} is not valid ({validation.Errors[0].Message}), feature {feature.Id} skipped");
+                    return null;
+                }
+
+                children.Add(child);
+            }
+            catch (Exception exception) when (exception is System.Text.Json.JsonException or InvalidOperationException or ArgumentException or FormatException)
+            {
+                warnings.Add($"apps: {childPath.Value} is not a valid manifest ({exception.Message}), feature {feature.Id} skipped");
+                return null;
+            }
+        }
+
+        ManifestValidationResult relation = AppManifestValidator.ValidateFeature(feature, children);
+        if (!relation.IsValid)
+        {
+            warnings.Add($"apps: the children of {feature.Id} are not valid ({relation.Errors[0].Message}), feature skipped");
+            return null;
+        }
+
+        return children;
     }
 }

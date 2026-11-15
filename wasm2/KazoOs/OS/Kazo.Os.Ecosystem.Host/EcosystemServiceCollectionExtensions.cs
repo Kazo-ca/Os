@@ -510,11 +510,19 @@ public static class EcosystemServiceCollectionExtensions
         // reserve the filesystem enforces, and the real figures behind df.
         services.AddScoped<IStorageCapacityProbe>(provider =>
             new BrowserStorageManager(provider.GetRequiredService<Microsoft.JSInterop.IJSRuntime>()));
+        // Orphan file content (rewritten and deleted files) is given back by the monitor at boot,
+        // every hour and when storage gets low (Os#537).
+        services.AddScoped<IStorageReclaimer>(provider =>
+            new Kazo.Os.Infrastructure.Browser.FileSystem.IndexedDbFileSystemMaintenance(
+                provider.GetRequiredService<Microsoft.JSInterop.IJSRuntime>()));
         services.AddScoped<StorageSpaceMonitor>(provider => new StorageSpaceMonitor(
             provider.GetRequiredService<IStorageCapacityProbe>(),
             provider.GetRequiredService<INotificationQueue>(),
             () => provider.GetRequiredService<ISessionService>().CurrentPrincipal,
-            language: () => provider.GetRequiredService<Kazo.Os.Platform.Core.Globalization.SessionLocaleService>().Culture));
+            language: () => provider.GetRequiredService<Kazo.Os.Platform.Core.Globalization.SessionLocaleService>().Culture)
+        {
+            Reclaimer = provider.GetRequiredService<IStorageReclaimer>(),
+        });
         services.AddScoped<IStorageSpaceGuard>(provider => provider.GetRequiredService<StorageSpaceMonitor>());
 
         // User keyring (ADR 0100 section 2): ~/.local/share/keyrings/login.keyring, sealed with
@@ -786,6 +794,18 @@ public static class EcosystemServiceCollectionExtensions
             new WebAppActivator(
                 () => provider.GetRequiredService<AppLifecycleOrchestrator>(),
                 provider.GetRequiredService<ListeningPortTable>())));
+        // ADR 0262: the services features provide, one instance per page, created on the first
+        // request in the feature's own process (kazoos-svc, like a system daemon).
+        services.TryAddScoped(provider => new Kazo.Os.Platform.Core.Features.FeatureServiceResolver(
+            provider.GetRequiredService<AppCatalog>(),
+            provider.GetRequiredService<IAppEnablementRegistry>(),
+            (assemblyFileName, cancellationToken) => LoadFeatureAssemblyAsync(provider, assemblyFileName, cancellationToken),
+            (runAs, implementation) => provider.GetRequiredService<AppLifecycleOrchestrator>()
+                .StartFeatureService(runAs, implementation, ServiceAccount.CreatePrincipal(
+                    InstallationId.FromGuid(Guid.NewGuid()), DeviceId.FromGuid(Guid.NewGuid()), DateTimeOffset.UtcNow))
+                .Context,
+            () => provider.GetService<IInstalledLibraryState>(),
+            provider.GetService<ILogger<Kazo.Os.Platform.Core.Features.FeatureServiceResolver>>()));
         services.AddScoped<AppExecutionContextFactory>(provider => new AppExecutionContextFactory(
             provider.GetRequiredService<ICapabilityGrantRepository>(),
             provider.GetRequiredService<IFileSystemService>(),
@@ -824,6 +844,12 @@ public static class EcosystemServiceCollectionExtensions
                 RestartForPackages = () => provider.GetRequiredService<SystemPowerService>().RestartAfterAsync(static () => Task.CompletedTask),
                 // ADR 0214 §1: registered by the browser hosts; without it, changes wait for a restart.
                 InstalledAppsActivator = () => provider.GetService<IInstalledAppsActivator>(),
+                // ADR 0261 §3: an app whose shared library waits for a restart is shown as « Restart to finish ».
+                InstalledLibraries = () => provider.GetService<IInstalledLibraryState>(),
+                // ADR 0262 §2: each app's KazoFeatures, answered by the page's resolver.
+                FeatureServices = () => provider.GetService<Kazo.Os.Platform.Core.Features.FeatureServiceResolver>(),
+                // ADR 0260 §3: the consent to a feature's installation is written as machine allow lines.
+                PermissionStore = () => provider.GetService<IAppPermissionStore>(),
             },
             // Lazy for the same reason: ShellInterpreter depends on the orchestrator (ADR 0056 section 7).
             shellHostProvider: () => provider.GetRequiredService<ShellHostService>(),
@@ -1383,6 +1409,17 @@ public static class EcosystemServiceCollectionExtensions
                 $"context-menus.d could not be updated after an install change: {exception.Message}");
         }
     }
+
+    /// <summary>
+    /// Loads the assembly of a feature's service (ADR 0262 §4) through the host's lazy loader, which
+    /// loads an installed feature's libraries first (ADR 0261 §1); <see langword="null"/> without it.
+    /// </summary>
+    [System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "A feature's assembly arrives after publishing; AppPackageApiCheck verified its references at install time.")]
+    private static async ValueTask<System.Reflection.Assembly?> LoadFeatureAssemblyAsync(
+        IServiceProvider provider, string assemblyFileName, CancellationToken cancellationToken) =>
+        provider.GetService<Kazo.Os.Platform.Blazor.LazyLoading.BuildKnownAssemblyLoaderRegistry>() is { } assemblies
+            ? (await assemblies.LoadAsync(assemblyFileName, cancellationToken).ConfigureAwait(false)).Assembly
+            : null;
 
     /// <summary>
     /// The OS's own reader of the package configuration (ADR 0189): <c>/etc/kazoos</c> and the users'
