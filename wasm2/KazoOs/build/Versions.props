@@ -82,6 +82,6 @@
     the manifest generator writes it as the app's sdkCompatibility.minimumVersion (ADR 0098 §3).
   -->
   <PropertyGroup>
-    <KazoOsVersion>3.4.0-preview.1</KazoOsVersion>
+    <KazoOsVersion>3.4.0-preview.2</KazoOsVersion>
   </PropertyGroup>
 </Project>
