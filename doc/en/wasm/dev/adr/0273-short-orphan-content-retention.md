@@ -4,7 +4,7 @@
 
 ## Status
 
-Proposed on 2026-11-15. On 2026-11-14 Benoit decided that retention is short
+Accepted on 2026-11-15. On 2026-11-14 Benoit decided that retention is short
 (a few hours to a day) and that orphaned content goes at once when space is
 low. On 2026-11-15, in the thread of issue #537, he set the two durations:
 **1 day**, and 5 minutes when space is low. This ADR writes them down, with
@@ -106,8 +106,9 @@ app ([ADR 0274](0274-single-copy-of-app-files.md) §4). The pass checks both.
 - No format change: `createdUtcMs` already exists. An old chunk without a
   timestamp is treated as old enough, since guarantee 1 protects it when it is
   referenced.
-- The cleanup pass becomes the place of the conversion to binary
-  ([ADR 0272](0272-binary-file-content.md) §3).
+- The pass runs once before the first-boot conversion to binary
+  ([ADR 0272](0272-binary-file-content.md) §3), so that content about to go
+  is not converted.
 - The Settings ▸ Storage page of ADR 0250 (`feature/base` series) can later
   show the reclaimable space and start the pass; that is not in this ADR.
 
