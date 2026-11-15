@@ -84,8 +84,10 @@ Dropbox, faux Graph et faux S3 en mémoire.
 
 À faire par Benoit avant la fusion de la série dans `main`, sur un Kazo OS qui
 contient la série : une préversion servie depuis `cloud-drives/base`, ou
-`dotnet run` du projet Ecosystem sur `http://localhost:5000` (adresse de retour
-déjà inscrite). Chaque essai note : réussi, échoué (avec la capture et le texte
+`dotnet run` du projet Ecosystem sur `localhost:5000`. L'adresse de retour suit
+le schéma de la page : `http://` et `https://localhost:5000` sont deux adresses
+distinctes, à inscrire chacune dans Entra (Application monopage) et dans les
+deux apps Dropbox. Chaque essai note : réussi, échoué (avec la capture et le texte
 de l'erreur), ou non fait.
 
 ### Préparation

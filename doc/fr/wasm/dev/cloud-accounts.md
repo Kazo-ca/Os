@@ -182,6 +182,7 @@ L'adresse de retour est
 | --- | --- |
 | os.kazo.ca | `https://os.kazo.ca/_content/Kazo.Os.Infrastructure.Browser/oauth-callback.html` |
 | `dotnet run` sans profil de lancement | `http://localhost:5000/_content/Kazo.Os.Infrastructure.Browser/oauth-callback.html` |
+| Même hôte servi en `https` (certificat de développement) | `https://localhost:5000/_content/Kazo.Os.Infrastructure.Browser/oauth-callback.html` |
 | Publication servie par `python3 -m http.server 8080` | `http://localhost:8080/_content/Kazo.Os.Infrastructure.Browser/oauth-callback.html` |
 
 Dropbox exige l'adresse exacte, port compris, et n'accepte `http` que pour

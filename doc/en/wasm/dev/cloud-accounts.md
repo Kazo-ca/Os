@@ -181,6 +181,7 @@ byte for byte:
 | --- | --- |
 | os.kazo.ca | `https://os.kazo.ca/_content/Kazo.Os.Infrastructure.Browser/oauth-callback.html` |
 | `dotnet run` without a launch profile | `http://localhost:5000/_content/Kazo.Os.Infrastructure.Browser/oauth-callback.html` |
+| Same host served over `https` (development certificate) | `https://localhost:5000/_content/Kazo.Os.Infrastructure.Browser/oauth-callback.html` |
 | Publish output served by `python3 -m http.server 8080` | `http://localhost:8080/_content/Kazo.Os.Infrastructure.Browser/oauth-callback.html` |
 
 Dropbox requires the exact address, port included, and accepts `http` only for

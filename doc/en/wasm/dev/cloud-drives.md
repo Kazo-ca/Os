@@ -82,8 +82,10 @@ Graph and fake S3 in memory.
 
 To be done by Benoit before the series is merged into `main`, on a Kazo OS
 that holds the series: a preview served from `cloud-drives/base`, or
-`dotnet run` of the Ecosystem project on `http://localhost:5000` (redirect URI
-already registered). Each trial records: passed, failed (with the screenshot
+`dotnet run` of the Ecosystem project on `localhost:5000`. The redirect URI
+follows the page's scheme: `http://` and `https://localhost:5000` are two
+distinct URIs, each to register in Entra (single-page application) and in both
+Dropbox apps. Each trial records: passed, failed (with the screenshot
 and the text of the error), or not done.
 
 ### Preparation
