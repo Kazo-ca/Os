@@ -1,0 +1,207 @@
+# Reusable workflow (ADR 0271 §7), called by the publish-to-kazoos-store.yml of every app
+# repository and by the Kazo OS SDK update.
+#
+# Submits a version of the app to the Kazo OS Store catalog (ADR 0188 §4, §7). For a tag
+# v<version> (the app's Version in its [AppManifest] class), it:
+#   1. checks the Kazo OS submodule and builds the app in Release, as CI does;
+#   2. packs it (KazoOsPack, ADR 0182) and checks the manifest version equals the tag;
+#   3. makes the catalog folder apps/<appId>_<version>/ from store/ (icon, short descriptions,
+#      descriptions, screenshots, store.json + the tag's commit) and the package's manifest.json
+#      (the generated one plus every static web resource KazoOsPack added, ADR 0221), the one
+#      the catalog compares with the package its CI builds;
+#   4. leaves that folder as an artifact of the run, then opens the pull request to the catalog:
+#      - on the channel of the version (ADR 0271 §5): a version with a suffix (1.2.1-beta.1) goes
+#        to the beta branch of the catalog, any other one to main;
+#      - with the Kazo OS automation GitHub App (secrets KAZO_AUTOMATION_APP_ID and
+#        KAZO_AUTOMATION_APP_KEY, organisation secrets of Kazo-ca), from a branch of the catalog
+#        itself, without a fork;
+#      - otherwise with the HACK_STORE_TOKEN secret (a token of the author allowed to fork and
+#        open pull requests), from the author's fork;
+#      - with neither, the author submits the artifact by hand.
+# The catalog never takes a binary from the author: its own CI compiles the app at that commit.
+name: Publish to the Kazo OS Store
+
+on:
+  workflow_call:
+    inputs:
+      app-directory:
+        description: Folder of the app project (the one with manifest.json), for example src/Contoso.Notes
+        type: string
+        required: true
+      ref:
+        description: Tag v<version> to submit (empty for the ref that started the caller)
+        type: string
+        default: ''
+    secrets:
+      KAZO_AUTOMATION_APP_ID:
+        required: false
+      KAZO_AUTOMATION_APP_KEY:
+        required: false
+      HACK_STORE_TOKEN:
+        required: false
+    outputs:
+      pull-request:
+        description: Address of the catalog pull request (empty when none was opened)
+        value: ${{ jobs.submit.outputs.pull-request }}
+      channel:
+        description: stable or beta
+        value: ${{ jobs.submit.outputs.channel }}
+
+permissions:
+  contents: read
+
+env:
+  APP_DIRECTORY: ${{ inputs.app-directory }}
+  MARKETPLACE: Kazo-ca/Os-AppMarketPlace
+
+jobs:
+  submit:
+    runs-on: ubuntu-latest
+    outputs:
+      pull-request: ${{ steps.pr.outputs.url }}
+      channel: ${{ steps.folder.outputs.channel }}
+    env:
+      HAS_AUTOMATION_APP: ${{ secrets.KAZO_AUTOMATION_APP_ID != '' && secrets.KAZO_AUTOMATION_APP_KEY != '' }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.ref }}
+
+      - name: Fetch the Kazo OS submodule
+        run: git submodule update --init --depth 1 external/KazoOs
+
+      - uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+
+      - name: Check the Kazo OS submodule
+        run: bash .github/scripts/check-kazoos-submodule.sh
+
+      - name: Build and pack (Release)
+        run: dotnet build "$APP_DIRECTORY" -c Release -t:KazoOsPack
+
+      - name: Make the catalog folder
+        id: folder
+        env:
+          REF: ${{ inputs.ref || github.ref }}
+        run: |
+          manifest="$APP_DIRECTORY/manifest.json"
+          app_id="$(jq -r .id "$manifest")"
+          version="$(jq -r .version "$manifest")"
+          tag="${REF#refs/tags/}"
+          if [[ "$tag" == v* && "${tag#v}" != "$version" ]]; then
+            echo "::error::Tag $tag does not match the app version $version (manifest.json)."
+            exit 1
+          fi
+          if [[ "$app_id" == com.example.* ]]; then
+            echo "::error::$app_id is the example id of the template: give the app its own id (Id of the [AppManifest] class) before publishing it."
+            exit 1
+          fi
+          # A version with a suffix is a beta version: it goes to the beta channel of the catalog.
+          if [[ "$version" == *-* ]]; then channel=beta; base=beta; else channel=stable; base=main; fi
+          name="${app_id}_${version}"
+          folder="artifacts/kazoos-store/apps/$name"
+          mkdir -p "$folder"
+          cp store/icon.png "$folder/"
+          cp store/short_description.*.txt store/description.*.md "$folder/"
+          if [[ -d store/screenshots ]]; then cp -r store/screenshots "$folder/"; fi
+          package="$APP_DIRECTORY/bin/kazoos-packages/$version/$app_id-$version.kazoapp"
+          unzip -p "$package" manifest.json > "$folder/manifest.json"
+          # The commit actually built, not the one that started the caller (they differ when the
+          # SDK update or Tag a release calls this workflow on a new tag).
+          jq --arg commit "$(git rev-parse HEAD)" '. + {commit: $commit}' store/store.json > "$folder/store.json"
+          {
+            echo "name=$name"
+            echo "app_id=$app_id"
+            echo "version=$version"
+            echo "channel=$channel"
+            echo "base=$base"
+          } >> "$GITHUB_OUTPUT"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kazoos-store-${{ steps.folder.outputs.name }}
+          path: artifacts/kazoos-store
+
+      - name: Get the Kazo OS automation token
+        id: app-token
+        if: env.HAS_AUTOMATION_APP == 'true'
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.KAZO_AUTOMATION_APP_ID }}
+          private-key: ${{ secrets.KAZO_AUTOMATION_APP_KEY }}
+          owner: Kazo-ca
+          repositories: Os-AppMarketPlace
+
+      - name: Open the pull request to the catalog
+        id: pr
+        env:
+          APP_TOKEN: ${{ steps.app-token.outputs.token }}
+          APP_SLUG: ${{ steps.app-token.outputs.app-slug }}
+          STORE_TOKEN: ${{ secrets.HACK_STORE_TOKEN }}
+          NAME: ${{ steps.folder.outputs.name }}
+          APP_ID: ${{ steps.folder.outputs.app_id }}
+          VERSION: ${{ steps.folder.outputs.version }}
+          CHANNEL: ${{ steps.folder.outputs.channel }}
+          BASE: ${{ steps.folder.outputs.base }}
+        run: |
+          body="Submitted by the publish workflow of $GITHUB_SERVER_URL/$GITHUB_REPOSITORY ($CHANNEL channel, commit $(git rev-parse HEAD))."
+          title="$APP_ID $VERSION"
+          if [[ "$CHANNEL" == beta ]]; then title="$title (beta)"; fi
+
+          if [[ -n "$APP_TOKEN" ]]; then
+            # The automation app works in the catalog itself: a branch there, no fork.
+            export GH_TOKEN="$APP_TOKEN"
+            user="$APP_SLUG[bot]"
+            email="$(gh api "users/$user" --jq .id)+$user@users.noreply.github.com"
+            remote="https://x-access-token:$APP_TOKEN@github.com/$MARKETPLACE.git"
+            branch="submit/$NAME"
+            head="$branch"
+          elif [[ -n "$STORE_TOKEN" ]]; then
+            export GH_TOKEN="$STORE_TOKEN"
+            user="$(gh api user --jq .login)"
+            email="$user@users.noreply.github.com"
+            # No --remote: gh refuses it when a repository is named (nothing is cloned here anyway).
+            gh repo fork "$MARKETPLACE" --clone=false
+            # An existing fork keeps its own name (for example one made before the catalog was
+            # renamed), so ask GitHub for the author's fork instead of guessing it.
+            fork="$(gh api "repos/$MARKETPLACE/forks" --paginate --jq ".[] | select(.owner.login == \"$user\") | .full_name" | head -n 1)"
+            fork="${fork:-$user/${MARKETPLACE#*/}}"
+            remote="https://x-access-token:$STORE_TOKEN@github.com/$fork.git"
+            branch="$NAME"
+            head="$user:$branch"
+          else
+            echo "No KAZO_AUTOMATION_APP_ID/KAZO_AUTOMATION_APP_KEY nor HACK_STORE_TOKEN secret: submit the artifact kazoos-store-$NAME to the $BASE branch of $MARKETPLACE by hand."
+            exit 0
+          fi
+
+          # GitHub creates a fork in the background: retry the clone for up to a minute.
+          for attempt in 1 2 3 4 5 6; do
+            if git clone --depth 1 "$remote" marketplace; then
+              break
+            fi
+            if [[ $attempt == 6 ]]; then
+              echo "::error::The catalog repository could not be cloned."
+              exit 1
+            fi
+            sleep 10
+          done
+          cd marketplace
+          if ! git fetch --depth 1 "https://github.com/$MARKETPLACE.git" "$BASE"; then
+            echo "::error::$MARKETPLACE has no $BASE branch: the $CHANNEL channel of the catalog is not open yet."
+            exit 1
+          fi
+          git checkout -B "$branch" FETCH_HEAD
+          mkdir -p apps
+          rm -rf "apps/$NAME"
+          cp -r "../artifacts/kazoos-store/apps/$NAME" apps/
+          git add "apps/$NAME"
+          git -c user.name="$user" -c user.email="$email" commit -m "Add $APP_ID $VERSION"
+          # Re-running the workflow replaces the branch, and so updates an open pull request.
+          git push --force origin "$branch"
+          url="$(gh pr list --repo "$MARKETPLACE" --head "$branch" --base "$BASE" --state open --json url --jq '.[0].url // empty')"
+          if [[ -z "$url" ]]; then
+            url="$(gh pr create --repo "$MARKETPLACE" --base "$BASE" --head "$head" --title "$title" --body "$body")"
+          fi
+          echo "Catalog pull request: $url"
+          echo "url=$url" >> "$GITHUB_OUTPUT"

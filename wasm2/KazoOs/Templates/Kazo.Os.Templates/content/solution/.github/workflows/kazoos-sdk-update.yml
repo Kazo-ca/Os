@@ -1,0 +1,403 @@
+# Reusable workflow (ADR 0271 §4): the "Kazo OS SDK update" of a Kazo OS app repository, called by
+# its sdk-update.yml when Kazo OS announces a release (repository_dispatch kazoos-sdk-released),
+# every hour (for repositories that are not told), or by hand with a version.
+#
+# 1. prepare: finds the Kazo OS release to move to (the newest stable or pre-release tag of the
+#    repository in .gitmodules, or the version asked) and, when it is newer than the app's, makes
+#    the branch kazoos-sdk/<Kazo OS version> with one commit: the submodule on the release tag and
+#    the app's version raised by .github/scripts/bump-app-version.sh.
+#    - Stable release: from main; version x.y.z -> x.y.(z+1).
+#    - Pre-release: from beta (made from main the first time); version x.y.(z+1)-beta.<n>, where
+#      x.y.z is main's version. beta is rebuilt from main when it only holds commits of this
+#      workflow, otherwise main is merged into it (a conflict opens a TODO issue).
+#    The branch stays afterwards: it marks the release as handled, so the hourly run does not redo
+#    it. Delete it (or run by hand with "force") to try again.
+# 2. ci: the app's CI (kazoos-ci.yml) on that branch, Release, packages from nuget.org.
+# 3. finish, when CI is green:
+#    - stable minor or major release of Kazo OS (ADR 0271 Q4 = B): pull request to main, merged by
+#      the automation (Q5 = A), then tagged and published (kazoos-tag-release.yml);
+#    - stable patch release: pull request to main, closed once green: the app still builds,
+#      nothing is published;
+#    - pre-release: beta moves to the branch, the version is tagged and submitted to the beta
+#      channel of the catalog.
+#    When CI is red: a TODO issue with the run; nothing is merged or published, main is untouched.
+#
+# Tokens: the Kazo OS automation GitHub App (KAZO_AUTOMATION_APP_ID, KAZO_AUTOMATION_APP_KEY,
+# organisation secrets of Kazo-ca) opens and merges the pull request, so its CI runs and the merge
+# goes through. Without it the workflow token is used: the repository must then allow GitHub
+# Actions to create pull requests (Settings > Actions > General), and a protected main may refuse
+# the merge (the pull request then stays open, with a comment).
+name: Kazo OS SDK update
+
+on:
+  workflow_call:
+    inputs:
+      app-directory:
+        description: Folder of the app project (the one with manifest.json), for example src/Contoso.Notes
+        type: string
+        required: true
+      version:
+        description: Kazo OS version to move to (empty for the newest release)
+        type: string
+        default: ''
+      force:
+        description: Redo a release already handled (its kazoos-sdk/<version> branch is replaced)
+        type: boolean
+        default: false
+      solution:
+        description: Solution or project the CI builds and tests (empty for the one at the root)
+        type: string
+        default: ''
+      npm-test:
+        description: The CI runs "npm ci" then "npm test"
+        type: boolean
+        default: false
+      e2e-test:
+        description: The CI runs "npm run test:e2e" with Playwright Chromium
+        type: boolean
+        default: false
+      timeout-minutes:
+        description: Time limit of the CI job
+        type: number
+        default: 40
+    secrets:
+      KAZO_AUTOMATION_APP_ID:
+        required: false
+      KAZO_AUTOMATION_APP_KEY:
+        required: false
+      HACK_STORE_TOKEN:
+        required: false
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+concurrency:
+  group: kazoos-sdk-update-${{ github.repository }}
+  cancel-in-progress: false
+
+env:
+  APP_DIRECTORY: ${{ inputs.app-directory }}
+  GIT_AUTHOR_NAME: github-actions[bot]
+  GIT_AUTHOR_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
+  GIT_COMMITTER_NAME: github-actions[bot]
+  GIT_COMMITTER_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
+
+jobs:
+  prepare:
+    # The template repository holds an example app: it is regenerated from the kazoos-solution
+    # template, never moved by this workflow.
+    if: github.repository != 'Kazo-ca/Os-AppTemplate'
+    runs-on: ubuntu-latest
+    outputs:
+      mode: ${{ steps.target.outputs.mode }}
+      sdk: ${{ steps.target.outputs.sdk }}
+      current: ${{ steps.target.outputs.current }}
+      kind: ${{ steps.target.outputs.kind }}
+      branch: ${{ steps.branch.outputs.branch }}
+      version: ${{ steps.branch.outputs.version }}
+      conflict: ${{ steps.branch.outputs.conflict }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Find the Kazo OS release to move to
+        id: target
+        env:
+          REQUESTED: ${{ inputs.version }}
+        run: |
+          url="$(git config -f .gitmodules submodule.external/KazoOs.url)"
+          OS_TAGS="$(git ls-remote --tags "$url" 'v*')"
+          MAIN_SHA="$(git rev-parse HEAD:external/KazoOs)"
+          BETA_SHA=""
+          if git rev-parse -q --verify origin/beta >/dev/null; then
+            BETA_SHA="$(git rev-parse origin/beta:external/KazoOs)"
+          fi
+          export OS_TAGS MAIN_SHA BETA_SHA REQUESTED
+          # Reads OS_TAGS (git ls-remote output), MAIN_SHA and BETA_SHA (submodule commits of main
+          # and beta) and REQUESTED; writes mode (stable, beta or none), sdk, current, kind (major,
+          # minor or patch from main's version) and reason as name=value lines. A stable release
+          # is preferred over a pre-release: the next run takes the pre-release.
+          cat > "$RUNNER_TEMP/kazoos-sdk-target.mjs" <<'SCRIPT'
+          const parse = (version) => {
+            const match = /^(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?$/.exec(version);
+            return match ? { version, core: [+match[1], +match[2], +match[3]], pre: match[4] ? match[4].split('.') : [] } : null;
+          };
+
+          // Semantic version precedence (semver.org §11).
+          const compare = (a, b) => {
+            for (let i = 0; i < 3; i++) if (a.core[i] !== b.core[i]) return a.core[i] - b.core[i];
+            if (!a.pre.length || !b.pre.length) return b.pre.length - a.pre.length;
+            for (let i = 0; i < Math.max(a.pre.length, b.pre.length); i++) {
+              const x = a.pre[i], y = b.pre[i];
+              if (x === undefined) return -1;
+              if (y === undefined) return 1;
+              const xn = /^\d+$/.test(x), yn = /^\d+$/.test(y);
+              if (xn && yn && +x !== +y) return +x - +y;
+              if (xn !== yn) return xn ? -1 : 1;
+              if (x !== y) return x < y ? -1 : 1;
+            }
+            return 0;
+          };
+
+          const newest = (versions) => versions.reduce((best, v) => (!best || compare(v, best) > 0 ? v : best), null);
+
+          // Tag versions, and the commit each one names. An annotated tag is listed twice: its own
+          // object, then its commit (the "^{}" line); the object is never a submodule commit.
+          const tags = new Map();
+          const commits = new Map();
+          for (const line of (process.env.OS_TAGS ?? '').split('\n')) {
+            const match = /^([0-9a-f]{40})\s+refs\/tags\/v([^\s^]+)(?:\^\{\})?$/.exec(line.trim());
+            const parsed = match && parse(match[2]);
+            if (!parsed) continue;
+            tags.set(parsed.version, parsed);
+            commits.set(match[1], parsed);
+          }
+
+          const out = (values) => {
+            for (const [name, value] of Object.entries(values)) console.log(`${name}=${value ?? ''}`);
+          };
+
+          const main = commits.get(process.env.MAIN_SHA ?? '');
+          if (!main) {
+            console.error(`The Kazo OS submodule of main (${process.env.MAIN_SHA}) is not on a release tag.`);
+            process.exit(1);
+          }
+          const beta = process.env.BETA_SHA ? commits.get(process.env.BETA_SHA) ?? null : null;
+          const all = [...tags.values()];
+          const latestStable = newest(all.filter((v) => !v.pre.length));
+
+          let stable = null;
+          let preview = null;
+          if (process.env.REQUESTED) {
+            const requested = tags.get(process.env.REQUESTED.replace(/^v/, ''));
+            if (!requested) {
+              console.error(`Kazo OS has no release tag v${process.env.REQUESTED.replace(/^v/, '')}.`);
+              process.exit(1);
+            }
+            if (requested.pre.length) preview = requested; else stable = requested;
+          } else {
+            stable = latestStable;
+            preview = newest(all.filter((v) => v.pre.length));
+          }
+
+          const kind = (from, to) => (to.core[0] !== from.core[0] ? 'major' : to.core[1] !== from.core[1] ? 'minor' : 'patch');
+
+          if (stable && compare(stable, main) > 0) {
+            out({ mode: 'stable', sdk: stable.version, current: main.version, kind: kind(main, stable),
+              reason: `Kazo OS ${stable.version} is newer than ${main.version} on main.` });
+          } else if (preview && compare(preview, main) > 0 && (!beta || compare(preview, beta) > 0)
+            && (!latestStable || compare(preview, latestStable) > 0)) {
+            out({ mode: 'beta', sdk: preview.version, current: (beta ?? main).version, kind: kind(main, preview),
+              reason: `Kazo OS ${preview.version} is newer than ${(beta ?? main).version} on ${beta ? 'beta' : 'main'}.` });
+          } else {
+            out({ mode: 'none', sdk: '', current: main.version, kind: '',
+              reason: `Up to date: main is on Kazo OS ${main.version}${beta ? `, beta on ${beta.version}` : ''}.` });
+          }
+          SCRIPT
+          node "$RUNNER_TEMP/kazoos-sdk-target.mjs" > "$RUNNER_TEMP/target.txt"
+          tee -a "$GITHUB_OUTPUT" < "$RUNNER_TEMP/target.txt"
+          sed -n 's/^reason=//p' "$RUNNER_TEMP/target.txt" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Make the branch
+        id: branch
+        if: steps.target.outputs.mode != 'none'
+        env:
+          MODE: ${{ steps.target.outputs.mode }}
+          SDK: ${{ steps.target.outputs.sdk }}
+          FORCE: ${{ inputs.force }}
+        run: |
+          branch="kazoos-sdk/$SDK"
+          echo "branch=$branch" >> "$GITHUB_OUTPUT"
+          if git rev-parse -q --verify "origin/$branch" >/dev/null && [[ "$FORCE" != true ]]; then
+            echo "Kazo OS $SDK was already handled (branch $branch). Delete the branch or run with force to try again." | tee -a "$GITHUB_STEP_SUMMARY"
+            echo "conflict=handled" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          main_version="$(git show "origin/main:$APP_DIRECTORY/manifest.json" | jq -r .version)"
+          if [[ "$MODE" == stable ]] || ! git rev-parse -q --verify origin/beta >/dev/null; then
+            git checkout -B "$branch" origin/main
+          elif [[ -z "$(git log --format=%s origin/main..origin/beta | grep -v '^Kazo OS SDK' || true)" ]]; then
+            # beta only holds commits of this workflow: rebuild it from main.
+            git checkout -B "$branch" origin/main
+          else
+            # beta holds work of its own: bring main into it. beta first takes main's app version
+            # and Kazo OS commit, so these lines, changed on both sides, do not conflict.
+            git checkout -B "$branch" origin/beta
+            bash .github/scripts/bump-app-version.sh "$APP_DIRECTORY" "$main_version" >/dev/null
+            git update-index --cacheinfo "160000,$(git rev-parse origin/main:external/KazoOs),external/KazoOs"
+            git add -A "$APP_DIRECTORY"
+            if ! git diff --cached --quiet; then
+              git commit -m "Kazo OS SDK: align beta with the versions of main"
+            fi
+            if ! git merge --no-ff -m "Kazo OS SDK: merge main into beta" origin/main; then
+              git merge --abort
+              echo "conflict=merge" >> "$GITHUB_OUTPUT"
+              echo "main does not merge into beta without conflicts." | tee -a "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
+          fi
+
+          git submodule update --init --depth 1 external/KazoOs
+          git -C external/KazoOs fetch --depth 1 origin "refs/tags/v$SDK:refs/tags/v$SDK"
+          git -C external/KazoOs checkout --quiet "v$SDK"
+          git add external/KazoOs
+
+          # main's version x.y.z leads to x.y.(z+1), stable or beta (a beta branch may carry a beta
+          # version: start again from main's).
+          bash .github/scripts/bump-app-version.sh "$APP_DIRECTORY" "$main_version" >/dev/null
+          next="$(bash .github/scripts/bump-app-version.sh "$APP_DIRECTORY" patch)"
+          if [[ "$MODE" == beta ]]; then
+            n=0
+            for tag in $(git tag -l "v$next-beta.*"); do
+              number="${tag##*-beta.}"
+              if [[ "$number" =~ ^[0-9]+$ ]] && (( number > n )); then n="$number"; fi
+            done
+            next="$(bash .github/scripts/bump-app-version.sh "$APP_DIRECTORY" "$next-beta.$((n + 1))")"
+          fi
+          git add -A "$APP_DIRECTORY"
+          git commit -m "Kazo OS SDK $SDK: version $next" \
+            -m "Rebuild only: the Kazo OS submodule moves to v$SDK and the app's version to $next. Made by the Kazo OS SDK update ($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID)."
+          git push --force origin "HEAD:refs/heads/$branch"
+          echo "version=$next" >> "$GITHUB_OUTPUT"
+          echo "Branch $branch: Kazo OS $SDK, app version $next." >> "$GITHUB_STEP_SUMMARY"
+
+  ci:
+    needs: prepare
+    if: needs.prepare.outputs.mode != 'none' && needs.prepare.outputs.conflict == ''
+    permissions:
+      contents: read
+    uses: Kazo-ca/Os-AppTemplate/.github/workflows/kazoos-ci.yml@v1
+    with:
+      ref: ${{ needs.prepare.outputs.branch }}
+      solution: ${{ inputs.solution }}
+      npm-test: ${{ inputs.npm-test }}
+      e2e-test: ${{ inputs.e2e-test }}
+      timeout-minutes: ${{ inputs.timeout-minutes }}
+
+  finish:
+    needs: [prepare, ci]
+    if: always() && needs.prepare.result == 'success' && needs.prepare.outputs.mode != 'none' && needs.prepare.outputs.conflict != 'handled'
+    runs-on: ubuntu-latest
+    outputs:
+      release: ${{ steps.result.outputs.release }}
+      commit: ${{ steps.result.outputs.commit }}
+      release-branch: ${{ steps.result.outputs.release-branch }}
+    env:
+      HAS_AUTOMATION_APP: ${{ secrets.KAZO_AUTOMATION_APP_ID != '' && secrets.KAZO_AUTOMATION_APP_KEY != '' }}
+      MODE: ${{ needs.prepare.outputs.mode }}
+      SDK: ${{ needs.prepare.outputs.sdk }}
+      CURRENT: ${{ needs.prepare.outputs.current }}
+      KIND: ${{ needs.prepare.outputs.kind }}
+      BRANCH: ${{ needs.prepare.outputs.branch }}
+      VERSION: ${{ needs.prepare.outputs.version }}
+      CONFLICT: ${{ needs.prepare.outputs.conflict }}
+      CI_RESULT: ${{ needs.ci.result }}
+      RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Get the Kazo OS automation token
+        id: app-token
+        if: env.HAS_AUTOMATION_APP == 'true'
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.KAZO_AUTOMATION_APP_ID }}
+          private-key: ${{ secrets.KAZO_AUTOMATION_APP_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: ${{ github.event.repository.name }}
+
+      - name: Merge, close or report
+        id: result
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token || github.token }}
+        run: |
+          report() {
+            # A TODO issue, once per release: the hourly run does not open it again.
+            local title="$1" body="$2"
+            if [[ -n "$(gh issue list --state open --search "\"$title\" in:title" --json number --jq '.[0].number // empty')" ]]; then
+              echo "Issue \"$title\" is already open."
+              return
+            fi
+            gh label create TODO --color FBCA04 --description "To do" 2>/dev/null || true
+            gh issue create --title "$title" --label TODO --body "$body"
+          }
+          dependencies=$'\n\n## Dépendances\n\n- Related: the Kazo OS release v'"$SDK"' (https://github.com/Kazo-ca/Os/releases/tag/v'"$SDK"').'
+
+          if [[ "$CONFLICT" == merge ]]; then
+            report "Kazo OS SDK $SDK: main does not merge into beta" \
+              "The Kazo OS SDK update could not bring main into beta: they conflict. Merge main into beta by hand, then run the Kazo OS SDK update again (Actions tab, version $SDK, force). Run: $RUN_URL$dependencies"
+            exit 0
+          fi
+          if [[ "$CI_RESULT" != success ]]; then
+            report "Kazo OS SDK $SDK: the app does not build or pass its tests" \
+              "The app was moved to Kazo OS $SDK ($MODE) on the branch $BRANCH, version $VERSION, and its CI failed ($CI_RESULT). Nothing was merged or published; main is unchanged. Run: $RUN_URL. Fix the app from that branch, then merge it as usual.$dependencies"
+            exit 0
+          fi
+
+          if [[ "$MODE" == beta ]]; then
+            # beta moves to the tested commit, with the workflow token of the checkout. The lease
+            # refuses to overwrite a push made to beta meanwhile.
+            commit="$(git rev-parse "origin/$BRANCH")"
+            lease="$(git rev-parse -q --verify origin/beta || true)"
+            git push --force-with-lease="refs/heads/beta:$lease" origin "$commit:refs/heads/beta"
+            {
+              echo "release=true"
+              echo "commit=$commit"
+              echo "release-branch=beta"
+            } >> "$GITHUB_OUTPUT"
+            echo "beta is on Kazo OS $SDK, version $VERSION: tagging it and submitting it to the beta channel." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          body="Rebuild only: the Kazo OS submodule moves from v$CURRENT to v$SDK ($KIND release) and the app's version to $VERSION. CI passed: $RUN_URL."
+          url="$(gh pr list --head "$BRANCH" --base main --state open --json url --jq '.[0].url // empty')"
+          if [[ -z "$url" ]]; then
+            url="$(gh pr create --base main --head "$BRANCH" --title "Kazo OS $SDK" --body "$body")"
+          fi
+          echo "Pull request: $url" >> "$GITHUB_STEP_SUMMARY"
+
+          if [[ "$KIND" == patch ]]; then
+            # ADR 0271 Q4 = B: a patch release of Kazo OS is only checked.
+            gh pr close "$url" --comment "Kazo OS $SDK is a patch release: the app still builds and passes its tests on it; nothing is published (ADR 0271, Q4 = B)."
+            echo "Patch release: checked, nothing published." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          # ADR 0271 Q5 = A: the automation merges a rebuild-only pull request into main, with the
+          # first merge method the repository allows.
+          merged=false
+          for method in --merge --squash --rebase; do
+            if gh pr merge "$url" "$method"; then merged=true; break; fi
+          done
+          if [[ "$merged" != true ]]; then
+            gh pr comment "$url" --body "The Kazo OS SDK update could not merge this pull request (protected branch?). Merge it, then run Tag a release to publish $VERSION."
+            echo "::warning::The pull request could not be merged; it stays open."
+            exit 0
+          fi
+          commit="$(gh pr view "$url" --json mergeCommit --jq .mergeCommit.oid)"
+          {
+            echo "release=true"
+            echo "commit=$commit"
+            echo "release-branch=main"
+          } >> "$GITHUB_OUTPUT"
+
+  release:
+    needs: finish
+    if: needs.finish.outputs.release == 'true'
+    permissions:
+      contents: write
+    uses: Kazo-ca/Os-AppTemplate/.github/workflows/kazoos-tag-release.yml@v1
+    with:
+      app-directory: ${{ inputs.app-directory }}
+      commit: ${{ needs.finish.outputs.commit }}
+      branch: ${{ needs.finish.outputs.release-branch }}
+      publish: true
+    secrets: inherit

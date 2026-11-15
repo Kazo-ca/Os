@@ -21,6 +21,20 @@ internal sealed partial class AppManagementGateway
     /// <summary>Gets what brings installed apps into the running catalog without a restart (ADR 0214 §1).</summary>
     public Func<IInstalledAppsActivator?>? InstalledAppsActivator { get; init; }
 
+    /// <summary>
+    /// Gets what the page loaded of the installed apps' libraries (ADR 0261 §3): an app whose copy of
+    /// a shared library waits for a restart is shown as « Restart to finish ».
+    /// </summary>
+    public Func<IInstalledLibraryState?>? InstalledLibraries { get; init; }
+
+    /// <summary>
+    /// Gets the machine decisions of <c>/etc/kazoos/app-permissions.config</c> (ADR 0049 §4), where
+    /// the administrator's consent to a feature's installation is written as <c>allow</c> for its
+    /// dangerous capabilities (ADR 0260 §3); <see langword="null"/> writes none, and the first
+    /// launch of an entry point then asks as for any app.
+    /// </summary>
+    public Func<Policy.IAppPermissionStore?>? PermissionStore { get; init; }
+
     /// <inheritdoc />
     public async ValueTask<IReadOnlyList<KazoAppCatalog>> GetPackageCatalogsAsync(bool refresh = false, CancellationToken cancellationToken = default)
     {
@@ -37,7 +51,7 @@ internal sealed partial class AppManagementGateway
                     name,
                     trust,
                     [.. listing.Categories.Select(static category => new KazoCatalogCategory(category.Id, category.Labels))],
-                    [.. listing.Apps.Select(app => ToPublic(listing, app, trust))]));
+                    [.. listing.Apps.Select(app => ToPublic(listing, app, trust, packages.SdkVersion))]));
             }
             catch (AppPackageException exception)
             {
@@ -131,11 +145,23 @@ internal sealed partial class AppManagementGateway
         }
     }
 
-    /// <summary>Gets whether the running catalog has <paramref name="appId"/> at <paramref name="version"/>.</summary>
+    /// <summary>
+    /// Gets whether the running OS has <paramref name="appId"/> at <paramref name="version"/> as it
+    /// will run after a restart: in its catalog, and with the copy of each shared library chosen for
+    /// it (ADR 0261 §3), not an older copy another app left in the page.
+    /// </summary>
     private bool RunsVersion(string appId, SemanticVersion version) =>
+        IsInCatalogAt(appId, version) && !WaitsForLibraryRestart(appId);
+
+    /// <summary>Gets whether the running catalog has <paramref name="appId"/> at <paramref name="version"/>.</summary>
+    private bool IsInCatalogAt(string appId, SemanticVersion version) =>
         _catalog.Manifests.TryGetValue(appId, out AppManifest? manifest)
         && SemanticVersion.TryParse(manifest.Version, out SemanticVersion running)
         && running == version;
+
+    /// <summary>Gets whether a shared library of <paramref name="appId"/> waits for a restart (ADR 0261 §3).</summary>
+    private bool WaitsForLibraryRestart(string appId) =>
+        InstalledLibraries?.Invoke()?.GetPendingRestarts().Any(restart => string.Equals(restart.AppId, appId, StringComparison.Ordinal)) == true;
 
     /// <summary>
     /// Whether the running catalog differs from what is installed for the system or for the
@@ -187,7 +213,7 @@ internal sealed partial class AppManagementGateway
         return await Translate(() => packages.FindInCatalogsAsync(text, version, sources, cancellationToken)).ConfigureAwait(false);
     }
 
-    private static KazoCatalogApp ToPublic(AppCatalogListing listing, AppCatalogEntry app, KazoPackageTrust trust) => new(
+    private static KazoCatalogApp ToPublic(AppCatalogListing listing, AppCatalogEntry app, KazoPackageTrust trust, SemanticVersion sdkVersion) => new(
         listing.Name,
         app.AppId,
         app.Name,
@@ -196,7 +222,7 @@ internal sealed partial class AppManagementGateway
         app.ShortDescriptions,
         app.License,
         app.Repository,
-        app.LatestVersion.ToString(),
+        AppVersionChoice.Offered(app, sdkVersion).ToString(),
         [.. app.Versions.Select(version => new KazoCatalogAppVersion(version.Version.ToString(), version.Size, version.Capabilities)
         {
             PublishedAt = version.PublishedAt,
@@ -209,6 +235,11 @@ internal sealed partial class AppManagementGateway
         })],
         trust)
     {
-        Kind = app.Kind == AppCatalogEntryKind.ThemePack ? KazoCatalogItemKind.ThemePack : KazoCatalogItemKind.App,
+        Kind = app.Kind switch
+        {
+            AppCatalogEntryKind.ThemePack => KazoCatalogItemKind.ThemePack,
+            AppCatalogEntryKind.Feature => KazoCatalogItemKind.Feature,
+            _ => KazoCatalogItemKind.App,
+        },
     };
 }

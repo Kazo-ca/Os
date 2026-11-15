@@ -254,6 +254,8 @@ public sealed class AppExecutionContextFactory
                 UpdateMonitor = _appCatalog.UpdateMonitor,
                 RestartForPackages = _appCatalog.RestartForPackages,
                 InstalledAppsActivator = _appCatalog.InstalledAppsActivator,
+                InstalledLibraries = _appCatalog.InstalledLibraries,
+                PermissionStore = _appCatalog.PermissionStore,
             };
 
     /// <summary>
@@ -414,6 +416,14 @@ public sealed class AppExecutionContextFactory
         clock.BindAmbientContext(context);
         catalogGateway?.BindAmbientContext(context);
         accessibilityGateway?.BindAmbientContext(context);
+        // ADR 0262 §2: the services of the features of the page, answered for this app's manifest.
+        if (_appCatalog?.FeatureServices?.Invoke() is { } featureServices)
+        {
+            Features.AppFeatureGateway features = new(featureServices, manifest);
+            features.BindAmbientContext(context);
+            context.Features = features;
+        }
+
         administration.SystemSettings?.BindAmbientContext(context);
         if (administration.SystemBackup is not null)
         {
@@ -624,6 +634,26 @@ public sealed record AppCatalogGatewayServices(
     /// (ADR 0214 §1); <see langword="null"/> leaves every change for the next start of the OS.
     /// </summary>
     public Func<Apps.Packages.IInstalledAppsActivator?>? InstalledAppsActivator { get; init; }
+
+    /// <summary>
+    /// Gets what the page loaded of the installed apps' libraries (ADR 0261 §3);
+    /// <see langword="null"/> for a host that loads no installed app.
+    /// </summary>
+    public Func<Apps.Packages.IInstalledLibraryState?>? InstalledLibraries { get; init; }
+
+    /// <summary>
+    /// Gets the services the features of the page provide (ADR 0262), behind each app's
+    /// <c>KazoFeatures</c>; <see langword="null"/> (or a <see langword="null"/> result) for a host
+    /// without them, where every contract is « not installed ».
+    /// </summary>
+    public Func<Features.FeatureServiceResolver?>? FeatureServices { get; init; }
+
+    /// <summary>
+    /// Gets the machine permission decisions (ADR 0049 §4) a feature's installation writes
+    /// <c>allow</c> lines to (ADR 0260 §3); <see langword="null"/> leaves the first launch of its
+    /// entry points to ask.
+    /// </summary>
+    public Func<Policy.IAppPermissionStore?>? PermissionStore { get; init; }
 }
 
 /// <summary>

@@ -23,7 +23,9 @@ Pour une app dans son propre dépôt, partez du modèle de solution
 ([ADR 0176](../dev/adr/0176-app-repository-template.md),
 [ADR 0207](../dev/adr/0207-solution-template-implementation.md)) : app, hôte,
 tests, sous-module Kazo OS qui fixe la version, sources de l'OS en `Debug`,
-paquets en `Release`, CI et publication dans le Kazo OS Store par un tag. Tout est
+paquets en `Release`, CI et publication dans le Kazo OS Store par un tag, et
+mise à jour automatique quand Kazo OS sort une version (workflows réutilisables
+de `Kazo-ca/Os-AppTemplate`, [ADR 0271](../dev/adr/0271-beta-channel-and-automatic-app-updates.md)). Tout est
 dans [`app-repository.md`](app-repository.md). La suite de ce guide décrit
 l'assemblage à la main, utile pour un dépôt qui a plusieurs apps ou son propre
 hôte.
@@ -194,6 +196,10 @@ statique ; le service worker ne s'enregistre que hors de `localhost`. Voir
    reconstruire **toutes** les apps, l'OS refuse celles de l'ancienne majeure.
 4. Les manifestes régénérés portent le nouveau minimum : une app reconstruite
    ne se charge plus sur un OS plus ancien.
+
+Un dépôt fait avec `kazoos-solution` n'a pas à faire ces étapes : son workflow
+« Kazo OS SDK update » déplace le sous-module, teste et publie
+([`app-repository.md`](app-repository.md#mise-à-jour-du-sdk-kazo-os)).
 
 ### Passer à la 2.0
 
