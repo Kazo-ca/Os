@@ -181,6 +181,16 @@ This section lists what is released in the `main` branch and online.
   reads and writes the user's network drives like their personal files,
   without a dangerous capability; another user's drive and `/mnt` stay system
   files. ([ADR 0231](dev/adr/0231-network-drives-count-as-personal-files.md))
+- **Cloud storage as a network drive**: the user connects their Dropbox, their
+  OneDrive (personal or work) or an S3-compatible storage and finds it under
+  `/mnt`, in the File Explorer, Settings ▸ Network ▸ Cloud accounts and
+  `mount -t`. Everything happens in the browser, with no server; they choose
+  between their whole storage and a folder reserved for Kazo OS. Apps go
+  through the SDK behind `cloud-accounts.manage`.
+  ([ADR 0267](dev/adr/0267-cloud-drives-as-network-drives.md),
+  [ADR 0269](dev/adr/0269-cloud-tokens-stay-on-the-device.md),
+  [ADR 0270](dev/adr/0270-cloud-drives-in-the-app-sdk.md),
+  [`cloud-drives.md`](dev/cloud-drives.md))
 - **Backup and restore** of the whole machine in a downloaded archive.
   ([`system-backup.md`](dev/system-backup.md))
 
@@ -457,7 +467,6 @@ points to its PR.
 | Switch user | Open another session without closing the first one. Stays greyed out in the Power menu by Benoit's choice: one session at a time, Sign out to change account. | [0195](dev/adr/0195-start-menu-power-button.md), [0201](dev/adr/0201-switch-user-stays-greyed.md) | [#290](https://github.com/Kazo-ca/Os/issues/290) |
 | File address served on demand | An app gets an address to read a large file (audio, video) without copying it in memory, with partial reads to seek in a track. | To write | [#379](https://github.com/Kazo-ca/Os/issues/379) |
 | Drag files onto an app | Public SDK contract to receive files dragged from the File Explorer or the desktop. | To write | [#380](https://github.com/Kazo-ca/Os/issues/380) |
-| Cloud storage as a network drive | The user connects their Dropbox, their OneDrive or an S3-compatible storage and finds it under `/mnt`, like a network drive. Everything happens in the browser, with no server; they choose between their whole storage and a folder reserved for Kazo OS. Series nearly done: trials with real accounts left ([`cloud-drives.md`](dev/cloud-drives.md)). | [0267](dev/adr/0267-cloud-drives-as-network-drives.md), [0270](dev/adr/0270-cloud-drives-in-the-app-sdk.md) | — |
 | Reclaim the space of rewritten or deleted files | The old content of a rewritten or deleted file is erased after 1 day, or after 5 minutes when storage is low, instead of staying in the browser forever. | [0273](dev/adr/0273-short-orphan-content-retention.md) | [#537](https://github.com/Kazo-ca/Os/issues/537) |
 
 ### Kazo OS Store
