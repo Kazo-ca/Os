@@ -200,6 +200,21 @@ unreadable keys put the account in `NeedsReconnect`. A keys account refuses
 reconnected by typing its keys again. Removal is the same as for the other
 accounts.
 
+## Public pages for the providers
+
+The consent screens of Dropbox and Microsoft link to two static pages of the
+host (`OS/Kazo.Os.Ecosystem/wwwroot/`), in French and English, with no
+WebAssembly and no script, styled by `legal.css`:
+
+| Page | Address | Where to register it |
+| --- | --- | --- |
+| Privacy policy | `https://os.kazo.ca/privacy.html` | Dropbox (production request), Entra ("Branding") |
+| Terms of use | `https://os.kazo.ca/terms.html` | Entra ("Branding") |
+
+The published service worker serves them as they are and keeps them offline,
+like the callback page. One pair of pages covers every provider, with a section
+per service (Benoit's choice, 2026-11-15).
+
 ## Decisions
 
 - **Tokens sealed on the device, key in the keyring**

@@ -1,0 +1,11 @@
+{
+  "id": "75c9c083-d3e6-4306-9c3a-7d07a51fcdeb",
+  "category": "new",
+  "audience": ["user"],
+  "title": { "en": "Privacy policy and terms of use pages", "fr": "Pages de confidentialité et de conditions d'utilisation" },
+  "description": {
+    "en": "os.kazo.ca/privacy.html and os.kazo.ca/terms.html explain, in French and English, that Kazo OS has no server receiving your files or cloud tokens. They are plain pages, available offline.",
+    "fr": "os.kazo.ca/privacy.html et os.kazo.ca/terms.html expliquent, en français et en anglais, que Kazo OS n'a aucun serveur qui reçoit vos fichiers ni vos jetons cloud. Ce sont des pages simples, disponibles hors ligne."
+  },
+  "links": ["doc/en/wasm/dev/cloud-accounts.md"]
+}

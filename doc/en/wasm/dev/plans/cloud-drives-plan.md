@@ -72,7 +72,8 @@ registrations can be prepared before and receive the addresses afterwards.
    - to hand over: the **Application (client) ID**. No secret to create.
 3. **A privacy policy page** on os.kazo.ca. It says that tokens and files stay
    in the user's browser and that Kazo OS has no server that receives them.
-   Dropbox asks for it for production. Work item 7 proposes its text.
+   Dropbox asks for it for production. **Written**: `privacy.html` and `terms.html`
+   ([`cloud-accounts.md`](../cloud-accounts.md#public-pages-for-the-providers)).
 4. **One trial per connector with a real account**, before the series is
    merged into `main`, and a trial of the PWA installed on iOS.
 

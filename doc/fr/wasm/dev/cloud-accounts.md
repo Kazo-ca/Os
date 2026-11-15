@@ -201,6 +201,21 @@ compte à clés refuse `GetAccessTokenAsync` et `ReconnectAsync`
 (`ProviderNotConfigured`) : on le reconnecte en saisissant de nouveau ses clés.
 Le retrait est le même que pour les autres comptes.
 
+## Pages publiques pour les fournisseurs
+
+Les écrans de consentement de Dropbox et de Microsoft renvoient à deux pages
+statiques de l'hôte (`OS/Kazo.Os.Ecosystem/wwwroot/`), en français et en
+anglais, sans WebAssembly ni script, stylées par `legal.css` :
+
+| Page | Adresse | Où l'inscrire |
+| --- | --- | --- |
+| Politique de confidentialité | `https://os.kazo.ca/privacy.html` | Dropbox (demande de production), Entra (« Personnalisation ») |
+| Conditions d'utilisation | `https://os.kazo.ca/terms.html` | Entra (« Personnalisation ») |
+
+Le service worker publié les sert telles quelles et les garde hors ligne, comme
+la page de retour. Une seule paire de pages couvre tous les fournisseurs, avec
+une section par service (choix de Benoit, 2026-11-15).
+
 ## Décisions
 
 - **Jetons scellés sur l'appareil, clé dans le trousseau**
