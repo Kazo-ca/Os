@@ -294,6 +294,9 @@ Cette section liste ce qui est publié dans la branche `main` et en ligne.
   « Redémarrer pour mettre à jour » l'ouvre dans tous les onglets.
   ([ADR 0174](dev/adr/0174-announce-a-new-version-to-open-sessions.md),
   [ADR 0223](dev/adr/0223-restart-onto-the-new-version.md))
+- **Aperçu de partage** : un lien vers `os.kazo.ca` partagé sur Facebook,
+  LinkedIn ou X montre l'image de Kazo OS, son titre et sa description.
+  ([`github-pages-deployment.md`](dev/github-pages-deployment.md#aperçu-de-partage-facebook-linkedin-x))
 - **Numéro de build et état de la version sur l'écran de connexion** : à côté
   de « Kazo OS 3.3.3 », le numéro de build (nombre de commits, le même pour le
   site, la Release et le serveur) et une pastille « À jour », « Obsolète : … »
@@ -470,6 +473,7 @@ dans `main`, le lien mène à sa PR.
 | Adresse de fichier servie à la demande | Une app reçoit une adresse pour lire un gros fichier (audio, vidéo) sans le copier en mémoire, avec lecture partielle pour avancer dans un morceau. | À écrire | [#379](https://github.com/Kazo-ca/Os/issues/379) |
 | Glisser des fichiers vers une app | Contrat public du SDK pour recevoir des fichiers glissés depuis l'explorateur ou le bureau. | À écrire | [#380](https://github.com/Kazo-ca/Os/issues/380) |
 | Stockage cloud comme lecteur réseau | L'utilisateur connecte son Dropbox, son OneDrive ou un stockage compatible S3 et le retrouve dans `/mnt`, comme un lecteur réseau. Tout se passe dans le navigateur, sans serveur ; il choisit entre tout son stockage et un dossier réservé à Kazo OS. Série presque terminée : reste les essais avec de vrais comptes ([`cloud-drives.md`](dev/cloud-drives.md)). | [0267](dev/adr/0267-cloud-drives-as-network-drives.md), [0270](dev/adr/0270-cloud-drives-in-the-app-sdk.md) | — |
+| Récupérer l'espace des fichiers réécrits ou supprimés | L'ancien contenu d'un fichier réécrit ou supprimé est effacé après 1 jour, ou après 5 minutes quand l'espace est faible, au lieu de rester pour toujours dans le navigateur. | [0273](dev/adr/0273-short-orphan-content-retention.md) | [#537](https://github.com/Kazo-ca/Os/issues/537) |
 
 ### Kazo OS Store
 

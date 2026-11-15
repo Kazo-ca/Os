@@ -285,6 +285,9 @@ This section lists what is released in the `main` branch and online.
   available; it downloads in the background and "Restart to update" opens it in
   every tab. ([ADR 0174](dev/adr/0174-announce-a-new-version-to-open-sessions.md),
   [ADR 0223](dev/adr/0223-restart-onto-the-new-version.md))
+- **Share preview**: a link to `os.kazo.ca` shared on Facebook, LinkedIn or X
+  shows the Kazo OS image, its title and its description.
+  ([`github-pages-deployment.md`](dev/github-pages-deployment.md#share-preview-facebook-linkedin-x))
 - **Build number and version status on the sign-in screen**: next to
   "Kazo OS 3.3.3", the build number (commit count, the same for the site, the
   Release and the server) and a badge "Up to date", "Outdated: …" or "Status
@@ -455,6 +458,7 @@ points to its PR.
 | File address served on demand | An app gets an address to read a large file (audio, video) without copying it in memory, with partial reads to seek in a track. | To write | [#379](https://github.com/Kazo-ca/Os/issues/379) |
 | Drag files onto an app | Public SDK contract to receive files dragged from the File Explorer or the desktop. | To write | [#380](https://github.com/Kazo-ca/Os/issues/380) |
 | Cloud storage as a network drive | The user connects their Dropbox, their OneDrive or an S3-compatible storage and finds it under `/mnt`, like a network drive. Everything happens in the browser, with no server; they choose between their whole storage and a folder reserved for Kazo OS. Series nearly done: trials with real accounts left ([`cloud-drives.md`](dev/cloud-drives.md)). | [0267](dev/adr/0267-cloud-drives-as-network-drives.md), [0270](dev/adr/0270-cloud-drives-in-the-app-sdk.md) | — |
+| Reclaim the space of rewritten or deleted files | The old content of a rewritten or deleted file is erased after 1 day, or after 5 minutes when storage is low, instead of staying in the browser forever. | [0273](dev/adr/0273-short-orphan-content-retention.md) | [#537](https://github.com/Kazo-ca/Os/issues/537) |
 
 ### Kazo OS Store
 

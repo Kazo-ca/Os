@@ -253,5 +253,6 @@ next free number is given in
 | [`0269-cloud-tokens-stay-on-the-device.md`](0269-cloud-tokens-stay-on-the-device.md) | ADR 0269: cloud account tokens stay on the device, sealed in `~/.local/state/kazoos/cloud-accounts.json`, with their key in the keyring; clarifies ADR 0267 §5. |
 | [`0270-cloud-drives-in-the-app-sdk.md`](0270-cloud-drives-in-the-app-sdk.md) | ADR 0270: cloud accounts and cloud drives go through the public SDK (`KazoCloudAccounts`, `KazoDriveInfo.MountNetworkDriveAsync`), behind the dangerous capability `cloud-accounts.manage`; supersedes one sentence of ADR 0267. |
 | [`0268-store-in-start-menu-quick-access.md`](0268-store-in-start-menu-quick-access.md) | ADR 0268: the Kazo OS Store moves from the Pinned section to the Start menu's Quick access; no default pin anymore, removed once from existing profiles; partly supersedes ADR 0188 and ADR 0212 §6 (series `store-quick-access/base`). |
+| [`0273-short-orphan-content-retention.md`](0273-short-orphan-content-retention.md) | ADR 0273 (accepted): orphaned content is kept 1 day, 5 minutes when space is low; age from the first chunk, chunks checked present when an entry is written, when the cleanup pass runs; supersedes the 30 days of ADR 0094 (issue #537) |
 
 Parent folder index: [`../README.md`](../README.md).

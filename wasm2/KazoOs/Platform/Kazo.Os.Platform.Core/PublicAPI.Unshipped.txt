@@ -366,3 +366,8 @@ Kazo.Os.Platform.Core.CloudAccounts.CloudProviderSettings.OneDriveAppFolderPath.
 Kazo.Os.Platform.Core.CloudAccounts.CloudProviderSettings.OneDriveAppFolderPath.init -> void
 static Kazo.Os.Platform.Core.CloudAccounts.CloudDrivesSettingsDocuments.DropboxAppFolderPathQualifiedKey.get -> string!
 static Kazo.Os.Platform.Core.CloudAccounts.CloudDrivesSettingsDocuments.OneDriveAppFolderPathQualifiedKey.get -> string!
+Kazo.Os.Platform.Core.Storage.StorageSpaceMonitor.Reclaimer.get -> Kazo.Os.Simulation.Abstractions.Metrics.IStorageReclaimer?
+Kazo.Os.Platform.Core.Storage.StorageSpaceMonitor.Reclaimer.init -> void
+static readonly Kazo.Os.Platform.Core.Storage.StorageSpaceMonitor.ReclaimRequestDelay -> System.TimeSpan
+Kazo.Os.Platform.Core.Storage.StorageSpaceMonitor.RequestReclaim() -> void
+static readonly Kazo.Os.Platform.Core.Storage.StorageSpaceMonitor.ReclaimInterval -> System.TimeSpan
