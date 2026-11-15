@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Reflection;
+using Kazo.Os.App.Abstractions;
 
 namespace Kazo.Os.Platform.Core.Apps.Packages;
 
@@ -45,8 +46,37 @@ public sealed record AppPackageDefaults(
     /// <summary>Hours between two update checks by default (ADR 0189 §1).</summary>
     public const int DefaultUpdateIntervalHours = 6;
 
-    /// <summary>Address of the official catalog (ADR 0188).</summary>
+    /// <summary>Address of the official catalog (ADR 0188), stable channel: what a stable OS reads.</summary>
     public const string OfficialCatalogAddress = "https://raw.githubusercontent.com/Kazo-ca/Os-AppMarketPlace/packages/catalog.json";
+
+    /// <summary>
+    /// Address of the beta channel of the official catalog (ADR 0271 §5 and §6): the content of
+    /// <see cref="OfficialCatalogAddress"/> plus the prereleases of the apps, read by an OS whose own
+    /// version is a prerelease (<c>3.4.0-preview.1</c>).
+    /// </summary>
+    public const string OfficialBetaCatalogAddress = "https://raw.githubusercontent.com/Kazo-ca/Os-AppMarketPlace/packages/catalog-beta.json";
+
+    /// <summary>
+    /// Gets the address of the official catalog for an OS of version <paramref name="sdkVersion"/>
+    /// (ADR 0271 §6): the channel follows the OS, there is no setting. A prerelease reads
+    /// <see cref="OfficialBetaCatalogAddress"/>, a stable version <see cref="OfficialCatalogAddress"/>.
+    /// </summary>
+    /// <param name="sdkVersion">The SDK of the OS, <see cref="KazoOsSdk.SemanticVersion"/> in a running OS.</param>
+    public static string OfficialCatalogAddressFor(SemanticVersion sdkVersion) =>
+        sdkVersion.PreRelease is null ? OfficialCatalogAddress : OfficialBetaCatalogAddress;
+
+    /// <summary>
+    /// Gets whether <paramref name="address"/> is the official catalog of either channel. A file that
+    /// names one of them for <c>official</c> follows the channel of the running OS (ADR 0271 §6):
+    /// the address written by an earlier OS of the other channel is read as the current one.
+    /// </summary>
+    /// <param name="address">An address of <c>[catalogs]</c>.</param>
+    public static bool IsOfficialCatalogAddress(Uri address)
+    {
+        ArgumentNullException.ThrowIfNull(address);
+        return string.Equals(address.AbsoluteUri, OfficialCatalogAddress, StringComparison.Ordinal)
+            || string.Equals(address.AbsoluteUri, OfficialBetaCatalogAddress, StringComparison.Ordinal);
+    }
 
     /// <summary>
     /// Public key (base64 SubjectPublicKeyInfo, ECDSA P-256) of the official catalog (ADR 0214 §2, Q3):
@@ -60,9 +90,12 @@ public sealed record AppPackageDefaults(
     /// <summary>Prefix of the assembly metadata keys.</summary>
     public const string MetadataPrefix = "Kazo.Os.AppPackages.";
 
-    /// <summary>The defaults of ADR 0189: the official catalog and <c>github.com/Kazo-ca</c> trusted, nothing blocked.</summary>
+    /// <summary>
+    /// The defaults of ADR 0189: the official catalog of this OS's channel (ADR 0271 §6) and
+    /// <c>github.com/Kazo-ca</c> trusted, nothing blocked.
+    /// </summary>
     public static AppPackageDefaults Standard { get; } = new(
-        [new(AppSourcesConfig.OfficialCatalogName, new Uri(OfficialCatalogAddress))],
+        [new(AppSourcesConfig.OfficialCatalogName, new Uri(OfficialCatalogAddressFor(KazoOsSdk.SemanticVersion)))],
         [AppSourcesConfigDocument.CatalogTrustPrefix + AppSourcesConfig.OfficialCatalogName, AppSourcesConfigDocument.DefaultTrustedKey],
         DefaultUpdateIntervalHours,
         [],

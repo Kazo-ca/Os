@@ -141,7 +141,7 @@ public sealed class CatalogAppSuggestions
                     continue;
                 }
 
-                AppCatalogVersion? version = NewestCompatible(app, sdkVersion);
+                AppCatalogVersion? version = AppVersionChoice.Newest(app, sdkVersion);
                 if (version is null
                     || !version.HandlesFile(extension, mediaType, action)
                     || policy.FindBlock(app.AppId, app.Category, version.Capabilities) is not null)
@@ -185,15 +185,4 @@ public sealed class CatalogAppSuggestions
             return null;
         }
     }
-
-    /// <summary>
-    /// The newest stable version that runs on <paramref name="sdkVersion"/>; a version whose
-    /// catalog entry gives no SDK range is kept (the install checks the manifest again).
-    /// </summary>
-    private static AppCatalogVersion? NewestCompatible(AppCatalogEntry app, SemanticVersion sdkVersion) =>
-        app.Versions
-            .Where(static version => version.Version.PreRelease is null)
-            .OrderByDescending(static version => version.Version)
-            .FirstOrDefault(version => version.MinimumSdkVersion is not { } minimum
-                || KazoOsSdk.IsCompatible(new AppSdkCompatibilityManifest(minimum, version.MaximumSdkVersion), sdkVersion));
 }
