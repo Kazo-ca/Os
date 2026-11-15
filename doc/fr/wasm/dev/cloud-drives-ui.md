@@ -40,9 +40,18 @@ que voit l'utilisateur et comment les apps système y arrivent par le SDK public
    un bouton par fournisseur configuré dont la source est présente, S3.
 3. **Fournisseur** : l'utilisateur choisit l'étendue (tout le stockage ou le
    dossier réservé à Kazo OS) quand le fournisseur offre les deux, et un
-   dossier de départ facultatif. « Se connecter et monter » appelle
+   dossier de départ facultatif. Avec le dossier réservé, le champ est précédé
+   de l'endroit où le fournisseur met ce dossier dans le stockage
+   (`/Apps/Kazo OS Folder/` pour Dropbox, `/Apps/Kazo OS/` pour OneDrive,
+   `KazoCloudProvider.AppFolderPath`) : le dossier de départ est relatif à
+   lui. « Se connecter et monter » appelle
    `ConnectAsync` puis `MountNetworkDriveAsync` sans `await` avant, pour que
-   la fenêtre de connexion parte du clic (geste de l'utilisateur).
+   la fenêtre de connexion parte du clic (geste de l'utilisateur). Pendant
+   que la fenêtre de connexion est ouverte, le dialogue l'indique, et Retour,
+   Fermer et Échap restent utilisables : l'OS ne voit pas cette fenêtre se
+   fermer (COOP, ADR 0131) et une page d'erreur du fournisseur ne revient
+   jamais ; quitter annule l'attente (jeton de `ConnectAsync`) et ignore son
+   résultat tardif, sans afficher d'erreur.
 4. **S3** : adresse, compartiment, région, préfixe, adressage
    (automatique, chemin, hôte virtuel), clé d'accès et clé secrète (champ
    masqué). Les clés partent dans `Secrets` ; la source les range dans le
@@ -52,6 +61,16 @@ que voit l'utilisateur et comment les apps système y arrivent par le SDK public
 
 Sans trousseau (invité, passkey sans PRF), la fenêtre l'explique et ne propose
 que le dossier de l'ordinateur.
+
+## La section « Lecteurs réseau » de l'explorateur
+
+Chaque lecteur cloud porte la marque de son service (Dropbox ; Microsoft pour
+OneDrive, qui n'a pas de glyphe propre dans les polices d'icônes ; une base de
+données pour S3), tirée de Bootstrap Icons (MIT), déjà livrée par le SDK. Sous
+le nom du compte, une seconde ligne donne le service et, s'il y en a un, le
+dossier de départ (`KazoDriveInfo.Root`) : deux comptes portent souvent la même
+adresse courriel. Sur téléphone, les puces gardent l'icône et le nom accessible
+porte la même seconde ligne.
 
 ## Page Paramètres « Comptes cloud »
 
@@ -85,6 +104,9 @@ umount /mnt/nom
   dangereuse (ADR 0270, réponse A de Benoit).
 - `KazoNetworkDriveRequest.ToString()` masque les secrets.
 - La fenêtre ne garde pas les clés S3 après le montage.
+- Les marques des services (Dropbox, Microsoft) viennent des polices d'icônes
+  déjà présentes ; Benoit l'a permis le 2026-11-15 (l'utilisateur se connecte
+  à son propre compte de ce service).
 
 ## Tests
 
@@ -113,3 +135,4 @@ umount /mnt/nom
 - [x] `mount -t dropbox|onedrive|s3`, `-o remount`, `umount`.
 - [x] Textes français et anglais, axe, captures.
 - [x] Captures des étapes fournisseur (Dropbox) et S3 avec les connecteurs des chantiers 3, 4 et 6.
+- [x] Chantier 7 : quitter une connexion qui a échoué, marque du service et dossier de départ dans « Lecteurs réseau », chemin du dossier réservé devant le dossier de départ.

@@ -172,7 +172,9 @@ public static partial class KazoOsBrowserHostExtensions
             cloudDrives["Dropbox:FullAccessClientId"],
             cloudDrives["Dropbox:AppFolderClientId"],
             cloudDrives["OneDrive:ClientId"],
-            cloudDrives["OneDrive:Tenant"]));
+            cloudDrives["OneDrive:Tenant"],
+            cloudDrives["Dropbox:AppFolderPath"],
+            cloudDrives["OneDrive:AppFolderPath"]));
         builder.Services.AddKazoOsEcosystem(
             apps.Catalog,
             provider => provider.GetRequiredService<BuildKnownLazyAppDescriptorRegistry>().Descriptors,

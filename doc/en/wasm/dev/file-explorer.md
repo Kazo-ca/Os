@@ -51,7 +51,7 @@ The manifest (`FileExplorerApp.Components`) registers two components:
 | Contract | Component | Role |
 |---|---|---|
 | `kazoos.file-view` | `ExplorerFileView` | `FileView` (internal implementation, ADR 0155 §1) bound to the OS menu, with the trash, the clipboard, transfers and their conflicts, opening and "Open with". Controller `IKazoFileView`. |
-| `kazoos.file-dialogs` | `ExplorerFileDialogs` | "Open with" ("Always use"), "Properties", name conflict, in native markup. |
+| `kazoos.file-dialogs` | `ExplorerFileDialogs` | "Open with" ("Always use", search and category filter), "Properties", name conflict, in native markup. |
 
 ```text
 Host app ──► KazoFileView (SDK) ──► registry ──► ExplorerFileView (explorer)
@@ -485,3 +485,23 @@ of the catalogs is described in
 - [x] Tests: `AppIntentGatewayTests.SuggestCatalogAppsAsync_*`,
   `WireCodecIntentTests`, `KazoAppsIntentTests`, `StoreLaunchArgumentsTests`,
   `OpenWithStoreTests` (UI.E2E, test catalog declaring `.docx`).
+
+## Tasks of the `open-with/search-filter` work item
+
+The explorer's "Open with" box (`ExplorerFileDialogs`):
+
+- [x] Each app row keeps its name and its id inside its border: the button, an
+  item of a scrolling flex list, shrank to its minimum height (2.25 rem) and
+  the id spilled below it. `flex-shrink: 0` and texts cut with "…" (the whole
+  text in a tooltip). Same fix in the OS app chooser (`AppChooserDialog`).
+- [x] A search box filters by name, id or description (every word must be
+  found, ignoring case).
+- [x] A category selector, shown when the listed apps have at least two
+  categories, uses the manifest category (`presentation.category`); the usual
+  categories are translated, the others shown capitalized, as in the Start
+  menu.
+- [x] When the filter hides the chosen app, the first app still listed is
+  chosen; no app found: a message, and "Open" is disabled.
+- [x] The arrow keys and Enter follow the filtered list.
+- [x] Tests: `OpenWithAppFilterTests` (unit) and `OpenWithFilterTests` (E2E,
+  desktop and phone, axe).

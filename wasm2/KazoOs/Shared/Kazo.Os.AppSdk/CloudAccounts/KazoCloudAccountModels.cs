@@ -73,7 +73,14 @@ public sealed class KazoCloudAccountException(KazoCloudAccountError error, strin
 /// <param name="Id">The service, as <c>mount -t</c> takes it: <c>dropbox</c>, <c>onedrive</c>.</param>
 /// <param name="DisplayName">Its name: Dropbox, OneDrive.</param>
 /// <param name="Scopes">The scopes the user can choose; never empty.</param>
-public sealed record KazoCloudProvider(string Id, string DisplayName, IReadOnlyList<KazoCloudAccessScope> Scopes);
+public sealed record KazoCloudProvider(string Id, string DisplayName, IReadOnlyList<KazoCloudAccessScope> Scopes)
+{
+    /// <summary>
+    /// Gets where the service puts the folder reserved for Kazo OS (<see cref="KazoCloudAccessScope.AppFolder"/>),
+    /// as the user sees it in the service, e.g. <c>Apps/Kazo OS Folder</c>; <see langword="null"/> when the OS does not know it.
+    /// </summary>
+    public string? AppFolderPath { get; init; }
+}
 
 /// <summary>A cloud account of the signed-in user (ADR 0270). Never carries a token or a key.</summary>
 /// <param name="Id">The OS's id of the account, stable across reconnections.</param>

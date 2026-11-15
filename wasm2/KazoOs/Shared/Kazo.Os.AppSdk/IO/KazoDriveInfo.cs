@@ -38,6 +38,12 @@ public sealed record KazoDriveSnapshot(
     /// of the computer and for the other drives.
     /// </summary>
     public string? Account { get; init; }
+
+    /// <summary>
+    /// Gets the folder of the service a network drive starts at (<see cref="KazoNetworkDriveRequest.Root"/>),
+    /// relative to what its account reaches; <see langword="null"/> for the whole storage and for the other drives.
+    /// </summary>
+    public string? Root { get; init; }
 }
 
 /// <summary>
@@ -158,7 +164,14 @@ public sealed class KazoDriveInfo
         DriveType = snapshot.DriveType;
         IsReady = snapshot.IsReady;
         Account = snapshot.Account;
+        Root = snapshot.Root;
     }
+
+    /// <summary>
+    /// Gets the folder of the service the drive starts at, relative to what its account reaches;
+    /// <see langword="null"/> for the whole storage and for the other drives.
+    /// </summary>
+    public string? Root { get; }
 
     /// <summary>
     /// Gets the id of the cloud account the drive belongs to (ADR 0270); <see langword="null"/> for

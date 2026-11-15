@@ -6,6 +6,29 @@ Les changements de Kazo OS, par version. Ce fichier est généré à partir de `
 `wasm2/KazoOs/build/tools/collect-changes.sh` (ADR 0186) : ne pas le modifier à la main. Les changements
 déjà déployés mais pas encore publiés sont dans la page Paramètres ▸ Nouveautés de l'OS.
 
+## 3.3.4 (2026-11-13)
+
+### Nouveau
+
+- **KazoAppPackages.InstallAsync rapporte sa progression.** Une nouvelle surcharge InstallAsync(source, scope, IProgress<KazoPackageInstallProgress>?, cancellationToken) rapporte chaque KazoPackageInstallStage (Preparing, Downloading avec BytesReceived et TotalBytes, Verifying, AwaitingApproval, Installing). La surcharge existante ne change pas ; IAppManagementGateway reçoit un membre correspondant avec un corps par défaut. Un cref vers KazoAppPackages.InstallAsync sans paramètres devient ambigu : nommer la surcharge. ([0266-store-ux-refresh.md](doc/fr/wasm/dev/adr/0266-store-ux-refresh.md), [app-installation.md](doc/fr/wasm/dev/app-installation.md))
+
+### Amélioré
+
+- **Une fiche d'app plus claire dans le Kazo OS Store.** La fiche d'une app dit en mots simples ce que l'app peut faire, les accès sensibles d'abord, avec les identifiants techniques à un clic. Elle liste les fichiers que l'app ouvre, mène à son code source et copie un lien « Essayer » à partager. Une barre garde Retour, l'app et son bouton en haut pendant le défilement, le panneau d'informations reste visible, et les messages se ferment seuls (une erreur reste jusqu'à ce qu'on la ferme). ([app-installation.md](doc/fr/wasm/dev/app-installation.md), [0266-store-ux-refresh.md](doc/fr/wasm/dev/adr/0266-store-ux-refresh.md))
+- **Un nouvel accueil pour le Kazo OS Store.** Le Store s'ouvre plus grand, sur un bandeau « À la une » avec l'app la plus récente que vous n'avez pas installée, puis une seule grille de toutes les apps, des plus récentes aux plus anciennes, avec des pastilles pour filtrer par catégorie. Chaque carte installe l'app pour vous en un clic, ou l'ouvre ou la met à jour ; un administrateur trouve aussi « Installer pour tout le monde » dans le menu à côté d'« Installer ». Des cartes vides s'affichent pendant le chargement des catalogues, une carte ne montre sa confiance que si l'app n'est pas vérifiée, et l'onglet Thèmes reste masqué tant qu'aucun pack de thème n'existe. ([app-installation.md](doc/fr/wasm/dev/app-installation.md), [0266-store-ux-refresh.md](doc/fr/wasm/dev/adr/0266-store-ux-refresh.md))
+- **Agrandir les captures d'une app dans le Store.** Cliquez sur une capture dans la fiche d'une app pour la voir à la taille de la fenêtre du Store, puis passez de l'une à l'autre avec les flèches, le clavier ou un balayage. Échap ou Retour la ferme. ([app-installation.md](doc/fr/wasm/dev/app-installation.md))
+- **Le Kazo OS Store s'adapte au téléphone.** Sur téléphone, les onglets du Store passent dans une barre en bas de l'écran, à portée du pouce, et l'en-tête tient sur deux lignes. Chaque bouton, onglet et lien fait au moins 44 px, assez grand pour le doigt. Les captures d'une app prises en portrait passent en premier et s'affichent en grand, avant celles en paysage. ([app-installation.md](doc/fr/wasm/dev/app-installation.md), [0266-store-ux-refresh.md](doc/fr/wasm/dev/adr/0266-store-ux-refresh.md))
+- **Le Store montre où en est une installation.** Pendant que le Kazo OS Store installe ou met à jour une app, sa fiche et sa carte montrent l'étape (préparation, téléchargement avec le pourcentage et les tailles, vérification, attente d'un administrateur, installation) au lieu de « En cours… ». Seuls les boutons de cette app attendent : une autre app peut être ouverte ou mise en file, et elle affiche « En attente de l'autre installation… » jusqu'à son tour. ([0266-store-ux-refresh.md](doc/fr/wasm/dev/adr/0266-store-ux-refresh.md), [app-installation.md](doc/fr/wasm/dev/app-installation.md))
+
+### Corrigé
+
+- **Le Kazo OS Store défile, cherche et se lit mieux.** La fiche d'une app s'ouvre en haut, et Retour ramène à la liste là où on l'avait laissée. Une puce écrite sur deux lignes dans une description reste une seule puce, et la description ne répète plus le nom de l'app. La recherche filtre aussi l'onglet Installées, et Entrée ouvre le premier résultat. Le focus du clavier est visible partout, les flèches passent d'un onglet à l'autre, et sur téléphone l'en-tête tient sur deux lignes avec des cibles tactiles plus grandes. ([app-installation.md](doc/fr/wasm/dev/app-installation.md))
+- **Le lien Essayer survit au redémarrage pour une mise à jour.** Un lien qui se termine par ?autolaunch=<id de l'app> était perdu quand l'onglet redémarrait sur une version plus récente de Kazo OS avant que l'app s'ouvre. L'onglet garde maintenant le lien jusqu'à l'ouverture de l'app (ou du Store, ou d'une erreur), et l'app s'ouvre après le redémarrage. ([0265-direct-link-survives-update-restart.md](doc/fr/wasm/dev/adr/0265-direct-link-survives-update-restart.md), [app-launch-link.md](doc/fr/wasm/dev/app-launch-link.md))
+
+### Pour les développeurs
+
+- **Les exports d'une app Craft arrivent dans sa fenêtre comme copies.** Une app Craft qui exporte par un lien de téléchargement du navigateur (un <a download> sur une adresse blob:, comme PdfCraft) n'envoie plus le fichier dans le dossier Téléchargements de l'ordinateur réel : quand la fenêtre s'abonne au nouvel événement CraftFrame.Exporting, le module Kazo.Os.AppSdk.Craft prend le fichier et la fenêtre l'enregistre comme copie par le dialogue d'enregistrement de l'OS (DocumentSession.DecideCopy). Une fenêtre qui ne s'abonne pas garde le téléchargement du navigateur. ([0264-craft-app-exports-reach-the-window.md](doc/fr/wasm/dev/adr/0264-craft-app-exports-reach-the-window.md))
+
 ## 3.3.3 (2026-11-13)
 
 ### Nouveau

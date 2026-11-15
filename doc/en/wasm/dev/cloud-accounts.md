@@ -147,10 +147,15 @@ empty id removes the provider or the scope:
 
 ```json
 "CloudDrives": {
-  "Dropbox": { "FullAccessClientId": "im7y4ma8wtsospi", "AppFolderClientId": "mcp8j0gt4h4v6s3" },
-  "OneDrive": { "ClientId": "7f89ba67-5655-4721-991a-53c64998f45e", "Tenant": "common" }
+  "Dropbox": { "FullAccessClientId": "im7y4ma8wtsospi", "AppFolderClientId": "mcp8j0gt4h4v6s3", "AppFolderPath": "Apps/Kazo OS Folder" },
+  "OneDrive": { "ClientId": "7f89ba67-5655-4721-991a-53c64998f45e", "Tenant": "common", "AppFolderPath": "Apps/Kazo OS" }
 }
 ```
+
+`AppFolderPath` says where the provider puts the reserved folder in the user's
+storage, as the user sees it on the service's site (the name of the registered
+app). The sign-in dialog shows it before the starting folder; empty, nothing is
+shown. No API call uses it.
 
 An administrator serving Kazo OS at another address registers their own apps
 and writes `/etc/kazoos/cloud-drives.config` (system layer only); a key present
@@ -160,10 +165,12 @@ and not empty there replaces the host's:
 [dropbox]
 full-access-client-id = …
 app-folder-client-id = …
+app-folder-path = Apps/…
 
 [onedrive]
 client-id = …
 tenant = common
+app-folder-path = Apps/…
 ```
 
 | Provider | `Full` scope | `AppFolder` scope | Other parameters |
@@ -181,6 +188,7 @@ byte for byte:
 | --- | --- |
 | os.kazo.ca | `https://os.kazo.ca/_content/Kazo.Os.Infrastructure.Browser/oauth-callback.html` |
 | `dotnet run` without a launch profile | `http://localhost:5000/_content/Kazo.Os.Infrastructure.Browser/oauth-callback.html` |
+| Same host served over `https` (development certificate) | `https://localhost:5000/_content/Kazo.Os.Infrastructure.Browser/oauth-callback.html` |
 | Publish output served by `python3 -m http.server 8080` | `http://localhost:8080/_content/Kazo.Os.Infrastructure.Browser/oauth-callback.html` |
 
 Dropbox requires the exact address, port included, and accepts `http` only for

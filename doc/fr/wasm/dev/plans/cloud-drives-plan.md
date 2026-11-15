@@ -25,7 +25,7 @@ réseau, sans serveur et sans coût.
 | 4 | `cloud-drives/4-onedrive` | Connecteur Microsoft Graph, les deux étendues, reconnexion après 24 heures. | 1, 2 |
 | 5 | `cloud-drives/5-ui` | Dialogue « Connecter un lecteur réseau » avec les fournisseurs et le choix de l'étendue, page Paramètres des comptes cloud, explorateur mobile, commandes `mount` et `umount` (§11). Textes en français et en anglais. **Fait** ([`cloud-drives-ui.md`](../cloud-drives-ui.md), [ADR 0270](../adr/0270-cloud-drives-in-the-app-sdk.md)). | 1, 2 |
 | 6 | `cloud-drives/6-s3` | Connecteur S3 compatible (SigV4), clés dans le trousseau, guide de la règle CORS. | 1 |
-| 7 | `cloud-drives/7-final` | Vérification de la série : build, toutes les suites, publication élaguée, essais avec de vrais comptes, doc `cloud-drives.md`, `features.md`. | 3 à 6 |
+| 7 | `cloud-drives/7-final` | Vérification de la série : build, toutes les suites, publication élaguée, essais avec de vrais comptes, doc `cloud-drives.md`, `features.md`. **Fait, sauf les essais réels de Benoit** ([`cloud-drives.md`](../cloud-drives.md#essais-réels)). | 3 à 6 |
 
 Les chantiers 1 et 2 vont en parallèle. Les chantiers 3, 4, 5 et 6 vont en
 parallèle ensuite ; le chantier 5 se développe avec la source factice du

@@ -43,9 +43,10 @@ navigateur, dans la composition de l'hôte.
   (métadonnées : fichiers, dossiers, liens), `fsLinks`, `fsContent` (blocs),
   `catalog`, `grants`, `audit`, `diagnostics`, `syncMetadata`, `serverConnection`,
   `syncCursors`, `syncRecordState`, et une base par site ASP.Kazo (`kazoweb.<appId>`).
-- Contenu de fichier : découpé en blocs adressés par SHA-256, de 256 Kio au plus
-  par défaut (`FileContentStoragePolicy.DefaultMaxChunkSizeBytes`) ; un bloc identique
-  n'est stocké qu'une fois.
+- Contenu de fichier : découpé en blocs de 256 Kio au plus par défaut
+  (`FileContentStoragePolicy.DefaultMaxChunkSizeBytes`), adressés par le SHA-256 du
+  fichier entier et le numéro du bloc ; deux fichiers identiques partagent leur
+  contenu, mais pas deux fichiers qui n'ont que des blocs en commun.
 
 ## Récupération
 
@@ -64,8 +65,23 @@ dans [`system-backup.md`](system-backup.md).
 - Les mutations de métadonnées sont des lots d'opérations IndexedDB ordonnés,
   construits par `IndexedDbFileSystemMutationPlanner` pour être atomiques. Les
   blocs de contenu sont adressés par hachage ; ceux qui ne sont plus référencés
-  sont ramassés par une passe bornée, après une période de rétention
-  (`OrphanRetention`), et jamais sans revalidation de leurs références.
+  (fichiers réécrits ou supprimés) sont ramassés par une passe bornée
+  (`IndexedDbFileSystemMaintenance`, `IStorageReclaimer`), après une période de
+  rétention : 1 jour (`OrphanRetention`), 5 minutes quand l'espace est faible
+  (`LowSpaceOrphanRetention`) ([ADR 0273](adr/0273-short-orphan-content-retention.md)).
+  `StorageSpaceMonitor` la lance quand le bureau s'affiche, toutes les heures, après
+  une suppression dans la corbeille, et quand l'espace devient faible, avant
+  d'avertir (Os#537). La passe tourne dans `runOrphanPass` (`indexedDb.js`) : rien
+  quand l'onglet est caché, et un seul onglet à la fois (Web Locks). Elle ne lit que
+  les clés et le bloc 0 des contenus non référencés, jamais tout le magasin
+  `fsContent` ; sa transaction de suppression revérifie les références et l'âge.
+  L'âge d'un contenu est la date de son bloc 0 (un contenu sans date compte comme
+  ancien). Une écriture qui réutilise un contenu déjà stocké donne la nouvelle date à
+  son bloc 0, et la transaction qui publie le fichier vérifie que tous ses blocs sont
+  présents (`assertCount`) : si un bloc manque, le contenu est réécrit une fois, puis
+  l'écriture échoue avec une erreur d'E/S. Une réécriture faite par le système
+  (`AppAuthority.System`) efface l'ancien contenu dans la même transaction quand plus
+  rien ne le référence.
 - Le chemin d'un fichier se résout en une requête (`resolvePath`, ADR 0090,
   [`filesystem-path-lookup.md`](filesystem-path-lookup.md)).
 - Les scripts `wwwroot/*.js` sont testés en contrat par

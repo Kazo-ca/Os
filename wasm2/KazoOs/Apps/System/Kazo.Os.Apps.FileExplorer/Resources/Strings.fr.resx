@@ -670,6 +670,12 @@
   <data name="CloudDrive.SignInNote" xml:space="preserve">
     <value>Une fenêtre {0} s'ouvre pour la connexion. Votre connexion reste sur cet appareil ; aucun serveur de Kazo OS ne la reçoit.</value>
   </data>
+  <data name="CloudDrive.AppFolderPrefix" xml:space="preserve">
+    <value>Le dossier que {0} réserve à Kazo OS dans votre stockage. Le lecteur commence là, ou dans le dossier que vous tapez après.</value>
+  </data>
+  <data name="CloudDrive.SigningIn" xml:space="preserve">
+    <value>La fenêtre de connexion {0} est ouverte. Si elle affiche une erreur ou si vous l'avez fermée, choisissez Retour ou Fermer pour arrêter d'attendre.</value>
+  </data>
   <data name="CloudDrive.SignInAndMount" xml:space="preserve">
     <value>Se connecter et monter</value>
   </data>
@@ -750,5 +756,50 @@
   </data>
   <data name="Network.ConnectShort" xml:space="preserve">
     <value>Connecter</value>
+  </data>
+  <data name="OpenWith.SearchLabel" xml:space="preserve">
+    <value>Rechercher dans les applications installées</value>
+  </data>
+  <data name="OpenWith.SearchPlaceholder" xml:space="preserve">
+    <value>Rechercher une application…</value>
+  </data>
+  <data name="OpenWith.CategoryLabel" xml:space="preserve">
+    <value>Catégorie</value>
+  </data>
+  <data name="OpenWith.AllCategories" xml:space="preserve">
+    <value>Toutes les catégories</value>
+  </data>
+  <data name="OpenWith.NoMatch" xml:space="preserve">
+    <value>Aucune application installée ne correspond à cette recherche.</value>
+  </data>
+  <data name="Category.Developer" xml:space="preserve">
+    <value>Développement</value>
+  </data>
+  <data name="Category.Editors" xml:space="preserve">
+    <value>Éditeurs</value>
+  </data>
+  <data name="Category.Graphics" xml:space="preserve">
+    <value>Graphisme</value>
+  </data>
+  <data name="Category.Internet" xml:space="preserve">
+    <value>Internet</value>
+  </data>
+  <data name="Category.Multimedia" xml:space="preserve">
+    <value>Multimédia</value>
+  </data>
+  <data name="Category.Network" xml:space="preserve">
+    <value>Réseau</value>
+  </data>
+  <data name="Category.Office" xml:space="preserve">
+    <value>Bureautique</value>
+  </data>
+  <data name="Category.Productivity" xml:space="preserve">
+    <value>Productivité</value>
+  </data>
+  <data name="Category.System" xml:space="preserve">
+    <value>Système</value>
+  </data>
+  <data name="Category.Utilities" xml:space="preserve">
+    <value>Utilitaires</value>
   </data>
 </root>

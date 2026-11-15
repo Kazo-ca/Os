@@ -148,6 +148,18 @@ export async function openDatabase(databaseName, version, migrationPlan = {}) {
     connections.set(cacheKey, database);
 }
 
+/**
+ * Returns the age stamp (`property`) of the first record of one content: the record whose key is
+ * [value, 0] (ADR 0273 section 2). A missing record or one without a numeric stamp (written before
+ * stamps existed, or a partial write) returns 0: old enough, since the delete still checks that
+ * nothing references the content.
+ */
+async function firstRecordStamp(store, value, property) {
+    const first = await requestResult(store.get([value, 0]));
+    const stamp = first?.[property];
+    return typeof stamp === "number" ? stamp : 0;
+}
+
 async function executeOperation(transaction, operation) {
     const store = transaction.objectStore(operation.objectStoreName);
     const source = operation.indexName ? store.index(operation.indexName) : store;
@@ -269,6 +281,76 @@ async function executeOperation(transaction, operation) {
             });
             return { deleted };
         }
+        case "addIfAbsentElseTouch": {
+            // Like addIfAbsent, but an existing record gets the new value of `compareProperty`
+            // (its creation time). A write that reuses content an orphan pass already found old
+            // makes it young again, so the pass's age check in its own transaction keeps it.
+            if (!operation.compareProperty) {
+                throw new Error("addIfAbsentElseTouch requires compareProperty.");
+            }
+
+            const current = await requestResult(store.get(operation.key));
+            if (current === undefined) {
+                await requestResult(store.keyPath !== null || operation.key === undefined
+                    ? store.add(operation.value)
+                    : store.add(operation.value, operation.key));
+                return { added: true };
+            }
+
+            const touched = operation.value[operation.compareProperty];
+            if (current[operation.compareProperty] !== touched) {
+                current[operation.compareProperty] = touched;
+                await requestResult(store.keyPath !== null || operation.key === undefined
+                    ? store.put(current)
+                    : store.put(current, operation.key));
+            }
+            return { added: false };
+        }
+        case "findUnreferencedOlderThan": {
+            // Orphan discovery without loading every record (ADR 0273): the primary keys of the
+            // store give the values of `indexName` (the first key part), each is counted in the
+            // reference index, and only the first record of an unreferenced value is read, for its
+            // `compareProperty` (creation time). `expectedValue` is the cutoff, `count` the most
+            // values returned.
+            if (!operation.indexName || !operation.referenceObjectStoreName ||
+                !operation.referenceIndexName || !operation.compareProperty ||
+                typeof operation.expectedValue !== "number" ||
+                !Number.isInteger(operation.count) || operation.count < 1) {
+                throw new Error("findUnreferencedOlderThan requires indexes, a cutoff and a positive count.");
+            }
+
+            const referenceIndex = transaction.objectStore(operation.referenceObjectStoreName)
+                .index(operation.referenceIndexName);
+            const keys = await requestResult(store.getAllKeys());
+            const values = [];
+            const seen = new Set();
+            for (const key of keys) {
+                const value = Array.isArray(key) ? key[0] : key;
+                if (!seen.has(value)) {
+                    seen.add(value);
+                    values.push(value);
+                }
+            }
+
+            const candidates = [];
+            let unreferenced = 0;
+            for (const value of values) {
+                if (candidates.length >= operation.count) {
+                    break;
+                }
+
+                if (await requestResult(referenceIndex.count(value)) !== 0) {
+                    continue;
+                }
+
+                unreferenced++;
+                if (await firstRecordStamp(store, value, operation.compareProperty) <= operation.expectedValue) {
+                    candidates.push(value);
+                }
+            }
+
+            return { candidates, scannedValues: values.length, unreferenced };
+        }
         case "deleteAllByIndexIfUnreferenced": {
             if (!operation.indexName || !operation.referenceObjectStoreName ||
                 !operation.referenceIndexName) {
@@ -282,11 +364,34 @@ async function executeOperation(transaction, operation) {
                 return { deleted: 0, referenced: true };
             }
 
+            // Optional age check in this same transaction: when `compareProperty` and a numeric
+            // `expectedValue` (cutoff) are given, content whose first record was written or
+            // touched after the cutoff is kept (a write reusing it is in progress).
+            if (operation.compareProperty && typeof operation.expectedValue === "number" &&
+                await firstRecordStamp(store, operation.query, operation.compareProperty) > operation.expectedValue) {
+                return { deleted: 0, referenced: false, young: true };
+            }
+
             const keys = await requestResult(store.index(operation.indexName).getAllKeys(operation.query));
             for (const key of keys) {
                 await requestResult(store.delete(key));
             }
             return { deleted: keys.length, referenced: false };
+        }
+        case "assertCount": {
+            // Fails the transaction when `indexName` (or the store) does not hold exactly
+            // `expectedValue` records for `query`: a file entry is published only when every
+            // chunk of its content is present (ADR 0273 section 3).
+            const actual = await requestResult(operation.query === undefined
+                ? source.count()
+                : source.count(operation.query));
+            if (actual !== operation.expectedValue) {
+                throw new DOMException(
+                    `${operation.failureCode ?? "indexeddb.count-mismatch"}: ${actual} of ${operation.expectedValue}.`,
+                    "ConstraintError");
+            }
+
+            return actual;
         }
         case "resolvePath": {
             // Path lookup (namei) in one transaction: start at the entry `key`, then for each
@@ -365,6 +470,37 @@ export async function executeTransaction(databaseName, version, objectStoreNames
         await completion.catch(() => {});
         throw error;
     }
+}
+
+/**
+ * Runs one orphan collection pass (ADR 0273 section 4): `findOperation` in a read-only transaction,
+ * then `deleteTemplate` once per candidate (its `query` set to the candidate) in one read-write
+ * transaction. It does nothing while the page is hidden, and only one tab runs it at a time (Web
+ * Locks, `lockName`); both cases return `{ skipped }`.
+ */
+export async function runOrphanPass(databaseName, version, objectStoreNames, lockName, findOperation, deleteTemplate) {
+    if (typeof document !== "undefined" && document.visibilityState === "hidden") {
+        return { skipped: "hidden" };
+    }
+
+    const run = async () => {
+        const [found] = await executeTransaction(databaseName, version, objectStoreNames, "readonly", [findOperation]);
+        const candidates = Array.isArray(found?.candidates) ? found.candidates : [];
+        if (candidates.length === 0) {
+            return { candidates, results: [] };
+        }
+
+        const operations = candidates.map(candidate => ({ ...deleteTemplate, query: candidate }));
+        const results = await executeTransaction(databaseName, version, objectStoreNames, "readwrite", operations);
+        return { candidates, results };
+    };
+
+    if (globalThis.navigator?.locks?.request) {
+        return navigator.locks.request(lockName, { ifAvailable: true },
+            lock => lock === null ? { skipped: "locked" } : run());
+    }
+
+    return run();
 }
 
 /** Closes cached connections and deletes a database. Call only from explicit recovery/test flows. */

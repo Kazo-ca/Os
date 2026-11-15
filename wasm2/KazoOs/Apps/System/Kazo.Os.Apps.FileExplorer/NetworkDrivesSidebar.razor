@@ -14,8 +14,8 @@
     {
         <button type="button" class="network-chip @(drive.IsReady ? "" : "disconnected") @(IsCurrent(drive) ? "active" : "")"
                 @onclick="() => OpenAsync(drive)" disabled="@_busy"
-                title="@(drive.IsReady ? drive.Name : L["Network.Reconnect", drive.VolumeLabel])">
-            <KazoIcon Library="IconLibrary.Lucide" Name="@DriveIcon(drive)" Size="16" /> <span>@drive.VolumeLabel</span>
+                title="@Tooltip(drive)" aria-label="@AccessibleName(drive)">
+            <KazoIcon Library="@DriveIcon(drive).Library" Name="@DriveIcon(drive).Name" Size="16" /> <span>@drive.VolumeLabel</span>
         </button>
         @if (IsCurrent(drive))
         {
@@ -41,10 +41,16 @@ else if (_canConnect || _drives.Count > 0)
         <div class="network-drive">
             <button class="sidebar-entry @(drive.IsReady ? "" : "disconnected") @(IsCurrent(drive) ? "active" : "")"
                     @onclick="() => OpenAsync(drive)"
-                    title="@(drive.IsReady ? drive.Name : L["Network.Reconnect", drive.VolumeLabel])"
+                    title="@Tooltip(drive)" aria-label="@AccessibleName(drive)"
                     disabled="@_busy">
-                <KazoIcon Library="IconLibrary.Lucide" Name="@DriveIcon(drive)" Size="16" />
-                <span>@drive.VolumeLabel</span>
+                <KazoIcon Library="@DriveIcon(drive).Library" Name="@DriveIcon(drive).Name" Size="16" />
+                <span class="network-drive-text">
+                    <span class="network-drive-label">@drive.VolumeLabel</span>
+                    @if (Detail(drive) is { } detail)
+                    {
+                        <span class="network-drive-detail">@detail</span>
+                    }
+                </span>
             </button>
             <button class="network-eject" @onclick="() => UnmountAsync(drive)" title="@L["Network.Disconnect", drive.VolumeLabel]"
                     aria-label="@L["Network.Disconnect", drive.VolumeLabel]" disabled="@_busy">

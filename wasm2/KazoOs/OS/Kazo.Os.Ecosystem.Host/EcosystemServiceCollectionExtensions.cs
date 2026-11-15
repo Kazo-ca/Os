@@ -520,11 +520,19 @@ public static class EcosystemServiceCollectionExtensions
         // reserve the filesystem enforces, and the real figures behind df.
         services.AddScoped<IStorageCapacityProbe>(provider =>
             new BrowserStorageManager(provider.GetRequiredService<Microsoft.JSInterop.IJSRuntime>()));
+        // Orphan file content (rewritten and deleted files) is given back by the monitor at boot,
+        // every hour and when storage gets low (Os#537).
+        services.AddScoped<IStorageReclaimer>(provider =>
+            new Kazo.Os.Infrastructure.Browser.FileSystem.IndexedDbFileSystemMaintenance(
+                provider.GetRequiredService<Microsoft.JSInterop.IJSRuntime>()));
         services.AddScoped<StorageSpaceMonitor>(provider => new StorageSpaceMonitor(
             provider.GetRequiredService<IStorageCapacityProbe>(),
             provider.GetRequiredService<INotificationQueue>(),
             () => provider.GetRequiredService<ISessionService>().CurrentPrincipal,
-            language: () => provider.GetRequiredService<Kazo.Os.Platform.Core.Globalization.SessionLocaleService>().Culture));
+            language: () => provider.GetRequiredService<Kazo.Os.Platform.Core.Globalization.SessionLocaleService>().Culture)
+        {
+            Reclaimer = provider.GetRequiredService<IStorageReclaimer>(),
+        });
         services.AddScoped<IStorageSpaceGuard>(provider => provider.GetRequiredService<StorageSpaceMonitor>());
 
         // User keyring (ADR 0100 section 2): ~/.local/share/keyrings/login.keyring, sealed with

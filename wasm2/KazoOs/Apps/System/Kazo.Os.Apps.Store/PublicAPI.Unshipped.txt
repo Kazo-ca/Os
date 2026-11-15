@@ -1,18 +1,1 @@
 #nullable enable
-Kazo.Os.Apps.Store.StoreScreenshots
-Kazo.Os.Apps.Store.StoreScreenshots.AppName.get -> string!
-Kazo.Os.Apps.Store.StoreScreenshots.AppName.set -> void
-Kazo.Os.Apps.Store.StoreScreenshots.DisposeAsync() -> System.Threading.Tasks.ValueTask
-Kazo.Os.Apps.Store.StoreScreenshots.OnScreenshotsMeasured(string![]! uris, double[]! widths, double[]! heights, bool narrow) -> void
-Kazo.Os.Apps.Store.StoreScreenshots.StoreScreenshots() -> void
-Kazo.Os.Apps.Store.StoreScreenshots.Uris.get -> System.Collections.Generic.IReadOnlyList<string!>!
-Kazo.Os.Apps.Store.StoreScreenshots.Uris.set -> void
-Kazo.Os.Apps.Store.StoreScreenshots.ViewerOpenChanged.get -> Microsoft.AspNetCore.Components.EventCallback<bool>
-Kazo.Os.Apps.Store.StoreScreenshots.ViewerOpenChanged.set -> void
-Kazo.Os.Apps.Store.StoreAppPage
-Kazo.Os.Apps.Store.StoreAppPage.DisposeAsync() -> System.Threading.Tasks.ValueTask
-Kazo.Os.Apps.Store.StoreAppPage.OnHeadVisibilityChanged(bool visible) -> void
-Kazo.Os.Apps.Store.StoreAppPage.Store.get -> Kazo.Os.Apps.Store.StoreWindow!
-Kazo.Os.Apps.Store.StoreAppPage.Store.set -> void
-Kazo.Os.Apps.Store.StoreAppPage.StoreAppPage() -> void
-override Kazo.Os.Apps.Store.StoreApp.Window.get -> Kazo.Os.App.Abstractions.WindowOptions?

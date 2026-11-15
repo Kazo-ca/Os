@@ -100,8 +100,8 @@ L'hôte Ecosystem enregistre la source :
 - Essai réel par Benoit, avec l'inscription Microsoft Entra (« Single-page
   application », adresses de retour de [`cloud-accounts.md`](cloud-accounts.md)) :
   connexion, les deux étendues, envoi d'un gros fichier, reconnexion après
-  24 heures. Non fait : l'inscription n'existe pas encore.
-- L'interface (chantier 5).
+  24 heures. L'inscription existe depuis le 2026-11-15 ; les étapes sont dans
+  [`cloud-drives.md`](cloud-drives.md#essais-réels).
 
 ## Tâches
 

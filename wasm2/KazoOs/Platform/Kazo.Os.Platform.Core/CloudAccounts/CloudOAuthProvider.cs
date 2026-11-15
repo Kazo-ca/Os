@@ -43,6 +43,13 @@ public sealed record CloudOAuthProvider(
     /// <summary>Microsoft tenant used when none is configured: work, school and personal accounts.</summary>
     public const string DefaultMicrosoftTenant = "common";
 
+    /// <summary>
+    /// Gets where the service puts the folder reserved for the app, as the user sees it in the
+    /// service (<c>Apps/Kazo OS Folder</c>); <see langword="null"/> when the host did not say. The
+    /// service names it after the app registration, so the host gives it with the app ids.
+    /// </summary>
+    public string? AppFolderPath { get; init; }
+
     /// <summary>Gets the access scopes this provider has an app id for, <see cref="CloudAccessScope.Full"/> first.</summary>
     public IReadOnlyList<CloudAccessScope> Scopes =>
         [.. Clients.Keys.Order()];

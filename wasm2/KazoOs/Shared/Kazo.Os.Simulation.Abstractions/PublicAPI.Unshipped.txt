@@ -110,3 +110,5 @@ Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveRequest.Options.get -> Sy
 Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveRequest.Options.init -> void
 Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveRequest.Secrets.get -> System.Collections.Generic.IReadOnlyDictionary<string!, string!>?
 Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveRequest.Secrets.init -> void
+Kazo.Os.Simulation.Abstractions.Metrics.IStorageReclaimer
+Kazo.Os.Simulation.Abstractions.Metrics.IStorageReclaimer.ReclaimAsync(bool lowSpace, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<long>

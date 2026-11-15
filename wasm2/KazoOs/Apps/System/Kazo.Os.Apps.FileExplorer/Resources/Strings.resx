@@ -670,6 +670,12 @@
   <data name="CloudDrive.SignInNote" xml:space="preserve">
     <value>A {0} window opens to sign in. Your sign-in stays on this device; no Kazo OS server receives it.</value>
   </data>
+  <data name="CloudDrive.AppFolderPrefix" xml:space="preserve">
+    <value>The folder {0} reserves for Kazo OS in your storage. The drive starts there, or in the folder you type after it.</value>
+  </data>
+  <data name="CloudDrive.SigningIn" xml:space="preserve">
+    <value>The {0} sign-in window is open. If it shows an error or you closed it, choose Back or Close to stop waiting.</value>
+  </data>
   <data name="CloudDrive.SignInAndMount" xml:space="preserve">
     <value>Sign in and mount</value>
   </data>
@@ -750,5 +756,50 @@
   </data>
   <data name="Network.ConnectShort" xml:space="preserve">
     <value>Connect</value>
+  </data>
+  <data name="OpenWith.SearchLabel" xml:space="preserve">
+    <value>Search the installed apps</value>
+  </data>
+  <data name="OpenWith.SearchPlaceholder" xml:space="preserve">
+    <value>Search an app…</value>
+  </data>
+  <data name="OpenWith.CategoryLabel" xml:space="preserve">
+    <value>Category</value>
+  </data>
+  <data name="OpenWith.AllCategories" xml:space="preserve">
+    <value>All categories</value>
+  </data>
+  <data name="OpenWith.NoMatch" xml:space="preserve">
+    <value>No installed app matches this search.</value>
+  </data>
+  <data name="Category.Developer" xml:space="preserve">
+    <value>Development</value>
+  </data>
+  <data name="Category.Editors" xml:space="preserve">
+    <value>Editors</value>
+  </data>
+  <data name="Category.Graphics" xml:space="preserve">
+    <value>Graphics</value>
+  </data>
+  <data name="Category.Internet" xml:space="preserve">
+    <value>Internet</value>
+  </data>
+  <data name="Category.Multimedia" xml:space="preserve">
+    <value>Multimedia</value>
+  </data>
+  <data name="Category.Network" xml:space="preserve">
+    <value>Network</value>
+  </data>
+  <data name="Category.Office" xml:space="preserve">
+    <value>Office</value>
+  </data>
+  <data name="Category.Productivity" xml:space="preserve">
+    <value>Productivity</value>
+  </data>
+  <data name="Category.System" xml:space="preserve">
+    <value>System</value>
+  </data>
+  <data name="Category.Utilities" xml:space="preserve">
+    <value>Utilities</value>
   </data>
 </root>

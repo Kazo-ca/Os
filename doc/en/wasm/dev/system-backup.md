@@ -105,6 +105,19 @@ and shortly after a persistent write that requests it
 write never waits for it: `FileSystemService` only reads the cached state
 `IsRootReserveReached`.
 
+### Reclaiming orphan content (Os#537)
+
+The monitor's `Reclaimer` (`IStorageReclaimer`, implemented by
+`IndexedDbFileSystemMaintenance`) gives back the space of the old content of
+rewritten and deleted files, with a 1-day retention: when the desktop shows
+(`EcosystemBootCoordinator` calls `RequestReclaim`), after a deletion in the trash
+(`FileSystemService`), then every hour (`ReclaimInterval`). `RequestReclaim` waits
+`ReclaimRequestDelay` (2 s), so emptying a trash of several items runs one reclaim.
+When space **becomes** low, the monitor first reclaims with the 5-minute
+low-space retention, measures again, and warns only if space is still low. A
+failed pass is ignored and tried again at the next run. Details:
+[`browser-infrastructure.md`](browser-infrastructure.md#points-to-know).
+
 ### Notification
 
 When space becomes low, the session's user receives **one** notification per
@@ -197,6 +210,7 @@ Dumps of versions 2 and 3 in `Tests/fixtures/indexeddb/` (version 1 was never co
 - [x] `QuotaExceededError` and content over 16 MiB translated by the IndexedDB provider.
 - [x] `.kosbak` archive (gzip), full validation, merge by overwriting.
 - [x] `StorageSpaceMonitor`: measurement, single notification, root reserve.
+- [x] Orphan content reclaimed at boot, every hour and when space becomes low (Os#537).
 - [x] Reserve enforced by `FileSystemService`; `df` with the real figures.
 - [x] `LogFileWriter`: lost lines counted then reported.
 - [x] `KazoSystemBackup`, gateway, `SystemBackupService`, browser device, `pickFile.js`.

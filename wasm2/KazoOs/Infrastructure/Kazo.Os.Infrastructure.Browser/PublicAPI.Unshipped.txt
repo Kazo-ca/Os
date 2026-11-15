@@ -7,3 +7,9 @@ Kazo.Os.Infrastructure.Browser.CloudAccounts.BrowserOAuthAuthorizationWindow.Pre
 Kazo.Os.Infrastructure.Browser.CloudAccounts.BrowserOAuthAuthorizationWindow.RedirectUri.get -> System.Uri!
 const Kazo.Os.Infrastructure.Browser.CloudAccounts.BrowserOAuthAuthorizationWindow.CallbackPath = "_content/Kazo.Os.Infrastructure.Browser/oauth-callback.html" -> string!
 static Kazo.Os.Infrastructure.Browser.CloudAccounts.BrowserOAuthAuthorizationWindow.GetRedirectUri(System.Uri! baseAddress) -> System.Uri!
+Kazo.Os.Infrastructure.Browser.FileSystem.IndexedDbFileSystemMaintenance.ReclaimAsync(bool lowSpace, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<long>
+Kazo.Os.Infrastructure.Browser.Schema.FileContentStoragePolicy.LowSpaceOrphanRetention.get -> System.TimeSpan
+Kazo.Os.Infrastructure.Browser.Schema.FileContentStoragePolicy.LowSpaceOrphanRetention.init -> void
+const Kazo.Os.Infrastructure.Browser.FileSystem.IndexedDbFileSystemMaintenance.HashesPerPass = 64 -> int
+const Kazo.Os.Infrastructure.Browser.FileSystem.IndexedDbFileSystemMaintenance.MaxPassesPerReclaim = 32 -> int
+static readonly Kazo.Os.Infrastructure.Browser.Schema.FileContentStoragePolicy.DefaultLowSpaceOrphanRetention -> System.TimeSpan

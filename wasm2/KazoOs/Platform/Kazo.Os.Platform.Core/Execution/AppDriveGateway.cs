@@ -209,7 +209,8 @@ public sealed class AppDriveGateway : IAppDriveGateway
         {
             DriveType = KazoDriveType.Network,
             IsReady = drive.IsConnected,
-            Account = drive.Account
+            Account = drive.Account,
+            Root = drive.Root
         };
 
     private NetworkDriveService RequireNetworkDrives() =>
