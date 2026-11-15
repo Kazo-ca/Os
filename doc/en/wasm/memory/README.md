@@ -22,6 +22,13 @@ at the end of each series or when a convention changes.
   folded into `PublicAPI.Shipped.txt`, 9 entries in `changes/3.3.4.json`;
   published when the PR lands in `main`. Next: Kazo Pdf in the Store, Kazo
   Photo (open and save files, then the Store).
+- **Series `cloud-drives/base`** (ADR 0267, 0269, 0270): done on 2026-11-15
+  and sent to `main` with Benoit's go-ahead, for a beta trial. Dropbox,
+  OneDrive and S3 as network drives; overview and real trials in
+  `dev/cloud-drives.md`. Benoit tried OneDrive and Dropbox on
+  `https://localhost:5000`; left: Dropbox whole storage, OneDrive work and the
+  PWA on iOS. He allowed the services' marks (icon fonts already shipped) in
+  "Network drives".
 - **Version 3.3.3** (2026-11-13, published). Benoit chose a patch number although the public API grows
   (like 2.2.1); 3.4.0 is kept for the prerelease SDK (TODO #456). Content:
   direct link `?autolaunch=<appId>` (ADR 0258, series `app-link/base`, PR
