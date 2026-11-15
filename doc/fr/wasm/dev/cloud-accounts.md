@@ -141,13 +141,15 @@ await accounts.RemoveAsync(account.Id);                           // démonte, r
 
 ## Identifiants d'app
 
-Ils sont publics. L'hôte les lit dans `wwwroot/appsettings.json` ; ils sont
-livrés vides, donc aucun fournisseur n'est proposé :
+Ils sont publics. L'hôte les lit dans `wwwroot/appsettings.json`. Ce sont ceux
+des inscriptions de Kazo OS (apps Dropbox « Kazo OS Drive » et « Kazo OS
+Folder », inscription Entra « Kazo OS »), valables pour les adresses de retour
+ci-dessous ; un identifiant vide retire le fournisseur ou l'étendue :
 
 ```json
 "CloudDrives": {
-  "Dropbox": { "FullAccessClientId": "", "AppFolderClientId": "" },
-  "OneDrive": { "ClientId": "", "Tenant": "common" }
+  "Dropbox": { "FullAccessClientId": "im7y4ma8wtsospi", "AppFolderClientId": "mcp8j0gt4h4v6s3" },
+  "OneDrive": { "ClientId": "7f89ba67-5655-4721-991a-53c64998f45e", "Tenant": "common" }
 }
 ```
 
