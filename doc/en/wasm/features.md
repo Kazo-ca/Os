@@ -285,6 +285,9 @@ This section lists what is released in the `main` branch and online.
   available; it downloads in the background and "Restart to update" opens it in
   every tab. ([ADR 0174](dev/adr/0174-announce-a-new-version-to-open-sessions.md),
   [ADR 0223](dev/adr/0223-restart-onto-the-new-version.md))
+- **Share preview**: a link to `os.kazo.ca` shared on Facebook, LinkedIn or X
+  shows the Kazo OS image, its title and its description.
+  ([`github-pages-deployment.md`](dev/github-pages-deployment.md#share-preview-facebook-linkedin-x))
 - **Build number and version status on the sign-in screen**: next to
   "Kazo OS 3.3.3", the build number (commit count, the same for the site, the
   Release and the server) and a badge "Up to date", "Outdated: …" or "Status
@@ -454,6 +457,7 @@ points to its PR.
 | Switch user | Open another session without closing the first one. Stays greyed out in the Power menu by Benoit's choice: one session at a time, Sign out to change account. | [0195](dev/adr/0195-start-menu-power-button.md), [0201](dev/adr/0201-switch-user-stays-greyed.md) | [#290](https://github.com/Kazo-ca/Os/issues/290) |
 | File address served on demand | An app gets an address to read a large file (audio, video) without copying it in memory, with partial reads to seek in a track. | To write | [#379](https://github.com/Kazo-ca/Os/issues/379) |
 | Drag files onto an app | Public SDK contract to receive files dragged from the File Explorer or the desktop. | To write | [#380](https://github.com/Kazo-ca/Os/issues/380) |
+| Reclaim the space of rewritten or deleted files | The old content of a rewritten or deleted file is erased after 1 day, or after 5 minutes when storage is low, instead of staying in the browser forever. | [0273](dev/adr/0273-short-orphan-content-retention.md) | [#537](https://github.com/Kazo-ca/Os/issues/537) |
 
 ### Kazo OS Store
 

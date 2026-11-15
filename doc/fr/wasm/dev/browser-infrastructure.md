@@ -65,10 +65,23 @@ dans [`system-backup.md`](system-backup.md).
 - Les mutations de métadonnées sont des lots d'opérations IndexedDB ordonnés,
   construits par `IndexedDbFileSystemMutationPlanner` pour être atomiques. Les
   blocs de contenu sont adressés par hachage ; ceux qui ne sont plus référencés
-  peuvent être ramassés par une passe bornée, après une période de rétention
-  (`OrphanRetention`), et jamais sans revalidation de leurs références. Aucun hôte
-  n'appelle encore cette passe : l'espace n'est donc pas récupéré aujourd'hui (voir
-  [`plans/browser-storage-optimization-analysis.md`](plans/browser-storage-optimization-analysis.md)).
+  (fichiers réécrits ou supprimés) sont ramassés par une passe bornée
+  (`IndexedDbFileSystemMaintenance`, `IStorageReclaimer`), après une période de
+  rétention : 1 jour (`OrphanRetention`), 5 minutes quand l'espace est faible
+  (`LowSpaceOrphanRetention`) ([ADR 0273](adr/0273-short-orphan-content-retention.md)).
+  `StorageSpaceMonitor` la lance quand le bureau s'affiche, toutes les heures, après
+  une suppression dans la corbeille, et quand l'espace devient faible, avant
+  d'avertir (Os#537). La passe tourne dans `runOrphanPass` (`indexedDb.js`) : rien
+  quand l'onglet est caché, et un seul onglet à la fois (Web Locks). Elle ne lit que
+  les clés et le bloc 0 des contenus non référencés, jamais tout le magasin
+  `fsContent` ; sa transaction de suppression revérifie les références et l'âge.
+  L'âge d'un contenu est la date de son bloc 0 (un contenu sans date compte comme
+  ancien). Une écriture qui réutilise un contenu déjà stocké donne la nouvelle date à
+  son bloc 0, et la transaction qui publie le fichier vérifie que tous ses blocs sont
+  présents (`assertCount`) : si un bloc manque, le contenu est réécrit une fois, puis
+  l'écriture échoue avec une erreur d'E/S. Une réécriture faite par le système
+  (`AppAuthority.System`) efface l'ancien contenu dans la même transaction quand plus
+  rien ne le référence.
 - Le chemin d'un fichier se résout en une requête (`resolvePath`, ADR 0090,
   [`filesystem-path-lookup.md`](filesystem-path-lookup.md)).
 - Les scripts `wwwroot/*.js` sont testés en contrat par

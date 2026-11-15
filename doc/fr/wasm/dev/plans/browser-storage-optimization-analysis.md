@@ -7,6 +7,11 @@ aucun numéro d'ADR n'est pris : ce document décrit ce que l'OS garde dans le n
 ce que ça coûte, et les pistes pour faire mieux. Chaque piste retenue demandera son ADR
 avant le code. Les décisions de Benoit sont au §7.
 
+Les constats décrivent la version 3.3.4. Depuis, l'issue #537 a branché le ramassage
+des contenus orphelins (constats C1 à C3 et C10), avec la rétention courte de
+l'[ADR 0273](../adr/0273-short-orphan-content-retention.md) ; l'état courant est dans
+[`browser-infrastructure.md`](../browser-infrastructure.md).
+
 ## 1. Résumé
 
 1. **L'espace n'est jamais récupéré.** Le contenu d'un fichier supprimé ou réécrit reste
@@ -124,7 +129,7 @@ Release, donne :
 
 Le stockage est donc bien la cause de #520, le contenu binaire (piste 2) la règle, et
 l'écriture en flux (piste 4) reste justifiée par la mémoire. Le rapport complet est
-`large-file-save-profile.md` (branche `docs/large-file-save-profile`).
+[`large-file-save-profile.md`](large-file-save-profile.md).
 
 Une observation reste à part : sur le site publié,
 `head -c 1048576 /dev/urandom > a.bin` dans le terminal n'avait pas fini après

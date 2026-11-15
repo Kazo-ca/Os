@@ -7,6 +7,11 @@ number is taken: this document describes what the OS keeps in the browser, what 
 costs, and the ways to do better. Each avenue that is kept will need its ADR before the
 code. Benoit's decisions are in §7.
 
+The findings describe version 3.3.4. Since then, issue #537 has wired the collection of
+orphan contents (findings C1 to C3 and C10), with the short retention of
+[ADR 0273](../adr/0273-short-orphan-content-retention.md); the current state is in
+[`browser-infrastructure.md`](../browser-infrastructure.md).
+
 ## 1. Summary
 
 1. **Space is never reclaimed.** The content of a deleted or rewritten file stays in
@@ -125,7 +130,7 @@ publish, gives:
 
 Storage is therefore indeed the cause of #520, binary content (avenue 2) fixes it, and
 streamed write (avenue 4) stays justified by memory. The full report is
-`large-file-save-profile.md` (branch `docs/large-file-save-profile`).
+[`large-file-save-profile.md`](large-file-save-profile.md).
 
 One observation stays apart: on the published site,
 `head -c 1048576 /dev/urandom > a.bin` in the terminal had not finished after

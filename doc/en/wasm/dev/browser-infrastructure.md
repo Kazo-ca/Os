@@ -65,10 +65,21 @@ in [`system-backup.md`](system-backup.md).
 - Metadata mutations are ordered batches of IndexedDB operations,
   built by `IndexedDbFileSystemMutationPlanner` to be atomic. Content
   chunks are addressed by hash; those that are no longer referenced
-  can be collected by a bounded pass, after a retention period
-  (`OrphanRetention`), and never without revalidating their references. No host
-  calls this pass yet: space is therefore not reclaimed today (see
-  [`plans/browser-storage-optimization-analysis.md`](plans/browser-storage-optimization-analysis.md)).
+  (rewritten or deleted files) are collected by a bounded pass
+  (`IndexedDbFileSystemMaintenance`, `IStorageReclaimer`), after a retention period:
+  1 day (`OrphanRetention`), 5 minutes when storage is low
+  (`LowSpaceOrphanRetention`) ([ADR 0273](adr/0273-short-orphan-content-retention.md)).
+  `StorageSpaceMonitor` runs it when the desktop shows, every hour, after a deletion
+  in the trash, and when storage becomes low, before warning (Os#537). The pass runs
+  in `runOrphanPass` (`indexedDb.js`): nothing while the tab is hidden, and one tab at
+  a time (Web Locks). It reads keys only and chunk 0 of unreferenced contents, never
+  the whole `fsContent` store; its delete transaction checks references and age
+  again. A content's age is the time of its chunk 0 (undated content counts as old).
+  A write that reuses stored content gives its chunk 0 the new time, and the
+  transaction that publishes the file checks that all its chunks are present
+  (`assertCount`): when one is missing, the content is written again once, then the
+  write fails with an I/O error. A rewrite done by the system (`AppAuthority.System`)
+  deletes the old content in the same transaction when nothing references it any more.
 - A file's path is resolved in one request (`resolvePath`, ADR 0090,
   [`filesystem-path-lookup.md`](filesystem-path-lookup.md)).
 - The `wwwroot/*.js` scripts are contract-tested by
