@@ -1,0 +1,11 @@
+{
+  "id": "2ddd6652-9544-4025-b9ce-7d7e0caa96c7",
+  "category": "developer",
+  "audience": ["developer"],
+  "title": { "en": "Network drives come from drive sources", "fr": "Les lecteurs réseau viennent de sources de lecteurs" },
+  "description": {
+    "en": "The network drive service mounts what any INetworkDriveSource gives it: the folder of the computer (hostfs) today, cloud connectors next. A drive may report its service's quota and revisions, write on condition, and reconnects by itself when its service can be reached again. df, /proc/mounts and KazoDriveInfo show its type.",
+    "fr": "Le service des lecteurs réseau monte ce que lui donne une INetworkDriveSource : le dossier de l'ordinateur (hostfs) aujourd'hui, les connecteurs cloud ensuite. Un lecteur peut donner le quota et les révisions de son service, écrire sous condition, et se reconnecte seul quand son service redevient joignable. df, /proc/mounts et KazoDriveInfo montrent son type."
+  },
+  "links": ["doc/en/wasm/dev/network-drive-sources.md", "doc/en/wasm/dev/adr/0267-cloud-drives-as-network-drives.md"]
+}

@@ -45,6 +45,7 @@ classement.
 | `shell.control` | normale (ADR 0051 : n'agit que sur le shell de l'utilisateur qui a tapé la commande, voir [`shell-commands.md`](../dev/shell-commands.md)) |
 | `screens.manage` | normale (ADR 0184 : lister, ouvrir, restaurer, fermer et identifier les écrans par `KazoScreens`, comme Paramètres ▸ Écrans ; chaque appel part d'un clic de l'utilisateur) |
 | `shell.context-menu` | normale (ADR 0151 §6 : ajouter des entrées aux menus des fichiers ; sans elle, le générateur produit `KOSAPP0027` et l'OS ignore les entrées, voir [`context-menu.md`](context-menu.md#entrées-des-apps-dans-les-menus-des-fichiers-chantier-4)) |
+| `cloud-accounts.manage` | **dangereuse** (`KazoCloudAccounts` et le montage d'un lecteur cloud par `KazoDriveInfo.MountNetworkDriveAsync`, ADR 0270 ; déclarée par l'Explorateur de fichiers, Paramètres et `mount`) |
 | `permissions.manage` | **dangereuse** (`KazoPermissionAdministration`, ADR 0056 §9 ; déclarée par Paramètres) |
 | `server.connection.manage` | **dangereuse** (`KazoServerConnection`, ADR 0056 §10 ; déclarée par Paramètres) |
 | `system.power` | **dangereuse** (`KazoSystem` : redémarrage, réinitialisation, ADR 0056 §11 ; déclarée par Paramètres) |
@@ -74,7 +75,7 @@ opération de fichier demande, avant les bits de permission :
 | `~/.config/<appId>/` (ses paramètres, ADR 0044) | `filesystem.private.read` | `filesystem.private.write` |
 | `/etc/<appId>/` | `filesystem.private.read` | `filesystem.system.write` (et l'autorité d'administrateur) |
 | `/home/<utilisateur>/` de l'utilisateur qui agit | `filesystem.user-home.read` | `filesystem.user-home.write` |
-| un lecteur réseau (`hostfs`, ADR 0181) monté par l'utilisateur qui agit ([ADR 0231](../dev/adr/0231-network-drives-count-as-personal-files.md)) | `filesystem.user-home.read` | `filesystem.user-home.write` |
+| un lecteur réseau (`hostfs`, ADR 0181, ou cloud, [ADR 0267](../dev/adr/0267-cloud-drives-as-network-drives.md)) monté par l'utilisateur qui agit ([ADR 0231](../dev/adr/0231-network-drives-count-as-personal-files.md)) | `filesystem.user-home.read` | `filesystem.user-home.write` |
 | tout le reste : `/mnt` lui-même, le lecteur d'un autre utilisateur, `/etc`, `/var`… | `filesystem.system.read` | `filesystem.system.write` |
 
 Pour son propre lecteur réseau, une app qui n'a que `filesystem.system.*`

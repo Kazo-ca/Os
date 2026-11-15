@@ -1,0 +1,11 @@
+{
+  "id": "5e2a19df-f1e9-470e-9317-4ec0d6a5af88",
+  "category": "developer",
+  "audience": ["developer"],
+  "title": { "en": "Cloud drives: the Dropbox connector", "fr": "Lecteurs cloud : le connecteur Dropbox" },
+  "description": {
+    "en": "A connected Dropbox account can be mounted as a network drive under /mnt/Dropbox (the whole storage or the Apps/Kazo OS folder, as chosen when connecting), with Dropbox's own revisions for conditional writes and its quota in df. The drive disconnects offline and reconnects by itself when the network returns. The connectors share a base and a contract test suite. The connection dialog comes with the next step of the series.",
+    "fr": "Un compte Dropbox connecté se monte comme lecteur réseau sous /mnt/Dropbox (tout le stockage ou le dossier Apps/Kazo OS, selon le choix fait à la connexion), avec les révisions de Dropbox pour les écritures sous condition et son quota dans df. Le lecteur se déconnecte hors ligne et se reconnecte seul au retour du réseau. Les connecteurs partagent une base et une suite de tests de contrat. Le dialogue de connexion arrive avec le chantier suivant de la série."
+  },
+  "links": ["doc/en/wasm/dev/cloud-drive-connectors.md", "doc/en/wasm/dev/adr/0267-cloud-drives-as-network-drives.md"]
+}

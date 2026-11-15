@@ -1,4 +1,5 @@
 #nullable enable
+const Kazo.Os.App.Abstractions.AppCapabilities.CloudAccountsManage = "cloud-accounts.manage" -> string!
 Kazo.Os.App.Abstractions.AppKind.Feature = 4 -> Kazo.Os.App.Abstractions.AppKind
 Kazo.Os.App.Abstractions.AppManifest.Parent.get -> string?
 Kazo.Os.App.Abstractions.AppManifest.Parent.init -> void

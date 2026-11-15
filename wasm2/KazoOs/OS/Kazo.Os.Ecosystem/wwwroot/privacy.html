@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Kazo OS — Politique de confidentialité / Privacy policy</title>
+    <link rel="stylesheet" href="legal.css" />
+</head>
+<body>
+<main>
+    <header>
+        <nav>
+            <a href="./">Kazo OS</a>
+            <a href="#fr">Français</a>
+            <a href="#en">English</a>
+            <a href="terms.html">Conditions d'utilisation / Terms of use</a>
+        </nav>
+    </header>
+
+    <section class="language" id="fr" lang="fr">
+        <h1>Politique de confidentialité</h1>
+        <p class="updated">Mise à jour : 2026-11-15</p>
+
+        <h2>En bref</h2>
+        <p>Kazo OS est un système d'exploitation simulé qui tourne entièrement dans votre navigateur.
+            os.kazo.ca est un site statique : Kazo OS n'a aucun serveur qui reçoit vos fichiers, vos
+            mots de passe ou les jetons de vos comptes cloud. Il n'y a ni publicité, ni mesure
+            d'audience, ni cookie de suivi.</p>
+
+        <h2>Ce qui reste dans votre navigateur</h2>
+        <ul>
+            <li>Vos comptes d'utilisateur Kazo OS, vos fichiers et vos réglages sont enregistrés dans le
+                stockage de votre navigateur (IndexedDB), sur votre appareil.</li>
+            <li>Les mots de passe sont conservés sous forme de hachage ; les secrets (trousseau) sont
+                chiffrés avec une clé qui ne s'ouvre qu'avec votre mot de passe ou votre clé d'accès.</li>
+            <li>Effacer les données du site dans votre navigateur supprime tout cela.</li>
+        </ul>
+
+        <h2>Comptes cloud (Dropbox, OneDrive, S3)</h2>
+        <p>Si vous connectez un compte Dropbox ou OneDrive, ou un compartiment compatible S3 :</p>
+        <ul>
+            <li>La connexion se fait directement chez le fournisseur (Dropbox ou Microsoft), dans une
+                fenêtre de celui-ci. Kazo OS ne voit jamais votre mot de passe de fournisseur.</li>
+            <li>Kazo OS demande seulement l'accès que vous choisissez : tout votre stockage, ou un seul
+                dossier réservé à Kazo OS. Il lit votre identité (adresse de courriel ou nom, identifiant
+                du compte) pour nommer le compte dans Kazo OS.</li>
+            <li>Les jetons d'accès restent sur votre appareil, chiffrés (AES-256-GCM), avec une clé gardée
+                dans votre trousseau Kazo OS. Ils ne sont jamais synchronisés ni envoyés à un serveur de
+                Kazo OS.</li>
+            <li>Vos fichiers circulent directement entre votre navigateur et le fournisseur. Kazo OS ne les
+                copie nulle part ailleurs, sauf si vous les copiez vous-même dans un autre dossier.</li>
+            <li>Retirer le compte dans Kazo OS démonte ses lecteurs, efface ses jetons et, chez Dropbox,
+                révoque l'accès. Vous pouvez aussi retirer l'accès à tout moment depuis les réglages de
+                votre compte Dropbox ou Microsoft.</li>
+            <li>L'usage de vos données chez le fournisseur relève de sa propre politique de
+                confidentialité.</li>
+        </ul>
+
+        <h2>Ce que d'autres reçoivent</h2>
+        <ul>
+            <li><strong>L'hébergeur du site</strong> reçoit, comme pour tout site web, votre adresse IP et
+                les fichiers demandés, et peut les garder dans des journaux techniques.</li>
+            <li><strong>Les fournisseurs cloud</strong> reçoivent les requêtes que vous faites vers votre
+                propre stockage.</li>
+            <li><strong>Le Kazo OS Store</strong> télécharge les apps que vous installez depuis GitHub.</li>
+            <li><strong>Un serveur Kazo OS facultatif</strong> : si vous ou votre administrateur reliez
+                Kazo OS à un serveur que vous hébergez, votre dossier personnel s'y synchronise. Les
+                jetons des comptes cloud et les lecteurs cloud n'y sont jamais envoyés.</li>
+        </ul>
+
+        <h2>Contact</h2>
+        <p>Pour toute question, ouvrez une issue sur
+            <a href="https://github.com/Kazo-ca/Os/issues">github.com/Kazo-ca/Os</a>.</p>
+    </section>
+
+    <section class="language" id="en" lang="en">
+        <h1>Privacy policy</h1>
+        <p class="updated">Updated: 2026-11-15</p>
+
+        <h2>In short</h2>
+        <p>Kazo OS is a simulated operating system that runs entirely in your browser. os.kazo.ca is a
+            static site: Kazo OS has no server that receives your files, your passwords or the tokens of
+            your cloud accounts. There is no advertising, no audience measurement and no tracking
+            cookie.</p>
+
+        <h2>What stays in your browser</h2>
+        <ul>
+            <li>Your Kazo OS user accounts, files and settings are stored in your browser's storage
+                (IndexedDB), on your device.</li>
+            <li>Passwords are kept as hashes; secrets (keyring) are encrypted with a key that opens only
+                with your password or passkey.</li>
+            <li>Clearing the site's data in your browser deletes all of it.</li>
+        </ul>
+
+        <h2>Cloud accounts (Dropbox, OneDrive, S3)</h2>
+        <p>If you connect a Dropbox or OneDrive account, or an S3-compatible bucket:</p>
+        <ul>
+            <li>You sign in directly at the provider (Dropbox or Microsoft), in a window of theirs. Kazo OS
+                never sees your provider password.</li>
+            <li>Kazo OS asks only for the access you choose: your whole storage, or a single folder
+                reserved to Kazo OS. It reads your identity (e-mail address or name, account id) to name
+                the account in Kazo OS.</li>
+            <li>Access tokens stay on your device, encrypted (AES-256-GCM), with a key kept in your
+                Kazo OS keyring. They are never synchronized nor sent to a Kazo OS server.</li>
+            <li>Your files travel directly between your browser and the provider. Kazo OS copies them
+                nowhere else, unless you copy them yourself to another folder.</li>
+            <li>Removing the account in Kazo OS unmounts its drives, erases its tokens and, at Dropbox,
+                revokes the access. You can also remove the access at any time from your Dropbox or
+                Microsoft account settings.</li>
+            <li>How the provider uses your data is governed by its own privacy policy.</li>
+        </ul>
+
+        <h2>What others receive</h2>
+        <ul>
+            <li><strong>The site's host</strong> receives, as for any website, your IP address and the
+                files requested, and may keep them in technical logs.</li>
+            <li><strong>Cloud providers</strong> receive the requests you make to your own storage.</li>
+            <li><strong>The Kazo OS Store</strong> downloads the apps you install from GitHub.</li>
+            <li><strong>An optional Kazo OS server</strong>: if you or your administrator connect Kazo OS
+                to a server you host, your home folder synchronizes there. Cloud account tokens and cloud
+                drives are never sent to it.</li>
+        </ul>
+
+        <h2>Contact</h2>
+        <p>For any question, open an issue on
+            <a href="https://github.com/Kazo-ca/Os/issues">github.com/Kazo-ca/Os</a>.</p>
+    </section>
+</main>
+</body>
+</html>

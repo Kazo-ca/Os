@@ -181,6 +181,16 @@ This section lists what is released in the `main` branch and online.
   reads and writes the user's network drives like their personal files,
   without a dangerous capability; another user's drive and `/mnt` stay system
   files. ([ADR 0231](dev/adr/0231-network-drives-count-as-personal-files.md))
+- **Cloud storage as a network drive**: the user connects their Dropbox, their
+  OneDrive (personal or work) or an S3-compatible storage and finds it under
+  `/mnt`, in the File Explorer, Settings ▸ Network ▸ Cloud accounts and
+  `mount -t`. Everything happens in the browser, with no server; they choose
+  between their whole storage and a folder reserved for Kazo OS. Apps go
+  through the SDK behind `cloud-accounts.manage`.
+  ([ADR 0267](dev/adr/0267-cloud-drives-as-network-drives.md),
+  [ADR 0269](dev/adr/0269-cloud-tokens-stay-on-the-device.md),
+  [ADR 0270](dev/adr/0270-cloud-drives-in-the-app-sdk.md),
+  [`cloud-drives.md`](dev/cloud-drives.md))
 - **Faster and lighter files**: content is kept in binary instead of base64 (about 25%
   less space, saving 52.5 MiB from 3.4 s to 1.0 s in Chromium), each 256 KiB chunk checked
   by its fingerprint when read; old content is converted once at the first boot, behind a

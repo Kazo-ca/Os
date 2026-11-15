@@ -153,6 +153,9 @@ internal sealed class AppExecutionContext : IAppExecutionContext
     public IAppUserAccountsGateway UserAccounts { get => Guarded(field); internal set; } = UnsupportedAdministrationGateways.UserAccounts;
 
     /// <inheritdoc />
+    public Kazo.Os.AppSdk.CloudAccounts.IAppCloudAccountsGateway CloudAccounts { get => Guarded(field); internal set; } = Kazo.Os.AppSdk.CloudAccounts.UnsupportedAppCloudAccountsGateway.Instance;
+
+    /// <inheritdoc />
     public IAppComponentProviderAdministrationGateway ComponentProviderAdministration { get => Guarded(field); internal set; } = UnsupportedAdministrationGateways.ComponentProviders;
 
     /// <inheritdoc />

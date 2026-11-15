@@ -705,6 +705,57 @@ internal sealed class RemoteDriveGateway(RemoteProcessChannel channel) : IAppDri
 
     public async ValueTask UnmountAsync(string mountPoint, CancellationToken cancellationToken = default) =>
         await channel.CallAsync(RemoteOps.DriveUnmount, writer => writer.WriteString("p", mountPoint), cancellationToken).ConfigureAwait(false);
+
+    public async ValueTask<IReadOnlyList<string>> GetNetworkDriveTypesAsync(CancellationToken cancellationToken = default) =>
+        WireCodec.ReadStrings(await channel.CallAsync(RemoteOps.DriveTypes, null, cancellationToken).ConfigureAwait(false), "ts");
+
+    // ADR 0270: the OS checks cloud-accounts.manage for a cloud type; a folder dialog opens on the page.
+    public async ValueTask<KazoDriveSnapshot?> MountNetworkDriveAsync(
+        KazoNetworkDriveRequest request,
+        string? mountPoint,
+        CancellationToken cancellationToken = default) =>
+        WireCodec.ReadDrive(await channel.CallAsync(RemoteOps.DriveMountNetwork, writer =>
+        {
+            WireCodec.WriteNetworkDriveRequest(writer, request);
+            if (mountPoint is not null)
+            {
+                writer.WriteString("p", mountPoint);
+            }
+        }, cancellationToken).ConfigureAwait(false));
+}
+
+/// <summary><see cref="Kazo.Os.AppSdk.CloudAccounts.IAppCloudAccountsGateway"/> in a worker (<c>mount -t dropbox</c>, ADR 0270).</summary>
+internal sealed class RemoteCloudAccountsGateway(RemoteProcessChannel channel) : Kazo.Os.AppSdk.CloudAccounts.IAppCloudAccountsGateway
+{
+    public async ValueTask<bool> CanConnectAsync(CancellationToken cancellationToken = default) =>
+        (await channel.CallAsync(RemoteOps.CloudCanConnect, null, cancellationToken).ConfigureAwait(false)).GetProperty("s").GetBoolean();
+
+    public async ValueTask PrepareAsync(CancellationToken cancellationToken = default) =>
+        await channel.CallAsync(RemoteOps.CloudPrepare, null, cancellationToken).ConfigureAwait(false);
+
+    public async ValueTask<IReadOnlyList<Kazo.Os.AppSdk.CloudAccounts.KazoCloudProvider>> GetProvidersAsync(CancellationToken cancellationToken = default) =>
+        WireCodec.ReadCloudProviders(await channel.CallAsync(RemoteOps.CloudProviders, null, cancellationToken).ConfigureAwait(false));
+
+    public async ValueTask<IReadOnlyList<Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccount>> GetAccountsAsync(CancellationToken cancellationToken = default) =>
+        WireCodec.ReadCloudAccounts(await channel.CallAsync(RemoteOps.CloudAccounts, null, cancellationToken).ConfigureAwait(false));
+
+    // The sign-in window opens on the page; the user gesture that led here is the page's.
+    public async ValueTask<Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccount> ConnectAsync(
+        string providerId,
+        Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccessScope scope,
+        CancellationToken cancellationToken = default) =>
+        WireCodec.ReadCloudAccount((await channel.CallAsync(RemoteOps.CloudConnect, writer =>
+        {
+            writer.WriteString("pv", providerId);
+            writer.WriteNumber("sc", (int)scope);
+        }, cancellationToken).ConfigureAwait(false)).GetProperty("a"));
+
+    public async ValueTask<Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccount> ReconnectAsync(string accountId, CancellationToken cancellationToken = default) =>
+        WireCodec.ReadCloudAccount((await channel.CallAsync(RemoteOps.CloudReconnect, writer => writer.WriteString("id", accountId), cancellationToken)
+            .ConfigureAwait(false)).GetProperty("a"));
+
+    public async ValueTask RemoveAsync(string accountId, CancellationToken cancellationToken = default) =>
+        await channel.CallAsync(RemoteOps.CloudRemove, writer => writer.WriteString("id", accountId), cancellationToken).ConfigureAwait(false);
 }
 
 /// <summary><see cref="IAppCrossOriginIsolationGateway"/> in a worker (ADR 0146): the OS answers with the page's status.</summary>

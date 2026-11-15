@@ -31,6 +31,33 @@
     <value>mount: unknown filesystem type '{0}'</value>
   </data>
   <data name="Usage" xml:space="preserve">
-    <value>Usage: mount [-l] | mount -t hostfs [/mnt/name] | mount -o remount /mnt/name</value>
+    <value>Usage: mount [-l] | mount -t hostfs [/mnt/name] | mount -t dropbox|onedrive [-o account=NAME,scope=full|app,root=PATH] [/mnt/name] | mount -t s3 -o endpoint=URL,bucket=NAME[,region=R,prefix=P,addressing=path|virtual,account=ID] [/mnt/name] | mount -o remount /mnt/name</value>
+  </data>
+  <data name="S3Usage" xml:space="preserve">
+    <value>Usage: mount -t s3 -o endpoint=URL,bucket=NAME[,region=R,prefix=P,addressing=path|virtual,account=ID] [/mnt/name]</value>
+  </data>
+  <data name="BadScope" xml:space="preserve">
+    <value>mount: invalid scope '{0}' (full or app)</value>
+  </data>
+  <data name="ScopeRequired" xml:space="preserve">
+    <value>mount: choose what Kazo OS may reach with -o scope=full (all your {0} storage) or -o scope=app (a folder reserved for Kazo OS)</value>
+  </data>
+  <data name="NoSuchAccount" xml:space="preserve">
+    <value>mount: no {1} account named '{0}'</value>
+  </data>
+  <data name="SeveralAccounts" xml:space="preserve">
+    <value>mount: several {0} accounts ({1}): choose one with -o account=NAME</value>
+  </data>
+  <data name="SigningIn" xml:space="preserve">
+    <value>Signing in to {0} in a new window…</value>
+  </data>
+  <data name="AccessKeyPrompt" xml:space="preserve">
+    <value>Access key ID: </value>
+  </data>
+  <data name="SecretKeyPrompt" xml:space="preserve">
+    <value>Secret access key: </value>
+  </data>
+  <data name="KeysRequired" xml:space="preserve">
+    <value>mount: both access keys are required</value>
   </data>
 </root>

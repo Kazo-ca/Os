@@ -829,6 +829,51 @@ internal sealed class RemoteProcessSession
             case RemoteOps.DriveUnmount:
                 await c.Drives.UnmountAsync(a.GetString("p"), cancellationToken).ConfigureAwait(false);
                 return static _ => { };
+            case RemoteOps.DriveTypes:
+            {
+                IReadOnlyList<string> types = await c.Drives.GetNetworkDriveTypesAsync(cancellationToken).ConfigureAwait(false);
+                return writer => WireCodec.WriteStrings(writer, "ts", types);
+            }
+            case RemoteOps.DriveMountNetwork:
+            {
+                Kazo.Os.AppSdk.IO.KazoDriveSnapshot? drive = await c.Drives
+                    .MountNetworkDriveAsync(WireCodec.ReadNetworkDriveRequest(a), a.GetOptionalString("p"), cancellationToken)
+                    .ConfigureAwait(false);
+                return writer => WireCodec.WriteDrive(writer, drive);
+            }
+            case RemoteOps.CloudCanConnect:
+            {
+                bool can = await c.CloudAccounts.CanConnectAsync(cancellationToken).ConfigureAwait(false);
+                return writer => writer.WriteBoolean("s", can);
+            }
+            case RemoteOps.CloudPrepare:
+                await c.CloudAccounts.PrepareAsync(cancellationToken).ConfigureAwait(false);
+                return static _ => { };
+            case RemoteOps.CloudProviders:
+            {
+                var providers = await c.CloudAccounts.GetProvidersAsync(cancellationToken).ConfigureAwait(false);
+                return writer => WireCodec.WriteCloudProviders(writer, providers);
+            }
+            case RemoteOps.CloudAccounts:
+            {
+                var accounts = await c.CloudAccounts.GetAccountsAsync(cancellationToken).ConfigureAwait(false);
+                return writer => WireCodec.WriteCloudAccounts(writer, accounts);
+            }
+            case RemoteOps.CloudConnect:
+            {
+                var account = await c.CloudAccounts
+                    .ConnectAsync(a.GetString("pv"), (Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccessScope)a.GetInt32("sc"), cancellationToken)
+                    .ConfigureAwait(false);
+                return writer => CloudAccountResult(writer, account);
+            }
+            case RemoteOps.CloudReconnect:
+            {
+                var account = await c.CloudAccounts.ReconnectAsync(a.GetString("id"), cancellationToken).ConfigureAwait(false);
+                return writer => CloudAccountResult(writer, account);
+            }
+            case RemoteOps.CloudRemove:
+                await c.CloudAccounts.RemoveAsync(a.GetString("id"), cancellationToken).ConfigureAwait(false);
+                return static _ => { };
             case RemoteOps.CrossOriginIsolation:
             {
                 KazoCrossOriginIsolationStatus isolation = await c.CrossOriginIsolation.GetStatusAsync(cancellationToken).ConfigureAwait(false);
@@ -1212,5 +1257,13 @@ internal sealed class RemoteProcessSession
 
         public ValueTask<Stream> OpenReadAsync(CancellationToken cancellationToken = default) =>
             ValueTask.FromResult<Stream>(new MemoryStream(content, writable: false));
+    }
+
+    /// <summary>One cloud account as the <c>a</c> object of a result (ADR 0270).</summary>
+    private static void CloudAccountResult(Utf8JsonWriter writer, Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccount account)
+    {
+        writer.WriteStartObject("a");
+        WireCodec.WriteCloudAccount(writer, account);
+        writer.WriteEndObject();
     }
 }

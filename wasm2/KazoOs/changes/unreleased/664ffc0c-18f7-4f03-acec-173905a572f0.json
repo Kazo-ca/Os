@@ -1,0 +1,11 @@
+{
+  "id": "664ffc0c-18f7-4f03-acec-173905a572f0",
+  "category": "fixed",
+  "audience": ["user"],
+  "title": { "en": "Connect a network drive: leave a sign-in that failed", "fr": "Connecter un lecteur réseau : quitter une connexion ratée" },
+  "description": {
+    "en": "While the Dropbox or OneDrive sign-in window is open, the dialog says so, and Back, Close and Escape stay usable: they stop waiting for a window that shows an error or was closed, instead of leaving the dialog stuck.",
+    "fr": "Pendant que la fenêtre de connexion Dropbox ou OneDrive est ouverte, le dialogue l'indique, et Retour, Fermer et Échap restent utilisables : ils arrêtent d'attendre une fenêtre qui affiche une erreur ou qui a été fermée, au lieu de laisser le dialogue bloqué."
+  },
+  "links": ["doc/en/wasm/dev/cloud-drives-ui.md"]
+}

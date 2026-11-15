@@ -23,6 +23,13 @@ jour à la fin de chaque série ou quand une convention change.
   `PublicAPI.Shipped.txt`, 9 entrées dans `changes/3.3.4.json` ; publiée
   quand la PR arrive dans `main`. Ensuite : Kazo Pdf dans le Store, Kazo
   Photo (ouvrir et enregistrer des fichiers, puis le Store).
+- **Série `cloud-drives/base`** (ADR 0267, 0269, 0270) : terminée le
+  2026-11-15 et envoyée dans `main` avec l'accord de Benoit, pour un essai en
+  bêta. Dropbox, OneDrive et S3 comme lecteurs réseau ; vue d'ensemble et
+  essais réels dans `dev/cloud-drives.md`. Benoit a essayé OneDrive et Dropbox
+  sur `https://localhost:5000` ; restent Dropbox tout le stockage, OneDrive
+  professionnel et la PWA sur iOS. Il a permis les marques des services
+  (polices d'icônes déjà livrées) dans « Lecteurs réseau ».
 - **Canal bêta** (série `release-channels/base`, ADR 0271, plan
   [`release-channels-plan.md`](../dev/plans/release-channels-plan.md)) :
   chantier 1 fait (`release-channels/1-prerelease-from-beta`). `release.yml`
