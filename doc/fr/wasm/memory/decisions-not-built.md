@@ -175,6 +175,15 @@ Seul #537 est codé ; la série `storage/base` reste à bâtir.
   allocations .NET avec le magasin de blocs en mémoire (pas dans le
   navigateur) : lire 52,5 Mio alloue 17 Mio au lieu de 53, un `Seek` suivi
   d'une lecture de 4 Kio en alloue 1. Aucun changement de l'API publique.
+- **Chantier 4 fait le 2026-11-15** (branche `storage/4-single-app-copy`, PR
+  vers `storage/base`) : magasin `servedFiles` (base en **version 6**, la 5
+  étant celle du chantier 1), `IndexedDbServedFiles`, publication sans lecture
+  ni copie, worker qui lit les blocs de `fsContent` (flux, `Range`, `chunkHash`
+  vérifié), fin du cache `kazoos-installed-apps`, `servedFiles` compté comme
+  référence par le nettoyage, hors sauvegarde. Vidage `kazoos-v5.json` ajouté
+  (`FIXTURE_VERSION` dans `produce-fixture-kazoos.js`). Pas mesuré dans le
+  navigateur : le démarrage d'une app Craft reste pour le chantier 7. Pas de
+  test automatique pour Ctrl+F5 ni deux onglets. Suite : chantier 5.
 
 ## Questions posées, réponse à confirmer
 

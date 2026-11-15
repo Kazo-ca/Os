@@ -67,7 +67,9 @@ The archive, the SDK API and the `system.backup` capability intended for apps ar
    `kazoos.backup.restore-record`), state `started`;
 5. restore in one IndexedDB transaction: **merge** = `put` of each record of
    the archive (same key: overwritten; the rest is kept), **replace** = `clear`
-   of each store then `put`;
+   of each store then `put`; `servedFiles` (served addresses of installed
+   apps, ADR 0274) is not in the archive: a replace clears it and the next
+   publication rebuilds it;
 6. the entry changes to `success` or `failure:<raison>`;
 7. host restart (`location.reload`), even after a failure;
 8. at the next startup, `EcosystemBootCoordinator` writes the kept entry to

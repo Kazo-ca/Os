@@ -328,9 +328,12 @@ validation en deux étapes :
   `lib/<culture>/<assemblage>.resources.dll` (pas ceux du SDK)
   ([ADR 0222](adr/0222-installed-app-satellite-assemblies.md)).
 - **Ressources `wwwroot/`** ([ADR 0206](adr/0206-serve-installed-app-assets.md)) :
-  au premier lancement de l'app dans la session, chaque ressource déclarée est
-  lue par `AppAssetStore` (empreinte vérifiée) et copiée dans le cache
-  `kazoos-installed-apps` ; le service worker la sert à
+  au premier lancement de l'app dans la session, l'OS écrit pour chaque
+  ressource déclarée une ligne de `servedFiles` qui pointe vers le contenu du
+  fichier dans le dossier de l'app, sans le relire ni le copier : le
+  `contentHash` du fichier doit être le SHA-256 du manifeste, sinon l'adresse
+  n'est pas servie et l'app est marquée abîmée
+  ([ADR 0274](adr/0274-single-copy-of-app-files.md)) ; le service worker la sert à
   `_content/<assemblage>/<chemin>`, la même adresse qu'une app compilée dans
   l'OS (balises, `import()`, CSS, Web Workers et leurs `importScripts`, et une
   page HTML chargée dans une iframe, [ADR 0243](adr/0243-serve-installed-app-pages.md)). Sur
@@ -341,11 +344,11 @@ validation en deux étapes :
   active le worker de cette version, et les onglets de l'ancienne redémarrent
   dessus ([ADR 0237](adr/0237-activate-the-worker-of-a-newer-page.md)) ; sinon
   (hors ligne, installation trop longue), les fichiers ne sont pas servis (ligne
-  dans `/var/log/syslog`) et l'OS redemande au lancement suivant. Le ménage du cache, partagé par tous les
+  dans `/var/log/syslog`) et l'OS redemande au lancement suivant. Le ménage des lignes, partagées par tous les
   onglets, garde aussi les fichiers des apps installées sur le disque par un
   autre onglet ([ADR 0225](adr/0225-serve-installed-app-files-to-every-page.md)).
 - **CSS isolé** ([ADR 0221](adr/0221-pack-all-static-web-assets-of-an-app.md)) :
-  une fois `<assemblage>.bundle.scp.css` copié dans le cache, l'OS ajoute un
+  une fois `<assemblage>.bundle.scp.css` servi, l'OS ajoute un
   `<link rel="stylesheet">` vers lui à la page, une fois par session, comme la
   feuille `styles.css` de l'hôte le fait pour une app compilée.
 - **Traductions** ([ADR 0222](adr/0222-installed-app-satellite-assemblies.md)) :

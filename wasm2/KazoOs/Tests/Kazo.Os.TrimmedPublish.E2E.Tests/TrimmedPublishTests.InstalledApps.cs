@@ -14,6 +14,50 @@ public sealed partial class TrimmedPublishTests
     private const string ProbeAppName = "Installed Assets Probe";
     private const string ProbeContent = "_content/Kazo.Os.Fixtures.InstalledAssets/";
 
+    /// <summary>
+    /// ADR 0274: serves a test file as the OS serves an installed app's file, without the installer:
+    /// its content as one binary chunk of <c>fsContent</c> (ADR 0272) and a <c>servedFiles</c> row
+    /// pointing at it. Defines <c>window.kazoTestServedFiles.put(address, text, type)</c> and
+    /// <c>.remove(address)</c> on the page; the address is relative to the page's base.
+    /// </summary>
+    private const string ServedFileHelpersScript =
+        """
+        () => {
+            const request = r => new Promise((resolve, reject) => { r.onsuccess = () => resolve(r.result); r.onerror = () => reject(r.error); });
+            const open = () => request(indexedDB.open('kazoos'));
+            const hex = buffer => Array.from(new Uint8Array(buffer), b => b.toString(16).padStart(2, '0')).join('');
+            const done = tx => new Promise((resolve, reject) => { tx.oncomplete = resolve; tx.onabort = () => reject(tx.error); tx.onerror = () => reject(tx.error); });
+            window.kazoTestServedFiles = {
+                async put(address, text, type) {
+                    const data = new TextEncoder().encode(text);
+                    const contentHash = hex(await crypto.subtle.digest('SHA-256', data));
+                    const db = await open();
+                    try {
+                        const tx = db.transaction(['fsContent', 'servedFiles'], 'readwrite');
+                        tx.objectStore('fsContent').put({ contentHash, chunkIndex: 0, data, chunkHash: contentHash, createdUtcMs: Date.now() });
+                        tx.objectStore('servedFiles').put({ url: address, contentHash, length: data.length, contentType: type,
+                            appId: 'org.kazoos.tests.served', chunkSize: Math.max(1, data.length) });
+                        await done(tx);
+                    } finally {
+                        db.close();
+                    }
+                },
+                async remove(address) {
+                    const db = await open();
+                    try {
+                        const tx = db.transaction(['fsContent', 'servedFiles'], 'readwrite');
+                        const row = await request(tx.objectStore('servedFiles').get(address));
+                        tx.objectStore('servedFiles').delete(address);
+                        if (row) tx.objectStore('fsContent').delete([row.contentHash, 0]);
+                        await done(tx);
+                    } finally {
+                        db.close();
+                    }
+                }
+            };
+        }
+        """;
+
     /// <summary>The fixture's text in <c>Resources/ProbeStrings.fr.resx</c> (ADR 0222).</summary>
     private const string FrenchGreeting = "Bonjour depuis le paquet";
 
@@ -105,7 +149,8 @@ public sealed partial class TrimmedPublishTests
 
     /// <summary>
     /// The published service worker (on the address where index.html registers it) answers a file the
-    /// OS copied into the installed apps' cache, before its release cache, for a page and for a Web
+    /// OS serves from the file system's content (ADR 0274), before its release cache, with a Range
+    /// request, and for a Web
     /// Worker started under cross-origin isolation (ADR 0131).
     /// </summary>
     [TrimmedPublishFact]
@@ -125,16 +170,21 @@ public sealed partial class TrimmedPublishTests
             await NavigateWhenReadyAsync(page, settings.PwaUrl);
             await WaitForServiceWorkerControllerAsync(page);
             await SignInAsync(page);
+            await page.EvaluateAsync(ServedFileHelpersScript);
 
             string answer = await page.EvaluateAsync<string>(
                 """
                 async content => {
                     const assets = await import('./_content/Kazo.Os.Infrastructure.Browser/installedAppAssets.js');
                     if (!await assets.prepare(10000)) return 'no service worker';
-                    const encode = text => Array.from(new TextEncoder().encode(text));
-                    await assets.put(content + 'engine/engine.js', encode("self.engineAnswer = () => 'served';"), 'text/javascript');
-                    await assets.put(content + 'engine/worker.js', encode("importScripts('engine.js'); self.onmessage = () => self.postMessage(self.engineAnswer());"), 'text/javascript');
+                    const files = window.kazoTestServedFiles;
+                    await files.put(content + 'engine/engine.js', "self.engineAnswer = () => 'served';", 'text/javascript');
+                    await files.put(content + 'engine/worker.js', "importScripts('engine.js'); self.onmessage = () => self.postMessage(self.engineAnswer());", 'text/javascript');
                     try {
+                        // A Range request gets only the bytes it asks for (ADR 0274 §5).
+                        const partial = await fetch(content + 'engine/engine.js', { headers: { Range: 'bytes=5-16' } });
+                        const range = `${partial.status} ${partial.headers.get('Content-Range')} ${await partial.text()}`;
+                        if (range !== '206 bytes 5-16/35 engineAnswer') return `range: ${range}`;
                         return await new Promise((resolve, reject) => {
                             const worker = new Worker(content + 'engine/worker.js');
                             worker.onmessage = event => { worker.terminate(); resolve(event.data); };
@@ -142,8 +192,8 @@ public sealed partial class TrimmedPublishTests
                             worker.postMessage('ping');
                         });
                     } finally {
-                        await assets.remove(content + 'engine/engine.js');
-                        await assets.remove(content + 'engine/worker.js');
+                        await files.remove(content + 'engine/engine.js');
+                        await files.remove(content + 'engine/worker.js');
                     }
                 }
                 """, ProbeContent);

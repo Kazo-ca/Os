@@ -393,8 +393,8 @@ démarre l'OS courant et vérifie :
   magasin `settings` a été repris par la migration vers les fichiers,
   ADR 0044), le fichier nommé par `expectations.setting.path` pour les vidages
   suivants (`~/.config/kazoos/appearance.config` pour v4) ;
-- la base est `kazoos`, en version 5 avec `serverConnection`, `syncCursors`
-  et `syncRecordState` ;
+- la base est `kazoos`, en version 6 avec `serverConnection`, `syncCursors`,
+  `syncRecordState` et `servedFiles` (ADR 0274) ;
 - la base `hackeros` a disparu et aucun enregistrement de `kazoos` ne contient
   d'ancien nom (ADR 0230) ;
 - chaque bloc de `fsContent` est binaire et concorde avec son propre
@@ -413,6 +413,7 @@ auto-incrément, administrateur présent).
 | `hackeros-v2.json` | 2 | `e46e897` (dernier commit en v2, avant `7a20401`) | OS démarré pour de vrai |
 | `hackeros-v3.json` | 3 | `7a20401` (seul commit en v3, avant `2481d67`) | OS démarré pour de vrai |
 | `kazoos-v4.json` | 4 | `a7e8d7a` (`storage/base` avant l'ADR 0272) | Publication Release trimmée de l'hôte Ecosystem démarrée pour de vrai (2026-11-15) : fichier écrit avec `echo` dans le Terminal, accent choisi dans Paramètres |
+| `kazoos-v5.json` | 5 | `b5368eed` (`storage/base` avant l'ADR 0274) | Même méthode (2026-11-15) ; les blocs de `fsContent` sont en octets (ADR 0272), vidés en `{ "$type": "Uint8Array", "base64": … }` et recréés en `Uint8Array` par le test |
 
 Chaque vidage contient `databaseName`, `version`, `producedFrom` (commit,
 méthode, hôte, date), `expectations` (identifiants de l'administrateur,
@@ -444,7 +445,7 @@ un magasin sans chemin de clé ; aucun pour l'instant).
    Cyan dans Paramètres, puis vide tous les magasins et refuse un vidage dont la
    version n'est pas celle attendue.
    Pour un build d'après le renommage (version 4 et suivantes), servir sa
-   publication Ecosystem trimmée et lancer `node Tests/fixtures/indexeddb/produce-fixture-kazoos.js <url> <commit> Tests/fixtures/indexeddb/kazoos-v<version>.json <préfixe-captures>` :
+   publication Ecosystem trimmée et lancer `FIXTURE_VERSION=<version> node Tests/fixtures/indexeddb/produce-fixture-kazoos.js <url> <commit> Tests/fixtures/indexeddb/kazoos-v<version>.json <préfixe-captures>` :
    il écrit le fichier avec `echo` dans le Terminal et note le chemin du
    fichier d'apparence de la personne dans `expectations.setting.path`.
 5. Lancer `IndexedDbUpgradeFixtureTests` et

@@ -7,7 +7,7 @@ Ce document décrit ce qu'une app voit de la sauvegarde de la machine : l'API `K
 ## Archive `.kosbak`
 
 Le JSON `formatVersion: 1` de `IndexedDbBackupService` (version du schéma,
-tous les magasins, SHA-256), compressé en gzip. `ReadArchive` reconnaît le gzip
+tous les magasins sauf `servedFiles`, ADR 0274, SHA-256), compressé en gzip. `ReadArchive` reconnaît le gzip
 à ses deux premiers octets (`1F 8B`) et accepte aussi le JSON brut. Une archive
 abîmée, vide, falsifiée (empreinte fausse) ou d'une autre version de schéma est
 refusée **avant** toute écriture, avec un message qui nomme les deux versions :

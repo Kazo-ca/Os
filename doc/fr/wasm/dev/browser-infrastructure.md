@@ -36,13 +36,14 @@ navigateur, dans la composition de l'hôte.
 
 ## Base IndexedDB
 
-- Nom : `kazoos`. Version courante : **5** (`KazoOsIndexedDbSchema.CurrentVersion`).
+- Nom : `kazoos`. Version courante : **6** (`KazoOsIndexedDbSchema.CurrentVersion`).
   Changer la version est le seul moyen d'ajouter, retirer ou modifier un
   magasin ou un index ; chaque montée a son étape de migration.
 - Magasins principaux : `users`, `groups`, `sessions`, `settings`, `fsEntries`
   (métadonnées : fichiers, dossiers, liens), `fsLinks`, `fsContent` (blocs),
   `catalog`, `grants`, `audit`, `diagnostics`, `syncMetadata`, `serverConnection`,
-  `syncCursors`, `syncRecordState`, et une base par site ASP.Kazo (`kazoweb.<appId>`).
+  `syncCursors`, `syncRecordState`, `servedFiles` (version 6, adresses servies des apps
+  installées, ADR 0274), et une base par site ASP.Kazo (`kazoweb.<appId>`).
 - Contenu de fichier : découpé en blocs de 256 Kio au plus par défaut
   (`FileContentStoragePolicy.DefaultMaxChunkSizeBytes`), adressés par le SHA-256 du
   fichier entier et le numéro du bloc ; deux fichiers identiques partagent leur
@@ -88,7 +89,18 @@ navigateur, dans la composition de l'hôte.
   s'était arrêté ; un Web Lock la réserve à un onglet, les autres attendent. Un bloc
   abîmé est laissé tel quel et nommé dans le journal, comme `fsck` ; si la conversion
   échoue, l'OS ne démarre pas et l'écran propose de réessayer.
-- Un onglet d'une ancienne version encore ouvert quand la version 5 ouvre la base ferme
+- Fichiers des apps installées (ADR 0274) : `servedFiles` associe chaque adresse
+  `_content/<assemblage>/<chemin>` au contenu du fichier dans le dossier de l'app :
+  `{url, contentHash, length, contentType, appId, chunkSize}`, index `contentHash` et
+  `appId`. `IndexedDbServedFiles` n'écrit une ligne que si le `contentHash` du fichier
+  est le SHA-256 du manifeste et que tous ses blocs sont là, dans la même transaction ;
+  aucun octet n'est lu ni copié. Le service worker (`installedAppAssets.sw.js`) ouvre
+  `kazoos` sans version, lit la ligne, puis renvoie les blocs en flux, 8 par
+  transaction, en vérifiant leur `chunkHash` ; une requête `Range` reçoit `206` avec
+  les seuls blocs couverts. La passe de nettoyage et la récupération immédiate gardent
+  un contenu qu'une ligne porte encore. `servedFiles` n'est pas sauvegardé : la
+  publication le reconstruit.
+- Un onglet d'une ancienne version encore ouvert quand une version plus récente ouvre la base ferme
   sa connexion ; sa prochaine opération échoue avec une erreur de version et la
   personne recharge la page.
 
