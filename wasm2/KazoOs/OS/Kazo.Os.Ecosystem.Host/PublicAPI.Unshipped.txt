@@ -1,4 +1,15 @@
 #nullable enable
+Kazo.Os.Ecosystem.EcosystemHostState.BeginWelcome() -> void
+Kazo.Os.Ecosystem.EcosystemHostView.Welcome = 7 -> Kazo.Os.Ecosystem.EcosystemHostView
+Kazo.Os.Ecosystem.WelcomeWizard
+Kazo.Os.Ecosystem.WelcomeWizard.Dispose() -> void
+Kazo.Os.Ecosystem.WelcomeWizard.OnFinished.get -> Microsoft.AspNetCore.Components.EventCallback
+Kazo.Os.Ecosystem.WelcomeWizard.OnFinished.set -> void
+Kazo.Os.Ecosystem.WelcomeWizard.Platform.get -> Kazo.Os.Theming.Abstractions.ThemePlatform
+Kazo.Os.Ecosystem.WelcomeWizard.Platform.set -> void
+Kazo.Os.Ecosystem.WelcomeWizard.Steps.get -> System.Collections.Generic.IReadOnlyList<Kazo.Os.Platform.Core.Welcome.WelcomeStep>!
+Kazo.Os.Ecosystem.WelcomeWizard.Steps.set -> void
+Kazo.Os.Ecosystem.WelcomeWizard.WelcomeWizard() -> void
 Kazo.Os.Ecosystem.DefaultContextLibraryRuntime
 Kazo.Os.Ecosystem.DefaultContextLibraryRuntime.FindLoaded(string! simpleName) -> System.Version?
 Kazo.Os.Ecosystem.DefaultContextLibraryRuntime.Load(byte[]! assembly) -> void

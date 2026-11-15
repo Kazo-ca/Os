@@ -161,6 +161,25 @@ virtual Kazo.Os.Platform.Core.Features.FeatureAssemblyLoader.Invoke(string! asse
 virtual Kazo.Os.Platform.Core.Features.FeatureServiceProcessStarter.Invoke(Kazo.Os.App.Abstractions.AppManifest! runAs, System.Type! implementation) -> Kazo.Os.AppSdk.IAppExecutionContext?
 static Kazo.Os.Platform.Core.Shell.StartMenuSettingsDocuments.RetiredDefaultPinnedAppIds.get -> System.Collections.Generic.IReadOnlyList<string!>!
 Kazo.Os.Platform.Core.Shell.StartMenuPreferencesService.StartMenuPreferencesService(Kazo.Os.Platform.Core.Settings.IOsSettingsService! settings, Kazo.Os.Simulation.Abstractions.Sessions.ISessionService! session, System.Collections.Generic.IReadOnlyList<string!>! defaultPins, System.Collections.Generic.IReadOnlyList<string!>! retiredDefaultPins) -> void
+Kazo.Os.Platform.Core.Processes.LoginEnvironmentProvider.ReloadAsync(Kazo.Os.Simulation.Abstractions.Sessions.AuthenticatedPrincipal! principal, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyDictionary<string!, string!>!>
+Kazo.Os.Platform.Core.Welcome.WelcomeSetupService
+Kazo.Os.Platform.Core.Welcome.WelcomeSetupService.GetChosenLocaleAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<string?>
+Kazo.Os.Platform.Core.Welcome.WelcomeSetupService.GetPendingStepsAsync(Kazo.Os.Theming.Abstractions.ThemePlatform platform, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<Kazo.Os.Platform.Core.Welcome.WelcomeStep>!>
+Kazo.Os.Platform.Core.Welcome.WelcomeSetupService.MarkCompletedAsync(Kazo.Os.Theming.Abstractions.ThemePlatform platform, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Kazo.Os.Platform.Core.Welcome.WelcomeSetupService.SetLanguageAsync(string? locale, Kazo.Os.Simulation.Abstractions.Sessions.AuthenticatedPrincipal! principal, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Kazo.Os.Platform.Core.Welcome.WelcomeSetupService.SetTimeZoneAsync(string! value, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Kazo.Os.Platform.Core.Welcome.WelcomeSetupService.SetWallpaperAsync(Kazo.Os.Theming.Abstractions.ThemePlatform platform, string! value, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Kazo.Os.Platform.Core.Welcome.WelcomeSetupService.WelcomeSetupService(Kazo.Os.Platform.Core.Settings.IOsSettingsService! settings, System.Func<Kazo.Os.Simulation.Abstractions.Sessions.AuthenticatedPrincipal!, System.Threading.CancellationToken, System.Threading.Tasks.Task!>? reloadLanguage = null, Microsoft.Extensions.Logging.ILogger<Kazo.Os.Platform.Core.Welcome.WelcomeSetupService!>? logger = null) -> void
+Kazo.Os.Platform.Core.Welcome.WelcomeStep
+Kazo.Os.Platform.Core.Welcome.WelcomeStep.Language = 0 -> Kazo.Os.Platform.Core.Welcome.WelcomeStep
+Kazo.Os.Platform.Core.Welcome.WelcomeStep.Theme = 1 -> Kazo.Os.Platform.Core.Welcome.WelcomeStep
+Kazo.Os.Platform.Core.Welcome.WelcomeStep.TimeZone = 3 -> Kazo.Os.Platform.Core.Welcome.WelcomeStep
+Kazo.Os.Platform.Core.Welcome.WelcomeStep.Wallpaper = 2 -> Kazo.Os.Platform.Core.Welcome.WelcomeStep
+const Kazo.Os.Platform.Core.Welcome.WelcomeSetupService.LocaleFileHeader = "Written by the welcome wizard. Change it in Settings > Language." -> string!
+static Kazo.Os.Platform.Core.Welcome.WelcomeSetupService.ThemeKey(Kazo.Os.Theming.Abstractions.ThemePlatform platform) -> string!
+static Kazo.Os.Platform.Core.Welcome.WelcomeSetupService.WallpaperKey(Kazo.Os.Theming.Abstractions.ThemePlatform platform) -> string!
+static readonly Kazo.Os.Platform.Core.Welcome.WelcomeSetupService.StateFile -> Kazo.Os.Platform.Core.Settings.OsSettingsFile!
+static readonly Kazo.Os.Platform.Core.Welcome.WelcomeSetupService.UserLocaleFile -> Kazo.Os.Platform.Core.Settings.OsSettingsFile!
 const Kazo.Os.Platform.Core.Apps.Packages.AppPackageDefaults.OfficialBetaCatalogAddress = "https://raw.githubusercontent.com/Kazo-ca/Os-AppMarketPlace/packages/catalog-beta.json" -> string!
 static Kazo.Os.Platform.Core.Apps.Packages.AppPackageDefaults.OfficialCatalogAddressFor(Kazo.Os.App.Abstractions.SemanticVersion sdkVersion) -> string!
 static Kazo.Os.Platform.Core.Apps.Packages.AppPackageDefaults.IsOfficialCatalogAddress(System.Uri! address) -> bool

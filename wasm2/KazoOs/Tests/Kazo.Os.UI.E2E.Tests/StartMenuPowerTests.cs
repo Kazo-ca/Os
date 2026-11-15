@@ -88,6 +88,7 @@ public sealed class StartMenuPowerTests(ITestOutputHelper output)
         await passwordField.WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30000 });
         await passwordField.FillAsync(E2ESupport.Password);
         await page.GetByRole(AriaRole.Button, new() { Name = "Start session" }).ClickAsync();
+        await E2ESupport.PassWelcomeAsync(page);
         await page.GetByRole(AriaRole.Button, new() { Name = "App launcher" })
             .WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 20000 });
     }

@@ -571,6 +571,7 @@ public sealed class ScreenServiceTests(ITestOutputHelper output)
         await password.WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 60000 });
         await password.FillAsync(E2ESupport.Password);
         await page.GetByRole(AriaRole.Button, new() { Name = "Start session", Exact = true }).ClickAsync();
+        await E2ESupport.PassWelcomeAsync(page);
         await page.GetByRole(AriaRole.Button, new() { Name = "App launcher" })
             .WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 60000 });
     }
