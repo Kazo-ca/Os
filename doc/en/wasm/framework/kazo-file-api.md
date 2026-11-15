@@ -32,7 +32,7 @@ notification remain applied exactly as before.
 | `IAppExecutionContext.IsRootElevated` | `Shared/Kazo.Os.AppSdk/IAppExecutionContext.cs` | Launch as full root through `sudo` (ADR 0042), default member `false`. Does not change `HomeDirectory`; used for the effective user's trash (`/root/.local/share/Trash`, [`trash.md`](../dev/trash.md)). |
 | `KazoFile`, `KazoDirectory`, `KazoPath` | `Shared/Kazo.Os.AppSdk/IO/` | Static facades. `KazoPath` is pure, except `GetFullPath(path)`. |
 | `KazoFileSystemInfo`, `KazoFileInfo`, `KazoDirectoryInfo` | `IO/KazoFileSystemInfo.cs` | Metadata snapshots (`GetAsync`, `RefreshAsync`). |
-| `KazoFileStream` | `IO/KazoFileStream.cs` | Read stream (wraps the engine's read) or write stream (memory buffer published in a single atomic write). |
+| `KazoFileStream` | `IO/KazoFileStream.cs` | Read stream (wraps the engine's read) or write stream (memory buffer published in a single atomic write). On the `/` disk, a file over 16 MiB is read as it is consumed (ADR 0275); see "Reading a large file". |
 | `KazoFileSystemWatcher` | `IO/KazoFileSystemWatcher.cs` | `Created`, `Changed`, `Deleted`, `Renamed` events on top of `IAppFileSystemWatchGateway`. |
 | `KazoWriteOptions` | `IO/KazoWriteOptions.cs` | Advanced API: `ExpectedRevision`, `CreateMode`. |
 | `Kazo*` exceptions | `IO/KazoExceptions.cs` | `KazoIOException` and its derived classes, `KazoUnauthorizedAccessException`. |
@@ -102,6 +102,8 @@ catch (KazoFileConflictException conflit)
 - Text: UTF-8 without BOM by default; an encoding passed explicitly writes its
   preamble (like .NET). Lines end with `\n`. Text files
   are published with the `text/plain` type.
+- `WriteAllBytesAsync` writes the array it receives as it is, without a copy (ADR 0275 §4):
+  like `File.WriteAllBytesAsync`, do not change it before the returned task completes.
 - `CopyAsync`/`MoveAsync` between two mounts: the facade copies the stream (keeping
   the source file's bits) then deletes the source.
 - `KazoFile.DeleteAsync` deletes permanently, like `System.IO`. For a
@@ -168,6 +170,33 @@ move out gives `Deleted`, a move in gives `Created`.
 
 The exceptions derive from `IOException` and `UnauthorizedAccessException`: an
 ordinary `catch` works.
+
+## Reading a large file
+
+On the `/` disk, `KazoFile.OpenReadAsync` returns, for a file over 16 MiB, a
+stream that loads the file piece by piece as it is read
+([ADR 0275](../dev/adr/0275-partial-read-and-file-address.md) §2): memory only
+holds a window of 1 to 16 MiB, and `Seek` only loads what is around the new
+position. Nothing changes in the API.
+
+```csharp
+await using KazoFileStream stream = await KazoFile.OpenReadAsync("~/Music/long.wav");
+stream.Seek(40 * 1024 * 1024, SeekOrigin.Begin); // loads only 1 MiB around 40 MiB
+byte[] header = new byte[4096];
+await stream.ReadExactlyAsync(header);
+```
+
+- **Read asynchronously** (`ReadAsync`, `CopyToAsync`, `ReadToEndAsync`): the
+  browser only gives access to storage asynchronously. A synchronous read
+  (`Read`, `StreamReader.ReadToEnd`) is only served from the window already
+  loaded; past it, it throws `NotSupportedException`, like the browser's HTTP
+  streams.
+- A file of 16 MiB or less is read whole when it is opened, as before.
+- `KazoFile.ReadAllBytesAsync` still returns the whole file; it reads straight
+  into an array of the right size (one copy less).
+- If the content of the file disappears during the read (damaged chunk), the
+  read throws an `IOException`. A file replaced while it is read keeps its old
+  content until the end of the read.
 
 ## Key decisions
 

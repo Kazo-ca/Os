@@ -175,7 +175,8 @@ async function onFetch(event) {
 }
 
 async function fetchShellOrAsset(event) {
-    // ADR 0206: an installed app's file, copied by the OS, comes before the release cache.
+    // ADR 0206: an installed app's file, read from the OS's file system (ADR 0274), comes before
+    // the release cache.
     // ADR 0243: a page load (navigation) too, so an iframe pointed at an installed app's page
     // (_content/<assembly>/host/index.html?author=…) shows that page, not a second Kazo OS; the
     // query stays on the frame's address for the page to read. An address under _content/ that no

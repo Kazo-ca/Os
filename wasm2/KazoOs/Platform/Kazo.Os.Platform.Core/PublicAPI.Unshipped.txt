@@ -192,3 +192,4 @@ Kazo.Os.Platform.Core.Storage.StorageSpaceMonitor.Reclaimer.init -> void
 static readonly Kazo.Os.Platform.Core.Storage.StorageSpaceMonitor.ReclaimRequestDelay -> System.TimeSpan
 Kazo.Os.Platform.Core.Storage.StorageSpaceMonitor.RequestReclaim() -> void
 static readonly Kazo.Os.Platform.Core.Storage.StorageSpaceMonitor.ReclaimInterval -> System.TimeSpan
+Kazo.Os.Platform.Core.Apps.AppAssetStore.ReportDamaged(string! appId, string! assetPath, string! reason) -> void

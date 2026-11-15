@@ -32,7 +32,7 @@ de permission restent appliqués exactement comme avant.
 | `IAppExecutionContext.IsRootElevated` | `Shared/Kazo.Os.AppSdk/IAppExecutionContext.cs` | Lancement en root complet par `sudo` (ADR 0042), membre par défaut `false`. Ne change pas `HomeDirectory` ; sert à la corbeille de l'utilisateur effectif (`/root/.local/share/Trash`, [`trash.md`](../dev/trash.md)). |
 | `KazoFile`, `KazoDirectory`, `KazoPath` | `Shared/Kazo.Os.AppSdk/IO/` | Façades statiques. `KazoPath` est pur, sauf `GetFullPath(path)`. |
 | `KazoFileSystemInfo`, `KazoFileInfo`, `KazoDirectoryInfo` | `IO/KazoFileSystemInfo.cs` | Instantanés de métadonnées (`GetAsync`, `RefreshAsync`). |
-| `KazoFileStream` | `IO/KazoFileStream.cs` | Flux de lecture (enveloppe la lecture du moteur) ou d'écriture (tampon mémoire publié en une écriture atomique). |
+| `KazoFileStream` | `IO/KazoFileStream.cs` | Flux de lecture (enveloppe la lecture du moteur) ou d'écriture (tampon mémoire publié en une écriture atomique). Sur le disque `/`, un fichier de plus de 16 Mio est lu à mesure qu'on le consomme (ADR 0275) ; voir « Lire un gros fichier ». |
 | `KazoFileSystemWatcher` | `IO/KazoFileSystemWatcher.cs` | Événements `Created`, `Changed`, `Deleted`, `Renamed` au-dessus de `IAppFileSystemWatchGateway`. |
 | `KazoWriteOptions` | `IO/KazoWriteOptions.cs` | API avancée : `ExpectedRevision`, `CreateMode`. |
 | Exceptions `Kazo*` | `IO/KazoExceptions.cs` | `KazoIOException` et ses dérivées, `KazoUnauthorizedAccessException`. |
@@ -102,6 +102,8 @@ catch (KazoFileConflictException conflit)
 - Texte : UTF-8 sans BOM par défaut ; un encodage passé explicitement écrit son
   préambule (comme .NET). Les lignes se terminent par `\n`. Les fichiers texte
   sont publiés avec le type `text/plain`.
+- `WriteAllBytesAsync` écrit le tableau reçu tel quel, sans le copier (ADR 0275 §4) :
+  comme `File.WriteAllBytesAsync`, ne le modifiez pas avant la fin de la tâche rendue.
 - `CopyAsync`/`MoveAsync` entre deux montages : la façade copie le flux (en gardant
   les bits du fichier source) puis supprime la source.
 - `KazoFile.DeleteAsync` supprime définitivement, comme `System.IO`. Pour une
@@ -168,6 +170,33 @@ sortie `Deleted`, une entrée `Created`.
 
 Les exceptions dérivent de `IOException` et `UnauthorizedAccessException` : un
 `catch` ordinaire fonctionne.
+
+## Lire un gros fichier
+
+Sur le disque `/`, `KazoFile.OpenReadAsync` rend pour un fichier de plus de
+16 Mio un flux qui charge le fichier par morceaux quand on le lit
+([ADR 0275](../dev/adr/0275-partial-read-and-file-address.md) §2) : la
+mémoire ne garde qu'une fenêtre de 1 à 16 Mio, et `Seek` ne charge que ce qui
+est autour de la nouvelle position. Rien ne change dans l'API.
+
+```csharp
+await using KazoFileStream flux = await KazoFile.OpenReadAsync("~/Musique/long.wav");
+flux.Seek(40 * 1024 * 1024, SeekOrigin.Begin); // ne charge que 1 Mio autour de 40 Mio
+byte[] entete = new byte[4096];
+await flux.ReadExactlyAsync(entete);
+```
+
+- **Lisez de façon asynchrone** (`ReadAsync`, `CopyToAsync`, `ReadToEndAsync`) :
+  le navigateur ne donne accès au stockage que de façon asynchrone. Une lecture
+  synchrone (`Read`, `StreamReader.ReadToEnd`) n'est servie que depuis la
+  fenêtre déjà chargée ; au-delà, elle lève `NotSupportedException`, comme les
+  flux HTTP du navigateur.
+- Un fichier de 16 Mio ou moins est lu d'un coup à l'ouverture, comme avant.
+- `KazoFile.ReadAllBytesAsync` rend toujours le fichier entier ; il lit
+  directement dans un tableau de la bonne taille (une copie de moins).
+- Si le contenu du fichier disparaît pendant la lecture (bloc abîmé), la
+  lecture lève une `IOException`. Un fichier remplacé pendant qu'on le lit
+  garde son ancien contenu jusqu'à la fin de la lecture.
 
 ## Décisions clés
 

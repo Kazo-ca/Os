@@ -139,6 +139,44 @@ Only #537 is coded; the `storage/base` series is still to build.
 - Retention of orphan contents: short, and quick deletion when space is low. Done
   by ADR 0273 (1 day, 5 minutes when space is low), which replaces the 30 days of
   ADR 0094.
+- **Series opened on 2026-11-15** (`storage/base` branch, no code): plan in
+  [`../dev/plans/browser-storage-series-plan.md`](../dev/plans/browser-storage-series-plan.md),
+  ADRs 0272 (binary content), 0273 (retention: 1 day, 5 minutes when space
+  is low; this is the ADR of #537), 0274 (a single copy of app files) and 0275
+  (partial read, file address) proposed. The 30 days are in fact in ADR 0094,
+  not in ADR 0099. Benoit chose the 1-day duration on 2026-11-15 (thread of #537). Benoit's
+  answers of 2026-11-15: the old content is converted all at once at the
+  first boot, with a waiting screen (not in the background), and a read
+  checks each chunk by its hash. No open question. The conversion is part of
+  work item 1, which fixes #520 according to the profiling of #538 and can
+  start as soon as the ADRs are merged into `storage/base`.
+- **Work item 1 done on 2026-11-15** (branch `storage/1-binary-file-content`,
+  PR to `storage/base`): binary chunks with their `chunkHash`, database at
+  version 5, one-time conversion at boot with a waiting screen, backups kept at
+  schema version 4 (`BackupSchemaVersion`), fixture `kazoos-v4.json`. Measured
+  in a trimmed Release publish, Chromium, cloud container: saving 52.5 MiB goes
+  from 3.4 to 3.5 s to 1.0 to 1.1 s. Firefox and Safari not measured (not
+  available in the container); reading 52.5 MiB with `cat` in the Terminal did
+  not finish within the journey's time, so the read was not measured. Next:
+  work items 3, 4 and 6 in parallel, then 5.
+- **Work item 3 done on 2026-11-15** (branch `storage/3-partial-read`, PR to
+  `storage/base`): `IndexedDbFileContentRepository.ReadRangeAsync` loads only
+  the chunks of a range; a file over 16 MiB opens as a `ChunkedContentReadStream`
+  (window of 1 MiB growing to 16 MiB on straight reads, back to 1 MiB after a
+  seek); a synchronous read past the loaded window throws
+  `NotSupportedException`; `KazoFile.ReadAllBytesAsync` makes one copy less.
+  Measured with .NET allocations and the in-memory chunk store (not in the
+  browser): reading 52.5 MiB allocates 17 MiB instead of 53 MiB, a seek and a
+  4 KiB read 1 MiB. No public API change.
+- **Work item 4 done on 2026-11-15** (branch `storage/4-single-app-copy`, PR
+  to `storage/base`): `servedFiles` store (database at **version 6**, version 5
+  being work item 1's), `IndexedDbServedFiles`, publishing with no read or
+  copy, worker reading the `fsContent` chunks (stream, `Range`, `chunkHash`
+  checked), end of the `kazoos-installed-apps` cache, `servedFiles` counted as a
+  reference by the cleanup, left out of backups. `kazoos-v5.json` dump added
+  (`FIXTURE_VERSION` in `produce-fixture-kazoos.js`). Not measured in the
+  browser: the start of a Craft app is left to work item 7. No automated test
+  for Ctrl+F5 or two tabs. Next: work item 5.
 
 ## Questions asked, answer to confirm
 
