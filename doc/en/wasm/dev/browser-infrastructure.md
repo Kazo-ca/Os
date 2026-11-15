@@ -36,13 +36,14 @@ implementations, in the host's composition.
 
 ## IndexedDB database
 
-- Name: `kazoos`. Current version: **5** (`KazoOsIndexedDbSchema.CurrentVersion`).
+- Name: `kazoos`. Current version: **6** (`KazoOsIndexedDbSchema.CurrentVersion`).
   Changing the version is the only way to add, remove or modify a
   store or an index; each upgrade has its migration step.
 - Main stores: `users`, `groups`, `sessions`, `settings`, `fsEntries`
   (metadata: files, folders, links), `fsLinks`, `fsContent` (chunks),
   `catalog`, `grants`, `audit`, `diagnostics`, `syncMetadata`, `serverConnection`,
-  `syncCursors`, `syncRecordState`, and one database per ASP.Kazo site (`kazoweb.<appId>`).
+  `syncCursors`, `syncRecordState`, `servedFiles` (version 6, served addresses of installed
+  apps, ADR 0274), and one database per ASP.Kazo site (`kazoweb.<appId>`).
 - File content: split into chunks of at most 256 KiB by default
   (`FileContentStoragePolicy.DefaultMaxChunkSizeBytes`), addressed by the SHA-256 of
   the whole file and the chunk number; two identical files share their content, but
@@ -86,7 +87,17 @@ implementations, in the host's composition.
   a Web Lock keeps it to one tab, the others wait. A damaged chunk is kept as it is
   and named in the log, like `fsck`; if the conversion fails the OS does not start
   and the screen offers to retry.
-- A tab of an older release still open when version 5 opens the database closes its
+- Files of installed apps (ADR 0274): `servedFiles` maps each address
+  `_content/<assembly>/<path>` to the content of the file in the app's folder:
+  `{url, contentHash, length, contentType, appId, chunkSize}`, indexes `contentHash` and
+  `appId`. `IndexedDbServedFiles` writes a row only when the file's `contentHash` is the
+  manifest's SHA-256 and all its chunks are there, in the same transaction; no byte is
+  read or copied. The service worker (`installedAppAssets.sw.js`) opens `kazoos` without
+  a version, reads the row, then streams the chunks, 8 per transaction, checking their
+  `chunkHash`; a `Range` request gets `206` with only the chunks it covers. The cleanup
+  pass and the immediate reclaim keep a content a row still points at. `servedFiles` is
+  not backed up: publishing rebuilds it.
+- A tab of an older release still open when a newer version opens the database closes its
   connection; its next operation fails with a version error and the person reloads.
 
 ## Recovery

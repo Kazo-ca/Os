@@ -411,7 +411,7 @@ internal sealed class IndexedDbFileContentRepository : IAsyncDisposable
     /// <remarks>
     /// The pass runs in JavaScript (<c>runOrphanPass</c>): discovery
     /// (<c>findUnreferencedOlderThan</c>) reads the keys of <c>fsContent</c>, counts the references of
-    /// each content hash in <c>fsEntries</c>, and reads only the first chunk of unreferenced hashes
+    /// each content hash in <c>fsEntries</c> and <c>servedFiles</c> (ADR 0274 §4), and reads only the first chunk of unreferenced hashes
     /// (its <c>createdUtcMs</c> is the content's age), so no file content crosses the interop. The
     /// delete transaction checks again, atomically, that each hash is unreferenced and still old. A
     /// hidden page, or a pass already running in another tab, skips the pass.
@@ -436,7 +436,9 @@ internal sealed class IndexedDbFileContentRepository : IAsyncDisposable
                 CompareProperty: CreatedProperty,
                 ExpectedValue: cutoffUtcMs,
                 ReferenceObjectStoreName: KazoOsIndexedDbSchema.FileSystemEntryStoreName,
-                ReferenceIndexName: "contentHash"),
+                ReferenceIndexName: "contentHash",
+                ExtraReferenceObjectStoreName: KazoOsIndexedDbSchema.ServedFileStoreName,
+                ExtraReferenceIndexName: "contentHash"),
             new IndexedDbOperation(
                 "deleteAllByIndexIfUnreferenced",
                 KazoOsIndexedDbSchema.FileContentStoreName,
@@ -444,7 +446,9 @@ internal sealed class IndexedDbFileContentRepository : IAsyncDisposable
                 CompareProperty: CreatedProperty,
                 ExpectedValue: cutoffUtcMs,
                 ReferenceObjectStoreName: KazoOsIndexedDbSchema.FileSystemEntryStoreName,
-                ReferenceIndexName: "contentHash"),
+                ReferenceIndexName: "contentHash",
+                ExtraReferenceObjectStoreName: KazoOsIndexedDbSchema.ServedFileStoreName,
+                ExtraReferenceIndexName: "contentHash"),
             cancellationToken).ConfigureAwait(false);
         return ReadPass(pass);
     }

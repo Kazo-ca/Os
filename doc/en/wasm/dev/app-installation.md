@@ -326,9 +326,12 @@ approval:
   `lib/<culture>/<assembly>.resources.dll` (not the SDK's)
   ([ADR 0222](adr/0222-installed-app-satellite-assemblies.md)).
 - **`wwwroot/` resources** ([ADR 0206](adr/0206-serve-installed-app-assets.md)):
-  at the app's first launch in the session, each declared resource is read
-  through `AppAssetStore` (hash checked) and copied into the
-  `kazoos-installed-apps` cache; the service worker serves it at
+  at the app's first launch in the session, the OS writes for each declared
+  resource a `servedFiles` row pointing at the content of the file in the
+  app's folder, without reading or copying it: the file's `contentHash` must
+  be the manifest's SHA-256, otherwise the address is not served and the app
+  is marked damaged ([ADR 0274](adr/0274-single-copy-of-app-files.md)); the
+  service worker serves it at
   `_content/<assembly>/<path>`, the same address as an app compiled into the
   OS (tags, `import()`, CSS, Web Workers and their `importScripts`, and an
   HTML page loaded in an iframe, [ADR 0243](adr/0243-serve-installed-app-pages.md)). On
@@ -339,11 +342,11 @@ approval:
   activates the worker of that release, and the tabs of the older one restart
   onto it ([ADR 0237](adr/0237-activate-the-worker-of-a-newer-page.md));
   otherwise (offline, install too long) the files are not served (line in
-  `/var/log/syslog`) and the OS asks again at the next launch. Cleaning the cache, shared by every tab,
+  `/var/log/syslog`) and the OS asks again at the next launch. Cleaning the rows, shared by every tab,
   also keeps the files of apps another tab installed on disk
   ([ADR 0225](adr/0225-serve-installed-app-files-to-every-page.md)).
 - **Scoped CSS** ([ADR 0221](adr/0221-pack-all-static-web-assets-of-an-app.md)):
-  once `<assembly>.bundle.scp.css` is copied into the cache, the OS adds a
+  once `<assembly>.bundle.scp.css` is served, the OS adds a
   `<link rel="stylesheet">` to it to the page, once per session, as the host's
   `styles.css` sheet does for a compiled app.
 - **Translations** ([ADR 0222](adr/0222-installed-app-satellite-assemblies.md)):

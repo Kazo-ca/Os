@@ -168,6 +168,15 @@ Only #537 is coded; the `storage/base` series is still to build.
   Measured with .NET allocations and the in-memory chunk store (not in the
   browser): reading 52.5 MiB allocates 17 MiB instead of 53 MiB, a seek and a
   4 KiB read 1 MiB. No public API change.
+- **Work item 4 done on 2026-11-15** (branch `storage/4-single-app-copy`, PR
+  to `storage/base`): `servedFiles` store (database at **version 6**, version 5
+  being work item 1's), `IndexedDbServedFiles`, publishing with no read or
+  copy, worker reading the `fsContent` chunks (stream, `Range`, `chunkHash`
+  checked), end of the `kazoos-installed-apps` cache, `servedFiles` counted as a
+  reference by the cleanup, left out of backups. `kazoos-v5.json` dump added
+  (`FIXTURE_VERSION` in `produce-fixture-kazoos.js`). Not measured in the
+  browser: the start of a Craft app is left to work item 7. No automated test
+  for Ctrl+F5 or two tabs. Next: work item 5.
 
 ## Questions asked, answer to confirm
 

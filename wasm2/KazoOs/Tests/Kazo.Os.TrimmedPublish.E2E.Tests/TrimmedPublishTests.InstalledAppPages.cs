@@ -10,15 +10,15 @@ namespace Kazo.Os.TrimmedPublish.E2E.Tests;
 /// </summary>
 public sealed partial class TrimmedPublishTests
 {
-    /// <summary>The page the tests copy into the installed apps' cache, as the OS copies an app's files.</summary>
+    /// <summary>The page the tests serve as the OS serves an installed app's file (ADR 0274).</summary>
     private const string InstalledPageHtml =
         "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><title>Installed app page</title></head>"
         + "<body><p id=\"installed-page\">installed page</p></body></html>";
 
     /// <summary>
-    /// Copies an HTML page into the installed apps' cache, opens it in an iframe with a query, and
-    /// returns what the frame shows: its paragraph, its query and whether it is cross-origin isolated,
-    /// or why it failed. The page is removed from the cache afterwards.
+    /// Serves an HTML page from the file system's content (<see cref="ServedFileHelpersScript"/>), opens
+    /// it in an iframe with a query, and returns what the frame shows: its paragraph, its query and
+    /// whether it is cross-origin isolated, or why it failed. The page is unserved afterwards.
     /// </summary>
     private const string FrameInstalledPageScript =
         """
@@ -26,7 +26,7 @@ public sealed partial class TrimmedPublishTests
             const assets = await import('./_content/Kazo.Os.Infrastructure.Browser/installedAppAssets.js');
             if (!await assets.prepare(10000)) return { error: 'no service worker' };
             const address = content + 'host/index.html';
-            await assets.put(address, Array.from(new TextEncoder().encode(html)), 'text/html');
+            await window.kazoTestServedFiles.put(address, html, 'text/html');
             const frame = document.createElement('iframe');
             try {
                 await new Promise((resolve, reject) => {
@@ -47,14 +47,14 @@ public sealed partial class TrimmedPublishTests
                 return { error: String(error) };
             } finally {
                 frame.remove();
-                await assets.remove(address);
+                await window.kazoTestServedFiles.remove(address);
             }
         }
         """;
 
     /// <summary>
     /// The published service worker (on the address where index.html registers it) answers the page
-    /// load of an installed app's file from the installed apps' cache, online and offline, with the
+    /// load of an installed app's file from the file system's content, online and offline, with the
     /// cross-origin isolation headers of ADR 0131 when the OS page has them.
     /// </summary>
     [TrimmedPublishFact]
@@ -80,13 +80,13 @@ public sealed partial class TrimmedPublishTests
             AssertInstalledPage(online, pageIsolated);
             Log($"online: the iframe showed the installed app's page with {online.Search} (crossOriginIsolated={online.Isolated}).");
 
-            // Offline the page comes from the installed apps' cache all the same.
+            // Offline the page comes from the file system's content all the same.
             await session.Context.SetOfflineAsync(true);
             try
             {
                 FramedPage offline = await FrameInstalledPageAsync(page);
                 AssertInstalledPage(offline, pageIsolated);
-                Log("offline: the iframe showed the installed app's page from the cache.");
+                Log("offline: the iframe showed the installed app's page from the file system's content.");
             }
             finally
             {
@@ -131,6 +131,7 @@ public sealed partial class TrimmedPublishTests
 
     private static async Task<FramedPage> FrameInstalledPageAsync(IPage page)
     {
+        await page.EvaluateAsync(ServedFileHelpersScript);
         FramedPage framed = await page.EvaluateAsync<FramedPage>(FrameInstalledPageScript, new { content = ProbeContent, html = InstalledPageHtml });
         Assert.True(string.IsNullOrEmpty(framed.Error), $"the installed app's page could not be framed: {framed.Error}");
         return framed;

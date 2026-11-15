@@ -99,7 +99,7 @@ public static partial class KazoOsBrowserHostExtensions
             OperatingSystem.IsBrowser()
                 ? new InstalledAppAssetPublisher(
                     installedApps,
-                    new BrowserInstalledAppAssetCache(),
+                    new BrowserInstalledAppAssetCache(provider.GetRequiredService<Microsoft.JSInterop.IJSRuntime>()),
                     () => provider.GetRequiredService<AppAssetStore>(),
                     provider.GetService<Microsoft.Extensions.Logging.ILogger<InstalledAppAssetPublisher>>())
                 : null)

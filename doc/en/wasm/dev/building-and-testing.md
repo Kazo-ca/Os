@@ -392,8 +392,8 @@ would create a fresh database at the current version), then starts the current O
   `settings` store was picked up by the migration to files, ADR 0044), the
   file named by `expectations.setting.path` for later dumps
   (`~/.config/kazoos/appearance.config` for v4);
-- the database is `kazoos`, at version 5 with `serverConnection`,
-  `syncCursors` and `syncRecordState`;
+- the database is `kazoos`, at version 6 with `serverConnection`,
+  `syncCursors`, `syncRecordState` and `servedFiles` (ADR 0274);
 - the `hackeros` database is gone and no `kazoos` record holds an old name
   (ADR 0230);
 - every `fsContent` chunk is binary and matches its own `chunkHash`, and
@@ -411,6 +411,7 @@ administrator present).
 | `hackeros-v2.json` | 2 | `e46e897` (last commit at v2, before `7a20401`) | OS actually started |
 | `hackeros-v3.json` | 3 | `7a20401` (only commit at v3, before `2481d67`) | OS actually started |
 | `kazoos-v4.json` | 4 | `a7e8d7a` (`storage/base` before ADR 0272) | Trimmed Release publish of the Ecosystem host actually started (2026-11-15): the file was written with `echo` in the Terminal, the accent chosen in Settings |
+| `kazoos-v5.json` | 5 | `b5368eed` (`storage/base` before ADR 0274) | Same method (2026-11-15); the `fsContent` chunks are bytes (ADR 0272), dumped as `{ "$type": "Uint8Array", "base64": … }` and recreated as `Uint8Array` by the test |
 
 Each dump contains `databaseName`, `version`, `producedFrom` (commit, method,
 host, date), `expectations` (administrator identifiers, file path and content,
@@ -441,7 +442,7 @@ key path; none for now).
    chooses the Cyan accent in Settings, then dumps all the stores and refuses a
    dump whose version is not the expected one.
    For a build after the rename (version 4 on), serve its trimmed Ecosystem
-   publish and run `node Tests/fixtures/indexeddb/produce-fixture-kazoos.js <url> <commit> Tests/fixtures/indexeddb/kazoos-v<version>.json <screenshot-prefix>`:
+   publish and run `FIXTURE_VERSION=<version> node Tests/fixtures/indexeddb/produce-fixture-kazoos.js <url> <commit> Tests/fixtures/indexeddb/kazoos-v<version>.json <screenshot-prefix>`:
    it writes the file with `echo` in the Terminal and records the path of the
    user's appearance file in `expectations.setting.path`.
 5. Run `IndexedDbUpgradeFixtureTests` and

@@ -9,6 +9,7 @@ Proposed on 2026-11-15, `storage/base` series
 option A of the storage analysis (§7, decision 2): the file system stays the
 only source, the service worker serves `_content/…` from the file store and
 the copy in Cache Storage goes away. This ADR says how. No open question.
+Built on 2026-11-15 by work item 4 (see "Implementation" below).
 
 - **Supersedes:** in [ADR 0206](0206-serve-installed-app-assets.md), the copy
   of the files into the `kazoos-installed-apps` cache; in
@@ -136,6 +137,35 @@ and 0237); otherwise it tries again at the next launch.
 - The service worker gains code that reads IndexedDB; it is shared by the two
   service-worker files of the host, like `installedAppAssets.sw.js`.
 
+## Implementation
+
+Work item 4 of the series, on 2026-11-15. What specifies or departs from the
+text above:
+
+- **Database at version 6**, not 5: version 5 shipped on its own with
+  [ADR 0272](0272-binary-file-content.md) (work item 1). Step 6 creates
+  `servedFiles`; a dump of version 5 (`kazoos-v5.json`) tests the upgrade.
+- **Row:** `{ url, contentHash, length, contentType, appId, chunkSize }`.
+  `chunkSize` is the chunk size the content was written with: the worker
+  derives from it the chunks a `Range` covers.
+- **Writing a row** (`IndexedDbServedFiles`): in a transaction that first
+  checks every chunk of the content is there (`assertCount`, code
+  `servedfiles.content-missing`); a content reclaimed in the meantime leaves
+  the address unserved instead of a broken row. A refused address (file
+  missing, never written, other hash, missing chunks) loses its previous row.
+- **Other hash:** the app is also marked damaged
+  (`AppAssetStore.ReportDamaged`), as when a file read does not match its
+  manifest (ADR 0098 §5).
+- **References:** the cleanup pass and the immediate reclaim of a system
+  rewrite count `servedFiles` as well as `fsEntries`
+  (`extraReferenceObjectStoreName`).
+- **Backup:** `servedFiles` is not backed up (publishing rebuilds it); a full
+  replace clears it with the rest. The schema version of a backup stays 4.
+- **Service worker:** checks the `chunkHash` of every chunk it reads
+  (ADR 0272 §4), reads 8 chunks per transaction, answers `416` to a `Range` it
+  cannot satisfy and closes its connection when the stream ends. `prepare()`
+  deletes the old `kazoos-installed-apps` cache.
+
 ## Rejected options
 
 - **B. Served files only in Cache Storage**, without extracting them into the
@@ -149,16 +179,23 @@ and 0237); otherwise it tries again at the next launch.
 
 ## Tasks
 
-- [ ] `servedFiles` store (database at version 5), repository, tests.
-- [ ] `InstalledAppAssetPublisher`: rows instead of copies, hash comparison,
+- [x] `servedFiles` store (database at version 6, see "Implementation"),
+  `IndexedDbServedFiles`, tests.
+- [x] `InstalledAppAssetPublisher`: rows instead of copies, hash comparison,
   housekeeping of the rows.
-- [ ] Chunk reader of the service worker (stream, `Range`), shared
+- [x] Chunk reader of the service worker (stream, `Range`), shared
   by the two service-worker files.
-- [ ] The cleanup pass counts `servedFiles` as a reference.
-- [ ] Removal of the `kazoos-installed-apps` cache and of
+- [x] The cleanup pass counts `servedFiles` as a reference.
+- [x] Removal of the `kazoos-installed-apps` cache and of
   `IInstalledAppAssetCache.PutAsync`.
-- [ ] E2E tests: app installed in the published OS (`TrimmedPublish.E2E`),
-  page loaded with Ctrl+F5, app in an iframe, worker of an app, two tabs.
-- [ ] Measurement of the start of a Craft app before and after.
-- [ ] Docs (FR and EN): `browser-infrastructure.md`, app packages, memory,
+- [x] E2E tests: app installed in the published OS (`TrimmedPublish.E2E`),
+  page in an iframe online and offline, worker of an app and its
+  `importScripts`, `Range` request, app launched again after the OS restarts.
+  A page loaded with Ctrl+F5 and two tabs have no automated test: the worker
+  taking control (ADR 0225, 0237) does not change.
+- [ ] Measurement of the start of a Craft app before and after: **not done in
+  the browser**. What is checked: publishing reads no byte of the files any
+  more (`InstalledAppAssetPublisherTests`, 0 reads instead of the app's size)
+  and writes one row per file. Left to work item 7 (final measurements).
+- [x] Docs (FR and EN): `browser-infrastructure.md`, app packages, memory,
   `features.md`, change entry.
