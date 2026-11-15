@@ -28,6 +28,14 @@ namespace Kazo.Os.Platform.Core.Storage;
 /// writes of a non-administrator with <c>ENOSPC</c>; the system and the administrator keep writing
 /// until the browser's real limit.
 /// </para>
+/// <para>
+/// <b>Reclaiming space (ADR 0273, Os#537).</b> With a <see cref="Reclaimer"/>, the orphan content
+/// of rewritten and deleted files is collected in the background: once the desktop is shown and
+/// after the trash is emptied (<see cref="RequestReclaim"/>), and every <see cref="ReclaimInterval"/>
+/// after <see cref="Start"/>. When the storage becomes low, the monitor first reclaims with the
+/// short low-space retention and measures again: the warning is posted only if the storage is still
+/// low.
+/// </para>
 /// </remarks>
 public sealed class StorageSpaceMonitor : IStorageSpaceGuard, IAsyncDisposable
 {
@@ -43,6 +51,15 @@ public sealed class StorageSpaceMonitor : IStorageSpaceGuard, IAsyncDisposable
     /// <summary>Shortest interval between two measures asked by <see cref="RequestRefresh"/>.</summary>
     public static readonly TimeSpan MinimumRefreshSpacing = TimeSpan.FromSeconds(5);
 
+    /// <summary>Interval between two background reclaims while the OS runs.</summary>
+    public static readonly TimeSpan ReclaimInterval = TimeSpan.FromHours(1);
+
+    /// <summary>
+    /// Quiet time <see cref="RequestReclaim"/> waits for, so a burst of requests (every element of
+    /// an emptied trash) runs one reclaim.
+    /// </summary>
+    public static readonly TimeSpan ReclaimRequestDelay = TimeSpan.FromSeconds(2);
+
     private readonly IStorageCapacityProbe _probe;
     private readonly INotificationQueue? _notifications;
     private readonly Func<AuthenticatedPrincipal?> _currentUser;
@@ -53,6 +70,7 @@ public sealed class StorageSpaceMonitor : IStorageSpaceGuard, IAsyncDisposable
     private Task? _loop;
     private long _lastRefreshTicks = long.MinValue;
     private LocalUserId? _warnedUser;
+    private int _reclaimRequested;
     private volatile bool _isRootReserveReached;
     private volatile bool _isLowSpace;
     private StorageCapacity? _last;
@@ -81,6 +99,12 @@ public sealed class StorageSpaceMonitor : IStorageSpaceGuard, IAsyncDisposable
         _time = time ?? TimeProvider.System;
     }
 
+    /// <summary>
+    /// Gets the store that gives back the space of orphan data, or <see langword="null"/> when the
+    /// host has none (nothing is reclaimed).
+    /// </summary>
+    public IStorageReclaimer? Reclaimer { get; init; }
+
     /// <inheritdoc />
     public bool IsRootReserveReached => _isRootReserveReached;
 
@@ -101,6 +125,41 @@ public sealed class StorageSpaceMonitor : IStorageSpaceGuard, IAsyncDisposable
         _loop = RunAsync(_stopping.Token);
     }
 
+    /// <summary>
+    /// Asks for a background reclaim soon (<see cref="ReclaimRequestDelay"/>), without waiting:
+    /// called once the desktop is shown and after the trash is emptied (ADR 0273 section 4). Requests
+    /// made while one is pending join it. Does nothing without a <see cref="Reclaimer"/>.
+    /// </summary>
+    public void RequestReclaim()
+    {
+        if (Reclaimer is null || Volatile.Read(ref _disposed) == 1
+            || Interlocked.Exchange(ref _reclaimRequested, 1) == 1)
+        {
+            return;
+        }
+
+        _ = RunRequestedReclaimAsync();
+    }
+
+    private async Task RunRequestedReclaimAsync()
+    {
+        try
+        {
+            await Task.Delay(ReclaimRequestDelay, _time, _stopping.Token).ConfigureAwait(false);
+            Interlocked.Exchange(ref _reclaimRequested, 0);
+            await ReclaimQuietlyAsync(_isLowSpace, _stopping.Token).ConfigureAwait(false);
+            RequestRefresh();
+        }
+        catch (Exception exception) when (exception is OperationCanceledException or ObjectDisposedException)
+        {
+            // Stopping.
+        }
+        finally
+        {
+            Interlocked.Exchange(ref _reclaimRequested, 0);
+        }
+    }
+
     /// <inheritdoc />
     public void RequestRefresh()
     {
@@ -118,9 +177,25 @@ public sealed class StorageSpaceMonitor : IStorageSpaceGuard, IAsyncDisposable
     /// <param name="cancellationToken">Cancels the measure.</param>
     public async Task RefreshAsync(CancellationToken cancellationToken = default)
     {
+        if (await MeasureAsync(warn: Reclaimer is null, cancellationToken).ConfigureAwait(false))
+        {
+            // The storage just became low: give back the orphan content first, then measure again
+            // and warn only if that was not enough.
+            await ReclaimQuietlyAsync(lowSpace: true, cancellationToken).ConfigureAwait(false);
+            await MeasureAsync(warn: true, cancellationToken).ConfigureAwait(false);
+        }
+    }
+
+    /// <summary>
+    /// Measures, updates the state and, when <paramref name="warn"/>, posts the warning if low.
+    /// Returns whether the storage became low with this measure while the warning was held back.
+    /// </summary>
+    private async Task<bool> MeasureAsync(bool warn, CancellationToken cancellationToken)
+    {
         await _refreshGate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
+            bool wasLow = _isLowSpace;
             Interlocked.Exchange(ref _lastRefreshTicks, _time.GetTimestamp());
             StorageCapacity? capacity = await _probe.GetCapacityAsync(cancellationToken).ConfigureAwait(false);
             _last = capacity;
@@ -129,15 +204,23 @@ public sealed class StorageSpaceMonitor : IStorageSpaceGuard, IAsyncDisposable
                 // Unknown quota: nothing is reserved, only the browser's own limit applies.
                 _isRootReserveReached = false;
                 _isLowSpace = false;
-                return;
+                return false;
             }
 
             _isRootReserveReached = StorageSpacePolicy.IsInRootReserve(measured);
             _isLowSpace = StorageSpacePolicy.IsLow(measured);
-            if (_isLowSpace)
+            if (!_isLowSpace)
+            {
+                return false;
+            }
+
+            if (warn || wasLow)
             {
                 Warn(measured);
+                return false;
             }
+
+            return true;
         }
         finally
         {
@@ -174,10 +257,43 @@ public sealed class StorageSpaceMonitor : IStorageSpaceGuard, IAsyncDisposable
     private async Task RunAsync(CancellationToken cancellationToken)
     {
         await RefreshQuietlyAsync().ConfigureAwait(false);
+        long started = _time.GetTimestamp();
+        TimeSpan nextReclaim = ReclaimInterval;
         using PeriodicTimer timer = new(PollInterval, _time);
         while (await timer.WaitForNextTickAsync(cancellationToken).ConfigureAwait(false))
         {
+            if (Reclaimer is not null && _time.GetElapsedTime(started) >= nextReclaim)
+            {
+                nextReclaim = _time.GetElapsedTime(started) + ReclaimInterval;
+                await ReclaimQuietlyAsync(_isLowSpace, cancellationToken).ConfigureAwait(false);
+            }
+
             await RefreshQuietlyAsync().ConfigureAwait(false);
+        }
+    }
+
+    /// <summary>
+    /// Runs the reclaimer; a failure (the store is closing, a transaction aborted) is left for the
+    /// next run: reclaiming space is never worth failing a measure or the boot.
+    /// </summary>
+    private async Task ReclaimQuietlyAsync(bool lowSpace, CancellationToken cancellationToken)
+    {
+        if (Reclaimer is not { } reclaimer)
+        {
+            return;
+        }
+
+        try
+        {
+            await reclaimer.ReclaimAsync(lowSpace, cancellationToken).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception exception) when (exception is not OutOfMemoryException)
+        {
+            // Swallowed on purpose (see summary): the orphans stay until the next run.
         }
     }
 

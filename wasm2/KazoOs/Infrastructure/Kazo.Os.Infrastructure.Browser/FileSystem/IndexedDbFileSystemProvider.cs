@@ -261,6 +261,50 @@ public sealed class IndexedDbFileSystemProvider : IFileSystemProvider, IFileSyst
         }
     }
 
+    /// <summary>
+    /// Writes the content, then points the entry at it. When the entry transaction finds chunks
+    /// missing (an orphan pass removed reused content between the two, ADR 0273 section 3), the
+    /// content is written again and published once more; a second miss is an I/O error.
+    /// </summary>
+    private async ValueTask<(IndexedDbFileContentWrite Persisted, DateTimeOffset Now)> PublishContentAsync(
+        IndexedDbFileSystemEntryRecord entry,
+        IFileSystemContentSource content,
+        bool systemRewrite,
+        CancellationToken cancellationToken)
+    {
+        for (int attempt = 1; ; attempt++)
+        {
+            IndexedDbFileContentWrite persisted;
+            await using (Stream source = await content.OpenReadAsync(cancellationToken).ConfigureAwait(false))
+            {
+                persisted = await _contentRepository.WriteAsync(source, cancellationToken).ConfigureAwait(false);
+            }
+
+            DateTimeOffset now = _timeProvider.GetUtcNow();
+            try
+            {
+                await _writer.WriteAsync(
+                    entry,
+                    persisted.ContentHash,
+                    persisted.Length,
+                    persisted.ChunkCount,
+                    content.Descriptor,
+                    now,
+                    systemRewrite,
+                    cancellationToken).ConfigureAwait(false);
+                return (persisted, now);
+            }
+            catch (JSException exception) when (
+                exception.Message.Contains(IndexedDbFileSystemMutationPlanner.ContentMissingFailureCode, StringComparison.Ordinal))
+            {
+                if (attempt >= 2)
+                {
+                    throw new InvalidDataException("File content chunks went missing before the entry was published.", exception);
+                }
+            }
+        }
+    }
+
     /// <inheritdoc />
     public async ValueTask<FileSystemMutationResult> WriteAsync(
         FileSystemWriteRequest request,
@@ -295,17 +339,9 @@ public sealed class IndexedDbFileSystemProvider : IFileSystemProvider, IFileSyst
                 return MutationFailure(FileSystemOperation.Write, FileSystemErrorCode.RevisionConflict, request.Path);
             }
 
-            await using Stream source = await content.OpenReadAsync(cancellationToken).ConfigureAwait(false);
-            IndexedDbFileContentWrite persisted =
-                await _contentRepository.WriteAsync(source, cancellationToken).ConfigureAwait(false);
-            DateTimeOffset now = _timeProvider.GetUtcNow();
-            await _writer.WriteAsync(
-                entry,
-                persisted.ContentHash,
-                persisted.Length,
-                content.Descriptor,
-                now,
-                cancellationToken).ConfigureAwait(false);
+            bool systemRewrite = context.OperationContext.EffectiveAuthority == AppAuthority.System;
+            (IndexedDbFileContentWrite persisted, DateTimeOffset now) =
+                await PublishContentAsync(entry, content, systemRewrite, cancellationToken).ConfigureAwait(false);
             IndexedDbFileSystemEntryRecord updated = entry with
             {
                 ContentModifiedUtcMs = now.ToUnixTimeMilliseconds(),

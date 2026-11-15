@@ -294,6 +294,9 @@ Cette section liste ce qui est publié dans la branche `main` et en ligne.
   « Redémarrer pour mettre à jour » l'ouvre dans tous les onglets.
   ([ADR 0174](dev/adr/0174-announce-a-new-version-to-open-sessions.md),
   [ADR 0223](dev/adr/0223-restart-onto-the-new-version.md))
+- **Aperçu de partage** : un lien vers `os.kazo.ca` partagé sur Facebook,
+  LinkedIn ou X montre l'image de Kazo OS, son titre et sa description.
+  ([`github-pages-deployment.md`](dev/github-pages-deployment.md#aperçu-de-partage-facebook-linkedin-x))
 - **Numéro de build et état de la version sur l'écran de connexion** : à côté
   de « Kazo OS 3.3.3 », le numéro de build (nombre de commits, le même pour le
   site, la Release et le serveur) et une pastille « À jour », « Obsolète : … »
@@ -472,6 +475,7 @@ dans `main`, le lien mène à sa PR.
 | Espace récupéré après une suppression | L'espace d'un fichier réécrit ou supprimé revient en un jour au plus, en quelques minutes quand l'espace manque, au lieu de rester occupé. | [0273](dev/adr/0273-short-orphan-content-retention.md) | [#537](https://github.com/Kazo-ca/Os/issues/537) |
 | Une seule copie des fichiers d'une app installée | Les fichiers d'une app ne sont plus recopiés dans un cache à chaque session : une app prend environ deux fois moins d'espace et son premier lancement ne recopie plus rien. Série `storage/base`. | [0274](dev/adr/0274-single-copy-of-app-files.md) | [plan](dev/plans/browser-storage-series-plan.md) |
 | Glisser des fichiers vers une app | Contrat public du SDK pour recevoir des fichiers glissés depuis l'explorateur ou le bureau. | À écrire | [#380](https://github.com/Kazo-ca/Os/issues/380) |
+| Récupérer l'espace des fichiers réécrits ou supprimés | L'ancien contenu d'un fichier réécrit ou supprimé est effacé après 1 jour, ou après 5 minutes quand l'espace est faible, au lieu de rester pour toujours dans le navigateur. | [0273](dev/adr/0273-short-orphan-content-retention.md) | [#537](https://github.com/Kazo-ca/Os/issues/537) |
 
 ### Kazo OS Store
 

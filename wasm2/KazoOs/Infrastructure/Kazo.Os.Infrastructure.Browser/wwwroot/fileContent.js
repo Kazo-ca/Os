@@ -88,7 +88,8 @@ export async function sha256(view) {
 
 /**
  * Stores one batch of chunks of a file (one transaction), adding only the chunks that are not
- * already stored at their key: content is immutable and addressed by the hash of the file.
+ * already stored at their key: content is immutable and addressed by the hash of the file. An
+ * existing chunk 0 gets the new creation time (ADR 0273 §2).
  * @param {string} databaseName The OS database.
  * @param {number} version Its version.
  * @param {string} contentHash SHA-256 of the whole file.
@@ -122,7 +123,18 @@ export async function writeChunks(databaseName, version, contentHash, firstIndex
     try {
         for (let index = 0; index < chunks.length; index++) {
             const chunkIndex = firstIndex + index;
-            if (await requestResult(store.getKey([contentHash, chunkIndex])) !== undefined) {
+            if (chunkIndex === 0) {
+                // Chunk 0 carries the age of the content (ADR 0273 §2): when the same content is
+                // already stored (maybe as an orphan), it gets the new creation time, so the orphan
+                // pass, which checks the age again in its delete transaction, keeps it.
+                const current = await requestResult(store.get([contentHash, 0]));
+                if (current !== undefined) {
+                    if (current.createdUtcMs !== createdUtcMs) {
+                        await requestResult(store.put({ ...current, createdUtcMs }));
+                    }
+                    continue;
+                }
+            } else if (await requestResult(store.getKey([contentHash, chunkIndex])) !== undefined) {
                 continue;
             }
 

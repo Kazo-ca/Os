@@ -7,6 +7,11 @@ number is taken: this document describes what the OS keeps in the browser, what 
 costs, and the ways to do better. Each avenue that is kept will need its ADR before the
 code. Benoit's decisions are in §7.
 
+The findings describe version 3.3.4. Since then, issue #537 has wired the collection of
+orphan contents (findings C1 to C3 and C10), with the short retention of
+[ADR 0273](../adr/0273-short-orphan-content-retention.md); the current state is in
+[`browser-infrastructure.md`](../browser-infrastructure.md).
+
 ## 1. Summary
 
 1. **Space is never reclaimed.** The content of a deleted or rewritten file stays in
@@ -18,10 +23,12 @@ code. Benoit's decisions are in §7.
 3. **The write and read path can be about 8 times and 5 times faster** (52 MiB:
    3.4 s → 0.4 s to write, 1.9 s → 0.36 s to read) with binary records, bytes passed
    without JSON, and the browser's SHA-256.
-4. **This does not explain the slowness of issue [#520](https://github.com/Kazo-ca/Os/issues/520).**
-   The storage layer accounts for about 3.4 s of the 43 s measured to save 52 MB. The
-   rest is elsewhere and is not located yet: it must be measured in the real OS before
-   choosing a fix.
+4. **This is indeed the cause of the slowness of issue [#520](https://github.com/Kazo-ca/Os/issues/520).**
+   Profiling in the real OS ([#538](https://github.com/Kazo-ca/Os/issues/538), delivered
+   on 2026-11-15) shows that in a Release publish, a 52.5 MiB save takes 4.1 to 4.9 s,
+   of which 96 % is in the content repository. The 43 s of the issue came from a Debug
+   host. Binary content (avenue 2) therefore fixes #520. The first version of this
+   analysis said the opposite, wrongly (see §3.4).
 5. **An installed app is kept in three copies**: the current version and the previous
    one in the file system (as base64), plus a copy of the served files in Cache
    Storage. A 64 MiB app takes about 236 MiB.
@@ -59,7 +66,8 @@ version and the previous one.
 
 **Space policy**: low storage under 64 MiB or 10 % free, 5 % reserve for root (at most
 256 MiB), orphan content retention of 30 days
-(ADR [0099](../adr/0099-os-backup-and-low-storage.md)).
+(ADR [0094](../adr/0094-deferred-decisions-status-and-maximum-file-size.md) for the retention,
+[0099](../adr/0099-os-backup-and-low-storage.md) for low storage).
 
 ## 3. Measurements
 
@@ -107,17 +115,26 @@ decoding and hashing 0.58 s, SDK copies 0.04 s.
 
 The issue measures, for a 52.5 MB `.psd`: 43.4 s to save, 40.0 s to open (2.8 s in
 PhotoCraft itself), and memory going from 1391 to 2588 MiB. The storage layer, measured
-alone, takes 3.4 s and 1.9 s. **About 90 % of the time is therefore elsewhere**: in the
-iframe → .NET transfer, in the SDK copies under memory pressure, or in something else.
+alone in Release, takes 3.4 s and 1.9 s.
 
-Two leads for the search:
+**Correction of 2026-11-15.** The first version of this analysis compared these two
+sets of numbers and concluded that about 90 % of the time was elsewhere than in
+storage. That was wrong: the 43 s of the issue had been measured on a Debug host, and
+the benchmark in Release. The profiling of issue
+[#538](https://github.com/Kazo-ca/Os/issues/538), done in the real OS in a Release
+publish, gives:
 
-- `/proc/diskstats` already gives the time spent in each IndexedDB transaction;
-  comparing it to the total time of a save tells at once whether the time is in storage
-  or before it;
-- on the published site, `head -c 1048576 /dev/urandom > a.bin` in the terminal had not
-  finished after 4 min 30. The terminal path therefore has its own problem, unrelated
-  to IndexedDB.
+- a 52.5 MiB save takes 4.1 to 4.9 s, close to the 3.4 s of the benchmark;
+- 96 % of that time is in the content repository (hashing, base64, JSON, IndexedDB);
+- the first save raises memory by about 780 MiB.
+
+Storage is therefore indeed the cause of #520, binary content (avenue 2) fixes it, and
+streamed write (avenue 4) stays justified by memory. The full report is
+[`large-file-save-profile.md`](large-file-save-profile.md).
+
+One observation stays apart: on the published site,
+`head -c 1048576 /dev/urandom > a.bin` in the terminal had not finished after
+4 min 30. The terminal path therefore has its own problem, unrelated to IndexedDB.
 
 ## 4. Findings
 
@@ -159,6 +176,7 @@ Two leads for the search:
    existing records (or reading both shapes), backup format, readers that read
    `dataBase64` directly.
 3. **Profile issue #520 in the real OS**, layer by layer, before fixing it.
+   Done on 2026-11-15 (#538, see §3.4): the time is in the content repository.
 4. **Partial read and streamed write.** Read a range of chunks without loading the
    file, write chunk by chunk without keeping the list. Lowers the memory peak; needs a
    new look at hash verification (per chunk instead of on the whole file).
@@ -191,7 +209,7 @@ Two leads for the search:
 | Order | Avenue | Why there |
 | --- | --- | --- |
 | 1 | 1. Reclaim space | Small, no format risk, fixes a real leak in production. |
-| 2 | 3. Profile #520 | Says where to put the effort next. |
+| 2 | 3. Profile #520 | Says where to put the effort next. Done: binary content fixes #520. |
 | 3 | 2. Binary content | The largest measured gain; changes the format, so early. |
 | 4 | 10. ADR 0250 | Already decided; protects the data. |
 | 5 | 6. One copy of app files | Large space gain for apps of 30 to 160 MB. |
@@ -216,7 +234,7 @@ recommendations.
    the file store, and the copy in Cache Storage goes away.
 3. **How long to keep an orphan content.** Short, from a few hours to a day, and at
    once when space is low. The exact value is set by the ADR that replaces the 30-day
-   retention of ADR 0099.
+   retention of ADR 0094.
 
 ## 8. Limits
 
@@ -225,13 +243,15 @@ recommendations.
 - Random bytes are the worst case for compression and say nothing about deduplication.
 - The .NET benchmark reproduces the content repository, not the whole OS: no metadata,
   no permissions, no memory pressure.
-- The time of a save in the real OS could not be measured end to end (see §3.4).
+- The time of a save in the real OS was not measured by this analysis; it was
+  measured afterwards by issue #538 (see §3.4).
 
 ## 9. Links
 
 - [`browser-infrastructure.md`](../browser-infrastructure.md)
 - ADR [0015](../adr/0015-browser-storage-and-indexeddb-adapter.md),
   [0018](../adr/0018-indexeddb-failure-and-recovery-policy.md),
+  [0094](../adr/0094-deferred-decisions-status-and-maximum-file-size.md),
   [0099](../adr/0099-os-backup-and-low-storage.md),
   [0206](../adr/0206-serve-installed-app-assets.md),
   [0225](../adr/0225-serve-installed-app-files-to-every-page.md),

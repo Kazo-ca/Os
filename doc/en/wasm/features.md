@@ -285,6 +285,9 @@ This section lists what is released in the `main` branch and online.
   available; it downloads in the background and "Restart to update" opens it in
   every tab. ([ADR 0174](dev/adr/0174-announce-a-new-version-to-open-sessions.md),
   [ADR 0223](dev/adr/0223-restart-onto-the-new-version.md))
+- **Share preview**: a link to `os.kazo.ca` shared on Facebook, LinkedIn or X
+  shows the Kazo OS image, its title and its description.
+  ([`github-pages-deployment.md`](dev/github-pages-deployment.md#share-preview-facebook-linkedin-x))
 - **Build number and version status on the sign-in screen**: next to
   "Kazo OS 3.3.3", the build number (commit count, the same for the site, the
   Release and the server) and a badge "Up to date", "Outdated: …" or "Status
@@ -457,6 +460,7 @@ points to its PR.
 | Space reclaimed after a deletion | The space of a rewritten or deleted file comes back within one day at most, within minutes when space is short, instead of staying taken. | [0273](dev/adr/0273-short-orphan-content-retention.md) | [#537](https://github.com/Kazo-ca/Os/issues/537) |
 | A single copy of the files of an installed app | The files of an app are no longer copied into a cache in every session: an app takes about half the space and its first launch copies nothing. `storage/base` series. | [0274](dev/adr/0274-single-copy-of-app-files.md) | [plan](dev/plans/browser-storage-series-plan.md) |
 | Drag files onto an app | Public SDK contract to receive files dragged from the File Explorer or the desktop. | To write | [#380](https://github.com/Kazo-ca/Os/issues/380) |
+| Reclaim the space of rewritten or deleted files | The old content of a rewritten or deleted file is erased after 1 day, or after 5 minutes when storage is low, instead of staying in the browser forever. | [0273](dev/adr/0273-short-orphan-content-retention.md) | [#537](https://github.com/Kazo-ca/Os/issues/537) |
 
 ### Kazo OS Store
 

@@ -33,8 +33,18 @@ public sealed record FileContentStoragePolicy
     /// <summary>Gets whether identical content chunks are reused by hash.</summary>
     public const bool DefaultDeduplicateChunks = true;
 
-    /// <summary>Gets the default retention window for orphaned content chunks.</summary>
-    public static readonly TimeSpan DefaultOrphanRetention = TimeSpan.FromDays(30);
+    /// <summary>
+    /// Gets the default retention window for orphaned content chunks: one day (decided
+    /// 2026-11-14, replaces the 30 days of ADR 0094). A chunk written or reused less than this ago
+    /// is kept even when no file points to it yet: its write may still be in progress.
+    /// </summary>
+    public static readonly TimeSpan DefaultOrphanRetention = TimeSpan.FromDays(1);
+
+    /// <summary>
+    /// Gets the retention window used when the storage is low (ADR 0099 section 2): five minutes,
+    /// long enough to cover a write whose metadata is not committed yet.
+    /// </summary>
+    public static readonly TimeSpan DefaultLowSpaceOrphanRetention = TimeSpan.FromMinutes(5);
 
     /// <summary>Initializes a validated content-storage policy.</summary>
     /// <param name="maxFileSizeBytes">Maximum supported file size in bytes; must be positive.</param>
@@ -105,6 +115,23 @@ public sealed record FileContentStoragePolicy
 
     /// <summary>Gets the retention window for orphaned content chunks before cleanup.</summary>
     public TimeSpan OrphanRetention { get; }
+
+    /// <summary>
+    /// Gets the retention window for orphaned content chunks when the storage is low; never longer
+    /// than <see cref="OrphanRetention"/> in effect.
+    /// </summary>
+    /// <exception cref="ArgumentOutOfRangeException">The value is not positive.</exception>
+    public TimeSpan LowSpaceOrphanRetention
+    {
+        get => _lowSpaceOrphanRetention < OrphanRetention ? _lowSpaceOrphanRetention : OrphanRetention;
+        init
+        {
+            ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(value, TimeSpan.Zero);
+            _lowSpaceOrphanRetention = value;
+        }
+    }
+
+    private readonly TimeSpan _lowSpaceOrphanRetention = DefaultLowSpaceOrphanRetention;
 
     /// <summary>Determines whether a file requires chunking at the configured chunk size.</summary>
     public bool RequiresChunking(long fileSizeBytes)

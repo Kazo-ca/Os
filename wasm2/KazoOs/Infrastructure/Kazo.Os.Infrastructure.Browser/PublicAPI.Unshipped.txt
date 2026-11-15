@@ -38,3 +38,9 @@ static Kazo.Os.Infrastructure.Browser.FileSystem.FileContentChunkKey.operator ==
 static Kazo.Os.Infrastructure.Browser.FileSystem.FileContentConversion.RunAsync(Microsoft.JSInterop.IJSRuntime! runtime, System.Action<long, long>! progress, System.Action! waiting, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Kazo.Os.Infrastructure.Browser.FileSystem.FileContentConversionResult!>!
 static Kazo.Os.Infrastructure.Browser.FileSystem.FileContentConversionResult.operator !=(Kazo.Os.Infrastructure.Browser.FileSystem.FileContentConversionResult? left, Kazo.Os.Infrastructure.Browser.FileSystem.FileContentConversionResult? right) -> bool
 static Kazo.Os.Infrastructure.Browser.FileSystem.FileContentConversionResult.operator ==(Kazo.Os.Infrastructure.Browser.FileSystem.FileContentConversionResult? left, Kazo.Os.Infrastructure.Browser.FileSystem.FileContentConversionResult? right) -> bool
+Kazo.Os.Infrastructure.Browser.FileSystem.IndexedDbFileSystemMaintenance.ReclaimAsync(bool lowSpace, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<long>
+Kazo.Os.Infrastructure.Browser.Schema.FileContentStoragePolicy.LowSpaceOrphanRetention.get -> System.TimeSpan
+Kazo.Os.Infrastructure.Browser.Schema.FileContentStoragePolicy.LowSpaceOrphanRetention.init -> void
+const Kazo.Os.Infrastructure.Browser.FileSystem.IndexedDbFileSystemMaintenance.HashesPerPass = 64 -> int
+const Kazo.Os.Infrastructure.Browser.FileSystem.IndexedDbFileSystemMaintenance.MaxPassesPerReclaim = 32 -> int
+static readonly Kazo.Os.Infrastructure.Browser.Schema.FileContentStoragePolicy.DefaultLowSpaceOrphanRetention -> System.TimeSpan

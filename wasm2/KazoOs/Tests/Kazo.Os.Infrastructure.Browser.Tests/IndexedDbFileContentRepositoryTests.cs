@@ -165,6 +165,34 @@ public sealed class IndexedDbFileContentRepositoryTests
     private static IndexedDbFileContentRepository Repository(MemoryFileContentChunkStore store) =>
         new(new ModuleRuntime(), chunks: store);
 
+    [Fact]
+    public async Task WriteAsync_ReusingStoredContent_RefreshesItsCreationTime()
+    {
+        MemoryFileContentChunkStore store = new();
+        MovableTimeProvider time = new(new DateTimeOffset(2026, 11, 1, 0, 0, 0, TimeSpan.Zero));
+        await using IndexedDbFileContentRepository repository = new(
+            new ModuleRuntime(), FileContentStoragePolicy.Default, time, chunks: store);
+        byte[] content = Pattern((2 * ChunkBytes) + 1);
+        IndexedDbFileContentWrite first = await repository.WriteAsync(new MemoryStream(content));
+
+        // Two days later the old content is an orphan past its retention; writing the same bytes
+        // again reuses it and must make it young, or a concurrent orphan pass could delete it.
+        time.Now = time.Now.AddDays(2);
+        await repository.WriteAsync(new MemoryStream(content));
+
+        long expected = time.Now.ToUnixTimeMilliseconds();
+        Assert.Equal(expected, store.Chunks[MemoryFileContentChunkStore.Key(first.ContentHash, 0)].CreatedUtcMs);
+        Assert.Equal(3, store.Chunks.Count);
+        Assert.Equal(3, first.ChunkCount);
+    }
+
+    private sealed class MovableTimeProvider(DateTimeOffset now) : TimeProvider
+    {
+        public DateTimeOffset Now { get; set; } = now;
+
+        public override DateTimeOffset GetUtcNow() => Now;
+    }
+
     private static byte[] Pattern(int length)
     {
         byte[] bytes = new byte[length];

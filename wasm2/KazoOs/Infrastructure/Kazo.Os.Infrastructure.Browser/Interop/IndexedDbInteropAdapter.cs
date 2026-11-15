@@ -100,11 +100,70 @@ internal sealed class IndexedDbInteropAdapter : IAsyncDisposable
         }
     }
 
+    /// <summary>
+    /// Runs one orphan collection pass in JavaScript (<c>runOrphanPass</c>, ADR 0273 section 4):
+    /// <paramref name="find"/> read-only, then <paramref name="deleteTemplate"/> once per candidate
+    /// in one read-write transaction, skipped while the page is hidden or another tab holds
+    /// <paramref name="lockName"/>.
+    /// </summary>
+    /// <returns>
+    /// <c>{ candidates, results }</c>, or <c>{ skipped }</c> with <c>"hidden"</c> or <c>"locked"</c>.
+    /// </returns>
+    public async ValueTask<JsonElement> RunOrphanPassAsync(
+        string boundaryName,
+        string lockName,
+        IndexedDbOperation find,
+        IndexedDbOperation deleteTemplate,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(lockName);
+        IndexedDbTransactionBoundary boundary = ValidateBoundary(boundaryName, [find, deleteTemplate]);
+        IJSObjectReference module = await GetModuleAsync(cancellationToken).ConfigureAwait(false);
+        return await module.InvokeAsync<JsonElement>(
+            "runOrphanPass",
+            cancellationToken,
+            KazoOsIndexedDbSchema.DatabaseName,
+            KazoOsIndexedDbSchema.CurrentVersion,
+            boundary.ObjectStoreNames,
+            lockName,
+            find,
+            deleteTemplate).ConfigureAwait(false);
+    }
+
     private async ValueTask<IReadOnlyList<JsonElement>> ExecuteCoreAsync(
         string boundaryName,
         IndexedDbTransactionMode mode,
         IReadOnlyList<IndexedDbOperation> operations,
         CancellationToken cancellationToken)
+    {
+        IndexedDbTransactionBoundary boundary = ValidateBoundary(boundaryName, operations);
+        IJSObjectReference module = await GetModuleAsync(cancellationToken).ConfigureAwait(false);
+        JsonElement[] results;
+        try
+        {
+            results = await module.InvokeAsync<JsonElement[]>(
+                "executeTransaction",
+                cancellationToken,
+                KazoOsIndexedDbSchema.DatabaseName,
+                KazoOsIndexedDbSchema.CurrentVersion,
+                boundary.ObjectStoreNames,
+                mode == IndexedDbTransactionMode.ReadOnly ? "readonly" : "readwrite",
+                operations).ConfigureAwait(false);
+        }
+        catch (JSException exception) when (exception.Message.Contains("QuotaExceededError", StringComparison.Ordinal))
+        {
+            throw new BrowserStorageQuotaException(
+                "Browser storage quota was exhausted; the IndexedDB transaction was not committed.",
+                exception);
+        }
+
+        return results;
+    }
+
+    /// <summary>Finds a declared boundary and checks every operation stays inside its stores.</summary>
+    private static IndexedDbTransactionBoundary ValidateBoundary(
+        string boundaryName,
+        IReadOnlyList<IndexedDbOperation> operations)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(boundaryName);
         ArgumentNullException.ThrowIfNull(operations);
@@ -134,27 +193,7 @@ internal sealed class IndexedDbInteropAdapter : IAsyncDisposable
             }
         }
 
-        IJSObjectReference module = await GetModuleAsync(cancellationToken).ConfigureAwait(false);
-        JsonElement[] results;
-        try
-        {
-            results = await module.InvokeAsync<JsonElement[]>(
-                "executeTransaction",
-                cancellationToken,
-                KazoOsIndexedDbSchema.DatabaseName,
-                KazoOsIndexedDbSchema.CurrentVersion,
-                boundary.ObjectStoreNames,
-                mode == IndexedDbTransactionMode.ReadOnly ? "readonly" : "readwrite",
-                operations).ConfigureAwait(false);
-        }
-        catch (JSException exception) when (exception.Message.Contains("QuotaExceededError", StringComparison.Ordinal))
-        {
-            throw new BrowserStorageQuotaException(
-                "Browser storage quota was exhausted; the IndexedDB transaction was not committed.",
-                exception);
-        }
-
-        return results;
+        return boundary;
     }
 
     /// <inheritdoc />
