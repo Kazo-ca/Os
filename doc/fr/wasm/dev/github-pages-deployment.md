@@ -97,6 +97,32 @@ d'isolation au legacy. Les autres chemins gardent la stratégie offline existant
 - Les métadonnées des paquets pointent aussi vers le nouveau dépôt. La version
   commune est définie une seule fois dans `build/Versions.props` (`2.2.2`).
 
+## Aperçu de partage (Facebook, LinkedIn, X)
+
+Quand on partage `https://os.kazo.ca/` sur Facebook, LinkedIn, Slack ou X, le
+réseau lit les balises Open Graph de `OS/Kazo.Os.Ecosystem/wwwroot/index.html`
+sans exécuter JavaScript, puis télécharge l'image qu'elles nomment :
+
+- `social-preview.png` (1280 × 640, la même image que l'aperçu social du dépôt
+  GitHub), servie à la racine du site ;
+- `og:type`, `og:site_name`, `og:title`, `og:description`, `og:image` (adresse
+  absolue `https://os.kazo.ca/social-preview.png`, exigée par Facebook),
+  `og:image:type`, `og:image:width`, `og:image:height`, `og:image:alt`, et
+  `twitter:card` `summary_large_image` avec `twitter:title` et `twitter:image`.
+
+Il n'y a volontairement ni `og:url` ni lien `canonical` : sans eux, chaque site
+garde l'adresse depuis laquelle il est partagé, et la bêta (`os-beta.kazo.ca`,
+même `index.html`) n'annonce pas le site stable. Elle montre la même image,
+servie par `os.kazo.ca`. Le service worker ne met pas l'image en cache hors
+ligne (`offlineAssetsExclude` de `service-worker.published.js`) : l'OS ne
+l'affiche jamais. `SocialPreviewTests` (Kazo.Os.Ecosystem.Tests) vérifie les
+balises, la taille de l'image et cette exclusion.
+
+Facebook garde son aperçu en cache. Après une publication qui change l'image ou
+les textes, ouvrir le [Sharing Debugger](https://developers.facebook.com/tools/debug/),
+coller `https://os.kazo.ca/` et cliquer **Scrape Again** (« Récupérer à
+nouveau »). LinkedIn a l'équivalent : [Post Inspector](https://www.linkedin.com/post-inspector/).
+
 ## Vérification locale
 
 Depuis la racine du dépôt, sur un dossier de sortie encore vide :
