@@ -479,7 +479,7 @@ dans `main`, le lien mène à sa PR.
 | Fonctionnalité | Description | ADR | Issue |
 | --- | --- | --- | --- |
 | Catalogue des applications | Format du catalogue, vérification et publication des applications proposées. | [0188](dev/adr/0188-hack-store-and-app-catalog.md) | [AppMarketPlace #1](https://github.com/Kazo-ca/Os-AppMarketPlace/issues/1) |
-| Canal bêta et mises à jour automatiques des apps | Une version bêta de Kazo OS en ligne (`os-beta.kazo.ca`), le SDK en préversion sur nuget.org, et chaque app qui se reconstruit et propose sa mise à jour quand le SDK sort. Décidé le 2026-11-14, rien n'est codé. | [0271](dev/adr/0271-beta-channel-and-automatic-app-updates.md), [plan](dev/plans/release-channels-plan.md) | [#456](https://github.com/Kazo-ca/Os/issues/456) |
+| Canal bêta et mises à jour automatiques des apps | Une version bêta de Kazo OS en ligne (`os-beta.kazo.ca`), le SDK en préversion sur nuget.org, et chaque app qui se reconstruit et propose sa mise à jour quand le SDK sort. Côté OS, c'est fait : la branche `beta`, le site bêta avec sa pastille « Bêta », le catalogue bêta et les workflows réutilisables des apps. La préversion 3.4.0-preview.1 est sortie le 2026-11-15. Il reste à aligner chaque dépôt d'app (chantier 7). | [0271](dev/adr/0271-beta-channel-and-automatic-app-updates.md), [plan](dev/plans/release-channels-plan.md) | [#456](https://github.com/Kazo-ca/Os/issues/456) |
 
 ### Personnalisation
 
