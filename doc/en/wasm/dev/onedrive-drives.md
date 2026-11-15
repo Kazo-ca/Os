@@ -98,9 +98,9 @@ The Ecosystem host registers the source:
 
 - A real trial by Benoit, with the Microsoft Entra registration ("Single-page
   application", redirect URIs from [`cloud-accounts.md`](cloud-accounts.md)):
-  sign-in, both scopes, a large upload, reconnecting after 24 hours. Not done:
-  the registration does not exist yet.
-- The UI (work item 5).
+  sign-in, both scopes, a large upload, reconnecting after 24 hours. The
+  registration exists since 2026-11-15; the steps are in
+  [`cloud-drives.md`](cloud-drives.md#real-trials).
 
 ## Task list
 
