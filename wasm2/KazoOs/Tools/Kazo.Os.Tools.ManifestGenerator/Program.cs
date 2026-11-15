@@ -99,6 +99,16 @@ public static class Program
                 return Fail(project, [.. boundary]);
             }
 
+            // ADR 0262 §3: an app that asks for a feature's service declares a dependency.
+            IReadOnlyList<GeneratorDiagnostic> dependency = FeatureDependencyInspector.Inspect(
+                File.ReadAllBytes(assemblyPath),
+                [.. result.Manifests.SelectMany(static manifest => manifest.All).Select(static generated => generated.Manifest)],
+                assemblyPath);
+            if (dependency.Count > 0)
+            {
+                return Fail(project, [.. dependency]);
+            }
+
             // ADR 0104 section 4: Resources/AppManifest.<culture>.resx -> localization/<culture>.json.
             ManifestLocalizationGenerator.Result localized = ManifestLocalizationGenerator.Apply(Path.GetDirectoryName(project)!, result.Manifests);
             if (localized.Diagnostics.Count > 0)

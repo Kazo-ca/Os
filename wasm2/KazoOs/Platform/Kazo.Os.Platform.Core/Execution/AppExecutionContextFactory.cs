@@ -378,6 +378,14 @@ public sealed class AppExecutionContextFactory
         clock.BindAmbientContext(context);
         catalogGateway?.BindAmbientContext(context);
         accessibilityGateway?.BindAmbientContext(context);
+        // ADR 0262 §2: the services of the features of the page, answered for this app's manifest.
+        if (_appCatalog?.FeatureServices?.Invoke() is { } featureServices)
+        {
+            Features.AppFeatureGateway features = new(featureServices, manifest);
+            features.BindAmbientContext(context);
+            context.Features = features;
+        }
+
         administration.SystemSettings?.BindAmbientContext(context);
         if (administration.SystemBackup is not null)
         {
@@ -594,6 +602,13 @@ public sealed record AppCatalogGatewayServices(
     /// <see langword="null"/> for a host that loads no installed app.
     /// </summary>
     public Func<Apps.Packages.IInstalledLibraryState?>? InstalledLibraries { get; init; }
+
+    /// <summary>
+    /// Gets the services the features of the page provide (ADR 0262), behind each app's
+    /// <c>KazoFeatures</c>; <see langword="null"/> (or a <see langword="null"/> result) for a host
+    /// without them, where every contract is « not installed ».
+    /// </summary>
+    public Func<Features.FeatureServiceResolver?>? FeatureServices { get; init; }
 
     /// <summary>
     /// Gets the machine permission decisions (ADR 0049 §4) a feature's installation writes

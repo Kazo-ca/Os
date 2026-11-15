@@ -441,6 +441,15 @@ SDK model (`FeatureDefinition`, `FeatureEntryPoint`, child manifests) is in
   uninstalling or reinstalling is done on the feature. An app's page
   (`KazoAppInfo.ParentId`) names its feature. The "Features" section of
   Settings is ADR 0249, not coded yet.
+- **Provided services** ([ADR 0262](adr/0262-feature-service-registry-and-async-resolution.md),
+  [`feature-services.md`](../framework/feature-services.md)): the feature's
+  manifest lists `providedServices`; their code is a declared assembly of the
+  package. `AppPackage.Read` refuses a contract that is not in a shared
+  library of the package (`apps.package.service-contract-not-shared`), and
+  the installer a feature that provides a contract another feature of the
+  catalog already provides (`apps.package.service-already-provided`).
+  `AppCatalog` no longer removes an app for an **optional** dependency out of
+  range: `KazoFeatures` answers it `VersionMismatch`.
 
 Tests: `FeatureDefinitionTests` (App.Abstractions), `AppDefinitionInspectorTests`
 and `ManifestWriterTests` (Tools.ManifestGenerator), `AppCatalogTests`,
@@ -526,9 +535,12 @@ implementation. For authors:
   simple name in two apps: the first one loaded serves both, the second is
   noted in the log, nothing else. Two **major**
   versions of a shared library are installed together, but only one is in the
-  page at a time: the app of the other major version asks for a restart. Until
-  features declare the services they provide (ADR 0262), a feature that
-  carries the shared library is its provider.
+  page at a time: the app of the other major version asks for a restart. The
+  provider of a shared library is the installed feature that carries it **and
+  declares that it provides one of its interfaces** (`providedServices`,
+  ADR 0262); the provisional rule of ADR 0256 §5 (any feature that carries it)
+  is removed: a feature that carries the library without providing any of its
+  contracts is a client like an app.
 
 Tests: `AppPackageLibraryTests`, `InstalledLibrariesTests`,
 `InstalledAppsImageTests` and `AppPackageGatewayTests` (Platform.Core),

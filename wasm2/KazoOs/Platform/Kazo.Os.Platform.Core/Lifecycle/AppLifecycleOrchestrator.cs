@@ -653,6 +653,64 @@ public sealed class AppLifecycleOrchestrator
     }
 
     /// <summary>
+    /// Starts the process a feature's services run in (ADR 0262 §1), like a system daemon: no
+    /// window, the system scope, the identity of <paramref name="runAs"/> (the feature, or its
+    /// service entry point) and the capabilities granted to it, never those of the app that asked.
+    /// One process serves every app of the page; it stops at the shutdown, or when
+    /// <see cref="StopAsync(ProcessId, ProcessExitReason)"/> ends it.
+    /// </summary>
+    /// <param name="runAs">The feature's manifest, or that of the child its services run as.</param>
+    /// <param name="implementation">The type of the service, in the feature's loaded assembly.</param>
+    /// <param name="principal">The account it runs as (<c>kazoos-svc</c>, <c>ServiceAccount.CreatePrincipal</c>).</param>
+    /// <returns>The launch: the process and the feature's context, or why it did not start.</returns>
+    public AppLaunchResult StartFeatureService(AppManifest runAs, Type implementation, AuthenticatedPrincipal principal)
+    {
+        ArgumentNullException.ThrowIfNull(runAs);
+        ArgumentNullException.ThrowIfNull(implementation);
+        ArgumentNullException.ThrowIfNull(principal);
+        if (!_enablement.IsEnabled(runAs.Id))
+        {
+            return new AppLaunchResult(AppLaunchStatus.Disabled, ErrorCode: "lifecycle.app.disabled");
+        }
+
+        HashSet<string> granted = ComputeGrantedCapabilities(runAs, principal);
+        ProcessRecord process;
+        try
+        {
+            process = _processManager.Start(new ProcessStartRequest(
+                null,
+                runAs.Id,
+                AppInstanceId.FromGuid(Guid.NewGuid()),
+                AppKind.Service,
+                principal.UserId,
+                principal.SessionId,
+                ToResourceProfile(runAs.Resources),
+                [runAs.Id, "--services"],
+                SystemScope: true));
+        }
+        catch (ProcessLimitExceededException exception)
+        {
+            return new AppLaunchResult(AppLaunchStatus.EntryPointFault, ErrorCode: ProcessLimitErrorCode, ErrorMessage: exception.Message);
+        }
+
+        IAppExecutionContext context = _contextFactory.Create(runAs, principal, process, granted, process.AppInstanceId.Value);
+        AppDescriptor descriptor = new(runAs, implementation, implementation.Assembly);
+        lock (_sync)
+        {
+            _running[process.Pid] = new RunningInstance(descriptor, context, ServiceInstance: null, RunTask: null);
+        }
+
+        if (context is AppExecutionContext trusted)
+        {
+            ProcessId pid = process.Pid;
+            trusted.Control.StopRequested += request => _ = StopAsync(pid, request.Reason);
+        }
+
+        ProcessRecord running = _processManager.MarkRunning(process.Pid);
+        return new AppLaunchResult(AppLaunchStatus.Launched, running, context);
+    }
+
+    /// <summary>
     /// Starts every enabled, automatic session <see cref="AppKind.Service"/> app in catalog
     /// activation order, per `P1-APP-005` and ADR 0097 section 4: run once per new session, right
     /// after the login, as the logged-in user. System services (<see cref="AppServiceStartup.Boot"/>)

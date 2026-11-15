@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "id": "ca.kazo.x86",
+  "name": "Os-x86",
+  "version": "1.0.0",
+  "publisherId": "ca.kazo",
+  "description": "Runs x86 virtual machines in the browser (ADR 0260); it provides Ix86 to other apps (ADR 0262).",
+  "kind": "feature",
+  "sdkCompatibility": { "minimumVersion": "3.2.0" },
+  "presentation": {
+    "category": "system",
+    "launchVisibility": "hidden",
+    "iconAssetPaths": []
+  },
+  "capabilities": ["filesystem.user-home.read", "network.real.access"],
+  "providedServices": [
+    {
+      "contract": "OsX86.Interface.Ix86, Os-x86.Interface",
+      "implementation": "OsX86.X86Service, OsX86",
+      "entryPoint": "ca.kazo.x86.daemon"
+    }
+  ],
+  "resources": {
+    "baselineCpuWeight": 0.0,
+    "burstCpuWeight": 0.0,
+    "baselineMemoryWeight": 0.0,
+    "burstMemoryWeight": 0.0,
+    "baselineStorageIoWeight": 0.0,
+    "burstStorageIoWeight": 0.0,
+    "baselineNetworkIoWeight": 0.0,
+    "burstNetworkIoWeight": 0.0
+  },
+  "execution": "mainThread"
+}

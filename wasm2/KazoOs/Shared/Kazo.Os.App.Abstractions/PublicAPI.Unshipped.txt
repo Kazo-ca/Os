@@ -89,3 +89,45 @@ static Kazo.Os.App.Abstractions.FeatureEntryPoint.operator !=(Kazo.Os.App.Abstra
 static Kazo.Os.App.Abstractions.FeatureEntryPoint.operator ==(Kazo.Os.App.Abstractions.FeatureEntryPoint? left, Kazo.Os.App.Abstractions.FeatureEntryPoint? right) -> bool
 static Kazo.Os.App.Abstractions.FeatureManifests.operator !=(Kazo.Os.App.Abstractions.FeatureManifests? left, Kazo.Os.App.Abstractions.FeatureManifests? right) -> bool
 static Kazo.Os.App.Abstractions.FeatureManifests.operator ==(Kazo.Os.App.Abstractions.FeatureManifests? left, Kazo.Os.App.Abstractions.FeatureManifests? right) -> bool
+Kazo.Os.App.Abstractions.AppManifest.ProvidedServices.get -> System.Collections.Generic.IReadOnlyList<Kazo.Os.App.Abstractions.AppProvidedServiceManifest!>?
+Kazo.Os.App.Abstractions.AppManifest.ProvidedServices.init -> void
+Kazo.Os.App.Abstractions.AppProvidedServiceManifest
+Kazo.Os.App.Abstractions.AppProvidedServiceManifest.<Clone>$() -> Kazo.Os.App.Abstractions.AppProvidedServiceManifest!
+Kazo.Os.App.Abstractions.AppProvidedServiceManifest.AppProvidedServiceManifest(string! Contract, string! Implementation) -> void
+Kazo.Os.App.Abstractions.AppProvidedServiceManifest.Contract.get -> string!
+Kazo.Os.App.Abstractions.AppProvidedServiceManifest.Contract.init -> void
+Kazo.Os.App.Abstractions.AppProvidedServiceManifest.ContractAssembly.get -> string!
+Kazo.Os.App.Abstractions.AppProvidedServiceManifest.ContractType.get -> string!
+Kazo.Os.App.Abstractions.AppProvidedServiceManifest.Deconstruct(out string! Contract, out string! Implementation) -> void
+Kazo.Os.App.Abstractions.AppProvidedServiceManifest.EntryPoint.get -> string?
+Kazo.Os.App.Abstractions.AppProvidedServiceManifest.EntryPoint.init -> void
+Kazo.Os.App.Abstractions.AppProvidedServiceManifest.Equals(Kazo.Os.App.Abstractions.AppProvidedServiceManifest? other) -> bool
+Kazo.Os.App.Abstractions.AppProvidedServiceManifest.Implementation.get -> string!
+Kazo.Os.App.Abstractions.AppProvidedServiceManifest.Implementation.init -> void
+Kazo.Os.App.Abstractions.AppProvidedServiceManifest.ImplementationAssembly.get -> string!
+Kazo.Os.App.Abstractions.AppProvidedServiceManifest.ImplementationType.get -> string!
+Kazo.Os.App.Abstractions.FeatureService
+Kazo.Os.App.Abstractions.FeatureService.<Clone>$() -> Kazo.Os.App.Abstractions.FeatureService!
+Kazo.Os.App.Abstractions.FeatureService.Contract.get -> System.Type!
+Kazo.Os.App.Abstractions.FeatureService.Contract.init -> void
+Kazo.Os.App.Abstractions.FeatureService.Deconstruct(out System.Type! Contract, out System.Type! Implementation) -> void
+Kazo.Os.App.Abstractions.FeatureService.Equals(Kazo.Os.App.Abstractions.FeatureService? other) -> bool
+Kazo.Os.App.Abstractions.FeatureService.FeatureService(System.Type! Contract, System.Type! Implementation) -> void
+Kazo.Os.App.Abstractions.FeatureService.Implementation.get -> System.Type!
+Kazo.Os.App.Abstractions.FeatureService.Implementation.init -> void
+override Kazo.Os.App.Abstractions.AppProvidedServiceManifest.Equals(object? obj) -> bool
+override Kazo.Os.App.Abstractions.AppProvidedServiceManifest.GetHashCode() -> int
+override Kazo.Os.App.Abstractions.AppProvidedServiceManifest.ToString() -> string!
+override Kazo.Os.App.Abstractions.FeatureService.Equals(object? obj) -> bool
+override Kazo.Os.App.Abstractions.FeatureService.GetHashCode() -> int
+override Kazo.Os.App.Abstractions.FeatureService.ToString() -> string!
+static Kazo.Os.App.Abstractions.AppProvidedServiceManifest.NameOf(System.Type! type) -> string!
+static Kazo.Os.App.Abstractions.AppProvidedServiceManifest.TryParseName(string? value, out string! typeName, out string! assemblyName) -> bool
+static Kazo.Os.App.Abstractions.AppProvidedServiceManifest.operator !=(Kazo.Os.App.Abstractions.AppProvidedServiceManifest? left, Kazo.Os.App.Abstractions.AppProvidedServiceManifest? right) -> bool
+static Kazo.Os.App.Abstractions.AppProvidedServiceManifest.operator ==(Kazo.Os.App.Abstractions.AppProvidedServiceManifest? left, Kazo.Os.App.Abstractions.AppProvidedServiceManifest? right) -> bool
+static Kazo.Os.App.Abstractions.FeatureService.operator !=(Kazo.Os.App.Abstractions.FeatureService? left, Kazo.Os.App.Abstractions.FeatureService? right) -> bool
+static Kazo.Os.App.Abstractions.FeatureService.operator ==(Kazo.Os.App.Abstractions.FeatureService? left, Kazo.Os.App.Abstractions.FeatureService? right) -> bool
+virtual Kazo.Os.App.Abstractions.FeatureDefinition.ProvidedServices.get -> System.Collections.Generic.IReadOnlyList<Kazo.Os.App.Abstractions.FeatureService!>!
+virtual Kazo.Os.App.Abstractions.FeatureDefinition.ServiceEntryPoint.get -> string?
+~Kazo.Os.App.Abstractions.AppManifestJsonSerializerContext.AppProvidedServiceManifest.get -> System.Text.Json.Serialization.Metadata.JsonTypeInfo<Kazo.Os.App.Abstractions.AppProvidedServiceManifest>
+~Kazo.Os.App.Abstractions.AppManifestJsonSerializerContext.IReadOnlyListAppProvidedServiceManifest.get -> System.Text.Json.Serialization.Metadata.JsonTypeInfo<System.Collections.Generic.IReadOnlyList<Kazo.Os.App.Abstractions.AppProvidedServiceManifest>>

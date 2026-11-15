@@ -699,6 +699,7 @@ public sealed partial class AppPackageInstaller
         }
 
         CheckLibraries(package, catalog, packagedAppIds, installedApps, loadedPackageLibraries);
+        CheckProvidedServices(package, catalog);
         IReadOnlyList<MissingRuntimeApi> missing = AppPackageApiCheck.FindMissing(package.Assemblies, _runtime);
         if (missing.Count > 0)
         {
@@ -736,6 +737,23 @@ public sealed partial class AppPackageInstaller
         fromPackages.UnionWith(installedApps.SelectMany(static app => app.Libraries).Select(static library => library.Name));
         InstalledLibraries.CheckReservedNames(package, _runtime, osAssemblies, fromPackages);
         InstalledLibraries.CheckMajorVersions(package, installedApps);
+    }
+
+    /// <summary>
+    /// ADR 0262 §1: one provider per contract. A feature that provides a contract another feature of
+    /// the catalog already provides is refused; an update of the same feature is not compared with itself.
+    /// </summary>
+    internal static void CheckProvidedServices(AppPackage package, AppCatalog catalog)
+    {
+        foreach (AppProvidedServiceManifest service in package.Manifest.ProvidedServices ?? [])
+        {
+            if (catalog.GetServiceProviders(service.ContractType).FirstOrDefault(provider => !string.Equals(provider.Feature.Id, package.AppId, StringComparison.Ordinal)) is { } other)
+            {
+                throw new AppPackageException(
+                    "apps.package.service-already-provided",
+                    $"{package.AppId} provides {service.ContractType}, which the feature {other.Feature.Name} ({other.Feature.Id}) already provides: a contract has one provider (ADR 0262 §1).");
+            }
+        }
     }
 
     /// <summary>

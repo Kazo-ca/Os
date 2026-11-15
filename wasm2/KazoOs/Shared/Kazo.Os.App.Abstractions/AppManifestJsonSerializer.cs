@@ -71,7 +71,8 @@ public static class AppManifestJsonSerializer
             "execution",
             "web",
             "oomScoreAdj",
-            "realNetworkPorts"
+            "realNetworkPorts",
+            "providedServices"
         });
 
         return JsonSerializer.Deserialize(document.RootElement.GetRawText(), AppManifestJsonSerializerContext.Default.AppManifest)
@@ -181,6 +182,10 @@ public static class AppManifestJsonSerializer
                     Scopes = [.. entry.Scopes.OrderBy(scope => AppContextMenusOrder(scope))],
                     Types = entry.Types is null ? null : [.. entry.Types.OrderBy(type => type, StringComparer.Ordinal)]
                 })],
+            // ADR 0262: an empty list is written as no property, like a manifest that provides nothing.
+            ProvidedServices = manifest.ProvidedServices is not { Count: > 0 }
+                ? null
+                : [.. manifest.ProvidedServices.OrderBy(item => item.Contract, StringComparer.Ordinal)],
             // The first URL is the site's primary address: the declared order is kept.
             Web = manifest.Web
         };
@@ -270,6 +275,9 @@ public static class AppManifestJsonSerializer
                     break;
                 case "components":
                     ValidateArray(property.Value, $"{path}.components", ["contract", "assembly", "type"]);
+                    break;
+                case "providedServices":
+                    ValidateArray(property.Value, $"{path}.providedServices", ["contract", "implementation", "entryPoint"]);
                     break;
                 case "contextMenus":
                     ValidateArray(property.Value, $"{path}.contextMenus", ["name", "title", "titles", "target", "intent", "icon", "scopes", "types", "selection", "first", "after", "afterGroup", "parent", "screens", "screen"]);

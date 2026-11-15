@@ -171,6 +171,26 @@ and the command of a `Terminal` child comes before that of an ordinary app of
 the same name (after system apps). See
 [`app-installation.md`](../dev/app-installation.md#features-adr-0260).
 
+#### Provided services: `ProvidedServices` (ADR 0262)
+
+A feature provides **services** to other apps: each pairs a contract (an
+interface of a shared library its clients carry) with the type of the feature
+that implements it.
+
+```csharp
+public override IReadOnlyList<FeatureService> ProvidedServices =>
+    [new(typeof(OsX86.Interface.Ix86), typeof(X86Service))];
+
+// Optional: the services run with the capabilities of this child.
+public override string? ServiceEntryPoint => "daemon";
+```
+
+The manifest writes them in `providedServices`
+(`"contract": "OsX86.Interface.Ix86, Os-x86.Interface"`,
+`"implementation": "OsX86.X86Service, OsX86"`). An app gets them with
+`KazoFeatures.GetServiceAsync<T>()`, which returns `null` when the feature is
+absent or disabled: see [`feature-services.md`](feature-services.md).
+
 ### Intents and URI schemes (ADR 0096)
 
 - `Intents` (`AppIntentDeclarationManifest(IntentId, PayloadSchemaAssetPath)`)

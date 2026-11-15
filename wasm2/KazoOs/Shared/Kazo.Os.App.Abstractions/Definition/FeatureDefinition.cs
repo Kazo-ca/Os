@@ -40,6 +40,21 @@ public abstract class FeatureDefinition : AppDefinition
     /// </summary>
     public abstract IReadOnlyList<FeatureEntryPoint> EntryPoints { get; }
 
+    /// <summary>
+    /// Gets the services the feature provides to other apps (ADR 0262 §1): each pairs a contract,
+    /// an interface of a shared library its clients carry (ADR 0261), with the type of the feature
+    /// that implements it. An app gets the instance with <c>KazoFeatures.GetServiceAsync&lt;T&gt;()</c>,
+    /// or <see langword="null"/> when the feature is absent or disabled. Empty by default.
+    /// </summary>
+    public virtual IReadOnlyList<FeatureService> ProvidedServices => [];
+
+    /// <summary>
+    /// Gets the suffix of the child whose capabilities the services run with (ADR 0262 §1), or
+    /// <see langword="null"/> (the default) for the feature's whole set. A service never runs with
+    /// the capabilities of the app that calls it.
+    /// </summary>
+    public virtual string? ServiceEntryPoint => null;
+
     /// <summary>A feature has no command of its own: a child of kind <see cref="AppKind.Terminal"/> does.</summary>
     public sealed override TerminalCommand? Terminal => null;
 
@@ -143,6 +158,15 @@ public sealed record FeatureEntryPoint(string Suffix, string Name, AppKind Kind,
     /// <summary>Gets the custom intents the child receives.</summary>
     public IReadOnlyList<AppIntentDeclarationManifest> Intents { get; init; } = [];
 }
+
+/// <summary>
+/// One service a <see cref="FeatureDefinition"/> provides (ADR 0262 §1). The OS creates one instance
+/// of <paramref name="Implementation"/> per page, on the first request, in the feature's execution
+/// context: its public constructor takes an <c>IFeatureServiceContext</c>, or nothing.
+/// </summary>
+/// <param name="Contract">The interface other apps ask for, in a shared library (ADR 0261 §2).</param>
+/// <param name="Implementation">The class of the feature that implements it.</param>
+public sealed record FeatureService(Type Contract, Type Implementation);
 
 /// <summary>What <see cref="AppDefinitionMapper.ToFeatureManifests(FeatureDefinition, string)"/> produces from one <see cref="FeatureDefinition"/>.</summary>
 /// <param name="Feature">The feature's own manifest (kind <see cref="AppKind.Feature"/>, no entry point).</param>
