@@ -118,6 +118,7 @@ in the same change (see [`AGENTS.md`](../../../AGENTS.md)).
 | [`wasm-v3-migration-analyse.md`](dev/plans/wasm-v3-migration-analyse.md) | Analysis of the wasm v3 migration (starting point of the end-of-migration plan). History. |
 | [`authentication-task-list.md`](dev/plans/authentication-task-list.md) | Former task list of WebAssembly authentication. History. |
 | [`browser-storage-optimization-analysis.md`](dev/plans/browser-storage-optimization-analysis.md) | Analysis of storage in the browser (2026-11-14, no code): what the OS keeps in IndexedDB and Cache Storage, measurements, findings (orphan contents never collected, base64, three copies of installed apps, `persist()` never called), twelve ordered avenues and three decisions by Benoit. |
+| [`browser-storage-series-plan.md`](dev/plans/browser-storage-series-plan.md) | **Plan of the `storage/base` series** (2026-11-15, no code started): work items 0 to 7 (binary content, conversion of the old content, partial read, a single copy of app files, file address, streamed write), links with issues #537 and #538, ADRs 0272 to 0275, three questions asked to Benoit |
 
 ### Subsystems and base apps
 

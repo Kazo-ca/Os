@@ -137,6 +137,15 @@ Nothing is coded.
   Storage goes away.
 - Retention of orphan contents: short (from a few hours to a day), and deletion
   at once when space is low; an ADR replaces the 30 days of ADR 0099.
+- **Series opened on 2026-11-15** (`storage/base` branch, no code): plan in
+  [`../dev/plans/browser-storage-series-plan.md`](../dev/plans/browser-storage-series-plan.md),
+  ADRs 0272 (binary content), 0273 (retention: 6 hours, 5 minutes when space
+  is low; this is the ADR of #537), 0274 (a single copy of app files) and 0275
+  (partial read, file address) proposed. The 30 days are in fact in ADR 0094,
+  not in ADR 0099. Three questions asked to Benoit on 2026-11-15 (conversion
+  of the old content, checks at read time, retention duration); the ADRs apply
+  the recommendation in the meantime. Work item 1 waits for the result of
+  #538.
 
 ## Questions asked, answer to confirm
 
