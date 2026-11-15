@@ -52,6 +52,9 @@ Le manifeste (`FileExplorerApp.Components`) inscrit deux composants :
 | `kazoos.file-view` | `ExplorerFileView` | `FileView` (implémentation interne, ADR 0155 §1) liée au menu de l'OS, avec la corbeille, le presse-papiers, les transferts et leurs conflits, l'ouverture et « Ouvrir avec ». Contrôleur `IKazoFileView`. |
 | `kazoos.file-dialogs` | `ExplorerFileDialogs` | « Ouvrir avec » (« Toujours utiliser », recherche et filtre par catégorie), « Propriétés », conflit de noms, en markup natif. |
 
+« Ouvrir » sur une sélection multiple ouvre les fichiers un par un, dans l'ordre où
+ils ont été choisis ; un rafraîchissement du dossier garde cet ordre.
+
 ```text
 App hôte ──► KazoFileView (SDK) ──► registre ──► ExplorerFileView (explorateur)
                                                    ├─ FileView + FileViewMenuBinding ──► Menus.Attach (menu de l'OS)
