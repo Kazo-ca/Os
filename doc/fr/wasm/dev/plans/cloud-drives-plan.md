@@ -75,7 +75,8 @@ inscriptions peuvent se préparer avant et recevoir les adresses ensuite.
 3. **Une page de politique de confidentialité** sur os.kazo.ca. Elle dit que
    les jetons et les fichiers restent dans le navigateur de l'utilisateur et
    que Kazo OS n'a aucun serveur qui les reçoit. Dropbox la demande pour la
-   production. Le chantier 7 en propose le texte.
+   production. **Écrite** : `privacy.html` et `terms.html`
+   ([`cloud-accounts.md`](../cloud-accounts.md#pages-publiques-pour-les-fournisseurs)).
 4. **Un essai par connecteur avec un vrai compte**, avant la fusion de la série
    dans `main`, et un essai de la PWA installée sur iOS.
 

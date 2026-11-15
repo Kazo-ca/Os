@@ -126,4 +126,47 @@ public sealed class CloudSignInWindowTests(PwaPublishFixture fixture)
         Assert.Contains("only used by Kazo OS", await callback.InnerTextAsync("#status"), StringComparison.Ordinal);
         Assert.DoesNotContain("code=", callback.Url, StringComparison.Ordinal);
     }
+
+    /// <summary>
+    /// The privacy policy and the terms of use that Dropbox and Microsoft link from their consent
+    /// screens: static pages of the release, served as they are (never the OS), kept offline.
+    /// </summary>
+    [Fact]
+    public async Task The_privacy_and_terms_pages_are_static_pages_of_the_release()
+    {
+        int port = PublishedAppHost.ReservePort();
+        await using PublishedAppHost host = new();
+        await host.StartAsync(fixture.V1WwwrootPath, port);
+
+        using IPlaywright playwright = await Playwright.CreateAsync();
+        await using IBrowser browser = await ChromiumLauncher.LaunchAsync(playwright,
+            new BrowserTypeLaunchOptions { Channel = "chrome", Headless = true });
+        IBrowserContext context = await browser.NewContextAsync();
+        IPage page = await context.NewPageAsync();
+        await PwaTestSupport.NavigateWhenReadyAsync(page, host.Address);
+        await PwaTestSupport.WaitForServiceWorkerControllerAsync(page);
+        string version = await PwaTestSupport.GetAssetsManifestVersionAsync(page);
+
+        foreach ((string path, string title) in new[]
+        {
+            ("privacy.html", "Kazo OS — Politique de confidentialité / Privacy policy"),
+            ("terms.html", "Kazo OS — Conditions d'utilisation / Terms of use")
+        })
+        {
+            Assert.True(await page.EvaluateAsync<bool>(
+                "async ([cache, url]) => !!(await (await caches.open(cache)).match(new URL(url, document.baseURI).href))",
+                new object[] { $"kazoos-cache-{version}", path }));
+
+            IPage legal = await context.NewPageAsync();
+            IResponse? response = await legal.GotoAsync($"{host.Address}/{path}#en");
+
+            Assert.NotNull(response);
+            Assert.True(response.FromServiceWorker);
+            Assert.Equal(title, await legal.TitleAsync());
+            Assert.Equal(0, await legal.Locator("script").CountAsync());
+            Assert.True(await legal.Locator("section#fr[lang=fr]").IsVisibleAsync());
+            Assert.True(await legal.Locator("section#en[lang=en]").IsVisibleAsync());
+            await legal.CloseAsync();
+        }
+    }
 }
