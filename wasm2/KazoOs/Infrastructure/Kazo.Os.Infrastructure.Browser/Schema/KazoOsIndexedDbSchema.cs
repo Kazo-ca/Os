@@ -306,6 +306,13 @@ public static class KazoOsIndexedDbSchema
                 "the two is a repository-level concern (P2-IDB-008), not this boundary's."),
 
         new(
+            "FileSystemContentPublish",
+            [FileSystemEntryStoreName, FileContentStoreName],
+            "Point a file entry at written content: check every chunk is present, replace the " +
+                "entry, and delete the previous content at once when the system rewrites its own " +
+                "file and nothing references it any more (ADR 0273 sections 3 and 5)."),
+
+        new(
             "FileSystemContentCleanup",
             [FileSystemEntryStoreName, FileContentStoreName],
             "Delete retained orphan chunks only after atomically rechecking that no filesystem " +

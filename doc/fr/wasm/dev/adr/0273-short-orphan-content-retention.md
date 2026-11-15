@@ -141,15 +141,15 @@ l'espace est faible**.
 
 Faites par l'issue #537 :
 
-- [ ] Passe qui ne lit que les clés et le premier bloc des candidats.
-- [ ] Durées de 1 jour et de 5 minutes dans `FileContentStoragePolicy`.
-- [ ] Rafraîchir l'horodatage du premier bloc à la réécriture d'un contenu
+- [x] Passe qui ne lit que les clés et le premier bloc des candidats.
+- [x] Durées de 1 jour et de 5 minutes dans `FileContentStoragePolicy`.
+- [x] Rafraîchir l'horodatage du premier bloc à la réécriture d'un contenu
   présent.
-- [ ] Vérifier la présence des blocs dans la transaction de l'entrée.
-- [ ] Déclencheurs : démarrage, toutes les heures, espace faible, corbeille
+- [x] Vérifier la présence des blocs dans la transaction de l'entrée.
+- [x] Déclencheurs : démarrage, toutes les heures, espace faible, corbeille
   vidée.
-- [ ] Suppression immédiate pour les fichiers réécrits par le système.
-- [ ] Tests : un fichier réécrit plusieurs fois ne fait pas grossir
+- [x] Suppression immédiate pour les fichiers réécrits par le système.
+- [x] Tests : un fichier réécrit plusieurs fois ne fait pas grossir
   `fsContent` ; écriture en cours pendant une passe ; deux onglets.
-- [ ] Docs (FR et EN) : `browser-infrastructure.md`, mémoire, entrée de
+- [x] Docs (FR et EN) : `browser-infrastructure.md`, mémoire, entrée de
   changement.

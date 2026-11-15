@@ -7,6 +7,11 @@ aucun numéro d'ADR n'est pris : ce document décrit ce que l'OS garde dans le n
 ce que ça coûte, et les pistes pour faire mieux. Chaque piste retenue demandera son ADR
 avant le code. Les décisions de Benoit sont au §7.
 
+Les constats décrivent la version 3.3.4. Depuis, l'issue #537 a branché le ramassage
+des contenus orphelins (constats C1 à C3 et C10), avec la rétention courte de
+l'[ADR 0273](../adr/0273-short-orphan-content-retention.md) ; l'état courant est dans
+[`browser-infrastructure.md`](../browser-infrastructure.md).
+
 ## 1. Résumé
 
 1. **L'espace n'est jamais récupéré.** Le contenu d'un fichier supprimé ou réécrit reste
@@ -18,10 +23,12 @@ avant le code. Les décisions de Benoit sont au §7.
 3. **Le chemin d'écriture et de lecture peut être environ 8 fois et 5 fois plus rapide**
    (52 Mio : 3,4 s → 0,4 s en écriture, 1,9 s → 0,36 s en lecture) avec des enregistrements
    binaires, un passage d'octets sans JSON et le SHA-256 du navigateur.
-4. **Ça n'explique pas la lenteur de l'issue [#520](https://github.com/Kazo-ca/Os/issues/520).**
-   La couche de stockage compte pour environ 3,4 s des 43 s mesurées pour enregistrer
-   52 Mo. Le reste est ailleurs et n'est pas encore localisé : il faut le mesurer dans
-   l'OS réel avant de choisir un correctif.
+4. **C'est bien la cause de la lenteur de l'issue [#520](https://github.com/Kazo-ca/Os/issues/520).**
+   Le profilage dans l'OS réel ([#538](https://github.com/Kazo-ca/Os/issues/538), rendu
+   le 2026-11-15) montre qu'en publication Release, un enregistrement de 52,5 Mio prend
+   4,1 à 4,9 s, dont 96 % dans le dépôt de contenu. Les 43 s de l'issue venaient d'un
+   hôte Debug. Le contenu binaire (piste 2) règle donc #520. La première version de
+   cette analyse disait le contraire, à tort (voir §3.4).
 5. **Une app installée est gardée en trois copies** : la version courante et la
    précédente dans le système de fichiers (en base64), plus une copie des fichiers
    servis dans Cache Storage. Une app de 64 Mio occupe environ 236 Mio.
@@ -59,7 +66,8 @@ version courante et la précédente.
 
 **Politique d'espace** : stockage faible sous 64 Mio ou 10 % libres, réserve de 5 % pour
 root (256 Mio au plus), rétention des contenus orphelins de 30 jours
-(ADR [0099](../adr/0099-os-backup-and-low-storage.md)).
+(ADR [0094](../adr/0094-deferred-decisions-status-and-maximum-file-size.md) pour la rétention,
+[0099](../adr/0099-os-backup-and-low-storage.md) pour le stockage faible).
 
 ## 3. Mesures
 
@@ -106,18 +114,27 @@ décodage et hachage 0,58 s, copies du SDK 0,04 s.
 
 L'issue mesure, pour un `.psd` de 52,5 Mo : 43,4 s pour enregistrer, 40,0 s pour ouvrir
 (2,8 s dans PhotoCraft lui-même), et la mémoire qui passe de 1391 à 2588 Mio. La couche
-de stockage, mesurée seule, prend 3,4 s et 1,9 s. **Environ 90 % du temps est donc
-ailleurs** : dans le passage iframe → .NET, dans les copies du SDK sous pression
-mémoire, ou dans autre chose.
+de stockage, mesurée seule en Release, prend 3,4 s et 1,9 s.
 
-Deux indices pour chercher :
+**Correction du 2026-11-15.** La première version de cette analyse comparait ces deux
+séries de chiffres et concluait qu'environ 90 % du temps était ailleurs que dans le
+stockage. C'était faux : les 43 s de l'issue avaient été mesurées sur un hôte Debug,
+et le banc d'essai en Release. Le profilage de l'issue
+[#538](https://github.com/Kazo-ca/Os/issues/538), fait dans l'OS réel en publication
+Release, donne :
 
-- `/proc/diskstats` donne déjà le temps passé dans chaque transaction IndexedDB ; le
-  comparer au temps total d'un enregistrement dit tout de suite si le temps est dans le
-  stockage ou avant ;
-- sur le site publié, `head -c 1048576 /dev/urandom > a.bin` dans le terminal n'avait
-  pas fini après 4 min 30. Le chemin du terminal a donc son propre problème, sans
-  rapport avec IndexedDB.
+- un enregistrement de 52,5 Mio prend 4,1 à 4,9 s, proche des 3,4 s du banc d'essai ;
+- 96 % de ce temps est dans le dépôt de contenu (hachage, base64, JSON, IndexedDB) ;
+- le premier enregistrement fait monter la mémoire d'environ 780 Mio.
+
+Le stockage est donc bien la cause de #520, le contenu binaire (piste 2) la règle, et
+l'écriture en flux (piste 4) reste justifiée par la mémoire. Le rapport complet est
+[`large-file-save-profile.md`](large-file-save-profile.md).
+
+Une observation reste à part : sur le site publié,
+`head -c 1048576 /dev/urandom > a.bin` dans le terminal n'avait pas fini après
+4 min 30. Le chemin du terminal a donc son propre problème, sans rapport avec
+IndexedDB.
 
 ## 4. Constats
 
@@ -161,6 +178,7 @@ Deux indices pour chercher :
    migration des enregistrements existants (ou lecture des deux formes), format de la
    sauvegarde, lecteurs qui lisent `dataBase64` directement.
 3. **Profiler l'issue #520 dans l'OS réel**, couche par couche, avant de la corriger.
+   Fait le 2026-11-15 (#538, voir §3.4) : le temps est dans le dépôt de contenu.
 4. **Lecture partielle et écriture en flux.** Lire une plage de blocs sans charger le
    fichier, écrire bloc par bloc sans garder la liste. Réduit le pic mémoire ; demande
    de revoir la vérification du hachage (par bloc plutôt que sur le fichier entier).
@@ -195,7 +213,7 @@ Deux indices pour chercher :
 | Ordre | Piste | Pourquoi là |
 | --- | --- | --- |
 | 1 | 1. Récupérer l'espace | Petit, sans risque de format, corrige une fuite réelle en production. |
-| 2 | 3. Profiler #520 | Dit où mettre l'effort ensuite. |
+| 2 | 3. Profiler #520 | Dit où mettre l'effort ensuite. Fait : le contenu binaire règle #520. |
 | 3 | 2. Contenu binaire | Le plus gros gain mesuré ; change le format, donc tôt. |
 | 4 | 10. ADR 0250 | Déjà décidé ; protège les données. |
 | 5 | 6. Une copie des fichiers d'app | Gros gain d'espace pour les apps de 30 à 160 Mo. |
@@ -221,7 +239,7 @@ recommandations.
    disparaît.
 3. **Combien de temps garder un contenu orphelin.** Court, de quelques heures à un
    jour, et tout de suite quand l'espace est faible. La valeur exacte est fixée par
-   l'ADR qui remplace la rétention de 30 jours de l'ADR 0099.
+   l'ADR qui remplace la rétention de 30 jours de l'ADR 0094.
 
 ## 8. Limites
 
@@ -231,14 +249,15 @@ recommandations.
   déduplication.
 - Le banc .NET reproduit le dépôt de contenu, pas tout l'OS : pas de métadonnées, pas
   de permissions, pas de pression mémoire.
-- Le temps d'un enregistrement dans l'OS réel n'a pas pu être mesuré de bout en bout
-  (voir §3.4).
+- Le temps d'un enregistrement dans l'OS réel n'a pas été mesuré par cette analyse ;
+  il l'a été ensuite par l'issue #538 (voir §3.4).
 
 ## 9. Liens
 
 - [`browser-infrastructure.md`](../browser-infrastructure.md)
 - ADR [0015](../adr/0015-browser-storage-and-indexeddb-adapter.md),
   [0018](../adr/0018-indexeddb-failure-and-recovery-policy.md),
+  [0094](../adr/0094-deferred-decisions-status-and-maximum-file-size.md),
   [0099](../adr/0099-os-backup-and-low-storage.md),
   [0206](../adr/0206-serve-installed-app-assets.md),
   [0225](../adr/0225-serve-installed-app-files-to-every-page.md),

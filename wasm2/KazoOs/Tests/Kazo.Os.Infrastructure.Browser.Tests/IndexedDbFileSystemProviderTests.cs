@@ -191,7 +191,7 @@ public sealed class IndexedDbFileSystemProviderTests
         MemoryFileContentChunkStore chunks = new();
         ScriptedModule module = new(
             Walk(Entry(ChildId, FileSystemEntryKind.File, revision: 4)),
-            [Parse("4"), Parse("null")]);
+            [Parse("4"), Parse("1"), Parse("null")]);
         await using IndexedDbFileSystemProvider provider = new(
             new FakeJsRuntime(module),
             new FixedTimeProvider(),
@@ -216,10 +216,119 @@ public sealed class IndexedDbFileSystemProviderTests
         IReadOnlyList<Kazo.Os.Infrastructure.Browser.Interop.IndexedDbOperation> metadataOperations =
             Assert.IsAssignableFrom<IReadOnlyList<Kazo.Os.Infrastructure.Browser.Interop.IndexedDbOperation>>(
                 module.ExecuteArguments[1][4]);
+        // ADR 0273 section 3: the entry is published only if its one chunk is present.
+        Assert.Equal(["assertPropertyEquals", "assertCount", "put"], metadataOperations.Select(operation => operation.Kind));
+        Assert.Equal(1, metadataOperations[1].ExpectedValue);
+        Assert.Equal(expectedHash, metadataOperations[1].Query);
+        Assert.Contains(
+            Kazo.Os.Infrastructure.Browser.Schema.KazoOsIndexedDbSchema.FileContentStoreName,
+            Assert.IsAssignableFrom<IEnumerable<string>>(module.ExecuteArguments[1][2]));
         IndexedDbFileSystemEntryRecord updated =
-            Assert.IsType<IndexedDbFileSystemEntryRecord>(metadataOperations[1].Value);
+            Assert.IsType<IndexedDbFileSystemEntryRecord>(metadataOperations[2].Value);
         Assert.Equal(expectedHash, updated.ContentHash);
         Assert.Equal((int)FileSystemContentKind.Text, updated.ContentKind);
+    }
+
+    [Fact]
+    public async Task WriteAsync_ChunksRemovedBeforePublishing_AreWrittenAgainOnce()
+    {
+        ScriptedModule module = new(
+            Walk(Entry(ChildId, FileSystemEntryKind.File, revision: 4)),
+            ScriptedModule.ContentMissing,
+            [Parse("4"), Parse("1"), Parse("null")]);
+        await using IndexedDbFileSystemProvider provider = new(
+            new FakeJsRuntime(module),
+            new FixedTimeProvider(),
+            null,
+            () => Guid.NewGuid(),
+            contentChunks: new MemoryFileContentChunkStore());
+
+        FileSystemMutationResult result = await provider.WriteAsync(
+            new FileSystemWriteRequest(VirtualPath.Parse("/file.txt"), 4),
+            new TextSource("hello"),
+            Context());
+
+        // ADR 0273 section 3: an orphan pass removed the reused content between the content write
+        // and the entry; the content is written again and the entry published. The chunks go
+        // through the binary chunk store (ADR 0272): walk, refused entry, published entry.
+        Assert.True(result.Succeeded);
+        Assert.Equal(3, module.ExecuteArguments.Count);
+    }
+
+    [Fact]
+    public async Task WriteAsync_ChunksMissingTwice_IsAnIoErrorAndPublishesNothing()
+    {
+        ScriptedModule module = new(
+            Walk(Entry(ChildId, FileSystemEntryKind.File, revision: 4)),
+            ScriptedModule.ContentMissing,
+            ScriptedModule.ContentMissing);
+        await using IndexedDbFileSystemProvider provider = new(
+            new FakeJsRuntime(module),
+            new FixedTimeProvider(),
+            null,
+            () => Guid.NewGuid(),
+            contentChunks: new MemoryFileContentChunkStore());
+
+        FileSystemMutationResult result = await provider.WriteAsync(
+            new FileSystemWriteRequest(VirtualPath.Parse("/file.txt"), 4),
+            new TextSource("hello"),
+            Context());
+
+        Assert.False(result.Succeeded);
+        Assert.Equal(FileSystemErrorCode.ProviderFailure, result.Transaction.Error!.Code);
+    }
+
+    [Fact]
+    public async Task WriteAsync_BySystem_DeletesThePreviousContentInTheSameTransaction()
+    {
+        ScriptedModule module = new(
+            Walk(Entry(ChildId, FileSystemEntryKind.File, revision: 4, length: 3, contentHash: "old-hash")),
+            [Parse("4"), Parse("1"), Parse("null"), Parse("{\"deleted\":1,\"referenced\":false}")]);
+        await using IndexedDbFileSystemProvider provider = new(
+            new FakeJsRuntime(module),
+            new FixedTimeProvider(),
+            null,
+            () => Guid.NewGuid(),
+            contentChunks: new MemoryFileContentChunkStore());
+
+        FileSystemMutationResult result = await provider.WriteAsync(
+            new FileSystemWriteRequest(VirtualPath.Parse("/file.txt"), 4),
+            new TextSource("hello"),
+            Context());
+
+        Assert.True(result.Succeeded);
+        IReadOnlyList<Kazo.Os.Infrastructure.Browser.Interop.IndexedDbOperation> operations =
+            Assert.IsAssignableFrom<IReadOnlyList<Kazo.Os.Infrastructure.Browser.Interop.IndexedDbOperation>>(
+                module.ExecuteArguments[1][4]);
+        Kazo.Os.Infrastructure.Browser.Interop.IndexedDbOperation delete = operations[^1];
+        Assert.Equal("deleteAllByIndexIfUnreferenced", delete.Kind);
+        Assert.Equal("old-hash", delete.Query);
+        Assert.Null(delete.CompareProperty);
+    }
+
+    [Fact]
+    public async Task WriteAsync_ByAUser_LeavesThePreviousContentToTheOrphanPass()
+    {
+        ScriptedModule module = new(
+            Walk(Entry(ChildId, FileSystemEntryKind.File, revision: 4, length: 3, contentHash: "old-hash")),
+            [Parse("4"), Parse("1"), Parse("null")]);
+        await using IndexedDbFileSystemProvider provider = new(
+            new FakeJsRuntime(module),
+            new FixedTimeProvider(),
+            null,
+            () => Guid.NewGuid(),
+            contentChunks: new MemoryFileContentChunkStore());
+
+        FileSystemMutationResult result = await provider.WriteAsync(
+            new FileSystemWriteRequest(VirtualPath.Parse("/file.txt"), 4),
+            new TextSource("hello"),
+            UserContext());
+
+        Assert.True(result.Succeeded);
+        IReadOnlyList<Kazo.Os.Infrastructure.Browser.Interop.IndexedDbOperation> operations =
+            Assert.IsAssignableFrom<IReadOnlyList<Kazo.Os.Infrastructure.Browser.Interop.IndexedDbOperation>>(
+                module.ExecuteArguments[1][4]);
+        Assert.Equal(["assertPropertyEquals", "assertCount", "put"], operations.Select(operation => operation.Kind));
     }
 
     [Fact]
@@ -487,6 +596,21 @@ public sealed class IndexedDbFileSystemProviderTests
             new DateTimeOffset(2026, 8, 2, 12, 0, 0, TimeSpan.Zero));
     }
 
+    private static FileSystemAuthorizationContext UserContext()
+    {
+        AppOperationContext operation = new()
+        {
+            AppId = "org.kazoos.test",
+            UserId = "user",
+            UserAuthority = AppAuthority.User,
+            GrantedCapabilities = new HashSet<string>(AppCapabilities.All, StringComparer.Ordinal)
+        };
+        return new FileSystemAuthorizationContext(
+            operation,
+            ["users"],
+            new DateTimeOffset(2026, 8, 2, 12, 0, 0, TimeSpan.Zero));
+    }
+
     private static JsonElement[] One(string json) => [JsonDocument.Parse(json).RootElement.Clone()];
 
     /// <summary>Result of one <c>resolvePath</c> walk: the entries found below the root, in order.</summary>
@@ -577,6 +701,9 @@ public sealed class IndexedDbFileSystemProviderTests
         /// <summary>A scripted result that makes the transaction fail like a full browser storage.</summary>
         public static readonly JsonElement[]? QuotaExceeded = null;
 
+        /// <summary>A scripted result that fails the transaction like <c>assertCount</c> on missing chunks.</summary>
+        public static readonly JsonElement[] ContentMissing = [];
+
         private readonly Queue<JsonElement[]?> _results = new(results);
 
         public List<object?[]> ExecuteArguments { get; } = [];
@@ -596,6 +723,11 @@ public sealed class IndexedDbFileSystemProviderTests
                 ExecuteArguments.Add(args ?? []);
                 JsonElement[] result = _results.Dequeue()
                     ?? throw new JSException("QuotaExceededError: The quota has been exceeded.");
+                if (ReferenceEquals(result, ContentMissing))
+                {
+                    throw new JSException("ConstraintError: filesystem.content-missing: 0 of 1.");
+                }
+
                 return ValueTask.FromResult((TValue)(object)result);
             }
 

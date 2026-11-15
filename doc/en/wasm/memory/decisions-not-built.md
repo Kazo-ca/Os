@@ -124,20 +124,21 @@ viewers live, scope of `?app=`, Eruda or not.
 ## Storage in the browser (decisions of 2026-11-14)
 
 Analysis: [`../dev/plans/browser-storage-optimization-analysis.md`](../dev/plans/browser-storage-optimization-analysis.md).
-Nothing is coded.
+Only #537 is coded; the `storage/base` series is still to build.
 
-- Two `TODO` issues first: #537 (reclaim the space of orphan contents, which
-  nothing collects today) and #538 (profile #520 in the real OS; delivered on
-  2026-11-15: in Release, 96% of the 4.1 to 4.9 s of a 52.5 MiB save is in
-  the content repository, the 43 s came from a Debug host).
+- Two `TODO` issues first: #537 (reclaim the space of orphan contents; done on
+  2026-11-15, ADR 0273) and #538 (profile #520 in the real OS; delivered on
+  2026-11-15: in Release, 96 % of the time is in the content repository, the
+  43 s came from a Debug host).
 - Then a `storage/base` series, ADRs before the code: binary content instead of
   base64, ADR 0250 to build, a single copy of app files, partial read and file
   address (#379).
 - Files of an installed app: the file system stays the only source; the
   service worker serves `_content/…` from the file store and the copy in Cache
   Storage goes away.
-- Retention of orphan contents: short (from a few hours to a day), and deletion
-  at once when space is low; an ADR replaces the 30 days of ADR 0099.
+- Retention of orphan contents: short, and quick deletion when space is low. Done
+  by ADR 0273 (1 day, 5 minutes when space is low), which replaces the 30 days of
+  ADR 0094.
 - **Series opened on 2026-11-15** (`storage/base` branch, no code): plan in
   [`../dev/plans/browser-storage-series-plan.md`](../dev/plans/browser-storage-series-plan.md),
   ADRs 0272 (binary content), 0273 (retention: 1 day, 5 minutes when space

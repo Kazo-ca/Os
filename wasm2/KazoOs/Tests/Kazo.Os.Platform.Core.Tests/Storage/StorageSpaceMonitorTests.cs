@@ -106,6 +106,103 @@ public sealed class StorageSpaceMonitorTests
         Assert.Empty(queue.GetActive(alice.UserId, DateTimeOffset.UtcNow));
     }
 
+    [Fact]
+    public async Task Becoming_low_reclaims_orphans_first_and_warns_nobody_when_that_is_enough()
+    {
+        Probe probe = new(new StorageCapacity(950 * MiB, 1000 * MiB));
+        InMemoryNotificationQueue queue = new(maxEntriesPerUser: 10);
+        AuthenticatedPrincipal alice = Principal("alice");
+        Reclaimer reclaimer = new(() => probe.Capacity = new StorageCapacity(500 * MiB, 1000 * MiB));
+        await using StorageSpaceMonitor monitor = new(probe, queue, () => alice) { Reclaimer = reclaimer };
+
+        await monitor.RefreshAsync();
+
+        Assert.Equal([true], reclaimer.Calls);
+        Assert.False(monitor.IsLowSpace);
+        Assert.Empty(queue.GetActive(alice.UserId, DateTimeOffset.UtcNow));
+    }
+
+    [Fact]
+    public async Task Becoming_low_warns_once_when_reclaiming_is_not_enough()
+    {
+        Probe probe = new(new StorageCapacity(950 * MiB, 1000 * MiB));
+        InMemoryNotificationQueue queue = new(maxEntriesPerUser: 10);
+        AuthenticatedPrincipal alice = Principal("alice");
+        Reclaimer reclaimer = new(() => { });
+        await using StorageSpaceMonitor monitor = new(probe, queue, () => alice) { Reclaimer = reclaimer };
+
+        await monitor.RefreshAsync();
+        await monitor.RefreshAsync();
+
+        // Reclaimed once when the storage became low, not again while it stays low.
+        Assert.Equal([true], reclaimer.Calls);
+        Assert.True(monitor.IsLowSpace);
+        Assert.Single(queue.GetActive(alice.UserId, DateTimeOffset.UtcNow));
+    }
+
+    [Fact]
+    public async Task A_failing_reclaimer_does_not_fail_the_measure()
+    {
+        Probe probe = new(new StorageCapacity(950 * MiB, 1000 * MiB));
+        InMemoryNotificationQueue queue = new(maxEntriesPerUser: 10);
+        AuthenticatedPrincipal alice = Principal("alice");
+        Reclaimer reclaimer = new(() => throw new InvalidOperationException("store closed"));
+        await using StorageSpaceMonitor monitor = new(probe, queue, () => alice) { Reclaimer = reclaimer };
+
+        await monitor.RefreshAsync();
+
+        Assert.True(monitor.IsLowSpace);
+        Assert.Single(queue.GetActive(alice.UserId, DateTimeOffset.UtcNow));
+    }
+
+    [Fact]
+    public async Task Plenty_of_space_never_reclaims_on_a_measure()
+    {
+        Probe probe = new(new StorageCapacity(100 * MiB, 1000 * MiB));
+        Reclaimer reclaimer = new(() => { });
+        await using StorageSpaceMonitor monitor = new(probe) { Reclaimer = reclaimer };
+
+        await monitor.RefreshAsync();
+
+        Assert.Empty(reclaimer.Calls);
+    }
+
+    [Fact]
+    public async Task A_burst_of_reclaim_requests_runs_one_reclaim()
+    {
+        Probe probe = new(new StorageCapacity(100 * MiB, 1000 * MiB));
+        Reclaimer reclaimer = new(() => { });
+        await using StorageSpaceMonitor monitor = new(probe) { Reclaimer = reclaimer };
+
+        // Emptying a trash of three elements: three deletions, one reclaim (ADR 0273 section 4).
+        monitor.RequestReclaim();
+        monitor.RequestReclaim();
+        monitor.RequestReclaim();
+        await reclaimer.FirstCall.Task.WaitAsync(TimeSpan.FromSeconds(10));
+        await Task.Delay(StorageSpaceMonitor.ReclaimRequestDelay);
+
+        Assert.Equal([false], reclaimer.Calls);
+    }
+
+    private sealed class Reclaimer(Action onReclaim) : IStorageReclaimer
+    {
+        public List<bool> Calls { get; } = [];
+
+        public TaskCompletionSource FirstCall { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public ValueTask<long> ReclaimAsync(bool lowSpace, CancellationToken cancellationToken = default)
+        {
+            lock (Calls)
+            {
+                Calls.Add(lowSpace);
+            }
+
+            onReclaim();
+            FirstCall.TrySetResult();
+            return ValueTask.FromResult(1L);
+        }
+    }
+
     private static AuthenticatedPrincipal Principal(string login)
     {
         LocalGroupId group = LocalGroupId.FromGuid(Guid.NewGuid());

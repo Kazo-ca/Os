@@ -113,6 +113,31 @@ public sealed class FileSystemServiceTests
         Assert.Equal(1, guard.Refreshes);
     }
 
+    [Fact]
+    public async Task Deleting_from_the_trash_asks_the_monitor_to_reclaim_orphan_content()
+    {
+        Reclaimer reclaimer = new();
+        await using Kazo.Os.Platform.Core.Storage.StorageSpaceMonitor monitor = new(new PlentyProbe()) { Reclaimer = reclaimer };
+        ServiceFixture fixture = await ServiceFixture.CreateAsync(monitor);
+        FileSystemAuthorizationContext user = fixture.UserContext(AppCapabilities.FileSystemUserHomeWrite);
+        foreach (string directory in new[] { "/home/user/.local", "/home/user/.local/share", "/home/user/.local/share/Trash", "/home/user/.local/share/Trash/files" })
+        {
+            await fixture.CreateAsync(directory, FileSystemEntryKind.Directory, user);
+        }
+
+        await fixture.CreateAsync("/home/user/.local/share/Trash/files/old.txt", FileSystemEntryKind.File, user);
+
+        // A deletion outside the trash leaves the content to the regular passes.
+        Assert.True((await fixture.DeleteAsync("/home/user/file.txt", user)).Succeeded);
+        await Task.Delay(Kazo.Os.Platform.Core.Storage.StorageSpaceMonitor.ReclaimRequestDelay * 2);
+        Assert.Empty(reclaimer.Calls);
+
+        // Emptying the trash frees content now (ADR 0273 section 4).
+        Assert.True((await fixture.DeleteAsync("/home/user/.local/share/Trash/files/old.txt", user)).Succeeded);
+        await reclaimer.FirstCall.Task.WaitAsync(TimeSpan.FromSeconds(10));
+        Assert.Equal([false], reclaimer.Calls);
+    }
+
     private sealed class ServiceFixture
     {
         private int _entryId = 1;
@@ -172,6 +197,42 @@ public sealed class FileSystemServiceTests
             return fixture;
         }
 
+        /// <summary>Creates one entry under its existing parent, reading the parent revision first.</summary>
+        internal async Task CreateAsync(string path, FileSystemEntryKind kind, FileSystemAuthorizationContext context)
+        {
+            VirtualPath target = VirtualPath.Parse(path);
+            FileSystemEntrySnapshot parent = (await Repository.StatAsync(
+                new FileSystemStatRequest(ParentOf(path)),
+                SystemContext)).Value!;
+            FileSystemMutationResult created = await Repository.CreateAsync(
+                new FileSystemCreateRequest(
+                    target,
+                    kind,
+                    FileSystemPermissions.FromMode(kind == FileSystemEntryKind.Directory ? (ushort)0x01FF : (ushort)0x01A4),
+                    parent.Metadata.Revision),
+                context);
+            Assert.True(created.Succeeded);
+        }
+
+        private static VirtualPath ParentOf(string path)
+        {
+            int slash = path.LastIndexOf('/');
+            return VirtualPath.Parse(slash == 0 ? "/" : path[..slash]);
+        }
+
+        /// <summary>Deletes one file through the service.</summary>
+        internal async Task<FileSystemMutationResult> DeleteAsync(string path, FileSystemAuthorizationContext context)
+        {
+            VirtualPath target = VirtualPath.Parse(path);
+            FileSystemEntrySnapshot entry = (await Repository.StatAsync(new FileSystemStatRequest(target), SystemContext)).Value!;
+            FileSystemEntrySnapshot parent = (await Repository.StatAsync(
+                new FileSystemStatRequest(ParentOf(path)),
+                SystemContext)).Value!;
+            return await Service.DeleteAsync(
+                new FileSystemDeleteRequest(target, entry.Metadata.Revision, parent.Metadata.Revision),
+                context);
+        }
+
         /// <summary>Overwrites <c>/home/user/file.txt</c> through the service.</summary>
         internal async Task<FileSystemMutationResult> WriteFileAsync(FileSystemAuthorizationContext context)
         {
@@ -217,6 +278,32 @@ public sealed class FileSystemServiceTests
                 FileSystemEntryKind.Directory,
                 FileSystemPermissions.FromMode(0x01FF),
                 parentRevision);
+    }
+
+    /// <summary>Records the reclaims the storage monitor runs.</summary>
+    private sealed class Reclaimer : IStorageReclaimer
+    {
+        public List<bool> Calls { get; } = [];
+
+        public TaskCompletionSource FirstCall { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public ValueTask<long> ReclaimAsync(bool lowSpace, CancellationToken cancellationToken = default)
+        {
+            lock (Calls)
+            {
+                Calls.Add(lowSpace);
+            }
+
+            FirstCall.TrySetResult();
+            return ValueTask.FromResult(0L);
+        }
+    }
+
+    /// <summary>A disk with plenty of free space.</summary>
+    private sealed class PlentyProbe : IStorageCapacityProbe
+    {
+        public ValueTask<StorageCapacity?> GetCapacityAsync(CancellationToken cancellationToken = default) =>
+            ValueTask.FromResult<StorageCapacity?>(new StorageCapacity(100L << 20, 1000L << 20));
     }
 
     /// <summary>Free-space state of the reserve tests; counts the measures the service asked for.</summary>

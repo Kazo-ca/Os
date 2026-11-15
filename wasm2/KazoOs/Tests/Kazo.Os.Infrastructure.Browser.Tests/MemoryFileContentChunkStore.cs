@@ -56,9 +56,15 @@ internal sealed class MemoryFileContentChunkStore : IFileContentChunkStore
         for (int offset = 0; offset < bytes.Count || count == 0; offset += chunkSize, count++)
         {
             byte[] data = bytes.Slice(offset, Math.Min(chunkSize, bytes.Count - offset)).ToArray();
-            if (Chunks.TryAdd(Key(contentHash, firstIndex + count), new StoredChunk(data, Hex(data), createdUtcMs)))
+            string key = Key(contentHash, firstIndex + count);
+            if (Chunks.TryAdd(key, new StoredChunk(data, Hex(data), createdUtcMs)))
             {
                 added++;
+            }
+            else if (firstIndex + count == 0)
+            {
+                // Like fileContent.js: an existing chunk 0 gets the new creation time (ADR 0273 §2).
+                Chunks[key] = Chunks[key] with { CreatedUtcMs = createdUtcMs };
             }
         }
 
