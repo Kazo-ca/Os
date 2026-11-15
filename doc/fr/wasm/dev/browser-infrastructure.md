@@ -43,9 +43,10 @@ navigateur, dans la composition de l'hôte.
   (métadonnées : fichiers, dossiers, liens), `fsLinks`, `fsContent` (blocs),
   `catalog`, `grants`, `audit`, `diagnostics`, `syncMetadata`, `serverConnection`,
   `syncCursors`, `syncRecordState`, et une base par site ASP.Kazo (`kazoweb.<appId>`).
-- Contenu de fichier : découpé en blocs adressés par SHA-256, de 256 Kio au plus
-  par défaut (`FileContentStoragePolicy.DefaultMaxChunkSizeBytes`) ; un bloc identique
-  n'est stocké qu'une fois.
+- Contenu de fichier : découpé en blocs de 256 Kio au plus par défaut
+  (`FileContentStoragePolicy.DefaultMaxChunkSizeBytes`), adressés par le SHA-256 du
+  fichier entier et le numéro du bloc ; deux fichiers identiques partagent leur
+  contenu, mais pas deux fichiers qui n'ont que des blocs en commun.
 
 ## Récupération
 

@@ -43,9 +43,10 @@ implementations, in the host's composition.
   (metadata: files, folders, links), `fsLinks`, `fsContent` (chunks),
   `catalog`, `grants`, `audit`, `diagnostics`, `syncMetadata`, `serverConnection`,
   `syncCursors`, `syncRecordState`, and one database per ASP.Kazo site (`kazoweb.<appId>`).
-- File content: split into chunks addressed by SHA-256, of at most 256 KiB
-  by default (`FileContentStoragePolicy.DefaultMaxChunkSizeBytes`); an identical chunk
-  is stored only once.
+- File content: split into chunks of at most 256 KiB by default
+  (`FileContentStoragePolicy.DefaultMaxChunkSizeBytes`), addressed by the SHA-256 of
+  the whole file and the chunk number; two identical files share their content, but
+  not two files that only have some chunks in common.
 
 ## Recovery
 
