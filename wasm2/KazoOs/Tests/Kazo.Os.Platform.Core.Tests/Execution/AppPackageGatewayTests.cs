@@ -828,11 +828,13 @@ public sealed partial class AppPackageGatewayTests
                 """);
         }
 
-        /// <summary>Publishes a feature with three children (ADR 0260 §2) in the official catalog, with <c>kind: feature</c> (ADR 0260 §4).</summary>
+        /// <summary>Publishes a feature with three children (ADR 0260 §2) in the official catalog of the build's channel, with <c>kind: feature</c> (ADR 0260 §4).</summary>
         internal void PublishFeatureCatalog(string version)
         {
-            string address = AppPackageDefaults.OfficialCatalogAddress;
-            string root = address[..^"catalog.json".Length];
+            // The official catalog of this build's channel (ADR 0271 §3): catalog-beta.json when the
+            // OS is a prerelease, catalog.json otherwise, so the test passes on main and on beta.
+            string address = AppPackageDefaults.OfficialCatalogAddressFor(KazoOsSdk.SemanticVersion);
+            string root = address[..(address.LastIndexOf('/') + 1)];
             Dictionary<string, byte[]> files = AppPackageTests.FeatureFiles(version);
             files["lib/Kazo.Feature.dll"] = File.ReadAllBytes(typeof(AppManifest).Assembly.Location);
             byte[] package = AppPackageTests.Build(files, AppPackageTests.FeatureId, version, manifests: AppPackageTests.FeatureManifestPaths);
