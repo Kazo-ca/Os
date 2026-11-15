@@ -24,7 +24,8 @@
     "version": { "$ref": "#/$defs/semanticVersion" },
     "publisherId": { "type": "string", "pattern": "^[a-z][a-z0-9-]*(\\.[a-z][a-z0-9-]*)+$" },
     "description": { "type": "string", "minLength": 1 },
-    "kind": { "enum": ["window", "terminal", "service", "web"] },
+    "kind": { "enum": ["window", "terminal", "service", "web", "feature"] },
+    "parent": { "type": "string", "pattern": "^[a-z][a-z0-9-]*(\\.[a-z][a-z0-9-]*){2,}$" },
     "entryPoint": {
       "type": "object",
       "additionalProperties": false,
@@ -239,6 +240,20 @@
         }
       }
     },
+    "providedServices": {
+      "description": "Services a feature provides to other apps (ADR 0262 §1): a contract, an interface of a shared library, and the type that implements it, both written 'Full.Type.Name, Assembly'. Only a feature declares them.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["contract", "implementation"],
+        "properties": {
+          "contract": { "type": "string", "pattern": "^[^,\\s]+, *[^,\\s=/\\\\]+$" },
+          "implementation": { "type": "string", "pattern": "^[^,\\s]+, *[^,\\s=/\\\\]+$" },
+          "entryPoint": { "type": "string", "pattern": "^[a-z][a-z0-9-]*(\\.[a-z][a-z0-9-]*){3,}$" }
+        }
+      }
+    },
     "contextMenus": {
       "description": "Entries the app adds to the OS file menus (ADR 0151, ADR 0159), in declaration order.",
       "type": "array",
@@ -378,11 +393,28 @@
       "then": { "not": { "required": ["window"] } }
     },
     {
-      "description": "Exactly one of entryPoint (legacy, single-platform) or platform (MOB-003, multi-platform) must be present. See doc/en/wasm/dev/old/mobile-interface-platform-plan.md §4.3.",
-      "oneOf": [
-        { "required": ["entryPoint"], "not": { "required": ["platform"] } },
-        { "required": ["platform"], "not": { "required": ["entryPoint"] } }
-      ]
+      "description": "Only a feature provides services to other apps (ADR 0262 §1).",
+      "if": {
+        "required": ["kind"],
+        "properties": { "kind": { "not": { "const": "feature" } } }
+      },
+      "then": { "not": { "required": ["providedServices"] } }
+    },
+    {
+      "description": "A feature (ADR 0260) has no entry point of its own; every other kind has exactly one of entryPoint (legacy, single-platform) or platform (MOB-003, multi-platform). See doc/en/wasm/dev/old/mobile-interface-platform-plan.md §4.3.",
+      "if": {
+        "required": ["kind"],
+        "properties": { "kind": { "const": "feature" } }
+      },
+      "then": {
+        "not": { "anyOf": [{ "required": ["entryPoint"] }, { "required": ["platform"] }, { "required": ["parent"] }] }
+      },
+      "else": {
+        "oneOf": [
+          { "required": ["entryPoint"], "not": { "required": ["platform"] } },
+          { "required": ["platform"], "not": { "required": ["entryPoint"] } }
+        ]
+      }
     }
   ],
   "$defs": {

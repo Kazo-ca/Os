@@ -311,7 +311,9 @@ approval:
   the app appears at once. Only the update, removal or rollback of an app already
   loaded in the page waits for a restart of Kazo OS; `kazopkg list` shows
   `(restart pending)` until then.
-- **Dangerous capabilities**: asked at first launch, as for any non-system app.
+- **Dangerous capabilities**: asked at first launch, as for any non-system app;
+  except for a feature (ADR 0260), whose installation consent is the machine
+  approval (section [Features](#features-adr-0260)).
 - **Publishing**: `dotnet build -c Release -t:KazoOsPack` in the app project
   writes the package and `index.json` to `bin/kazoos-packages` (property
   `KazoOsPackageOutput`), to push to the `kazoos-packages` branch; the
@@ -324,7 +326,10 @@ approval:
   ([ADR 0221](adr/0221-pack-all-static-web-assets-of-an-app.md)). It also
   holds the satellite assemblies of the app's assemblies,
   `lib/<culture>/<assembly>.resources.dll` (not the SDK's)
-  ([ADR 0222](adr/0222-installed-app-satellite-assemblies.md)).
+  ([ADR 0222](adr/0222-installed-app-satellite-assemblies.md)), and the
+  app's own libraries with their satellites
+  ([ADR 0261](adr/0261-app-libraries-and-shared-versions.md),
+  [section below](#app-libraries-and-shared-versions-adr-0261)).
 - **`wwwroot/` resources** ([ADR 0206](adr/0206-serve-installed-app-assets.md)):
   at the app's first launch in the session, each declared resource is read
   through `AppAssetStore` (hash checked) and copied into the
@@ -352,9 +357,9 @@ approval:
   (`InstalledAppSatellites`) and loads it: `IStringLocalizer` and
   `ResourceManager` find its translated texts, whatever the process's `LANG`.
   `AppPackage` refuses a satellite that translates no declared assembly.
-- **Limits**: see the section of the same name in ADR 0182 (main thread only,
-  third-party NuGet dependencies not carried); the `wwwroot` resources limit is
-  lifted by ADR 0206.
+- **Limits**: see the section of the same name in ADR 0182 (main thread
+  only); the `wwwroot` resources limit is lifted by ADR 0206, the one on the
+  app's dependencies (projects and third-party NuGet packages) by ADR 0261.
 
 Tests: `AppPackageGatewayTests`, `AppSourcesAndPolicyTests`,
 `InstalledAppsImageTests`, `AppPackageWriterTests`, `AppPackageTests`
@@ -366,6 +371,185 @@ Tests: `AppPackageGatewayTests`, `AppSourcesAndPolicyTests`,
 `TrimmedPublishTests.InstalledApps.cs` (test package
 `Tests/fixtures/installed-app` installed by `kazopkg` in the trimmed publish,
 run by `build/publish-trimmed.sh`).
+
+## Features (ADR 0260)
+
+ADR [0260](adr/0260-feature-app-type.md) adds the `Feature` app kind: an
+optional feature of the OS (WSL-like), one identity, one package, one
+permissions screen, installed for the whole machine by an administrator. Its
+SDK model (`FeatureDefinition`, `FeatureEntryPoint`, child manifests) is in
+[`app-model.md`](../framework/app-model.md#features-featuredefinition-adr-0260).
+
+- **Package**: `manifest.json` is the feature's manifest (kind `feature`,
+  without `entryPoint`); each child has its own file
+  `entrypoints/<suffix>.json`, an ordinary manifest of its kind with
+  `parent: "<feature>"`, and `kazoos-package.json` lists them under
+  `manifests` (a package without that list is read by the `entrypoints/`
+  prefix). `AppPackage.Read` validates each child as a manifest of its kind,
+  then the set (`AppManifestValidator.ValidateFeature`: version, publisher,
+  permissions within the set, `apps.package.bad-manifest` otherwise). An
+  ordinary package with an `entrypoints/` file is refused
+  (`apps.package.unexpected-file`), and so is a child manifest at the root (a
+  child is never installed alone). `AppPackageWriter.Write` and `pack` write
+  the children found in `entrypoints/` next to the project's `manifest.json`.
+- **System-wide only**: `kazopkg install --user` refuses a feature
+  (`apps.package.feature-system-only`, "A feature is installed for the whole
+  machine, by an administrator"). A catalog's `catalog.json` carries
+  `kind: "feature"` on its entry: the Store lists it with the apps, says on
+  its page that it is installed for the whole machine and offers "Install for
+  everyone" only; the refusal on click remains the safety net (a catalog
+  without `kind`, a package that turns out to be a feature when read).
+  Without an option it goes to everyone (`/usr/lib/kazoos/apps/<id>/<version>/`, the children
+  under `entrypoints/`), with the two-step approval. The approval window says
+  it is a feature, names its entry points and shows the **set** of
+  permissions, once.
+- **Consent = machine approval**: once the package is written, the OS writes
+  into `/etc/kazoos/app-permissions.config` an `allow` line for every
+  dangerous capability of the feature and of each child (and the declared
+  real-network ports, ADR 0233 §4). No approval window appears at the first
+  launch of an entry point; a user's own refusal (ADR 0049 §9) stays
+  possible in Settings ▸ Permissions. Removing the feature erases those
+  lines. `kazopkg install` says so ("approved for the whole machine…") instead
+  of the first-launch note.
+- **Catalog**: at boot and on every addition, `InstalledAppsImage` reads the
+  children listed by the feature's `kazoos-package.json`; a feature with a
+  missing or invalid child is left out with a warning. `HostAppCatalog` adds
+  the feature and its children together; an error on a child leaves the whole
+  feature out. In `AppCatalog`, a child is attached to its feature
+  (`FeatureChildren`, `GetFeatureOf`, `GetFeatureChildren`): the feature
+  activates before its children, the children of a refused feature (SDK) are
+  refused with it, and a child whose feature is missing or is not one, or
+  that asks for a permission outside the set, fails the catalog
+  (`catalog.feature.parent.missing`, `catalog.feature.parent.kind`,
+  `catalog.feature.capability-outside-set`).
+- **Commands**: in `AssignCommands`, the commands of a feature's children
+  come before those of ordinary apps (after system apps): `x86` cannot be
+  masked by an app installed later; of two features with the same name, the
+  first activated wins, the other gets `catalog.command.duplicate`.
+- **Enabling and disabling as a block**: `AppsConfigDocument.ExpandDependents`
+  and `ExpandDependencies` treat `parent` as a required dependency; disabling
+  the feature (Settings, `apps.config`) disables its children, enabling it
+  again enables them. An `[uninstalled]` line naming a child is ignored with
+  a warning, and `UninstallAsync` or `ReinstallAsync` on a child fails
+  (`apps.app.feature-child:<id>:<feature>`); a child's state is its feature's.
+- **Execution**: each child is an app in its own right (process, command,
+  window, service), with its subset of permissions only; the feature itself
+  has no entry point and `AppEntryPointDiscovery` skips it. A package whose
+  child does not run on the main thread is refused like any installed app
+  (`apps.package.worker-unsupported`).
+- **Settings ▸ Applications** lists the features in a group of their own,
+  each with its entry points (name, kind, id) without an action of their own;
+  uninstalling or reinstalling is done on the feature. An app's page
+  (`KazoAppInfo.ParentId`) names its feature. The "Features" section of
+  Settings is ADR 0249, not coded yet.
+- **Provided services** ([ADR 0262](adr/0262-feature-service-registry-and-async-resolution.md),
+  [`feature-services.md`](../framework/feature-services.md)): the feature's
+  manifest lists `providedServices`; their code is a declared assembly of the
+  package. `AppPackage.Read` refuses a contract that is not in a shared
+  library of the package (`apps.package.service-contract-not-shared`), and
+  the installer a feature that provides a contract another feature of the
+  catalog already provides (`apps.package.service-already-provided`).
+  `AppCatalog` no longer removes an app for an **optional** dependency out of
+  range: `KazoFeatures` answers it `VersionMismatch`.
+
+Tests: `FeatureDefinitionTests` (App.Abstractions), `AppDefinitionInspectorTests`
+and `ManifestWriterTests` (Tools.ManifestGenerator), `AppCatalogTests`,
+`AppPackageTests`, `AppPackageWriterTests`, `InstalledAppsImageTests`,
+`AppInstallationServiceTests` and `AppPackageGatewayTests` (Platform.Core).
+
+## App libraries and shared versions (ADR 0261)
+
+ADR [0261](adr/0261-app-libraries-and-shared-versions.md) (issue #419) puts in
+the package the assemblies the app needs that the OS does not bring, and loads
+one copy per page of a **shared** library. ADR
+[0256](adr/0256-app-libraries-implementation-adjustments.md) adjusts its
+implementation. For authors:
+[`app-repository.md`](../framework/app-repository.md#libraries-of-the-app).
+
+- **An ordinary library goes with the app, nothing more** (ADR 0256 §1): a
+  library its author did not mark as shared is managed neither by Kazo OS nor
+  by the Store. The OS checks the file like any file of the package and loads
+  it before the app; there is no catalog entry, no dependency resolution, no
+  version comparison between apps, no restart offer, no refusal based on its
+  version. The rules below about the single copy, the choice of the copy, the
+  major version and "Restart to finish" hold for a **shared** library only.
+- **In the package**: `KazoOsPack` puts in `lib/` the outputs of the
+  `ProjectReference` items, the assemblies of the NuGet packages and the
+  referenced DLLs the build copies next to the app, with their satellites
+  (`lib/<culture>/<library>.resources.dll`). What the OS brings stays out, by
+  assembly name (property `KazoOsProvidedAssemblyPattern`: `Kazo.Os.*`,
+  `System*`, `Microsoft.*`, `MudBlazor*`, `netstandard`, `mscorlib`,
+  `WindowsBase`). `kazoos-package.json` gains the `libraries` list:
+
+  ```json
+  "libraries": [
+    { "name": "Kazo.Irc.Protocol", "version": "1.0.0.0", "sha256": "…", "shared": false }
+  ]
+  ```
+
+  `name` is the simple name of the assembly (file `lib/<name>.dll`), `version`
+  its assembly version. A package without the list (made before the ADR) has
+  no library.
+- **Checked when read**: `AppPackage.Read` reads each listed library again in
+  its assembly (`AppPackageLibrary.Describe`): file present
+  (`apps.package.missing-assembly`), same SHA-256
+  (`apps.package.hash-mismatch`), same name, same version and same `shared`
+  mark as the assembly says, and not an assembly the manifest declares
+  (`apps.package.bad-description`). `AppPackage.Assemblies` holds them:
+  `AppPackageApiCheck` checks them against the runtime like the app's assembly
+  (ADR 0242).
+- **The `shared` mark**: the author of the library sets it, with
+  `<KazoOsSharedLibrary>true</KazoOsSharedLibrary>` in the library's project.
+  The property writes
+  `[assembly: AssemblyMetadata("Kazo.Os.SharedLibrary", "true")]` into the
+  assembly: the mark follows the library whatever way it is referenced
+  (project, DLL, NuGet package), the app declares nothing, and a package
+  cannot mark as shared a library that is not.
+- **Refused at installation**: `apps.package.library-reserved` protects the
+  OS: a package does not replace an assembly of the OS, of the .NET runtime or
+  of a built-in app with a library of the same name (only the name counts,
+  never the version; a library already loaded from another package is not an
+  assembly of the OS); `apps.package.library-major-mismatch` when a shared library has another
+  major version than the copy of an installed feature (the message gives both
+  versions and the feature). Without a feature, two apps with two different
+  major versions are both installed. Both refusals come before any
+  administrator is asked; the Store shows them as an incompatible version.
+- **Loading**: `InstalledAppsImage` reads `libraries` from the
+  `kazoos-package.json` of each installed app (`InstalledApp.Libraries`).
+  Before loading an assembly of the app, `InstalledAppLibraries` loads its
+  libraries, satellites included. A library that is not shared comes from the
+  app's folder. For a shared library, `InstalledLibraries.Choose` takes the
+  copy of an installed feature of the same major version, otherwise the newest
+  copy of that major version among the installed apps; the choice is written
+  to `/var/log/syslog`
+  (`libraries: Os-x86.Interface 1.2.0 loaded for ca.kazo.boxedwine (feature ca.kazo.x86)`).
+- **Copy already loaded**: .NET does not unload an assembly. When the copy in
+  the page lacks what the app expects (another major version, or older than
+  the app's) and a restart would load another one, the app stays served by the
+  loaded copy, a line says so in `/var/log/syslog`, and the app is shown as
+  "Restart to finish" (`KazoInstalledPackage.Loaded` is `false`,
+  `RestartRequired` in the install report) in the Store and `kazopkg list`.
+  The same holds for a feature installed with a newer copy than the one
+  already loaded.
+- **One load context** (ADR 0256 §3 to §5): every installed app shares the
+  default load context. Two libraries that are **not shared** with the same
+  simple name in two apps: the first one loaded serves both, the second is
+  noted in the log, nothing else. Two **major**
+  versions of a shared library are installed together, but only one is in the
+  page at a time: the app of the other major version asks for a restart. The
+  provider of a shared library is the installed feature that carries it **and
+  declares that it provides one of its interfaces** (`providedServices`,
+  ADR 0262); the provisional rule of ADR 0256 §5 (any feature that carries it)
+  is removed: a feature that carries the library without providing any of its
+  contracts is a client like an app.
+
+Tests: `AppPackageLibraryTests`, `InstalledLibrariesTests`,
+`InstalledAppsImageTests` and `AppPackageGatewayTests` (Platform.Core),
+`InstalledAppLibrariesTests` (Ecosystem), `PackagedLibrariesTests` and
+`MsBuildIntegrationTests` (Tools.ManifestGenerator, fixture
+`ManifestGenerator.Fixtures.WithLibrary`), and the two-assembly package of
+`Tests/fixtures/installed-app` installed in the trimmed OS
+(`TrimmedPublishTests.InstalledApps.cs`).
 
 ## The Kazo OS Store and the catalogs
 
@@ -385,7 +569,11 @@ kazopkg info org.example.notes
   (`schemaVersion` 1, `packages` branch of the catalog repository). The file's
   paths (package, icon, screenshots, descriptions) are relative to
   `catalog.json`. The OS keeps it 5 minutes; an invalid app or version is
-  skipped with a warning in `/var/log/syslog`. Each version may carry
+  skipped with a warning in `/var/log/syslog`. Each entry carries a `kind`:
+  `app` when absent, `feature` (ADR 0260 §4: listed with the apps, installed
+  for the whole machine only) or `theme-pack` (ADR 0213); a value this OS does
+  not know is read as `app` with a warning, so a newer catalog hides nothing
+  (the package says what it is at installation).
   `fileHandlers` (`{ mediaType?, extensions, actions }`, copied from the
   manifest, ADR [0257](adr/0257-offer-a-store-app-for-an-unsupported-file.md)):
   when no installed app opens a file, the OS proposes the apps that declare it,
@@ -532,6 +720,74 @@ Tests: `AppCatalogDocumentTests`, the catalog and progress tests of
 `Kazo.Os.UI.E2E.Tests` (`StoreNavigationTests`, `StoreInstallProgressTests`,
 `StoreScreenshotViewerTests`, `StoreAppPageTests`, `StoreHomeTests`,
 `StoreMobileTests`, which measures every control on a 390 × 844 phone).
+
+## Beta channel and offered version (ADR 0271)
+
+Work item 3 of the `release-channels/base` series
+([ADR 0271](adr/0271-beta-channel-and-automatic-app-updates.md) §5 and §6,
+[plan](plans/release-channels-plan.md)).
+
+- **The channel follows the OS.** An OS whose version has a suffix
+  (`3.5.0-preview.1`, `KazoOsSdk.SemanticVersion.PreRelease`) reads the beta
+  channel of the official catalog,
+  `https://raw.githubusercontent.com/Kazo-ca/Os-AppMarketPlace/packages/catalog-beta.json`
+  (`AppPackageDefaults.OfficialBetaCatalogAddress`); a stable OS reads
+  `catalog.json`. `AppPackageDefaults.OfficialCatalogAddressFor(version)` gives
+  the address, and `AppPackageDefaults.Standard` uses it: that is what a new
+  `/etc/kazoos/app-sources.config` receives. No setting.
+- **`/etc/kazoos` migration.** The OS never rewrites an existing file. When it
+  is read, a `[catalogs]` line naming the official catalog of either channel is
+  read as the official catalog of the OS's channel
+  (`AppSourcesConfigDocument.Read`): a file written by a stable OS gives
+  `catalog-beta.json` to a prerelease, and the other way round. Any other
+  address (a mirror, a company catalog, or `official=` changed by an
+  administrator) is kept as written, and a host built with its own catalogs
+  (`KazoOsAppCatalogs`) moves nothing.
+- **Offered version.** The Store (`KazoCatalogApp.LatestVersion`, the version
+  installed by default), `kazopkg info` and `kazopkg install <app>` without a
+  version, the update check (`AppUpdateMonitor`, `kazopkg update`), the « Try »
+  links (ADR 0258) and the proposals for a file (ADR 0257) pick the **newest
+  version whose `sdkCompatibility` accepts the OS's SDK** (`AppVersionChoice`),
+  no longer the last one published: an app rebuilt on a newer SDK does not
+  block an older OS, which keeps the previous version. A version with no known
+  range (a GitHub repository's `index.json` gives none) counts as compatible;
+  the install checks the manifest again. When no version fits, the newest one
+  is still shown and the install refuses it with
+  `apps.package.sdk-incompatible`, which says which SDK it needs.
+- **App prereleases.** Offered when the OS is itself a prerelease, or when the
+  installed version is one (as before); otherwise only stable versions are,
+  except for an app that has published nothing but prereleases. `1.0.1`
+  replaces `1.0.1-beta.2` (SemVer order).
+
+### `catalog-beta.json` format
+
+Set by this work item for work item 4 (`Os-AppMarketPlace`), which writes it:
+
+- Same folder as `catalog.json` (root of the `packages` branch), **same
+  format** (`schemaVersion` 1, same fields, same reading rules, 8 MiB at most):
+  the OS reads it with `AppCatalogDocument.Parse`, no special case.
+- **Content**: all of `catalog.json` (categories, apps, stable versions), plus
+  the apps' beta versions, added to the app's `versions`. An app that only has
+  a beta version yet is listed too, with its listing fields.
+- **Beta version**: SemVer with a `<next patch>-beta.<n>` suffix
+  (`1.0.1-beta.1`), package at
+  `packages/<appId>/<version>/<appId>-<version>.kazoapp` and assets under
+  `assets/<appId>/<version>/` like a stable version, signed with the same key
+  (`KAZO_STORE_SIGNING_KEY`), `sdkCompatibility.minimumVersion` = the SDK
+  prerelease it was compiled on (`3.5.0-preview.1`).
+- **Order**: versions newest first in SemVer order
+  (`1.0.1` > `1.0.1-beta.2` > `1.0.1-beta.1` > `1.0.0`).
+- **`latestVersion`**: the newest **stable** version, as in `catalog.json`; the
+  newest beta only for an app with no stable version. The OS only uses it when
+  no version is compatible.
+- The listing fields (`name`, `shortDescriptions`…) come from the version
+  `latestVersion` names, so that an app's listing does not change with a beta.
+- A beta version does not count in the 3 versions kept; it is removed when the
+  stable version it precedes is published (ADR 0271 §5).
+
+Tests: `ReleaseChannelTests` and `AppPackageGatewayTests.ReleaseChannels`
+(Platform.Core); the Store and « Try » link E2E tests serve both addresses of
+the official catalog.
 
 ## Adding without a restart, signing and transactions
 

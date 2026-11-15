@@ -2,6 +2,8 @@
 .kos-version { display: inline-flex; flex-wrap: wrap; align-items: center; gap: .35rem .6rem; }
 .kos-version-name { font-weight: 650; color: var(--kos-text-primary, #e5f4f0); }
 .kos-version-build { font-family: var(--kos-font-mono, ui-monospace, "Cascadia Code", monospace); font-size: .8em; color: var(--kos-text-secondary, #a8bac4); }
+/* ADR 0271 §3: the beta badge, solid so it reads apart from the status badge. */
+.kos-version-channel { padding: .05rem .55rem; border-radius: 999px; font-size: .75em; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: #12091a; background: var(--kos-beta, #c792ea); }
 .kos-version-status { display: inline-flex; align-items: center; gap: .35rem; padding: .05rem .55rem; border: 1px solid currentColor; border-radius: 999px; font-size: .78em; font-weight: 600; letter-spacing: .02em; }
 .kos-version-status::before { content: ""; width: .45rem; height: .45rem; border-radius: 50%; background: currentColor; }
 .kos-version-status.is-up-to-date { color: var(--kos-success, #42d392); }

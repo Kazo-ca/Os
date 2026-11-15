@@ -59,7 +59,7 @@ Memory, Backup, What's new, About).
 | Memory (`memory`) | `MemoryPanel` | File `/etc/kazoos/memory.config`, section `[oom-killer]` (ADR 0126). |
 | Backup (`backup`) | `BackupPanel` | Present only if `KazoSystemBackup.IsSupportedFor` allows it (ADR 0099). |
 | What's new (`whats-new`) | `WhatsNewPanel` | The OS change list by version, the next one first, with a **New** badge on unseen changes; they become seen when the page closes (`KazoWhatsNew`, ADR 0186). The sign-in notification opens it with `--page=whats-new`. |
-| About (`about`) | (in the window) | Authority, reboot (`KazoSystem.RebootAsync`), danger zone: factory reset (`KazoSystem.FactoryResetAsync`), confirmed by typing `RESET`, which erases everything the OS keeps in the browser ([ADR 0227](adr/0227-factory-reset-erases-everything.md)). A **What's new?** button next to the version opens the What's new page. |
+| About (`about`) | (in the window) | Authority, reboot (`KazoSystem.RebootAsync`), danger zone: factory reset (`KazoSystem.FactoryResetAsync`), confirmed by typing `RESET`, which erases everything the OS keeps in the browser ([ADR 0227](adr/0227-factory-reset-erases-everything.md)). A **What's new?** button next to the version opens the What's new page. A prerelease shows the "Beta" badge and the "Back to the stable version" link; the stable version served by `os.kazo.ca` has the "Try the beta" link ([`beta-site.md`](beta-site.md), ADR 0271). |
 | Application (`application`) | `AppDetailsPanel` | Added only with `--app=<id>` (ADR 0096): details and settings of an app. |
 
 ## Launch arguments

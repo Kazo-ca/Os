@@ -133,6 +133,7 @@ public sealed partial class AppDetailsPanel
         AppKind.Terminal => L["Details.Kind.Terminal"],
         AppKind.Service => L["Details.Kind.Service"],
         AppKind.Web => L["Details.Kind.Web"],
+        AppKind.Feature => L["Details.Kind.Feature"],
         _ => kind.ToString()
     };
 

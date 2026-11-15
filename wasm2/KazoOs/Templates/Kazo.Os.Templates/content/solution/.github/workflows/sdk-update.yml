@@ -1,0 +1,47 @@
+# Kazo OS SDK update (ADR 0271 §4): when Kazo OS releases a version, moves the app to it, runs the
+# CI, and publishes the app automatically:
+#   - a pre-release of Kazo OS: the beta branch, a beta version x.y.z-beta.n, the beta channel of
+#     the Kazo OS Store;
+#   - a stable minor or major release: a pull request to main, merged by the automation when the
+#     CI is green, then tagged and published;
+#   - a stable patch release: checked only (the pull request is closed once green).
+# A red CI opens a TODO issue and changes nothing. The steps live in the reusable workflow
+# kazoos-sdk-update.yml of Kazo-ca/Os-AppTemplate (ADR 0271 §7).
+#
+# Started by Kazo OS (repository_dispatch kazoos-sdk-released, for the repositories it lists),
+# every hour otherwise, or by hand from the Actions tab.
+name: Kazo OS SDK update
+
+on:
+  repository_dispatch:
+    types: [kazoos-sdk-released]
+  schedule:
+    - cron: '23 * * * *'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Kazo OS version to move to (empty for the newest release)
+        required: false
+        default: ''
+      force:
+        description: Redo a version already handled
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  update:
+#if (templateRepository)
+    uses: ./.github/workflows/kazoos-sdk-update.yml
+#else
+    uses: Kazo-ca/Os-AppTemplate/.github/workflows/kazoos-sdk-update.yml@v1
+#endif
+    with:
+      app-directory: src/Kazo.Os.Template.Solution
+      version: ${{ github.event.client_payload.version || inputs.version || '' }}
+      force: ${{ inputs.force || false }}
+    secrets: inherit
