@@ -73,6 +73,28 @@ submodule with local changes or off its tag.
 
 Force either one with `-p:KazoOsUseSource=true` or `false`.
 
+### Libraries of the app
+
+The app may have libraries of its own: another project of this repository (`ProjectReference`), a
+NuGet package (`PackageReference`) or a DLL. Reference them as in any .NET project; there is nothing
+to declare. `KazoOsPack` puts in the package every assembly the app needs that Kazo OS does not
+bring (the SDK, the .NET runtime, the `Microsoft.*` assemblies and MudBlazor come with the OS), and
+the OS loads them before the app. A library must not be named `Kazo.Os.*`, a name the OS keeps.
+
+A library that several apps carry and that must exist once in the OS (the contracts of a feature,
+for instance) is marked as **shared** by its author, in the library's own project:
+
+```xml
+<PropertyGroup>
+  <KazoOsSharedLibrary>true</KazoOsSharedLibrary>
+</PropertyGroup>
+```
+
+A library project that does not reference `Kazo.Os.App.Build` writes the same mark itself:
+`<AssemblyMetadata Include="Kazo.Os.SharedLibrary" Value="true" />`. The mark is in the assembly,
+so an app that uses the library has nothing to add. Kazo OS then loads one copy for every app of
+the same major version; a minor version of a shared library only adds members.
+
 ### Publishing to the Kazo OS Store
 
 1. Fill `store/` (icon, short descriptions, descriptions, screenshots, category and tags in
@@ -100,6 +122,25 @@ Force either one with `-p:KazoOsUseSource=true` or `false`.
 
 The catalog never takes a binary from you: once your pull request is reviewed and merged, its CI
 compiles the app at the tagged commit.
+
+### Following new Kazo OS versions
+
+The **Kazo OS SDK update** workflow (`sdk-update.yml`) runs every hour, when Kazo OS announces a
+release, or by hand from the Actions tab. When Kazo OS has a newer version, it moves the submodule
+to it, raises the app's version (`.github/scripts/bump-app-version.sh`) on a `kazoos-sdk/<version>`
+branch and runs the CI there:
+
+- a Kazo OS pre-release: the `beta` branch takes it, as version `x.y.(z+1)-beta.<n>`, which goes to
+  the beta channel of the Kazo OS Store;
+- a minor or major stable release: a pull request to `main`, merged, tagged and published;
+- a patch stable release: checked only, nothing is published.
+
+A red CI opens a `TODO` issue and changes nothing. A version with a suffix (`1.2.1-beta.1`) is
+always published from `beta`, one without from `main`. The workflows of this repository are short:
+they call the shared workflows of [Kazo-ca/Os-AppTemplate](https://github.com/Kazo-ca/Os-AppTemplate)
+(`@v1`), so they improve without a change here. Without the Kazo OS automation secrets, allow GitHub
+Actions to create pull requests (**Settings** ▸ **Actions** ▸ **General**) for the update to open its
+pull request.
 
 ### Publishing on the `kazoos-packages` branch
 

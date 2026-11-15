@@ -529,8 +529,14 @@ public partial class StoreWindow
     {
         "apps.package.blocked" => L["Error.Blocked"],
         "apps.package.installed-for-system" => L["Error.InstalledForSystem"],
+        // ADR 0260 §4: « Install for me » is refused for a feature; « for everyone » installs it.
+        "apps.package.feature-system-only" => L["Error.FeatureSystemOnly"],
         "apps.package.sdk-incompatible" => L["Error.Incompatible", exception.Message],
         "apps.package.missing-api" => L["Error.Incompatible", exception.Message],
+        // ADR 0261: a library named like an assembly of the OS, or a shared library of another
+        // major version than the copy an installed feature provides.
+        "apps.package.library-reserved" => L["Error.Incompatible", exception.Message],
+        "apps.package.library-major-mismatch" => L["Error.Incompatible", exception.Message],
         "apps.package.download-failed" => L["Error.Offline"],
         "apps.package.no-previous" => L["Error.NoPrevious"],
         "apps.package.reinstall-required" => L["Error.ReinstallRequired"],

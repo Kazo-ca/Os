@@ -117,3 +117,82 @@ Kazo.Os.AppSdk.CloudAccounts.KazoCloudProvider.AppFolderPath.init -> void
 Kazo.Os.AppSdk.IO.KazoDriveInfo.Root.get -> string?
 Kazo.Os.AppSdk.IO.KazoDriveSnapshot.Root.get -> string?
 Kazo.Os.AppSdk.IO.KazoDriveSnapshot.Root.init -> void
+Kazo.Os.AppSdk.Apps.KazoAppInfo.ParentId.get -> string?
+Kazo.Os.AppSdk.Apps.KazoAppInfo.ParentId.init -> void
+Kazo.Os.AppSdk.Apps.KazoPackageInstallReport.EntryPoints.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Kazo.Os.AppSdk.Apps.KazoPackageInstallReport.EntryPoints.init -> void
+Kazo.Os.AppSdk.Apps.KazoPackageInstallReport.IsFeature.get -> bool
+Kazo.Os.AppSdk.Apps.KazoPackageInstallReport.IsFeature.init -> void
+Kazo.Os.AppSdk.Apps.KazoCatalogItemKind.Feature = 2 -> Kazo.Os.AppSdk.Apps.KazoCatalogItemKind
+Kazo.Os.AppSdk.Features.IAppFeatureGateway
+Kazo.Os.AppSdk.Features.IAppFeatureGateway.Changed -> System.EventHandler<Kazo.Os.AppSdk.Features.KazoFeatureServiceChangedEventArgs!>?
+Kazo.Os.AppSdk.Features.IAppFeatureGateway.GetServiceAsync(System.Type! contract, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<object?>
+Kazo.Os.AppSdk.Features.IAppFeatureGateway.GetStatusAsync(System.Type! contract, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.Features.KazoFeatureServiceStatus!>
+Kazo.Os.AppSdk.Features.IAppFeatureGateway.IsAvailable(System.Type! contract) -> bool
+Kazo.Os.AppSdk.Features.IFeatureServiceContext
+Kazo.Os.AppSdk.Features.IFeatureServiceContext.Caller.get -> Kazo.Os.AppSdk.Features.KazoFeatureCaller?
+Kazo.Os.AppSdk.Features.IFeatureServiceContext.EnterFeature() -> System.IDisposable!
+Kazo.Os.AppSdk.Features.IFeatureServiceContext.Feature.get -> Kazo.Os.AppSdk.IAppExecutionContext!
+Kazo.Os.AppSdk.Features.IFeatureServiceContext.Stopping.get -> System.Threading.CancellationToken
+Kazo.Os.AppSdk.Features.KazoFeatureCaller
+Kazo.Os.AppSdk.Features.KazoFeatureCaller.<Clone>$() -> Kazo.Os.AppSdk.Features.KazoFeatureCaller!
+Kazo.Os.AppSdk.Features.KazoFeatureCaller.AppId.get -> string!
+Kazo.Os.AppSdk.Features.KazoFeatureCaller.AppId.init -> void
+Kazo.Os.AppSdk.Features.KazoFeatureCaller.Deconstruct(out string! AppId, out long ProcessId, out string! UserId) -> void
+Kazo.Os.AppSdk.Features.KazoFeatureCaller.Equals(Kazo.Os.AppSdk.Features.KazoFeatureCaller? other) -> bool
+Kazo.Os.AppSdk.Features.KazoFeatureCaller.KazoFeatureCaller(string! AppId, long ProcessId, string! UserId) -> void
+Kazo.Os.AppSdk.Features.KazoFeatureCaller.ProcessId.get -> long
+Kazo.Os.AppSdk.Features.KazoFeatureCaller.ProcessId.init -> void
+Kazo.Os.AppSdk.Features.KazoFeatureCaller.UserId.get -> string!
+Kazo.Os.AppSdk.Features.KazoFeatureCaller.UserId.init -> void
+Kazo.Os.AppSdk.Features.KazoFeatureServiceChangedEventArgs
+Kazo.Os.AppSdk.Features.KazoFeatureServiceChangedEventArgs.Contract.get -> string!
+Kazo.Os.AppSdk.Features.KazoFeatureServiceChangedEventArgs.KazoFeatureServiceChangedEventArgs(string! contract, Kazo.Os.AppSdk.Features.KazoFeatureServiceState state) -> void
+Kazo.Os.AppSdk.Features.KazoFeatureServiceChangedEventArgs.State.get -> Kazo.Os.AppSdk.Features.KazoFeatureServiceState
+Kazo.Os.AppSdk.Features.KazoFeatureServiceState
+Kazo.Os.AppSdk.Features.KazoFeatureServiceState.Available = 0 -> Kazo.Os.AppSdk.Features.KazoFeatureServiceState
+Kazo.Os.AppSdk.Features.KazoFeatureServiceState.Disabled = 2 -> Kazo.Os.AppSdk.Features.KazoFeatureServiceState
+Kazo.Os.AppSdk.Features.KazoFeatureServiceState.LoadFailed = 4 -> Kazo.Os.AppSdk.Features.KazoFeatureServiceState
+Kazo.Os.AppSdk.Features.KazoFeatureServiceState.NotDeclared = 6 -> Kazo.Os.AppSdk.Features.KazoFeatureServiceState
+Kazo.Os.AppSdk.Features.KazoFeatureServiceState.NotInstalled = 1 -> Kazo.Os.AppSdk.Features.KazoFeatureServiceState
+Kazo.Os.AppSdk.Features.KazoFeatureServiceState.RestartRequired = 5 -> Kazo.Os.AppSdk.Features.KazoFeatureServiceState
+Kazo.Os.AppSdk.Features.KazoFeatureServiceState.VersionMismatch = 3 -> Kazo.Os.AppSdk.Features.KazoFeatureServiceState
+Kazo.Os.AppSdk.Features.KazoFeatureServiceStatus
+Kazo.Os.AppSdk.Features.KazoFeatureServiceStatus.<Clone>$() -> Kazo.Os.AppSdk.Features.KazoFeatureServiceStatus!
+Kazo.Os.AppSdk.Features.KazoFeatureServiceStatus.Deconstruct(out Kazo.Os.AppSdk.Features.KazoFeatureServiceState State) -> void
+Kazo.Os.AppSdk.Features.KazoFeatureServiceStatus.Equals(Kazo.Os.AppSdk.Features.KazoFeatureServiceStatus? other) -> bool
+Kazo.Os.AppSdk.Features.KazoFeatureServiceStatus.ErrorCode.get -> string?
+Kazo.Os.AppSdk.Features.KazoFeatureServiceStatus.ErrorCode.init -> void
+Kazo.Os.AppSdk.Features.KazoFeatureServiceStatus.FeatureId.get -> string?
+Kazo.Os.AppSdk.Features.KazoFeatureServiceStatus.FeatureId.init -> void
+Kazo.Os.AppSdk.Features.KazoFeatureServiceStatus.InstalledVersion.get -> string?
+Kazo.Os.AppSdk.Features.KazoFeatureServiceStatus.InstalledVersion.init -> void
+Kazo.Os.AppSdk.Features.KazoFeatureServiceStatus.IsAvailable.get -> bool
+Kazo.Os.AppSdk.Features.KazoFeatureServiceStatus.KazoFeatureServiceStatus(Kazo.Os.AppSdk.Features.KazoFeatureServiceState State) -> void
+Kazo.Os.AppSdk.Features.KazoFeatureServiceStatus.RequestedRange.get -> string?
+Kazo.Os.AppSdk.Features.KazoFeatureServiceStatus.RequestedRange.init -> void
+Kazo.Os.AppSdk.Features.KazoFeatureServiceStatus.State.get -> Kazo.Os.AppSdk.Features.KazoFeatureServiceState
+Kazo.Os.AppSdk.Features.KazoFeatureServiceStatus.State.init -> void
+Kazo.Os.AppSdk.Features.KazoFeatures
+Kazo.Os.AppSdk.Features.UnsupportedAppFeatureGateway
+Kazo.Os.AppSdk.Features.UnsupportedAppFeatureGateway.Changed -> System.EventHandler<Kazo.Os.AppSdk.Features.KazoFeatureServiceChangedEventArgs!>?
+Kazo.Os.AppSdk.Features.UnsupportedAppFeatureGateway.GetServiceAsync(System.Type! contract, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<object?>
+Kazo.Os.AppSdk.Features.UnsupportedAppFeatureGateway.GetStatusAsync(System.Type! contract, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.Features.KazoFeatureServiceStatus!>
+Kazo.Os.AppSdk.Features.UnsupportedAppFeatureGateway.IsAvailable(System.Type! contract) -> bool
+Kazo.Os.AppSdk.Features.UnsupportedAppFeatureGateway.UnsupportedAppFeatureGateway() -> void
+Kazo.Os.AppSdk.IAppExecutionContext.Features.get -> Kazo.Os.AppSdk.Features.IAppFeatureGateway!
+override Kazo.Os.AppSdk.Features.KazoFeatureCaller.Equals(object? obj) -> bool
+override Kazo.Os.AppSdk.Features.KazoFeatureCaller.GetHashCode() -> int
+override Kazo.Os.AppSdk.Features.KazoFeatureCaller.ToString() -> string!
+override Kazo.Os.AppSdk.Features.KazoFeatureServiceStatus.Equals(object? obj) -> bool
+override Kazo.Os.AppSdk.Features.KazoFeatureServiceStatus.GetHashCode() -> int
+override Kazo.Os.AppSdk.Features.KazoFeatureServiceStatus.ToString() -> string!
+static Kazo.Os.AppSdk.Features.KazoFeatureCaller.operator !=(Kazo.Os.AppSdk.Features.KazoFeatureCaller? left, Kazo.Os.AppSdk.Features.KazoFeatureCaller? right) -> bool
+static Kazo.Os.AppSdk.Features.KazoFeatureCaller.operator ==(Kazo.Os.AppSdk.Features.KazoFeatureCaller? left, Kazo.Os.AppSdk.Features.KazoFeatureCaller? right) -> bool
+static Kazo.Os.AppSdk.Features.KazoFeatureServiceStatus.NotInstalled.get -> Kazo.Os.AppSdk.Features.KazoFeatureServiceStatus!
+static Kazo.Os.AppSdk.Features.KazoFeatureServiceStatus.operator !=(Kazo.Os.AppSdk.Features.KazoFeatureServiceStatus? left, Kazo.Os.AppSdk.Features.KazoFeatureServiceStatus? right) -> bool
+static Kazo.Os.AppSdk.Features.KazoFeatureServiceStatus.operator ==(Kazo.Os.AppSdk.Features.KazoFeatureServiceStatus? left, Kazo.Os.AppSdk.Features.KazoFeatureServiceStatus? right) -> bool
+static Kazo.Os.AppSdk.Features.KazoFeatures.Changed -> System.EventHandler<Kazo.Os.AppSdk.Features.KazoFeatureServiceChangedEventArgs!>?
+static Kazo.Os.AppSdk.Features.KazoFeatures.GetServiceAsync<T>(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<T?>
+static Kazo.Os.AppSdk.Features.KazoFeatures.GetStatusAsync<T>(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.Features.KazoFeatureServiceStatus!>
+static Kazo.Os.AppSdk.Features.KazoFeatures.IsAvailable<T>() -> bool

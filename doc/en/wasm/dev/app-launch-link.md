@@ -25,6 +25,7 @@ served by `Kazo.Os.Server`.
 | Page reload **before** the link has finished (restart for an update, F5 during the install) | The tab kept the link ([ADR 0265](adr/0265-direct-link-survives-update-restart.md)): it runs again, the guest continues without a click and the app opens (without a new download when it was already installed). |
 | The app is refused because a newer version waits (ADR 0239 §2) | "Restart" reloads the tab onto the new version, which runs the link again and opens the app. "Later" forgets the link. |
 | Page reload **after** the link has finished | The parameter was removed from the address and the tab forgot the link: nothing starts again. The usual screen shows. |
+| First sign-in of the account | The [welcome wizard](welcome-wizard.md) does not show while a link waits: the app opens. It shows at the next sign-in (ADR 0276). |
 | Malformed id | The link is ignored (but removed from the address); the OS starts as usual. |
 
 ### Errors

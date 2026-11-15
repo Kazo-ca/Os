@@ -197,6 +197,21 @@ Cette section liste ce qui est publié dans la branche `main` et en ligne.
   [ADR 0269](dev/adr/0269-cloud-tokens-stay-on-the-device.md),
   [ADR 0270](dev/adr/0270-cloud-drives-in-the-app-sdk.md),
   [`cloud-drives.md`](dev/cloud-drives.md))
+- **Fichiers plus rapides et moins lourds** : le contenu est gardé en binaire au lieu
+  de base64 (environ 25 % d'espace en moins, enregistrement de 52,5 Mio de 3,4 s à 1,0 s
+  dans Chromium), chaque bloc de 256 Kio vérifié par son empreinte à la lecture ; l'ancien
+  contenu est converti une fois au premier démarrage, derrière un écran d'attente.
+  ([ADR 0272](dev/adr/0272-binary-file-content.md))
+- **Gros fichiers lus et écrits par morceaux** : au-delà de 16 Mio, un fichier s'ouvre en
+  flux qui ne charge que les blocs lus, et s'enregistre par lots passés au navigateur, ce
+  qui réduit de moitié la mémoire prise. ([ADR 0275](dev/adr/0275-partial-read-and-file-address.md) §1, 2 et 4)
+- **Une seule copie des fichiers d'une app installée** : le service worker sert les
+  fichiers d'une app depuis son dossier, sans copie dans un cache ; une app de 64 Mio dont
+  la version précédente est gardée prend 128 Mio au lieu de 236 Mio.
+  ([ADR 0274](dev/adr/0274-single-copy-of-app-files.md))
+- **Espace récupéré après une réécriture ou une suppression** : l'ancien contenu est
+  effacé après 1 jour, ou après 5 minutes quand l'espace manque.
+  ([ADR 0273](dev/adr/0273-short-orphan-content-retention.md))
 - **Sauvegarde et restauration** de toute la machine dans une archive
   téléchargée. ([`system-backup.md`](dev/system-backup.md))
 
@@ -335,6 +350,11 @@ Cette section liste ce qui est publié dans la branche `main` et en ligne.
   qui montrent ce que fait chaque app, et le menu Démarrer, le bureau et
   l'explorateur affichent l'icône propre de chaque app, y compris installée.
   ([ADR 0232](dev/adr/0232-illustrated-app-icons-everywhere.md))
+- **Assistant de bienvenue** : à la première connexion, l'utilisateur choisit
+  sa langue, son thème, son fond d'écran et son fuseau horaire avant le
+  bureau ; chaque choix s'applique tout de suite et l'assistant peut être
+  passé. ([`welcome-wizard.md`](dev/welcome-wizard.md),
+  [ADR 0276](dev/adr/0276-welcome-wizard-at-first-sign-in.md))
 - **Thèmes** de l'OS, et éditeur pour créer les siens.
   ([`theme-files.md`](framework/theme-files.md))
 - **Fonds d'écran en image** : une image PNG, JPEG ou WebP (4 livrées avec
@@ -468,6 +488,9 @@ Cette section liste ce qui est publié dans la branche `main` et en ligne.
 - **Tests navigateur chaque nuit** : les suites Playwright tournent la nuit sur
   `main` quand il a changé ; un échec ouvre une issue.
   ([`ci-workflows.md`](dev/ci-workflows.md#tests-navigateur-chaque-nuit))
+- **Fonctionnalités installables (type « Feature »)** : une fonctionnalité facultative de l'OS installée pour toute la machine par un administrateur, avec ses points d'entrée enfants. ([ADR 0260](dev/adr/0260-feature-app-type.md), [`app-installation.md`](dev/app-installation.md#fonctionnalités-adr-0260))
+- **Bibliothèques d'app et versions partagées** : un paquet emporte les bibliothèques de l'app, et une bibliothèque partagée (`KazoOsSharedLibrary`) est chargée une seule fois, dans sa version compatible la plus récente. ([ADR 0261](dev/adr/0261-app-libraries-and-shared-versions.md), [ADR 0256](dev/adr/0256-app-libraries-implementation-adjustments.md))
+- **Services des Features** : une app demande une interface qu'une Feature fournit, avec `KazoFeatures.GetServiceAsync<T>()`, sans dépendance dans son binaire. ([ADR 0262](dev/adr/0262-feature-service-registry-and-async-resolution.md), [`feature-services.md`](framework/feature-services.md))
 
 ## En cours de développement
 
@@ -480,15 +503,15 @@ dans `main`, le lien mène à sa PR.
 | Fonctionnalité | Description | ADR | Issue |
 | --- | --- | --- | --- |
 | Changer d'utilisateur | Ouvrir une autre session sans fermer la première. Reste grisé dans le menu Marche/arrêt par choix de Benoit : une session à la fois, Se déconnecter pour changer de compte. | [0195](dev/adr/0195-start-menu-power-button.md), [0201](dev/adr/0201-switch-user-stays-greyed.md) | [#290](https://github.com/Kazo-ca/Os/issues/290) |
-| Adresse de fichier servie à la demande | Une app reçoit une adresse pour lire un gros fichier (audio, vidéo) sans le copier en mémoire, avec lecture partielle pour avancer dans un morceau. | À écrire | [#379](https://github.com/Kazo-ca/Os/issues/379) |
+| Adresse de fichier servie à la demande | Une app reçoit une adresse pour lire un gros fichier (audio, vidéo) sans le copier en mémoire, avec lecture partielle pour avancer dans un morceau. Série `storage/base` ; la lecture partielle est faite (chantier 3), l'adresse reste à faire. | [0275](dev/adr/0275-partial-read-and-file-address.md) | [#379](https://github.com/Kazo-ca/Os/issues/379) |
 | Glisser des fichiers vers une app | Contrat public du SDK pour recevoir des fichiers glissés depuis l'explorateur ou le bureau. | À écrire | [#380](https://github.com/Kazo-ca/Os/issues/380) |
-| Récupérer l'espace des fichiers réécrits ou supprimés | L'ancien contenu d'un fichier réécrit ou supprimé est effacé après 1 jour, ou après 5 minutes quand l'espace est faible, au lieu de rester pour toujours dans le navigateur. | [0273](dev/adr/0273-short-orphan-content-retention.md) | [#537](https://github.com/Kazo-ca/Os/issues/537) |
 
 ### Kazo OS Store
 
 | Fonctionnalité | Description | ADR | Issue |
 | --- | --- | --- | --- |
 | Catalogue des applications | Format du catalogue, vérification et publication des applications proposées. | [0188](dev/adr/0188-hack-store-and-app-catalog.md) | [AppMarketPlace #1](https://github.com/Kazo-ca/Os-AppMarketPlace/issues/1) |
+| Canal bêta et mises à jour automatiques des apps | Une version bêta de Kazo OS en ligne (`os-beta.kazo.ca`), le SDK en préversion sur nuget.org, et chaque app qui se reconstruit et propose sa mise à jour quand le SDK sort. Côté OS, c'est fait : la branche `beta`, le site bêta avec sa pastille « Bêta », le catalogue bêta et les workflows réutilisables des apps. La préversion 3.4.0-preview.1 est sortie le 2026-11-15. Il reste à aligner chaque dépôt d'app (chantier 7). | [0271](dev/adr/0271-beta-channel-and-automatic-app-updates.md), [plan](dev/plans/release-channels-plan.md) | [#456](https://github.com/Kazo-ca/Os/issues/456) |
 
 ### Personnalisation
 
@@ -501,6 +524,28 @@ dans `main`, le lien mène à sa PR.
 | Fonctionnalité | Description | ADR | Issue |
 | --- | --- | --- | --- |
 | HackerOS devient Kazo OS | Le nom HackerOS est déjà pris par une distribution Linux. Tout est renommé : nom affiché, espaces de noms et paquets `Kazo.Os.*` (SDK 3.0.0), préfixe `Kazo` au lieu de `Hack`, commandes, extensions et chemins ; les données des utilisateurs sont migrées au premier démarrage. | [0228](dev/adr/0228-rename-to-kazoos.md), [0229](dev/adr/0229-kazo-os-display-name-and-new-address.md), [0230](dev/adr/0230-rename-migration-by-previous-version.md) | Série `rename/base` |
+
+### Fonctionnalités installables (Features) et Os-x86
+
+Os-x86 ([Os-x86](https://github.com/Kazo-ca/Os-x86)) est une fonctionnalité
+facultative de l'OS, installée au niveau système par un administrateur, qui
+fait tourner des machines virtuelles x86 dans le navigateur (Linux, FreeDOS,
+programmes Windows par Wine) ; l'app BoxedWine en est l'interface. Elle
+demande à l'OS le type d'app « Feature » et les points d'extension ci-dessous
+(lot 1, série `feature/base`, ADR 0246 à 0256 et 0260 à 0262 ; une ligne par ADR).
+
+| Fonctionnalité | Description | ADR | Issue |
+| --- | --- | --- | --- |
+| Permissions déclarées par une Feature | Une Feature déclare ses propres permissions, dangereuses comprises ; elles suivent les règles du catalogue de l'OS et ne sont jamais accordées en silence. | [0246](dev/adr/0246-provider-declared-permissions.md) | — |
+| Rôles déclarés par une Feature | Une Feature déclare des rôles qu'un administrateur attribue ; chaque opération sensible passe par l'authentification de l'OS. | [0247](dev/adr/0247-feature-declared-roles.md) | — |
+| Résolution des dépendances | Le Store et `kazopkg` installent les dépendances déclarées dans le manifeste, avec un seul consentement ; retirer un paquet avertit et désactive les apps dépendantes. | [0248](dev/adr/0248-store-and-kazopkg-dependency-resolution.md) | — |
+| Section « Fonctionnalités » des Paramètres | Paramètres liste les Features installées et affiche les pages qu'elles fournissent, selon le rôle de l'usager. | [0249](dev/adr/0249-settings-features-section.md) | — |
+| Persistance et éviction du stockage | L'OS demande au navigateur de ne pas effacer son stockage, affiche le quota et avertit quand le navigateur a tout de même effacé des données. | [0250](dev/adr/0250-storage-persistence-and-eviction.md) | — |
+| Route du shell vers les apps à capacité d'exécution | `./programme.exe` au terminal est typé par le détecteur de format d'une Feature puis confié à l'app qui déclare `execute` pour ce type MIME, sans bit d'exécution ni lecture comme script. | [0251](dev/adr/0251-shell-route-to-execute-capable-apps.md) | — |
+| Le Terminal affiche un programme invité | Un programme console d'une Feature (shell Linux, programme DOS texte) s'affiche dans le Terminal de Kazo : couleurs par cellule, touches de fonction, Ctrl+C au programme. | [0252](dev/adr/0252-terminal-shows-a-guest-program.md) | — |
+| Expéditeur marqué | Une app lancée ou un fichier ouvert par une autre app connaît l'expéditeur, marqué par l'OS, pour son journal. | [0253](dev/adr/0253-marked-sender-on-launch-and-open.md) | — |
+| Événements par usager | Un journal d'événements par usager (permission accordée, mise à jour, conflit résolu), visible par l'usager et les administrateurs. | [0254](dev/adr/0254-per-user-events.md) | — |
+| Relais : identités et décisions d'une Feature | Le relais du serveur accepte d'une Feature une identité par flux, une décision et des limites, et journalise par identité. | [0255](dev/adr/0255-relay-identities-and-decisions-of-a-feature.md) | — |
 
 ### Applications optionnelles portées
 

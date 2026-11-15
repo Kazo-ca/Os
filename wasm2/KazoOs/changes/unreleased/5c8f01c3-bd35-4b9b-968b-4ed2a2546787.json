@@ -1,0 +1,11 @@
+{
+  "id": "5c8f01c3-bd35-4b9b-968b-4ed2a2546787",
+  "category": "improved",
+  "audience": ["user", "developer"],
+  "title": { "en": "The Store offers the newest app version your Kazo OS runs, and a beta OS reads the beta catalog", "fr": "Le Store propose la version d'app la plus récente que votre Kazo OS fait tourner, et un OS bêta lit le catalogue bêta" },
+  "description": {
+    "en": "The Store, kazopkg and the update check no longer offer an app version built for a newer Kazo OS than yours: they pick the newest version that runs here, so an app rebuilt for a newer SDK does not block an older OS. A prerelease of Kazo OS reads the beta channel of the official catalog (catalog-beta.json) and offers the beta versions of the apps; a stable Kazo OS reads catalog.json and never sees them.",
+    "fr": "Le Store, kazopkg et la vérification des mises à jour ne proposent plus une version d'app compilée pour un Kazo OS plus récent que le vôtre : ils choisissent la version la plus récente qui tourne ici, pour qu'une app reconstruite sur un SDK plus récent ne bloque pas un OS plus ancien. Une préversion de Kazo OS lit le canal bêta du catalogue officiel (catalog-beta.json) et propose les versions bêta des apps ; un Kazo OS stable lit catalog.json et ne les voit jamais."
+  },
+  "links": ["doc/en/wasm/dev/app-installation.md", "doc/en/wasm/dev/adr/0271-beta-channel-and-automatic-app-updates.md"]
+}

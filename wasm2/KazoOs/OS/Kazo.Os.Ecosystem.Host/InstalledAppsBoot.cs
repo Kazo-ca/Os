@@ -190,9 +190,9 @@ public sealed class InstalledAppsBoot
     public InstalledApp? FindByAssembly(string assemblyName) =>
         Current.Installed.FirstOrDefault(app => app.AssemblyNames.Contains(assemblyName));
 
-    /// <summary>Finds an installed app by ID.</summary>
+    /// <summary>Finds an installed app by ID: its own, or that of one of its children (ADR 0260 §2).</summary>
     public InstalledApp? Find(string appId) =>
-        Current.Installed.FirstOrDefault(app => string.Equals(app.AppId, appId, StringComparison.Ordinal));
+        Current.Installed.FirstOrDefault(app => app.Owns(appId));
 
     /// <summary>Reads one installed file.</summary>
     internal ValueTask<byte[]?> ReadAsync(VirtualPath path, CancellationToken cancellationToken) =>
@@ -213,6 +213,12 @@ public sealed class InstalledAppsActivator(
     ILogger<InstalledAppsActivator>? logger = null) : IInstalledAppsActivator
 {
     private readonly SemaphoreSlim _gate = new(1, 1);
+
+    /// <summary>
+    /// Gets the loader of the installed apps' libraries (ADR 0261 §3): after each change it writes to
+    /// the log which app waits for a restart to get its copy of a shared library.
+    /// </summary>
+    public InstalledAppLibraries? Libraries { get; init; }
 
     /// <inheritdoc />
     public async ValueTask<InstalledAppsActivation> ActivateAsync(CancellationToken cancellationToken = default)
@@ -238,6 +244,8 @@ public sealed class InstalledAppsActivator(
                     string.Join(", ", activation.WaitingForRestart));
             }
 
+            // ADR 0261 §3: a feature just installed may carry a newer copy of a library already in the page.
+            Libraries?.ReportPendingRestarts();
             return activation;
         }
         finally
@@ -277,6 +285,12 @@ public sealed class InstalledAppAssemblyTransport(IBuildKnownAssemblyTransport i
     /// <summary>Gets the loader of their satellite assemblies (ADR 0222 §2); <see langword="null"/> loads none.</summary>
     public InstalledAppSatellites? Satellites { get; init; }
 
+    /// <summary>
+    /// Gets the loader of the libraries their packages carry (ADR 0261 §1): they are in the page
+    /// before the app's own assembly. <see langword="null"/> loads none.
+    /// </summary>
+    public InstalledAppLibraries? Libraries { get; init; }
+
     /// <inheritdoc />
     [RequiresUnreferencedCode("Installed assemblies arrive after publishing; AppPackageApiCheck verified their references at install time.")]
     public async Task<IReadOnlyList<Assembly>> LoadAsync(IReadOnlyList<string> assemblyNames, CancellationToken cancellationToken)
@@ -303,6 +317,12 @@ public sealed class InstalledAppAssemblyTransport(IBuildKnownAssemblyTransport i
             {
                 loaded.Add(existing);
                 continue;
+            }
+
+            if (Libraries is { } libraries)
+            {
+                // ADR 0261 §1: what the app's code refers to is in the runtime before that code.
+                await libraries.LoadForAsync(app, cancellationToken).ConfigureAwait(false);
             }
 
             byte[] bytes = await installed.ReadAsync(app.GetAssemblyPath(name), cancellationToken).ConfigureAwait(false)
@@ -353,6 +373,8 @@ public static class InstalledAppsBootExtensions
     /// It first moves the data a version before 3.0.0 left in the browser to the Kazo OS names
     /// (<see cref="RenamedStorageMigration"/>, ADR 0230): this is the first point of every browser
     /// host's boot where the page runs and nothing has opened the OS database yet.
+    /// Then it converts, once, the file content stored in base64 to the binary form, with a
+    /// waiting screen (<see cref="FileContentConversion"/>, ADR 0272 §3).
     /// </remarks>
     /// <param name="host">The built host.</param>
     /// <returns>A task that completes when the catalog is final.</returns>
@@ -360,6 +382,11 @@ public static class InstalledAppsBootExtensions
     {
         ArgumentNullException.ThrowIfNull(host);
         await MigrateRenamedStorageAsync(host).ConfigureAwait(true);
+        if (OperatingSystem.IsBrowser())
+        {
+            await ConvertFileContentAsync(host).ConfigureAwait(true);
+        }
+
         InstalledAppsBoot? boot = host.Services.GetService<InstalledAppsBoot>();
         if (boot is null || boot.IsLoaded)
         {
@@ -424,6 +451,64 @@ public static class InstalledAppsBootExtensions
         }
 
         await RepairRenamedContentAsync(runtime, logger).ConfigureAwait(true);
+    }
+
+    /// <summary>
+    /// ADR 0272 §3: converts, once, the file content a release before database version 5 stored in
+    /// base64, with a waiting screen, before the OS reads any file. A failure keeps the screen with
+    /// a Retry button and the OS does not start: after the conversion the OS only reads the binary
+    /// form, so a half-converted database would show files as damaged.
+    /// </summary>
+    [System.Runtime.Versioning.SupportedOSPlatform("browser")]
+    private static async Task ConvertFileContentAsync(WebAssemblyHost host)
+    {
+        if (host.Services.GetService<IJSRuntime>() is not { } runtime)
+        {
+            return;
+        }
+
+        ILogger? logger = host.Services.GetService<ILoggerFactory>()?.CreateLogger(typeof(FileContentConversion));
+        bool shown = false;
+        try
+        {
+            await BrowserStorageConversionScreen.ImportAsync().ConfigureAwait(true);
+            FileContentConversionResult result = await FileContentConversion.RunAsync(
+                runtime,
+                (looked, total) =>
+                {
+                    shown = true;
+                    BrowserStorageConversionScreen.ShowProgress(looked, total);
+                },
+                () =>
+                {
+                    shown = true;
+                    BrowserStorageConversionScreen.ShowWaiting();
+                }).ConfigureAwait(true);
+            if (!result.AlreadyDone)
+            {
+                logger?.LogInformation(
+                    "fsck: file content converted to the binary form ({Converted} of {Chunks} chunk(s), {Bytes} byte(s))",
+                    result.Converted, result.Chunks, result.Bytes);
+            }
+
+            foreach (FileContentChunkKey chunk in result.Damaged)
+            {
+                logger?.LogWarning(
+                    "fsck: chunk {Index} of content {Hash} is not valid base64 and was left as it is; its file is damaged",
+                    chunk.ChunkIndex, chunk.ContentHash);
+            }
+        }
+        catch (Exception exception) when (exception is JSException or InvalidOperationException or InvalidDataException or System.Text.Json.JsonException)
+        {
+            logger?.LogError(exception, "fsck: the file content could not be converted to the binary form; the OS waits for a retry");
+            BrowserStorageConversionScreen.ShowFailure(exception.Message);
+            await Task.Delay(Timeout.Infinite).ConfigureAwait(true);
+        }
+
+        if (shown)
+        {
+            BrowserStorageConversionScreen.Hide();
+        }
     }
 
     /// <summary>

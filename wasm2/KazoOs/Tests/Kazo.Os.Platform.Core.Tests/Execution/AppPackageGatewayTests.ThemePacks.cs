@@ -1,3 +1,4 @@
+using Kazo.Os.App.Abstractions;
 using System.Text;
 using Kazo.Os.AppSdk.Apps;
 using Kazo.Os.AppSdk.IO;
@@ -183,7 +184,8 @@ public sealed partial class AppPackageGatewayTests
 
         internal void PublishThemePackCatalog(string latest, bool corruptHash, params string[] older)
         {
-            string root = AppPackageDefaults.OfficialCatalogAddress[..^"catalog.json".Length];
+            string address = AppPackageDefaults.OfficialCatalogAddressFor(KazoOsSdk.SemanticVersion);
+            string root = address[..(address.LastIndexOf('/') + 1)];
             string oldest = older.Length == 0 ? latest : older[^1];
             List<string> versions = [];
             foreach (string version in older.Prepend(latest))
@@ -205,7 +207,7 @@ public sealed partial class AppPackageGatewayTests
                     """);
             }
 
-            _downloader.Files[new Uri(AppPackageDefaults.OfficialCatalogAddress)] = Encoding.UTF8.GetBytes($$$"""
+            _downloader.Files[new Uri(AppPackageDefaults.OfficialCatalogAddressFor(KazoOsSdk.SemanticVersion))] = Encoding.UTF8.GetBytes($$$"""
                 {"schemaVersion":1,"categories":[{"id":"themes","labels":{"en":"Themes","fr":"Thèmes"}}],
                  "apps":[{"appId":"{{{Pack}}}","kind":"theme-pack","name":"Neon","category":"themes","tags":["dark"],
                           "shortDescriptions":{"en":"Neon pack"},"license":"CC-BY-4.0","repository":"https://github.com/example/neon",

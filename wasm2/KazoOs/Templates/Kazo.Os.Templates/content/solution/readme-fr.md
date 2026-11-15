@@ -73,6 +73,31 @@ un sous-module modifié ou hors de son tag.
 
 Forcez l'un ou l'autre avec `-p:KazoOsUseSource=true` ou `false`.
 
+### Bibliothèques de l'app
+
+L'app peut avoir ses propres bibliothèques : un autre projet de ce dépôt (`ProjectReference`), un
+paquet NuGet (`PackageReference`) ou une DLL. Référencez-les comme dans tout projet .NET ; il n'y a
+rien à déclarer. `KazoOsPack` met dans le paquet chaque assemblage dont l'app a besoin et que Kazo OS
+n'apporte pas (le SDK, le runtime .NET, les assemblages `Microsoft.*` et MudBlazor viennent avec
+l'OS), et l'OS les charge avant l'app. Une bibliothèque ne doit pas s'appeler `Kazo.Os.*`, nom que
+l'OS garde pour lui.
+
+Une bibliothèque que plusieurs apps embarquent et qui doit exister une seule fois dans l'OS (les
+contrats d'une fonctionnalité, par exemple) est marquée **partagée** par son auteur, dans le projet
+de la bibliothèque :
+
+```xml
+<PropertyGroup>
+  <KazoOsSharedLibrary>true</KazoOsSharedLibrary>
+</PropertyGroup>
+```
+
+Un projet de bibliothèque qui ne référence pas `Kazo.Os.App.Build` écrit la même marque lui-même :
+`<AssemblyMetadata Include="Kazo.Os.SharedLibrary" Value="true" />`. La marque est dans
+l'assemblage : une app qui utilise la bibliothèque n'a rien à ajouter. Kazo OS charge alors une
+seule copie pour toutes les apps de la même version majeure ; une version mineure d'une
+bibliothèque partagée ne fait qu'ajouter des membres.
+
 ### Publier dans le Kazo OS Store
 
 1. Remplissez `store/` (icône, descriptions courtes, descriptions, captures d'écran, catégorie et
@@ -100,6 +125,25 @@ Forcez l'un ou l'autre avec `-p:KazoOsUseSource=true` ou `false`.
 
 Le catalogue ne prend jamais de binaire de votre part : une fois votre pull request relue et
 fusionnée, sa CI compile l'app au commit du tag.
+
+### Suivre les nouvelles versions de Kazo OS
+
+Le workflow **Kazo OS SDK update** (`sdk-update.yml`) tourne toutes les heures, quand Kazo OS
+annonce une version, ou à la main depuis l'onglet Actions. Quand Kazo OS a une version plus récente,
+il y déplace le sous-module, monte la version de l'app (`.github/scripts/bump-app-version.sh`) sur
+une branche `kazoos-sdk/<version>` et y lance la CI :
+
+- une préversion de Kazo OS : la branche `beta` la reçoit, en version `x.y.(z+1)-beta.<n>`, qui va
+  dans le canal bêta du Kazo OS Store ;
+- une version stable mineure ou majeure : une pull request vers `main`, fusionnée, taguée et publiée ;
+- une version stable corrective : vérifiée seulement, rien n'est publié.
+
+Une CI rouge ouvre une issue `TODO` et ne change rien. Une version avec un suffixe (`1.2.1-beta.1`)
+se publie toujours depuis `beta`, une version sans suffixe depuis `main`. Les workflows de ce dépôt
+sont courts : ils appellent les workflows partagés de
+[Kazo-ca/Os-AppTemplate](https://github.com/Kazo-ca/Os-AppTemplate) (`@v1`), qui s'améliorent sans
+changement ici. Sans les secrets de l'automate de Kazo OS, autorisez GitHub Actions à créer des pull
+requests (**Settings** ▸ **Actions** ▸ **General**) pour que la mise à jour ouvre sa pull request.
 
 ### Publier sur la branche `kazoos-packages`
 
