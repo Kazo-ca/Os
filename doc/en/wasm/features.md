@@ -452,7 +452,10 @@ points to its PR.
 | Feature | Description | ADR | Issue |
 | --- | --- | --- | --- |
 | Switch user | Open another session without closing the first one. Stays greyed out in the Power menu by Benoit's choice: one session at a time, Sign out to change account. | [0195](dev/adr/0195-start-menu-power-button.md), [0201](dev/adr/0201-switch-user-stays-greyed.md) | [#290](https://github.com/Kazo-ca/Os/issues/290) |
-| File address served on demand | An app gets an address to read a large file (audio, video) without copying it in memory, with partial reads to seek in a track. | To write | [#379](https://github.com/Kazo-ca/Os/issues/379) |
+| File address served on demand | An app gets an address to read a large file (audio, video) without copying it in memory, with partial reads to seek in a track. `storage/base` series. | [0275](dev/adr/0275-partial-read-and-file-address.md) | [#379](https://github.com/Kazo-ca/Os/issues/379) |
+| Faster and lighter files in the browser | File content is kept in binary instead of base64: about 25% less space, writes and reads several times faster. The old content is converted all at once at the first boot after the update, with a waiting screen. `storage/base` series. | [0272](dev/adr/0272-binary-file-content.md) | [plan](dev/plans/browser-storage-series-plan.md) |
+| Space reclaimed after a deletion | The space of a rewritten or deleted file comes back within one day at most, within minutes when space is short, instead of staying taken. | [0273](dev/adr/0273-short-orphan-content-retention.md) | [#537](https://github.com/Kazo-ca/Os/issues/537) |
+| A single copy of the files of an installed app | The files of an app are no longer copied into a cache in every session: an app takes about half the space and its first launch copies nothing. `storage/base` series. | [0274](dev/adr/0274-single-copy-of-app-files.md) | [plan](dev/plans/browser-storage-series-plan.md) |
 | Drag files onto an app | Public SDK contract to receive files dragged from the File Explorer or the desktop. | To write | [#380](https://github.com/Kazo-ca/Os/issues/380) |
 
 ### Kazo OS Store

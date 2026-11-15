@@ -125,6 +125,37 @@ Questions à reposer au démarrage : où vivent les visionneuses, portée de
 - Code Editor **reste une app système**.
 - Le remplacement de l'éditeur de texte reste **sans expressions régulières**.
 
+## Stockage dans le navigateur (décisions du 2026-11-14)
+
+Analyse : [`../dev/plans/browser-storage-optimization-analysis.md`](../dev/plans/browser-storage-optimization-analysis.md).
+Rien n'est codé.
+
+- Deux issues `TODO` d'abord : #537 (récupérer l'espace des contenus orphelins,
+  que rien ne ramasse aujourd'hui) et #538 (profiler #520 dans l'OS réel ; rendu le
+  2026-11-15 : en Release, 96 % des 4,1 à 4,9 s d'un enregistrement de
+  52,5 Mio sont dans le dépôt de contenu, les 43 s venaient d'un hôte Debug).
+- Ensuite une série `storage/base`, ADR avant le code : contenu binaire au lieu
+  de base64, ADR 0250 à bâtir, une seule copie des fichiers d'app, lecture
+  partielle et adresse de fichier (#379).
+- Fichiers d'une app installée : le système de fichiers reste la seule source ;
+  le service worker sert `_content/…` depuis le magasin de fichiers et la copie
+  dans Cache Storage disparaît.
+- Rétention des contenus orphelins : courte (de quelques heures à un jour), et
+  suppression tout de suite quand l'espace est faible ; une ADR remplace les
+  30 jours de l'ADR 0099.
+- **Série ouverte le 2026-11-15** (branche `storage/base`, aucun code) : plan
+  dans [`../dev/plans/browser-storage-series-plan.md`](../dev/plans/browser-storage-series-plan.md),
+  ADR 0272 (contenu binaire), 0273 (rétention : 1 jour, 5 minutes quand
+  l'espace est faible ; c'est l'ADR de #537), 0274 (une seule copie des
+  fichiers d'app) et 0275 (lecture partielle, adresse de fichier) proposées.
+  Les 30 jours sont en fait dans l'ADR 0094, pas dans l'ADR 0099. Benoit a
+  choisi la durée de 1 jour le 2026-11-15 (fil de #537). Réponses de
+  Benoit du 2026-11-15 : l'ancien contenu est converti en une fois au premier
+  démarrage, avec un écran d'attente (pas en arrière-plan), et une lecture
+  vérifie chaque bloc par son hachage. Aucune question ouverte. La conversion
+  fait partie du chantier 1, qui règle #520 d'après le profilage de #538 et
+  peut partir dès que les ADR sont fusionnées dans `storage/base`.
+
 ## Questions posées, réponse à confirmer
 
 - **« Nouveau dossier » dans les dialogues** (ADR 0175) : rendre

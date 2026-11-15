@@ -43,9 +43,10 @@ navigateur, dans la composition de l'hôte.
   (métadonnées : fichiers, dossiers, liens), `fsLinks`, `fsContent` (blocs),
   `catalog`, `grants`, `audit`, `diagnostics`, `syncMetadata`, `serverConnection`,
   `syncCursors`, `syncRecordState`, et une base par site ASP.Kazo (`kazoweb.<appId>`).
-- Contenu de fichier : découpé en blocs adressés par SHA-256, de 256 Kio au plus
-  par défaut (`FileContentStoragePolicy.DefaultMaxChunkSizeBytes`) ; un bloc identique
-  n'est stocké qu'une fois.
+- Contenu de fichier : découpé en blocs de 256 Kio au plus par défaut
+  (`FileContentStoragePolicy.DefaultMaxChunkSizeBytes`), adressés par le SHA-256 du
+  fichier entier et le numéro du bloc ; deux fichiers identiques partagent leur
+  contenu, mais pas deux fichiers qui n'ont que des blocs en commun.
 
 ## Récupération
 
@@ -64,8 +65,10 @@ dans [`system-backup.md`](system-backup.md).
 - Les mutations de métadonnées sont des lots d'opérations IndexedDB ordonnés,
   construits par `IndexedDbFileSystemMutationPlanner` pour être atomiques. Les
   blocs de contenu sont adressés par hachage ; ceux qui ne sont plus référencés
-  sont ramassés par une passe bornée, après une période de rétention
-  (`OrphanRetention`), et jamais sans revalidation de leurs références.
+  peuvent être ramassés par une passe bornée, après une période de rétention
+  (`OrphanRetention`), et jamais sans revalidation de leurs références. Aucun hôte
+  n'appelle encore cette passe : l'espace n'est donc pas récupéré aujourd'hui (voir
+  [`plans/browser-storage-optimization-analysis.md`](plans/browser-storage-optimization-analysis.md)).
 - Le chemin d'un fichier se résout en une requête (`resolvePath`, ADR 0090,
   [`filesystem-path-lookup.md`](filesystem-path-lookup.md)).
 - Les scripts `wwwroot/*.js` sont testés en contrat par

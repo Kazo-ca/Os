@@ -43,9 +43,10 @@ implementations, in the host's composition.
   (metadata: files, folders, links), `fsLinks`, `fsContent` (chunks),
   `catalog`, `grants`, `audit`, `diagnostics`, `syncMetadata`, `serverConnection`,
   `syncCursors`, `syncRecordState`, and one database per ASP.Kazo site (`kazoweb.<appId>`).
-- File content: split into chunks addressed by SHA-256, of at most 256 KiB
-  by default (`FileContentStoragePolicy.DefaultMaxChunkSizeBytes`); an identical chunk
-  is stored only once.
+- File content: split into chunks of at most 256 KiB by default
+  (`FileContentStoragePolicy.DefaultMaxChunkSizeBytes`), addressed by the SHA-256 of
+  the whole file and the chunk number; two identical files share their content, but
+  not two files that only have some chunks in common.
 
 ## Recovery
 
@@ -64,8 +65,10 @@ in [`system-backup.md`](system-backup.md).
 - Metadata mutations are ordered batches of IndexedDB operations,
   built by `IndexedDbFileSystemMutationPlanner` to be atomic. Content
   chunks are addressed by hash; those that are no longer referenced
-  are collected by a bounded pass, after a retention period
-  (`OrphanRetention`), and never without revalidating their references.
+  can be collected by a bounded pass, after a retention period
+  (`OrphanRetention`), and never without revalidating their references. No host
+  calls this pass yet: space is therefore not reclaimed today (see
+  [`plans/browser-storage-optimization-analysis.md`](plans/browser-storage-optimization-analysis.md)).
 - A file's path is resolved in one request (`resolvePath`, ADR 0090,
   [`filesystem-path-lookup.md`](filesystem-path-lookup.md)).
 - The `wwwroot/*.js` scripts are contract-tested by

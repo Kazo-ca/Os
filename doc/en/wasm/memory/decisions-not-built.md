@@ -121,6 +121,35 @@ viewers live, scope of `?app=`, Eruda or not.
 - Code Editor **stays a system app**.
 - The text editor's replace stays **without regular expressions**.
 
+## Storage in the browser (decisions of 2026-11-14)
+
+Analysis: [`../dev/plans/browser-storage-optimization-analysis.md`](../dev/plans/browser-storage-optimization-analysis.md).
+Nothing is coded.
+
+- Two `TODO` issues first: #537 (reclaim the space of orphan contents, which
+  nothing collects today) and #538 (profile #520 in the real OS; delivered on
+  2026-11-15: in Release, 96% of the 4.1 to 4.9 s of a 52.5 MiB save is in
+  the content repository, the 43 s came from a Debug host).
+- Then a `storage/base` series, ADRs before the code: binary content instead of
+  base64, ADR 0250 to build, a single copy of app files, partial read and file
+  address (#379).
+- Files of an installed app: the file system stays the only source; the
+  service worker serves `_content/…` from the file store and the copy in Cache
+  Storage goes away.
+- Retention of orphan contents: short (from a few hours to a day), and deletion
+  at once when space is low; an ADR replaces the 30 days of ADR 0099.
+- **Series opened on 2026-11-15** (`storage/base` branch, no code): plan in
+  [`../dev/plans/browser-storage-series-plan.md`](../dev/plans/browser-storage-series-plan.md),
+  ADRs 0272 (binary content), 0273 (retention: 1 day, 5 minutes when space
+  is low; this is the ADR of #537), 0274 (a single copy of app files) and 0275
+  (partial read, file address) proposed. The 30 days are in fact in ADR 0094,
+  not in ADR 0099. Benoit chose the 1-day duration on 2026-11-15 (thread of #537). Benoit's
+  answers of 2026-11-15: the old content is converted all at once at the
+  first boot, with a waiting screen (not in the background), and a read
+  checks each chunk by its hash. No open question. The conversion is part of
+  work item 1, which fixes #520 according to the profiling of #538 and can
+  start as soon as the ADRs are merged into `storage/base`.
+
 ## Questions asked, answer to confirm
 
 - **"New folder" in dialogs** (ADR 0175): make
