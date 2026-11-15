@@ -32,11 +32,11 @@ navigateur, dans la composition de l'hôte.
 | `Isolation/` | `BrowserCrossOriginIsolation` : état COOP/COEP (ADR 0131, 0146). |
 | `Workers/` | `BrowserWebWorkerRuntime` : runtime des Web Workers côté navigateur ([`worker-processes.md`](worker-processes.md)). |
 | `Globalization/` | Satellites de langue chargés par le navigateur. |
-| `wwwroot/` | Scripts JavaScript servis sous `_content/Kazo.Os.Infrastructure.Browser/` : `indexedDb.js`, `storageManager.js`, `webSiteDatabases.js`, `renamedStorage.js` (migration du renommage), `cryptoHasher.js`, `hostClipboard.js`, `crossOriginIsolation.js`, `sharedRing.js` (anneau partagé des pipes des workers), `workerHost.js` et `workerBootstrap.js`. |
+| `wwwroot/` | Scripts JavaScript servis sous `_content/Kazo.Os.Infrastructure.Browser/` : `indexedDb.js`, `fileContent.js` et `binaryChunks.js` (contenu de fichier binaire, ADR 0272), `storageManager.js`, `webSiteDatabases.js`, `renamedStorage.js` (migration du renommage), `cryptoHasher.js`, `hostClipboard.js`, `crossOriginIsolation.js`, `sharedRing.js` (anneau partagé des pipes des workers), `workerHost.js` et `workerBootstrap.js`. |
 
 ## Base IndexedDB
 
-- Nom : `kazoos`. Version courante : **4** (`KazoOsIndexedDbSchema.CurrentVersion`).
+- Nom : `kazoos`. Version courante : **5** (`KazoOsIndexedDbSchema.CurrentVersion`).
   Changer la version est le seul moyen d'ajouter, retirer ou modifier un
   magasin ou un index ; chaque montée a son étape de migration.
 - Magasins principaux : `users`, `groups`, `sessions`, `settings`, `fsEntries`
@@ -47,6 +47,31 @@ navigateur, dans la composition de l'hôte.
   (`FileContentStoragePolicy.DefaultMaxChunkSizeBytes`), adressés par le SHA-256 du
   fichier entier et le numéro du bloc ; deux fichiers identiques partagent leur
   contenu, mais pas deux fichiers qui n'ont que des blocs en commun.
+- Depuis la version 5 (ADR 0272), un bloc est rangé en octets : `{contentHash, chunkIndex,
+  data: Uint8Array, chunkHash, createdUtcMs}`, où `chunkHash` est le SHA-256 du bloc
+  seul. `IndexedDbFileContentRepository` passe par `IFileContentChunkStore`
+  (`BrowserFileContentChunkStore`, `[JSImport]` de `fileContent.js` avec une
+  `MemoryView`) : ni base64 ni JSON entre le C# et le navigateur. Une écriture hache
+  avec WebCrypto, puis range 64 blocs par transaction ; une lecture vérifie chaque bloc
+  (numéro, longueur, `chunkHash`) et refuse un fichier abîmé au lieu de rendre de faux
+  octets.
+- L'adaptateur JSON (`indexedDb.js`) voit toujours les blocs sous leur forme base64 :
+  `binaryChunks.js` change un bloc binaire qu'il lit en `dataBase64`, et une opération
+  marquée `BinaryChunk` (restauration d'une sauvegarde, migration du renommage) de
+  nouveau en octets après avoir vérifié son hachage. Les sauvegardes gardent le format 1
+  et la version de schéma 4 (`KazoOsIndexedDbSchema.BackupSchemaVersion`), pour qu'une
+  version précédente les restaure encore.
+- Conversion unique : au premier démarrage en version 5, avant l'ouverture de session,
+  `FileContentConversion.RunAsync` convertit les blocs base64 des anciennes versions
+  par lots de 16 Mio, derrière un écran d'attente avec la progression
+  (`storageConversion.js` de l'hôte Ecosystem). La position est gardée dans
+  `syncMetadata` (`fileContentConversion`), donc un onglet fermé reprend où il
+  s'était arrêté ; un Web Lock la réserve à un onglet, les autres attendent. Un bloc
+  abîmé est laissé tel quel et nommé dans le journal, comme `fsck` ; si la conversion
+  échoue, l'OS ne démarre pas et l'écran propose de réessayer.
+- Un onglet d'une ancienne version encore ouvert quand la version 5 ouvre la base ferme
+  sa connexion ; sa prochaine opération échoue avec une erreur de version et la
+  personne recharge la page.
 
 ## Récupération
 

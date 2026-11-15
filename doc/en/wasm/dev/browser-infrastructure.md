@@ -32,11 +32,11 @@ implementations, in the host's composition.
 | `Isolation/` | `BrowserCrossOriginIsolation`: COOP/COEP state (ADR 0131, 0146). |
 | `Workers/` | `BrowserWebWorkerRuntime`: Web Workers runtime on the browser side ([`worker-processes.md`](worker-processes.md)). |
 | `Globalization/` | Language satellites loaded by the browser. |
-| `wwwroot/` | JavaScript scripts served under `_content/Kazo.Os.Infrastructure.Browser/`: `indexedDb.js`, `storageManager.js`, `webSiteDatabases.js`, `renamedStorage.js` (rename migration), `cryptoHasher.js`, `hostClipboard.js`, `crossOriginIsolation.js`, `sharedRing.js` (shared ring of the workers' pipes), `workerHost.js` and `workerBootstrap.js`. |
+| `wwwroot/` | JavaScript scripts served under `_content/Kazo.Os.Infrastructure.Browser/`: `indexedDb.js`, `fileContent.js` and `binaryChunks.js` (binary file content, ADR 0272), `storageManager.js`, `webSiteDatabases.js`, `renamedStorage.js` (rename migration), `cryptoHasher.js`, `hostClipboard.js`, `crossOriginIsolation.js`, `sharedRing.js` (shared ring of the workers' pipes), `workerHost.js` and `workerBootstrap.js`. |
 
 ## IndexedDB database
 
-- Name: `kazoos`. Current version: **4** (`KazoOsIndexedDbSchema.CurrentVersion`).
+- Name: `kazoos`. Current version: **5** (`KazoOsIndexedDbSchema.CurrentVersion`).
   Changing the version is the only way to add, remove or modify a
   store or an index; each upgrade has its migration step.
 - Main stores: `users`, `groups`, `sessions`, `settings`, `fsEntries`
@@ -47,6 +47,28 @@ implementations, in the host's composition.
   (`FileContentStoragePolicy.DefaultMaxChunkSizeBytes`), addressed by the SHA-256 of
   the whole file and the chunk number; two identical files share their content, but
   not two files that only have some chunks in common.
+- Since version 5 (ADR 0272) a chunk is stored as bytes: `{contentHash, chunkIndex,
+  data: Uint8Array, chunkHash, createdUtcMs}`, where `chunkHash` is the SHA-256 of the
+  chunk alone. `IndexedDbFileContentRepository` goes through `IFileContentChunkStore`
+  (`BrowserFileContentChunkStore`, `[JSImport]` of `fileContent.js` with a
+  `MemoryView`): no base64 and no JSON between C# and the browser. A write hashes in
+  WebCrypto, then stores 64 chunks per transaction; a read checks each chunk (number,
+  length, `chunkHash`) and refuses a damaged file instead of returning wrong bytes.
+- The JSON adapter (`indexedDb.js`) still sees chunks in their base64 form:
+  `binaryChunks.js` turns a binary chunk it reads into `dataBase64`, and an operation
+  marked `BinaryChunk` (backup restore, rename migration) back into bytes after
+  checking its hash. Backups keep format 1 and schema version 4
+  (`KazoOsIndexedDbSchema.BackupSchemaVersion`), so an older release still restores them.
+- One-time conversion: at the first boot on version 5, before the session starts,
+  `FileContentConversion.RunAsync` converts the base64 chunks of older releases by
+  batches of 16 MiB, behind a waiting screen with progress
+  (`storageConversion.js` of the Ecosystem host). The position is saved in
+  `syncMetadata` (`fileContentConversion`), so a closed tab resumes where it stopped;
+  a Web Lock keeps it to one tab, the others wait. A damaged chunk is kept as it is
+  and named in the log, like `fsck`; if the conversion fails the OS does not start
+  and the screen offers to retry.
+- A tab of an older release still open when version 5 opens the database closes its
+  connection; its next operation fails with a version error and the person reloads.
 
 ## Recovery
 

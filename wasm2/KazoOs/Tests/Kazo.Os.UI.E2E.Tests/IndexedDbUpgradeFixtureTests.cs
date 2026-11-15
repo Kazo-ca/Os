@@ -27,7 +27,7 @@ namespace Kazo.Os.UI.E2E.Tests;
 /// survived), reads the fixture's file back with <c>cat</c> in the Terminal (filesystem entries,
 /// links and content chunks survived), reads <c>/etc/kazoos/appearance.config</c> (the setting
 /// stored in the retired <c>settings</c> store was carried over by the settings-to-files
-/// migration, ADR 0044), checks the database is now <c>kazoos</c> at version 4, that <c>hackeros</c>
+/// migration, ADR 0044), checks the database is now <c>kazoos</c> at version 5, that <c>hackeros</c>
 /// is gone, and that no stored record names HackerOS any more (the fixture's own document, whose
 /// text is the person's, is stored as base64 and kept as it is).
 /// </para>
@@ -35,7 +35,7 @@ namespace Kazo.Os.UI.E2E.Tests;
 public sealed partial class IndexedDbUpgradeFixtureTests(ITestOutputHelper output)
 {
     /// <summary>The schema version the current OS must leave the database at.</summary>
-    private const int ExpectedCurrentVersion = 4;
+    private const int ExpectedCurrentVersion = 5;
 
     /// <summary>The OS database since the rename (<c>KazoOsIndexedDbSchema.DatabaseName</c>).</summary>
     private const string CurrentDatabaseName = "kazoos";
@@ -149,15 +149,55 @@ public sealed partial class IndexedDbUpgradeFixtureTests(ITestOutputHelper outpu
         }
         """;
 
+    /// <summary>
+    /// Counts the content chunks by form and checks each binary chunk against its own SHA-256
+    /// (ADR 0272), then reads the conversion record in <c>syncMetadata</c>.
+    /// </summary>
+    private const string ContentScript = """
+        async name => {
+            const db = await new Promise((resolve, reject) => {
+                const open = indexedDB.open(name);
+                open.onsuccess = () => resolve(open.result);
+                open.onerror = () => reject(open.error);
+            });
+            const read = (store, query) => new Promise((resolve, reject) => {
+                const request = query === undefined
+                    ? db.transaction(store, "readonly").objectStore(store).getAll()
+                    : db.transaction(store, "readonly").objectStore(store).get(query);
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = () => reject(request.error);
+            });
+            const chunks = await read("fsContent");
+            const conversion = await read("syncMetadata", "fileContentConversion");
+            db.close();
+            let binary = 0, base64 = 0, badHash = 0;
+            for (const chunk of chunks) {
+                if (typeof chunk.dataBase64 === "string") { base64++; continue; }
+                if (!(chunk.data instanceof Uint8Array)) { continue; }
+                binary++;
+                const digest = new Uint8Array(await crypto.subtle.digest("SHA-256", chunk.data));
+                const hex = Array.from(digest, b => b.toString(16).padStart(2, "0")).join("");
+                if (hex !== chunk.chunkHash) { badHash++; }
+            }
+            return { chunks: chunks.length, binary, base64, badHash, conversionDone: conversion?.done === true };
+        }
+        """;
+
     /// <summary>Upgrades one fixture's database to the current version through the real OS.</summary>
     /// <param name="fixtureVersion">The schema version of the dumped database.</param>
     [Theory]
     [InlineData(2)]
     [InlineData(3)]
+    [InlineData(4)]
     public async Task Current_os_upgrades_an_old_database_and_keeps_files_accounts_and_settings(int fixtureVersion)
     {
         string solutionDirectory = E2ESupport.FindSolutionDirectory();
-        string fixturePath = Path.Combine(solutionDirectory, "Tests", "fixtures", "indexeddb", $"hackeros-v{fixtureVersion}.json");
+        string fixturePath = Path.Combine(
+            solutionDirectory,
+            "Tests",
+            "fixtures",
+            "indexeddb",
+            fixtureVersion < 4 ? $"hackeros-v{fixtureVersion}.json" : $"kazoos-v{fixtureVersion}.json");
         string fixtureJson = await File.ReadAllTextAsync(fixturePath);
         using JsonDocument fixture = JsonDocument.Parse(fixtureJson);
         JsonElement root = fixture.RootElement;
@@ -171,6 +211,11 @@ public sealed partial class IndexedDbUpgradeFixtureTests(ITestOutputHelper outpu
         string fileContent = expectations.GetProperty("file").GetProperty("content").GetString()!;
         string settingKey = expectations.GetProperty("setting").GetProperty("key").GetString()!;
         string settingValue = expectations.GetProperty("setting").GetProperty("value").GetString()!;
+        // Dumps before the settings-to-files migration (ADR 0044) kept the setting in the retired
+        // settings store, carried over to the system file; a later dump names the user's own file.
+        string settingPath = expectations.GetProperty("setting").TryGetProperty("path", out JsonElement path)
+            ? path.GetString()!
+            : "/etc/kazoos/appearance.config";
         string databaseName = root.GetProperty("databaseName").GetString()!;
 
         int port = E2ESupport.ReservePort();
@@ -248,23 +293,37 @@ public sealed partial class IndexedDbUpgradeFixtureTests(ITestOutputHelper outpu
             await WaitForTerminalTextAsync(rows, text => OutputFinished(text, fileContent), $"the content of {filePath}");
             output.WriteLine($"[test] {filePath} kept its content.");
 
-            await RunCommandAsync(page, screen, "cat /etc/kazoos/appearance.config");
+            await RunCommandAsync(page, screen, $"cat {settingPath}");
             Regex setting = new($@"^\s*{Regex.Escape(settingKey)}\s*=\s*{Regex.Escape(settingValue)}\s*$", RegexOptions.Multiline);
             await WaitForTerminalTextAsync(
                 rows,
                 text => setting.IsMatch(text) && OutputFinished(text, settingValue),
-                $"{settingKey}={settingValue} in /etc/kazoos/appearance.config");
+                $"{settingKey}={settingValue} in {settingPath}");
             output.WriteLine($"[test] the appearance setting {settingKey}={settingValue} survived.");
 
             // 5. ADR 0230: the old database is gone and no record holds an old name.
             JsonElement dump = await page.EvaluateAsync<JsonElement>(DumpScript, CurrentDatabaseName);
             string[] names = [.. dump.GetProperty("names").EnumerateArray().Select(name => name.GetString()!)];
-            Assert.DoesNotContain(databaseName, names);
+            if (databaseName != CurrentDatabaseName)
+            {
+                Assert.DoesNotContain(databaseName, names);
+            }
+
             Assert.DoesNotContain(names, name => OldName.IsMatch(name));
             string records = dump.GetProperty("stores").GetString()!;
             Match old = OldName.Match(records);
             Assert.False(old.Success, $"A migrated record still holds '{old.Value}': …{records[Math.Max(0, old.Index - 200)..Math.Min(records.Length, old.Index + 200)]}…");
             output.WriteLine($"[test] '{databaseName}' moved to '{CurrentDatabaseName}' without any old name.");
+
+            // 6. ADR 0272: the one-time conversion left every content chunk binary, verified by its
+            //    own hash, and recorded that it is done.
+            JsonElement content = await page.EvaluateAsync<JsonElement>(ContentScript, CurrentDatabaseName);
+            output.WriteLine($"[test] content after conversion: {content}");
+            Assert.True(content.GetProperty("chunks").GetInt32() > 0);
+            Assert.Equal(content.GetProperty("chunks").GetInt32(), content.GetProperty("binary").GetInt32());
+            Assert.Equal(0, content.GetProperty("base64").GetInt32());
+            Assert.Equal(0, content.GetProperty("badHash").GetInt32());
+            Assert.True(content.GetProperty("conversionDone").GetBoolean(), "The conversion did not record that it is done.");
 
             Assert.Empty(consoleErrors);
         }

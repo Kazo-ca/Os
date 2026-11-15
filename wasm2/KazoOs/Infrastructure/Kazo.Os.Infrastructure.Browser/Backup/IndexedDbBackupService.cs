@@ -124,7 +124,7 @@ public sealed class IndexedDbBackupService : IAsyncDisposable
         ValidatedBackup backup = Validate(backupJson);
         return new IndexedDbBackupSummary(
             backup.CreatedAtUtc,
-            KazoOsIndexedDbSchema.CurrentVersion,
+            KazoOsIndexedDbSchema.BackupSchemaVersion,
             backup.RecordCount,
             backup.Stores.ToDictionary(store => store.Name, store => store.Records.GetArrayLength(), StringComparer.Ordinal));
     }
@@ -157,8 +157,10 @@ public sealed class IndexedDbBackupService : IAsyncDisposable
         // keeps every other one (ADR 0099 section 1). Either way it is one transaction.
         foreach ((string storeName, JsonElement records) in backup.Stores)
         {
+            // ADR 0272 §5: a chunk comes in base64 and is stored in its binary form.
+            bool chunks = StringComparer.Ordinal.Equals(storeName, KazoOsIndexedDbSchema.FileContentStoreName);
             operations.AddRange(records.EnumerateArray().Select(record =>
-                new IndexedDbOperation("put", storeName, Value: record.Clone())));
+                new IndexedDbOperation("put", storeName, Value: record.Clone(), BinaryChunk: chunks ? true : null)));
         }
 
         await _adapter.OpenAsync(IndexedDbMigrationPlan.CreateCurrent(), cancellationToken).ConfigureAwait(false);
@@ -199,11 +201,12 @@ public sealed class IndexedDbBackupService : IAsyncDisposable
         string createdAt = RequiredString(envelope, "createdAtUtc");
         string expectedHash = RequiredString(envelope, "sha256");
         string? osVersion = envelope["osVersion"]?.GetValue<string>();
-        if (schemaVersion != KazoOsIndexedDbSchema.CurrentVersion)
+        if (schemaVersion != KazoOsIndexedDbSchema.BackupSchemaVersion)
         {
             // ADR 0099 section 1: a backup of another schema version is refused with a clear message.
+            // Database version 5 kept the backup's stores and records (ADR 0272 §5): backups name 4.
             throw new IndexedDbBackupValidationException(
-                $"This backup uses database schema version {schemaVersion}; this Kazo OS uses version {KazoOsIndexedDbSchema.CurrentVersion}. It cannot be restored here.");
+                $"This backup uses database schema version {schemaVersion}; this Kazo OS uses version {KazoOsIndexedDbSchema.BackupSchemaVersion}. It cannot be restored here.");
         }
 
         if (formatVersion != FormatVersion
@@ -317,7 +320,7 @@ public sealed class IndexedDbBackupService : IAsyncDisposable
         {
             ["formatVersion"] = FormatVersion,
             ["databaseName"] = databaseName,
-            ["databaseSchemaVersion"] = KazoOsIndexedDbSchema.CurrentVersion,
+            ["databaseSchemaVersion"] = KazoOsIndexedDbSchema.BackupSchemaVersion,
             ["createdAtUtc"] = createdAtUtc.ToUniversalTime().ToString("O"),
         };
         // ADR 0230 §2: the version that made the backup; the backups before 3.0.0 have none.

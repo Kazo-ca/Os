@@ -1,5 +1,5 @@
 using System.Buffers;
-using System.Security.Cryptography;
+using System.Diagnostics;
 using System.Text.Json;
 using Kazo.Os.Infrastructure.Browser.Interop;
 using Kazo.Os.Infrastructure.Browser.Schema;
@@ -8,35 +8,53 @@ using Microsoft.JSInterop;
 
 namespace Kazo.Os.Infrastructure.Browser.FileSystem;
 
-/// <summary>Persists and reconstructs immutable, SHA-256-addressed file chunks.</summary>
+/// <summary>
+/// Persists and reconstructs immutable, SHA-256-addressed file chunks. Since ADR 0272 the chunks
+/// are binary (<c>Uint8Array</c> with the SHA-256 of each chunk) and the bytes go through
+/// <see cref="IFileContentChunkStore"/>, without JSON or base64; the JSON adapter only opens the
+/// database and runs the orphan cleanup.
+/// </summary>
 internal sealed class IndexedDbFileContentRepository : IAsyncDisposable
 {
     private const string Boundary = "FileSystemContentWrite";
     private readonly IndexedDbInteropAdapter _adapter;
+    private readonly IFileContentChunkStore _chunks;
     private readonly FileContentStoragePolicy _policy;
     private readonly TimeProvider _timeProvider;
+    private readonly IBlockDeviceStatistics? _disk;
 
     /// <summary>Initializes the content repository with the accepted browser storage policy.</summary>
-    /// <param name="runtime">JavaScript runtime.</param>
+    /// <param name="runtime">JavaScript runtime of the JSON adapter.</param>
     /// <param name="policy">Chunk and file size limits.</param>
     /// <param name="timeProvider">Clock stamping chunk creation times.</param>
     /// <param name="disk">
     /// Optional statistics of <c>hda</c>: a content write counts the bytes of its chunks, a content
-    /// read the bytes of the file (ADR 0057 section 4).
+    /// read the bytes of the file, one I/O per transaction (ADR 0057 section 4).
+    /// </param>
+    /// <param name="chunks">
+    /// Binary chunk store; <see cref="BrowserFileContentChunkStore"/> in the browser when omitted.
     /// </param>
     internal IndexedDbFileContentRepository(
         IJSRuntime runtime,
         FileContentStoragePolicy? policy = null,
         TimeProvider? timeProvider = null,
-        IBlockDeviceStatistics? disk = null)
+        IBlockDeviceStatistics? disk = null,
+        IFileContentChunkStore? chunks = null)
     {
         ArgumentNullException.ThrowIfNull(runtime);
         _adapter = new IndexedDbInteropAdapter(runtime, disk);
+        _chunks = chunks ?? DefaultChunkStore();
         _policy = policy ?? FileContentStoragePolicy.Default;
         _timeProvider = timeProvider ?? TimeProvider.System;
+        _disk = disk;
     }
 
-    /// <summary>Consumes a stream once, hashes it incrementally, and stores deduplicated chunks.</summary>
+    private int ChunkSize => checked((int)_policy.MaxChunkSizeBytes);
+
+    /// <summary>
+    /// Consumes a stream once and stores its deduplicated chunks: the SHA-256 of the file and of
+    /// each chunk are computed by the browser (ADR 0272 §2).
+    /// </summary>
     internal async ValueTask<IndexedDbFileContentWrite> WriteAsync(
         Stream source,
         CancellationToken cancellationToken = default)
@@ -47,81 +65,34 @@ internal sealed class IndexedDbFileContentRepository : IAsyncDisposable
             throw new InvalidDataException("Filesystem content source is not readable.");
         }
 
-        List<byte[]> chunks = [];
-        long length = 0;
-        byte[] buffer = ArrayPool<byte>.Shared.Rent(checked((int)_policy.MaxChunkSizeBytes));
-        using IncrementalHash hash = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
-        try
-        {
-            while (true)
-            {
-                int read = await source.ReadAsync(
-                    buffer.AsMemory(0, checked((int)_policy.MaxChunkSizeBytes)),
-                    cancellationToken).ConfigureAwait(false);
-                if (read == 0)
-                {
-                    break;
-                }
-
-                length = checked(length + read);
-                if (length > _policy.MaxFileSizeBytes)
-                {
-                    throw new FileContentTooLargeException(_policy.MaxFileSizeBytes);
-                }
-
-                hash.AppendData(buffer, 0, read);
-                chunks.Add(buffer.AsSpan(0, read).ToArray());
-            }
-        }
-        finally
-        {
-            ArrayPool<byte>.Shared.Return(buffer, clearArray: true);
-        }
-
-        if (chunks.Count == 0)
-        {
-            chunks.Add([]);
-        }
-
-        string contentHash = Convert.ToHexString(hash.GetHashAndReset()).ToLowerInvariant();
+        byte[] content = await ReadAllAsync(source, cancellationToken).ConfigureAwait(false);
         await _adapter.OpenAsync(IndexedDbMigrationPlan.CreateCurrent(), cancellationToken).ConfigureAwait(false);
+        string contentHash = await _chunks.HashAsync(new ArraySegment<byte>(content), cancellationToken)
+            .ConfigureAwait(false);
 
-        // A file of up to 128 MiB is written in batches of ChunksPerTransaction chunks (ADR 0245):
-        // only one batch is base64-encoded and crosses the JS interop at a time. The chunks are
-        // addressed by the hash of the whole content, so an interrupted write leaves only
-        // unreferenced chunks that the orphan cleanup removes, and a retry adds the missing ones.
+        // A file of up to 128 MiB is written in batches of ChunksPerTransaction chunks (ADR 0245).
+        // The chunks are addressed by the hash of the whole content, so an interrupted write leaves
+        // only unreferenced chunks that the orphan cleanup removes, and a retry adds the missing ones.
         long createdUtcMs = _timeProvider.GetUtcNow().ToUnixTimeMilliseconds();
-        for (int first = 0; first < chunks.Count; first += FileContentStoragePolicy.ChunksPerTransaction)
+        int chunkCount = ChunkCountFor(content.Length);
+        for (int first = 0; first < chunkCount; first += FileContentStoragePolicy.ChunksPerTransaction)
         {
-            int count = Math.Min(FileContentStoragePolicy.ChunksPerTransaction, chunks.Count - first);
-            IReadOnlyList<IndexedDbOperation> operations = [.. Enumerable.Range(first, count).Select(index =>
-                new IndexedDbOperation(
-                    "addIfAbsent",
-                    KazoOsIndexedDbSchema.FileContentStoreName,
-                    Key: new object[] { contentHash, index },
-                    Value: new IndexedDbFileContentChunkRecord(
-                        contentHash,
-                        index,
-                        Convert.ToBase64String(chunks[index]),
-                        createdUtcMs)))];
-            long batchBytes = 0;
-            for (int index = first; index < first + count; index++)
-            {
-                batchBytes += chunks[index].Length;
-            }
-
-            await _adapter.ExecuteAsync(
-                Boundary,
-                IndexedDbTransactionMode.ReadWrite,
-                operations,
-                cancellationToken,
-                ioBytes: batchBytes).ConfigureAwait(false);
+            int count = Math.Min(FileContentStoragePolicy.ChunksPerTransaction, chunkCount - first);
+            ArraySegment<byte> batch = BatchOf(content, first, count);
+            await MeasureAsync(
+                BlockIoDirection.Write,
+                batch.Count,
+                () => _chunks.WriteChunksAsync(contentHash, first, batch, ChunkSize, createdUtcMs, cancellationToken))
+                .ConfigureAwait(false);
         }
 
-        return new IndexedDbFileContentWrite(contentHash, length);
+        return new IndexedDbFileContentWrite(contentHash, content.Length);
     }
 
-    /// <summary>Loads and validates all chunks for one immutable content hash.</summary>
+    /// <summary>
+    /// Loads all chunks for one immutable content hash, checking each one by its own hash, their
+    /// numbers and the total length (ADR 0272 §4).
+    /// </summary>
     internal async ValueTask<Stream> ReadAsync(
         string contentHash,
         long expectedLength,
@@ -129,116 +100,145 @@ internal sealed class IndexedDbFileContentRepository : IAsyncDisposable
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(contentHash);
         ArgumentOutOfRangeException.ThrowIfNegative(expectedLength);
+        if (expectedLength > _policy.MaxFileSizeBytes)
+        {
+            throw new InvalidDataException("Persisted file length exceeds the browser limit.");
+        }
+
         await _adapter.OpenAsync(IndexedDbMigrationPlan.CreateCurrent(), cancellationToken).ConfigureAwait(false);
-        MemoryStream content = new(checked((int)expectedLength));
-        using IncrementalHash hash = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
-        try
+        byte[] content = new byte[checked((int)expectedLength)];
+        int chunkCount = ChunkCountFor(content.Length);
+        for (int first = 0; first < chunkCount; first += FileContentStoragePolicy.ChunksPerTransaction)
         {
-            int expectedChunks = expectedLength == 0 ? 1 : _policy.ChunkCountFor(expectedLength);
-            if (expectedChunks <= FileContentStoragePolicy.ChunksPerTransaction)
-            {
-                // A file of at most one batch is read with one index query, as before ADR 0245.
-                IReadOnlyList<JsonElement> results = await _adapter.ExecuteAsync(
-                    Boundary,
-                    IndexedDbTransactionMode.ReadOnly,
-                    [new IndexedDbOperation(
-                        "getAll",
-                        KazoOsIndexedDbSchema.FileContentStoreName,
-                        IndexName: "contentHash",
-                        Query: contentHash)],
-                    cancellationToken,
-                    ioBytes: expectedLength).ConfigureAwait(false);
-                JsonElement records = results.Single();
-                if (records.ValueKind != JsonValueKind.Array || records.GetArrayLength() == 0)
+            int count = Math.Min(FileContentStoragePolicy.ChunksPerTransaction, chunkCount - first);
+            ArraySegment<byte> batch = BatchOf(content, first, count);
+            await MeasureAsync(
+                BlockIoDirection.Read,
+                batch.Count,
+                async () =>
                 {
-                    throw new InvalidDataException("Persisted file content has no chunks.");
-                }
-
-                await AppendChunksAsync(content, hash, contentHash, 0, records.EnumerateArray(), cancellationToken)
-                    .ConfigureAwait(false);
-            }
-            else
-            {
-                // A larger file is read in batches of ChunksPerTransaction keys (ADR 0245), so the
-                // interop never carries the base64 copy of the whole file at once.
-                for (int first = 0; first < expectedChunks; first += FileContentStoragePolicy.ChunksPerTransaction)
-                {
-                    int count = Math.Min(FileContentStoragePolicy.ChunksPerTransaction, expectedChunks - first);
-                    IReadOnlyList<JsonElement> results = await _adapter.ExecuteAsync(
-                        Boundary,
-                        IndexedDbTransactionMode.ReadOnly,
-                        [.. Enumerable.Range(first, count).Select(index => new IndexedDbOperation(
-                            "get",
-                            KazoOsIndexedDbSchema.FileContentStoreName,
-                            Key: new object[] { contentHash, index }))],
-                        cancellationToken,
-                        ioBytes: Math.Min(
-                            (long)count * _policy.MaxChunkSizeBytes,
-                            expectedLength - (first * _policy.MaxChunkSizeBytes))).ConfigureAwait(false);
-                    if (results.Count != count || results.Any(record => record.ValueKind != JsonValueKind.Object))
-                    {
-                        throw new InvalidDataException("Persisted file chunks are incomplete or out of order.");
-                    }
-
-                    await AppendChunksAsync(content, hash, contentHash, first, results, cancellationToken)
+                    await _chunks.ReadChunksAsync(contentHash, first, count, batch, ChunkSize, cancellationToken)
                         .ConfigureAwait(false);
-                }
-            }
-        }
-        catch
-        {
-            content.Dispose();
-            throw;
+                    return 0;
+                }).ConfigureAwait(false);
         }
 
-        string actualHash = Convert.ToHexString(hash.GetHashAndReset()).ToLowerInvariant();
-        if (content.Length != expectedLength
-            || !StringComparer.Ordinal.Equals(actualHash, contentHash))
-        {
-            content.Dispose();
-            throw new InvalidDataException("Persisted file content does not match its metadata hash and length.");
-        }
+        return new MemoryStream(content, 0, content.Length, writable: false, publiclyVisible: true);
+    }
 
-        content.Position = 0;
-        return content;
+    /// <summary>Number of chunks of a file: an empty file still has one, empty, chunk.</summary>
+    private int ChunkCountFor(int length) => length == 0 ? 1 : _policy.ChunkCountFor(length);
+
+    /// <summary>The bytes of the chunks <paramref name="first"/> to <paramref name="first"/> + <paramref name="count"/>.</summary>
+    private ArraySegment<byte> BatchOf(byte[] content, int first, int count)
+    {
+        int offset = (int)Math.Min(content.Length, (long)first * ChunkSize);
+        int length = (int)Math.Min(content.Length - offset, (long)count * ChunkSize);
+        return new ArraySegment<byte>(content, offset, length);
     }
 
     /// <summary>
-    /// Appends a run of chunk records to <paramref name="content"/>, checking that they belong to
-    /// <paramref name="contentHash"/> and follow each other from <paramref name="firstIndex"/>.
+    /// Reads the whole source, refusing more than <see cref="FileContentStoragePolicy.MaxFileSizeBytes"/>
+    /// before anything is stored (ADR 0245).
     /// </summary>
-    private static async ValueTask AppendChunksAsync(
-        MemoryStream content,
-        IncrementalHash hash,
-        string contentHash,
-        int firstIndex,
-        IEnumerable<JsonElement> records,
-        CancellationToken cancellationToken)
+    private async ValueTask<byte[]> ReadAllAsync(Stream source, CancellationToken cancellationToken)
     {
-        int expectedIndex = firstIndex;
-        foreach (JsonElement element in records)
+        if (source.CanSeek)
         {
-            IndexedDbFileContentChunkRecord chunk = IndexedDbFileContentChunkRecord.FromJson(element);
-            if (!StringComparer.Ordinal.Equals(chunk.ContentHash, contentHash)
-                || chunk.ChunkIndex != expectedIndex++)
+            long remaining = Math.Max(0, source.Length - source.Position);
+            if (remaining > _policy.MaxFileSizeBytes)
             {
-                throw new InvalidDataException("Persisted file chunks are incomplete or out of order.");
+                throw new FileContentTooLargeException(_policy.MaxFileSizeBytes);
             }
 
-            byte[] bytes;
-            try
+            byte[] exact = new byte[remaining];
+            int filled = 0;
+            while (filled < exact.Length)
             {
-                bytes = Convert.FromBase64String(chunk.DataBase64);
-            }
-            catch (FormatException exception)
-            {
-                throw new InvalidDataException("Persisted file chunk data is malformed.", exception);
+                int read = await source.ReadAsync(exact.AsMemory(filled), cancellationToken).ConfigureAwait(false);
+                if (read == 0)
+                {
+                    return exact.AsSpan(0, filled).ToArray();
+                }
+
+                filled += read;
             }
 
-            hash.AppendData(bytes);
-            await content.WriteAsync(bytes, cancellationToken).ConfigureAwait(false);
+            // A stream that grows while it is read is finished the generic way.
+            byte[] probe = new byte[1];
+            if (await source.ReadAsync(probe, cancellationToken).ConfigureAwait(false) == 0)
+            {
+                return exact;
+            }
+
+            using MemoryStream rest = new();
+            rest.Write(exact);
+            rest.Write(probe);
+            await CopyBoundedAsync(source, rest, cancellationToken).ConfigureAwait(false);
+            return rest.ToArray();
+        }
+
+        using MemoryStream buffer = new();
+        await CopyBoundedAsync(source, buffer, cancellationToken).ConfigureAwait(false);
+        return buffer.ToArray();
+    }
+
+    private async ValueTask CopyBoundedAsync(Stream source, MemoryStream destination, CancellationToken cancellationToken)
+    {
+        byte[] buffer = ArrayPool<byte>.Shared.Rent(ChunkSize);
+        try
+        {
+            while (true)
+            {
+                int read = await source.ReadAsync(buffer.AsMemory(0, ChunkSize), cancellationToken).ConfigureAwait(false);
+                if (read == 0)
+                {
+                    return;
+                }
+
+                if (destination.Length + read > _policy.MaxFileSizeBytes)
+                {
+                    throw new FileContentTooLargeException(_policy.MaxFileSizeBytes);
+                }
+
+                destination.Write(buffer, 0, read);
+            }
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(buffer, clearArray: true);
         }
     }
+
+    /// <summary>
+    /// Counts one transaction of the chunk store in <c>/proc/diskstats</c>, like the JSON adapter
+    /// does for its own (ADR 0057 §4): in flight from the call to its end, with its bytes.
+    /// </summary>
+    private async ValueTask MeasureAsync(BlockIoDirection direction, long bytes, Func<ValueTask<int>> operation)
+    {
+        if (_disk is null)
+        {
+            await operation().ConfigureAwait(false);
+            return;
+        }
+
+        long started = Stopwatch.GetTimestamp();
+        bool succeeded = false;
+        _disk.Begin();
+        try
+        {
+            await operation().ConfigureAwait(false);
+            succeeded = true;
+        }
+        finally
+        {
+            _disk.Complete(direction, bytes, Stopwatch.GetElapsedTime(started), succeeded);
+        }
+    }
+
+    private static IFileContentChunkStore DefaultChunkStore() => OperatingSystem.IsBrowser()
+        ? BrowserFileContentChunkStore.Instance
+        : UnavailableFileContentChunkStore.Instance;
 
     /// <summary>Deletes a bounded set of retained hashes after atomic reference revalidation.</summary>
     internal async ValueTask<IndexedDbFileContentCleanupResult> CleanupAsync(

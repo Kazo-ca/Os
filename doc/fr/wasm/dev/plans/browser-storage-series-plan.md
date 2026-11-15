@@ -49,7 +49,7 @@ et une PR vers `storage/base`.
 | N° | Branche | Contenu | ADR | Dépend de |
 | --- | --- | --- | --- | --- |
 | 0 | `storage/0-adrs-and-plan` | Ce plan et les ADR 0272 à 0275 | | |
-| 1 | `storage/1-binary-file-content` | Blocs en `Uint8Array` avec leur hachage, module JavaScript du dépôt de contenu (`[JSImport]`, `MemoryView`), SHA-256 par WebCrypto, vérification par bloc, base en version 5, **conversion de l'ancien contenu en une fois au premier démarrage avec un écran d'attente**, sauvegarde et instantané de diagnostic | [0272](../adr/0272-binary-file-content.md) | |
+| 1 | `storage/1-binary-file-content` | Blocs en `Uint8Array` avec leur hachage, module JavaScript du dépôt de contenu (`[JSImport]`, `MemoryView`), SHA-256 par WebCrypto, vérification par bloc, base en version 5, **conversion de l'ancien contenu en une fois au premier démarrage avec un écran d'attente**, sauvegarde et instantané de diagnostic. **Fait le 2026-11-15** : enregistrement de 52,5 Mio de 3,4 s à 1,0 s (Release trimmée, Chromium) | [0272](../adr/0272-binary-file-content.md) | |
 | 2 | (retiré) | Fusionné dans le chantier 1 le 2026-11-15 : Benoit a choisi la conversion en une fois au premier démarrage, qui doit partir avec le contenu binaire | | |
 | 3 | `storage/3-partial-read` | Lecture d'une plage dans le dépôt de contenu, flux de lecture à la demande pour les fichiers de plus de 16 Mio | [0275](../adr/0275-partial-read-and-file-address.md) §1, 2 | 1 |
 | 4 | `storage/4-single-copy-of-app-files` | Magasin `servedFiles`, publication sans copie, lecteur de blocs du service worker (flux, `Range`), fin du cache `kazoos-installed-apps` | [0274](../adr/0274-single-copy-of-app-files.md) | 1, #537 |

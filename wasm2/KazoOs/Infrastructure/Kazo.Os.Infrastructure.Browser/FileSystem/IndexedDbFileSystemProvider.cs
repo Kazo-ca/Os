@@ -38,13 +38,18 @@ public sealed class IndexedDbFileSystemProvider : IFileSystemProvider, IFileSyst
         TimeProvider timeProvider,
         Func<FileSystemEntryId>? entryIdFactory,
         Func<Guid>? transactionIdFactory,
-        IBlockDeviceStatistics? disk = null)
+        IBlockDeviceStatistics? disk = null,
+        IFileContentChunkStore? contentChunks = null)
     {
         ArgumentNullException.ThrowIfNull(runtime);
         ArgumentNullException.ThrowIfNull(timeProvider);
         _reader = new IndexedDbFileSystemReader(runtime, disk);
         _writer = new IndexedDbFileSystemWriter(runtime, disk);
-        _contentRepository = new IndexedDbFileContentRepository(runtime, timeProvider: timeProvider, disk: disk);
+        _contentRepository = new IndexedDbFileContentRepository(
+            runtime,
+            timeProvider: timeProvider,
+            disk: disk,
+            chunks: contentChunks);
         _timeProvider = timeProvider;
         _entryIdFactory = entryIdFactory ?? (() => FileSystemEntryId.FromGuid(Guid.NewGuid()));
         _transactionIdFactory = transactionIdFactory ?? Guid.NewGuid;

@@ -21,8 +21,22 @@ public static class KazoOsIndexedDbSchema
     /// <remarks>
     /// Incrementing this value is the only way to add/remove/change an object store or index;
     /// migration steps for each prior version are implemented by <c>P2-IDB-006</c>.
+    /// <para>
+    /// Version 5 (ADR 0272) changes no store: it marks the database whose content chunks are
+    /// binary, so that a page of an older release can no longer open it.
+    /// </para>
     /// </remarks>
-    public const int CurrentVersion = 4;
+    public const int CurrentVersion = 5;
+
+    /// <summary>
+    /// Gets the schema version a backup document names (<c>databaseSchemaVersion</c>, ADR 0099).
+    /// </summary>
+    /// <remarks>
+    /// It stays 4 while the stores a backup holds are those of version 4: version 5 only changed
+    /// how a chunk is kept in the database, and a backup still carries it in base64 (ADR 0272 §5).
+    /// A previous release of the OS therefore restores a backup made by this one.
+    /// </remarks>
+    internal const int BackupSchemaVersion = 4;
 
     /// <summary>Object store persisting one record per <c>LocalUser</c> account.</summary>
     public const string UserStoreName = "users";

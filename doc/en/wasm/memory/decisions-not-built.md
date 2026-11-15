@@ -149,6 +149,15 @@ Nothing is coded.
   checks each chunk by its hash. No open question. The conversion is part of
   work item 1, which fixes #520 according to the profiling of #538 and can
   start as soon as the ADRs are merged into `storage/base`.
+- **Work item 1 done on 2026-11-15** (branch `storage/1-binary-file-content`,
+  PR to `storage/base`): binary chunks with their `chunkHash`, database at
+  version 5, one-time conversion at boot with a waiting screen, backups kept at
+  schema version 4 (`BackupSchemaVersion`), fixture `kazoos-v4.json`. Measured
+  in a trimmed Release publish, Chromium, cloud container: saving 52.5 MiB goes
+  from 3.4 to 3.5 s to 1.0 to 1.1 s. Firefox and Safari not measured (not
+  available in the container); reading 52.5 MiB with `cat` in the Terminal did
+  not finish within the journey's time, so the read was not measured. Next:
+  work items 3, 4 and 6 in parallel, then 5.
 
 ## Questions asked, answer to confirm
 

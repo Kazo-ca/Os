@@ -49,7 +49,7 @@ and a PR to `storage/base`.
 | No. | Branch | Content | ADR | Depends on |
 | --- | --- | --- | --- | --- |
 | 0 | `storage/0-adrs-and-plan` | This plan and ADRs 0272 to 0275 | | |
-| 1 | `storage/1-binary-file-content` | Chunks as `Uint8Array` with their hash, JavaScript module of the content repository (`[JSImport]`, `MemoryView`), SHA-256 by WebCrypto, per-chunk check, database at version 5, **conversion of the old content all at once at the first boot with a waiting screen**, backup and diagnostic snapshot | [0272](../adr/0272-binary-file-content.md) | |
+| 1 | `storage/1-binary-file-content` | Chunks as `Uint8Array` with their hash, JavaScript module of the content repository (`[JSImport]`, `MemoryView`), SHA-256 by WebCrypto, per-chunk check, database at version 5, **conversion of the old content all at once at the first boot with a waiting screen**, backup and diagnostic snapshot. **Done on 2026-11-15**: saving 52.5 MiB from 3.4 s to 1.0 s (trimmed Release, Chromium) | [0272](../adr/0272-binary-file-content.md) | |
 | 2 | (removed) | Merged into work item 1 on 2026-11-15: Benoit chose the one-time conversion at the first boot, which must ship with binary content | | |
 | 3 | `storage/3-partial-read` | Range read in the content repository, on-demand read stream for files over 16 MiB | [0275](../adr/0275-partial-read-and-file-address.md) §1, 2 | 1 |
 | 4 | `storage/4-single-copy-of-app-files` | `servedFiles` store, publication without copy, chunk reader of the service worker (stream, `Range`), end of the `kazoos-installed-apps` cache | [0274](../adr/0274-single-copy-of-app-files.md) | 1, #537 |

@@ -1,3 +1,5 @@
+import { toBinaryForm, toJsonForm } from "./binaryChunks.js";
+
 const connections = new Map();
 
 function interopError(error, fallbackMessage) {
@@ -341,16 +343,26 @@ export async function executeTransaction(databaseName, version, objectStoreNames
         throw new Error("Operations must be an array.");
     }
 
+    // ADR 0272 §5: a chunk written as JSON (backup restore, rename repair) is stored in its binary
+    // form. WebCrypto is not an IndexedDB request, so this runs before the transaction opens.
+    const prepared = [];
+    for (const operation of operations) {
+        prepared.push(operation?.binaryChunk === true
+            ? { ...operation, value: await toBinaryForm(operation.value) }
+            : operation);
+    }
+
     const transaction = database.transaction(objectStoreNames, mode);
     const completion = transactionCompletion(transaction);
     const results = [];
 
     try {
-        for (const operation of operations) {
+        for (const operation of prepared) {
             if (!objectStoreNames.includes(operation.objectStoreName)) {
                 throw new Error(`Operation store '${operation.objectStoreName}' is outside the transaction boundary.`);
             }
-            results.push(await executeOperation(transaction, operation));
+            // A binary chunk read here goes back to C# as JSON: in the base64 form.
+            results.push(toJsonForm(await executeOperation(transaction, operation)));
         }
         await completion;
         return results;

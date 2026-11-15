@@ -214,6 +214,12 @@ internal enum IndexedDbTransactionMode
 }
 
 /// <summary>Describes one operation in an ordered IndexedDB transaction batch.</summary>
+/// <remarks>
+/// <see cref="BinaryChunk"/>: the value is a content chunk in its JSON form
+/// (<c>dataBase64</c>, with or without <c>chunkHash</c>); <c>indexedDb.js</c> stores it in the binary
+/// form of ADR 0272 (<c>data</c> and the <c>chunkHash</c> it computes, refusing one that does not
+/// match). A binary chunk an operation reads always comes back in that JSON form.
+/// </remarks>
 internal sealed record IndexedDbOperation(
     string Kind,
     string ObjectStoreName,
@@ -226,7 +232,8 @@ internal sealed record IndexedDbOperation(
     object? ExpectedValue = null,
     string? FailureCode = null,
     string? ReferenceObjectStoreName = null,
-    string? ReferenceIndexName = null);
+    string? ReferenceIndexName = null,
+    bool? BinaryChunk = null);
 
 /// <summary>Describes the ordered schema migration chain up to the current database version.</summary>
 internal sealed record IndexedDbMigrationPlan
@@ -285,6 +292,15 @@ internal sealed record IndexedDbMigrationPlan
             [.. KazoOsIndexedDbSchema.ObjectStores.Where(store =>
                 store.Name is KazoOsIndexedDbSchema.SyncCursorStoreName
                     or KazoOsIndexedDbSchema.SyncRecordStateStoreName)],
+            [],
+            [],
+            []),
+
+        // ADR 0272 §6: no store changes. The number is a guard: a page of a release before content
+        // chunks became binary can no longer open the database, instead of failing file by file.
+        new(
+            5,
+            [],
             [],
             [],
             [])
