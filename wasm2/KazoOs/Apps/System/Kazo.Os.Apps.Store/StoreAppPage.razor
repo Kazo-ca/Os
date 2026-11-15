@@ -38,6 +38,13 @@
                             <KazoIcon Library="IconLibrary.Lucide" Name="@StoreWindow.TrustIcon(app.Trust)" Size="14" Title="" />
                             @Store.TrustText(app.Trust) · @L["Detail.Catalog", app.Catalog]
                         </span>
+                        @if (entry.IsFeature)
+                        {
+                            <span class="store-feature-note">
+                                <KazoIcon Library="IconLibrary.Lucide" Name="puzzle" Size="14" Title="" />
+                                @L["Detail.Feature"]
+                            </span>
+                        }
                         @if (latest is not null)
                         {
                             <span>@L["Detail.Version"] @app.LatestVersion</span>

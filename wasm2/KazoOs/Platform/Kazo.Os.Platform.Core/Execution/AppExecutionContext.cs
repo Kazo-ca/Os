@@ -162,6 +162,9 @@ internal sealed class AppExecutionContext : IAppExecutionContext
     public IAppScreensGateway Screens { get => Guarded(field); internal set; } = UnsupportedAdministrationGateways.Screens;
 
     /// <inheritdoc />
+    public Kazo.Os.AppSdk.Features.IAppFeatureGateway Features { get => Guarded(field); internal set; } = new Kazo.Os.AppSdk.Features.UnsupportedAppFeatureGateway();
+
+    /// <inheritdoc />
     public Kazo.Os.AppSdk.WhatsNew.IAppWhatsNewGateway WhatsNew { get => Guarded(field); internal set; } = UnsupportedAdministrationGateways.WhatsNew;
 
     /// <inheritdoc />

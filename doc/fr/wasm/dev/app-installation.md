@@ -313,7 +313,9 @@ validation en deux étapes :
   arrière d'une app déjà chargée dans la page attend un redémarrage de Kazo OS ;
   `kazopkg list` affiche `(restart pending)` d'ici là.
 - **Capacités dangereuses** : demandées au premier lancement, comme pour toute
-  app non système.
+  app non système ; sauf pour une fonctionnalité (ADR 0260), dont le
+  consentement à l'installation vaut approbation machine (section
+  [Fonctionnalités](#fonctionnalités-adr-0260)).
 - **Publication** : `dotnet build -c Release -t:KazoOsPack` dans le projet de
   l'app écrit le paquet et `index.json` dans `bin/kazoos-packages` (propriété
   `KazoOsPackageOutput`), à pousser sur la branche `kazoos-packages` ; le
@@ -326,7 +328,10 @@ validation en deux étapes :
   ([ADR 0221](adr/0221-pack-all-static-web-assets-of-an-app.md)). Il contient
   aussi les assemblages satellites des assemblages de l'app,
   `lib/<culture>/<assemblage>.resources.dll` (pas ceux du SDK)
-  ([ADR 0222](adr/0222-installed-app-satellite-assemblies.md)).
+  ([ADR 0222](adr/0222-installed-app-satellite-assemblies.md)), et les
+  bibliothèques propres de l'app avec leurs satellites
+  ([ADR 0261](adr/0261-app-libraries-and-shared-versions.md),
+  [section plus bas](#bibliothèques-dapp-et-versions-partagées-adr-0261)).
 - **Ressources `wwwroot/`** ([ADR 0206](adr/0206-serve-installed-app-assets.md)) :
   au premier lancement de l'app dans la session, chaque ressource déclarée est
   lue par `AppAssetStore` (empreinte vérifiée) et copiée dans le cache
@@ -356,8 +361,9 @@ validation en deux étapes :
   processus. `AppPackage` refuse un satellite qui ne traduit aucun assemblage
   déclaré.
 - **Limites** : voir la section du même nom de l'ADR 0182 (fil principal
-  seulement, dépendances NuGet tierces non transportées) ; la limite des
-  ressources `wwwroot` est levée par l'ADR 0206.
+  seulement) ; la limite des ressources `wwwroot` est levée par l'ADR 0206,
+  celle des dépendances de l'app (projets et paquets NuGet tiers) par
+  l'ADR 0261.
 
 Tests : `AppPackageGatewayTests`, `AppSourcesAndPolicyTests`,
 `InstalledAppsImageTests`, `AppPackageWriterTests`, `AppPackageTests`
@@ -369,6 +375,196 @@ Tests : `AppPackageGatewayTests`, `AppSourcesAndPolicyTests`,
 `TrimmedPublishTests.InstalledApps.cs` (paquet de test
 `Tests/fixtures/installed-app` installé par `kazopkg` dans la publication
 réduite, lancé par `build/publish-trimmed.sh`).
+
+## Fonctionnalités (ADR 0260)
+
+L'ADR [0260](adr/0260-feature-app-type.md) ajoute le genre d'app `Feature` :
+une fonctionnalité facultative de l'OS (à la manière de WSL), une identité,
+un paquet, un écran de permissions, installée pour toute la machine par un
+administrateur. Son modèle côté SDK (`FeatureDefinition`, `FeatureEntryPoint`,
+manifestes enfants) est dans
+[`app-model.md`](../framework/app-model.md#fonctionnalités-featuredefinition-adr-0260).
+
+- **Paquet** : `manifest.json` est le manifeste de la fonctionnalité (genre
+  `feature`, sans `entryPoint`) ; chaque enfant a son propre fichier
+  `entrypoints/<suffixe>.json`, un manifeste ordinaire de son genre avec
+  `parent: "<fonctionnalité>"`, et `kazoos-package.json` les liste dans
+  `manifests` (un paquet sans cette liste est lu par le préfixe `entrypoints/`).
+  `AppPackage.Read` valide chaque enfant comme un manifeste de son genre, puis
+  l'ensemble (`AppManifestValidator.ValidateFeature` : version, éditeur,
+  permissions dans l'ensemble, `apps.package.bad-manifest` sinon). Un paquet
+  ordinaire avec un fichier `entrypoints/` est refusé
+  (`apps.package.unexpected-file`), et un manifeste enfant à la racine aussi
+  (un enfant ne s'installe jamais seul). `AppPackageWriter.Write` et
+  `pack` écrivent les enfants trouvés dans `entrypoints/` à côté du
+  `manifest.json` du projet.
+- **Au niveau système seulement** : `kazopkg install --user` refuse une
+  fonctionnalité (`apps.package.feature-system-only`, « Une fonctionnalité
+  s'installe pour toute la machine, par un administrateur »). Le `catalog.json`
+  d'un catalogue porte `kind: "feature"` sur son entrée : le Store la liste
+  avec les apps, dit sur sa fiche qu'elle s'installe pour toute la machine et
+  ne propose que « Installer pour tous » ; le refus au clic reste le filet
+  (catalogue sans `kind`, paquet qui se révèle une fonctionnalité à la
+  lecture). Sans option, elle va pour tous
+  (`/usr/lib/kazoos/apps/<id>/<version>/`, les enfants dans
+  `entrypoints/`), avec la validation en deux étapes. La fenêtre
+  d'approbation dit que c'est une fonctionnalité, nomme ses points d'entrée et
+  montre **l'ensemble** des permissions, une fois.
+- **Consentement = approbation machine** : une fois le paquet écrit, l'OS
+  inscrit dans `/etc/kazoos/app-permissions.config` une ligne `allow` pour
+  chaque capacité dangereuse de la fonctionnalité et de chacun de ses enfants
+  (et les ports réels déclarés, ADR 0233 §4). Aucune fenêtre d'approbation
+  n'apparaît au premier lancement d'un point d'entrée ; le refus par usager
+  (ADR 0049 §9) reste possible dans Paramètres ▸ Permissions. Le retrait de la
+  fonctionnalité efface ces lignes. `kazopkg install` le dit (« approuvée pour
+  toute la machine… ») à la place de la note du premier lancement.
+- **Catalogue** : au démarrage et à chaque ajout, `InstalledAppsImage` lit les
+  enfants listés par `kazoos-package.json` de la fonctionnalité ; une
+  fonctionnalité dont un enfant manque ou est invalide est laissée de côté
+  avec un avertissement. `HostAppCatalog` ajoute la fonctionnalité et ses
+  enfants ensemble ; une erreur sur un enfant écarte toute la fonctionnalité.
+  Dans `AppCatalog`, un enfant est rattaché à sa fonctionnalité
+  (`FeatureChildren`, `GetFeatureOf`, `GetFeatureChildren`) : la
+  fonctionnalité s'active avant ses enfants, les enfants d'une fonctionnalité
+  refusée (SDK) sont refusés avec elle, et un enfant dont la fonctionnalité
+  manque ou n'en est pas une, ou qui demande une permission hors de
+  l'ensemble, fait échouer le catalogue (`catalog.feature.parent.missing`,
+  `catalog.feature.parent.kind`, `catalog.feature.capability-outside-set`).
+- **Commandes** : dans `AssignCommands`, les commandes des enfants d'une
+  fonctionnalité passent avant celles des apps ordinaires (après les apps
+  système) : `x86` ne peut pas être masquée par une app installée ensuite ;
+  deux fonctionnalités de même nom, la première activée gagne, l'autre reçoit
+  `catalog.command.duplicate`.
+- **Activation et désactivation en bloc** : `AppsConfigDocument.ExpandDependents`
+  et `ExpandDependencies` traitent `parent` comme une dépendance obligatoire ;
+  désactiver la fonctionnalité (Paramètres, `apps.config`) désactive ses
+  enfants, la réactiver les réactive. Une ligne `[uninstalled]` qui nomme un
+  enfant est ignorée avec un avertissement, et `UninstallAsync` ou
+  `ReinstallAsync` sur un enfant échoue (`apps.app.feature-child:<id>:<fonctionnalité>`) ;
+  l'état d'un enfant est celui de sa fonctionnalité.
+- **Exécution** : chaque enfant est une app à part entière (processus,
+  commande, fenêtre, service), avec son seul sous-ensemble de permissions ;
+  la fonctionnalité elle-même n'a pas de point d'entrée et `AppEntryPointDiscovery`
+  l'ignore. Un paquet dont un enfant ne tourne pas sur le fil principal est
+  refusé comme toute app installée (`apps.package.worker-unsupported`).
+- **Paramètres ▸ Applications** liste les fonctionnalités dans un groupe à
+  part, chacune avec ses points d'entrée (nom, genre, id) sans action propre ;
+  désinstaller ou réinstaller se fait sur la fonctionnalité. La fiche d'une
+  app (`KazoAppInfo.ParentId`) nomme sa fonctionnalité. La section
+  « Fonctionnalités » des Paramètres est l'ADR 0249, pas encore codée.
+- **Services fournis** ([ADR 0262](adr/0262-feature-service-registry-and-async-resolution.md),
+  [`feature-services.md`](../framework/feature-services.md)) : le manifeste de
+  la fonctionnalité liste `providedServices` ; leur code est un assemblage
+  déclaré du paquet. `AppPackage.Read` refuse un contrat qui n'est pas dans
+  une bibliothèque partagée du paquet (`apps.package.service-contract-not-shared`),
+  et l'installeur une fonctionnalité qui fournit un contrat qu'une autre
+  fonctionnalité du catalogue fournit déjà (`apps.package.service-already-provided`).
+  `AppCatalog` ne retire plus une app pour une dépendance **facultative** hors
+  plage : `KazoFeatures` lui répond `VersionMismatch`.
+
+Tests : `FeatureDefinitionTests` (App.Abstractions), `AppDefinitionInspectorTests`
+et `ManifestWriterTests` (Tools.ManifestGenerator), `AppCatalogTests`,
+`AppPackageTests`, `AppPackageWriterTests`, `InstalledAppsImageTests`,
+`AppInstallationServiceTests` et `AppPackageGatewayTests` (Platform.Core).
+
+## Bibliothèques d'app et versions partagées (ADR 0261)
+
+L'ADR [0261](adr/0261-app-libraries-and-shared-versions.md) (issue #419) fait
+entrer dans le paquet les assemblages dont l'app a besoin et que l'OS
+n'apporte pas, et ne charge qu'une copie par page d'une bibliothèque
+**partagée**. L'ADR [0256](adr/0256-app-libraries-implementation-adjustments.md)
+en ajuste la mise en œuvre. Côté auteur : [`app-repository.md`](../framework/app-repository.md#bibliothèques-de-lapp).
+
+- **Une bibliothèque ordinaire accompagne l'app, rien de plus** (ADR 0256 §1) :
+  une bibliothèque que son auteur n'a pas marquée partagée n'est gérée ni par
+  Kazo OS ni par le Store. L'OS vérifie le fichier comme tout fichier du
+  paquet et le charge avant l'app ; il n'y a pas d'entrée de catalogue, pas de
+  résolution de dépendance, pas de comparaison de versions entre apps, pas de
+  redémarrage proposé, pas de refus fondé sur sa version. Les règles
+  ci-dessous sur la copie unique, le choix de la copie, la version majeure et
+  « Redémarrer pour terminer » ne valent que pour une bibliothèque
+  **partagée**.
+- **Dans le paquet** : `KazoOsPack` met dans `lib/` les sorties des
+  `ProjectReference`, les assemblages des paquets NuGet et les DLL référencées
+  que le build copie à côté de l'app, avec leurs satellites
+  (`lib/<culture>/<bibliothèque>.resources.dll`). Ce que l'OS apporte reste
+  dehors, par nom d'assemblage (propriété `KazoOsProvidedAssemblyPattern` :
+  `Kazo.Os.*`, `System*`, `Microsoft.*`, `MudBlazor*`, `netstandard`,
+  `mscorlib`, `WindowsBase`). `kazoos-package.json` gagne la liste
+  `libraries` :
+
+  ```json
+  "libraries": [
+    { "name": "Kazo.Irc.Protocol", "version": "1.0.0.0", "sha256": "…", "shared": false }
+  ]
+  ```
+
+  `name` est le nom simple de l'assemblage (fichier `lib/<name>.dll`),
+  `version` sa version d'assemblage. Un paquet sans cette liste (fait avant
+  l'ADR) n'a aucune bibliothèque.
+- **Vérifié à la lecture** : `AppPackage.Read` relit chaque bibliothèque
+  listée dans son assemblage (`AppPackageLibrary.Describe`) : fichier présent
+  (`apps.package.missing-assembly`), même SHA-256
+  (`apps.package.hash-mismatch`), même nom, même version et même marque
+  `shared` que ce que dit l'assemblage, et pas un assemblage que le manifeste
+  déclare (`apps.package.bad-description`). `AppPackage.Assemblies` les
+  contient : `AppPackageApiCheck` les vérifie contre le runtime comme
+  l'assemblage de l'app (ADR 0242).
+- **Marque `shared`** : c'est l'auteur de la bibliothèque qui la pose, avec
+  `<KazoOsSharedLibrary>true</KazoOsSharedLibrary>` dans le projet de la
+  bibliothèque. La propriété écrit
+  `[assembly: AssemblyMetadata("Kazo.Os.SharedLibrary", "true")]` dans
+  l'assemblage : la marque suit la bibliothèque quelle que soit la façon de la
+  référencer (projet, DLL, paquet NuGet), l'app ne déclare rien, et un paquet
+  ne peut pas marquer partagée une bibliothèque qui ne l'est pas.
+- **Refus à l'installation** : `apps.package.library-reserved` protège l'OS :
+  un paquet ne remplace pas un assemblage de l'OS, du runtime .NET ou d'une
+  app intégrée par une bibliothèque du même nom (seul le nom compte, jamais
+  la version ; une bibliothèque déjà chargée depuis un autre paquet n'est pas
+  un assemblage de l'OS) ; `apps.package.library-major-mismatch` quand une
+  bibliothèque partagée a une autre version majeure que la copie d'une
+  fonctionnalité installée (le message donne les deux versions et la
+  fonctionnalité). Sans fonctionnalité, deux apps avec deux majeures
+  différentes s'installent toutes les deux. Les deux refus arrivent avant
+  toute demande à un administrateur ; le Store les montre comme une version
+  incompatible.
+- **Chargement** : `InstalledAppsImage` lit `libraries` du
+  `kazoos-package.json` de chaque app installée (`InstalledApp.Libraries`).
+  Avant de charger un assemblage de l'app, `InstalledAppLibraries` charge ses
+  bibliothèques, satellites compris. Une bibliothèque non partagée vient du
+  dossier de l'app. Pour une bibliothèque partagée, `InstalledLibraries.Choose`
+  prend la copie d'une fonctionnalité installée de même version majeure,
+  sinon la copie la plus récente de cette majeure parmi les apps installées ;
+  le choix est écrit dans `/var/log/syslog`
+  (`libraries: Os-x86.Interface 1.2.0 loaded for ca.kazo.boxedwine (feature ca.kazo.x86)`).
+- **Copie déjà chargée** : .NET ne décharge pas une assemblée. Quand la copie
+  dans la page n'a pas ce que l'app attend (version majeure différente, ou
+  plus ancienne que celle de l'app) et qu'un redémarrage en chargerait une
+  autre, l'app reste servie par la copie chargée, une ligne le dit dans
+  `/var/log/syslog`, et l'app est montrée « Redémarrer pour terminer »
+  (`KazoInstalledPackage.Loaded` à `false`, `RestartRequired` du rapport
+  d'installation) dans le Store et `kazopkg list`. C'est aussi le cas d'une
+  fonctionnalité installée avec une copie plus récente que celle déjà chargée.
+- **Un seul contexte de chargement** (ADR 0256 §3 à §5) : toutes les apps
+  installées partagent le contexte de chargement par défaut. Deux
+  bibliothèques **non partagées** de même nom simple dans deux apps : la
+  première chargée sert les deux, la seconde est notée dans le journal, rien
+  d'autre. Deux versions **majeures** d'une bibliothèque partagée sont
+  installées ensemble, mais une seule est dans la page à la fois : l'app de
+  l'autre majeure demande un redémarrage. Le fournisseur d'une bibliothèque
+  partagée est la fonctionnalité installée qui l'embarque **et déclare
+  fournir une de ses interfaces** (`providedServices`, ADR 0262) ; la règle
+  provisoire de l'ADR 0256 §5 (toute fonctionnalité qui l'embarque) est
+  retirée : une fonctionnalité qui embarque la bibliothèque sans en fournir
+  de contrat est une cliente comme une app.
+
+Tests : `AppPackageLibraryTests`, `InstalledLibrariesTests`,
+`InstalledAppsImageTests` et `AppPackageGatewayTests` (Platform.Core),
+`InstalledAppLibrariesTests` (Ecosystem), `PackagedLibrariesTests` et
+`MsBuildIntegrationTests` (Tools.ManifestGenerator, fixture
+`ManifestGenerator.Fixtures.WithLibrary`), et le paquet à deux assemblages de
+`Tests/fixtures/installed-app` installé dans l'OS rogné
+(`TrimmedPublishTests.InstalledApps.cs`).
 
 ## Le Kazo OS Store et les catalogues
 
@@ -388,7 +584,12 @@ kazopkg info org.example.notes
   (`schemaVersion` 1, branche `packages` du dépôt catalogue). Les chemins du
   fichier (paquet, icône, captures, descriptions) sont relatifs à
   `catalog.json`. L'OS le garde 5 minutes ; une app ou une version invalide est
-  ignorée avec un avertissement dans `/var/log/syslog`. Chaque version peut
+  ignorée avec un avertissement dans `/var/log/syslog`. Chaque entrée porte un
+  `kind` : `app` quand il manque, `feature` (ADR 0260 §4 : listée avec les
+  apps, installée pour toute la machine seulement) ou `theme-pack` (ADR 0213) ;
+  une valeur que l'OS ne connaît pas est lue comme `app` avec un avertissement,
+  pour qu'un catalogue plus récent ne cache rien (le paquet dit ce qu'il est à
+  l'installation).
   porter `fileHandlers` (`{ mediaType?, extensions, actions }`, recopié du
   manifeste, ADR [0257](adr/0257-offer-a-store-app-for-an-unsupported-file.md)) :
   quand aucune app installée n'ouvre un fichier, l'OS propose les apps qui le

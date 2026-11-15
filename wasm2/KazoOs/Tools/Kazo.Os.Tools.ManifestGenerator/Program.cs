@@ -99,6 +99,16 @@ public static class Program
                 return Fail(project, [.. boundary]);
             }
 
+            // ADR 0262 §3: an app that asks for a feature's service declares a dependency.
+            IReadOnlyList<GeneratorDiagnostic> dependency = FeatureDependencyInspector.Inspect(
+                File.ReadAllBytes(assemblyPath),
+                [.. result.Manifests.SelectMany(static manifest => manifest.All).Select(static generated => generated.Manifest)],
+                assemblyPath);
+            if (dependency.Count > 0)
+            {
+                return Fail(project, [.. dependency]);
+            }
+
             // ADR 0104 section 4: Resources/AppManifest.<culture>.resx -> localization/<culture>.json.
             ManifestLocalizationGenerator.Result localized = ManifestLocalizationGenerator.Apply(Path.GetDirectoryName(project)!, result.Manifests);
             if (localized.Diagnostics.Count > 0)
@@ -158,7 +168,9 @@ public static class Program
     /// in the packages folder, the content of the app repository's <c>kazoos-packages</c> branch.
     /// With <c>--web-assets</c>, the package holds every static web resource of the project, not only
     /// the declared ones (ADR 0221 §1). The satellite assemblies of the declared assemblies, found in
-    /// <c>--bin</c>, go to <c>lib/&lt;culture&gt;/</c> (ADR 0222 §1).
+    /// <c>--bin</c>, go to <c>lib/&lt;culture&gt;/</c> (ADR 0222 §1). With <c>--libraries &lt;list file&gt;</c>,
+    /// the assemblies that file names (one path per line) go to <c>lib/</c> as the app's libraries, with
+    /// their satellites, and are listed in <c>libraries</c> of the package description (ADR 0261 §1).
     /// The version is never signed here: only the marketplace repository signs packages (ADR 0219); the
     /// signatures already in <c>index.json</c> are kept (ADR 0219 §2).
     /// </summary>
@@ -181,13 +193,37 @@ public static class Program
                 Console.WriteLine($"{manifestPath} : warning {GeneratorCodes.PackageWebAssetsMissing}: No static web asset manifest at '{webAssets}': the package holds only the declared assets, without the rest of wwwroot/, the collocated scripts or the scoped CSS (ADR 0221).");
             }
 
-            // ADR 0222 §1: the translations of the app's own assemblies go with them.
-            SortedDictionary<string, byte[]> satellites = PackagedSatellites.Find(bin, DeclaredAssemblies(manifestJson));
+            // ADR 0260 §2: the children of a feature, entrypoints/<suffix>.json next to its manifest.
+            List<KeyValuePair<string, byte[]>> children = [];
+            string entryPoints = Path.Combine(Path.GetDirectoryName(manifestPath)!, ManifestWriter.EntryPointsDirectoryName);
+            if (Directory.Exists(entryPoints))
+            {
+                foreach (string childPath in Directory.EnumerateFiles(entryPoints, "*.json").Order(StringComparer.Ordinal))
+                {
+                    children.Add(new(Path.GetFileName(childPath), File.ReadAllBytes(childPath)));
+                }
+            }
+
+            // ADR 0261 §1: the assemblies the app needs that the OS does not bring; one the manifest
+            // declares is an assembly of the app, not a library.
+            IReadOnlySet<string> declared = DeclaredAssemblies(children.Select(static child => child.Value).Prepend(manifestJson));
+            SortedDictionary<string, byte[]> libraries = options.TryGetValue("libraries", out string? libraryList)
+                ? PackagedLibraries.Read(Path.GetFullPath(libraryList))
+                : new SortedDictionary<string, byte[]>(StringComparer.Ordinal);
+            foreach (string assembly in declared)
+            {
+                libraries.Remove(assembly);
+            }
+
+            // ADR 0222 §1: the translations of the app's own assemblies and libraries go with them.
+            SortedDictionary<string, byte[]> satellites = PackagedSatellites.Find(bin, new HashSet<string>(declared.Concat(libraries.Keys), StringComparer.Ordinal));
             byte[] package = AppPackageWriter.Write(
                 manifestJson,
                 assembly => File.ReadAllBytes(Path.Combine(bin, assembly)),
                 asset => File.ReadAllBytes(sources.TryGetValue(asset, out string? source) ? source : Path.Combine(webroot, asset)),
-                satellites);
+                satellites,
+                children,
+                libraries);
             AppPackage read = AppPackage.Read(package);
             string relativePath = AppPackageWriter.GetPackagePath(read.AppId, read.Version);
             string packagePath = Path.Combine(output, relativePath);
@@ -200,6 +236,10 @@ public static class Program
                 new AppPackageIndexEntry(read.Version, relativePath, AppPackage.Sha256(package)));
             File.WriteAllBytes(indexPath, index);
             Console.WriteLine($"Kazo OS package: {read.AppId} {read.Version} -> {packagePath}");
+            foreach (AppPackageLibrary library in read.Libraries)
+            {
+                Console.WriteLine($"  library {library.Name} {InstalledLibraries.Format(library.Version)}{(library.Shared ? " (shared)" : string.Empty)}");
+            }
             return 0;
         }
         catch (Exception exception) when (exception is AppPackageException or IOException or UnauthorizedAccessException or System.Text.Json.JsonException)
@@ -208,18 +248,24 @@ public static class Program
         }
     }
 
-    /// <summary>Gets the assemblies a manifest declares; an invalid manifest declares none (the writer refuses it).</summary>
-    private static IReadOnlySet<string> DeclaredAssemblies(byte[] manifestJson)
+    /// <summary>Gets the assemblies the manifests declare; an invalid manifest declares none (the writer refuses it).</summary>
+    private static IReadOnlySet<string> DeclaredAssemblies(IEnumerable<byte[]> manifestJsons)
     {
-        try
+        HashSet<string> assemblies = new(StringComparer.Ordinal);
+        foreach (byte[] manifestJson in manifestJsons)
         {
-            return AppPackage.GetDeclaredAssemblies(AppManifestJsonSerializer.NormalizeOptionalCollections(
-                AppManifestJsonSerializer.DeserializeStrict(System.Text.Encoding.UTF8.GetString(manifestJson))));
+            try
+            {
+                assemblies.UnionWith(AppPackage.GetDeclaredAssemblies(AppManifestJsonSerializer.NormalizeOptionalCollections(
+                    AppManifestJsonSerializer.DeserializeStrict(System.Text.Encoding.UTF8.GetString(manifestJson)))));
+            }
+            catch (Exception exception) when (exception is System.Text.Json.JsonException or InvalidOperationException or ArgumentException or FormatException)
+            {
+                // The writer refuses it with a message of its own.
+            }
         }
-        catch (Exception exception) when (exception is System.Text.Json.JsonException or InvalidOperationException or ArgumentException or FormatException)
-        {
-            return new HashSet<string>(StringComparer.Ordinal);
-        }
+
+        return assemblies;
     }
 
     /// <summary>
@@ -305,7 +351,7 @@ public static class Program
         Console.WriteLine("Kazo OS manifest generator (ADR 0047)");
         Console.WriteLine("  generate --assembly <app.dll> --project <app.csproj> --stamp <file> [--dependencies <list file>]");
         Console.WriteLine("  aggregate --project <host.csproj> --apps <list file> --output <BuiltInApplications.json> [--trimmer-roots <roots.xml>]");
-        Console.WriteLine("  pack --manifest <manifest.json> --bin <output dir> --webroot <wwwroot> --output <packages dir> [--web-assets <staticwebassets.build.json>]");
+        Console.WriteLine("  pack --manifest <manifest.json> --bin <output dir> --webroot <wwwroot> --output <packages dir> [--web-assets <staticwebassets.build.json>] [--libraries <list file>]");
         Console.WriteLine("  validate <manifest.json>");
     }
 }
