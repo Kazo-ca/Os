@@ -49,6 +49,23 @@ public sealed class AppAssetStoreTests
         Assert.False(store.IsDamaged("org.kazoos.tests.icons"));
     }
 
+    [Fact]
+    public async Task A_damage_found_outside_the_store_marks_the_app_and_refuses_the_asset_after()
+    {
+        // ADR 0274 §3: publishing an installed app's files compares the hashes without reading the bytes.
+        CountingSource source = new() { Bytes = Icon };
+        AppAssetStore store = new(Catalog(Hash(Icon)), source);
+        int changes = 0;
+        store.Changed += (_, _) => changes++;
+
+        store.ReportDamaged("org.kazoos.tests.icons", "icons/app.svg", "the file's content is not the manifest's");
+        store.ReportDamaged("org.kazoos.tests.icons", "icons/app.svg", "again");
+
+        Assert.True(store.IsDamaged("org.kazoos.tests.icons"));
+        Assert.Equal(1, changes);
+        await Assert.ThrowsAsync<AppAssetIntegrityException>(() => store.ReadAsync("org.kazoos.tests.icons", "icons/app.svg").AsTask());
+    }
+
     private static string Hash(byte[] bytes) => Convert.ToHexStringLower(SHA256.HashData(bytes));
 
     private static AppCatalog Catalog(string sha256) => AppCatalog.Build(

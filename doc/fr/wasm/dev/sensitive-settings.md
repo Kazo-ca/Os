@@ -96,7 +96,8 @@ await mail.SetSecretAsync("Account.password", null);          // efface l'entré
 `StorageSnapshotRedactor` masque, dans l'instantané de stockage de l'app
 Diagnostics (`AppStorageDiagnosticsGateway`), le contenu des fichiers
 `*.private.config` et de tout fichier sous `~/.local/share/keyrings/` : le
-morceau devient `[masked: ADR 0100]`. La synchronisation ne couvre que le
+morceau devient `[masked: ADR 0100]` (son `dataBase64`, ou ses `data` binaires
+depuis l'ADR 0272). La synchronisation ne couvre que le
 dossier personnel, donc le fichier privé de `/etc` (seul porteur des clés
 `Restricted`) n'est jamais synchronisé. La sauvegarde complète de l'ADR 0099,
 réservée à root, garde tout.

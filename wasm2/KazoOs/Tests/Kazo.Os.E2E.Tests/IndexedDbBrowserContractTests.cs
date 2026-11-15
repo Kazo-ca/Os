@@ -623,6 +623,70 @@ public sealed partial class IndexedDbBrowserContractTests
         }
     }
 
+    /// <summary>
+    /// ADR 0274 §4: a content a <c>servedFiles</c> row still points at is referenced, so neither the
+    /// orphan pass nor the deletion of an old content removes it while the address is served.
+    /// </summary>
+    [Fact]
+    public async Task Orphan_content_served_to_an_installed_app_is_kept()
+    {
+        string solutionDirectory = FindSolutionDirectory();
+        int port = ReservePort();
+        string address = $"http://127.0.0.1:{port}";
+        using Process server = StartHarness(solutionDirectory, address);
+
+        try
+        {
+            using IPlaywright playwright = await Playwright.CreateAsync();
+            await using IBrowser browser = await ChromiumLauncher.LaunchAsync(playwright,
+                new BrowserTypeLaunchOptions { Channel = "chrome", Headless = true });
+            IPage page = await browser.NewPageAsync();
+            await NavigateWhenReadyAsync(page, address);
+
+            JsonElement result = await page.EvaluateAsync<JsonElement>(
+                """
+                async () => {
+                    const module = await import('/_content/Kazo.Os.Infrastructure.Browser/indexedDb.js');
+                    const name = `kazoos-served-${crypto.randomUUID()}`;
+                    const byHash = storeName => ({ name: storeName, keyPath: storeName === 'fsContent' ? ['contentHash', 'chunkIndex'] : (storeName === 'servedFiles' ? 'url' : 'id'),
+                        autoIncrement: false, indexes: [{ name: 'contentHash', keyPath: 'contentHash', unique: false }] });
+                    await module.openDatabase(name, 1, {
+                        steps: [{ targetVersion: 1, createObjectStores: [byHash('fsContent'), byHash('fsEntries'), byHash('servedFiles')] }]
+                    });
+                    const stores = ['fsContent', 'fsEntries', 'servedFiles'];
+                    const chunk = hash => ({ kind: 'add', objectStoreName: 'fsContent',
+                        value: { contentHash: hash, chunkIndex: 0, dataBase64: '', createdUtcMs: 100 } });
+                    await module.executeTransaction(name, 1, stores, 'readwrite', [
+                        chunk('served'), chunk('orphan'),
+                        { kind: 'add', objectStoreName: 'servedFiles', value: { url: '_content/A/a.js', contentHash: 'served' } }
+                    ]);
+                    const extra = { referenceObjectStoreName: 'fsEntries', referenceIndexName: 'contentHash',
+                        extraReferenceObjectStoreName: 'servedFiles', extraReferenceIndexName: 'contentHash' };
+                    const find = { kind: 'findUnreferencedOlderThan', objectStoreName: 'fsContent', indexName: 'contentHash',
+                        count: 10, compareProperty: 'createdUtcMs', expectedValue: 500, ...extra };
+                    const del = hash => ({ kind: 'deleteAllByIndexIfUnreferenced', objectStoreName: 'fsContent',
+                        indexName: 'contentHash', query: hash, compareProperty: 'createdUtcMs', expectedValue: 500, ...extra });
+                    const [found] = await module.executeTransaction(name, 1, stores, 'readonly', [find]);
+                    const deleted = await module.executeTransaction(name, 1, stores, 'readwrite', [del('served'), del('orphan')]);
+                    const [remaining] = await module.executeTransaction(name, 1, ['fsContent'], 'readonly',
+                        [{ kind: 'getAllKeys', objectStoreName: 'fsContent' }]);
+                    await module.deleteDatabase(name);
+                    return { found, deleted, remaining: remaining.map(key => key[0]) };
+                }
+                """);
+
+            Assert.Equal(["orphan"], result.GetProperty("found").GetProperty("candidates").EnumerateArray().Select(e => e.GetString()));
+            JsonElement[] deleted = [.. result.GetProperty("deleted").EnumerateArray()];
+            Assert.True(deleted[0].GetProperty("referenced").GetBoolean());
+            Assert.Equal(1, deleted[1].GetProperty("deleted").GetInt32());
+            Assert.Equal(["served"], result.GetProperty("remaining").EnumerateArray().Select(e => e.GetString()));
+        }
+        finally
+        {
+            StopProcess(server);
+        }
+    }
+
     /// <summary>Verifies that two tabs cannot both commit the same expected revision.</summary>
     [Fact]
     public async Task Multi_tab_revision_conflict_allows_exactly_one_commit()

@@ -187,6 +187,21 @@ Cette section liste ce qui est publié dans la branche `main` et en ligne.
   comme ses fichiers personnels, sans capacité dangereuse ; le lecteur d'un
   autre utilisateur et `/mnt` restent des fichiers du système.
   ([ADR 0231](dev/adr/0231-network-drives-count-as-personal-files.md))
+- **Fichiers plus rapides et moins lourds** : le contenu est gardé en binaire au lieu
+  de base64 (environ 25 % d'espace en moins, enregistrement de 52,5 Mio de 3,4 s à 1,0 s
+  dans Chromium), chaque bloc de 256 Kio vérifié par son empreinte à la lecture ; l'ancien
+  contenu est converti une fois au premier démarrage, derrière un écran d'attente.
+  ([ADR 0272](dev/adr/0272-binary-file-content.md))
+- **Gros fichiers lus et écrits par morceaux** : au-delà de 16 Mio, un fichier s'ouvre en
+  flux qui ne charge que les blocs lus, et s'enregistre par lots passés au navigateur, ce
+  qui réduit de moitié la mémoire prise. ([ADR 0275](dev/adr/0275-partial-read-and-file-address.md) §1, 2 et 4)
+- **Une seule copie des fichiers d'une app installée** : le service worker sert les
+  fichiers d'une app depuis son dossier, sans copie dans un cache ; une app de 64 Mio dont
+  la version précédente est gardée prend 128 Mio au lieu de 236 Mio.
+  ([ADR 0274](dev/adr/0274-single-copy-of-app-files.md))
+- **Espace récupéré après une réécriture ou une suppression** : l'ancien contenu est
+  effacé après 1 jour, ou après 5 minutes quand l'espace manque.
+  ([ADR 0273](dev/adr/0273-short-orphan-content-retention.md))
 - **Sauvegarde et restauration** de toute la machine dans une archive
   téléchargée. ([`system-backup.md`](dev/system-backup.md))
 
@@ -478,9 +493,8 @@ dans `main`, le lien mène à sa PR.
 | Fonctionnalité | Description | ADR | Issue |
 | --- | --- | --- | --- |
 | Changer d'utilisateur | Ouvrir une autre session sans fermer la première. Reste grisé dans le menu Marche/arrêt par choix de Benoit : une session à la fois, Se déconnecter pour changer de compte. | [0195](dev/adr/0195-start-menu-power-button.md), [0201](dev/adr/0201-switch-user-stays-greyed.md) | [#290](https://github.com/Kazo-ca/Os/issues/290) |
-| Adresse de fichier servie à la demande | Une app reçoit une adresse pour lire un gros fichier (audio, vidéo) sans le copier en mémoire, avec lecture partielle pour avancer dans un morceau. | À écrire | [#379](https://github.com/Kazo-ca/Os/issues/379) |
+| Adresse de fichier servie à la demande | Une app reçoit une adresse pour lire un gros fichier (audio, vidéo) sans le copier en mémoire, avec lecture partielle pour avancer dans un morceau. Série `storage/base` ; la lecture partielle est faite (chantier 3), l'adresse reste à faire. | [0275](dev/adr/0275-partial-read-and-file-address.md) | [#379](https://github.com/Kazo-ca/Os/issues/379) |
 | Glisser des fichiers vers une app | Contrat public du SDK pour recevoir des fichiers glissés depuis l'explorateur ou le bureau. | À écrire | [#380](https://github.com/Kazo-ca/Os/issues/380) |
-| Récupérer l'espace des fichiers réécrits ou supprimés | L'ancien contenu d'un fichier réécrit ou supprimé est effacé après 1 jour, ou après 5 minutes quand l'espace est faible, au lieu de rester pour toujours dans le navigateur. | [0273](dev/adr/0273-short-orphan-content-retention.md) | [#537](https://github.com/Kazo-ca/Os/issues/537) |
 
 ### Kazo OS Store
 

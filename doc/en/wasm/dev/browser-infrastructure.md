@@ -32,21 +32,73 @@ implementations, in the host's composition.
 | `Isolation/` | `BrowserCrossOriginIsolation`: COOP/COEP state (ADR 0131, 0146). |
 | `Workers/` | `BrowserWebWorkerRuntime`: Web Workers runtime on the browser side ([`worker-processes.md`](worker-processes.md)). |
 | `Globalization/` | Language satellites loaded by the browser. |
-| `wwwroot/` | JavaScript scripts served under `_content/Kazo.Os.Infrastructure.Browser/`: `indexedDb.js`, `storageManager.js`, `webSiteDatabases.js`, `renamedStorage.js` (rename migration), `cryptoHasher.js`, `hostClipboard.js`, `crossOriginIsolation.js`, `sharedRing.js` (shared ring of the workers' pipes), `workerHost.js` and `workerBootstrap.js`. |
+| `wwwroot/` | JavaScript scripts served under `_content/Kazo.Os.Infrastructure.Browser/`: `indexedDb.js`, `fileContent.js` and `binaryChunks.js` (binary file content, ADR 0272), `storageManager.js`, `webSiteDatabases.js`, `renamedStorage.js` (rename migration), `cryptoHasher.js`, `hostClipboard.js`, `crossOriginIsolation.js`, `sharedRing.js` (shared ring of the workers' pipes), `workerHost.js` and `workerBootstrap.js`. |
 
 ## IndexedDB database
 
-- Name: `kazoos`. Current version: **4** (`KazoOsIndexedDbSchema.CurrentVersion`).
+- Name: `kazoos`. Current version: **6** (`KazoOsIndexedDbSchema.CurrentVersion`).
   Changing the version is the only way to add, remove or modify a
   store or an index; each upgrade has its migration step.
 - Main stores: `users`, `groups`, `sessions`, `settings`, `fsEntries`
   (metadata: files, folders, links), `fsLinks`, `fsContent` (chunks),
   `catalog`, `grants`, `audit`, `diagnostics`, `syncMetadata`, `serverConnection`,
-  `syncCursors`, `syncRecordState`, and one database per ASP.Kazo site (`kazoweb.<appId>`).
+  `syncCursors`, `syncRecordState`, `servedFiles` (version 6, served addresses of installed
+  apps, ADR 0274), and one database per ASP.Kazo site (`kazoweb.<appId>`).
 - File content: split into chunks of at most 256 KiB by default
   (`FileContentStoragePolicy.DefaultMaxChunkSizeBytes`), addressed by the SHA-256 of
   the whole file and the chunk number; two identical files share their content, but
   not two files that only have some chunks in common.
+- Since version 5 (ADR 0272) a chunk is stored as bytes: `{contentHash, chunkIndex,
+  data: Uint8Array, chunkHash, createdUtcMs}`, where `chunkHash` is the SHA-256 of the
+  chunk alone. `IndexedDbFileContentRepository` goes through `IFileContentChunkStore`
+  (`BrowserFileContentChunkStore`, `[JSImport]` of `fileContent.js` with a
+  `MemoryView`): no base64 and no JSON between C# and the browser. A write hashes in
+  WebCrypto, then stores 64 chunks per transaction; a read checks each chunk (number,
+  length, `chunkHash`) and refuses a damaged file instead of returning wrong bytes.
+- Partial read (ADR 0275 §1 and §2): `ReadRangeAsync` reads a `[start, length]` range
+  by loading only the chunks that cover it, in batches of 64. A file over 16 MiB
+  (`IndexedDbFileSystemProvider.StreamedReadThresholdBytes`) opens as a
+  `ChunkedContentReadStream`: a seekable stream that keeps one window of chunks in
+  memory, like the read-ahead of a real disk. The window holds 4 chunks (1 MiB) when
+  the file is opened and after a `Seek` elsewhere, and doubles on each read that goes
+  straight on, up to 64 chunks (16 MiB). The first window is read when the file is
+  opened, so a content that is gone still fails at open; a chunk lost further on makes
+  the read fail with an `IOException`. A synchronous read is only served from the
+  loaded window and throws `NotSupportedException` past it. Under 16 MiB, the file is
+  read whole, as before.
+- Streamed write (ADR 0275 §4): the repository reads the stream to write in batches of
+  16 MiB (64 chunks). A file that fits in one batch is hashed and stored from that batch, as
+  before. A larger file is handed to the browser batch by batch
+  (`IFileContentChunkStore.BeginStagedWriteAsync`, `IStagedFileContent`): each batch is
+  copied into a `Blob` of the page as soon as it arrives, then the browser joins the file,
+  hashes it and stores its chunks, 64 per transaction. The .NET memory holds one batch at a
+  time; the 128 MiB limit is checked before the first chunk is stored, and a failed write
+  releases what the page held.
+- The JSON adapter (`indexedDb.js`) still sees chunks in their base64 form:
+  `binaryChunks.js` turns a binary chunk it reads into `dataBase64`, and an operation
+  marked `BinaryChunk` (backup restore, rename migration) back into bytes after
+  checking its hash. Backups keep format 1 and schema version 4
+  (`KazoOsIndexedDbSchema.BackupSchemaVersion`), so an older release still restores them.
+- One-time conversion: at the first boot on version 5, before the session starts,
+  `FileContentConversion.RunAsync` converts the base64 chunks of older releases by
+  batches of 16 MiB, behind a waiting screen with progress
+  (`storageConversion.js` of the Ecosystem host). The position is saved in
+  `syncMetadata` (`fileContentConversion`), so a closed tab resumes where it stopped;
+  a Web Lock keeps it to one tab, the others wait. A damaged chunk is kept as it is
+  and named in the log, like `fsck`; if the conversion fails the OS does not start
+  and the screen offers to retry.
+- Files of installed apps (ADR 0274): `servedFiles` maps each address
+  `_content/<assembly>/<path>` to the content of the file in the app's folder:
+  `{url, contentHash, length, contentType, appId, chunkSize}`, indexes `contentHash` and
+  `appId`. `IndexedDbServedFiles` writes a row only when the file's `contentHash` is the
+  manifest's SHA-256 and all its chunks are there, in the same transaction; no byte is
+  read or copied. The service worker (`installedAppAssets.sw.js`) opens `kazoos` without
+  a version, reads the row, then streams the chunks, 8 per transaction, checking their
+  `chunkHash`; a `Range` request gets `206` with only the chunks it covers. The cleanup
+  pass and the immediate reclaim keep a content a row still points at. `servedFiles` is
+  not backed up: publishing rebuilds it.
+- A tab of an older release still open when a newer version opens the database closes its
+  connection; its next operation fails with a version error and the person reloads.
 
 ## Recovery
 

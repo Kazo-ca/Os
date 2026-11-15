@@ -1,0 +1,11 @@
+{
+  "id": "11da9d4f-344e-429f-b57f-9a855383c3b1",
+  "category": "improved",
+  "audience": ["user", "developer"],
+  "title": { "en": "Large files are read as they are used", "fr": "Les gros fichiers sont lus à mesure qu'on s'en sert" },
+  "description": {
+    "en": "Opening a file over 16 MiB no longer loads it whole: only the part being read is in memory, 16 MiB at most, and jumping ahead in a file loads only the piece around the new position. Apps read such a file asynchronously; a synchronous read past what is loaded is refused.",
+    "fr": "Ouvrir un fichier de plus de 16 Mio ne le charge plus en entier : seule la partie lue est en mémoire, 16 Mio au plus, et avancer dans un fichier ne charge que le morceau autour de la nouvelle position. Les apps lisent un tel fichier de façon asynchrone ; une lecture synchrone au-delà de ce qui est chargé est refusée."
+  },
+  "links": ["doc/en/wasm/framework/kazo-file-api.md", "doc/en/wasm/dev/adr/0275-partial-read-and-file-address.md"]
+}

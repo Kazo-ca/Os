@@ -1,0 +1,11 @@
+{
+  "id": "e456b102-d364-49e0-b3f9-3b9701949c61",
+  "category": "improved",
+  "audience": ["user", "developer"],
+  "title": { "en": "Saving a large file takes less memory", "fr": "Enregistrer un gros fichier prend moins de mémoire" },
+  "description": {
+    "en": "A file larger than 16 MiB is now handed to the browser 16 MiB at a time while it is saved, instead of being copied whole in the OS memory, which WebAssembly never gives back. KazoFile.WriteAllBytesAsync no longer copies the array it receives: do not change it before the returned task completes.",
+    "fr": "Un fichier de plus de 16 Mio est maintenant passé au navigateur par lots de 16 Mio pendant l'enregistrement, au lieu d'être copié en entier dans la mémoire de l'OS, que WebAssembly ne rend jamais. KazoFile.WriteAllBytesAsync ne copie plus le tableau reçu : ne le modifiez pas avant la fin de la tâche rendue."
+  },
+  "links": ["doc/en/wasm/dev/browser-infrastructure.md", "doc/en/wasm/dev/adr/0275-partial-read-and-file-address.md"]
+}

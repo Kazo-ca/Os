@@ -373,26 +373,31 @@ intents, environment, shell). Example: see the
 ### IndexedDB version upgrade fixtures
 
 ADR 0099 §4. `Tests/fixtures/indexeddb/` contains a dump of the OS database
-for each schema version already published. They were recorded before the
-rename, under the name `hackeros`, and do not change: the OS first moves that
-database to `kazoos` with the Kazo OS names
-([`rename-migration.md`](rename-migration.md), ADR 0230).
+for each schema version already published. The dumps of versions 2 and 3
+were recorded before the rename, under the name `hackeros`, and do not change:
+the OS first moves that database to `kazoos` with the Kazo OS names
+([`rename-migration.md`](rename-migration.md), ADR 0230). From version 4 on, a
+dump is `kazoos-v<n>.json` and names `kazoos`.
 `IndexedDbUpgradeFixtureTests` (`Kazo.Os.UI.E2E.Tests`) recreates each
 database at its old version with `indexedDB.open(name, oldVersion)`, from a
 page of the same origin that does not start the OS (served by Playwright
 itself; waiting for the host is done over HTTP, because opening the OS page
-would create a fresh v4 database), then starts the current OS and verifies:
+would create a fresh database at the current version), then starts the current OS and verifies:
 
 - the "Sign in" screen (not the "Create administrator" welcome) and login with
   the administrator password from the dump: the account survived;
 - `cat` of the dump's file in the Terminal: entries, links and content;
-- `cat /etc/kazoos/appearance.config` contains `accent=cyan`: the setting
-  stored in the old `settings` store was picked up by the migration to files
-  (ADR 0044);
-- the database is `kazoos`, at version 4 with `serverConnection`,
-  `syncCursors` and `syncRecordState`;
+- `cat` of the dump's appearance file contains `accent=cyan`:
+  `/etc/kazoos/appearance.config` for v2 and v3 (the setting stored in the old
+  `settings` store was picked up by the migration to files, ADR 0044), the
+  file named by `expectations.setting.path` for later dumps
+  (`~/.config/kazoos/appearance.config` for v4);
+- the database is `kazoos`, at version 6 with `serverConnection`,
+  `syncCursors`, `syncRecordState` and `servedFiles` (ADR 0274);
 - the `hackeros` database is gone and no `kazoos` record holds an old name
-  (ADR 0230).
+  (ADR 0230);
+- every `fsContent` chunk is binary and matches its own `chunkHash`, and
+  `syncMetadata` records that the one-time conversion is done (ADR 0272).
 
 `IndexedDbUpgradeFixtureCatalogTests` (`Kazo.Os.Infrastructure.Browser.Tests`,
 no browser, hence in every ordinary run) verifies that a dump exists for each
@@ -405,6 +410,8 @@ administrator present).
 | none | 1 | none | **No dump.** Version 1 existed before any commit of the repository: the root commit `fdca68e` already declares `CurrentVersion = 2`. No build can produce it and a reconstructed dump would be invented. Step 1 of the plan remains tested by the creation of a fresh database (each empty startup). |
 | `hackeros-v2.json` | 2 | `e46e897` (last commit at v2, before `7a20401`) | OS actually started |
 | `hackeros-v3.json` | 3 | `7a20401` (only commit at v3, before `2481d67`) | OS actually started |
+| `kazoos-v4.json` | 4 | `a7e8d7a` (`storage/base` before ADR 0272) | Trimmed Release publish of the Ecosystem host actually started (2026-11-15): the file was written with `echo` in the Terminal, the accent chosen in Settings |
+| `kazoos-v5.json` | 5 | `b5368eed` (`storage/base` before ADR 0274) | Same method (2026-11-15); the `fsContent` chunks are bytes (ADR 0272), dumped as `{ "$type": "Uint8Array", "base64": … }` and recreated as `Uint8Array` by the test |
 
 Each dump contains `databaseName`, `version`, `producedFrom` (commit, method,
 host, date), `expectations` (administrator identifiers, file path and content,
@@ -434,6 +441,10 @@ key path; none for now).
    the File Explorer (the text editor of `7a20401` does not save a new file),
    chooses the Cyan accent in Settings, then dumps all the stores and refuses a
    dump whose version is not the expected one.
+   For a build after the rename (version 4 on), serve its trimmed Ecosystem
+   publish and run `FIXTURE_VERSION=<version> node Tests/fixtures/indexeddb/produce-fixture-kazoos.js <url> <commit> Tests/fixtures/indexeddb/kazoos-v<version>.json <screenshot-prefix>`:
+   it writes the file with `echo` in the Terminal and records the path of the
+   user's appearance file in `expectations.setting.path`.
 5. Run `IndexedDbUpgradeFixtureTests` and
    `IndexedDbUpgradeFixtureCatalogTests`; add the version to the first one's
    `[InlineData]`.
@@ -528,5 +539,6 @@ dotnet test Tests/Kazo.Os.UI.E2E.Tests -c Release --no-build --filter "FullyQual
 - [x] IndexedDB version upgrade fixtures (ADR 0099 §4, `v3/7`):
   - [x] schema history: v1 absent from the repository, v2 up to `e46e897`, v3 at `7a20401`;
   - [x] v2 and v3 dumps produced by starting the OS of those commits (`produce-fixture.js`);
-  - [x] E2E test per dump (account, file, setting, version 4);
+  - [x] v4 dump produced from the trimmed Ecosystem publish of `a7e8d7a` (ADR 0272);
+  - [x] E2E test per dump (account, file, setting, version 5, binary content);
   - [x] non-browser check of the rule "one dump per previous version".

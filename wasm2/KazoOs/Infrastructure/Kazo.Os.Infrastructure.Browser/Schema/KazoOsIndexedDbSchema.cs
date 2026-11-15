@@ -21,8 +21,28 @@ public static class KazoOsIndexedDbSchema
     /// <remarks>
     /// Incrementing this value is the only way to add/remove/change an object store or index;
     /// migration steps for each prior version are implemented by <c>P2-IDB-006</c>.
+    /// <para>
+    /// Version 5 (ADR 0272) changes no store: it marks the database whose content chunks are
+    /// binary, so that a page of an older release can no longer open it.
+    /// </para>
+    /// <para>
+    /// Version 6 (ADR 0274) adds <see cref="ServedFileStoreName"/>, the addresses the service
+    /// worker serves from the file system's content.
+    /// </para>
     /// </remarks>
-    public const int CurrentVersion = 4;
+    public const int CurrentVersion = 6;
+
+    /// <summary>
+    /// Gets the schema version a backup document names (<c>databaseSchemaVersion</c>, ADR 0099).
+    /// </summary>
+    /// <remarks>
+    /// It stays 4 while the stores a backup holds are those of version 4: version 5 only changed
+    /// how a chunk is kept in the database, and a backup still carries it in base64 (ADR 0272 §5).
+    /// Version 6 adds <see cref="ServedFileStoreName"/>, which a backup leaves out (it is rebuilt
+    /// at the first launch of each installed app, ADR 0274 §2). A previous release of the OS
+    /// therefore restores a backup made by this one.
+    /// </remarks>
+    internal const int BackupSchemaVersion = 4;
 
     /// <summary>Object store persisting one record per <c>LocalUser</c> account.</summary>
     public const string UserStoreName = "users";
@@ -85,6 +105,13 @@ public static class KazoOsIndexedDbSchema
     /// optimistic-concurrency revision; domain-agnostic like <see cref="SyncCursorStoreName"/>.
     /// </summary>
     public const string SyncRecordStateStoreName = "syncRecordState";
+
+    /// <summary>
+    /// Gets the store of the addresses the service worker serves from <see cref="FileContentStoreName"/>
+    /// (ADR 0274 §2): one record per <c>_content/&lt;assembly&gt;/&lt;path&gt;</c> of an installed
+    /// app, written by its publication. Derived data: a backup does not hold it.
+    /// </summary>
+    public const string ServedFileStoreName = "servedFiles";
 
     /// <summary>Gets every object store declared for <see cref="CurrentVersion"/>, in creation order.</summary>
     public static IReadOnlyList<IndexedDbObjectStoreDefinition> ObjectStores { get; } =
@@ -243,8 +270,29 @@ public static class KazoOsIndexedDbSchema
             purpose:
                 "Last-synced sync-Revision/ContentHash per (domain, recordId) pair, id = " +
                 "\"domain|recordId\" (ADR 0029). Separate from any document's own local " +
-                "optimistic-concurrency revision.")
+                "optimistic-concurrency revision."),
+
+        new(
+            ServedFileStoreName,
+            keyPath: ["url"],
+            autoIncrement: false,
+            indexes:
+            [
+                new IndexedDbIndexDefinition("contentHash", ["contentHash"]),
+                new IndexedDbIndexDefinition("appId", ["appId"])
+            ],
+            purpose:
+                "One record per address the service worker serves from fsContent (ADR 0274): url " +
+                "relative to the page's base, contentHash, length, contentType, appId. A row is a " +
+                "reference to its content for the orphan pass.")
     ];
+
+    /// <summary>
+    /// Gets the stores a backup holds (ADR 0099): every store but <see cref="ServedFileStoreName"/>,
+    /// which the publication of the installed apps rebuilds.
+    /// </summary>
+    public static IReadOnlyList<IndexedDbObjectStoreDefinition> BackupObjectStores { get; } =
+        [.. ObjectStores.Where(store => store.Name != ServedFileStoreName)];
 
     /// <summary>
     /// Gets every named cross-store atomic transaction boundary. A transaction never spans more
@@ -293,16 +341,23 @@ public static class KazoOsIndexedDbSchema
 
         new(
             "FileSystemContentPublish",
-            [FileSystemEntryStoreName, FileContentStoreName],
+            [FileSystemEntryStoreName, FileContentStoreName, ServedFileStoreName],
             "Point a file entry at written content: check every chunk is present, replace the " +
                 "entry, and delete the previous content at once when the system rewrites its own " +
-                "file and nothing references it any more (ADR 0273 sections 3 and 5)."),
+                "file and nothing references it any more, neither an entry nor a served address " +
+                "(ADR 0273 sections 3 and 5, ADR 0274 section 4)."),
 
         new(
             "FileSystemContentCleanup",
-            [FileSystemEntryStoreName, FileContentStoreName],
+            [FileSystemEntryStoreName, FileContentStoreName, ServedFileStoreName],
             "Delete retained orphan chunks only after atomically rechecking that no filesystem " +
-                "entry references their content hash."),
+                "entry and no served address references their content hash (ADR 0274 section 4)."),
+
+        new(
+            "ServedFilesWrite",
+            [ServedFileStoreName, FileContentStoreName],
+            "Serve or stop serving one address of an installed app: check its content's chunks " +
+                "are present and put its row, or delete rows (ADR 0274 sections 2 and 3)."),
 
         new(
             "CatalogEnablementChange",
