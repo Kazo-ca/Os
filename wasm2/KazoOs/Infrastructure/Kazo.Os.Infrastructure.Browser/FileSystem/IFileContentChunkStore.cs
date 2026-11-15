@@ -59,6 +59,58 @@ internal interface IFileContentChunkStore
         ArraySegment<byte> destination,
         int chunkSize,
         CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Starts a write held on the browser side (ADR 0275 §4): the bytes of a file larger than one
+    /// batch are handed over batch by batch and kept outside the .NET memory until the hash of the
+    /// whole file is known, then stored at their key.
+    /// </summary>
+    /// <param name="cancellationToken">Observed before the call starts.</param>
+    /// <returns>The pending write; disposing it releases what the browser holds.</returns>
+    ValueTask<IStagedFileContent> BeginStagedWriteAsync(CancellationToken cancellationToken);
+}
+
+/// <summary>
+/// The bytes of one file written in several batches, held by the browser (a <c>Blob</c> built batch
+/// by batch) instead of the .NET memory (ADR 0275 §4). The order is: <see cref="AppendAsync"/> for
+/// every batch, <see cref="HashAsync"/> once, then <see cref="WriteChunksAsync"/> for every batch of
+/// chunks; <see cref="IAsyncDisposable.DisposeAsync"/> always, which releases the bytes.
+/// </summary>
+internal interface IStagedFileContent : IAsyncDisposable
+{
+    /// <summary>Gets the bytes appended so far.</summary>
+    long Length { get; }
+
+    /// <summary>Copies <paramref name="bytes"/> to the end of the pending file; the caller may reuse its buffer.</summary>
+    /// <param name="bytes">The next bytes of the file.</param>
+    /// <param name="cancellationToken">Observed before the call starts.</param>
+    ValueTask AppendAsync(ArraySegment<byte> bytes, CancellationToken cancellationToken);
+
+    /// <summary>Computes the SHA-256 of the whole pending file, in lowercase hexadecimal; no append may follow.</summary>
+    /// <param name="cancellationToken">Observed before the call starts.</param>
+    ValueTask<string> HashAsync(CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Stores <paramref name="count"/> chunks of the pending file from <paramref name="firstIndex"/>
+    /// in one transaction, like <see cref="IFileContentChunkStore.WriteChunksAsync"/>.
+    /// </summary>
+    /// <param name="contentHash">SHA-256 of the whole file, from <see cref="HashAsync"/>.</param>
+    /// <param name="firstIndex">Number of the first chunk.</param>
+    /// <param name="count">How many chunks to store.</param>
+    /// <param name="chunkSize">Bytes per chunk; only the last chunk of the file may be shorter.</param>
+    /// <param name="createdUtcMs">Creation time stamped on the new chunks.</param>
+    /// <param name="cancellationToken">Observed before the call starts.</param>
+    /// <returns>How many chunks were added.</returns>
+    /// <exception cref="Storage.BrowserStorageQuotaException">
+    /// The browser storage is full; the transaction was not committed (ADR 0099).
+    /// </exception>
+    ValueTask<int> WriteChunksAsync(
+        string contentHash,
+        int firstIndex,
+        int count,
+        int chunkSize,
+        long createdUtcMs,
+        CancellationToken cancellationToken);
 }
 
 /// <summary>
@@ -95,6 +147,10 @@ internal sealed class UnavailableFileContentChunkStore : IFileContentChunkStore
         ArraySegment<byte> destination,
         int chunkSize,
         CancellationToken cancellationToken) => throw Unavailable();
+
+    /// <inheritdoc />
+    public ValueTask<IStagedFileContent> BeginStagedWriteAsync(CancellationToken cancellationToken) =>
+        throw Unavailable();
 
     private static PlatformNotSupportedException Unavailable() =>
         new("File content is stored in the browser's IndexedDB, which this host does not have.");

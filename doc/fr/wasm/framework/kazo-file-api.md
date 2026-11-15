@@ -102,6 +102,8 @@ catch (KazoFileConflictException conflit)
 - Texte : UTF-8 sans BOM par défaut ; un encodage passé explicitement écrit son
   préambule (comme .NET). Les lignes se terminent par `\n`. Les fichiers texte
   sont publiés avec le type `text/plain`.
+- `WriteAllBytesAsync` écrit le tableau reçu tel quel, sans le copier (ADR 0275 §4) :
+  comme `File.WriteAllBytesAsync`, ne le modifiez pas avant la fin de la tâche rendue.
 - `CopyAsync`/`MoveAsync` entre deux montages : la façade copie le flux (en gardant
   les bits du fichier source) puis supprime la source.
 - `KazoFile.DeleteAsync` supprime définitivement, comme `System.IO`. Pour une

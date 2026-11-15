@@ -65,6 +65,14 @@ implementations, in the host's composition.
   the read fail with an `IOException`. A synchronous read is only served from the
   loaded window and throws `NotSupportedException` past it. Under 16 MiB, the file is
   read whole, as before.
+- Streamed write (ADR 0275 §4): the repository reads the stream to write in batches of
+  16 MiB (64 chunks). A file that fits in one batch is hashed and stored from that batch, as
+  before. A larger file is handed to the browser batch by batch
+  (`IFileContentChunkStore.BeginStagedWriteAsync`, `IStagedFileContent`): each batch is
+  copied into a `Blob` of the page as soon as it arrives, then the browser joins the file,
+  hashes it and stores its chunks, 64 per transaction. The .NET memory holds one batch at a
+  time; the 128 MiB limit is checked before the first chunk is stored, and a failed write
+  releases what the page held.
 - The JSON adapter (`indexedDb.js`) still sees chunks in their base64 form:
   `binaryChunks.js` turns a binary chunk it reads into `dataBase64`, and an operation
   marked `BinaryChunk` (backup restore, rename migration) back into bytes after

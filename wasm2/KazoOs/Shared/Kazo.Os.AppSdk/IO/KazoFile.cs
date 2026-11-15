@@ -111,11 +111,15 @@ public static class KazoFile
         WriteAllBytesAsync(path, bytes, options: null, cancellationToken);
 
     /// <summary>Creates or replaces a binary file with advanced options; returns the committed file.</summary>
+    /// <remarks>
+    /// The array is written as it is, without a copy (ADR 0275 §4: a copy of a 50 MB file costs
+    /// 50 MB of memory that WebAssembly never gives back). Like <see cref="System.IO.File.WriteAllBytesAsync(string, byte[], CancellationToken)"/>,
+    /// do not change it before the returned task completes.
+    /// </remarks>
     public static Task<KazoFileInfo> WriteAllBytesAsync(string path, byte[] bytes, KazoWriteOptions? options, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(bytes);
-        byte[] copy = (byte[])bytes.Clone();
-        return PublishAsync(path, _ => copy, needsExistingContent: false, FileSystemContentDescriptor.Binary(), options, cancellationToken);
+        return PublishAsync(path, _ => bytes, needsExistingContent: false, FileSystemContentDescriptor.Binary(), options, cancellationToken);
     }
 
     // ----- Append -----
