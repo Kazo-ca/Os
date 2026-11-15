@@ -165,7 +165,7 @@ public sealed class IndexedDbFileContentRepositoryTests
     private static IndexedDbFileContentRepository Repository(MemoryFileContentChunkStore store) =>
         new(new ModuleRuntime(), chunks: store);
 
-    private static byte[] Pattern(int length)
+    internal static byte[] Pattern(int length)
     {
         byte[] bytes = new byte[length];
         for (int index = 0; index < length; index++)
@@ -177,7 +177,7 @@ public sealed class IndexedDbFileContentRepositoryTests
     }
 
     /// <summary>The JSON adapter's runtime: only opens the database here.</summary>
-    private sealed class ModuleRuntime : IJSRuntime, IJSObjectReference
+    internal sealed class ModuleRuntime : IJSRuntime, IJSObjectReference
     {
         public ValueTask DisposeAsync() => ValueTask.CompletedTask;
 

@@ -54,6 +54,17 @@ implementations, in the host's composition.
   `MemoryView`): no base64 and no JSON between C# and the browser. A write hashes in
   WebCrypto, then stores 64 chunks per transaction; a read checks each chunk (number,
   length, `chunkHash`) and refuses a damaged file instead of returning wrong bytes.
+- Partial read (ADR 0275 §1 and §2): `ReadRangeAsync` reads a `[start, length]` range
+  by loading only the chunks that cover it, in batches of 64. A file over 16 MiB
+  (`IndexedDbFileSystemProvider.StreamedReadThresholdBytes`) opens as a
+  `ChunkedContentReadStream`: a seekable stream that keeps one window of chunks in
+  memory, like the read-ahead of a real disk. The window holds 4 chunks (1 MiB) when
+  the file is opened and after a `Seek` elsewhere, and doubles on each read that goes
+  straight on, up to 64 chunks (16 MiB). The first window is read when the file is
+  opened, so a content that is gone still fails at open; a chunk lost further on makes
+  the read fail with an `IOException`. A synchronous read is only served from the
+  loaded window and throws `NotSupportedException` past it. Under 16 MiB, the file is
+  read whole, as before.
 - The JSON adapter (`indexedDb.js`) still sees chunks in their base64 form:
   `binaryChunks.js` turns a binary chunk it reads into `dataBase64`, and an operation
   marked `BinaryChunk` (backup restore, rename migration) back into bytes after
