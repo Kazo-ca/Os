@@ -3,5 +3,6 @@ static Kazo.Os.Platform.Core.Shell.StartMenuSettingsDocuments.RetiredDefaultPinn
 Kazo.Os.Platform.Core.Shell.StartMenuPreferencesService.StartMenuPreferencesService(Kazo.Os.Platform.Core.Settings.IOsSettingsService! settings, Kazo.Os.Simulation.Abstractions.Sessions.ISessionService! session, System.Collections.Generic.IReadOnlyList<string!>! defaultPins, System.Collections.Generic.IReadOnlyList<string!>! retiredDefaultPins) -> void
 Kazo.Os.Platform.Core.Storage.StorageSpaceMonitor.Reclaimer.get -> Kazo.Os.Simulation.Abstractions.Metrics.IStorageReclaimer?
 Kazo.Os.Platform.Core.Storage.StorageSpaceMonitor.Reclaimer.init -> void
-static readonly Kazo.Os.Platform.Core.Storage.StorageSpaceMonitor.FirstReclaimDelay -> System.TimeSpan
+static readonly Kazo.Os.Platform.Core.Storage.StorageSpaceMonitor.ReclaimRequestDelay -> System.TimeSpan
+Kazo.Os.Platform.Core.Storage.StorageSpaceMonitor.RequestReclaim() -> void
 static readonly Kazo.Os.Platform.Core.Storage.StorageSpaceMonitor.ReclaimInterval -> System.TimeSpan

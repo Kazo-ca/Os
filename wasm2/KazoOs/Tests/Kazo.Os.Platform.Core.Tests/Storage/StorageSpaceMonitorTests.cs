@@ -167,14 +167,38 @@ public sealed class StorageSpaceMonitorTests
         Assert.Empty(reclaimer.Calls);
     }
 
+    [Fact]
+    public async Task A_burst_of_reclaim_requests_runs_one_reclaim()
+    {
+        Probe probe = new(new StorageCapacity(100 * MiB, 1000 * MiB));
+        Reclaimer reclaimer = new(() => { });
+        await using StorageSpaceMonitor monitor = new(probe) { Reclaimer = reclaimer };
+
+        // Emptying a trash of three elements: three deletions, one reclaim (ADR 0273 section 4).
+        monitor.RequestReclaim();
+        monitor.RequestReclaim();
+        monitor.RequestReclaim();
+        await reclaimer.FirstCall.Task.WaitAsync(TimeSpan.FromSeconds(10));
+        await Task.Delay(StorageSpaceMonitor.ReclaimRequestDelay);
+
+        Assert.Equal([false], reclaimer.Calls);
+    }
+
     private sealed class Reclaimer(Action onReclaim) : IStorageReclaimer
     {
         public List<bool> Calls { get; } = [];
 
+        public TaskCompletionSource FirstCall { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
         public ValueTask<long> ReclaimAsync(bool lowSpace, CancellationToken cancellationToken = default)
         {
-            Calls.Add(lowSpace);
+            lock (Calls)
+            {
+                Calls.Add(lowSpace);
+            }
+
             onReclaim();
+            FirstCall.TrySetResult();
             return ValueTask.FromResult(1L);
         }
     }

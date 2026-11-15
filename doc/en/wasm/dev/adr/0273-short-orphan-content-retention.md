@@ -131,13 +131,13 @@ and "another duration". Benoit chose **1 day, 5 minutes when space is low**.
 
 Done by issue #537:
 
-- [ ] A pass that reads only the keys and the first chunk of the candidates.
-- [ ] Durations of 1 day and 5 minutes in `FileContentStoragePolicy`.
-- [ ] Refresh the timestamp of the first chunk when present content is
+- [x] A pass that reads only the keys and the first chunk of the candidates.
+- [x] Durations of 1 day and 5 minutes in `FileContentStoragePolicy`.
+- [x] Refresh the timestamp of the first chunk when present content is
   written again.
-- [ ] Check that the chunks are present in the transaction of the entry.
-- [ ] Triggers: boot, every hour, low space, trash emptied.
-- [ ] Immediate deletion for files rewritten by the system.
-- [ ] Tests: a file rewritten several times does not make `fsContent` grow; a
+- [x] Check that the chunks are present in the transaction of the entry.
+- [x] Triggers: boot, every hour, low space, trash emptied.
+- [x] Immediate deletion for files rewritten by the system.
+- [x] Tests: a file rewritten several times does not make `fsContent` grow; a
   write in progress during a pass; two tabs.
-- [ ] Docs (FR and EN): `browser-infrastructure.md`, memory, change entry.
+- [x] Docs (FR and EN): `browser-infrastructure.md`, memory, change entry.

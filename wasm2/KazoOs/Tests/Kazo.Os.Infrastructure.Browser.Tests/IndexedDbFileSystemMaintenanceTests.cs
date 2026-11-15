@@ -12,9 +12,8 @@ public sealed class IndexedDbFileSystemMaintenanceTests
     [Fact]
     public async Task CleanupAsync_DeletesOldOrphanButRetainsConcurrentlyReferencedHash()
     {
-        ScriptedModule module = new(
-            One("{\"candidates\":[\"orphan\",\"used\"],\"scannedValues\":3,\"unreferenced\":2}"),
-            [Parse("{\"deleted\":1,\"referenced\":false}"), Parse("{\"deleted\":0,\"referenced\":true}")]);
+        ScriptedModule module = new(Parse(
+            "{\"candidates\":[\"orphan\",\"used\"],\"results\":[{\"deleted\":1,\"referenced\":false},{\"deleted\":0,\"referenced\":true}]}"));
         await using IndexedDbFileSystemMaintenance maintenance = new(
             new FakeJsRuntime(module),
             FileContentStoragePolicy.Default,
@@ -25,22 +24,20 @@ public sealed class IndexedDbFileSystemMaintenanceTests
         Assert.Equal(2, result.CandidateHashes);
         Assert.Equal(1, result.DeletedChunks);
         Assert.Equal(1, result.RetainedReferencedHashes);
-        IReadOnlyList<IndexedDbOperation> operations =
-            Assert.IsAssignableFrom<IReadOnlyList<IndexedDbOperation>>(module.ExecuteArguments[1][4]);
-        Assert.All(operations, operation =>
-        {
-            Assert.Equal("deleteAllByIndexIfUnreferenced", operation.Kind);
-            Assert.Equal(KazoOsIndexedDbSchema.FileSystemEntryStoreName, operation.ReferenceObjectStoreName);
-            Assert.Equal("contentHash", operation.ReferenceIndexName);
-            Assert.Equal("createdUtcMs", operation.CompareProperty);
-            Assert.Equal(CutoffMs(FileContentStoragePolicy.DefaultOrphanRetention), operation.ExpectedValue);
-        });
+        object?[] pass = Assert.Single(module.PassArguments);
+        Assert.Equal("kazoos-orphan-content-pass", pass[3]);
+        IndexedDbOperation delete = Assert.IsType<IndexedDbOperation>(pass[5]);
+        Assert.Equal("deleteAllByIndexIfUnreferenced", delete.Kind);
+        Assert.Equal(KazoOsIndexedDbSchema.FileSystemEntryStoreName, delete.ReferenceObjectStoreName);
+        Assert.Equal("contentHash", delete.ReferenceIndexName);
+        Assert.Equal("createdUtcMs", delete.CompareProperty);
+        Assert.Equal(CutoffMs(FileContentStoragePolicy.DefaultOrphanRetention), delete.ExpectedValue);
     }
 
     [Fact]
     public async Task Discovery_reads_keys_and_references_in_javascript_not_the_whole_content_store()
     {
-        ScriptedModule module = new(One("{\"candidates\":[],\"scannedValues\":0,\"unreferenced\":0}"));
+        ScriptedModule module = new(Parse("{\"candidates\":[],\"results\":[]}"));
         await using IndexedDbFileSystemMaintenance maintenance = new(
             new FakeJsRuntime(module),
             FileContentStoragePolicy.Default,
@@ -49,8 +46,8 @@ public sealed class IndexedDbFileSystemMaintenanceTests
         IndexedDbFileContentCleanupResult result = await maintenance.InitializeAsync();
 
         Assert.Equal(new IndexedDbFileContentCleanupResult(0, 0, 0), result);
-        IndexedDbOperation discovery = Assert.Single(
-            Assert.IsAssignableFrom<IReadOnlyList<IndexedDbOperation>>(Assert.Single(module.ExecuteArguments)[4]));
+        Assert.Empty(module.ExecuteArguments);
+        IndexedDbOperation discovery = Assert.IsType<IndexedDbOperation>(Assert.Single(module.PassArguments)[4]);
         Assert.Equal("findUnreferencedOlderThan", discovery.Kind);
         Assert.Equal(KazoOsIndexedDbSchema.FileContentStoreName, discovery.ObjectStoreName);
         Assert.Equal(KazoOsIndexedDbSchema.FileSystemEntryStoreName, discovery.ReferenceObjectStoreName);
@@ -59,9 +56,22 @@ public sealed class IndexedDbFileSystemMaintenanceTests
     }
 
     [Fact]
+    public async Task A_pass_skipped_by_a_hidden_page_or_another_tab_deletes_nothing()
+    {
+        ScriptedModule module = new(Parse("{\"skipped\":\"locked\"}"));
+        await using IndexedDbFileSystemMaintenance maintenance = new(
+            new FakeJsRuntime(module),
+            FileContentStoragePolicy.Default,
+            new FixedTimeProvider());
+
+        Assert.Equal(0, await maintenance.ReclaimAsync(lowSpace: false));
+        Assert.Single(module.PassArguments);
+    }
+
+    [Fact]
     public async Task ReclaimAsync_with_low_space_uses_the_short_retention()
     {
-        ScriptedModule module = new(One("{\"candidates\":[],\"scannedValues\":0,\"unreferenced\":0}"));
+        ScriptedModule module = new(Parse("{\"candidates\":[],\"results\":[]}"));
         await using IndexedDbFileSystemMaintenance maintenance = new(
             new FakeJsRuntime(module),
             FileContentStoragePolicy.Default,
@@ -70,24 +80,22 @@ public sealed class IndexedDbFileSystemMaintenanceTests
         long deleted = await maintenance.ReclaimAsync(lowSpace: true);
 
         Assert.Equal(0, deleted);
-        IndexedDbOperation discovery = Assert.Single(
-            Assert.IsAssignableFrom<IReadOnlyList<IndexedDbOperation>>(Assert.Single(module.ExecuteArguments)[4]));
+        IndexedDbOperation discovery = Assert.IsType<IndexedDbOperation>(Assert.Single(module.PassArguments)[4]);
         Assert.Equal(CutoffMs(FileContentStoragePolicy.DefaultLowSpaceOrphanRetention), discovery.ExpectedValue);
     }
 
     [Fact]
     public async Task ReclaimAsync_runs_passes_until_one_is_not_full()
     {
-        string full = "{\"candidates\":[" + string.Join(
+        string candidates = string.Join(
             ",",
-            Enumerable.Range(0, IndexedDbFileSystemMaintenance.HashesPerPass).Select(index => $"\"h{index}\"")) + "]}";
-        JsonElement[] deletions = [.. Enumerable.Range(0, IndexedDbFileSystemMaintenance.HashesPerPass)
-            .Select(_ => Parse("{\"deleted\":2,\"referenced\":false}"))];
+            Enumerable.Range(0, IndexedDbFileSystemMaintenance.HashesPerPass).Select(index => $"\"h{index}\""));
+        string results = string.Join(
+            ",",
+            Enumerable.Range(0, IndexedDbFileSystemMaintenance.HashesPerPass).Select(_ => "{\"deleted\":2}"));
         ScriptedModule module = new(
-            One(full),
-            deletions,
-            One("{\"candidates\":[\"last\"]}"),
-            [Parse("{\"deleted\":1,\"referenced\":false}")]);
+            Parse($"{{\"candidates\":[{candidates}],\"results\":[{results}]}}"),
+            Parse("{\"candidates\":[\"last\"],\"results\":[{\"deleted\":1}]}"));
         await using IndexedDbFileSystemMaintenance maintenance = new(
             new FakeJsRuntime(module),
             FileContentStoragePolicy.Default,
@@ -96,7 +104,7 @@ public sealed class IndexedDbFileSystemMaintenanceTests
         long deleted = await maintenance.ReclaimAsync(lowSpace: false);
 
         Assert.Equal((IndexedDbFileSystemMaintenance.HashesPerPass * 2) + 1, deleted);
-        Assert.Equal(4, module.ExecuteArguments.Count);
+        Assert.Equal(2, module.PassArguments.Count);
     }
 
     [Fact]
@@ -118,8 +126,6 @@ public sealed class IndexedDbFileSystemMaintenanceTests
     private static long CutoffMs(TimeSpan retention) =>
         (new FixedTimeProvider().GetUtcNow() - retention).ToUnixTimeMilliseconds();
 
-    private static JsonElement[] One(string json) => [Parse(json)];
-
     private static JsonElement Parse(string json) => JsonDocument.Parse(json).RootElement.Clone();
 
     private sealed class FakeJsRuntime(IJSObjectReference module) : IJSRuntime
@@ -133,11 +139,13 @@ public sealed class IndexedDbFileSystemMaintenanceTests
             object?[]? args) => ValueTask.FromResult((TValue)module);
     }
 
-    private sealed class ScriptedModule(params JsonElement[][] results) : IJSObjectReference
+    private sealed class ScriptedModule(params JsonElement[] passes) : IJSObjectReference
     {
-        private readonly Queue<JsonElement[]> _results = new(results);
+        private readonly Queue<JsonElement> _passes = new(passes);
 
         public List<object?[]> ExecuteArguments { get; } = [];
+
+        public List<object?[]> PassArguments { get; } = [];
 
         public ValueTask DisposeAsync() => ValueTask.CompletedTask;
 
@@ -152,7 +160,13 @@ public sealed class IndexedDbFileSystemMaintenanceTests
             if (identifier == "executeTransaction")
             {
                 ExecuteArguments.Add(args ?? []);
-                return ValueTask.FromResult((TValue)(object)_results.Dequeue());
+                throw new InvalidOperationException("The orphan pass must run through runOrphanPass.");
+            }
+
+            if (identifier == "runOrphanPass")
+            {
+                PassArguments.Add(args ?? []);
+                return ValueTask.FromResult((TValue)(object)_passes.Dequeue());
             }
 
             return ValueTask.FromResult(default(TValue)!);

@@ -109,8 +109,10 @@ write never waits for it: `FileSystemService` only reads the cached state
 
 The monitor's `Reclaimer` (`IStorageReclaimer`, implemented by
 `IndexedDbFileSystemMaintenance`) gives back the space of the old content of
-rewritten and deleted files: in the background 30 s after boot
-(`FirstReclaimDelay`), then every hour (`ReclaimInterval`), with a 1-day retention.
+rewritten and deleted files, with a 1-day retention: when the desktop shows
+(`EcosystemBootCoordinator` calls `RequestReclaim`), after a deletion in the trash
+(`FileSystemService`), then every hour (`ReclaimInterval`). `RequestReclaim` waits
+`ReclaimRequestDelay` (2 s), so emptying a trash of several items runs one reclaim.
 When space **becomes** low, the monitor first reclaims with the 5-minute
 low-space retention, measures again, and warns only if space is still low. A
 failed pass is ignored and tried again at the next run. Details:

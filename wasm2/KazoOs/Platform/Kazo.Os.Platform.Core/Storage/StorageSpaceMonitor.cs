@@ -29,11 +29,12 @@ namespace Kazo.Os.Platform.Core.Storage;
 /// until the browser's real limit.
 /// </para>
 /// <para>
-/// <b>Reclaiming space (Os#537).</b> With a <see cref="Reclaimer"/>, the orphan content of
-/// rewritten and deleted files is collected in the background <see cref="FirstReclaimDelay"/>
-/// after <see cref="Start"/>, then every <see cref="ReclaimInterval"/>. When the storage becomes
-/// low, the monitor first reclaims with the short low-space retention and measures again: the
-/// warning is posted only if the storage is still low.
+/// <b>Reclaiming space (ADR 0273, Os#537).</b> With a <see cref="Reclaimer"/>, the orphan content
+/// of rewritten and deleted files is collected in the background: once the desktop is shown and
+/// after the trash is emptied (<see cref="RequestReclaim"/>), and every <see cref="ReclaimInterval"/>
+/// after <see cref="Start"/>. When the storage becomes low, the monitor first reclaims with the
+/// short low-space retention and measures again: the warning is posted only if the storage is still
+/// low.
 /// </para>
 /// </remarks>
 public sealed class StorageSpaceMonitor : IStorageSpaceGuard, IAsyncDisposable
@@ -50,14 +51,14 @@ public sealed class StorageSpaceMonitor : IStorageSpaceGuard, IAsyncDisposable
     /// <summary>Shortest interval between two measures asked by <see cref="RequestRefresh"/>.</summary>
     public static readonly TimeSpan MinimumRefreshSpacing = TimeSpan.FromSeconds(5);
 
-    /// <summary>
-    /// Delay between <see cref="Start"/> and the first background reclaim: one poll, so the boot's
-    /// own reads and writes go first.
-    /// </summary>
-    public static readonly TimeSpan FirstReclaimDelay = PollInterval;
-
     /// <summary>Interval between two background reclaims while the OS runs.</summary>
     public static readonly TimeSpan ReclaimInterval = TimeSpan.FromHours(1);
+
+    /// <summary>
+    /// Quiet time <see cref="RequestReclaim"/> waits for, so a burst of requests (every element of
+    /// an emptied trash) runs one reclaim.
+    /// </summary>
+    public static readonly TimeSpan ReclaimRequestDelay = TimeSpan.FromSeconds(2);
 
     private readonly IStorageCapacityProbe _probe;
     private readonly INotificationQueue? _notifications;
@@ -69,6 +70,7 @@ public sealed class StorageSpaceMonitor : IStorageSpaceGuard, IAsyncDisposable
     private Task? _loop;
     private long _lastRefreshTicks = long.MinValue;
     private LocalUserId? _warnedUser;
+    private int _reclaimRequested;
     private volatile bool _isRootReserveReached;
     private volatile bool _isLowSpace;
     private StorageCapacity? _last;
@@ -121,6 +123,41 @@ public sealed class StorageSpaceMonitor : IStorageSpaceGuard, IAsyncDisposable
         }
 
         _loop = RunAsync(_stopping.Token);
+    }
+
+    /// <summary>
+    /// Asks for a background reclaim soon (<see cref="ReclaimRequestDelay"/>), without waiting:
+    /// called once the desktop is shown and after the trash is emptied (ADR 0273 section 4). Requests
+    /// made while one is pending join it. Does nothing without a <see cref="Reclaimer"/>.
+    /// </summary>
+    public void RequestReclaim()
+    {
+        if (Reclaimer is null || Volatile.Read(ref _disposed) == 1
+            || Interlocked.Exchange(ref _reclaimRequested, 1) == 1)
+        {
+            return;
+        }
+
+        _ = RunRequestedReclaimAsync();
+    }
+
+    private async Task RunRequestedReclaimAsync()
+    {
+        try
+        {
+            await Task.Delay(ReclaimRequestDelay, _time, _stopping.Token).ConfigureAwait(false);
+            Interlocked.Exchange(ref _reclaimRequested, 0);
+            await ReclaimQuietlyAsync(_isLowSpace, _stopping.Token).ConfigureAwait(false);
+            RequestRefresh();
+        }
+        catch (Exception exception) when (exception is OperationCanceledException or ObjectDisposedException)
+        {
+            // Stopping.
+        }
+        finally
+        {
+            Interlocked.Exchange(ref _reclaimRequested, 0);
+        }
     }
 
     /// <inheritdoc />
@@ -221,7 +258,7 @@ public sealed class StorageSpaceMonitor : IStorageSpaceGuard, IAsyncDisposable
     {
         await RefreshQuietlyAsync().ConfigureAwait(false);
         long started = _time.GetTimestamp();
-        TimeSpan nextReclaim = FirstReclaimDelay;
+        TimeSpan nextReclaim = ReclaimInterval;
         using PeriodicTimer timer = new(PollInterval, _time);
         while (await timer.WaitForNextTickAsync(cancellationToken).ConfigureAwait(false))
         {

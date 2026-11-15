@@ -535,7 +535,7 @@ public sealed partial class IndexedDbBrowserContractTests
                             : { contentHash: hash, chunkIndex: index, dataBase64: '', createdUtcMs }
                     });
                     await module.executeTransaction(name, 1, stores, 'readwrite', [
-                        chunk('old', 0, 100), chunk('old', 1, 100),
+                        chunk('old', 0, 100), chunk('old', 1, 900),
                         chunk('used', 0, 100),
                         chunk('young', 0, 900),
                         chunk('legacy', 0, undefined),
@@ -556,25 +556,64 @@ public sealed partial class IndexedDbBrowserContractTests
                         indexName: 'contentHash', query: hash, compareProperty: 'createdUtcMs', expectedValue: 500,
                         referenceObjectStoreName: 'fsEntries', referenceIndexName: 'contentHash' });
                     const deleted = await module.executeTransaction(name, 1, stores, 'readwrite',
-                        [del('old'), del('reused'), del('used')]);
+                        [del('old'), del('reused'), del('used'), del('legacy')]);
+                    // The entry publish fails when a chunk is missing (ADR 0273 section 3).
+                    let missing = null;
+                    try {
+                        await module.executeTransaction(name, 1, stores, 'readwrite', [
+                            { kind: 'assertCount', objectStoreName: 'fsContent', indexName: 'contentHash', query: 'young',
+                              expectedValue: 2, failureCode: 'filesystem.content-missing' },
+                            { kind: 'put', objectStoreName: 'fsEntries', value: { id: 'other', contentHash: 'young' } }]);
+                    } catch (error) {
+                        missing = `${error.name}|${error.message}`;
+                    }
+                    const [published] = await module.executeTransaction(name, 1, stores, 'readonly',
+                        [{ kind: 'get', objectStoreName: 'fsEntries', key: 'other' }]);
                     const [remaining] = await module.executeTransaction(name, 1, ['fsContent'], 'readonly',
                         [{ kind: 'getAllKeys', objectStoreName: 'fsContent' }]);
                     const [reused] = await module.executeTransaction(name, 1, ['fsContent'], 'readonly',
                         [{ kind: 'get', objectStoreName: 'fsContent', key: ['reused', 0] }]);
+                    // A whole pass with a later cutoff collects what is left unreferenced.
+                    const pass = await module.runOrphanPass(name, 1, stores, `lock-${name}`,
+                        { ...find, expectedValue: 2000 }, { ...del('x'), expectedValue: 2000 });
+                    let locked = null;
+                    await navigator.locks.request(`lock-${name}`, async () => {
+                        locked = await module.runOrphanPass(name, 1, stores, `lock-${name}`, find, del('x'));
+                    });
+                    // A file rewritten five times: the pass leaves only its last content.
+                    for (let version = 1; version <= 5; version++) {
+                        await module.executeTransaction(name, 1, stores, 'readwrite', [
+                            chunk(`doc-v${version}`, 0, 100 + version),
+                            { kind: 'put', objectStoreName: 'fsEntries', value: { id: 'doc', contentHash: `doc-v${version}` } }]);
+                    }
+                    await module.runOrphanPass(name, 1, stores, `lock-${name}`,
+                        { ...find, expectedValue: 2000 }, { ...del('x'), expectedValue: 2000 });
+                    const [afterRewrites] = await module.executeTransaction(name, 1, ['fsContent'], 'readonly',
+                        [{ kind: 'getAllKeys', objectStoreName: 'fsContent' }]);
                     await module.deleteDatabase(name);
-                    return { found, touch, deleted, remaining: remaining.map(key => key[0]).sort(), reused };
+                    return { found, touch, deleted, remaining: remaining.map(key => key[0]).sort(), reused,
+                        missing, published: published ?? null, pass, locked,
+                        afterRewrites: afterRewrites.map(key => key[0]).sort() };
                 }
                 """);
 
             JsonElement found = result.GetProperty("found");
-            Assert.Equal(["old", "reused"], found.GetProperty("candidates").EnumerateArray().Select(e => e.GetString()).Order());
+            // Age is chunk 0's time: 'old' is old although chunk 1 is young, undated 'legacy' counts as old.
+            Assert.Equal(["legacy", "old", "reused"], found.GetProperty("candidates").EnumerateArray().Select(e => e.GetString()).Order());
             Assert.Equal(5, found.GetProperty("scannedValues").GetInt32());
             Assert.False(result.GetProperty("touch").GetProperty("added").GetBoolean());
             JsonElement[] deleted = [.. result.GetProperty("deleted").EnumerateArray()];
             Assert.Equal(2, deleted[0].GetProperty("deleted").GetInt32());
             Assert.True(deleted[1].GetProperty("young").GetBoolean());
             Assert.True(deleted[2].GetProperty("referenced").GetBoolean());
-            Assert.Equal(["legacy", "reused", "used", "young"], result.GetProperty("remaining").EnumerateArray().Select(e => e.GetString()));
+            Assert.Equal(1, deleted[3].GetProperty("deleted").GetInt32());
+            Assert.Equal(["reused", "used", "young"], result.GetProperty("remaining").EnumerateArray().Select(e => e.GetString()));
+            Assert.StartsWith("ConstraintError|filesystem.content-missing", result.GetProperty("missing").GetString());
+            Assert.Equal(JsonValueKind.Null, result.GetProperty("published").ValueKind);
+            JsonElement pass = result.GetProperty("pass");
+            Assert.Equal(["reused", "young"], pass.GetProperty("candidates").EnumerateArray().Select(e => e.GetString()).Order());
+            Assert.Equal("locked", result.GetProperty("locked").GetProperty("skipped").GetString());
+            Assert.Equal(["doc-v5", "used"], result.GetProperty("afterRewrites").EnumerateArray().Select(e => e.GetString()));
             Assert.Equal(1000, result.GetProperty("reused").GetProperty("createdUtcMs").GetInt64());
             Assert.Equal(string.Empty, result.GetProperty("reused").GetProperty("dataBase64").GetString());
         }

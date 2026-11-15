@@ -110,9 +110,11 @@ cache `IsRootReserveReached`.
 
 Le `Reclaimer` du moniteur (`IStorageReclaimer`, implémenté par
 `IndexedDbFileSystemMaintenance`) rend l'espace de l'ancien contenu des fichiers
-réécrits et supprimés : en arrière-plan 30 s après le démarrage
-(`FirstReclaimDelay`), puis toutes les heures (`ReclaimInterval`), avec une
-rétention de 1 jour. Quand l'espace **devient** faible, le moniteur récupère
+réécrits et supprimés, avec une rétention de 1 jour : quand le bureau s'affiche
+(`EcosystemBootCoordinator` appelle `RequestReclaim`), après une suppression dans
+la corbeille (`FileSystemService`), puis toutes les heures (`ReclaimInterval`).
+`RequestReclaim` attend `ReclaimRequestDelay` (2 s) : vider une corbeille de
+plusieurs éléments ne lance qu'une récupération. Quand l'espace **devient** faible, le moniteur récupère
 d'abord avec la rétention de 5 minutes, mesure de nouveau, et n'avertit que si
 l'espace est encore faible. Une passe en échec est ignorée et retentée à la
 prochaine exécution. Détails :

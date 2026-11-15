@@ -67,13 +67,20 @@ dans [`system-backup.md`](system-backup.md).
   (fichiers réécrits ou supprimés) sont ramassés par une passe bornée
   (`IndexedDbFileSystemMaintenance`, `IStorageReclaimer`), après une période de
   rétention : 1 jour (`OrphanRetention`), 5 minutes quand l'espace est faible
-  (`LowSpaceOrphanRetention`). `StorageSpaceMonitor` la lance en arrière-plan 30 s
-  après le démarrage, toutes les heures, et quand l'espace devient faible, avant
-  d'avertir (Os#537). La passe ne lit que les clés et les blocs des contenus non
-  référencés, jamais tout le magasin `fsContent` ; sa transaction de suppression
-  revérifie les références et l'âge. Une écriture qui réutilise un contenu déjà
-  stocké donne la nouvelle date à son bloc 0 : la passe ne peut pas retirer un contenu
-  qu'une écriture est en train de prendre.
+  (`LowSpaceOrphanRetention`) ([ADR 0273](adr/0273-short-orphan-content-retention.md)).
+  `StorageSpaceMonitor` la lance quand le bureau s'affiche, toutes les heures, après
+  une suppression dans la corbeille, et quand l'espace devient faible, avant
+  d'avertir (Os#537). La passe tourne dans `runOrphanPass` (`indexedDb.js`) : rien
+  quand l'onglet est caché, et un seul onglet à la fois (Web Locks). Elle ne lit que
+  les clés et le bloc 0 des contenus non référencés, jamais tout le magasin
+  `fsContent` ; sa transaction de suppression revérifie les références et l'âge.
+  L'âge d'un contenu est la date de son bloc 0 (un contenu sans date compte comme
+  ancien). Une écriture qui réutilise un contenu déjà stocké donne la nouvelle date à
+  son bloc 0, et la transaction qui publie le fichier vérifie que tous ses blocs sont
+  présents (`assertCount`) : si un bloc manque, le contenu est réécrit une fois, puis
+  l'écriture échoue avec une erreur d'E/S. Une réécriture faite par le système
+  (`AppAuthority.System`) efface l'ancien contenu dans la même transaction quand plus
+  rien ne le référence.
 - Le chemin d'un fichier se résout en une requête (`resolvePath`, ADR 0090,
   [`filesystem-path-lookup.md`](filesystem-path-lookup.md)).
 - Les scripts `wwwroot/*.js` sont testés en contrat par

@@ -14,6 +14,7 @@ internal sealed class IndexedDbFileContentRepository : IAsyncDisposable
     private const string Boundary = "FileSystemContentWrite";
     private const string CleanupBoundary = "FileSystemContentCleanup";
     private const string CreatedProperty = "createdUtcMs";
+    private const string OrphanPassLockName = "kazoos-orphan-content-pass";
     private readonly IndexedDbInteropAdapter _adapter;
     private readonly FileContentStoragePolicy _policy;
     private readonly TimeProvider _timeProvider;
@@ -125,7 +126,7 @@ internal sealed class IndexedDbFileContentRepository : IAsyncDisposable
                 ioBytes: batchBytes).ConfigureAwait(false);
         }
 
-        return new IndexedDbFileContentWrite(contentHash, length);
+        return new IndexedDbFileContentWrite(contentHash, length, chunks.Count);
     }
 
     /// <summary>Loads and validates all chunks for one immutable content hash.</summary>
@@ -251,15 +252,15 @@ internal sealed class IndexedDbFileContentRepository : IAsyncDisposable
     /// Deletes up to <paramref name="maximumHashes"/> orphaned contents older than the retention
     /// window (<see cref="FileContentStoragePolicy.OrphanRetention"/>, or
     /// <see cref="FileContentStoragePolicy.LowSpaceOrphanRetention"/> when
-    /// <paramref name="lowSpace"/>).
+    /// <paramref name="lowSpace"/>), ADR 0273.
     /// </summary>
     /// <remarks>
-    /// Discovery runs in JavaScript in one read-only transaction (<c>findUnreferencedOlderThan</c>):
-    /// it reads the keys of <c>fsContent</c>, counts the references of each content hash in
-    /// <c>fsEntries</c>, and reads only the chunks of unreferenced hashes, so no file content
-    /// crosses the interop. The delete transaction checks again, atomically, that each hash is
-    /// unreferenced and still old: a file committed or a write reusing the content meanwhile keeps
-    /// it.
+    /// The pass runs in JavaScript (<c>runOrphanPass</c>): discovery
+    /// (<c>findUnreferencedOlderThan</c>) reads the keys of <c>fsContent</c>, counts the references of
+    /// each content hash in <c>fsEntries</c>, and reads only the first chunk of unreferenced hashes
+    /// (its <c>createdUtcMs</c> is the content's age), so no file content crosses the interop. The
+    /// delete transaction checks again, atomically, that each hash is unreferenced and still old. A
+    /// hidden page, or a pass already running in another tab, skips the pass.
     /// </remarks>
     internal async ValueTask<IndexedDbFileContentCleanupResult> CleanupAsync(
         int maximumHashes = 64,
@@ -270,10 +271,10 @@ internal sealed class IndexedDbFileContentRepository : IAsyncDisposable
         await _adapter.OpenAsync(IndexedDbMigrationPlan.CreateCurrent(), cancellationToken).ConfigureAwait(false);
         TimeSpan retention = lowSpace ? _policy.LowSpaceOrphanRetention : _policy.OrphanRetention;
         long cutoffUtcMs = (_timeProvider.GetUtcNow() - retention).ToUnixTimeMilliseconds();
-        IReadOnlyList<JsonElement> discovery = await _adapter.ExecuteAsync(
+        JsonElement pass = await _adapter.RunOrphanPassAsync(
             CleanupBoundary,
-            IndexedDbTransactionMode.ReadOnly,
-            [new IndexedDbOperation(
+            OrphanPassLockName,
+            new IndexedDbOperation(
                 "findUnreferencedOlderThan",
                 KazoOsIndexedDbSchema.FileContentStoreName,
                 IndexName: "contentHash",
@@ -281,48 +282,50 @@ internal sealed class IndexedDbFileContentRepository : IAsyncDisposable
                 CompareProperty: CreatedProperty,
                 ExpectedValue: cutoffUtcMs,
                 ReferenceObjectStoreName: KazoOsIndexedDbSchema.FileSystemEntryStoreName,
-                ReferenceIndexName: "contentHash")],
-            cancellationToken).ConfigureAwait(false);
-        string[] candidates = ReadCandidates(discovery);
-        if (candidates.Length == 0)
-        {
-            return new IndexedDbFileContentCleanupResult(0, 0, 0);
-        }
-
-        IReadOnlyList<IndexedDbOperation> operations = [.. candidates.Select(contentHash =>
+                ReferenceIndexName: "contentHash"),
             new IndexedDbOperation(
                 "deleteAllByIndexIfUnreferenced",
                 KazoOsIndexedDbSchema.FileContentStoreName,
                 IndexName: "contentHash",
-                Query: contentHash,
                 CompareProperty: CreatedProperty,
                 ExpectedValue: cutoffUtcMs,
                 ReferenceObjectStoreName: KazoOsIndexedDbSchema.FileSystemEntryStoreName,
-                ReferenceIndexName: "contentHash"))];
-        IReadOnlyList<JsonElement> results = await _adapter.ExecuteAsync(
-            CleanupBoundary,
-            IndexedDbTransactionMode.ReadWrite,
-            operations,
+                ReferenceIndexName: "contentHash"),
             cancellationToken).ConfigureAwait(false);
-        int deletedChunks = results.Sum(result => result.GetProperty("deleted").GetInt32());
-        int retainedHashes = results.Count(result => result.GetProperty("deleted").GetInt32() == 0);
-        return new IndexedDbFileContentCleanupResult(candidates.Length, deletedChunks, retainedHashes);
+        return ReadPass(pass);
     }
 
-    /// <summary>Reads the candidate hashes of a <c>findUnreferencedOlderThan</c> result.</summary>
-    private static string[] ReadCandidates(IReadOnlyList<JsonElement> discovery)
+    /// <summary>Reads the result of one <c>runOrphanPass</c>.</summary>
+    private static IndexedDbFileContentCleanupResult ReadPass(JsonElement pass)
     {
-        if (discovery.Count != 1
-            || discovery[0].ValueKind != JsonValueKind.Object
-            || !discovery[0].TryGetProperty("candidates", out JsonElement candidates)
-            || candidates.ValueKind != JsonValueKind.Array)
+        if (pass.ValueKind != JsonValueKind.Object)
         {
-            throw new InvalidDataException("Persisted file chunk discovery result is malformed.");
+            throw new InvalidDataException("Orphan content pass result is malformed.");
         }
 
-        return [.. candidates.EnumerateArray()
-            .Select(candidate => candidate.GetString()
-                ?? throw new InvalidDataException("Persisted file chunk discovery returned no hash."))];
+        if (pass.TryGetProperty("skipped", out _))
+        {
+            return new IndexedDbFileContentCleanupResult(0, 0, 0);
+        }
+
+        if (!pass.TryGetProperty("candidates", out JsonElement candidates)
+            || candidates.ValueKind != JsonValueKind.Array
+            || !pass.TryGetProperty("results", out JsonElement results)
+            || results.ValueKind != JsonValueKind.Array)
+        {
+            throw new InvalidDataException("Orphan content pass result is malformed.");
+        }
+
+        int deletedChunks = 0;
+        int retainedHashes = 0;
+        foreach (JsonElement result in results.EnumerateArray())
+        {
+            int deleted = result.GetProperty("deleted").GetInt32();
+            deletedChunks += deleted;
+            retainedHashes += deleted == 0 ? 1 : 0;
+        }
+
+        return new IndexedDbFileContentCleanupResult(candidates.GetArrayLength(), deletedChunks, retainedHashes);
     }
 
     /// <inheritdoc />
@@ -330,7 +333,10 @@ internal sealed class IndexedDbFileContentRepository : IAsyncDisposable
 }
 
 /// <summary>Reports the immutable identity and byte length of persisted file content.</summary>
-internal sealed record IndexedDbFileContentWrite(string ContentHash, long Length);
+/// <param name="ContentHash">SHA-256 of the whole content, lowercase hex.</param>
+/// <param name="Length">Content length in bytes.</param>
+/// <param name="ChunkCount">Chunks stored for it (one for empty content).</param>
+internal sealed record IndexedDbFileContentWrite(string ContentHash, long Length, int ChunkCount);
 
 /// <summary>Stable browser-storage representation of one content chunk.</summary>
 internal sealed record IndexedDbFileContentChunkRecord(
