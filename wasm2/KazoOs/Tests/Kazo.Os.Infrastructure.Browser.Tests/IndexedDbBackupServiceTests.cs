@@ -24,11 +24,15 @@ public sealed class IndexedDbBackupServiceTests
         Assert.Equal(1, result.RecordCount);
         TransactionInvocation export = module.Transactions[0];
         Assert.Equal("readonly", export.Mode);
-        Assert.Equal(KazoOsIndexedDbSchema.ObjectStores.Count, export.Operations.Count);
+        // ADR 0274: servedFiles is rebuilt from the installed apps, never exported...
+        Assert.Equal(KazoOsIndexedDbSchema.BackupObjectStores.Count, export.Operations.Count);
+        Assert.DoesNotContain(export.Operations, operation => operation.ObjectStoreName == KazoOsIndexedDbSchema.ServedFileStoreName);
         Assert.All(export.Operations, operation => Assert.Equal("getAll", operation.Kind));
         TransactionInvocation restore = module.Transactions[1];
         Assert.Equal("readwrite", restore.Mode);
+        // ...but a replace clears it with the rest: a row must not outlive the content it serves.
         Assert.Equal(KazoOsIndexedDbSchema.ObjectStores.Count, restore.Operations.Count(operation => operation.Kind == "clear"));
+        Assert.Contains(restore.Operations, operation => operation.Kind == "clear" && operation.ObjectStoreName == KazoOsIndexedDbSchema.ServedFileStoreName);
         Assert.Single(restore.Operations, operation => operation.Kind == "put");
     }
 
@@ -110,13 +114,14 @@ public sealed class IndexedDbBackupServiceTests
     [Fact]
     public async Task Backup_still_names_schema_version_4_so_a_previous_release_restores_it()
     {
-        // ADR 0272 §5: database version 5 kept the stores and records of a backup.
+        // ADR 0272 §5: database version 5 kept the stores and records of a backup; version 6 only
+        // adds servedFiles, which a backup leaves out (ADR 0274).
         FakeIndexedDbModule module = new(CreateSnapshot());
         await using IndexedDbBackupService service = new(new FakeJsRuntime(module));
 
         using JsonDocument document = JsonDocument.Parse(await service.ExportAsync());
 
-        Assert.Equal(5, KazoOsIndexedDbSchema.CurrentVersion);
+        Assert.Equal(6, KazoOsIndexedDbSchema.CurrentVersion);
         Assert.Equal(4, document.RootElement.GetProperty("databaseSchemaVersion").GetInt32());
     }
 
@@ -124,7 +129,7 @@ public sealed class IndexedDbBackupServiceTests
     public async Task Restore_asks_for_content_chunks_in_their_binary_form()
     {
         JsonElement[] snapshot = CreateSnapshot();
-        int contentIndex = KazoOsIndexedDbSchema.ObjectStores
+        int contentIndex = KazoOsIndexedDbSchema.BackupObjectStores
             .Select((store, index) => (store, index))
             .Single(item => item.store.Name == KazoOsIndexedDbSchema.FileContentStoreName).index;
         // A chunk as indexedDb.js hands it to C#: in its JSON form, base64 with its hash.
@@ -149,8 +154,8 @@ public sealed class IndexedDbBackupServiceTests
     private static JsonElement[] CreateSnapshot()
     {
         JsonElement empty = JsonDocument.Parse("[]").RootElement.Clone();
-        JsonElement[] stores = Enumerable.Repeat(empty, KazoOsIndexedDbSchema.ObjectStores.Count).ToArray();
-        int userIndex = KazoOsIndexedDbSchema.ObjectStores
+        JsonElement[] stores = Enumerable.Repeat(empty, KazoOsIndexedDbSchema.BackupObjectStores.Count).ToArray();
+        int userIndex = KazoOsIndexedDbSchema.BackupObjectStores
             .Select((store, index) => (store, index))
             .Single(item => item.store.Name == KazoOsIndexedDbSchema.UserStoreName)
             .index;

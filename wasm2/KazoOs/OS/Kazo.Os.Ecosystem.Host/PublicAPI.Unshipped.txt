@@ -1,1 +1,11 @@
 #nullable enable
+*REMOVED*Kazo.Os.Ecosystem.BrowserInstalledAppAssetCache.BrowserInstalledAppAssetCache() -> void
+*REMOVED*Kazo.Os.Ecosystem.BrowserInstalledAppAssetCache.PutAsync(string! url, byte[]! bytes, string! contentType, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask
+*REMOVED*Kazo.Os.Ecosystem.BrowserInstalledAppAssetCache.RemoveAsync(string! url, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask
+*REMOVED*Kazo.Os.Ecosystem.IInstalledAppAssetCache.PutAsync(string! url, byte[]! bytes, string! contentType, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask
+*REMOVED*Kazo.Os.Ecosystem.IInstalledAppAssetCache.RemoveAsync(string! url, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask
+Kazo.Os.Ecosystem.BrowserInstalledAppAssetCache.BrowserInstalledAppAssetCache(Microsoft.JSInterop.IJSRuntime! runtime) -> void
+Kazo.Os.Ecosystem.BrowserInstalledAppAssetCache.RemoveAsync(System.Collections.Generic.IReadOnlyList<string!>! urls, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask
+Kazo.Os.Ecosystem.BrowserInstalledAppAssetCache.ServeAsync(string! appId, System.Collections.Generic.IReadOnlyList<Kazo.Os.Infrastructure.Browser.FileSystem.ServedFileRequest!>! files, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<Kazo.Os.Infrastructure.Browser.FileSystem.ServedFileResult!>!>
+Kazo.Os.Ecosystem.IInstalledAppAssetCache.RemoveAsync(System.Collections.Generic.IReadOnlyList<string!>! urls, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask
+Kazo.Os.Ecosystem.IInstalledAppAssetCache.ServeAsync(string! appId, System.Collections.Generic.IReadOnlyList<Kazo.Os.Infrastructure.Browser.FileSystem.ServedFileRequest!>! files, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<Kazo.Os.Infrastructure.Browser.FileSystem.ServedFileResult!>!>

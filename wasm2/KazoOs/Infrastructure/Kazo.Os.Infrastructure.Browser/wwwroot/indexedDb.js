@@ -162,6 +162,22 @@ async function firstRecordStamp(store, value, property) {
     return typeof stamp === "number" ? stamp : 0;
 }
 
+/**
+ * Counts the references to `value`: the records of `referenceIndexName` in
+ * `referenceObjectStoreName`, plus those of the optional second reference
+ * (`extraReferenceObjectStoreName`/`extraReferenceIndexName`). A content is referenced by a file
+ * entry and, since ADR 0274 section 4, by an address the service worker serves (servedFiles).
+ */
+async function referenceCount(transaction, operation, value) {
+    let count = await requestResult(transaction.objectStore(operation.referenceObjectStoreName)
+        .index(operation.referenceIndexName).count(value));
+    if (count === 0 && operation.extraReferenceObjectStoreName && operation.extraReferenceIndexName) {
+        count = await requestResult(transaction.objectStore(operation.extraReferenceObjectStoreName)
+            .index(operation.extraReferenceIndexName).count(value));
+    }
+    return count;
+}
+
 async function executeOperation(transaction, operation) {
     const store = transaction.objectStore(operation.objectStoreName);
     const source = operation.indexName ? store.index(operation.indexName) : store;
@@ -321,8 +337,6 @@ async function executeOperation(transaction, operation) {
                 throw new Error("findUnreferencedOlderThan requires indexes, a cutoff and a positive count.");
             }
 
-            const referenceIndex = transaction.objectStore(operation.referenceObjectStoreName)
-                .index(operation.referenceIndexName);
             const keys = await requestResult(store.getAllKeys());
             const values = [];
             const seen = new Set();
@@ -341,7 +355,7 @@ async function executeOperation(transaction, operation) {
                     break;
                 }
 
-                if (await requestResult(referenceIndex.count(value)) !== 0) {
+                if (await referenceCount(transaction, operation, value) !== 0) {
                     continue;
                 }
 
@@ -359,10 +373,7 @@ async function executeOperation(transaction, operation) {
                 throw new Error("deleteAllByIndexIfUnreferenced requires source and reference indexes.");
             }
 
-            const referenceStore = transaction.objectStore(operation.referenceObjectStoreName);
-            const referenceCount = await requestResult(
-                referenceStore.index(operation.referenceIndexName).count(operation.query));
-            if (referenceCount !== 0) {
+            if (await referenceCount(transaction, operation, operation.query) !== 0) {
                 return { deleted: 0, referenced: true };
             }
 

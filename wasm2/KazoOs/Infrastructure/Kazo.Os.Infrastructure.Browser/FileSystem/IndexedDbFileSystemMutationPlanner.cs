@@ -169,7 +169,11 @@ internal static class IndexedDbFileSystemMutationPlanner
                 IndexName: "contentHash",
                 Query: previous,
                 ReferenceObjectStoreName: KazoOsIndexedDbSchema.FileSystemEntryStoreName,
-                ReferenceIndexName: "contentHash"));
+                ReferenceIndexName: "contentHash",
+                // ADR 0274 §4: a file an installed app's window still runs is kept until the next
+                // publication drops its address.
+                ExtraReferenceObjectStoreName: KazoOsIndexedDbSchema.ServedFileStoreName,
+                ExtraReferenceIndexName: "contentHash"));
         }
 
         return operations;

@@ -1,6 +1,6 @@
 #nullable enable
 *REMOVED*const Kazo.Os.Infrastructure.Browser.Schema.KazoOsIndexedDbSchema.CurrentVersion = 4 -> int
-const Kazo.Os.Infrastructure.Browser.Schema.KazoOsIndexedDbSchema.CurrentVersion = 5 -> int
+const Kazo.Os.Infrastructure.Browser.Schema.KazoOsIndexedDbSchema.CurrentVersion = 6 -> int
 Kazo.Os.Infrastructure.Browser.FileSystem.FileContentChunkKey
 Kazo.Os.Infrastructure.Browser.FileSystem.FileContentChunkKey.<Clone>$() -> Kazo.Os.Infrastructure.Browser.FileSystem.FileContentChunkKey!
 Kazo.Os.Infrastructure.Browser.FileSystem.FileContentChunkKey.ChunkIndex.get -> int
@@ -44,3 +44,51 @@ Kazo.Os.Infrastructure.Browser.Schema.FileContentStoragePolicy.LowSpaceOrphanRet
 const Kazo.Os.Infrastructure.Browser.FileSystem.IndexedDbFileSystemMaintenance.HashesPerPass = 64 -> int
 const Kazo.Os.Infrastructure.Browser.FileSystem.IndexedDbFileSystemMaintenance.MaxPassesPerReclaim = 32 -> int
 static readonly Kazo.Os.Infrastructure.Browser.Schema.FileContentStoragePolicy.DefaultLowSpaceOrphanRetention -> System.TimeSpan
+*REMOVED*static Kazo.Os.Infrastructure.Browser.Apps.BrowserInstalledAppAssets.ListAsync() -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<string!>!>!
+*REMOVED*static Kazo.Os.Infrastructure.Browser.Apps.BrowserInstalledAppAssets.PutAsync(string! url, byte[]! bytes, string! contentType) -> System.Threading.Tasks.Task!
+*REMOVED*static Kazo.Os.Infrastructure.Browser.Apps.BrowserInstalledAppAssets.RemoveAsync(string! url) -> System.Threading.Tasks.Task<bool>!
+Kazo.Os.Infrastructure.Browser.FileSystem.IndexedDbServedFiles
+Kazo.Os.Infrastructure.Browser.FileSystem.IndexedDbServedFiles.DisposeAsync() -> System.Threading.Tasks.ValueTask
+Kazo.Os.Infrastructure.Browser.FileSystem.IndexedDbServedFiles.IndexedDbServedFiles(Microsoft.JSInterop.IJSRuntime! runtime) -> void
+Kazo.Os.Infrastructure.Browser.FileSystem.IndexedDbServedFiles.ListAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<string!>!>
+Kazo.Os.Infrastructure.Browser.FileSystem.IndexedDbServedFiles.RemoveAsync(System.Collections.Generic.IReadOnlyList<string!>! urls, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Kazo.Os.Infrastructure.Browser.FileSystem.IndexedDbServedFiles.ServeAsync(string! appId, System.Collections.Generic.IReadOnlyList<Kazo.Os.Infrastructure.Browser.FileSystem.ServedFileRequest!>! files, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<Kazo.Os.Infrastructure.Browser.FileSystem.ServedFileResult!>!>
+Kazo.Os.Infrastructure.Browser.FileSystem.ServedFileOutcome
+Kazo.Os.Infrastructure.Browser.FileSystem.ServedFileOutcome.ContentMissing = 4 -> Kazo.Os.Infrastructure.Browser.FileSystem.ServedFileOutcome
+Kazo.Os.Infrastructure.Browser.FileSystem.ServedFileOutcome.HashMismatch = 3 -> Kazo.Os.Infrastructure.Browser.FileSystem.ServedFileOutcome
+Kazo.Os.Infrastructure.Browser.FileSystem.ServedFileOutcome.Missing = 2 -> Kazo.Os.Infrastructure.Browser.FileSystem.ServedFileOutcome
+Kazo.Os.Infrastructure.Browser.FileSystem.ServedFileOutcome.Served = 1 -> Kazo.Os.Infrastructure.Browser.FileSystem.ServedFileOutcome
+Kazo.Os.Infrastructure.Browser.FileSystem.ServedFileRequest
+Kazo.Os.Infrastructure.Browser.FileSystem.ServedFileRequest.<Clone>$() -> Kazo.Os.Infrastructure.Browser.FileSystem.ServedFileRequest!
+Kazo.Os.Infrastructure.Browser.FileSystem.ServedFileRequest.ContentType.get -> string!
+Kazo.Os.Infrastructure.Browser.FileSystem.ServedFileRequest.ContentType.init -> void
+Kazo.Os.Infrastructure.Browser.FileSystem.ServedFileRequest.Deconstruct(out string! Url, out Kazo.Os.App.Abstractions.VirtualPath Path, out string! Sha256, out string! ContentType) -> void
+Kazo.Os.Infrastructure.Browser.FileSystem.ServedFileRequest.Equals(Kazo.Os.Infrastructure.Browser.FileSystem.ServedFileRequest? other) -> bool
+Kazo.Os.Infrastructure.Browser.FileSystem.ServedFileRequest.Path.get -> Kazo.Os.App.Abstractions.VirtualPath
+Kazo.Os.Infrastructure.Browser.FileSystem.ServedFileRequest.Path.init -> void
+Kazo.Os.Infrastructure.Browser.FileSystem.ServedFileRequest.ServedFileRequest(string! Url, Kazo.Os.App.Abstractions.VirtualPath Path, string! Sha256, string! ContentType) -> void
+Kazo.Os.Infrastructure.Browser.FileSystem.ServedFileRequest.Sha256.get -> string!
+Kazo.Os.Infrastructure.Browser.FileSystem.ServedFileRequest.Sha256.init -> void
+Kazo.Os.Infrastructure.Browser.FileSystem.ServedFileRequest.Url.get -> string!
+Kazo.Os.Infrastructure.Browser.FileSystem.ServedFileRequest.Url.init -> void
+Kazo.Os.Infrastructure.Browser.FileSystem.ServedFileResult
+Kazo.Os.Infrastructure.Browser.FileSystem.ServedFileResult.<Clone>$() -> Kazo.Os.Infrastructure.Browser.FileSystem.ServedFileResult!
+Kazo.Os.Infrastructure.Browser.FileSystem.ServedFileResult.Deconstruct(out string! Url, out Kazo.Os.Infrastructure.Browser.FileSystem.ServedFileOutcome Outcome) -> void
+Kazo.Os.Infrastructure.Browser.FileSystem.ServedFileResult.Equals(Kazo.Os.Infrastructure.Browser.FileSystem.ServedFileResult? other) -> bool
+Kazo.Os.Infrastructure.Browser.FileSystem.ServedFileResult.Outcome.get -> Kazo.Os.Infrastructure.Browser.FileSystem.ServedFileOutcome
+Kazo.Os.Infrastructure.Browser.FileSystem.ServedFileResult.Outcome.init -> void
+Kazo.Os.Infrastructure.Browser.FileSystem.ServedFileResult.ServedFileResult(string! Url, Kazo.Os.Infrastructure.Browser.FileSystem.ServedFileOutcome Outcome) -> void
+Kazo.Os.Infrastructure.Browser.FileSystem.ServedFileResult.Url.get -> string!
+Kazo.Os.Infrastructure.Browser.FileSystem.ServedFileResult.Url.init -> void
+const Kazo.Os.Infrastructure.Browser.Schema.KazoOsIndexedDbSchema.ServedFileStoreName = "servedFiles" -> string!
+override Kazo.Os.Infrastructure.Browser.FileSystem.ServedFileRequest.Equals(object? obj) -> bool
+override Kazo.Os.Infrastructure.Browser.FileSystem.ServedFileRequest.GetHashCode() -> int
+override Kazo.Os.Infrastructure.Browser.FileSystem.ServedFileRequest.ToString() -> string!
+override Kazo.Os.Infrastructure.Browser.FileSystem.ServedFileResult.Equals(object? obj) -> bool
+override Kazo.Os.Infrastructure.Browser.FileSystem.ServedFileResult.GetHashCode() -> int
+override Kazo.Os.Infrastructure.Browser.FileSystem.ServedFileResult.ToString() -> string!
+static Kazo.Os.Infrastructure.Browser.FileSystem.ServedFileRequest.operator !=(Kazo.Os.Infrastructure.Browser.FileSystem.ServedFileRequest? left, Kazo.Os.Infrastructure.Browser.FileSystem.ServedFileRequest? right) -> bool
+static Kazo.Os.Infrastructure.Browser.FileSystem.ServedFileRequest.operator ==(Kazo.Os.Infrastructure.Browser.FileSystem.ServedFileRequest? left, Kazo.Os.Infrastructure.Browser.FileSystem.ServedFileRequest? right) -> bool
+static Kazo.Os.Infrastructure.Browser.FileSystem.ServedFileResult.operator !=(Kazo.Os.Infrastructure.Browser.FileSystem.ServedFileResult? left, Kazo.Os.Infrastructure.Browser.FileSystem.ServedFileResult? right) -> bool
+static Kazo.Os.Infrastructure.Browser.FileSystem.ServedFileResult.operator ==(Kazo.Os.Infrastructure.Browser.FileSystem.ServedFileResult? left, Kazo.Os.Infrastructure.Browser.FileSystem.ServedFileResult? right) -> bool
+static Kazo.Os.Infrastructure.Browser.Schema.KazoOsIndexedDbSchema.BackupObjectStores.get -> System.Collections.Generic.IReadOnlyList<Kazo.Os.Infrastructure.Browser.Schema.IndexedDbObjectStoreDefinition!>!
