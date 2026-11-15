@@ -9,7 +9,7 @@
 [0273](../adr/0273-short-orphan-content-retention.md),
 [0274](../adr/0274-single-copy-of-app-files.md) et
 [0275](../adr/0275-partial-read-and-file-address.md) sont écrites (chantier 0).
-**Aucun code n'est commencé.** Trois questions sont posées à Benoit (§6).
+**Aucun code n'est commencé.** Deux questions sont posées à Benoit (§6).
 
 ## 1. Objet
 
@@ -18,7 +18,7 @@ ses fichiers plus vite, sans changer ce qu'une app voit :
 
 - le contenu des fichiers en binaire au lieu de base64 (25 % d'espace en
   moins, écriture environ 8 fois plus rapide, lecture environ 5 fois) ;
-- l'espace d'un fichier réécrit ou supprimé récupéré en quelques heures ;
+- l'espace d'un fichier réécrit ou supprimé récupéré en un jour au plus, en quelques minutes quand l'espace manque ;
 - une seule copie des fichiers d'une app installée (une app de 64 Mio passe
   d'environ 236 Mio à 128 Mio, version précédente comprise) ;
 - lire une partie d'un gros fichier sans le charger en entier, et une adresse
@@ -31,7 +31,7 @@ ses fichiers plus vite, sans changer ce qu'une app voit :
 | --- | --- |
 | Par où commencer | Deux issues `TODO` hors série, tout de suite : [#537](https://github.com/Kazo-ca/Os/issues/537) (récupérer l'espace) et [#538](https://github.com/Kazo-ca/Os/issues/538) (profiler [#520](https://github.com/Kazo-ca/Os/issues/520)). Le reste dans la série `storage/base`, ADR avant le code. |
 | Fichiers d'une app installée | Le système de fichiers reste la seule source ; le service worker sert `_content/…` depuis le magasin de fichiers ; la copie dans Cache Storage disparaît. |
-| Contenus orphelins | Rétention courte, de quelques heures à un jour ; tout de suite quand l'espace est faible. |
+| Contenus orphelins | Rétention courte ; tout de suite quand l'espace est faible. Le 2026-11-15, dans le fil de #537 : **1 jour**, et 5 minutes quand l'espace est faible. |
 
 ## 3. Avant la série : deux issues qui ont leur propre fil
 
@@ -93,14 +93,13 @@ quand il promet un gain.
 
 ## 6. Questions posées à Benoit (2026-11-15)
 
-Les trois questions sont posées dans le fil de la série, avec leur contexte.
+Les deux questions sont posées dans le fil de la série, avec leur contexte.
 En attendant, les ADR appliquent la recommandation.
 
 | N° | Question | Choix | Recommandé |
 | --- | --- | --- | --- |
 | 1 | Comment convertir le contenu déjà enregistré en base64 ? (ADR 0272 §3) | A. en arrière-plan, par petits lots ; B. en une fois au premier démarrage, avec un écran d'attente ; C. jamais | A |
 | 2 | Que vérifier à chaque lecture d'un fichier ? (ADR 0272 §4) | A. chaque bloc par son hachage ; B. le fichier entier, comme aujourd'hui ; C. rien à la lecture | A |
-| 3 | Combien de temps garder un contenu orphelin quand l'espace ne manque pas ? (ADR 0273 §1) | A. 1 heure ; B. 6 heures ; C. 24 heures | B |
 
 ## 7. Risques
 

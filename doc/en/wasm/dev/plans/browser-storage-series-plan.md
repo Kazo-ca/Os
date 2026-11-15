@@ -9,7 +9,7 @@
 [0273](../adr/0273-short-orphan-content-retention.md),
 [0274](../adr/0274-single-copy-of-app-files.md) and
 [0275](../adr/0275-partial-read-and-file-address.md) are written (work item 0).
-**No code has started.** Three questions are asked to Benoit (§6).
+**No code has started.** Two questions are asked to Benoit (§6).
 
 ## 1. Purpose
 
@@ -18,7 +18,7 @@ faster, without changing what an app sees:
 
 - file content in binary instead of base64 (25% less space, writes about
   8 times faster, reads about 5 times);
-- the space of a rewritten or deleted file reclaimed within a few hours;
+- the space of a rewritten or deleted file reclaimed within one day at most, within minutes when space is short;
 - a single copy of the files of an installed app (a 64 MiB app goes from
   about 236 MiB to 128 MiB, previous version included);
 - reading a part of a large file without loading all of it, and a file
@@ -31,7 +31,7 @@ faster, without changing what an app sees:
 | --- | --- |
 | Where to start | Two `TODO` issues outside the series, right away: [#537](https://github.com/Kazo-ca/Os/issues/537) (reclaim space) and [#538](https://github.com/Kazo-ca/Os/issues/538) (profile [#520](https://github.com/Kazo-ca/Os/issues/520)). The rest in the `storage/base` series, ADRs before code. |
 | Files of an installed app | The file system stays the only source; the service worker serves `_content/…` from the file store; the copy in Cache Storage goes away. |
-| Orphaned content | Short retention, a few hours to a day; at once when space is low. |
+| Orphaned content | Short retention; at once when space is low. On 2026-11-15, in the thread of #537: **1 day**, and 5 minutes when space is low. |
 
 ## 3. Before the series: two issues with their own thread
 
@@ -91,14 +91,13 @@ and a before-and-after measurement when it promises a gain.
 
 ## 6. Questions asked to Benoit (2026-11-15)
 
-The three questions are asked in the thread of the series, with their context.
+The two questions are asked in the thread of the series, with their context.
 In the meantime, the ADRs apply the recommendation.
 
 | No. | Question | Choices | Recommended |
 | --- | --- | --- | --- |
 | 1 | How to convert the content already stored in base64? (ADR 0272 §3) | A. in the background, in small batches; B. all at once at the first boot, with a waiting screen; C. never | A |
 | 2 | What to check at each read of a file? (ADR 0272 §4) | A. each chunk by its hash; B. the whole file, as today; C. nothing at read time | A |
-| 3 | How long to keep orphaned content when space is not short? (ADR 0273 §1) | A. 1 hour; B. 6 hours; C. 24 hours | B |
 
 ## 7. Risks
 

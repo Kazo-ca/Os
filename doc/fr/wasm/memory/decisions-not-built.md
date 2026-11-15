@@ -144,12 +144,13 @@ Rien n'est codé.
   30 jours de l'ADR 0099.
 - **Série ouverte le 2026-11-15** (branche `storage/base`, aucun code) : plan
   dans [`../dev/plans/browser-storage-series-plan.md`](../dev/plans/browser-storage-series-plan.md),
-  ADR 0272 (contenu binaire), 0273 (rétention : 6 heures, 5 minutes quand
+  ADR 0272 (contenu binaire), 0273 (rétention : 1 jour, 5 minutes quand
   l'espace est faible ; c'est l'ADR de #537), 0274 (une seule copie des
   fichiers d'app) et 0275 (lecture partielle, adresse de fichier) proposées.
-  Les 30 jours sont en fait dans l'ADR 0094, pas dans l'ADR 0099. Trois
-  questions posées à Benoit le 2026-11-15 (conversion de l'ancien contenu,
-  vérification à la lecture, durée de rétention) ; les ADR appliquent la
+  Les 30 jours sont en fait dans l'ADR 0094, pas dans l'ADR 0099. Benoit a
+  choisi la durée de 1 jour le 2026-11-15 (fil de #537). Deux questions
+  posées à Benoit le 2026-11-15 (conversion de l'ancien contenu,
+  vérification à la lecture) ; les ADR appliquent la
   recommandation en attendant. Le chantier 1 attend le résultat de #538.
 
 ## Questions posées, réponse à confirmer
