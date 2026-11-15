@@ -6,9 +6,9 @@
 
 Proposed on 2026-11-15. On 2026-11-14 Benoit decided that retention is short
 (a few hours to a day) and that orphaned content goes at once when space is
-low; this ADR sets the values and the safety rules. One question is still
-asked to Benoit (at the end); the decision applies its recommendation in the
-meantime. This is the ADR that issue
+low. On 2026-11-15, in the thread of issue #537, he set the two durations:
+**1 day**, and 5 minutes when space is low. This ADR writes them down, with
+the safety rules. No open question. This is the ADR that issue
 [#537](https://github.com/Kazo-ca/Os/issues/537) asks for: the code of #537
 applies it and brings it to `main` with it.
 
@@ -40,10 +40,10 @@ applies it and brings it to `main` with it.
 
 | Situation | Orphaned content is deleted after |
 | --- | --- |
-| Normal space | **6 hours** |
+| Normal space | **1 day** |
 | Low space (thresholds of ADR 0099) | **5 minutes** |
 
-- `FileContentStoragePolicy.DefaultOrphanRetention` becomes 6 hours; a second
+- `FileContentStoragePolicy.DefaultOrphanRetention` becomes 1 day; a second
   value, `DefaultLowSpaceOrphanRetention`, is 5 minutes.
 - The 5 minutes are not a wanted wait: they are the margin that lets a write
   in progress finish. "At once" means the pass starts as soon as space gets
@@ -56,7 +56,7 @@ applies it and brings it to `main` with it.
   whole store.
 - A write that finds content already present (`addIfAbsent` rewrites nothing)
   **refreshes the timestamp of the first chunk**. Without this, saving again
-  content orphaned for 5 h 59 would leave it one minute from deletion before
+  content orphaned for 23 h 59 would leave it one minute from deletion before
   its entry is written.
 
 ### 3. Two guarantees, whatever the duration
@@ -99,7 +99,7 @@ app ([ADR 0274](0274-single-copy-of-app-files.md) §4). The pass checks both.
 
 ## Consequences
 
-- The space of a rewritten or deleted file comes back in 6 hours at most, in
+- The space of a rewritten or deleted file comes back in one day at most, in
   a few minutes when space is short. The case of 500 MB for a month is gone.
 - The chunks left by an interrupted write go after the same duration, instead
   of 30 days (ADR 0245 §3).
@@ -120,18 +120,18 @@ app ([ADR 0274](0274-single-copy-of-app-files.md) §4). The pass checks both.
 - **Count references per chunk**: useful for per-chunk deduplication
   (analysis, lead 8), not needed here.
 
-## Question asked to Benoit
+## Benoit's decision (2026-11-15)
 
-1. **How long should orphaned content be kept when space is not short?**
-   A. 1 hour; B. 6 hours (recommended); C. 24 hours. In all three cases,
-   5 minutes when space is low.
+Question asked in the thread of issue #537: which retention duration to set.
+Choices among "1 day, 5 minutes when space is low", "keep 30 days for now"
+and "another duration". Benoit chose **1 day, 5 minutes when space is low**.
 
 ## Tasks
 
 Done by issue #537:
 
 - [ ] A pass that reads only the keys and the first chunk of the candidates.
-- [ ] Durations of 6 hours and 5 minutes in `FileContentStoragePolicy`.
+- [ ] Durations of 1 day and 5 minutes in `FileContentStoragePolicy`.
 - [ ] Refresh the timestamp of the first chunk when present content is
   written again.
 - [ ] Check that the chunks are present in the transaction of the entry.

@@ -6,9 +6,10 @@
 
 Proposée le 2026-11-15. Benoit a décidé le 2026-11-14 que la rétention est
 courte (de quelques heures à un jour) et que le contenu orphelin part tout de
-suite quand l'espace est faible ; cette ADR fixe les valeurs et les règles de
-sûreté. Une question reste posée à Benoit (à la fin) ; la décision applique sa
-recommandation en attendant. C'est l'ADR que l'issue
+suite quand l'espace est faible. Le 2026-11-15, dans le fil de l'issue #537,
+il a fixé les deux durées : **1 jour**, et 5 minutes quand l'espace est
+faible. Cette ADR les écrit, avec les règles de sûreté. Aucune question
+ouverte. C'est l'ADR que l'issue
 [#537](https://github.com/Kazo-ca/Os/issues/537) demande : le code de #537
 l'applique et l'amène dans `main` avec lui.
 
@@ -43,10 +44,10 @@ l'applique et l'amène dans `main` avec lui.
 
 | Situation | Un contenu orphelin est supprimé après |
 | --- | --- |
-| Espace normal | **6 heures** |
+| Espace normal | **1 jour** |
 | Espace faible (seuils de l'ADR 0099) | **5 minutes** |
 
-- `FileContentStoragePolicy.DefaultOrphanRetention` passe à 6 heures ; une
+- `FileContentStoragePolicy.DefaultOrphanRetention` passe à 1 jour ; une
   deuxième valeur, `DefaultLowSpaceOrphanRetention`, vaut 5 minutes.
 - Les 5 minutes ne sont pas une attente voulue : c'est la marge qui laisse
   finir une écriture en cours. « Tout de suite » veut dire que la passe part
@@ -59,7 +60,7 @@ l'applique et l'amène dans `main` avec lui.
   tout le magasin.
 - Une écriture qui retrouve un contenu déjà présent (`addIfAbsent` ne réécrit
   rien) **rafraîchit l'horodatage du premier bloc**. Sans cela, réenregistrer
-  un contenu orphelin depuis 5 h 59 le laisserait à une minute de la
+  un contenu orphelin depuis 23 h 59 le laisserait à une minute de la
   suppression avant que son entrée soit écrite.
 
 ### 3. Deux garanties, quelle que soit la durée
@@ -105,7 +106,7 @@ passe vérifie les deux.
 
 ## Conséquences
 
-- L'espace d'un fichier réécrit ou supprimé revient en 6 heures au plus, en
+- L'espace d'un fichier réécrit ou supprimé revient en un jour au plus, en
   quelques minutes quand l'espace manque. Le cas des 500 Mo pendant un mois
   disparaît.
 - Les blocs laissés par une écriture interrompue partent après la même durée,
@@ -128,18 +129,19 @@ passe vérifie les deux.
 - **Compter les références par bloc** : utile pour la déduplication par bloc
   (analyse, piste 8), pas nécessaire ici.
 
-## Question posée à Benoit
+## Décision de Benoit (2026-11-15)
 
-1. **Combien de temps garder un contenu orphelin quand l'espace ne manque
-   pas ?** A. 1 heure ; B. 6 heures (recommandé) ; C. 24 heures. Dans les
-   trois cas, 5 minutes quand l'espace est faible.
+Question posée dans le fil de l'issue #537 : quelle durée de rétention mettre.
+Choix parmi « 1 jour, 5 minutes quand l'espace est faible », « garder 30 jours
+pour l'instant » et « autre durée ». Benoit a choisi **1 jour, 5 minutes quand
+l'espace est faible**.
 
 ## Tâches
 
 Faites par l'issue #537 :
 
 - [ ] Passe qui ne lit que les clés et le premier bloc des candidats.
-- [ ] Durées de 6 heures et de 5 minutes dans `FileContentStoragePolicy`.
+- [ ] Durées de 1 jour et de 5 minutes dans `FileContentStoragePolicy`.
 - [ ] Rafraîchir l'horodatage du premier bloc à la réécriture d'un contenu
   présent.
 - [ ] Vérifier la présence des blocs dans la transaction de l'entrée.
