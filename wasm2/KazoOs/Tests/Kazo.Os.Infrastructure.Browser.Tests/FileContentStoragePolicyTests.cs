@@ -13,7 +13,7 @@ public sealed class FileContentStoragePolicyTests
         Assert.Equal(256 * 1024, policy.MaxChunkSizeBytes);
         Assert.Equal("SHA-256", policy.ContentHashAlgorithm);
         Assert.True(policy.DeduplicateChunks);
-        Assert.Equal(TimeSpan.FromDays(30), policy.OrphanRetention);
+        Assert.Equal(TimeSpan.FromDays(1), policy.OrphanRetention);
     }
 
     [Fact]

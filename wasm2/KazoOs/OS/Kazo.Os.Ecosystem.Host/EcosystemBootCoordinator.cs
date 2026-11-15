@@ -163,6 +163,10 @@ public sealed class EcosystemBootCoordinator
         }
 
         _startup.MarkStarted();
+
+        // The desktop is shown: give back the orphan content of rewritten and deleted files in the
+        // background (ADR 0273 section 4).
+        _spaceMonitor?.RequestReclaim();
         _logWriter?.Write(LogFileTarget.Syslog, DiagnosticSeverity.Information, "kernel", "boot: system started (desktop shown)");
     }
 
