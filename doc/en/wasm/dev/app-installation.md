@@ -533,6 +533,74 @@ Tests: `AppCatalogDocumentTests`, the catalog and progress tests of
 `StoreScreenshotViewerTests`, `StoreAppPageTests`, `StoreHomeTests`,
 `StoreMobileTests`, which measures every control on a 390 × 844 phone).
 
+## Beta channel and offered version (ADR 0271)
+
+Work item 3 of the `release-channels/base` series
+([ADR 0271](adr/0271-beta-channel-and-automatic-app-updates.md) §5 and §6,
+[plan](plans/release-channels-plan.md)).
+
+- **The channel follows the OS.** An OS whose version has a suffix
+  (`3.5.0-preview.1`, `KazoOsSdk.SemanticVersion.PreRelease`) reads the beta
+  channel of the official catalog,
+  `https://raw.githubusercontent.com/Kazo-ca/Os-AppMarketPlace/packages/catalog-beta.json`
+  (`AppPackageDefaults.OfficialBetaCatalogAddress`); a stable OS reads
+  `catalog.json`. `AppPackageDefaults.OfficialCatalogAddressFor(version)` gives
+  the address, and `AppPackageDefaults.Standard` uses it: that is what a new
+  `/etc/kazoos/app-sources.config` receives. No setting.
+- **`/etc/kazoos` migration.** The OS never rewrites an existing file. When it
+  is read, a `[catalogs]` line naming the official catalog of either channel is
+  read as the official catalog of the OS's channel
+  (`AppSourcesConfigDocument.Read`): a file written by a stable OS gives
+  `catalog-beta.json` to a prerelease, and the other way round. Any other
+  address (a mirror, a company catalog, or `official=` changed by an
+  administrator) is kept as written, and a host built with its own catalogs
+  (`KazoOsAppCatalogs`) moves nothing.
+- **Offered version.** The Store (`KazoCatalogApp.LatestVersion`, the version
+  installed by default), `kazopkg info` and `kazopkg install <app>` without a
+  version, the update check (`AppUpdateMonitor`, `kazopkg update`), the « Try »
+  links (ADR 0258) and the proposals for a file (ADR 0257) pick the **newest
+  version whose `sdkCompatibility` accepts the OS's SDK** (`AppVersionChoice`),
+  no longer the last one published: an app rebuilt on a newer SDK does not
+  block an older OS, which keeps the previous version. A version with no known
+  range (a GitHub repository's `index.json` gives none) counts as compatible;
+  the install checks the manifest again. When no version fits, the newest one
+  is still shown and the install refuses it with
+  `apps.package.sdk-incompatible`, which says which SDK it needs.
+- **App prereleases.** Offered when the OS is itself a prerelease, or when the
+  installed version is one (as before); otherwise only stable versions are,
+  except for an app that has published nothing but prereleases. `1.0.1`
+  replaces `1.0.1-beta.2` (SemVer order).
+
+### `catalog-beta.json` format
+
+Set by this work item for work item 4 (`Os-AppMarketPlace`), which writes it:
+
+- Same folder as `catalog.json` (root of the `packages` branch), **same
+  format** (`schemaVersion` 1, same fields, same reading rules, 8 MiB at most):
+  the OS reads it with `AppCatalogDocument.Parse`, no special case.
+- **Content**: all of `catalog.json` (categories, apps, stable versions), plus
+  the apps' beta versions, added to the app's `versions`. An app that only has
+  a beta version yet is listed too, with its listing fields.
+- **Beta version**: SemVer with a `<next patch>-beta.<n>` suffix
+  (`1.0.1-beta.1`), package at
+  `packages/<appId>/<version>/<appId>-<version>.kazoapp` and assets under
+  `assets/<appId>/<version>/` like a stable version, signed with the same key
+  (`KAZO_STORE_SIGNING_KEY`), `sdkCompatibility.minimumVersion` = the SDK
+  prerelease it was compiled on (`3.5.0-preview.1`).
+- **Order**: versions newest first in SemVer order
+  (`1.0.1` > `1.0.1-beta.2` > `1.0.1-beta.1` > `1.0.0`).
+- **`latestVersion`**: the newest **stable** version, as in `catalog.json`; the
+  newest beta only for an app with no stable version. The OS only uses it when
+  no version is compatible.
+- The listing fields (`name`, `shortDescriptions`…) come from the version
+  `latestVersion` names, so that an app's listing does not change with a beta.
+- A beta version does not count in the 3 versions kept; it is removed when the
+  stable version it precedes is published (ADR 0271 §5).
+
+Tests: `ReleaseChannelTests` and `AppPackageGatewayTests.ReleaseChannels`
+(Platform.Core); the Store and « Try » link E2E tests serve both addresses of
+the official catalog.
+
 ## Adding without a restart, signing and transactions
 
 ADR [0214](adr/0214-hack-store-hot-add-signing-transactions.md) (issue #251)

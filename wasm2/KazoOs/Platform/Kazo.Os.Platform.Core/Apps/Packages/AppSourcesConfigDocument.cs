@@ -224,6 +224,17 @@ public static class AppSourcesConfigDocument
             }
         }
 
+        // ADR 0271 §6: the channel follows the OS. A line naming the official catalog of either
+        // channel (written by an earlier stable or prerelease OS on the same machine) reads as the
+        // official catalog of the host's channel; a catalog at any other address is kept as written.
+        if (defaults.Catalogs.Select(static pair => pair.Value).FirstOrDefault(AppPackageDefaults.IsOfficialCatalogAddress) is { } channel)
+        {
+            foreach (string name in catalogs.Where(static pair => AppPackageDefaults.IsOfficialCatalogAddress(pair.Value)).Select(static pair => pair.Key).ToArray())
+            {
+                catalogs[name] = channel;
+            }
+        }
+
         return new AppSourcesConfig(
             hosts.TryGetValue(GitHubHostKey, out string? gitHub) ? gitHub : DefaultGitHubHost,
             trusted.Where(static pair => pair.Value).Select(static pair => pair.Key).ToHashSet(StringComparer.OrdinalIgnoreCase),

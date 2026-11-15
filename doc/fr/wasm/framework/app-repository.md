@@ -6,10 +6,13 @@
 
 Le point de départ d'une app Kazo OS dans son propre dépôt : une solution qui
 se lance en débogage dans l'OS, dont la version de Kazo OS est fixée par un
-sous-module, et qui se publie dans le Kazo OS Store par un tag. Décisions :
+sous-module, qui se publie dans le Kazo OS Store par un tag et qui suit seule
+les nouvelles versions de Kazo OS. Décisions :
 [ADR 0176](../dev/adr/0176-app-repository-template.md),
 [ADR 0188](../dev/adr/0188-hack-store-and-app-catalog.md) §7,
-[ADR 0207](../dev/adr/0207-solution-template-implementation.md).
+[ADR 0207](../dev/adr/0207-solution-template-implementation.md),
+[ADR 0271](../dev/adr/0271-beta-channel-and-automatic-app-updates.md) (canal
+bêta, workflows réutilisables, mise à jour du SDK).
 Le guide général d'un dépôt qui utilise Kazo OS est
 [`building-on-kazoos.md`](building-on-kazoos.md).
 
@@ -48,10 +51,16 @@ Deux façons, même résultat :
 | `Directory.Build.targets` | import du mode source externe, contrôle du sous-module |
 | `.gitmodules` | `external/KazoOs`, clone superficiel |
 | `store/` | `icon.png` (256×256), `short_description.{en,fr}.txt`, `description.{en,fr}.md`, `store.json`, `screenshots/` facultatif |
-| `.github/workflows/ci.yml` | CI : sous-module vérifié, README conforme à `store/` (`.github/scripts/store-readme.mjs --check`), build et tests en `Release` |
-| `.github/workflows/publish-to-kazoos-store.yml` | soumission au catalogue sur un tag `v*` |
-| `.github/workflows/tag-release.yml` | pose sur un commit de `main` le tag de la version du manifeste et lance les deux workflows ci-dessus (`workflow_dispatch`) |
+| `.github/workflows/ci.yml` | CI (push sur `main` et `beta`, pull requests) : sous-module vérifié, README conforme à `store/` (`.github/scripts/store-readme.mjs --check`), build et tests en `Release` |
+| `.github/workflows/publish-to-kazoos-store.yml` | soumission au catalogue sur un tag `v*` (canal stable ou bêta selon la version) |
+| `.github/workflows/tag-release.yml` | pose sur un commit de `main` (ou de `beta` pour une version bêta) le tag de la version du manifeste, puis publie (`workflow_dispatch`) |
 | `.github/workflows/publish-packages.yml` | paquet non signé poussé sur la branche `kazoos-packages` sur un tag `v*` ([ADR 0219](../dev/adr/0219-app-authors-signing-tool.md)) |
+| `.github/workflows/sdk-update.yml` | **Kazo OS SDK update** : passe l'app sur une nouvelle version de Kazo OS, la teste et la publie (voir [plus bas](#mise-à-jour-du-sdk-kazo-os)) |
+| `.github/scripts/` | `check-kazoos-submodule.sh`, `store-readme.mjs`, `bump-app-version.sh` (change `Version` de la classe `[AppManifest]` et de `manifest.json`) |
+
+Chaque fichier de `.github/workflows/` tient en quelques lignes : il appelle un
+[workflow réutilisable](#les-workflows-réutilisables) de
+`Kazo-ca/Os-AppTemplate`.
 | `README.md`, `readme-fr.md` | en haut, la fiche du Store de l'app (le texte de `store/description.{en,fr}.md` et les captures), une section « Essayer » et une courte présentation de Kazo OS avec le lien vers son dépôt ; puis ces étapes, pour le dépôt créé |
 
 ## La version de Kazo OS
@@ -182,6 +191,27 @@ gh secret set HACK_STORE_TOKEN --repo <propriétaire>/<dépôt>
 - Ce jeton ne signe rien : les apps sont signées seulement dans le dépôt du
   marketplace ([ADR 0219](../dev/adr/0219-app-authors-signing-tool.md)).
 
+### Canal bêta
+
+Une version d'app avec un suffixe (`1.2.1-beta.1`) est une version bêta
+([ADR 0271](../dev/adr/0271-beta-channel-and-automatic-app-updates.md) §5) :
+elle se publie depuis la branche `beta` de l'app (**Tag a release**, branche
+`beta`) et va dans la branche `beta` du catalogue, que seul un Kazo OS en
+préversion lit. `main` refuse une version avec suffixe, `beta` une version
+sans suffixe.
+
+### Le jeton de l'automate
+
+Pour les dépôts de `Kazo-ca`, les workflows utilisent la **GitHub App de
+l'organisation** ([ADR 0271](../dev/adr/0271-beta-channel-and-automatic-app-updates.md)
+§7, Q6) au lieu de `HACK_STORE_TOKEN` : deux secrets d'organisation,
+`KAZO_AUTOMATION_APP_ID` (l'identifiant de l'app) et `KAZO_AUTOMATION_APP_KEY`
+(sa clé privée), transmis par `secrets: inherit`. Avec eux, la pull request du
+catalogue part d'une branche `submit/<appId>_<version>` du catalogue lui-même,
+sans fork, et la mise à jour du SDK ouvre et fusionne ses pull requests. Sans
+eux, `HACK_STORE_TOKEN` (fork de l'auteur) puis l'artefact à soumettre à la
+main restent les chemins d'un dépôt tiers.
+
 ## Publier sur `kazoos-packages`
 
 [ADR 0219](../dev/adr/0219-app-authors-signing-tool.md) §4, sans signature
@@ -199,11 +229,89 @@ vérifie par leur SHA-256 et demande un administrateur pour une source non
 fiable (ADR 0208, ADR 0214 §2.4). Un dépôt d'app qui a encore un secret
 `HACKEROS_APP_SIGNING_KEY` (ADR 0219) peut le supprimer : plus rien ne le lit.
 
+## Mise à jour du SDK Kazo OS
+
+`sdk-update.yml` (« Kazo OS SDK update »,
+[ADR 0271](../dev/adr/0271-beta-channel-and-automatic-app-updates.md) §4)
+démarre quand Kazo OS annonce une version (`repository_dispatch` de type
+`kazoos-sdk-released`, charge `{ "version": "3.5.0-preview.1", "channel": "beta" }`,
+envoyé aux dépôts de `build/app-repositories.txt`), toutes les heures pour les
+autres dépôts, ou à la main (onglet Actions, version facultative, `force` pour
+refaire une version déjà traitée).
+
+1. Il cherche la version la plus récente parmi les tags du dépôt du
+   sous-module (ou celle demandée) et la compare à celle de `main` et de
+   `beta`. Une version stable passe avant une préversion.
+2. Il crée la branche `kazoos-sdk/<version de Kazo OS>` : le sous-module sur
+   le tag, et la version de l'app montée par `bump-app-version.sh`.
+   - **Version stable** : depuis `main` ; `x.y.z` devient `x.y.(z+1)`.
+   - **Préversion** : depuis `beta` (créée depuis `main` la première fois) ;
+     la version devient `x.y.(z+1)-beta.<n>`, où `x.y.z` est celle de `main`
+     et `<n>` suit les tags déjà posés. `beta` est refaite depuis `main` quand
+     elle ne contient que des commits de ce workflow ; sinon `main` y est
+     fusionnée, après avoir aligné la version et le sous-module de `beta` sur
+     ceux de `main` pour que ces lignes ne se contredisent pas.
+   La branche reste ensuite : elle marque la version comme traitée, la
+   vérification de l'heure suivante ne la refait pas.
+3. La CI de l'app (`kazoos-ci.yml`) tourne sur cette branche.
+4. Verte :
+   - **préversion** : `beta` avance sur la branche, le tag est posé et la
+     version est soumise au canal bêta du catalogue ;
+   - **mineure ou majeure stable** : pull request vers `main` fusionnée par
+     l'automate (Q5 = A), tag, publication (Q4 = B) ;
+   - **corrective stable** : la pull request est fermée une fois verte ;
+     l'app compile toujours, rien n'est publié.
+5. Rouge (ou `main` qui ne se fusionne pas dans `beta`) : une issue `TODO`
+   avec le lien de l'exécution ; rien n'est fusionné ni publié.
+
+Le dépôt de l'app n'a rien à régler quand les secrets de l'automate sont là.
+Sans eux, le jeton du workflow sert : il faut alors autoriser GitHub Actions à
+créer des pull requests (**Settings** ▸ **Actions** ▸ **General**), et une
+`main` protégée peut refuser la fusion (la pull request reste ouverte, avec un
+commentaire). La dernière étape d'une préversion attend la branche `beta` du
+catalogue (chantier 4 de la série `release-channels/base`).
+
+## Les workflows réutilisables
+
+Les workflows sont écrits une fois, dans
+[`Kazo-ca/Os-AppTemplate`](https://github.com/Kazo-ca/Os-AppTemplate)
+(`on: workflow_call`), et chaque dépôt d'app les appelle en une ligne
+([ADR 0271](../dev/adr/0271-beta-channel-and-automatic-app-updates.md) §7) :
+
+```yaml
+jobs:
+  build:
+    uses: Kazo-ca/Os-AppTemplate/.github/workflows/kazoos-ci.yml@v1
+```
+
+| Workflow réutilisable | Appelé par | Entrées |
+| --- | --- | --- |
+| `kazoos-ci.yml` | `ci.yml`, la mise à jour du SDK | `ref`, `solution`, `npm-test` (`npm ci` puis `npm test`), `e2e-test` (Playwright Chromium, `npm run test:e2e`), `timeout-minutes` |
+| `kazoos-publish-to-store.yml` | `publish-to-kazoos-store.yml`, `kazoos-tag-release.yml` | `app-directory`, `ref` ; sorties `pull-request`, `channel` |
+| `kazoos-publish-packages.yml` | `publish-packages.yml`, `kazoos-tag-release.yml` | `app-directory`, `ref` |
+| `kazoos-tag-release.yml` | `tag-release.yml`, la mise à jour du SDK | `app-directory`, `commit`, `branch` (`main` ou `beta`), `publish` |
+| `kazoos-sdk-update.yml` | `sdk-update.yml` | `app-directory`, `version`, `force` et les entrées de la CI |
+
+Seul le sous-module `external/KazoOs` est récupéré : un autre sous-module (les
+sources d'un moteur dont le build est versionné, comme les apps Craft) n'est
+pas nécessaire. Un dépôt dont la CI a des étapes propres (un build épinglé, par
+exemple) garde son workflow à côté de ces appels.
+
+Le tag `v1` de `Os-AppTemplate` désigne la dernière version compatible : il
+avance à chaque changement qui ne casse pas les appels ; un changement qui les
+casse prend `v2`. Les scripts (`.github/scripts/`) restent dans chaque dépôt :
+un auteur les lance aussi à la main.
+
 ## Le dépôt template GitHub
 
 [`Kazo-ca/Os-AppTemplate`](https://github.com/Kazo-ca/Os-AppTemplate)
-est la sortie de `dotnet new kazoos-solution -n Kazo.Os.App` plus le lien du
-sous-module. On le régénère depuis le modèle, jamais à la main. Il ne peut
+est la sortie de `dotnet new kazoos-solution -n Kazo.Os.App --templateRepository true`
+plus le lien du sous-module. On le régénère depuis le modèle, jamais à la main.
+`--templateRepository true` ajoute les workflows réutilisables (`kazoos-*.yml`)
+et fait appeler aux workflows du dépôt leur copie locale
+(`uses: ./.github/workflows/kazoos-ci.yml`) : une pull request du template se
+teste avant que `v1` avance. La mise à jour du SDK ne s'exécute pas dans ce
+dépôt, et un id d'app `com.example.*` ne se soumet pas au Store. Il ne peut
 fonctionner qu'avec un sous-module sur une release qui contient ce modèle
 (2.2.0 ou plus récente, ADR 0207 §11).
 
@@ -216,3 +324,5 @@ fonctionner qu'avec un sous-module sur une release qui contient ce modèle
 - [ ] Dépôt template régénéré sur la release qui contient ce modèle.
 - [x] Workflow `publish-packages.yml` et signature des paquets (ADR 0219).
 - [x] Signature retirée des dépôts d'apps et du modèle (ADR 0219).
+- [x] Workflows réutilisables, canal bêta, mise à jour du SDK et `bump-app-version.sh` (ADR 0271, chantier 5).
+- [ ] Tag `v1` de `Os-AppTemplate` posé après la fusion dans `main` (Benoit).

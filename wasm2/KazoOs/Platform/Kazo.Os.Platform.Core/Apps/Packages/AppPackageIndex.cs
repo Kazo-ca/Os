@@ -14,6 +14,15 @@ public sealed record AppPackageIndexEntry(SemanticVersion Version, string Path, 
     /// optional <c>signature</c> field (base64, ADR 0214 §2); <see langword="null"/> when unsigned.
     /// </summary>
     public byte[]? Signature { get; init; }
+
+    /// <summary>
+    /// Gets the oldest SDK the version runs on (<c>sdkCompatibility.minimumVersion</c> of a catalog,
+    /// ADR 0271 §6), or <see langword="null"/> when unknown: an <c>index.json</c> gives none.
+    /// </summary>
+    public string? MinimumSdkVersion { get; init; }
+
+    /// <summary>Gets the newest SDK the version runs on, or <see langword="null"/> when it has no upper bound or is unknown.</summary>
+    public string? MaximumSdkVersion { get; init; }
 }
 
 /// <summary>

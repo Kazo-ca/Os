@@ -91,7 +91,7 @@ internal sealed partial class AppManagementGateway
             parsed.Name,
             index.AppId,
             [.. index.Versions.Select(static entry => entry.Version.ToString())],
-            index.Latest?.Version.ToString(),
+            AppVersionChoice.Newest(index, packages.SdkVersion, current?.Version)?.Version.ToString() ?? index.Latest?.Version.ToString(),
             trust != AppSourceTrust.Untrusted,
             current?.Version?.ToString())
         {
