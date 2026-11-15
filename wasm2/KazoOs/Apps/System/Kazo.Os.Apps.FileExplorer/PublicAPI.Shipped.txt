@@ -1,4 +1,10 @@
 #nullable enable
+Kazo.Os.Apps.FileExplorer.ConnectNetworkDriveDialog
+Kazo.Os.Apps.FileExplorer.ConnectNetworkDriveDialog.Closed.get -> Microsoft.AspNetCore.Components.EventCallback
+Kazo.Os.Apps.FileExplorer.ConnectNetworkDriveDialog.Closed.set -> void
+Kazo.Os.Apps.FileExplorer.ConnectNetworkDriveDialog.ConnectNetworkDriveDialog() -> void
+Kazo.Os.Apps.FileExplorer.ConnectNetworkDriveDialog.Mounted.get -> Microsoft.AspNetCore.Components.EventCallback<Kazo.Os.AppSdk.IO.KazoDriveInfo!>
+Kazo.Os.Apps.FileExplorer.ConnectNetworkDriveDialog.Mounted.set -> void
 Kazo.Os.Apps.FileExplorer.ExplorerFileDialogs
 Kazo.Os.Apps.FileExplorer.ExplorerFileDialogs.Completed.get -> Microsoft.AspNetCore.Components.EventCallback<object?>
 Kazo.Os.Apps.FileExplorer.ExplorerFileDialogs.Completed.set -> void
@@ -466,6 +472,8 @@ Kazo.Os.Apps.FileExplorer.FileExplorerWindow.DisposeAsync() -> System.Threading.
 Kazo.Os.Apps.FileExplorer.FileExplorerWindow.FileExplorerWindow() -> void
 Kazo.Os.Apps.FileExplorer.FileExplorerWindow.NavigateForwardAsync(Kazo.Os.AppSdk.Blazor.AppForwardRequest! request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.Blazor.AppBackResult!>
 Kazo.Os.Apps.FileExplorer.NetworkDrivesSidebar
+Kazo.Os.Apps.FileExplorer.NetworkDrivesSidebar.Compact.get -> bool
+Kazo.Os.Apps.FileExplorer.NetworkDrivesSidebar.Compact.set -> void
 Kazo.Os.Apps.FileExplorer.NetworkDrivesSidebar.CurrentPath.get -> string?
 Kazo.Os.Apps.FileExplorer.NetworkDrivesSidebar.CurrentPath.set -> void
 Kazo.Os.Apps.FileExplorer.NetworkDrivesSidebar.Failed.get -> Microsoft.AspNetCore.Components.EventCallback<string!>
@@ -482,6 +490,8 @@ Kazo.Os.Apps.FileExplorer.TrashView.TrashView() -> void
 Kazo.Os.Apps.FileExplorer._Imports
 Kazo.Os.Apps.FileExplorer._Imports.Execute() -> void
 Kazo.Os.Apps.FileExplorer._Imports._Imports() -> void
+override Kazo.Os.Apps.FileExplorer.ConnectNetworkDriveDialog.OnAfterRenderAsync(bool firstRender) -> System.Threading.Tasks.Task!
+override Kazo.Os.Apps.FileExplorer.ConnectNetworkDriveDialog.OnInitializedAsync() -> System.Threading.Tasks.Task!
 override Kazo.Os.Apps.FileExplorer.FileControl.ContextMenu.FileViewContextMenuContext.Equals(object? obj) -> bool
 override Kazo.Os.Apps.FileExplorer.FileControl.ContextMenu.FileViewContextMenuContext.GetHashCode() -> int
 override Kazo.Os.Apps.FileExplorer.FileControl.ContextMenu.FileViewContextMenuContext.ToString() -> string!
@@ -545,6 +555,7 @@ static Kazo.Os.Apps.FileExplorer.FileControl.Icons.ShellIconDescriptor.operator 
 static Kazo.Os.Apps.FileExplorer.FileExplorerApp.RegisterFileContextMenu(Kazo.Os.AppSdk.Blazor.Files.RegisterFileContextMenuContext! context) -> void
 virtual Kazo.Os.Apps.FileExplorer.FileExplorerWindow.CanNavigateBack.get -> bool
 virtual Kazo.Os.Apps.FileExplorer.FileExplorerWindow.NavigateBackAsync(Kazo.Os.AppSdk.Blazor.AppBackRequest! request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.Blazor.AppBackResult!>
+~override Kazo.Os.Apps.FileExplorer.ConnectNetworkDriveDialog.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
 ~override Kazo.Os.Apps.FileExplorer.FileControl.FileView.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
 ~override Kazo.Os.Apps.FileExplorer.FileControl.FileViewBreadcrumb.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
 ~override Kazo.Os.Apps.FileExplorer.FileControl.FileViewContextMenu.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
