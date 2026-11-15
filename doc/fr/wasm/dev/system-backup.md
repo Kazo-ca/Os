@@ -68,7 +68,9 @@ L'archive, l'API du SDK et la capacité `system.backup` destinées aux apps sont
    clé `kazoos.backup.restore-record`), état `started` ;
 5. restauration en une transaction IndexedDB : **fusion** = `put` de chaque
    enregistrement de l'archive (même clé : écrasé ; le reste est gardé),
-   **remplacement** = `clear` de chaque magasin puis `put` ;
+   **remplacement** = `clear` de chaque magasin puis `put` ; `servedFiles`
+   (adresses servies des apps installées, ADR 0274) n'est pas dans l'archive :
+   un remplacement le vide et la publication suivante le reconstruit ;
 6. l'entrée passe à `success` ou `failure:<raison>` ;
 7. redémarrage de l'hôte (`location.reload`), même après un échec ;
 8. au démarrage suivant, `EcosystemBootCoordinator` écrit l'entrée gardée

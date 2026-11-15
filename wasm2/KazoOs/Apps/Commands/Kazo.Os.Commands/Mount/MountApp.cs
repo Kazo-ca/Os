@@ -25,16 +25,16 @@ public sealed class MountApp : AppDefinition
     public override string PublisherId => "pub.kazoos";
 
     /// <inheritdoc />
-    public override string Description => "Mount a folder of the computer as a network drive";
+    public override string Description => "Mount a folder of the computer or a cloud storage as a network drive";
 
     /// <inheritdoc />
     public override AppLaunchVisibility LaunchVisibility => AppLaunchVisibility.Hidden;
 
     /// <inheritdoc />
-    public override IReadOnlyList<string> Capabilities => [AppCapabilities.FileSystemSystemRead];
+    public override IReadOnlyList<string> Capabilities => [AppCapabilities.FileSystemSystemRead, AppCapabilities.CloudAccountsManage];
 
     /// <inheritdoc />
-    public override TerminalCommand? Terminal => new("mount", "mount [-l] | mount -t hostfs [/mnt/name] | mount -o remount /mnt/name");
+    public override TerminalCommand? Terminal => new("mount", "mount [-l] | mount -t hostfs|dropbox|onedrive|s3 [-o options] [/mnt/name] | mount -o remount /mnt/name");
 
     /// <inheritdoc />
     public override AppResourceProfileManifest Resources => new(

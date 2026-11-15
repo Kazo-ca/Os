@@ -51,6 +51,7 @@ public sealed class DoNotDisturbTests(ITestOutputHelper output)
             await passwordField.WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = StepTimeoutMs });
             await passwordField.FillAsync(E2ESupport.Password);
             await page.GetByRole(AriaRole.Button, new() { Name = "Start session" }).ClickAsync();
+            await E2ESupport.PassWelcomeAsync(page);
             await Assertions.Expect(moon).ToBeVisibleAsync(new() { Timeout = StepTimeoutMs });
             output.WriteLine("[test] the moon is back after a reload.");
 

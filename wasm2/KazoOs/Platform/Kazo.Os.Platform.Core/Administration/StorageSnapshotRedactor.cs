@@ -82,7 +82,12 @@ internal static class StorageSnapshotRedactor
                 && chunk["contentHash"]?.GetValue<string>() is { } hash
                 && secretHashes.Contains(hash))
             {
+                // ADR 0272 §5: a snapshot carries a chunk in base64; a binary `data` field is masked too.
                 chunk["dataBase64"] = MaskedData;
+                if (chunk.ContainsKey("data"))
+                {
+                    chunk["data"] = MaskedData;
+                }
             }
 
             masked.Add(node);

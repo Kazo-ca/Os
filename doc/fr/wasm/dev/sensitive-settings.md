@@ -96,7 +96,8 @@ await mail.SetSecretAsync("Account.password", null);          // efface l'entré
 `StorageSnapshotRedactor` masque, dans l'instantané de stockage de l'app
 Diagnostics (`AppStorageDiagnosticsGateway`), le contenu des fichiers
 `*.private.config` et de tout fichier sous `~/.local/share/keyrings/` : le
-morceau devient `[masked: ADR 0100]`. La synchronisation ne couvre que le
+morceau devient `[masked: ADR 0100]` (son `dataBase64`, ou ses `data` binaires
+depuis l'ADR 0272). La synchronisation ne couvre que le
 dossier personnel, donc le fichier privé de `/etc` (seul porteur des clés
 `Restricted`) n'est jamais synchronisé. La sauvegarde complète de l'ADR 0099,
 réservée à root, garde tout.
@@ -156,6 +157,9 @@ string? other = await KazoKeyring.GetAsync(AppContext, "org.example.mail", "imap
 
 - Une app ne voit que ses propres entrées. Lire celles d'une autre app ou tout
   lister demande `keyring.read-all` ; sans elle, `UnauthorizedAccessException`.
+- Les entrées du propriétaire `org.kazoos.cloud-accounts` (clés des jetons des
+  comptes cloud, [`cloud-accounts.md`](cloud-accounts.md)) sont réservées à
+  l'OS : aucune app ne les lit, même avec `keyring.read-all`.
 - Un trousseau verrouillé lève `KazoKeyringLockedException`.
 - Un identifiant fait au plus 256 caractères, sans caractère de contrôle.
 - Chaque méthode existe aussi sans contexte (contexte ambiant de l'ADR 0043).

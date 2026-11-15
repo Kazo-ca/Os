@@ -71,6 +71,12 @@ public sealed class EcosystemHostState
     /// <summary>Shows the login progress transition screen during session initialization.</summary>
     public void BeginLoginProgress() => View = EcosystemHostView.LoginProgress;
 
+    /// <summary>
+    /// Shows the welcome wizard (ADR 0276): the session is open, the desktop waits until the
+    /// wizard is finished or skipped.
+    /// </summary>
+    public void BeginWelcome() => View = EcosystemHostView.Welcome;
+
     /// <summary>Shows the desktop only after session activation succeeds.</summary>
     public void CompleteLogin() => View = EcosystemHostView.Desktop;
 
@@ -125,5 +131,7 @@ public enum EcosystemHostView
     /// <summary>A typed storage failure blocks ordinary startup.</summary>
     Recovery,
     /// <summary>An unexpected unrecoverable host failure occurred.</summary>
-    Fatal
+    Fatal,
+    /// <summary>An authenticated session chooses its language, theme, wallpaper and time zone before its first desktop (ADR 0276).</summary>
+    Welcome
 }

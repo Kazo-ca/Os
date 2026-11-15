@@ -12,6 +12,8 @@ Kazo.Os.Apps.Settings.AppSourcesPanel
 Kazo.Os.Apps.Settings.AppSourcesPanel.AppSourcesPanel() -> void
 Kazo.Os.Apps.Settings.BackupPanel
 Kazo.Os.Apps.Settings.BackupPanel.BackupPanel() -> void
+Kazo.Os.Apps.Settings.CloudAccountsPanel
+Kazo.Os.Apps.Settings.CloudAccountsPanel.CloudAccountsPanel() -> void
 Kazo.Os.Apps.Settings.CursorThemePanel
 Kazo.Os.Apps.Settings.CursorThemePanel.CursorThemePanel() -> void
 Kazo.Os.Apps.Settings.CursorThemePanel.DisposeAsync() -> System.Threading.Tasks.ValueTask
@@ -97,6 +99,7 @@ const Kazo.Os.Apps.Settings.SetWallpaperApp.SetWallpaperIntent = "org.kazoos.set
 const Kazo.Os.Apps.Settings.SetWallpaperApp.SingleEntry = "set-wallpaper" -> string!
 const Kazo.Os.Apps.Settings.SetWallpaperApp.SubmenuEntry = "set-wallpaper-on" -> string!
 override Kazo.Os.Apps.Settings.AppSourcesPanel.OnInitializedAsync() -> System.Threading.Tasks.Task!
+override Kazo.Os.Apps.Settings.CloudAccountsPanel.OnInitializedAsync() -> System.Threading.Tasks.Task!
 override Kazo.Os.Apps.Settings.InstalledAppsPanel.OnInitializedAsync() -> System.Threading.Tasks.Task!
 override Kazo.Os.Apps.Settings.PasskeysPanel.OnInitializedAsync() -> System.Threading.Tasks.Task!
 override Kazo.Os.Apps.Settings.SetWallpaperApp.Capabilities.get -> System.Collections.Generic.IReadOnlyList<string!>!
@@ -133,6 +136,7 @@ static Kazo.Os.Apps.Settings.SetWallpaperApp.RegisterFileContextMenu(Kazo.Os.App
 static readonly Kazo.Os.Apps.Settings.SetWallpaperApp.ImageTypes -> System.Collections.Generic.IReadOnlyList<string!>!
 ~override Kazo.Os.Apps.Settings.AppSourcesPanel.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
 ~override Kazo.Os.Apps.Settings.BackupPanel.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
+~override Kazo.Os.Apps.Settings.CloudAccountsPanel.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
 ~override Kazo.Os.Apps.Settings.InstalledAppsPanel.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
 ~override Kazo.Os.Apps.Settings.PasskeysPanel.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
 ~override Kazo.Os.Apps.Settings.SettingsWindow.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void

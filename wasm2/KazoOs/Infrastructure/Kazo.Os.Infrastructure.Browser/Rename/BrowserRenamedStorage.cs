@@ -119,7 +119,9 @@ internal sealed class BrowserRenamedStorage(IJSRuntime runtime) : IRenamedStorag
 
             if (change.Put is not null)
             {
-                operations.Add(new IndexedDbOperation("put", change.StoreName, Value: ToElement(change.Put)));
+                // ADR 0272 §5: a rewritten chunk (base64) is stored in its binary form.
+                bool chunk = StringComparer.Ordinal.Equals(change.StoreName, KazoOsIndexedDbSchema.FileContentStoreName);
+                operations.Add(new IndexedDbOperation("put", change.StoreName, Value: ToElement(change.Put), BinaryChunk: chunk ? true : null));
             }
         }
 

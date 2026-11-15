@@ -780,4 +780,10 @@ Annuler : décider au prochain lancement.</value>
   <data name="AppLink.Error.Generic" xml:space="preserve">
     <value>L'installation a échoué : {0}</value>
   </data>
+  <data name="Capability.cloud-accounts.manage.Title" xml:space="preserve">
+    <value>Gérer les comptes cloud</value>
+  </data>
+  <data name="Capability.cloud-accounts.manage.Risk" xml:space="preserve">
+    <value>Connecter ou retirer vos comptes Dropbox, OneDrive ou S3 et monter leur stockage comme lecteurs réseau.</value>
+  </data>
 </root>

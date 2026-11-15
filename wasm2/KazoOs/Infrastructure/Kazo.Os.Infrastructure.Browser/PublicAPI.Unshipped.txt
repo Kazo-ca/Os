@@ -1,7 +1,1 @@
 #nullable enable
-Kazo.Os.Infrastructure.Browser.FileSystem.IndexedDbFileSystemMaintenance.ReclaimAsync(bool lowSpace, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<long>
-Kazo.Os.Infrastructure.Browser.Schema.FileContentStoragePolicy.LowSpaceOrphanRetention.get -> System.TimeSpan
-Kazo.Os.Infrastructure.Browser.Schema.FileContentStoragePolicy.LowSpaceOrphanRetention.init -> void
-const Kazo.Os.Infrastructure.Browser.FileSystem.IndexedDbFileSystemMaintenance.HashesPerPass = 64 -> int
-const Kazo.Os.Infrastructure.Browser.FileSystem.IndexedDbFileSystemMaintenance.MaxPassesPerReclaim = 32 -> int
-static readonly Kazo.Os.Infrastructure.Browser.Schema.FileContentStoragePolicy.DefaultLowSpaceOrphanRetention -> System.TimeSpan

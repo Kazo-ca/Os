@@ -175,7 +175,8 @@ async function onFetch(event) {
 }
 
 async function fetchShellOrAsset(event) {
-    // ADR 0206: an installed app's file, copied by the OS, comes before the release cache.
+    // ADR 0206: an installed app's file, read from the OS's file system (ADR 0274), comes before
+    // the release cache.
     // ADR 0243: a page load (navigation) too, so an iframe pointed at an installed app's page
     // (_content/<assembly>/host/index.html?author=…) shows that page, not a second Kazo OS; the
     // query stays on the frame's address for the page to read. An address under _content/ that no
@@ -188,14 +189,21 @@ async function fetchShellOrAsset(event) {
     }
 
     // Cache-First strategy for static assets and HTML shell (P2-PWA-004)
+    // ADR 0267 §5: a page load of a page of the release (the cloud sign-in's callback page,
+    // _content/Kazo.Os.Infrastructure.Browser/oauth-callback.html?code=…&state=…) is that page,
+    // whatever its query, never a second Kazo OS.
+    const requestUrl = new URL(event.request.url);
+    const releasePageLoad = event.request.mode === 'navigate'
+        && manifestUrlList.some(url => url === requestUrl.origin + requestUrl.pathname);
     const shouldServeIndexHtml = event.request.mode === 'navigate'
+        && !releasePageLoad
         && !manifestUrlList.some(url => url === event.request.url);
 
     const request = shouldServeIndexHtml ? 'index.html' : event.request;
     const cache = await caches.open(cacheName);
     // A Web Worker's script carries its id in the query (?kazoos-worker=N, ADR 0131 §4, memory
-    // attribution): it is the same cached file.
-    const ignoreSearch = !shouldServeIndexHtml && new URL(event.request.url).searchParams.has('kazoos-worker');
+    // attribution): it is the same cached file. So is a release page loaded with a query.
+    const ignoreSearch = !shouldServeIndexHtml && (releasePageLoad || requestUrl.searchParams.has('kazoos-worker'));
     const cachedResponse = await cache.match(request, { ignoreSearch });
 
     if (cachedResponse) {

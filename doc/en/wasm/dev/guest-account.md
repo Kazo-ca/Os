@@ -12,8 +12,10 @@ then create your own account, keeping the guest's work or not. Decision:
 ## For the user
 
 1. **First start.** Under the form that creates the first account, the
-   **Start as a Guest** button opens the desktop at once. It is offered only
-   while no account exists yet.
+   **Start as a Guest** button opens the session at once, with no password.
+   It is offered only while no account exists yet. As for every account, the
+   first session goes through the [welcome wizard](welcome-wizard.md), which
+   can be skipped.
 2. **Later visits.** While the guest is the only account, the sign-in screen
    shows "Guest" with **Continue as Guest** (no password) and the **Create my
    account** link.

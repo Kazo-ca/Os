@@ -24,6 +24,19 @@ public sealed class EcosystemHostStateTests
     }
 
     [Fact]
+    public void The_welcome_wizard_stands_between_the_sign_in_and_the_desktop()
+    {
+        EcosystemHostState state = new();
+        state.CompleteIdentityLoad([CreateUser("admin")]);
+
+        state.BeginWelcome();
+        Assert.Equal(EcosystemHostView.Welcome, state.View);
+
+        state.CompleteLogin();
+        Assert.Equal(EcosystemHostView.Desktop, state.View);
+    }
+
+    [Fact]
     public void A_pending_app_launch_link_is_taken_once()
     {
         EcosystemHostState state = new();

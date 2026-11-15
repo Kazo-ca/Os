@@ -11,11 +11,15 @@ namespace Kazo.Os.Commands.Df;
 /// <summary>
 /// <c>df [-h] [-k] [-T] [-a]</c> (ADR 0064): space of the mounted disks from
 /// <see cref="KazoDriveInfo"/> (the IndexedDB disk <c>/dev/hda</c> on <c>/</c>, ADR 0057), in
-/// 1K-blocks or human-readable sizes, and the network drives of ADR 0181 (<c>host:&lt;folder&gt;</c>, no size); <c>-a</c> also lists the pseudo filesystems of
+/// 1K-blocks or human-readable sizes, and the network drives of ADR 0181 (<c>host:&lt;folder&gt;</c>, no size) and ADR 0267
+/// (<c>&lt;type&gt;:&lt;account&gt;</c>, with the service's quota when it has one); <c>-a</c> also lists the pseudo filesystems of
 /// <c>/proc/mounts</c> (<c>proc</c>, <c>devtmpfs</c>) with no blocks, as Linux does.
 /// </summary>
 public sealed class DfCommand(AppManifest manifest) : TerminalAppBase(manifest)
 {
+    /// <summary>Filesystem type of a folder of the computer (ADR 0181).</summary>
+    private const string HostFolderType = "hostfs";
+
     /// <inheritdoc />
     public override async ValueTask<int> ExecuteAsync(TerminalExecutionContext context, CancellationToken cancellationToken)
     {
@@ -68,8 +72,21 @@ public sealed class DfCommand(AppManifest manifest) : TerminalAppBase(manifest)
             string percent = drive.TotalSize == 0 ? "-" : $"{(int)Math.Ceiling(used * 100.0 / drive.TotalSize)}%";
             if (drive.DriveType == KazoDriveType.Network)
             {
-                // ADR 0181: the browser gives neither the size nor the free space of a host folder.
-                rows.Add(["host:" + drive.VolumeLabel, drive.DriveFormat, "-", "-", "-", "-", drive.Name]);
+                // ADR 0181: host:<folder>; ADR 0267 §3: <type>:<account> for a cloud drive.
+                string source = (drive.DriveFormat == HostFolderType ? "host" : drive.DriveFormat) + ":" + drive.VolumeLabel;
+                if (drive.TotalSize == 0)
+                {
+                    // The browser gives neither the size nor the free space of a host folder, nor
+                    // does a cloud service without a quota (S3) or a disconnected drive.
+                    rows.Add([source, drive.DriveFormat, "-", "-", "-", "-", drive.Name]);
+                    continue;
+                }
+
+                rows.Add(
+                [
+                    source, drive.DriveFormat, Size(drive.TotalSize, human), Size(used, human),
+                    Size(drive.AvailableFreeSpace, human), percent, drive.Name
+                ]);
                 continue;
             }
 

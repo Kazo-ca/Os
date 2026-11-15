@@ -45,6 +45,7 @@ classification.
 | `shell.control` | normal (ADR 0051: acts only on the shell of the user who typed the command, see [`shell-commands.md`](../dev/shell-commands.md)) |
 | `screens.manage` | normal (ADR 0184: list, open, restore, close and identify screens through `KazoScreens`, as Settings ▸ Screens does; each call comes from a user click) |
 | `shell.context-menu` | normal (ADR 0151 §6: add entries to file menus; without it, the generator produces `KOSAPP0027` and the OS ignores the entries, see [`context-menu.md`](context-menu.md#app-entries-in-the-file-menus-work-item-4)) |
+| `cloud-accounts.manage` | **dangerous** (`KazoCloudAccounts` and mounting a cloud drive through `KazoDriveInfo.MountNetworkDriveAsync`, ADR 0270; declared by File Explorer, Settings and `mount`) |
 | `permissions.manage` | **dangerous** (`KazoPermissionAdministration`, ADR 0056 §9; declared by Settings) |
 | `server.connection.manage` | **dangerous** (`KazoServerConnection`, ADR 0056 §10; declared by Settings) |
 | `system.power` | **dangerous** (`KazoSystem`: restart, reset, ADR 0056 §11; declared by Settings) |
@@ -74,7 +75,7 @@ file operation asks for, before the permission bits:
 | `~/.config/<appId>/` (its settings, ADR 0044) | `filesystem.private.read` | `filesystem.private.write` |
 | `/etc/<appId>/` | `filesystem.private.read` | `filesystem.system.write` (and administrator authority) |
 | `/home/<user>/` of the acting user | `filesystem.user-home.read` | `filesystem.user-home.write` |
-| a network drive (`hostfs`, ADR 0181) mounted by the acting user ([ADR 0231](../dev/adr/0231-network-drives-count-as-personal-files.md)) | `filesystem.user-home.read` | `filesystem.user-home.write` |
+| a network drive (`hostfs`, ADR 0181, or cloud, [ADR 0267](../dev/adr/0267-cloud-drives-as-network-drives.md)) mounted by the acting user ([ADR 0231](../dev/adr/0231-network-drives-count-as-personal-files.md)) | `filesystem.user-home.read` | `filesystem.user-home.write` |
 | everything else: `/mnt` itself, another user's drive, `/etc`, `/var`… | `filesystem.system.read` | `filesystem.system.write` |
 
 On their own network drive, an app that holds only `filesystem.system.*`

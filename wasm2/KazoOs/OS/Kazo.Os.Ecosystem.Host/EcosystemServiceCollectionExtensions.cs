@@ -1,6 +1,7 @@
 using Kazo.Os.App.Abstractions;
 using Kazo.Os.App.Abstractions.Policy;
 using Kazo.Os.Infrastructure.Browser.Catalog;
+using Kazo.Os.Infrastructure.Browser.CloudAccounts;
 using Kazo.Os.Infrastructure.Browser.FileSystem;
 using Kazo.Os.Infrastructure.Browser.Interop;
 using Kazo.Os.Infrastructure.Browser.Policy;
@@ -11,6 +12,9 @@ using Kazo.Os.Infrastructure.Browser.Sync;
 using Kazo.Os.Platform.Core.ServerConnection;
 using Kazo.Os.Ecosystem.Administration;
 using Kazo.Os.Platform.Core.Administration;
+using Kazo.Os.Platform.Core.CloudAccounts;
+using Kazo.Os.Platform.Core.CloudDrives.Dropbox;
+using Kazo.Os.Platform.Core.CloudDrives.OneDrive;
 using Kazo.Os.Platform.Core.Power;
 using Kazo.Os.Platform.Core.Backup;
 using Kazo.Os.Platform.Core.Storage;
@@ -19,6 +23,7 @@ using Kazo.Os.Platform.Core.Apps;
 using Kazo.Os.Platform.Core.Apps.Packages;
 using Kazo.Os.Platform.Core;
 using Kazo.Os.Platform.WorkerHost.Host;
+using Kazo.Os.Simulation.Abstractions.CloudAccounts;
 using Kazo.Os.Simulation.Abstractions.Workers;
 using Kazo.Os.Platform.Core.Diagnostics;
 using Kazo.Os.Platform.Core.Discovery;
@@ -272,9 +277,14 @@ public static class EcosystemServiceCollectionExtensions
         services.AddScoped<IDynamicFileSystemMountRouter>(provider => provider.GetRequiredService<FileSystemMountRouter>());
         services.AddScoped<IHostFolderAccess>(provider =>
             new BrowserHostFolderAccess(provider.GetRequiredService<Microsoft.JSInterop.IJSRuntime>()));
+        // ADR 0267 §3: the folders of the computer (hostfs) and every other drive source registered
+        // as INetworkDriveSource (the cloud connectors).
         services.AddScoped<NetworkDriveService>(provider => new NetworkDriveService(
             provider.GetRequiredService<IDynamicFileSystemMountRouter>(),
-            provider.GetRequiredService<IHostFolderAccess>(),
+            [
+                new HostFolderDriveSource(provider.GetRequiredService<IHostFolderAccess>()),
+                .. provider.GetServices<INetworkDriveSource>()
+            ],
             () => provider.GetRequiredService<ISessionService>().CurrentPrincipal,
             provider.GetService<IEventBus>(),
             logger: provider.GetService<ILogger<NetworkDriveService>>()));
@@ -535,6 +545,49 @@ public static class EcosystemServiceCollectionExtensions
             provider.GetRequiredService<IKeyringCipher>(),
             provider.GetRequiredService<IAuditLog>(),
             provider.GetService<ILogger<UserKeyringService>>()));
+
+        // Cloud accounts (ADR 0267 §5): OAuth with PKCE in a pop-up window that returns to the static
+        // oauth-callback.html of Infrastructure.Browser, tokens sealed on the device under a key of
+        // the keyring above. Nothing is offered until KazoOs:CloudDrives has app ids.
+        services.TryAddScoped<IOAuthAuthorizationWindow>(provider => new BrowserOAuthAuthorizationWindow(
+            provider.GetRequiredService<IJSRuntime>(),
+            new Uri(provider.GetRequiredService<Microsoft.AspNetCore.Components.NavigationManager>().BaseUri)));
+        services.TryAddScoped<ICloudProviderCatalog>(provider => new CloudProviderCatalog(
+            provider.GetService<CloudProviderSettings>() ?? CloudProviderSettings.None,
+            provider.GetRequiredService<IOsSettingsService>()));
+        services.AddScoped<CloudAccountService>(provider => new CloudAccountService(
+            provider.GetRequiredService<IFileSystemService>(),
+            provider.GetRequiredService<ISimulationClock>(),
+            provider.GetRequiredService<UserKeyringService>(),
+            provider.GetRequiredService<IKeyringCipher>(),
+            provider.GetRequiredService<ICloudProviderCatalog>(),
+            provider.GetRequiredService<IOAuthAuthorizationWindow>(),
+            new CloudOAuthTokenClient(new HttpClient()),
+            () => provider.GetRequiredService<ISessionService>().CurrentPrincipal,
+            drives: () => provider.GetService<NetworkDriveService>(),
+            provider.GetService<IEventBus>(),
+            logger: provider.GetService<ILogger<CloudAccountService>>()));
+        // ADR 0267 §6: the Dropbox connector, a drive source of the network drive service. It is
+        // offered only when KazoOs:CloudDrives (or /etc/kazoos/cloud-drives.config) has a Dropbox app key.
+        services.AddScoped<INetworkDriveSource>(provider => new DropboxDriveSource(
+            provider.GetRequiredService<CloudAccountService>(),
+            provider.GetRequiredService<ICloudProviderCatalog>(),
+            new HttpClient(),
+            provider.GetService<IHostActivitySignal>()));
+        // ADR 0267 §6: OneDrive drives over Microsoft Graph, offered when OneDrive has an app id.
+        services.AddScoped<INetworkDriveSource>(provider => new OneDriveDriveSource(
+            provider.GetRequiredService<CloudAccountService>(),
+            provider.GetRequiredService<ICloudProviderCatalog>(),
+            new HttpClient(),
+            provider.GetService<IHostActivitySignal>()));
+        // ADR 0267 §6: buckets of S3 compatible services, signed with SigV4 in the OS; the service
+        // and the keys are an s3 cloud account above. Drives mount through NetworkDriveService.
+        services.AddScoped<INetworkDriveSource>(provider => new Kazo.Os.Platform.Core.CloudDrives.S3.S3DriveSource(
+            provider.GetRequiredService<CloudAccountService>(),
+            new HttpClient(),
+            provider.GetService<IEventBus>(),
+            provider.GetService<IHostActivitySignal>(),
+            logger: provider.GetService<ILogger<Kazo.Os.Platform.Core.CloudDrives.S3.S3DriveSource>>()));
 
         // passwd and the Settings "Users" tab (ADR 0120): new credentials hashed through Web Crypto
         // like at login, the login keyring re-sealed or set aside, every attempt in auth.log.
@@ -910,6 +963,8 @@ public static class EcosystemServiceCollectionExtensions
                 Passkeys = () => provider.GetRequiredService<PasskeyService>(),
                 // ADR 0187: the guest's "Create my account", shown by the host.
                 GuestRequests = () => provider.GetRequiredService<GuestAccountRequests>(),
+                // KazoCloudAccounts (ADR 0270): Explorer and Settings connect and remove cloud accounts.
+                CloudAccounts = () => provider.GetRequiredService<Kazo.Os.Platform.Core.CloudAccounts.CloudAccountService>(),
                 // KazoComponentProviders (ADR 0156): a third-party provider goes through the approval window.
                 ComponentProviders = () => provider.GetRequiredService<Kazo.Os.Platform.Core.ComponentProviders.ComponentProviderService>(),
                 ApprovalPrompt = () => provider.GetRequiredService<IDangerousCapabilityApprovalPrompt>(),
@@ -1102,6 +1157,17 @@ public static class EcosystemServiceCollectionExtensions
             provider.GetRequiredService<INotificationQueue>(),
             () => provider.GetRequiredService<ISessionService>().CurrentPrincipal,
             () => provider.GetRequiredService<Kazo.Os.Platform.Core.Globalization.SessionLocaleService>().Culture));
+        // ADR 0276: the welcome wizard's state and writes. Its language applies in the session:
+        // the login environment is read again, then the shell takes the session's locale.
+        services.AddScoped(provider => new Kazo.Os.Platform.Core.Welcome.WelcomeSetupService(
+            provider.GetRequiredService<IOsSettingsService>(),
+            async (principal, cancellationToken) =>
+            {
+                await provider.GetRequiredService<LoginEnvironmentProvider>().ReloadAsync(principal, cancellationToken);
+                await provider.GetRequiredService<Kazo.Os.Platform.Core.Globalization.SessionLocaleService>()
+                    .UseSessionLocaleAsync(principal, cancellationToken);
+            },
+            provider.GetService<ILogger<Kazo.Os.Platform.Core.Welcome.WelcomeSetupService>>()));
         // ADR 0258 §3: the direct link ?autolaunch=<appId> installs the app of the official
         // catalog for the guest and launches it; the host calls it once the guest session is open,
         // the desktop shows its progress window. The install goes through the same management
