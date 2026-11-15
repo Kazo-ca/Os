@@ -69,9 +69,25 @@ internal static class PwaTestSupport
         await page.GetByLabel("Password", new() { Exact = true }).FillAsync(Password);
         await page.GetByLabel("Confirm password").FillAsync(Password);
         await page.GetByRole(AriaRole.Button, new() { Name = "Create local profile" }).ClickAsync();
+        await PassWelcomeAsync(page, 20000);
 
         await page.GetByRole(AriaRole.Button, new() { Name = "App launcher" })
             .WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 20000 });
+    }
+
+    /// <summary>
+    /// Passes the welcome wizard (ADR 0276) when the sign-in shows it: an account sees it once, so the
+    /// test clicks « Skip » and goes on to the desktop. Does nothing when the desktop opens directly.
+    /// </summary>
+    private static async Task PassWelcomeAsync(IPage page, float timeoutMs)
+    {
+        ILocator skip = page.Locator(".welcome-skip");
+        ILocator shell = page.Locator(".desktop-shell, .mobile-shell");
+        await skip.Or(shell).First.WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = timeoutMs });
+        if (await skip.IsVisibleAsync())
+        {
+            await skip.ClickAsync();
+        }
     }
 
     /// <summary>
@@ -86,6 +102,7 @@ internal static class PwaTestSupport
         await passwordField.WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 20000 });
         await passwordField.FillAsync(Password);
         await page.GetByRole(AriaRole.Button, new() { Name = "Start session" }).ClickAsync();
+        await PassWelcomeAsync(page, 20000);
         await page.GetByRole(AriaRole.Button, new() { Name = "App launcher" })
             .WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 20000 });
     }

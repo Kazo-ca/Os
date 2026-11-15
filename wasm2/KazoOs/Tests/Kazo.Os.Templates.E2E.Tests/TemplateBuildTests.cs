@@ -142,6 +142,7 @@ public sealed class TemplateBuildTests(TemplateWorkspace workspace)
             await inputs.Nth(2).FillAsync("matrix123");
             await inputs.Nth(3).FillAsync("matrix123");
             await page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Create local profile" }).ClickAsync();
+            await PassWelcomeAsync(page);
 
             // The generated window app, lazy-loaded from its project reference.
             await page.GetByText("Applications", new PageGetByTextOptions { Exact = true }).ClickAsync(new LocatorClickOptions { Timeout = 60_000 });
@@ -220,6 +221,7 @@ public sealed class TemplateBuildTests(TemplateWorkspace workspace)
             await inputs.Nth(2).FillAsync("matrix123");
             await inputs.Nth(3).FillAsync("matrix123");
             await page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Create local profile" }).ClickAsync();
+            await PassWelcomeAsync(page);
 
             // The window app of SDK 3.0.0, lazy-loaded from its package, shows the OS file control
             // (KazoFileView, provided by the File Explorer).
@@ -240,6 +242,21 @@ public sealed class TemplateBuildTests(TemplateWorkspace workspace)
         finally
         {
             server.Kill(entireProcessTree: true);
+        }
+    }
+
+    /// <summary>
+    /// Passes the welcome wizard (ADR 0276) when the generated host shows it after the profile is
+    /// created: the test clicks « Skip » and goes on to the desktop.
+    /// </summary>
+    private static async Task PassWelcomeAsync(IPage page)
+    {
+        ILocator skip = page.Locator(".welcome-skip");
+        ILocator shell = page.Locator(".desktop-shell, .mobile-shell");
+        await skip.Or(shell).First.WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 60_000 });
+        if (await skip.IsVisibleAsync())
+        {
+            await skip.ClickAsync();
         }
     }
 

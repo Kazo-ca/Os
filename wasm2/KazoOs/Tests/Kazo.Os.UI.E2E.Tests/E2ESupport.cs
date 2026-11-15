@@ -155,10 +155,29 @@ internal static class E2ESupport
 
         await page.GetByRole(AriaRole.Button, new() { Name = "Create local profile" }).ClickAsync();
         output.WriteLine("[harness] submitted local-profile onboarding form.");
+        await PassWelcomeAsync(page);
 
         ILocator appLauncherBtn = page.GetByRole(AriaRole.Button, new() { Name = "App launcher" });
         await appLauncherBtn.WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 15000 });
         output.WriteLine("[harness] desktop is ready (App launcher visible).");
+    }
+
+    /// <summary>
+    /// Passes the welcome wizard (ADR 0276) when the sign-in shows it: an account sees it once per
+    /// form factor, so a test that signs in clicks « Skip » and goes on to the desktop. Does nothing
+    /// when the session opens straight on the shell. The selectors are classes, so this works in
+    /// every language.
+    /// </summary>
+    public static async Task PassWelcomeAsync(IPage page, float timeoutMs = 60000)
+    {
+        ILocator skip = page.Locator(".welcome-skip");
+        ILocator shell = page.Locator(".desktop-shell, .mobile-shell");
+        await skip.Or(shell).First.WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = timeoutMs });
+        if (await skip.IsVisibleAsync())
+        {
+            await skip.ClickAsync();
+            await shell.First.WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = timeoutMs });
+        }
     }
 
     /// <summary>Opens an app from the App Launcher by its display name and waits briefly for its window to mount.</summary>

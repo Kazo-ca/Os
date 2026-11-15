@@ -64,6 +64,7 @@ public sealed class PasswdTerminalTests(ITestOutputHelper output)
 
             await password.FillAsync(NewPassword);
             await page.GetByRole(AriaRole.Button, new() { Name = "Start session", Exact = true }).ClickAsync();
+            await E2ESupport.PassWelcomeAsync(page);
             await page.GetByRole(AriaRole.Button, new() { Name = "App launcher" })
                 .WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 60000 });
             output.WriteLine("[test] the old password is refused and the new one signs in.");

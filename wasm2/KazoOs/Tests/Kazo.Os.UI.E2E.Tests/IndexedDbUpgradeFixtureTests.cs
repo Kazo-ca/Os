@@ -226,6 +226,7 @@ public sealed partial class IndexedDbUpgradeFixtureTests(ITestOutputHelper outpu
             await user.SelectOptionAsync(loginName);
             await page.GetByLabel("Password").FillAsync(password);
             await page.GetByRole(AriaRole.Button, new() { Name = "Start session" }).ClickAsync();
+            await E2ESupport.PassWelcomeAsync(page);
             await page.GetByRole(AriaRole.Button, new() { Name = "App launcher" }).WaitForAsync(
                 new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 60_000 });
             output.WriteLine($"[test] signed in as '{loginName}' with the fixture password.");

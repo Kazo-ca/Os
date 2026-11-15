@@ -66,6 +66,7 @@ public sealed class ClockPanelMobileToggleTests(ITestOutputHelper output)
             await passwordField.WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 20000 });
             await passwordField.FillAsync(E2ESupport.Password);
             await page.GetByRole(AriaRole.Button, new() { Name = "Start session" }).ClickAsync();
+            await E2ESupport.PassWelcomeAsync(page);
 
             // The persisted Mobile preference now drives the actual shell (MOB-008): the Desktop
             // taskbar/App launcher is gone, replaced by the Mobile system navigation bar.

@@ -80,6 +80,7 @@ public sealed class LowStorageSpaceTests(ITestOutputHelper output)
             await passwordField.WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30000 });
             await passwordField.FillAsync(E2ESupport.Password);
             await page.GetByRole(AriaRole.Button, new() { Name = "Start session" }).ClickAsync();
+            await E2ESupport.PassWelcomeAsync(page);
             await clockButton.WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30000 });
             output.WriteLine("[test] signed in again inside the root reserve.");
         }
