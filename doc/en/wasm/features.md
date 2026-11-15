@@ -443,6 +443,9 @@ This section lists what is released in the `main` branch and online.
 - **Browser tests every night**: the Playwright suites run at night on `main`
   when it changed; a failure opens an issue.
   ([`ci-workflows.md`](dev/ci-workflows.md#browser-tests-every-night))
+- **Installable features ("Feature" app type)**: an optional feature of the OS installed for the whole machine by an administrator, with its child entry points. ([ADR 0260](dev/adr/0260-feature-app-type.md), [`app-installation.md`](dev/app-installation.md#features-adr-0260))
+- **App libraries and shared versions**: a package carries the app's libraries, and a shared library (`KazoOsSharedLibrary`) is loaded once, in its newest compatible version. ([ADR 0261](dev/adr/0261-app-libraries-and-shared-versions.md), [ADR 0256](dev/adr/0256-app-libraries-implementation-adjustments.md))
+- **Feature services**: an app asks for an interface a Feature provides with `KazoFeatures.GetServiceAsync<T>()`, with no dependency in its binary. ([ADR 0262](dev/adr/0262-feature-service-registry-and-async-resolution.md), [`feature-services.md`](framework/feature-services.md))
 
 ## In development
 
@@ -488,9 +491,6 @@ one row per ADR).
 
 | Feature | Description | ADR | Issue |
 | --- | --- | --- | --- |
-| “Feature” app type | An optional OS feature (WSL-like) installed system-wide by an administrator: one identity, child entry points (command, windows, pages), permissions as a block. Code shipped by work item `feature/14` (`FeatureDefinition`, multi-manifest package, catalog, `kazopkg`, Store and `kind: feature` in `catalog.json`, Settings ▸ Applications; [`app-installation.md`](dev/app-installation.md#features-adr-0260)). | [0260](dev/adr/0260-feature-app-type.md) | — |
-| App libraries and shared versions | A package carries the app's own libraries (#419); one copy of a shared library (a Feature's contracts) is loaded per page, the most recent compatible one. Code delivered by work item `feature/15` (`KazoOsPack` and `libraries` in `kazoos-package.json`, the `KazoOsSharedLibrary` property, the `library-reserved` and `library-major-mismatch` refusals, loading before the app, "Restart to finish" when another copy is already loaded; [`app-installation.md`](dev/app-installation.md#app-libraries-and-shared-versions-adr-0261)). | [0261](dev/adr/0261-app-libraries-and-shared-versions.md), [0256](dev/adr/0256-app-libraries-implementation-adjustments.md) | — |
-| Service registry and asynchronous resolution | An app asks the OS for the interface a Feature provides, without a binary dependency; null when the Feature is absent. Code delivered by work item `feature/16` (`ProvidedServices`, `KazoFeatures.GetServiceAsync<T>()`, `IsAvailable`, `GetStatusAsync`, `Changed`, the Feature's context as `kazoos-svc`, an optional dependency out of range kept in the catalog; [`feature-services.md`](framework/feature-services.md)). | [0262](dev/adr/0262-feature-service-registry-and-async-resolution.md) | — |
 | Permissions declared by a Feature | A Feature declares its own permissions, dangerous ones included; they follow the rules of the OS catalog and are never granted silently. | [0246](dev/adr/0246-provider-declared-permissions.md) | — |
 | Roles declared by a Feature | A Feature declares roles an administrator assigns; every sensitive operation goes through the OS authentication. | [0247](dev/adr/0247-feature-declared-roles.md) | — |
 | Dependency resolution | The Store and `kazopkg` install the dependencies declared in the manifest, with one consent; removing a package warns and disables the dependent apps. | [0248](dev/adr/0248-store-and-kazopkg-dependency-resolution.md) | — |
