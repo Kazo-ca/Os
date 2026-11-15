@@ -4,7 +4,7 @@
 
 ## Statut
 
-Proposée le 2026-11-15. Benoit a décidé le 2026-11-14 que la rétention est
+Acceptée le 2026-11-15. Benoit a décidé le 2026-11-14 que la rétention est
 courte (de quelques heures à un jour) et que le contenu orphelin part tout de
 suite quand l'espace est faible. Le 2026-11-15, dans le fil de l'issue #537,
 il a fixé les deux durées : **1 jour**, et 5 minutes quand l'espace est
@@ -114,8 +114,9 @@ passe vérifie les deux.
 - Aucun changement de format : `createdUtcMs` existe déjà. Un bloc ancien sans
   horodatage est traité comme assez vieux, puisque la garantie 1 le protège
   s'il est référencé.
-- La passe de nettoyage devient le lieu de la conversion en binaire
-  ([ADR 0272](0272-binary-file-content.md) §3).
+- La passe tourne une fois avant la conversion en binaire du premier
+  démarrage ([ADR 0272](0272-binary-file-content.md) §3), pour ne pas
+  convertir un contenu qui va partir.
 - La page Réglages ▸ Stockage de l'ADR 0250 (série `feature/base`) pourra
   montrer l'espace récupérable et lancer la passe ; ce n'est pas dans cette
   ADR.
