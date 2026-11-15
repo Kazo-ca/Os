@@ -12,8 +12,15 @@ at the end of each series or when a convention changes.
 - **Active code**: `wasm2/KazoOs/` (simulated OS in Blazor WebAssembly, .NET 10,
   solution `Kazo.Os.sln`). `src/` is the old version, kept as a
   reference.
-- **Version**: Kazo OS and the SDK move to **3.3.4** (branch `release/3.3.4`,
-  2026-11-13). Benoit chose a patch number although the public API grows
+- **Version**: Kazo OS and the SDK move to the stable **3.4.0** (branch
+  `release/3.4.0`, 2026-11-15), after the prereleases 3.4.0-preview.1 to 4
+  published from `beta`. Content: beta channel and app updates (ADR 0271),
+  feature apps, libraries and services (ADR 0260 to 0262), cloud drives
+  (ADR 0267, 0269, 0270), the Store in Quick access (ADR 0268), lighter
+  storage (ADR 0272 to 0275) and the welcome wizard (ADR 0276). Public API
+  folded into `PublicAPI.Shipped.txt`, `changes/3.4.0.json`; published when
+  the PR lands in `main`, then each app receives its SDK update.
+- **Version 3.3.4** (2026-11-13, published). Benoit chose a patch number although the public API grows
   (like 3.3.3). Content: a Craft app's exports reach its window (ADR 0264,
   series `craft-exports/base`, for Kazo Pdf), the direct link survives the
   restart for an update (ADR 0265, series `app-link-reload/base`) and the new

@@ -176,6 +176,7 @@ Kazo.Os.App.Abstractions.AppIntentRequest.RequestId.init -> void
 Kazo.Os.App.Abstractions.AppIntentRequest.UserId.get -> string!
 Kazo.Os.App.Abstractions.AppIntentRequest.UserId.init -> void
 Kazo.Os.App.Abstractions.AppKind
+Kazo.Os.App.Abstractions.AppKind.Feature = 4 -> Kazo.Os.App.Abstractions.AppKind
 Kazo.Os.App.Abstractions.AppKind.Service = 2 -> Kazo.Os.App.Abstractions.AppKind
 Kazo.Os.App.Abstractions.AppKind.Terminal = 1 -> Kazo.Os.App.Abstractions.AppKind
 Kazo.Os.App.Abstractions.AppKind.Web = 3 -> Kazo.Os.App.Abstractions.AppKind
@@ -223,10 +224,14 @@ Kazo.Os.App.Abstractions.AppManifest.OomScoreAdj.get -> int?
 Kazo.Os.App.Abstractions.AppManifest.OomScoreAdj.init -> void
 Kazo.Os.App.Abstractions.AppManifest.OsCompatibility.get -> Kazo.Os.App.Abstractions.OsCompatibilityManifest?
 Kazo.Os.App.Abstractions.AppManifest.OsCompatibility.init -> void
+Kazo.Os.App.Abstractions.AppManifest.Parent.get -> string?
+Kazo.Os.App.Abstractions.AppManifest.Parent.init -> void
 Kazo.Os.App.Abstractions.AppManifest.Platform.get -> Kazo.Os.App.Abstractions.AppManifestPlatform?
 Kazo.Os.App.Abstractions.AppManifest.Platform.init -> void
 Kazo.Os.App.Abstractions.AppManifest.Presentation.get -> Kazo.Os.App.Abstractions.PresentationManifest!
 Kazo.Os.App.Abstractions.AppManifest.Presentation.init -> void
+Kazo.Os.App.Abstractions.AppManifest.ProvidedServices.get -> System.Collections.Generic.IReadOnlyList<Kazo.Os.App.Abstractions.AppProvidedServiceManifest!>?
+Kazo.Os.App.Abstractions.AppManifest.ProvidedServices.init -> void
 Kazo.Os.App.Abstractions.AppManifest.PublisherId.get -> string!
 Kazo.Os.App.Abstractions.AppManifest.PublisherId.init -> void
 Kazo.Os.App.Abstractions.AppManifest.RealNetworkPorts.get -> System.Collections.Generic.IReadOnlyList<string!>?
@@ -357,6 +362,21 @@ Kazo.Os.App.Abstractions.AppPlatformId
 Kazo.Os.App.Abstractions.AppPlatformId.AppPlatformId() -> void
 Kazo.Os.App.Abstractions.AppPlatformId.Equals(Kazo.Os.App.Abstractions.AppPlatformId other) -> bool
 Kazo.Os.App.Abstractions.AppPlatformId.Value.get -> string!
+Kazo.Os.App.Abstractions.AppProvidedServiceManifest
+Kazo.Os.App.Abstractions.AppProvidedServiceManifest.<Clone>$() -> Kazo.Os.App.Abstractions.AppProvidedServiceManifest!
+Kazo.Os.App.Abstractions.AppProvidedServiceManifest.AppProvidedServiceManifest(string! Contract, string! Implementation) -> void
+Kazo.Os.App.Abstractions.AppProvidedServiceManifest.Contract.get -> string!
+Kazo.Os.App.Abstractions.AppProvidedServiceManifest.Contract.init -> void
+Kazo.Os.App.Abstractions.AppProvidedServiceManifest.ContractAssembly.get -> string!
+Kazo.Os.App.Abstractions.AppProvidedServiceManifest.ContractType.get -> string!
+Kazo.Os.App.Abstractions.AppProvidedServiceManifest.Deconstruct(out string! Contract, out string! Implementation) -> void
+Kazo.Os.App.Abstractions.AppProvidedServiceManifest.EntryPoint.get -> string?
+Kazo.Os.App.Abstractions.AppProvidedServiceManifest.EntryPoint.init -> void
+Kazo.Os.App.Abstractions.AppProvidedServiceManifest.Equals(Kazo.Os.App.Abstractions.AppProvidedServiceManifest? other) -> bool
+Kazo.Os.App.Abstractions.AppProvidedServiceManifest.Implementation.get -> string!
+Kazo.Os.App.Abstractions.AppProvidedServiceManifest.Implementation.init -> void
+Kazo.Os.App.Abstractions.AppProvidedServiceManifest.ImplementationAssembly.get -> string!
+Kazo.Os.App.Abstractions.AppProvidedServiceManifest.ImplementationType.get -> string!
 Kazo.Os.App.Abstractions.AppResourceProfileManifest
 Kazo.Os.App.Abstractions.AppResourceProfileManifest.<Clone>$() -> Kazo.Os.App.Abstractions.AppResourceProfileManifest!
 Kazo.Os.App.Abstractions.AppResourceProfileManifest.AppResourceProfileManifest(double BaselineCpuWeight, double BurstCpuWeight, double BaselineMemoryWeight, double BurstMemoryWeight, double BaselineStorageIoWeight, double BurstStorageIoWeight, double BaselineNetworkIoWeight, double BurstNetworkIoWeight) -> void
@@ -524,6 +544,72 @@ Kazo.Os.App.Abstractions.ExecuteCommandIntent.ExecuteCommandIntent(string! Comma
 Kazo.Os.App.Abstractions.ExecuteCommandIntent.IntentId.get -> string!
 Kazo.Os.App.Abstractions.ExecuteCommandIntent.WorkingDirectory.get -> Kazo.Os.App.Abstractions.VirtualPath?
 Kazo.Os.App.Abstractions.ExecuteCommandIntent.WorkingDirectory.init -> void
+Kazo.Os.App.Abstractions.FeatureDefinition
+Kazo.Os.App.Abstractions.FeatureDefinition.FeatureDefinition() -> void
+Kazo.Os.App.Abstractions.FeatureEntryPoint
+Kazo.Os.App.Abstractions.FeatureEntryPoint.<Clone>$() -> Kazo.Os.App.Abstractions.FeatureEntryPoint!
+Kazo.Os.App.Abstractions.FeatureEntryPoint.AutoStart.get -> bool
+Kazo.Os.App.Abstractions.FeatureEntryPoint.AutoStart.init -> void
+Kazo.Os.App.Abstractions.FeatureEntryPoint.Capabilities.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Kazo.Os.App.Abstractions.FeatureEntryPoint.Capabilities.init -> void
+Kazo.Os.App.Abstractions.FeatureEntryPoint.Category.get -> string?
+Kazo.Os.App.Abstractions.FeatureEntryPoint.Category.init -> void
+Kazo.Os.App.Abstractions.FeatureEntryPoint.Deconstruct(out string! Suffix, out string! Name, out Kazo.Os.App.Abstractions.AppKind Kind, out System.Type! EntryPoint) -> void
+Kazo.Os.App.Abstractions.FeatureEntryPoint.Description.get -> string?
+Kazo.Os.App.Abstractions.FeatureEntryPoint.Description.init -> void
+Kazo.Os.App.Abstractions.FeatureEntryPoint.EntryPoint.get -> System.Type!
+Kazo.Os.App.Abstractions.FeatureEntryPoint.EntryPoint.init -> void
+Kazo.Os.App.Abstractions.FeatureEntryPoint.Equals(Kazo.Os.App.Abstractions.FeatureEntryPoint? other) -> bool
+Kazo.Os.App.Abstractions.FeatureEntryPoint.Execution.get -> Kazo.Os.App.Abstractions.AppExecutionHost?
+Kazo.Os.App.Abstractions.FeatureEntryPoint.Execution.init -> void
+Kazo.Os.App.Abstractions.FeatureEntryPoint.FeatureEntryPoint(string! Suffix, string! Name, Kazo.Os.App.Abstractions.AppKind Kind, System.Type! EntryPoint) -> void
+Kazo.Os.App.Abstractions.FeatureEntryPoint.Icons.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Kazo.Os.App.Abstractions.FeatureEntryPoint.Icons.init -> void
+Kazo.Os.App.Abstractions.FeatureEntryPoint.Intents.get -> System.Collections.Generic.IReadOnlyList<Kazo.Os.App.Abstractions.AppIntentDeclarationManifest!>!
+Kazo.Os.App.Abstractions.FeatureEntryPoint.Intents.init -> void
+Kazo.Os.App.Abstractions.FeatureEntryPoint.Kind.get -> Kazo.Os.App.Abstractions.AppKind
+Kazo.Os.App.Abstractions.FeatureEntryPoint.Kind.init -> void
+Kazo.Os.App.Abstractions.FeatureEntryPoint.LaunchVisibility.get -> Kazo.Os.App.Abstractions.AppLaunchVisibility
+Kazo.Os.App.Abstractions.FeatureEntryPoint.LaunchVisibility.init -> void
+Kazo.Os.App.Abstractions.FeatureEntryPoint.MobileEntryPoint.get -> System.Type?
+Kazo.Os.App.Abstractions.FeatureEntryPoint.MobileEntryPoint.init -> void
+Kazo.Os.App.Abstractions.FeatureEntryPoint.Name.get -> string!
+Kazo.Os.App.Abstractions.FeatureEntryPoint.Name.init -> void
+Kazo.Os.App.Abstractions.FeatureEntryPoint.Resources.get -> Kazo.Os.App.Abstractions.AppResourceProfileManifest?
+Kazo.Os.App.Abstractions.FeatureEntryPoint.Resources.init -> void
+Kazo.Os.App.Abstractions.FeatureEntryPoint.ServiceStartup.get -> Kazo.Os.App.Abstractions.AppServiceStartup?
+Kazo.Os.App.Abstractions.FeatureEntryPoint.ServiceStartup.init -> void
+Kazo.Os.App.Abstractions.FeatureEntryPoint.Settings.get -> Kazo.Os.App.Abstractions.AppSettingsSchemaManifest?
+Kazo.Os.App.Abstractions.FeatureEntryPoint.Settings.init -> void
+Kazo.Os.App.Abstractions.FeatureEntryPoint.SingleInstancePerUser.get -> bool
+Kazo.Os.App.Abstractions.FeatureEntryPoint.SingleInstancePerUser.init -> void
+Kazo.Os.App.Abstractions.FeatureEntryPoint.Suffix.get -> string!
+Kazo.Os.App.Abstractions.FeatureEntryPoint.Suffix.init -> void
+Kazo.Os.App.Abstractions.FeatureEntryPoint.SupportsBack.get -> bool
+Kazo.Os.App.Abstractions.FeatureEntryPoint.SupportsBack.init -> void
+Kazo.Os.App.Abstractions.FeatureEntryPoint.Terminal.get -> Kazo.Os.App.Abstractions.TerminalCommand?
+Kazo.Os.App.Abstractions.FeatureEntryPoint.Terminal.init -> void
+Kazo.Os.App.Abstractions.FeatureEntryPoint.Window.get -> Kazo.Os.App.Abstractions.WindowOptions?
+Kazo.Os.App.Abstractions.FeatureEntryPoint.Window.init -> void
+Kazo.Os.App.Abstractions.FeatureManifests
+Kazo.Os.App.Abstractions.FeatureManifests.<Clone>$() -> Kazo.Os.App.Abstractions.FeatureManifests!
+Kazo.Os.App.Abstractions.FeatureManifests.All.get -> System.Collections.Generic.IEnumerable<Kazo.Os.App.Abstractions.AppManifest!>!
+Kazo.Os.App.Abstractions.FeatureManifests.Children.get -> System.Collections.Generic.IReadOnlyList<Kazo.Os.App.Abstractions.AppManifest!>!
+Kazo.Os.App.Abstractions.FeatureManifests.Children.init -> void
+Kazo.Os.App.Abstractions.FeatureManifests.Deconstruct(out Kazo.Os.App.Abstractions.AppManifest! Feature, out System.Collections.Generic.IReadOnlyList<Kazo.Os.App.Abstractions.AppManifest!>! Children) -> void
+Kazo.Os.App.Abstractions.FeatureManifests.Equals(Kazo.Os.App.Abstractions.FeatureManifests? other) -> bool
+Kazo.Os.App.Abstractions.FeatureManifests.Feature.get -> Kazo.Os.App.Abstractions.AppManifest!
+Kazo.Os.App.Abstractions.FeatureManifests.Feature.init -> void
+Kazo.Os.App.Abstractions.FeatureManifests.FeatureManifests(Kazo.Os.App.Abstractions.AppManifest! Feature, System.Collections.Generic.IReadOnlyList<Kazo.Os.App.Abstractions.AppManifest!>! Children) -> void
+Kazo.Os.App.Abstractions.FeatureService
+Kazo.Os.App.Abstractions.FeatureService.<Clone>$() -> Kazo.Os.App.Abstractions.FeatureService!
+Kazo.Os.App.Abstractions.FeatureService.Contract.get -> System.Type!
+Kazo.Os.App.Abstractions.FeatureService.Contract.init -> void
+Kazo.Os.App.Abstractions.FeatureService.Deconstruct(out System.Type! Contract, out System.Type! Implementation) -> void
+Kazo.Os.App.Abstractions.FeatureService.Equals(Kazo.Os.App.Abstractions.FeatureService? other) -> bool
+Kazo.Os.App.Abstractions.FeatureService.FeatureService(System.Type! Contract, System.Type! Implementation) -> void
+Kazo.Os.App.Abstractions.FeatureService.Implementation.get -> System.Type!
+Kazo.Os.App.Abstractions.FeatureService.Implementation.init -> void
 Kazo.Os.App.Abstractions.FileHandler
 Kazo.Os.App.Abstractions.FileHandler.<Clone>$() -> Kazo.Os.App.Abstractions.FileHandler!
 Kazo.Os.App.Abstractions.FileHandler.Actions.get -> System.Collections.Generic.IReadOnlyList<string!>!
@@ -1017,6 +1103,7 @@ abstract Kazo.Os.App.Abstractions.AppDefinition.EntryPoint.get -> System.Type!
 abstract Kazo.Os.App.Abstractions.AppDefinition.Id.get -> string!
 abstract Kazo.Os.App.Abstractions.AppDefinition.Kind.get -> Kazo.Os.App.Abstractions.AppKind
 abstract Kazo.Os.App.Abstractions.AppDefinition.Name.get -> string!
+abstract Kazo.Os.App.Abstractions.FeatureDefinition.EntryPoints.get -> System.Collections.Generic.IReadOnlyList<Kazo.Os.App.Abstractions.FeatureEntryPoint!>!
 abstract Kazo.Os.App.Abstractions.Policy.CapabilityConstraint.<Clone>$() -> Kazo.Os.App.Abstractions.Policy.CapabilityConstraint!
 abstract Kazo.Os.App.Abstractions.Policy.CapabilityConstraint.Kind.get -> Kazo.Os.App.Abstractions.Policy.CapabilityConstraintKind
 abstract Kazo.Os.App.Abstractions.Policy.CapabilityResourceCandidate.<Clone>$() -> Kazo.Os.App.Abstractions.Policy.CapabilityResourceCandidate!
@@ -1025,6 +1112,7 @@ const Kazo.Os.App.Abstractions.AppCapabilities.AppsLaunch = "apps.launch" -> str
 const Kazo.Os.App.Abstractions.AppCapabilities.AppsManage = "apps.manage" -> string!
 const Kazo.Os.App.Abstractions.AppCapabilities.ClipboardRead = "clipboard.read" -> string!
 const Kazo.Os.App.Abstractions.AppCapabilities.ClipboardWrite = "clipboard.write" -> string!
+const Kazo.Os.App.Abstractions.AppCapabilities.CloudAccountsManage = "cloud-accounts.manage" -> string!
 const Kazo.Os.App.Abstractions.AppCapabilities.DialogFileOpen = "dialogs.file-open" -> string!
 const Kazo.Os.App.Abstractions.AppCapabilities.DialogFileSave = "dialogs.file-save" -> string!
 const Kazo.Os.App.Abstractions.AppCapabilities.DialogFolderSelect = "dialogs.folder-select" -> string!
@@ -1161,6 +1249,9 @@ override Kazo.Os.App.Abstractions.AppPlatformEntryPointManifest.GetHashCode() ->
 override Kazo.Os.App.Abstractions.AppPlatformEntryPointManifest.ToString() -> string!
 override Kazo.Os.App.Abstractions.AppPlatformId.GetHashCode() -> int
 override Kazo.Os.App.Abstractions.AppPlatformId.ToString() -> string!
+override Kazo.Os.App.Abstractions.AppProvidedServiceManifest.Equals(object? obj) -> bool
+override Kazo.Os.App.Abstractions.AppProvidedServiceManifest.GetHashCode() -> int
+override Kazo.Os.App.Abstractions.AppProvidedServiceManifest.ToString() -> string!
 override Kazo.Os.App.Abstractions.AppResourceProfileManifest.Equals(object? obj) -> bool
 override Kazo.Os.App.Abstractions.AppResourceProfileManifest.GetHashCode() -> int
 override Kazo.Os.App.Abstractions.AppResourceProfileManifest.ToString() -> string!
@@ -1191,6 +1282,17 @@ override Kazo.Os.App.Abstractions.EditFileIntent.ToString() -> string!
 override Kazo.Os.App.Abstractions.ExecuteCommandIntent.Equals(object? obj) -> bool
 override Kazo.Os.App.Abstractions.ExecuteCommandIntent.GetHashCode() -> int
 override Kazo.Os.App.Abstractions.ExecuteCommandIntent.ToString() -> string!
+override Kazo.Os.App.Abstractions.FeatureDefinition.EntryPoint.get -> System.Type!
+override Kazo.Os.App.Abstractions.FeatureDefinition.LaunchVisibility.get -> Kazo.Os.App.Abstractions.AppLaunchVisibility
+override Kazo.Os.App.Abstractions.FeatureEntryPoint.Equals(object? obj) -> bool
+override Kazo.Os.App.Abstractions.FeatureEntryPoint.GetHashCode() -> int
+override Kazo.Os.App.Abstractions.FeatureEntryPoint.ToString() -> string!
+override Kazo.Os.App.Abstractions.FeatureManifests.Equals(object? obj) -> bool
+override Kazo.Os.App.Abstractions.FeatureManifests.GetHashCode() -> int
+override Kazo.Os.App.Abstractions.FeatureManifests.ToString() -> string!
+override Kazo.Os.App.Abstractions.FeatureService.Equals(object? obj) -> bool
+override Kazo.Os.App.Abstractions.FeatureService.GetHashCode() -> int
+override Kazo.Os.App.Abstractions.FeatureService.ToString() -> string!
 override Kazo.Os.App.Abstractions.FileHandler.Equals(object? obj) -> bool
 override Kazo.Os.App.Abstractions.FileHandler.GetHashCode() -> int
 override Kazo.Os.App.Abstractions.FileHandler.ToString() -> string!
@@ -1316,6 +1418,18 @@ override Kazo.Os.App.Abstractions.WebBlazorManifest.ToString() -> string!
 override Kazo.Os.App.Abstractions.WindowOptions.Equals(object? obj) -> bool
 override Kazo.Os.App.Abstractions.WindowOptions.GetHashCode() -> int
 override Kazo.Os.App.Abstractions.WindowOptions.ToString() -> string!
+override sealed Kazo.Os.App.Abstractions.FeatureDefinition.AutoStart.get -> bool
+override sealed Kazo.Os.App.Abstractions.FeatureDefinition.BlazorRoot.get -> System.Type?
+override sealed Kazo.Os.App.Abstractions.FeatureDefinition.Components.get -> System.Collections.Generic.IReadOnlyList<Kazo.Os.App.Abstractions.AppComponent!>!
+override sealed Kazo.Os.App.Abstractions.FeatureDefinition.FileHandlers.get -> System.Collections.Generic.IReadOnlyList<Kazo.Os.App.Abstractions.FileHandler!>!
+override sealed Kazo.Os.App.Abstractions.FeatureDefinition.Kind.get -> Kazo.Os.App.Abstractions.AppKind
+override sealed Kazo.Os.App.Abstractions.FeatureDefinition.MobileEntryPoint.get -> System.Type?
+override sealed Kazo.Os.App.Abstractions.FeatureDefinition.ServiceStartup.get -> Kazo.Os.App.Abstractions.AppServiceStartup?
+override sealed Kazo.Os.App.Abstractions.FeatureDefinition.SingleInstancePerUser.get -> bool
+override sealed Kazo.Os.App.Abstractions.FeatureDefinition.SupportsBack.get -> bool
+override sealed Kazo.Os.App.Abstractions.FeatureDefinition.Terminal.get -> Kazo.Os.App.Abstractions.TerminalCommand?
+override sealed Kazo.Os.App.Abstractions.FeatureDefinition.Urls.get -> System.Collections.Generic.IReadOnlyList<string!>!
+override sealed Kazo.Os.App.Abstractions.FeatureDefinition.Window.get -> Kazo.Os.App.Abstractions.WindowOptions?
 override sealed Kazo.Os.App.Abstractions.Policy.NetworkHostCapabilityConstraint.Equals(Kazo.Os.App.Abstractions.Policy.CapabilityConstraint? other) -> bool
 override sealed Kazo.Os.App.Abstractions.Policy.NetworkHostResourceCandidate.Equals(Kazo.Os.App.Abstractions.Policy.CapabilityResourceCandidate? other) -> bool
 override sealed Kazo.Os.App.Abstractions.Policy.NetworkPortCapabilityConstraint.Equals(Kazo.Os.App.Abstractions.Policy.CapabilityConstraint? other) -> bool
@@ -1345,6 +1459,8 @@ static Kazo.Os.App.Abstractions.AppContextMenus.DefaultItemIds.get -> System.Col
 static Kazo.Os.App.Abstractions.AppContextMenus.Scopes.get -> System.Collections.Generic.IReadOnlyList<string!>!
 static Kazo.Os.App.Abstractions.AppContextMenus.Selections.get -> System.Collections.Generic.IReadOnlyList<string!>!
 static Kazo.Os.App.Abstractions.AppContextMenus.VectorLibraries.get -> System.Collections.Generic.IReadOnlyList<string!>!
+static Kazo.Os.App.Abstractions.AppDefinitionMapper.ToFeatureManifests(Kazo.Os.App.Abstractions.FeatureDefinition! definition) -> Kazo.Os.App.Abstractions.FeatureManifests!
+static Kazo.Os.App.Abstractions.AppDefinitionMapper.ToFeatureManifests(Kazo.Os.App.Abstractions.FeatureDefinition! definition, string! sdkMinimumVersion) -> Kazo.Os.App.Abstractions.FeatureManifests!
 static Kazo.Os.App.Abstractions.AppDefinitionMapper.ToManifest(Kazo.Os.App.Abstractions.AppDefinition! definition) -> Kazo.Os.App.Abstractions.AppManifest!
 static Kazo.Os.App.Abstractions.AppDefinitionMapper.ToManifest(Kazo.Os.App.Abstractions.AppDefinition! definition, string! sdkMinimumVersion) -> Kazo.Os.App.Abstractions.AppManifest!
 static Kazo.Os.App.Abstractions.AppDependencyManifest.operator !=(Kazo.Os.App.Abstractions.AppDependencyManifest? left, Kazo.Os.App.Abstractions.AppDependencyManifest? right) -> bool
@@ -1386,6 +1502,7 @@ static Kazo.Os.App.Abstractions.AppManifestText.operator ==(Kazo.Os.App.Abstract
 static Kazo.Os.App.Abstractions.AppManifestTextJsonSerializer.DeserializeStrict(string! json) -> Kazo.Os.App.Abstractions.AppManifestText!
 static Kazo.Os.App.Abstractions.AppManifestTextJsonSerializer.SerializeCanonical(Kazo.Os.App.Abstractions.AppManifestText! text) -> string!
 static Kazo.Os.App.Abstractions.AppManifestValidator.Validate(Kazo.Os.App.Abstractions.AppManifest! manifest) -> Kazo.Os.App.Abstractions.ManifestValidationResult!
+static Kazo.Os.App.Abstractions.AppManifestValidator.ValidateFeature(Kazo.Os.App.Abstractions.AppManifest! feature, System.Collections.Generic.IReadOnlyList<Kazo.Os.App.Abstractions.AppManifest!>! children) -> Kazo.Os.App.Abstractions.ManifestValidationResult!
 static Kazo.Os.App.Abstractions.AppOperationContext.operator !=(Kazo.Os.App.Abstractions.AppOperationContext? left, Kazo.Os.App.Abstractions.AppOperationContext? right) -> bool
 static Kazo.Os.App.Abstractions.AppOperationContext.operator ==(Kazo.Os.App.Abstractions.AppOperationContext? left, Kazo.Os.App.Abstractions.AppOperationContext? right) -> bool
 static Kazo.Os.App.Abstractions.AppPlatformCapabilities.operator !=(Kazo.Os.App.Abstractions.AppPlatformCapabilities? left, Kazo.Os.App.Abstractions.AppPlatformCapabilities? right) -> bool
@@ -1397,6 +1514,10 @@ static Kazo.Os.App.Abstractions.AppPlatformId.Parse(string! value) -> Kazo.Os.Ap
 static Kazo.Os.App.Abstractions.AppPlatformId.TryParse(string? value, out Kazo.Os.App.Abstractions.AppPlatformId platformId) -> bool
 static Kazo.Os.App.Abstractions.AppPlatformId.operator !=(Kazo.Os.App.Abstractions.AppPlatformId left, Kazo.Os.App.Abstractions.AppPlatformId right) -> bool
 static Kazo.Os.App.Abstractions.AppPlatformId.operator ==(Kazo.Os.App.Abstractions.AppPlatformId left, Kazo.Os.App.Abstractions.AppPlatformId right) -> bool
+static Kazo.Os.App.Abstractions.AppProvidedServiceManifest.NameOf(System.Type! type) -> string!
+static Kazo.Os.App.Abstractions.AppProvidedServiceManifest.TryParseName(string? value, out string! typeName, out string! assemblyName) -> bool
+static Kazo.Os.App.Abstractions.AppProvidedServiceManifest.operator !=(Kazo.Os.App.Abstractions.AppProvidedServiceManifest? left, Kazo.Os.App.Abstractions.AppProvidedServiceManifest? right) -> bool
+static Kazo.Os.App.Abstractions.AppProvidedServiceManifest.operator ==(Kazo.Os.App.Abstractions.AppProvidedServiceManifest? left, Kazo.Os.App.Abstractions.AppProvidedServiceManifest? right) -> bool
 static Kazo.Os.App.Abstractions.AppResourceProfileManifest.None.get -> Kazo.Os.App.Abstractions.AppResourceProfileManifest!
 static Kazo.Os.App.Abstractions.AppResourceProfileManifest.operator !=(Kazo.Os.App.Abstractions.AppResourceProfileManifest? left, Kazo.Os.App.Abstractions.AppResourceProfileManifest? right) -> bool
 static Kazo.Os.App.Abstractions.AppResourceProfileManifest.operator ==(Kazo.Os.App.Abstractions.AppResourceProfileManifest? left, Kazo.Os.App.Abstractions.AppResourceProfileManifest? right) -> bool
@@ -1420,6 +1541,12 @@ static Kazo.Os.App.Abstractions.EditFileIntent.operator !=(Kazo.Os.App.Abstracti
 static Kazo.Os.App.Abstractions.EditFileIntent.operator ==(Kazo.Os.App.Abstractions.EditFileIntent? left, Kazo.Os.App.Abstractions.EditFileIntent? right) -> bool
 static Kazo.Os.App.Abstractions.ExecuteCommandIntent.operator !=(Kazo.Os.App.Abstractions.ExecuteCommandIntent? left, Kazo.Os.App.Abstractions.ExecuteCommandIntent? right) -> bool
 static Kazo.Os.App.Abstractions.ExecuteCommandIntent.operator ==(Kazo.Os.App.Abstractions.ExecuteCommandIntent? left, Kazo.Os.App.Abstractions.ExecuteCommandIntent? right) -> bool
+static Kazo.Os.App.Abstractions.FeatureEntryPoint.operator !=(Kazo.Os.App.Abstractions.FeatureEntryPoint? left, Kazo.Os.App.Abstractions.FeatureEntryPoint? right) -> bool
+static Kazo.Os.App.Abstractions.FeatureEntryPoint.operator ==(Kazo.Os.App.Abstractions.FeatureEntryPoint? left, Kazo.Os.App.Abstractions.FeatureEntryPoint? right) -> bool
+static Kazo.Os.App.Abstractions.FeatureManifests.operator !=(Kazo.Os.App.Abstractions.FeatureManifests? left, Kazo.Os.App.Abstractions.FeatureManifests? right) -> bool
+static Kazo.Os.App.Abstractions.FeatureManifests.operator ==(Kazo.Os.App.Abstractions.FeatureManifests? left, Kazo.Os.App.Abstractions.FeatureManifests? right) -> bool
+static Kazo.Os.App.Abstractions.FeatureService.operator !=(Kazo.Os.App.Abstractions.FeatureService? left, Kazo.Os.App.Abstractions.FeatureService? right) -> bool
+static Kazo.Os.App.Abstractions.FeatureService.operator ==(Kazo.Os.App.Abstractions.FeatureService? left, Kazo.Os.App.Abstractions.FeatureService? right) -> bool
 static Kazo.Os.App.Abstractions.FileHandler.operator !=(Kazo.Os.App.Abstractions.FileHandler? left, Kazo.Os.App.Abstractions.FileHandler? right) -> bool
 static Kazo.Os.App.Abstractions.FileHandler.operator ==(Kazo.Os.App.Abstractions.FileHandler? left, Kazo.Os.App.Abstractions.FileHandler? right) -> bool
 static Kazo.Os.App.Abstractions.FileHandlerManifest.operator !=(Kazo.Os.App.Abstractions.FileHandlerManifest? left, Kazo.Os.App.Abstractions.FileHandlerManifest? right) -> bool
@@ -1562,6 +1689,8 @@ virtual Kazo.Os.App.Abstractions.AppDefinition.Terminal.get -> Kazo.Os.App.Abstr
 virtual Kazo.Os.App.Abstractions.AppDefinition.Urls.get -> System.Collections.Generic.IReadOnlyList<string!>!
 virtual Kazo.Os.App.Abstractions.AppDefinition.Version.get -> string!
 virtual Kazo.Os.App.Abstractions.AppDefinition.Window.get -> Kazo.Os.App.Abstractions.WindowOptions?
+virtual Kazo.Os.App.Abstractions.FeatureDefinition.ProvidedServices.get -> System.Collections.Generic.IReadOnlyList<Kazo.Os.App.Abstractions.FeatureService!>!
+virtual Kazo.Os.App.Abstractions.FeatureDefinition.ServiceEntryPoint.get -> string?
 virtual Kazo.Os.App.Abstractions.Policy.CapabilityConstraint.EqualityContract.get -> System.Type!
 virtual Kazo.Os.App.Abstractions.Policy.CapabilityConstraint.Equals(Kazo.Os.App.Abstractions.Policy.CapabilityConstraint? other) -> bool
 virtual Kazo.Os.App.Abstractions.Policy.CapabilityConstraint.PrintMembers(System.Text.StringBuilder! builder) -> bool
@@ -1581,6 +1710,7 @@ virtual Kazo.Os.App.Abstractions.Policy.CapabilityResourceCandidate.PrintMembers
 ~Kazo.Os.App.Abstractions.AppManifestJsonSerializerContext.AppManifest.get -> System.Text.Json.Serialization.Metadata.JsonTypeInfo<Kazo.Os.App.Abstractions.AppManifest>
 ~Kazo.Os.App.Abstractions.AppManifestJsonSerializerContext.AppManifestPlatform.get -> System.Text.Json.Serialization.Metadata.JsonTypeInfo<Kazo.Os.App.Abstractions.AppManifestPlatform>
 ~Kazo.Os.App.Abstractions.AppManifestJsonSerializerContext.AppPlatformEntryPointManifest.get -> System.Text.Json.Serialization.Metadata.JsonTypeInfo<Kazo.Os.App.Abstractions.AppPlatformEntryPointManifest>
+~Kazo.Os.App.Abstractions.AppManifestJsonSerializerContext.AppProvidedServiceManifest.get -> System.Text.Json.Serialization.Metadata.JsonTypeInfo<Kazo.Os.App.Abstractions.AppProvidedServiceManifest>
 ~Kazo.Os.App.Abstractions.AppManifestJsonSerializerContext.AppResourceProfileManifest.get -> System.Text.Json.Serialization.Metadata.JsonTypeInfo<Kazo.Os.App.Abstractions.AppResourceProfileManifest>
 ~Kazo.Os.App.Abstractions.AppManifestJsonSerializerContext.AppSdkCompatibilityManifest.get -> System.Text.Json.Serialization.Metadata.JsonTypeInfo<Kazo.Os.App.Abstractions.AppSdkCompatibilityManifest>
 ~Kazo.Os.App.Abstractions.AppManifestJsonSerializerContext.AppServiceStartup.get -> System.Text.Json.Serialization.Metadata.JsonTypeInfo<Kazo.Os.App.Abstractions.AppServiceStartup>
@@ -1600,6 +1730,7 @@ virtual Kazo.Os.App.Abstractions.Policy.CapabilityResourceCandidate.PrintMembers
 ~Kazo.Os.App.Abstractions.AppManifestJsonSerializerContext.IReadOnlyListAppDependencyManifest.get -> System.Text.Json.Serialization.Metadata.JsonTypeInfo<System.Collections.Generic.IReadOnlyList<Kazo.Os.App.Abstractions.AppDependencyManifest>>
 ~Kazo.Os.App.Abstractions.AppManifestJsonSerializerContext.IReadOnlyListAppIntentDeclarationManifest.get -> System.Text.Json.Serialization.Metadata.JsonTypeInfo<System.Collections.Generic.IReadOnlyList<Kazo.Os.App.Abstractions.AppIntentDeclarationManifest>>
 ~Kazo.Os.App.Abstractions.AppManifestJsonSerializerContext.IReadOnlyListAppPlatformEntryPointManifest.get -> System.Text.Json.Serialization.Metadata.JsonTypeInfo<System.Collections.Generic.IReadOnlyList<Kazo.Os.App.Abstractions.AppPlatformEntryPointManifest>>
+~Kazo.Os.App.Abstractions.AppManifestJsonSerializerContext.IReadOnlyListAppProvidedServiceManifest.get -> System.Text.Json.Serialization.Metadata.JsonTypeInfo<System.Collections.Generic.IReadOnlyList<Kazo.Os.App.Abstractions.AppProvidedServiceManifest>>
 ~Kazo.Os.App.Abstractions.AppManifestJsonSerializerContext.IReadOnlyListAppSettingFieldManifest.get -> System.Text.Json.Serialization.Metadata.JsonTypeInfo<System.Collections.Generic.IReadOnlyList<Kazo.Os.App.Abstractions.AppSettingFieldManifest>>
 ~Kazo.Os.App.Abstractions.AppManifestJsonSerializerContext.IReadOnlyListAssetManifest.get -> System.Text.Json.Serialization.Metadata.JsonTypeInfo<System.Collections.Generic.IReadOnlyList<Kazo.Os.App.Abstractions.AssetManifest>>
 ~Kazo.Os.App.Abstractions.AppManifestJsonSerializerContext.IReadOnlyListFileHandlerManifest.get -> System.Text.Json.Serialization.Metadata.JsonTypeInfo<System.Collections.Generic.IReadOnlyList<Kazo.Os.App.Abstractions.FileHandlerManifest>>
