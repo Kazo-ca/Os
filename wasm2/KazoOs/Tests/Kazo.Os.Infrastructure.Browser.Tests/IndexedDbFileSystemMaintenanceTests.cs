@@ -30,6 +30,9 @@ public sealed class IndexedDbFileSystemMaintenanceTests
         Assert.Equal("deleteAllByIndexIfUnreferenced", delete.Kind);
         Assert.Equal(KazoOsIndexedDbSchema.FileSystemEntryStoreName, delete.ReferenceObjectStoreName);
         Assert.Equal("contentHash", delete.ReferenceIndexName);
+        // ADR 0274 §4: an address the service worker serves keeps its content too.
+        Assert.Equal(KazoOsIndexedDbSchema.ServedFileStoreName, delete.ExtraReferenceObjectStoreName);
+        Assert.Equal("contentHash", delete.ExtraReferenceIndexName);
         Assert.Equal("createdUtcMs", delete.CompareProperty);
         Assert.Equal(CutoffMs(FileContentStoragePolicy.DefaultOrphanRetention), delete.ExpectedValue);
     }
@@ -51,6 +54,7 @@ public sealed class IndexedDbFileSystemMaintenanceTests
         Assert.Equal("findUnreferencedOlderThan", discovery.Kind);
         Assert.Equal(KazoOsIndexedDbSchema.FileContentStoreName, discovery.ObjectStoreName);
         Assert.Equal(KazoOsIndexedDbSchema.FileSystemEntryStoreName, discovery.ReferenceObjectStoreName);
+        Assert.Equal(KazoOsIndexedDbSchema.ServedFileStoreName, discovery.ExtraReferenceObjectStoreName);
         Assert.Equal(IndexedDbFileSystemMaintenance.HashesPerPass, discovery.Count);
         Assert.Equal(CutoffMs(FileContentStoragePolicy.DefaultOrphanRetention), discovery.ExpectedValue);
     }

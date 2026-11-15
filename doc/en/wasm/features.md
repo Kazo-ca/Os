@@ -188,6 +188,9 @@ This section lists what is released in the `main` branch and online.
 - **Large files read and written in pieces**: beyond 16 MiB, a file opens as a stream that
   loads only the chunks read, and is saved in batches handed to the browser, which halves
   the memory taken. ([ADR 0275](dev/adr/0275-partial-read-and-file-address.md) §1, 2 and 4)
+- **A single copy of the files of an installed app**: the service worker serves an app's
+  files from its folder, with no copy in a cache; a 64 MiB app whose previous version is kept
+  takes 128 MiB instead of 236 MiB. ([ADR 0274](dev/adr/0274-single-copy-of-app-files.md))
 - **Space reclaimed after a rewrite or a deletion**: old content is erased after 1 day, or
   after 5 minutes when space is short. ([ADR 0273](dev/adr/0273-short-orphan-content-retention.md))
 - **Backup and restore** of the whole machine in a downloaded archive.
@@ -465,7 +468,6 @@ points to its PR.
 | --- | --- | --- | --- |
 | Switch user | Open another session without closing the first one. Stays greyed out in the Power menu by Benoit's choice: one session at a time, Sign out to change account. | [0195](dev/adr/0195-start-menu-power-button.md), [0201](dev/adr/0201-switch-user-stays-greyed.md) | [#290](https://github.com/Kazo-ca/Os/issues/290) |
 | File address served on demand | An app gets an address to read a large file (audio, video) without copying it in memory, with partial reads to seek in a track. `storage/base` series; the partial read is done (work item 3), the address is still to do. | [0275](dev/adr/0275-partial-read-and-file-address.md) | [#379](https://github.com/Kazo-ca/Os/issues/379) |
-| A single copy of the files of an installed app | The files of an app are no longer copied into a cache in every session: an app takes about half the space and its first launch copies nothing. `storage/base` series. | [0274](dev/adr/0274-single-copy-of-app-files.md) | [plan](dev/plans/browser-storage-series-plan.md) |
 | Drag files onto an app | Public SDK contract to receive files dragged from the File Explorer or the desktop. | To write | [#380](https://github.com/Kazo-ca/Os/issues/380) |
 
 ### Kazo OS Store

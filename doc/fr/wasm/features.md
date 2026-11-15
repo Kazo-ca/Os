@@ -195,6 +195,10 @@ Cette section liste ce qui est publié dans la branche `main` et en ligne.
 - **Gros fichiers lus et écrits par morceaux** : au-delà de 16 Mio, un fichier s'ouvre en
   flux qui ne charge que les blocs lus, et s'enregistre par lots passés au navigateur, ce
   qui réduit de moitié la mémoire prise. ([ADR 0275](dev/adr/0275-partial-read-and-file-address.md) §1, 2 et 4)
+- **Une seule copie des fichiers d'une app installée** : le service worker sert les
+  fichiers d'une app depuis son dossier, sans copie dans un cache ; une app de 64 Mio dont
+  la version précédente est gardée prend 128 Mio au lieu de 236 Mio.
+  ([ADR 0274](dev/adr/0274-single-copy-of-app-files.md))
 - **Espace récupéré après une réécriture ou une suppression** : l'ancien contenu est
   effacé après 1 jour, ou après 5 minutes quand l'espace manque.
   ([ADR 0273](dev/adr/0273-short-orphan-content-retention.md))
@@ -482,7 +486,6 @@ dans `main`, le lien mène à sa PR.
 | --- | --- | --- | --- |
 | Changer d'utilisateur | Ouvrir une autre session sans fermer la première. Reste grisé dans le menu Marche/arrêt par choix de Benoit : une session à la fois, Se déconnecter pour changer de compte. | [0195](dev/adr/0195-start-menu-power-button.md), [0201](dev/adr/0201-switch-user-stays-greyed.md) | [#290](https://github.com/Kazo-ca/Os/issues/290) |
 | Adresse de fichier servie à la demande | Une app reçoit une adresse pour lire un gros fichier (audio, vidéo) sans le copier en mémoire, avec lecture partielle pour avancer dans un morceau. Série `storage/base` ; la lecture partielle est faite (chantier 3), l'adresse reste à faire. | [0275](dev/adr/0275-partial-read-and-file-address.md) | [#379](https://github.com/Kazo-ca/Os/issues/379) |
-| Une seule copie des fichiers d'une app installée | Les fichiers d'une app ne sont plus recopiés dans un cache à chaque session : une app prend environ deux fois moins d'espace et son premier lancement ne recopie plus rien. Série `storage/base`. | [0274](dev/adr/0274-single-copy-of-app-files.md) | [plan](dev/plans/browser-storage-series-plan.md) |
 | Glisser des fichiers vers une app | Contrat public du SDK pour recevoir des fichiers glissés depuis l'explorateur ou le bureau. | À écrire | [#380](https://github.com/Kazo-ca/Os/issues/380) |
 
 ### Kazo OS Store

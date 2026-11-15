@@ -35,7 +35,7 @@ namespace Kazo.Os.UI.E2E.Tests;
 public sealed partial class IndexedDbUpgradeFixtureTests(ITestOutputHelper output)
 {
     /// <summary>The schema version the current OS must leave the database at.</summary>
-    private const int ExpectedCurrentVersion = 5;
+    private const int ExpectedCurrentVersion = 6;
 
     /// <summary>The OS database since the rename (<c>KazoOsIndexedDbSchema.DatabaseName</c>).</summary>
     private const string CurrentDatabaseName = "kazoos";
@@ -93,10 +93,19 @@ public sealed partial class IndexedDbUpgradeFixtureTests(ITestOutputHelper outpu
                 tx.onabort = () => reject(tx.error);
                 tx.onerror = () => reject(tx.error);
             });
+            // A dump writes a typed array (a binary chunk from v5 on, ADR 0272) as { $type, base64 }.
+            const revive = value => {
+                if (Array.isArray(value)) return value.map(revive);
+                if (value === null || typeof value !== "object") return value;
+                if (value.$type === "Uint8Array" && typeof value.base64 === "string") {
+                    return Uint8Array.from(atob(value.base64), c => c.charCodeAt(0));
+                }
+                return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, revive(item)]));
+            };
             let count = 0;
             for (const store of fixture.objectStores) {
                 const target = tx.objectStore(store.name);
-                store.records.forEach((record, i) => {
+                store.records.map(revive).forEach((record, i) => {
                     if (target.keyPath === null) {
                         target.put(record, store.keys[i]);
                     } else {
@@ -189,6 +198,7 @@ public sealed partial class IndexedDbUpgradeFixtureTests(ITestOutputHelper outpu
     [InlineData(2)]
     [InlineData(3)]
     [InlineData(4)]
+    [InlineData(5)]
     public async Task Current_os_upgrades_an_old_database_and_keeps_files_accounts_and_settings(int fixtureVersion)
     {
         string solutionDirectory = E2ESupport.FindSolutionDirectory();
@@ -282,6 +292,7 @@ public sealed partial class IndexedDbUpgradeFixtureTests(ITestOutputHelper outpu
             Assert.Contains("serverConnection", stores);
             Assert.Contains("syncCursors", stores);
             Assert.Contains("syncRecordState", stores);
+            Assert.Contains("servedFiles", stores);
 
             // 4. The file and the setting, read back through the OS itself.
             await E2ESupport.OpenAppAsync(page, "Terminal", output);

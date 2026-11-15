@@ -6,11 +6,13 @@
 //
 // usage: node produce-fixture-kazoos.js <url> <commit> <out.json> <screenshotPrefix>
 // env:   PLAYWRIGHT_MODULE  path of the node "playwright" package (default: "playwright")
+//        FIXTURE_VERSION    the schema version the build writes (default: 4)
 // Full procedure: doc/en/wasm/dev/building-and-testing.md, "IndexedDB version upgrade fixtures".
 const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
 const fs = require('fs');
 const [url, commit, outJson, shot] = process.argv.slice(2);
-const version = 4;
+// The schema version the build writes (KazoOsIndexedDbSchema.CurrentVersion of that commit).
+const version = Number(process.env.FIXTURE_VERSION || 4);
 const admin = { loginName: 'admin', displayName: 'Fixture Admin', password: `Fixture-v${version}-pass` };
 const file = { directory: '/home/admin/Documents', name: 'upgrade-note.txt',
   content: `Written by Kazo OS at IndexedDB schema v${version} (${commit}).` };

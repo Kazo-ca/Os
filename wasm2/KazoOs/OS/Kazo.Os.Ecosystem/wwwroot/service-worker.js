@@ -3,8 +3,8 @@
 // be reflected on the first load after each change).
 //
 // One exception (ADR 0206): the wwwroot/ files of apps installed by kazopkg live in the OS, not on
-// the server. The OS copies them into a cache and this worker answers _content/<assembly>/<path>
-// from it, page loads included (an iframe pointed at an installed app's page, ADR 0243); every
+// the server. This worker answers _content/<assembly>/<path> from the OS's file system (ADR 0274),
+// page loads included (an iframe pointed at an installed app's page, ADR 0243); every
 // other request goes to the network as before.
 self.importScripts('./_content/Kazo.Os.Infrastructure.Browser/installedAppAssets.sw.js');
 

@@ -304,6 +304,9 @@ public sealed class IndexedDbFileSystemProviderTests
         Assert.Equal("deleteAllByIndexIfUnreferenced", delete.Kind);
         Assert.Equal("old-hash", delete.Query);
         Assert.Null(delete.CompareProperty);
+        // ADR 0274 §4: the old content stays while an installed app's address still serves it.
+        Assert.Equal("servedFiles", delete.ExtraReferenceObjectStoreName);
+        Assert.Equal("contentHash", delete.ExtraReferenceIndexName);
     }
 
     [Fact]

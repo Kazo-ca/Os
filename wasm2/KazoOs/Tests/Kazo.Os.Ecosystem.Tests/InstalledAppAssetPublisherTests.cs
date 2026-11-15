@@ -1,12 +1,13 @@
 using System.Security.Cryptography;
 using System.Text;
 using Kazo.Os.App.Abstractions;
+using Kazo.Os.Infrastructure.Browser.FileSystem;
 using Kazo.Os.Platform.Core.Apps;
 using Kazo.Os.Platform.Core.Apps.Packages;
 
 namespace Kazo.Os.Ecosystem.Tests;
 
-/// <summary>ADR 0206: an installed app's wwwroot/ files are copied, checked, where the service worker serves them.</summary>
+/// <summary>ADR 0206, ADR 0274: an installed app's wwwroot/ files are served by the service worker from its folder, checked, never copied.</summary>
 public sealed class InstalledAppAssetPublisherTests
 {
     private const string AppId = "org.kazo.sample";
@@ -31,7 +32,18 @@ public sealed class InstalledAppAssetPublisherTests
     {
         InstalledApp app = new(new AppPackageSource("Kazo-ca", "Sample", SemanticVersion.Parse("1.0.0")), manifest);
         InstalledAppsBoot boot = new(BuildKnownLazyApps.Host);
-        boot.Apply(new InstalledAppsImage([app], []), (path, _) => ValueTask.FromResult(files.TryGetValue(path.Value, out byte[]? bytes) ? bytes : null));
+        cache.Disk = files;
+        boot.Apply(new InstalledAppsImage([app], []), (path, _) =>
+        {
+            // ADR 0274 §3: serving an app's files reads none of them; only manifests and
+            // configuration files are read.
+            if (path.Value.Contains("/wwwroot/", StringComparison.Ordinal))
+            {
+                cache.FileReads++;
+            }
+
+            return ValueTask.FromResult(files.TryGetValue(path.Value, out byte[]? bytes) ? bytes : null);
+        });
         AppAssetStore store = new(boot.Current.Catalog, new InstalledAppAssetSource(NoAppAssetSource.Instance, boot));
         return (new InstalledAppAssetPublisher(boot, cache, () => store), app, store);
     }
@@ -54,10 +66,11 @@ public sealed class InstalledAppAssetPublisherTests
         Assert.Equal(Worker, cache.Files["_content/Kazo.Sample/engine/worker.js"].Bytes);
         Assert.Equal("text/javascript", cache.Files["_content/Kazo.Sample/engine/engine.js"].ContentType);
         Assert.Equal(2, cache.Files.Count);
+        Assert.Equal(0, cache.FileReads);
     }
 
     [Fact]
-    public async Task Files_are_copied_once_per_session_and_stale_addresses_are_dropped()
+    public async Task Files_are_served_once_per_session_and_stale_addresses_are_dropped()
     {
         MemoryCache cache = new();
         cache.Files["_content/Kazo.Removed/old.js"] = ([1], "text/javascript");
@@ -74,7 +87,7 @@ public sealed class InstalledAppAssetPublisherTests
     }
 
     [Fact]
-    public async Task A_damaged_file_is_not_served_and_its_old_copy_is_removed()
+    public async Task A_damaged_file_is_not_served_its_old_address_is_removed_and_the_app_is_damaged()
     {
         MemoryCache cache = new();
         cache.Files["_content/Kazo.Sample/engine/engine.js"] = (Engine, "text/javascript");
@@ -95,7 +108,7 @@ public sealed class InstalledAppAssetPublisherTests
     }
 
     [Fact]
-    public async Task Without_a_service_worker_nothing_is_copied_and_the_launch_goes_on()
+    public async Task Without_a_service_worker_nothing_is_served_and_the_launch_goes_on()
     {
         MemoryCache cache = new() { CanServe = false };
         AppManifest manifest = Manifest(new AssetManifest("engine/engine.js", AssetKind.JavaScriptModule, Hash(Engine)));
@@ -107,7 +120,7 @@ public sealed class InstalledAppAssetPublisherTests
     }
 
     [Fact]
-    public async Task A_launch_after_a_page_without_service_worker_asks_again_and_copies_the_files()
+    public async Task A_launch_after_a_page_without_service_worker_asks_again_and_serves_the_files()
     {
         // ADR 0225: a page loaded with Ctrl+F5 can be taken by the worker later in the session.
         MemoryCache cache = new() { CanServe = false };
@@ -236,6 +249,8 @@ public sealed class InstalledAppAssetPublisherTests
 
         public int Puts { get; private set; }
 
+        public int FileReads { get; set; }
+
         public int Prepares { get; private set; }
 
         public ValueTask<bool> PrepareAsync(CancellationToken cancellationToken)
@@ -247,16 +262,43 @@ public sealed class InstalledAppAssetPublisherTests
         public ValueTask<IReadOnlyList<string>> ListAsync(CancellationToken cancellationToken) =>
             ValueTask.FromResult<IReadOnlyList<string>>([.. Files.Keys]);
 
-        public ValueTask PutAsync(string url, byte[] bytes, string contentType, CancellationToken cancellationToken)
+        public Dictionary<string, byte[]> Disk { get; set; } = new(StringComparer.Ordinal);
+
+        // Like IndexedDbServedFiles: the stored content's hash is compared with the manifest's,
+        // and a refused address stops being served.
+        public ValueTask<IReadOnlyList<ServedFileResult>> ServeAsync(string appId, IReadOnlyList<ServedFileRequest> files, CancellationToken cancellationToken)
         {
-            Puts++;
-            Files[url] = (bytes, contentType);
-            return ValueTask.CompletedTask;
+            List<ServedFileResult> results = [];
+            foreach (ServedFileRequest file in files)
+            {
+                ServedFileOutcome outcome = !Disk.TryGetValue(file.Path.Value, out byte[]? bytes)
+                    ? ServedFileOutcome.Missing
+                    : !string.Equals(Hash(bytes), file.Sha256, StringComparison.OrdinalIgnoreCase)
+                        ? ServedFileOutcome.HashMismatch
+                        : ServedFileOutcome.Served;
+                if (outcome == ServedFileOutcome.Served)
+                {
+                    Puts++;
+                    Files[file.Url] = (bytes!, file.ContentType);
+                }
+                else
+                {
+                    Files.Remove(file.Url);
+                }
+
+                results.Add(new ServedFileResult(file.Url, outcome));
+            }
+
+            return ValueTask.FromResult<IReadOnlyList<ServedFileResult>>(results);
         }
 
-        public ValueTask RemoveAsync(string url, CancellationToken cancellationToken)
+        public ValueTask RemoveAsync(IReadOnlyList<string> urls, CancellationToken cancellationToken)
         {
-            Files.Remove(url);
+            foreach (string url in urls)
+            {
+                Files.Remove(url);
+            }
+
             return ValueTask.CompletedTask;
         }
 

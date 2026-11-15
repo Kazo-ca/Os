@@ -9,7 +9,8 @@ Proposée le 2026-11-15, série `storage/base`
 2026-11-14 l'option A de l'analyse du stockage (§7, décision 2) : le système
 de fichiers reste la seule source, le service worker sert `_content/…` depuis
 le magasin de fichiers et la copie dans Cache Storage disparaît. Cette ADR dit
-comment. Aucune question ouverte.
+comment. Aucune question ouverte. Mise en œuvre le 2026-11-15 par le chantier 4
+(voir « Mise en œuvre » plus bas).
 
 - **Remplace :** dans l'[ADR 0206](0206-serve-installed-app-assets.md), la
   copie des fichiers dans le cache `kazoos-installed-apps` ; dans
@@ -140,6 +141,38 @@ ADR 0225 §1 et 0237) ; sinon elle recommence au lancement suivant.
 - Le service worker gagne du code qui lit IndexedDB ; il est partagé par les
   deux fichiers de service worker de l'hôte, comme `installedAppAssets.sw.js`.
 
+## Mise en œuvre
+
+Chantier 4 de la série, le 2026-11-15. Ce qui précise ou s'écarte du texte
+ci-dessus :
+
+- **Base en version 6**, pas 5 : la version 5 est sortie seule avec
+  l'[ADR 0272](0272-binary-file-content.md) (chantier 1). L'étape 6 crée
+  `servedFiles` ; un vidage de la version 5 (`kazoos-v5.json`) teste la montée
+  de version.
+- **Ligne :** `{ url, contentHash, length, contentType, appId, chunkSize }`.
+  `chunkSize` est la taille de bloc avec laquelle le contenu a été écrit : le
+  worker en déduit les blocs que couvre un `Range`.
+- **Écriture d'une ligne** (`IndexedDbServedFiles`) : dans une transaction qui
+  vérifie d'abord que tous les blocs du contenu sont là (`assertCount`, code
+  `servedfiles.content-missing`) ; un contenu récupéré entre-temps laisse
+  l'adresse non servie au lieu d'une ligne cassée. Une adresse refusée
+  (fichier absent, jamais écrit, hachage différent, blocs manquants) perd sa
+  ligne précédente.
+- **Hachage différent :** l'app est aussi marquée abîmée
+  (`AppAssetStore.ReportDamaged`), comme quand un fichier lu ne correspond pas
+  à son manifeste (ADR 0098 §5).
+- **Références :** la passe de nettoyage et la récupération immédiate lors
+  d'une réécriture système comptent `servedFiles` en plus de `fsEntries`
+  (`extraReferenceObjectStoreName`).
+- **Sauvegarde :** `servedFiles` n'est pas sauvegardé (la publication la
+  reconstruit) ; un remplacement complet la vide avec le reste. La version de
+  schéma d'une sauvegarde reste 4.
+- **Service worker :** vérifie le `chunkHash` de chaque bloc lu (ADR 0272 §4),
+  lit 8 blocs par transaction, répond `416` à un `Range` impossible et ferme
+  sa connexion à la fin du flux. `prepare()` supprime l'ancien cache
+  `kazoos-installed-apps`.
+
 ## Options écartées
 
 - **B. Les fichiers servis seulement dans Cache Storage**, sans les extraire
@@ -154,15 +187,24 @@ ADR 0225 §1 et 0237) ; sinon elle recommence au lancement suivant.
 
 ## Tâches
 
-- [ ] Magasin `servedFiles` (base en version 5), dépôt, tests.
-- [ ] `InstalledAppAssetPublisher` : lignes au lieu de copies, comparaison des
+- [x] Magasin `servedFiles` (base en version 6, voir « Mise en œuvre »),
+  `IndexedDbServedFiles`, tests.
+- [x] `InstalledAppAssetPublisher` : lignes au lieu de copies, comparaison des
   hachages, ménage des lignes.
-- [ ] Lecteur de blocs du service worker (flux, `Range`), partagé
+- [x] Lecteur de blocs du service worker (flux, `Range`), partagé
   par les deux fichiers de service worker.
-- [ ] La passe de nettoyage compte `servedFiles` comme référence.
-- [ ] Suppression du cache `kazoos-installed-apps` et de `IInstalledAppAssetCache.PutAsync`.
-- [ ] Tests E2E : app installée dans l'OS publié (`TrimmedPublish.E2E`), page
-  chargée par Ctrl+F5, app dans une iframe, worker d'une app, deux onglets.
-- [ ] Mesure du démarrage d'une app Craft avant et après.
-- [ ] Docs (FR et EN) : `browser-infrastructure.md`, paquets d'apps, mémoire,
+- [x] La passe de nettoyage compte `servedFiles` comme référence.
+- [x] Suppression du cache `kazoos-installed-apps` et de `IInstalledAppAssetCache.PutAsync`.
+- [x] Tests E2E : app installée dans l'OS publié (`TrimmedPublish.E2E`), page
+  dans une iframe en ligne et hors ligne, worker d'une app et ses
+  `importScripts`, requête `Range`, app relancée après un redémarrage de
+  l'OS. La page chargée par Ctrl+F5 et deux onglets n'ont pas de test
+  automatique : la prise de contrôle par le worker (ADR 0225, 0237) ne change
+  pas.
+- [ ] Mesure du démarrage d'une app Craft avant et après : **pas faite dans le
+  navigateur**. Ce qui est vérifié : la publication ne lit plus aucun octet des
+  fichiers (test `InstalledAppAssetPublisherTests`, 0 lecture au lieu de la
+  taille de l'app) et n'écrit qu'une ligne par fichier. Reste pour le
+  chantier 7 (mesures finales).
+- [x] Docs (FR et EN) : `browser-infrastructure.md`, paquets d'apps, mémoire,
   `features.md`, entrée de changement.

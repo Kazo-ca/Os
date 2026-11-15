@@ -7,7 +7,7 @@ This document describes what an app sees of the machine backup: the `KazoSystemB
 ## `.kosbak` archive
 
 The `formatVersion: 1` JSON of `IndexedDbBackupService` (schema version,
-all stores, SHA-256), compressed with gzip. `ReadArchive` recognizes gzip
+all stores but `servedFiles`, ADR 0274, SHA-256), compressed with gzip. `ReadArchive` recognizes gzip
 by its first two bytes (`1F 8B`) and also accepts raw JSON. An archive that is
 damaged, empty, tampered with (wrong hash) or from another schema version is
 refused **before** any write, with a message that names both versions:

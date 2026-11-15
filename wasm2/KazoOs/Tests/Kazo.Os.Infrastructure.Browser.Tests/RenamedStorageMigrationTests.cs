@@ -138,7 +138,7 @@ public sealed class RenamedStorageMigrationTests
     private static string LegacyBackup(Dictionary<string, IReadOnlyList<JsonObject>> records)
     {
         JsonObject stores = [];
-        foreach (IndexedDbObjectStoreDefinition store in KazoOsIndexedDbSchema.ObjectStores)
+        foreach (IndexedDbObjectStoreDefinition store in KazoOsIndexedDbSchema.BackupObjectStores)
         {
             stores[store.Name] = new JsonArray([.. (records.GetValueOrDefault(store.Name) ?? []).Select(record => (JsonNode)record.DeepClone())]);
         }

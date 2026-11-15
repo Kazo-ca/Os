@@ -51,7 +51,7 @@ public sealed class IndexedDbBackupService : IAsyncDisposable
     public async ValueTask<string> ExportAsync(CancellationToken cancellationToken = default)
     {
         await _adapter.OpenAsync(IndexedDbMigrationPlan.CreateCurrent(), cancellationToken).ConfigureAwait(false);
-        IndexedDbOperation[] operations = KazoOsIndexedDbSchema.ObjectStores
+        IndexedDbOperation[] operations = KazoOsIndexedDbSchema.BackupObjectStores
             .Select(store => new IndexedDbOperation("getAll", store.Name))
             .ToArray();
         IReadOnlyList<JsonElement> results = await _adapter.ExecuteAsync(
@@ -62,7 +62,7 @@ public sealed class IndexedDbBackupService : IAsyncDisposable
 
         JsonObject payload = BuildPayload(
             _timeProvider.GetUtcNow(),
-            KazoOsIndexedDbSchema.ObjectStores.Select((store, index) => (store.Name, results[index])),
+            KazoOsIndexedDbSchema.BackupObjectStores.Select((store, index) => (store.Name, results[index])),
             KazoOsIndexedDbSchema.DatabaseName,
             KazoOsSdk.Version);
         JsonObject envelope = JsonNode.Parse(payload.ToJsonString())!.AsObject();
@@ -149,6 +149,8 @@ public sealed class IndexedDbBackupService : IAsyncDisposable
         List<IndexedDbOperation> operations = [];
         if (mode == IndexedDbRestoreMode.Replace)
         {
+            // Every store, servedFiles included (ADR 0274 §2): its rows point at the content the
+            // restore replaces, and the next launch of each installed app writes them again.
             operations.AddRange(KazoOsIndexedDbSchema.ObjectStores
                 .Select(store => new IndexedDbOperation("clear", store.Name)));
         }
@@ -219,14 +221,14 @@ public sealed class IndexedDbBackupService : IAsyncDisposable
 
         JsonObject storesNode = envelope["stores"] as JsonObject
             ?? throw new IndexedDbBackupValidationException("Backup stores object is missing.");
-        string[] expectedStores = KazoOsIndexedDbSchema.ObjectStores.Select(store => store.Name).ToArray();
+        string[] expectedStores = KazoOsIndexedDbSchema.BackupObjectStores.Select(store => store.Name).ToArray();
         if (!storesNode.Select(item => item.Key).Order().SequenceEqual(expectedStores.Order(), StringComparer.Ordinal))
         {
             throw new IndexedDbBackupValidationException("Backup store set does not match the current schema.");
         }
 
         List<(string Name, JsonElement Records)> stores = [];
-        foreach (IndexedDbObjectStoreDefinition definition in KazoOsIndexedDbSchema.ObjectStores)
+        foreach (IndexedDbObjectStoreDefinition definition in KazoOsIndexedDbSchema.BackupObjectStores)
         {
             JsonArray recordsNode = storesNode[definition.Name] as JsonArray
                 ?? throw new IndexedDbBackupValidationException($"Store '{definition.Name}' must be an array.");
