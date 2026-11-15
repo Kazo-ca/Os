@@ -19,5 +19,6 @@ summarized in [`../../memory/README.md`](../../memory/README.md).
 | [`wasm-v3-migration-analyse.md`](wasm-v3-migration-analyse.md) | Analysis of the wasm v3 migration (starting point of the end-of-migration plan). Historical. |
 | [`authentication-task-list.md`](authentication-task-list.md) | Former task list for WebAssembly authentication. Historical. |
 | [`kazoos-store.md`](kazoos-store.md) | **Kazo OS Store** plan, **approved on 2026-10-29**: system app (in the style of the Play Store) pinned by default, reviewed `Kazo-ca/Os-AppMarketPlace` catalog, trusted sources and per-user install, theme packs in v2; ADRs [0188](../adr/0188-hack-store-and-app-catalog.md) to [0190](../adr/0190-theme-packs.md) and the ordered list of work items (none started). |
+| [`large-file-save-profile.md`](large-file-save-profile.md) | Measurement of saving and opening a large file in the real OS (2026-11-14, issue #538, follow-up of #520): the 40 s for 50 MB come from a host built in Debug (about 4 s in the Release publish); 96% of the time is in the storage layer (SHA-256 in .NET, base64, JSON passage to IndexedDB); memory, `/proc/diskstats`, `head` bug on `/dev/urandom`; proposals. No product code changed. |
 
 Parent folder index: [`../README.md`](../README.md).
