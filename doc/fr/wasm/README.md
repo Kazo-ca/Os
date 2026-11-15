@@ -121,6 +121,8 @@ dans le même changement (voir [`AGENTS.md`](../../../AGENTS.md)).
 | [`v3-1-series-plan.md`](dev/plans/v3-1-series-plan.md) | Série v3.1 (branche `v3.1/base`, 2026-10-17) : lacunes de la migration v3 corrigées avant les suites de l'étape 5 ; restauration de la géométrie des fenêtres (ADR 0116), titre de fenêtre posé par l'app et publication du SDK 1.1 (ADR 0117), fusion de `v3/base` (associations par utilisateur, `passwd`), branches, dépendances et barre de fusion. |
 | [`wasm-v3-migration-analyse.md`](dev/plans/wasm-v3-migration-analyse.md) | Analyse de la migration wasm v3 (point de départ du plan de fin de migration). Historique. |
 | [`authentication-task-list.md`](dev/plans/authentication-task-list.md) | Ancienne liste de tâches de l'authentification WebAssembly. Historique. |
+| [`browser-storage-optimization-analysis.md`](dev/plans/browser-storage-optimization-analysis.md) | Analyse du stockage dans le navigateur (2026-11-14, aucun code) : ce que l'OS garde dans IndexedDB et Cache Storage, mesures, constats (contenus orphelins jamais ramassés, base64, trois copies des apps installées, `persist()` jamais appelé), douze pistes ordonnées et trois décisions de Benoit. |
+| [`large-file-save-profile.md`](dev/plans/large-file-save-profile.md) | Mesure de l'enregistrement et de l'ouverture d'un gros fichier dans l'OS réel (2026-11-14, issue #538, suite de #520) : les 40 s pour 50 Mo viennent d'un hôte compilé en Debug (environ 4 s dans la publication Release) ; 96 % du temps est dans la couche de stockage (SHA-256 en .NET, base64, passage JSON vers IndexedDB) ; mémoire, `/proc/diskstats`, bogue de `head` sur `/dev/urandom` ; propositions. Aucun code du produit changé. |
 
 ### Sous-systèmes et apps de base
 

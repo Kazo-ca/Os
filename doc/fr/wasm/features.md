@@ -325,6 +325,11 @@ Cette section liste ce qui est publié dans la branche `main` et en ligne.
   qui montrent ce que fait chaque app, et le menu Démarrer, le bureau et
   l'explorateur affichent l'icône propre de chaque app, y compris installée.
   ([ADR 0232](dev/adr/0232-illustrated-app-icons-everywhere.md))
+- **Assistant de bienvenue** : à la première connexion, l'utilisateur choisit
+  sa langue, son thème, son fond d'écran et son fuseau horaire avant le
+  bureau ; chaque choix s'applique tout de suite et l'assistant peut être
+  passé. ([`welcome-wizard.md`](dev/welcome-wizard.md),
+  [ADR 0276](dev/adr/0276-welcome-wizard-at-first-sign-in.md))
 - **Thèmes** de l'OS, et éditeur pour créer les siens.
   ([`theme-files.md`](framework/theme-files.md))
 - **Fonds d'écran en image** : une image PNG, JPEG ou WebP (4 livrées avec
@@ -470,9 +475,9 @@ dans `main`, le lien mène à sa PR.
 | Fonctionnalité | Description | ADR | Issue |
 | --- | --- | --- | --- |
 | Changer d'utilisateur | Ouvrir une autre session sans fermer la première. Reste grisé dans le menu Marche/arrêt par choix de Benoit : une session à la fois, Se déconnecter pour changer de compte. | [0195](dev/adr/0195-start-menu-power-button.md), [0201](dev/adr/0201-switch-user-stays-greyed.md) | [#290](https://github.com/Kazo-ca/Os/issues/290) |
-| Assistant de bienvenue | À la première connexion, choisir sa langue, son thème, son fond d'écran et son fuseau horaire avant le bureau ; on peut le passer. Codé dans la série `first-run-theme/base`. | [0276](dev/adr/0276-welcome-wizard-at-first-sign-in.md) | [#553](https://github.com/Kazo-ca/Os/issues/553) (tests des apps) |
 | Adresse de fichier servie à la demande | Une app reçoit une adresse pour lire un gros fichier (audio, vidéo) sans le copier en mémoire, avec lecture partielle pour avancer dans un morceau. | À écrire | [#379](https://github.com/Kazo-ca/Os/issues/379) |
 | Glisser des fichiers vers une app | Contrat public du SDK pour recevoir des fichiers glissés depuis l'explorateur ou le bureau. | À écrire | [#380](https://github.com/Kazo-ca/Os/issues/380) |
+| Récupérer l'espace des fichiers réécrits ou supprimés | L'ancien contenu d'un fichier réécrit ou supprimé est effacé après 1 jour, ou après 5 minutes quand l'espace est faible, au lieu de rester pour toujours dans le navigateur. | [0273](dev/adr/0273-short-orphan-content-retention.md) | [#537](https://github.com/Kazo-ca/Os/issues/537) |
 
 ### Kazo OS Store
 
