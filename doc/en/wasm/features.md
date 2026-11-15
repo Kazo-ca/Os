@@ -181,6 +181,18 @@ This section lists what is released in the `main` branch and online.
   reads and writes the user's network drives like their personal files,
   without a dangerous capability; another user's drive and `/mnt` stay system
   files. ([ADR 0231](dev/adr/0231-network-drives-count-as-personal-files.md))
+- **Faster and lighter files**: content is kept in binary instead of base64 (about 25%
+  less space, saving 52.5 MiB from 3.4 s to 1.0 s in Chromium), each 256 KiB chunk checked
+  by its fingerprint when read; old content is converted once at the first boot, behind a
+  waiting screen. ([ADR 0272](dev/adr/0272-binary-file-content.md))
+- **Large files read and written in pieces**: beyond 16 MiB, a file opens as a stream that
+  loads only the chunks read, and is saved in batches handed to the browser, which halves
+  the memory taken. ([ADR 0275](dev/adr/0275-partial-read-and-file-address.md) §1, 2 and 4)
+- **A single copy of the files of an installed app**: the service worker serves an app's
+  files from its folder, with no copy in a cache; a 64 MiB app whose previous version is kept
+  takes 128 MiB instead of 236 MiB. ([ADR 0274](dev/adr/0274-single-copy-of-app-files.md))
+- **Space reclaimed after a rewrite or a deletion**: old content is erased after 1 day, or
+  after 5 minutes when space is short. ([ADR 0273](dev/adr/0273-short-orphan-content-retention.md))
 - **Backup and restore** of the whole machine in a downloaded archive.
   ([`system-backup.md`](dev/system-backup.md))
 
@@ -443,6 +455,9 @@ This section lists what is released in the `main` branch and online.
 - **Browser tests every night**: the Playwright suites run at night on `main`
   when it changed; a failure opens an issue.
   ([`ci-workflows.md`](dev/ci-workflows.md#browser-tests-every-night))
+- **Installable features ("Feature" app type)**: an optional feature of the OS installed for the whole machine by an administrator, with its child entry points. ([ADR 0260](dev/adr/0260-feature-app-type.md), [`app-installation.md`](dev/app-installation.md#features-adr-0260))
+- **App libraries and shared versions**: a package carries the app's libraries, and a shared library (`KazoOsSharedLibrary`) is loaded once, in its newest compatible version. ([ADR 0261](dev/adr/0261-app-libraries-and-shared-versions.md), [ADR 0256](dev/adr/0256-app-libraries-implementation-adjustments.md))
+- **Feature services**: an app asks for an interface a Feature provides with `KazoFeatures.GetServiceAsync<T>()`, with no dependency in its binary. ([ADR 0262](dev/adr/0262-feature-service-registry-and-async-resolution.md), [`feature-services.md`](framework/feature-services.md))
 
 ## In development
 
@@ -456,17 +471,14 @@ points to its PR.
 | --- | --- | --- | --- |
 | Switch user | Open another session without closing the first one. Stays greyed out in the Power menu by Benoit's choice: one session at a time, Sign out to change account. | [0195](dev/adr/0195-start-menu-power-button.md), [0201](dev/adr/0201-switch-user-stays-greyed.md) | [#290](https://github.com/Kazo-ca/Os/issues/290) |
 | File address served on demand | An app gets an address to read a large file (audio, video) without copying it in memory, with partial reads to seek in a track. `storage/base` series; the partial read is done (work item 3), the address is still to do. | [0275](dev/adr/0275-partial-read-and-file-address.md) | [#379](https://github.com/Kazo-ca/Os/issues/379) |
-| Faster and lighter files in the browser | File content is kept in binary instead of base64: about 25% less space, saving a 52.5 MiB file about three times faster (3.4 s to 1.0 s in Chromium); beyond 16 MiB, the file goes to the browser in batches while it is saved, which halves the memory taken ([ADR 0275](dev/adr/0275-partial-read-and-file-address.md) §4). The old content is converted all at once at the first boot after the update, with a waiting screen. `storage/base` series. | [0272](dev/adr/0272-binary-file-content.md) | [plan](dev/plans/browser-storage-series-plan.md) |
-| Space reclaimed after a deletion | The space of a rewritten or deleted file comes back within one day at most, within minutes when space is short, instead of staying taken. | [0273](dev/adr/0273-short-orphan-content-retention.md) | [#537](https://github.com/Kazo-ca/Os/issues/537) |
-| A single copy of the files of an installed app | The files of an app are no longer copied into a cache in every session: the service worker serves them from the app's folder. A 64 MiB app with its previous version kept takes 128 MiB instead of 236 MiB (with binary content), and its first launch copies nothing. `storage/base` series, done (work item 4). | [0274](dev/adr/0274-single-copy-of-app-files.md) | [plan](dev/plans/browser-storage-series-plan.md) |
 | Drag files onto an app | Public SDK contract to receive files dragged from the File Explorer or the desktop. | To write | [#380](https://github.com/Kazo-ca/Os/issues/380) |
-| Reclaim the space of rewritten or deleted files | The old content of a rewritten or deleted file is erased after 1 day, or after 5 minutes when storage is low, instead of staying in the browser forever. | [0273](dev/adr/0273-short-orphan-content-retention.md) | [#537](https://github.com/Kazo-ca/Os/issues/537) |
 
 ### Kazo OS Store
 
 | Feature | Description | ADR | Issue |
 | --- | --- | --- | --- |
 | Application catalog | Catalog format, checking and publishing of the offered applications. | [0188](dev/adr/0188-hack-store-and-app-catalog.md) | [AppMarketPlace #1](https://github.com/Kazo-ca/Os-AppMarketPlace/issues/1) |
+| Beta channel and automatic app updates | A beta version of Kazo OS online (`os-beta.kazo.ca`), the SDK as a prerelease on nuget.org, and each app rebuilding and offering its update when the SDK ships. The OS side is done: the `beta` branch, the beta site with its "Beta" badge, the beta catalog and the reusable app workflows. Prerelease 3.4.0-preview.1 shipped on 2026-11-15. Each app repository still has to be aligned (work item 7). | [0271](dev/adr/0271-beta-channel-and-automatic-app-updates.md), [plan](dev/plans/release-channels-plan.md) | [#456](https://github.com/Kazo-ca/Os/issues/456) |
 
 ### Personalization
 
@@ -479,6 +491,28 @@ points to its PR.
 | Feature | Description | ADR | Issue |
 | --- | --- | --- | --- |
 | HackerOS becomes Kazo OS | The name HackerOS is already taken by a Linux distribution. Everything is renamed: displayed name, `Kazo.Os.*` namespaces and packages (SDK 3.0.0), `Kazo` prefix instead of `Hack`, commands, extensions and paths; user data is migrated on the first boot. | [0228](dev/adr/0228-rename-to-kazoos.md), [0229](dev/adr/0229-kazo-os-display-name-and-new-address.md), [0230](dev/adr/0230-rename-migration-by-previous-version.md) | Series `rename/base` |
+
+### Installable features (Features) and Os-x86
+
+Os-x86 ([Os-x86](https://github.com/Kazo-ca/Os-x86)) is an optional OS
+feature, installed system-wide by an administrator, that runs x86 virtual
+machines in the browser (Linux, FreeDOS, Windows programs through Wine); the
+BoxedWine app is its interface. It asks the OS for the "Feature" app type and
+the extension points below (lot 1, `feature/base` series, ADR 0246 to 0256 and 0260 to 0262;
+one row per ADR).
+
+| Feature | Description | ADR | Issue |
+| --- | --- | --- | --- |
+| Permissions declared by a Feature | A Feature declares its own permissions, dangerous ones included; they follow the rules of the OS catalog and are never granted silently. | [0246](dev/adr/0246-provider-declared-permissions.md) | — |
+| Roles declared by a Feature | A Feature declares roles an administrator assigns; every sensitive operation goes through the OS authentication. | [0247](dev/adr/0247-feature-declared-roles.md) | — |
+| Dependency resolution | The Store and `kazopkg` install the dependencies declared in the manifest, with one consent; removing a package warns and disables the dependent apps. | [0248](dev/adr/0248-store-and-kazopkg-dependency-resolution.md) | — |
+| “Features” section of Settings | Settings lists the installed Features and shows the pages they provide, by the user's role. | [0249](dev/adr/0249-settings-features-section.md) | — |
+| Storage persistence and eviction | The OS asks the browser not to erase its storage, shows the quota and warns when the browser erased data anyway. | [0250](dev/adr/0250-storage-persistence-and-eviction.md) | — |
+| Shell route to execute-capable apps | `./program.exe` in the terminal is typed by a Feature's format detector, then handed to the app that declares `execute` for that MIME type, without an execute bit nor a script reading. | [0251](dev/adr/0251-shell-route-to-execute-capable-apps.md) | — |
+| The Terminal shows a guest program | A Feature's console program (Linux shell, text-mode DOS program) shows in the Kazo Terminal: per-cell colors, function keys, Ctrl+C to the program. | [0252](dev/adr/0252-terminal-shows-a-guest-program.md) | — |
+| Marked sender | An app launched or a file opened by another app knows the sender, marked by the OS, for its journal. | [0253](dev/adr/0253-marked-sender-on-launch-and-open.md) | — |
+| Per-user events | A per-user events journal (permission granted, update, conflict resolved), visible by the user and the administrators. | [0254](dev/adr/0254-per-user-events.md) | — |
+| Relay: identities and decisions of a Feature | The server relay accepts from a Feature an identity per flow, a decision and limits, and logs per identity. | [0255](dev/adr/0255-relay-identities-and-decisions-of-a-feature.md) | — |
 
 ### Optional ported applications
 

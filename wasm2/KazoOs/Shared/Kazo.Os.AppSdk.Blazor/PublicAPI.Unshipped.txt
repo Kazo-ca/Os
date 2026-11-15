@@ -1,1 +1,10 @@
 #nullable enable
+const Kazo.Os.AppSdk.Blazor.Components.KazoOsChannelLink.BetaSiteAddress = "https://os-beta.kazo.ca/" -> string!
+const Kazo.Os.AppSdk.Blazor.Components.KazoOsChannelLink.StableSiteAddress = "https://os.kazo.ca/" -> string!
+Kazo.Os.AppSdk.Blazor.Components.KazoOsChannelLink
+Kazo.Os.AppSdk.Blazor.Components.KazoOsChannelLink.KazoOsChannelLink() -> void
+Kazo.Os.AppSdk.Blazor.Components.KazoOsChannelLink.Version.get -> string!
+Kazo.Os.AppSdk.Blazor.Components.KazoOsChannelLink.Version.set -> void
+static Kazo.Os.AppSdk.Blazor.Components.KazoOsChannelLink.GetSwitchTarget(Kazo.Os.App.Abstractions.SemanticVersion running, System.Uri! page) -> System.Uri?
+static Kazo.Os.AppSdk.Blazor.Components.KazoOsChannelLink.IsBeta(string? version) -> bool
+~override Kazo.Os.AppSdk.Blazor.Components.KazoOsChannelLink.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void

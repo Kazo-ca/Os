@@ -46,6 +46,13 @@ public sealed class AppPackage
     /// <summary>Name of the app manifest at the archive root.</summary>
     public const string ManifestFileName = "manifest.json";
 
+    /// <summary>
+    /// Folder of the children of a feature (ADR 0260 §2): one <c>entrypoints/&lt;suffix&gt;.json</c>
+    /// per child, each an ordinary manifest of its kind naming the feature as its <c>parent</c>, and
+    /// listed under <c>manifests</c> in <see cref="DescriptionFileName"/>.
+    /// </summary>
+    public const string EntryPointsFolder = "entrypoints/";
+
     /// <summary>Folder of the app assemblies.</summary>
     public const string LibraryFolder = "lib/";
 
@@ -67,11 +74,18 @@ public sealed class AppPackage
     /// <summary>Most files accepted in one archive.</summary>
     public const int MaximumFiles = 2_000;
 
-    private AppPackage(AppManifest manifest, SemanticVersion version, IReadOnlyDictionary<string, byte[]> files)
+    private AppPackage(
+        AppManifest manifest,
+        IReadOnlyList<AppManifest> children,
+        SemanticVersion version,
+        IReadOnlyDictionary<string, byte[]> files,
+        IReadOnlyList<AppPackageLibrary> libraries)
     {
         Manifest = manifest;
+        Children = children;
         Version = version;
         Files = files;
+        Libraries = libraries;
     }
 
     /// <summary>Gets the app identifier.</summary>
@@ -80,13 +94,35 @@ public sealed class AppPackage
     /// <summary>Gets the package version (equal to the manifest version).</summary>
     public SemanticVersion Version { get; }
 
-    /// <summary>Gets the app manifest.</summary>
+    /// <summary>Gets the app manifest: the feature's own, for a feature package.</summary>
     public AppManifest Manifest { get; }
+
+    /// <summary>
+    /// Gets the children of a feature (ADR 0260 §2), read from <c>entrypoints/*.json</c>, each
+    /// validated as a manifest of its kind and against the feature; empty for any other package.
+    /// </summary>
+    public IReadOnlyList<AppManifest> Children { get; }
+
+    /// <summary>Gets whether this package holds a feature (ADR 0260): installed for the whole machine only.</summary>
+    public bool IsFeature => Manifest.Kind == AppKind.Feature;
+
+    /// <summary>Gets the manifest followed by its children: every app the package installs.</summary>
+    public IEnumerable<AppManifest> Manifests => Children.Prepend(Manifest);
 
     /// <summary>Gets every verified file by its archive path, <see cref="DescriptionFileName"/> included.</summary>
     public IReadOnlyDictionary<string, byte[]> Files { get; }
 
-    /// <summary>Gets the app assemblies, by file name (e.g. <c>Kazo.Webamp.dll</c>); satellites are not among them.</summary>
+    /// <summary>
+    /// Gets the libraries of the app (ADR 0261 §1), listed in <c>libraries</c> of
+    /// <see cref="DescriptionFileName"/>: each one is a file of <c>lib/</c> whose name, version, SHA-256
+    /// and shared mark were checked against the assembly itself. Empty for an app without a library.
+    /// </summary>
+    public IReadOnlyList<AppPackageLibrary> Libraries { get; }
+
+    /// <summary>
+    /// Gets the assemblies of the package, by file name (e.g. <c>Kazo.Webamp.dll</c>): the declared
+    /// ones and the libraries; satellites are not among them.
+    /// </summary>
     public IReadOnlyDictionary<string, byte[]> Assemblies => Files
         .Where(static pair => pair.Key.StartsWith(LibraryFolder, StringComparison.Ordinal) && pair.Key.IndexOf('/', LibraryFolder.Length) < 0)
         .ToDictionary(static pair => pair.Key[LibraryFolder.Length..], static pair => pair.Value, StringComparer.Ordinal);
@@ -187,7 +223,7 @@ public sealed class AppPackage
             }
         }
 
-        AppManifest manifest = ReadManifest(files);
+        AppManifest manifest = ReadManifest(files, ManifestFileName);
         if (!string.Equals(manifest.Id, description.AppId, StringComparison.Ordinal))
         {
             throw new AppPackageException("apps.package.id-mismatch", $"The package names '{description.AppId}' but its manifest is '{manifest.Id}'.");
@@ -198,8 +234,114 @@ public sealed class AppPackage
             throw new AppPackageException("apps.package.version-mismatch", $"The package is version {description.Version} but its manifest says {manifest.Version}.");
         }
 
-        CheckContents(manifest, files);
-        return new AppPackage(manifest, description.Version, files);
+        if (manifest.Parent is not null)
+        {
+            throw new AppPackageException("apps.package.bad-manifest", $"{ManifestFileName} is the child of '{manifest.Parent}': a child is installed with its feature's package, never alone (ADR 0260).");
+        }
+
+        IReadOnlyList<AppManifest> children = ReadChildren(manifest, description, files);
+        CheckLibraries(description.Libraries, GetDeclaredAssemblies(children.Prepend(manifest)), files);
+        CheckServiceContracts(manifest, description.Libraries);
+        CheckContents(manifest, children, description.Libraries, files);
+        return new AppPackage(manifest, children, description.Version, files, description.Libraries);
+    }
+
+    /// <summary>
+    /// ADR 0262 §1: the contract of a service a feature provides is an interface of a library the
+    /// package carries and that its author marked as shared (ADR 0261 §2); otherwise every client
+    /// app would hold its own copy of the contract, a type the feature's instance does not implement.
+    /// </summary>
+    private static void CheckServiceContracts(AppManifest manifest, IReadOnlyList<AppPackageLibrary> libraries)
+    {
+        foreach (AppProvidedServiceManifest service in manifest.ProvidedServices ?? [])
+        {
+            if (!libraries.Any(library => library.Shared && string.Equals(library.Name, service.ContractAssembly, StringComparison.OrdinalIgnoreCase)))
+            {
+                throw new AppPackageException(
+                    "apps.package.service-contract-not-shared",
+                    $"{manifest.Id} provides {service.ContractType} from {service.ContractAssembly}, which is not a shared library of the package: mark the contracts' project with KazoOsSharedLibrary (ADR 0262 §1, ADR 0256 §2).");
+            }
+        }
+    }
+
+    /// <summary>
+    /// ADR 0261 §1: every listed library is a file of <c>lib/</c> that is the assembly the list says
+    /// (same simple name, version, SHA-256 and shared mark), and is not one the manifest declares.
+    /// </summary>
+    private static void CheckLibraries(IReadOnlyList<AppPackageLibrary> libraries, IReadOnlySet<string> declared, Dictionary<string, byte[]> files)
+    {
+        foreach (AppPackageLibrary library in libraries)
+        {
+            if (declared.Contains(library.FileName, StringComparer.OrdinalIgnoreCase))
+            {
+                throw new AppPackageException("apps.package.bad-description", $"{DescriptionFileName} lists '{library.Name}' as a library, but the manifest declares {library.FileName} as an assembly of the app.");
+            }
+
+            if (!files.TryGetValue(LibraryFolder + library.FileName, out byte[]? bytes))
+            {
+                throw new AppPackageException("apps.package.missing-assembly", $"{DescriptionFileName} lists the library lib/{library.FileName}, which the package does not hold.");
+            }
+
+            AppPackageLibrary actual = AppPackageLibrary.Describe(library.FileName, bytes);
+            if (!string.Equals(actual.Sha256, library.Sha256, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new AppPackageException("apps.package.hash-mismatch", $"The library lib/{library.FileName} does not match the SHA-256 of its entry in libraries.");
+            }
+
+            if (!string.Equals(actual.Name, library.Name, StringComparison.Ordinal) || actual.Version != library.Version || actual.Shared != library.Shared)
+            {
+                throw new AppPackageException(
+                    "apps.package.bad-description",
+                    $"{DescriptionFileName} lists the library {library.Name} {library.Version} (shared: {library.Shared}), but lib/{library.FileName} is {actual.Name} {actual.Version} (shared: {actual.Shared}).");
+            }
+        }
+    }
+
+    /// <summary>
+    /// ADR 0260 §2: a feature package carries one manifest per child under <c>entrypoints/</c>,
+    /// listed in <c>manifests</c> of the description (every <c>entrypoints/*.json</c> file when the
+    /// description predates the list). Any other package carries none.
+    /// </summary>
+    private static IReadOnlyList<AppManifest> ReadChildren(AppManifest manifest, PackageDescription description, Dictionary<string, byte[]> files)
+    {
+        string[] listed = description.Manifests.Count > 0
+            ? [.. description.Manifests]
+            : [.. files.Keys.Where(static path => path.StartsWith(EntryPointsFolder, StringComparison.Ordinal)).Order(StringComparer.Ordinal)];
+        if (manifest.Kind != AppKind.Feature)
+        {
+            if (listed.Length > 0)
+            {
+                throw new AppPackageException("apps.package.unexpected-file", $"'{listed[0]}' is a child manifest, but {ManifestFileName} is not a feature (ADR 0260).");
+            }
+
+            return [];
+        }
+
+        List<AppManifest> children = [];
+        foreach (string path in listed)
+        {
+            if (!path.StartsWith(EntryPointsFolder, StringComparison.Ordinal) || !path.EndsWith(".json", StringComparison.Ordinal) || path.IndexOf('/', EntryPointsFolder.Length) >= 0)
+            {
+                throw new AppPackageException("apps.package.bad-description", $"{DescriptionFileName} lists the child manifest '{path}' outside {EntryPointsFolder}<suffix>.json.");
+            }
+
+            AppManifest child = ReadManifest(files, path);
+            ManifestValidationResult validation = AppManifestValidator.Validate(child);
+            if (!validation.IsValid)
+            {
+                throw new AppPackageException("apps.package.bad-manifest", $"{path} is not valid: {string.Join("; ", validation.Errors.Select(static error => error.Message))}");
+            }
+
+            children.Add(child);
+        }
+
+        ManifestValidationResult relation = AppManifestValidator.ValidateFeature(manifest, children);
+        if (!relation.IsValid)
+        {
+            throw new AppPackageException("apps.package.bad-manifest", $"The children of {manifest.Id} are not valid: {string.Join("; ", relation.Errors.Select(static error => error.Message))}");
+        }
+
+        return children;
     }
 
     /// <summary>Gets the lower-case hexadecimal SHA-256 of <paramref name="bytes"/>, the form packages and manifests use.</summary>
@@ -304,7 +446,23 @@ public sealed class AppPackage
                 listed[file.Name] = hash;
             }
 
-            return new PackageDescription(appId, version, listed);
+            // ADR 0260 §2: the child manifests of a feature, in the order the feature declares them.
+            List<string> manifests = [];
+            if (root.TryGetProperty("manifests", out JsonElement manifestList) && manifestList.ValueKind == JsonValueKind.Array)
+            {
+                foreach (JsonElement item in manifestList.EnumerateArray())
+                {
+                    string path = item.GetString() ?? string.Empty;
+                    if (!listed.ContainsKey(path))
+                    {
+                        throw new AppPackageException("apps.package.bad-description", $"{DescriptionFileName} lists the manifest '{path}', which is not among its files.");
+                    }
+
+                    manifests.Add(path);
+                }
+            }
+
+            return new PackageDescription(appId, version, listed, manifests, AppPackageLibrary.ReadList(root));
         }
         catch (Exception exception) when (exception is JsonException or KeyNotFoundException or InvalidOperationException)
         {
@@ -312,11 +470,11 @@ public sealed class AppPackage
         }
     }
 
-    private static AppManifest ReadManifest(Dictionary<string, byte[]> files)
+    private static AppManifest ReadManifest(Dictionary<string, byte[]> files, string path)
     {
-        if (!files.TryGetValue(ManifestFileName, out byte[]? bytes))
+        if (!files.TryGetValue(path, out byte[]? bytes))
         {
-            throw new AppPackageException("apps.package.no-manifest", $"The package has no {ManifestFileName}.");
+            throw new AppPackageException("apps.package.no-manifest", $"The package has no {path}.");
         }
 
         try
@@ -326,11 +484,11 @@ public sealed class AppPackage
         }
         catch (Exception exception) when (exception is JsonException or InvalidOperationException or ArgumentException or FormatException)
         {
-            throw new AppPackageException("apps.package.bad-manifest", $"{ManifestFileName} is not a valid app manifest: {exception.Message}");
+            throw new AppPackageException("apps.package.bad-manifest", $"{path} is not a valid app manifest: {exception.Message}");
         }
     }
 
-    private static void CheckContents(AppManifest manifest, Dictionary<string, byte[]> files)
+    private static void CheckContents(AppManifest manifest, IReadOnlyList<AppManifest> children, IReadOnlyList<AppPackageLibrary> libraries, Dictionary<string, byte[]> files)
     {
         ManifestValidationResult validation = AppManifestValidator.Validate(manifest);
         if (!validation.IsValid)
@@ -338,18 +496,23 @@ public sealed class AppPackage
             throw new AppPackageException("apps.package.bad-manifest", $"{ManifestFileName} is not valid: {string.Join("; ", validation.Errors.Select(static error => error.Message))}");
         }
 
-        IReadOnlySet<string> declared = GetDeclaredAssemblies(manifest);
+        IReadOnlySet<string> declared = GetDeclaredAssemblies(children.Prepend(manifest));
+        // ADR 0261 §1: the libraries of the app have their satellites too.
+        HashSet<string> translatable = new(declared.Concat(libraries.Select(static library => library.FileName)), StringComparer.Ordinal);
+        bool feature = manifest.Kind == AppKind.Feature;
         foreach (string path in files.Keys)
         {
             // ADR 0222 §1: a satellite translates one of the app's own assemblies, never the SDK's
             // (the OS brings those) nor another package's.
             bool known = path is DescriptionFileName or LegacyDescriptionFileName or ManifestFileName
                 || (path.StartsWith(LibraryFolder, StringComparison.Ordinal) && path.EndsWith(".dll", StringComparison.OrdinalIgnoreCase) && path.Count(static c => c == '/') == 1)
-                || (TryParseSatellitePath(path, out _, out string translated) && declared.Contains(translated))
-                || path.StartsWith(AssetFolder, StringComparison.Ordinal);
+                || (TryParseSatellitePath(path, out _, out string translated) && translatable.Contains(translated))
+                || path.StartsWith(AssetFolder, StringComparison.Ordinal)
+                // ADR 0260 §2: the children of a feature, already read and validated.
+                || (feature && path.StartsWith(EntryPointsFolder, StringComparison.Ordinal) && path.EndsWith(".json", StringComparison.Ordinal) && path.Count(static c => c == '/') == 1);
             if (!known)
             {
-                throw new AppPackageException("apps.package.unexpected-file", $"'{path}' is outside manifest.json, lib/*.dll, lib/<culture>/<declared assembly>.resources.dll and wwwroot/.");
+                throw new AppPackageException("apps.package.unexpected-file", $"'{path}' is outside manifest.json, lib/*.dll, lib/<culture>/<declared assembly>.resources.dll, wwwroot/ and, for a feature, entrypoints/*.json.");
             }
         }
 
@@ -361,7 +524,7 @@ public sealed class AppPackage
             }
         }
 
-        foreach (AssetManifest asset in manifest.Assets)
+        foreach (AssetManifest asset in children.Prepend(manifest).SelectMany(static item => item.Assets).DistinctBy(static asset => asset.Path, StringComparer.Ordinal))
         {
             if (!files.TryGetValue(AssetFolder + asset.Path, out byte[]? bytes))
             {
@@ -380,15 +543,34 @@ public sealed class AppPackage
     public static IReadOnlySet<string> GetDeclaredAssemblies(AppManifest manifest)
     {
         ArgumentNullException.ThrowIfNull(manifest);
+        return GetDeclaredAssemblies([manifest]);
+    }
+
+    /// <summary>Gets every assembly a set of manifests names (a feature and its children, ADR 0260 §2).</summary>
+    /// <param name="manifests">Valid manifests.</param>
+    public static IReadOnlySet<string> GetDeclaredAssemblies(IEnumerable<AppManifest> manifests)
+    {
+        ArgumentNullException.ThrowIfNull(manifests);
         HashSet<string> assemblies = new(StringComparer.Ordinal);
-        if (AppManifestPlatformSupport.Resolve(manifest) is { } platforms)
+        foreach (AppManifest manifest in manifests)
         {
-            assemblies.UnionWith(platforms.EntryPointsByPlatform.Values.Select(static entryPoint => entryPoint.Assembly));
+            if (AppManifestPlatformSupport.Resolve(manifest) is { } platforms)
+            {
+                assemblies.UnionWith(platforms.EntryPointsByPlatform.Values.Select(static entryPoint => entryPoint.Assembly));
+            }
+
+            assemblies.UnionWith((manifest.Components ?? []).Select(static component => component.Assembly));
+            // ADR 0262 §1: the code of a feature's services is the feature's.
+            assemblies.UnionWith((manifest.ProvidedServices ?? []).Select(static service => service.ImplementationAssembly + ".dll"));
         }
 
-        assemblies.UnionWith((manifest.Components ?? []).Select(static component => component.Assembly));
         return assemblies;
     }
 
-    private sealed record PackageDescription(string AppId, SemanticVersion Version, IReadOnlyDictionary<string, string> Files);
+    private sealed record PackageDescription(
+        string AppId,
+        SemanticVersion Version,
+        IReadOnlyDictionary<string, string> Files,
+        IReadOnlyList<string> Manifests,
+        IReadOnlyList<AppPackageLibrary> Libraries);
 }
