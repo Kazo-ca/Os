@@ -151,10 +151,12 @@ suis d'accord avec tes recommendations".
 
 ## Tasks
 
-- [ ] `WelcomeSetupService` (state, plan of steps, language) and
+- [x] `WelcomeSetupService` (state, plan of steps, language) and
   `LoginEnvironmentProvider.ReloadAsync`, with tests.
-- [ ] Host view `Welcome` and component `WelcomeWizard` (four steps, desktop
+- [x] Host view `Welcome` and component `WelcomeWizard` (four steps, desktop
   and phone, EN/FR).
-- [ ] Tests: unit, E2E `WelcomeWizardTests`, updated test helpers.
-- [ ] Docs FR/EN (`welcome-wizard.md`, `features.md`, memory), screenshots.
-- [ ] `TODO` issue for the tests of the app repositories.
+- [x] Tests: unit, E2E `WelcomeWizardTests`, updated test helpers.
+- [x] Docs FR/EN (`welcome-wizard.md`, `features.md`, memory), screenshots.
+- [x] `TODO` issue for the tests of the app repositories.
+
+Doc: [`welcome-wizard.md`](../welcome-wizard.md). Issue for the tests of the app repositories: [#553](https://github.com/Kazo-ca/Os/issues/553).

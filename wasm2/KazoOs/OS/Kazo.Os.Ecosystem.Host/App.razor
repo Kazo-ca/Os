@@ -52,8 +52,10 @@
     <MudDialogProvider />
     <MudSnackbarProvider />
     @* ADR 0197 §5: in a session, « Update ready » is a notification (bubble + clock panel); the
-       sign-in screens have neither, so they keep this notice in the bottom corner. *@
-    @if (State.UpdateAvailable && State.View != EcosystemHostView.Desktop)
+       sign-in screens have neither, so they keep this notice in the bottom corner. The welcome
+       wizard (ADR 0276) has its buttons in that corner and lasts a moment: the notice waits for
+       the desktop, which shows the notification. *@
+    @if (State.UpdateAvailable && State.View is not (EcosystemHostView.Desktop or EcosystemHostView.Welcome))
     {
         <aside class="update-notice" role="status">
             <span>@(State.AvailableVersion is { } version ? L["Update.VersionReady", version] : L["Update.Ready"]) @L["Update.Detail"]</span>
