@@ -518,7 +518,7 @@ one row per ADR).
 
 | Feature | Description | ADR | Issue |
 | --- | --- | --- | --- |
-| Permissions declared by a Feature | A Feature declares its own permissions, dangerous ones included; they follow the rules of the OS catalog and are never granted silently. | [0246](dev/adr/0246-provider-declared-permissions.md) | — |
+| Permissions declared by a Feature | A Feature declares its own permissions, dangerous ones included; they follow the rules of the OS catalog and are never granted silently. Code delivered by work item `feature/17` (`ProvidedCapabilities`, reserved prefix, the `ICapabilityCatalog` catalog of capabilities, a seeder that grants only what is known and dangerous topic permissions, issue #432, `Covers`, `Caller.Require`, the secure window even from the terminal; [`capabilities.md`](framework/capabilities.md#permissions-declared-by-a-feature-adr-0246)). | [0246](dev/adr/0246-provider-declared-permissions.md) | — |
 | Roles declared by a Feature | A Feature declares roles an administrator assigns; every sensitive operation goes through the OS authentication. | [0247](dev/adr/0247-feature-declared-roles.md) | — |
 | Dependency resolution | The Store and `kazopkg` install the dependencies declared in the manifest, with one consent; removing a package warns and disables the dependent apps. | [0248](dev/adr/0248-store-and-kazopkg-dependency-resolution.md) | — |
 | “Features” section of Settings | Settings lists the installed Features and shows the pages they provide, by the user's role. | [0249](dev/adr/0249-settings-features-section.md) | — |

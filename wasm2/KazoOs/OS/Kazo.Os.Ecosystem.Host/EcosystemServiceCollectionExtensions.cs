@@ -445,9 +445,17 @@ public static class EcosystemServiceCollectionExtensions
         // Dangerous capabilities (ADR 0049): remembered decisions, the launch gate and its
         // secure-desktop overlay (the broker is the host's default approval prompt), and the
         // administration behind Settings > Permissions. Scoped: they read the session user's files.
+        // ADR 0246: the catalog of capabilities of the running OS, the built-in one plus the
+        // permissions of the installed, enabled features; everything that decides a grant reads it.
+        services.TryAddSingleton<ICapabilityCatalog>(provider => new Kazo.Os.Platform.Core.Features.InstalledCapabilityCatalog(
+            provider.GetRequiredService<AppCatalog>(),
+            provider.GetService<IAppEnablementRegistry>()));
         services.AddScoped<IAppPermissionStore>(provider => new AppPermissionStore(
             provider.GetRequiredService<IOsSettingsService>(),
-            provider.GetService<ILogger<AppPermissionStore>>()));
+            provider.GetService<ILogger<AppPermissionStore>>())
+        {
+            Capabilities = provider.GetService<ICapabilityCatalog>(),
+        });
         services.AddScoped<DangerousCapabilityApprovalBroker>();
         services.AddScoped<IDangerousCapabilityApprovalPrompt>(provider =>
             provider.GetRequiredService<DangerousCapabilityApprovalBroker>());
@@ -460,7 +468,8 @@ public static class EcosystemServiceCollectionExtensions
             provider.GetRequiredService<IAuditLog>(),
             provider.GetRequiredService<IDangerousCapabilityApprovalPrompt>())
         {
-            RealNetworkGrants = provider.GetRequiredService<IRealNetworkGrantReconciler>()
+            RealNetworkGrants = provider.GetRequiredService<IRealNetworkGrantReconciler>(),
+            Capabilities = provider.GetService<ICapabilityCatalog>() ?? BuiltInCapabilityCatalog.Instance,
         });
         // OS authentication agent (ADR 0055 section 5, polkit-like): gateways that need an
         // administrator ask it; its secure-desktop overlay is rendered by the shell.
@@ -487,7 +496,8 @@ public static class EcosystemServiceCollectionExtensions
             provider.GetRequiredService<IAdminElevationVerifier>(),
             provider.GetRequiredService<IAuditLog>())
         {
-            RealNetworkGrants = provider.GetRequiredService<IRealNetworkGrantReconciler>()
+            RealNetworkGrants = provider.GetRequiredService<IRealNetworkGrantReconciler>(),
+            Capabilities = provider.GetService<ICapabilityCatalog>() ?? BuiltInCapabilityCatalog.Instance,
         });
         // Reboot and factory reset (ADR 0056 section 11): the browser reloads the page and deletes
         // the OS database; KazoSystem reaches them only after the authentication agent agreed.
@@ -653,7 +663,12 @@ public static class EcosystemServiceCollectionExtensions
                 grantRepository: provider.GetService<ICapabilityGrantRepository>(),
                 catalog: provider.GetService<AppCatalog>(),
                 profileInitializer: provider.GetRequiredService<SettingsStoreToFilesMigration>(),
-                keyring: provider.GetRequiredService<UserKeyringService>());
+                keyring: provider.GetRequiredService<UserKeyringService>())
+            {
+                // ADR 0246 §3: only what the catalog knows is granted at sign-in (issue #432).
+                Capabilities = provider.GetService<ICapabilityCatalog>(),
+                Logger = provider.GetService<ILogger<LocalSessionService>>(),
+            };
         });
         // Per-process arguments, working directory and environment (ADR 0050): filled and
         // emptied by the process manager, read by /proc and each app's Environment gateway.
@@ -901,6 +916,8 @@ public static class EcosystemServiceCollectionExtensions
                 InstalledLibraries = () => provider.GetService<IInstalledLibraryState>(),
                 // ADR 0262 §2: each app's KazoFeatures, answered by the page's resolver.
                 FeatureServices = () => provider.GetService<Kazo.Os.Platform.Core.Features.FeatureServiceResolver>(),
+                // ADR 0246: each app's capability checks know the features' permissions and what they cover.
+                Capabilities = () => provider.GetService<ICapabilityCatalog>(),
                 // ADR 0260 §3: the consent to a feature's installation is written as machine allow lines.
                 PermissionStore = () => provider.GetService<IAppPermissionStore>(),
             },
@@ -1040,6 +1057,7 @@ public static class EcosystemServiceCollectionExtensions
         {
             // ADR 0125, section 3: a session's root process gets the limits of limits.conf.
             LoginResourceLimits = provider.GetRequiredService<LoginResourceLimitsProvider>(),
+            Capabilities = provider.GetService<ICapabilityCatalog>() ?? BuiltInCapabilityCatalog.Instance,
             // ADR 0214 §4.2: the data of an installed app is backed up when its version changes.
             DataGuard = new AppDataGuard(
                 () => provider.GetService<InstalledPackageCatalog>(), provider.GetService<ILogger<AppDataGuard>>()),

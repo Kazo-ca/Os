@@ -254,6 +254,27 @@
         }
       }
     },
+    "capabilityPrefix": {
+      "description": "Prefix of the permissions a feature declares (ADR 0246 §2): one lowercase segment no built-in capability uses.",
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$"
+    },
+    "providedCapabilities": {
+      "description": "Permissions a feature declares (ADR 0246 §1), each '<prefix>.<name>', normal or dangerous, with the same rules as the built-in catalog.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "risk", "title"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z][a-z0-9-]*(\\.[a-z][a-z0-9-]*)+$" },
+          "risk": { "enum": ["normal", "dangerous"] },
+          "title": { "type": "string", "minLength": 1 },
+          "riskStatement": { "type": "string", "minLength": 1 },
+          "covers": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+        }
+      }
+    },
     "contextMenus": {
       "description": "Entries the app adds to the OS file menus (ADR 0151, ADR 0159), in declaration order.",
       "type": "array",
@@ -399,6 +420,14 @@
         "properties": { "kind": { "not": { "const": "feature" } } }
       },
       "then": { "not": { "required": ["providedServices"] } }
+    },
+    {
+      "description": "Only a feature declares permissions of its own (ADR 0246 §1).",
+      "if": {
+        "required": ["kind"],
+        "properties": { "kind": { "not": { "const": "feature" } } }
+      },
+      "then": { "not": { "anyOf": [{ "required": ["providedCapabilities"] }, { "required": ["capabilityPrefix"] }] } }
     },
     {
       "description": "A feature (ADR 0260) has no entry point of its own; every other kind has exactly one of entryPoint (legacy, single-platform) or platform (MOB-003, multi-platform). See doc/en/wasm/dev/old/mobile-interface-platform-plan.md §4.3.",

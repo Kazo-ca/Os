@@ -138,6 +138,64 @@ installation, and no window asks at the first launch of an entry point. A
 user's own refusal stays possible. See
 [`app-installation.md`](../dev/app-installation.md#features-adr-0260).
 
+## Permissions declared by a Feature (ADR 0246)
+
+[ADR 0246](../dev/adr/0246-provider-declared-permissions.md) makes the catalog
+of capabilities a **service**, `ICapabilityCatalog`: the built-in catalog
+(`AppCapabilities`), the topic permissions of ADR 0040 and the permissions that
+**the installed, enabled features** declare (`InstalledCapabilityCatalog`,
+which follows the running app catalog).
+
+- **Declaring** (the feature): a prefix of its own (`CapabilityPrefix`, one
+  lowercase segment no built-in capability uses, `x86`) and its permissions
+  (`ProvidedCapabilities`), each `<prefix>.<name>` with a title, a level
+  (`Normal` or `Dangerous`), the risk statement of a dangerous one and what it
+  covers (`Covers`):
+
+```csharp
+public override string? CapabilityPrefix => "x86";
+
+public override IReadOnlyList<ProvidedCapability> ProvidedCapabilities =>
+[
+    new("x86.programs.launch", CapabilityRisk.Normal, "Launch programs"),
+    new("x86.vm.use", CapabilityRisk.Normal, "Use virtual machines"),
+    new("x86.vm.destroy", CapabilityRisk.Dangerous, "Delete virtual machines") { RiskStatement = "…" },
+    new("x86.vm", CapabilityRisk.Dangerous, "Manage virtual machines") { RiskStatement = "…", Covers = ["x86.vm.use", "x86.vm.destroy"] },
+];
+```
+
+  The manifest writes them in `capabilityPrefix` and `providedCapabilities`.
+  The validator refuses a reserved prefix (`manifest.capability.prefix-reserved`),
+  a permission outside the prefix, a dangerous one without a risk statement,
+  covering a more dangerous permission or one of another feature. The
+  installer refuses a prefix another feature already took
+  (`apps.package.capability-prefix-taken`) and an identifier already declared
+  (`apps.package.capability-already-provided`).
+- **Asking** (the client app): it lists them in `Capabilities`, with a
+  **dependency** on the feature (ADR 0262 §3), otherwise
+  `manifest.capability.unknown`. When the feature that holds the prefix is
+  installed, the dependency must name it.
+- **Granting, never silently**: at sign-in, the seeder grants only what the
+  catalog knows. A normal permission of a feature is granted if and only if
+  the feature is installed and enabled; a dangerous one follows ADR 0049 word
+  for word (a machine `allow` line after an administrator's approval, refusal
+  per user, `block` policy). An **unknown** identifier is never granted: it is
+  written once to `/var/log/syslog` (`capability.unknown-skipped`). The
+  **topic permissions** of ADR 0040 are **dangerous**: they need an approval,
+  as ADR 0040 required (fix of issue #432).
+- **Covering**: granting `x86.vm` grants `x86.vm.use` and `x86.vm.destroy`
+  (`AppCapabilityChecker` and `CapabilityCatalogExtensions.IsGranted`).
+- **Removing** the feature removes its permissions from the catalog: a check
+  refuses them, whatever line or grant remains; they apply again once the
+  feature is reinstalled.
+- **Checking** (the feature's service): each operation calls
+  `context.Caller.Require("x86.vm.use")`, which throws
+  `UnauthorizedAccessException` when the calling app does not hold it
+  ([`feature-services.md`](feature-services.md)).
+- **Showing**: the approval window of an installation, Settings ▸ Permissions
+  and the report of `kazopkg install` show a feature's permission with its
+  title, its risk statement and the feature that declares it.
+
 ## `policy.config` policy
 
 The `capabilityGrantsLocked` key, never evaluated, is removed from the schema of

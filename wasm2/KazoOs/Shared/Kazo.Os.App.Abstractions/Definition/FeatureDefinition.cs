@@ -55,6 +55,20 @@ public abstract class FeatureDefinition : AppDefinition
     /// </summary>
     public virtual string? ServiceEntryPoint => null;
 
+    /// <summary>
+    /// Gets the prefix of the permissions the feature declares (ADR 0246 §2): one lowercase segment,
+    /// <c>x86</c>, that no built-in capability uses and no other installed feature took. Required
+    /// when <see cref="ProvidedCapabilities"/> is not empty.
+    /// </summary>
+    public virtual string? CapabilityPrefix => null;
+
+    /// <summary>
+    /// Gets the permissions the feature declares (ADR 0246 §1), each <c>&lt;prefix&gt;.&lt;name&gt;</c>:
+    /// its services and commands require them of their callers
+    /// (<c>IFeatureServiceContext.Caller.Require</c>). Empty by default.
+    /// </summary>
+    public virtual IReadOnlyList<ProvidedCapability> ProvidedCapabilities => [];
+
     /// <summary>A feature has no command of its own: a child of kind <see cref="AppKind.Terminal"/> does.</summary>
     public sealed override TerminalCommand? Terminal => null;
 

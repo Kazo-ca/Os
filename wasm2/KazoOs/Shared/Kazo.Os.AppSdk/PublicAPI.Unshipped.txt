@@ -1,1 +1,9 @@
 #nullable enable
+Kazo.Os.AppSdk.Features.KazoFeatureCaller.Has(string! permission) -> bool
+Kazo.Os.AppSdk.Features.KazoFeatureCaller.Permissions.get -> Kazo.Os.Simulation.Abstractions.Gateways.ICapabilityChecker?
+Kazo.Os.AppSdk.Features.KazoFeatureCaller.Permissions.init -> void
+Kazo.Os.AppSdk.Features.KazoFeatureCaller.Require(string! permission) -> void
+Kazo.Os.AppSdk.Administration.KazoCapabilityPermissionInfo.ProviderId.get -> string?
+Kazo.Os.AppSdk.Administration.KazoCapabilityPermissionInfo.ProviderId.init -> void
+Kazo.Os.AppSdk.Apps.KazoPackageInstallReport.DangerousCapabilities.get -> System.Collections.Generic.IReadOnlyList<string!>?
+Kazo.Os.AppSdk.Apps.KazoPackageInstallReport.DangerousCapabilities.init -> void

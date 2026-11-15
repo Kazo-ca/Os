@@ -564,6 +564,9 @@
   <data name="Permissions.AskAgain" xml:space="preserve">
     <value>Redemander au lancement</value>
   </data>
+  <data name="Permissions.Provider" xml:space="preserve">
+    <value>Déclarée par la fonctionnalité {0}</value>
+  </data>
   <data name="Permissions.Empty" xml:space="preserve">
     <value>Aucune application installée ne déclare de capacité dangereuse.</value>
   </data>

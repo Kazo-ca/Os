@@ -171,6 +171,15 @@ and the command of a `Terminal` child comes before that of an ordinary app of
 the same name (after system apps). See
 [`app-installation.md`](../dev/app-installation.md#features-adr-0260).
 
+#### Declared permissions: `ProvidedCapabilities` (ADR 0246)
+
+A feature declares its own permissions under a prefix of its own
+(`CapabilityPrefix => "x86"`, `ProvidedCapabilities`), normal or dangerous,
+with a title, a risk statement and what they cover; a client app asks for them
+in `Capabilities` with a dependency on the feature. They follow the rules of
+the OS catalog: see
+[`capabilities.md`](capabilities.md#permissions-declared-by-a-feature-adr-0246).
+
 #### Provided services: `ProvidedServices` (ADR 0262)
 
 A feature provides **services** to other apps: each pairs a contract (an

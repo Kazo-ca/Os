@@ -139,6 +139,66 @@ l'installation, et aucune fenêtre ne demande au premier lancement d'un point
 d'entrée. Le refus par usager reste possible. Voir
 [`app-installation.md`](../dev/app-installation.md#fonctionnalités-adr-0260).
 
+## Permissions déclarées par une Feature (ADR 0246)
+
+L'[ADR 0246](../dev/adr/0246-provider-declared-permissions.md) fait du
+catalogue des capacités un **service**, `ICapabilityCatalog` : le catalogue
+intégré (`AppCapabilities`), les permissions sujet de l'ADR 0040 et les
+permissions que **les fonctionnalités installées et activées** déclarent
+(`InstalledCapabilityCatalog`, qui suit le catalogue des apps en cours).
+
+- **Déclarer** (la fonctionnalité) : un préfixe à elle (`CapabilityPrefix`,
+  un segment en minuscules qu'aucune capacité intégrée n'utilise, `x86`) et
+  ses permissions (`ProvidedCapabilities`), chacune `<préfixe>.<nom>` avec un
+  titre, un niveau (`Normal` ou `Dangerous`), la phrase de risque d'une
+  dangereuse et ce qu'elle couvre (`Covers`) :
+
+```csharp
+public override string? CapabilityPrefix => "x86";
+
+public override IReadOnlyList<ProvidedCapability> ProvidedCapabilities =>
+[
+    new("x86.programs.launch", CapabilityRisk.Normal, "Lancer des programmes"),
+    new("x86.vm.use", CapabilityRisk.Normal, "Utiliser les VM"),
+    new("x86.vm.destroy", CapabilityRisk.Dangerous, "Supprimer des VM") { RiskStatement = "…" },
+    new("x86.vm", CapabilityRisk.Dangerous, "Gérer les VM") { RiskStatement = "…", Covers = ["x86.vm.use", "x86.vm.destroy"] },
+];
+```
+
+  Le manifeste les écrit dans `capabilityPrefix` et `providedCapabilities`.
+  Le validateur refuse un préfixe réservé (`manifest.capability.prefix-reserved`),
+  une permission hors du préfixe, une dangereuse sans phrase de risque, une
+  couverture d'une permission plus dangereuse ou d'une autre fonctionnalité.
+  L'installeur refuse un préfixe déjà pris par une autre fonctionnalité
+  (`apps.package.capability-prefix-taken`) et un identifiant déjà déclaré
+  (`apps.package.capability-already-provided`).
+- **Demander** (l'app cliente) : elle les liste dans `Capabilities`, avec une
+  **dépendance** vers la fonctionnalité (ADR 0262 §3), sans quoi
+  `manifest.capability.unknown`. Quand la fonctionnalité qui porte le préfixe
+  est installée, la dépendance doit la nommer.
+- **Accorder, jamais en silence** : à la connexion, le semeur n'accorde que ce
+  que le catalogue connaît. Une permission normale d'une fonctionnalité est
+  accordée si et seulement si la fonctionnalité est installée et activée ;
+  une dangereuse suit l'ADR 0049 mot pour mot (ligne `allow` machine après
+  l'approbation d'un administrateur, refus par usager, politique `block`).
+  Un identifiant **inconnu** n'est jamais accordé : il est écrit une fois dans
+  `/var/log/syslog` (`capability.unknown-skipped`). Les **permissions sujet**
+  de l'ADR 0040 sont **dangereuses** : elles demandent une approbation, comme
+  l'ADR 0040 l'exigeait (correction de l'issue #432).
+- **Couvrir** : accorder `x86.vm` accorde `x86.vm.use` et `x86.vm.destroy`
+  (`AppCapabilityChecker` et `CapabilityCatalogExtensions.IsGranted`).
+- **Retirer** la fonctionnalité retire ses permissions du catalogue : une
+  vérification les refuse, quelle que soit la ligne ou l'octroi restant ;
+  ils redeviennent effectifs à la réinstallation.
+- **Vérifier** (le service de la fonctionnalité) : chaque opération appelle
+  `context.Caller.Require("x86.vm.use")`, qui lève
+  `UnauthorizedAccessException` quand l'app appelante ne la détient pas
+  ([`feature-services.md`](feature-services.md)).
+- **Montrer** : l'écran d'approbation d'une installation, Paramètres ▸
+  Permissions et le rapport de `kazopkg install` montrent une permission de
+  fonctionnalité avec son titre, sa phrase de risque et la fonctionnalité qui
+  la déclare.
+
 ## Politique `policy.config`
 
 La clé `capabilityGrantsLocked`, jamais évaluée, est retirée du schéma de

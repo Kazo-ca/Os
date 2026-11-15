@@ -144,7 +144,16 @@ public static class AppDefinitionMapper
             Execution = AppExecutionHost.MainThread,
             OomScoreAdj = definition.OomScoreAdjust,
             // ADR 0262 §1: the services the feature provides, in its own assemblies.
-            ProvidedServices = ToProvidedServices(definition)
+            ProvidedServices = ToProvidedServices(definition),
+            // ADR 0246 §1: the permissions it declares, under its prefix.
+            CapabilityPrefix = definition.CapabilityPrefix,
+            ProvidedCapabilities = definition.ProvidedCapabilities is not { Count: > 0 } declared
+                ? null
+                : [.. declared.Select(static capability => new AppProvidedCapabilityManifest(capability.Id, capability.Risk, capability.Title)
+                {
+                    RiskStatement = capability.RiskStatement,
+                    Covers = capability.Covers.Count == 0 ? null : [.. capability.Covers],
+                })]
         };
 
         IReadOnlyList<FeatureEntryPoint> entryPoints = definition.EntryPoints

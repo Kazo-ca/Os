@@ -1,1 +1,28 @@
 #nullable enable
+Kazo.Os.Platform.Core.Execution.AppCapabilityChecker.Capabilities.get -> Kazo.Os.App.Abstractions.ICapabilityCatalog?
+Kazo.Os.Platform.Core.Execution.AppCapabilityChecker.Capabilities.init -> void
+Kazo.Os.Platform.Core.Execution.AppCatalogGatewayServices.Capabilities.get -> System.Func<Kazo.Os.App.Abstractions.ICapabilityCatalog?>?
+Kazo.Os.Platform.Core.Execution.AppCatalogGatewayServices.Capabilities.init -> void
+Kazo.Os.Platform.Core.Features.InstalledCapabilityCatalog
+Kazo.Os.Platform.Core.Features.InstalledCapabilityCatalog.All.get -> System.Collections.Generic.IReadOnlyList<Kazo.Os.App.Abstractions.CapabilityDescription!>!
+Kazo.Os.Platform.Core.Features.InstalledCapabilityCatalog.Dispose() -> void
+Kazo.Os.Platform.Core.Features.InstalledCapabilityCatalog.Find(string! capability) -> Kazo.Os.App.Abstractions.CapabilityDescription?
+Kazo.Os.Platform.Core.Features.InstalledCapabilityCatalog.GetProvider(string! capability) -> string?
+Kazo.Os.Platform.Core.Features.InstalledCapabilityCatalog.InstalledCapabilityCatalog(Kazo.Os.Platform.Core.AppCatalog! catalog, Kazo.Os.Platform.Core.Lifecycle.IAppEnablementRegistry? enablement = null) -> void
+Kazo.Os.Platform.Core.Lifecycle.AppLifecycleOrchestrator.Capabilities.get -> Kazo.Os.App.Abstractions.ICapabilityCatalog!
+Kazo.Os.Platform.Core.Lifecycle.AppLifecycleOrchestrator.Capabilities.init -> void
+Kazo.Os.Platform.Core.Policy.AppPermissionAdministration.Capabilities.get -> Kazo.Os.App.Abstractions.ICapabilityCatalog!
+Kazo.Os.Platform.Core.Policy.AppPermissionAdministration.Capabilities.init -> void
+Kazo.Os.Platform.Core.Policy.AppPermissionStore.Capabilities.get -> Kazo.Os.App.Abstractions.ICapabilityCatalog?
+Kazo.Os.Platform.Core.Policy.AppPermissionStore.Capabilities.init -> void
+Kazo.Os.Platform.Core.Policy.DangerousCapabilityGate.Capabilities.get -> Kazo.Os.App.Abstractions.ICapabilityCatalog!
+Kazo.Os.Platform.Core.Policy.DangerousCapabilityGate.Capabilities.init -> void
+Kazo.Os.Platform.Core.Sessions.LocalSessionService.Capabilities.get -> Kazo.Os.App.Abstractions.ICapabilityCatalog?
+Kazo.Os.Platform.Core.Sessions.LocalSessionService.Capabilities.init -> void
+Kazo.Os.Platform.Core.Sessions.LocalSessionService.Logger.get -> Microsoft.Extensions.Logging.ILogger?
+Kazo.Os.Platform.Core.Sessions.LocalSessionService.Logger.init -> void
+static Kazo.Os.Platform.Core.Policy.AppPermissionDecisions.Parse(string? machineContent, string? userContent, string! machinePath, string! userPath, Kazo.Os.App.Abstractions.ICapabilityCatalog! catalog) -> Kazo.Os.Platform.Core.Policy.AppPermissionDecisions!
+static Kazo.Os.Platform.Core.Policy.CapabilityText.Describe(string! capability, System.Globalization.CultureInfo? language, Kazo.Os.App.Abstractions.ICapabilityCatalog! catalog) -> Kazo.Os.App.Abstractions.CapabilityDescription!
+static Kazo.Os.Platform.Core.Policy.CleanProfileCapabilityGrantSeeder.SeedDeclaredCapabilities(Kazo.Os.App.Abstractions.Policy.ICapabilityGrantRepository! repository, Kazo.Os.App.Abstractions.AppManifest! manifest, string! userId, bool isSystemApp, Kazo.Os.App.Abstractions.ICapabilityCatalog! catalog, System.Action<string!>? skipped = null) -> System.Collections.Generic.IReadOnlyList<Kazo.Os.App.Abstractions.Policy.CapabilityGrantMutationResult!>!
+static Kazo.Os.Platform.Core.Policy.DangerousCapabilityEvaluator.DeclaresDangerousCapabilities(Kazo.Os.App.Abstractions.AppManifest! manifest, Kazo.Os.App.Abstractions.ICapabilityCatalog! catalog) -> bool
+static Kazo.Os.Platform.Core.Policy.DangerousCapabilityEvaluator.Evaluate(Kazo.Os.App.Abstractions.AppManifest! manifest, bool isSystemApp, Kazo.Os.Platform.Core.Policy.DangerousCapabilityPolicy policy, Kazo.Os.Platform.Core.Policy.AppPermissionDecisions! decisions, Kazo.Os.App.Abstractions.ICapabilityCatalog! catalog) -> System.Collections.Generic.IReadOnlyList<Kazo.Os.Platform.Core.Policy.DangerousCapabilityStatus!>!

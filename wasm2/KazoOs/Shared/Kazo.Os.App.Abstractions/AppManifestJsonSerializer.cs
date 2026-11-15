@@ -72,7 +72,9 @@ public static class AppManifestJsonSerializer
             "web",
             "oomScoreAdj",
             "realNetworkPorts",
-            "providedServices"
+            "providedServices",
+            "capabilityPrefix",
+            "providedCapabilities"
         });
 
         return JsonSerializer.Deserialize(document.RootElement.GetRawText(), AppManifestJsonSerializerContext.Default.AppManifest)
@@ -186,6 +188,12 @@ public static class AppManifestJsonSerializer
             ProvidedServices = manifest.ProvidedServices is not { Count: > 0 }
                 ? null
                 : [.. manifest.ProvidedServices.OrderBy(item => item.Contract, StringComparer.Ordinal)],
+            // ADR 0246: likewise for the permissions a feature declares.
+            ProvidedCapabilities = manifest.ProvidedCapabilities is not { Count: > 0 }
+                ? null
+                : [.. manifest.ProvidedCapabilities
+                    .OrderBy(item => item.Id, StringComparer.Ordinal)
+                    .Select(item => item with { Covers = item.Covers is not { Count: > 0 } ? null : [.. item.Covers.Order(StringComparer.Ordinal)] })],
             // The first URL is the site's primary address: the declared order is kept.
             Web = manifest.Web
         };
@@ -278,6 +286,9 @@ public static class AppManifestJsonSerializer
                     break;
                 case "providedServices":
                     ValidateArray(property.Value, $"{path}.providedServices", ["contract", "implementation", "entryPoint"]);
+                    break;
+                case "providedCapabilities":
+                    ValidateArray(property.Value, $"{path}.providedCapabilities", ["id", "risk", "title", "riskStatement", "covers"]);
                     break;
                 case "contextMenus":
                     ValidateArray(property.Value, $"{path}.contextMenus", ["name", "title", "titles", "target", "intent", "icon", "scopes", "types", "selection", "first", "after", "afterGroup", "parent", "screens", "screen"]);

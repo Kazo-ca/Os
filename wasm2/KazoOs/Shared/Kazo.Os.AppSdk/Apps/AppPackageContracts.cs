@@ -167,6 +167,13 @@ public sealed record KazoPackageInstallReport(
     /// </summary>
     public bool IsFeature { get; init; }
 
+    /// <summary>
+    /// Gets the capabilities among <see cref="Capabilities"/> that the OS classifies dangerous
+    /// (ADR 0049, ADR 0246): the built-in ones, the topic permissions and the dangerous permissions of
+    /// the installed features. <see langword="null"/> when the OS did not say, as before ADR 0246.
+    /// </summary>
+    public IReadOnlyList<string>? DangerousCapabilities { get; init; }
+
     /// <summary>Gets the names of a feature's entry points (ADR 0260 §2); empty for an app.</summary>
     public IReadOnlyList<string> EntryPoints { get; init; } = [];
 

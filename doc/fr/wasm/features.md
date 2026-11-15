@@ -536,7 +536,7 @@ demande à l'OS le type d'app « Feature » et les points d'extension ci-dessous
 
 | Fonctionnalité | Description | ADR | Issue |
 | --- | --- | --- | --- |
-| Permissions déclarées par une Feature | Une Feature déclare ses propres permissions, dangereuses comprises ; elles suivent les règles du catalogue de l'OS et ne sont jamais accordées en silence. | [0246](dev/adr/0246-provider-declared-permissions.md) | — |
+| Permissions déclarées par une Feature | Une Feature déclare ses propres permissions, dangereuses comprises ; elles suivent les règles du catalogue de l'OS et ne sont jamais accordées en silence. Code livré par le chantier `feature/17` (`ProvidedCapabilities`, préfixe réservé, catalogue des capacités `ICapabilityCatalog`, semeur qui n'accorde que le connu et permissions sujet dangereuses, issue #432, `Covers`, `Caller.Require`, fenêtre sécurisée même depuis le terminal ; [`capabilities.md`](framework/capabilities.md#permissions-déclarées-par-une-feature-adr-0246)). | [0246](dev/adr/0246-provider-declared-permissions.md) | — |
 | Rôles déclarés par une Feature | Une Feature déclare des rôles qu'un administrateur attribue ; chaque opération sensible passe par l'authentification de l'OS. | [0247](dev/adr/0247-feature-declared-roles.md) | — |
 | Résolution des dépendances | Le Store et `kazopkg` installent les dépendances déclarées dans le manifeste, avec un seul consentement ; retirer un paquet avertit et désactive les apps dépendantes. | [0248](dev/adr/0248-store-and-kazopkg-dependency-resolution.md) | — |
 | Section « Fonctionnalités » des Paramètres | Paramètres liste les Features installées et affiche les pages qu'elles fournissent, selon le rôle de l'usager. | [0249](dev/adr/0249-settings-features-section.md) | — |

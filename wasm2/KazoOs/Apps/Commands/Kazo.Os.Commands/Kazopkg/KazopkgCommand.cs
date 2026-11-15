@@ -153,6 +153,15 @@ public sealed class KazopkgCommand(AppManifest manifest) : TerminalAppBase(manif
         return 0;
     }
 
+    /// <summary>
+    /// Gets whether the OS classifies a capability of the report dangerous (ADR 0246): its own list
+    /// when it gave one (features' permissions included), the built-in catalog otherwise.
+    /// </summary>
+    private static bool IsDangerous(KazoPackageInstallReport report, string capability) =>
+        report.DangerousCapabilities is { } dangerous
+            ? dangerous.Contains(capability, StringComparer.Ordinal)
+            : AppCapabilities.IsDangerous(capability);
+
     private static async Task WriteReportAsync(TerminalExecutionContext context, KazoPackageInstallReport report)
     {
         IStringLocalizer<Strings> text = context.App.GetLocalizer<Strings>();
@@ -184,9 +193,9 @@ public sealed class KazopkgCommand(AppManifest manifest) : TerminalAppBase(manif
         {
             await context.StandardOutput.WriteLineAsync(text[
                 "Capabilities",
-                string.Join(", ", report.Capabilities.Select(static capability =>
-                    AppCapabilities.IsDangerous(capability) ? $"{capability} (!)" : capability))]);
-            if (report.Capabilities.Any(AppCapabilities.IsDangerous))
+                string.Join(", ", report.Capabilities.Select(capability =>
+                    IsDangerous(report, capability) ? $"{capability} (!)" : capability))]);
+            if (report.Capabilities.Any(capability => IsDangerous(report, capability)))
             {
                 // ADR 0260 §3: the administrator's consent to the installation approved a feature's set.
                 await context.StandardOutput.WriteLineAsync(text[report.IsFeature ? "FeatureApproved" : "DangerousNote"]);

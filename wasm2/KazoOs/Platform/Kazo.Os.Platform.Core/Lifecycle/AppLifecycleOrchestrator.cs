@@ -185,6 +185,12 @@ public sealed class AppLifecycleOrchestrator
     public LoginResourceLimitsProvider? LoginResourceLimits { get; init; }
 
     /// <summary>
+    /// Gets the catalog of capabilities of the running OS (ADR 0246): a launch asks the dangerous
+    /// permissions of the installed features too. The built-in catalog by default.
+    /// </summary>
+    public ICapabilityCatalog Capabilities { get; init; } = BuiltInCapabilityCatalog.Instance;
+
+    /// <summary>
     /// Gets the guard that backs up a user's data before the first launch of another version of an
     /// installed app (ADR 0214 §4.2); <see langword="null"/> launches without it.
     /// </summary>
@@ -463,7 +469,7 @@ public sealed class AppLifecycleOrchestrator
         // the instance's capabilities are frozen at launch with the administrator's answer.
         DangerousCapabilityGateResult? dangerous = null;
         if (_dangerousCapabilityGate is not null
-            && DangerousCapabilityEvaluator.DeclaresDangerousCapabilities(descriptor.Manifest))
+            && DangerousCapabilityEvaluator.DeclaresDangerousCapabilities(descriptor.Manifest, Capabilities))
         {
             dangerous = await _dangerousCapabilityGate
                 .EnsureDecidedAsync(descriptor.Manifest, request.Principal, request.ApprovalPrompt, request.Interactive, cancellationToken)
