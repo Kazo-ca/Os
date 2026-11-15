@@ -1,1 +1,40 @@
 #nullable enable
+*REMOVED*const Kazo.Os.Infrastructure.Browser.Schema.KazoOsIndexedDbSchema.CurrentVersion = 4 -> int
+const Kazo.Os.Infrastructure.Browser.Schema.KazoOsIndexedDbSchema.CurrentVersion = 5 -> int
+Kazo.Os.Infrastructure.Browser.FileSystem.FileContentChunkKey
+Kazo.Os.Infrastructure.Browser.FileSystem.FileContentChunkKey.<Clone>$() -> Kazo.Os.Infrastructure.Browser.FileSystem.FileContentChunkKey!
+Kazo.Os.Infrastructure.Browser.FileSystem.FileContentChunkKey.ChunkIndex.get -> int
+Kazo.Os.Infrastructure.Browser.FileSystem.FileContentChunkKey.ChunkIndex.init -> void
+Kazo.Os.Infrastructure.Browser.FileSystem.FileContentChunkKey.ContentHash.get -> string!
+Kazo.Os.Infrastructure.Browser.FileSystem.FileContentChunkKey.ContentHash.init -> void
+Kazo.Os.Infrastructure.Browser.FileSystem.FileContentChunkKey.Deconstruct(out string! ContentHash, out int ChunkIndex) -> void
+Kazo.Os.Infrastructure.Browser.FileSystem.FileContentChunkKey.Equals(Kazo.Os.Infrastructure.Browser.FileSystem.FileContentChunkKey? other) -> bool
+Kazo.Os.Infrastructure.Browser.FileSystem.FileContentChunkKey.FileContentChunkKey(string! ContentHash, int ChunkIndex) -> void
+Kazo.Os.Infrastructure.Browser.FileSystem.FileContentConversion
+Kazo.Os.Infrastructure.Browser.FileSystem.FileContentConversionResult
+Kazo.Os.Infrastructure.Browser.FileSystem.FileContentConversionResult.<Clone>$() -> Kazo.Os.Infrastructure.Browser.FileSystem.FileContentConversionResult!
+Kazo.Os.Infrastructure.Browser.FileSystem.FileContentConversionResult.AlreadyDone.get -> bool
+Kazo.Os.Infrastructure.Browser.FileSystem.FileContentConversionResult.AlreadyDone.init -> void
+Kazo.Os.Infrastructure.Browser.FileSystem.FileContentConversionResult.Bytes.get -> long
+Kazo.Os.Infrastructure.Browser.FileSystem.FileContentConversionResult.Bytes.init -> void
+Kazo.Os.Infrastructure.Browser.FileSystem.FileContentConversionResult.Chunks.get -> long
+Kazo.Os.Infrastructure.Browser.FileSystem.FileContentConversionResult.Chunks.init -> void
+Kazo.Os.Infrastructure.Browser.FileSystem.FileContentConversionResult.Converted.get -> long
+Kazo.Os.Infrastructure.Browser.FileSystem.FileContentConversionResult.Converted.init -> void
+Kazo.Os.Infrastructure.Browser.FileSystem.FileContentConversionResult.Damaged.get -> System.Collections.Generic.IReadOnlyList<Kazo.Os.Infrastructure.Browser.FileSystem.FileContentChunkKey!>!
+Kazo.Os.Infrastructure.Browser.FileSystem.FileContentConversionResult.Damaged.init -> void
+Kazo.Os.Infrastructure.Browser.FileSystem.FileContentConversionResult.Deconstruct(out bool AlreadyDone, out long Chunks, out long Converted, out long Bytes, out System.Collections.Generic.IReadOnlyList<Kazo.Os.Infrastructure.Browser.FileSystem.FileContentChunkKey!>! Damaged) -> void
+Kazo.Os.Infrastructure.Browser.FileSystem.FileContentConversionResult.Equals(Kazo.Os.Infrastructure.Browser.FileSystem.FileContentConversionResult? other) -> bool
+Kazo.Os.Infrastructure.Browser.FileSystem.FileContentConversionResult.FileContentConversionResult(bool AlreadyDone, long Chunks, long Converted, long Bytes, System.Collections.Generic.IReadOnlyList<Kazo.Os.Infrastructure.Browser.FileSystem.FileContentChunkKey!>! Damaged) -> void
+const Kazo.Os.Infrastructure.Browser.FileSystem.FileContentConversion.BatchBytes = 16777216 -> int
+override Kazo.Os.Infrastructure.Browser.FileSystem.FileContentChunkKey.Equals(object? obj) -> bool
+override Kazo.Os.Infrastructure.Browser.FileSystem.FileContentChunkKey.GetHashCode() -> int
+override Kazo.Os.Infrastructure.Browser.FileSystem.FileContentChunkKey.ToString() -> string!
+override Kazo.Os.Infrastructure.Browser.FileSystem.FileContentConversionResult.Equals(object? obj) -> bool
+override Kazo.Os.Infrastructure.Browser.FileSystem.FileContentConversionResult.GetHashCode() -> int
+override Kazo.Os.Infrastructure.Browser.FileSystem.FileContentConversionResult.ToString() -> string!
+static Kazo.Os.Infrastructure.Browser.FileSystem.FileContentChunkKey.operator !=(Kazo.Os.Infrastructure.Browser.FileSystem.FileContentChunkKey? left, Kazo.Os.Infrastructure.Browser.FileSystem.FileContentChunkKey? right) -> bool
+static Kazo.Os.Infrastructure.Browser.FileSystem.FileContentChunkKey.operator ==(Kazo.Os.Infrastructure.Browser.FileSystem.FileContentChunkKey? left, Kazo.Os.Infrastructure.Browser.FileSystem.FileContentChunkKey? right) -> bool
+static Kazo.Os.Infrastructure.Browser.FileSystem.FileContentConversion.RunAsync(Microsoft.JSInterop.IJSRuntime! runtime, System.Action<long, long>! progress, System.Action! waiting, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Kazo.Os.Infrastructure.Browser.FileSystem.FileContentConversionResult!>!
+static Kazo.Os.Infrastructure.Browser.FileSystem.FileContentConversionResult.operator !=(Kazo.Os.Infrastructure.Browser.FileSystem.FileContentConversionResult? left, Kazo.Os.Infrastructure.Browser.FileSystem.FileContentConversionResult? right) -> bool
+static Kazo.Os.Infrastructure.Browser.FileSystem.FileContentConversionResult.operator ==(Kazo.Os.Infrastructure.Browser.FileSystem.FileContentConversionResult? left, Kazo.Os.Infrastructure.Browser.FileSystem.FileContentConversionResult? right) -> bool

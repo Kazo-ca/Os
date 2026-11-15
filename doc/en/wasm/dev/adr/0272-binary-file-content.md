@@ -191,13 +191,15 @@ onto the new version (ADR 0223, 0239) rather than a file error.
 
 ## Tasks
 
-- [ ] JavaScript module of the content repository, `[JSImport]`, `MemoryView`.
-- [ ] Binary write with `chunkHash`, SHA-256 by WebCrypto.
-- [ ] Reading the binary form, per-chunk check.
-- [ ] Database at version 5, empty migration step, test of an older page.
-- [ ] Backup and restore (format 1 kept), diagnostic snapshot.
-- [ ] One-time conversion at the first boot: waiting screen with progress,
-  resumed after a close, one tab at a time, test on a version 4 database.
-- [ ] Measurements before and after in Chromium, Firefox and Safari.
-- [ ] Docs (FR and EN): `browser-infrastructure.md`, backup, memory,
+- [x] JavaScript module of the content repository, `[JSImport]`, `MemoryView` (`fileContent.js`, `BrowserFileContentChunkStore`).
+- [x] Binary write with `chunkHash`, SHA-256 by WebCrypto.
+- [x] Reading the binary form, per-chunk check.
+- [x] Database at version 5, empty migration step. Older page: behaviour described in `browser-infrastructure.md` (version error, reload), no automated test.
+- [x] Backup and restore (format 1 and schema version 4 kept, `BackupSchemaVersion`), diagnostic snapshot.
+- [x] One-time conversion at the first boot: waiting screen with progress,
+  resumed after a close (position in `syncMetadata`), one tab at a time (Web
+  Lock), test on a version 4 database (`kazoos-v4.json`, with the v2 and v3
+  dumps). Resuming after a close has no automated test.
+- [x] Measurements before and after in Chromium (trimmed Release, 52.5 MiB save: 3.4 to 3.5 s before, 1.0 to 1.1 s after). Firefox and Safari: not measured, not available in the container. Read: not measured (a `cat` of 52.5 MiB in the Terminal did not finish within the journey's time).
+- [x] Docs (FR and EN): `browser-infrastructure.md`, backup, memory,
   `features.md`, change entry.

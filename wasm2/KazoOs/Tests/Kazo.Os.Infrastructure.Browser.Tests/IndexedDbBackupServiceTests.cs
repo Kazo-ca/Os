@@ -96,7 +96,7 @@ public sealed class IndexedDbBackupServiceTests
         await using IndexedDbBackupService service = new(new FakeJsRuntime(module));
         string backup = await service.ExportAsync();
         string older = backup.Replace(
-            $"\"databaseSchemaVersion\":{KazoOsIndexedDbSchema.CurrentVersion}",
+            $"\"databaseSchemaVersion\":{KazoOsIndexedDbSchema.BackupSchemaVersion}",
             "\"databaseSchemaVersion\":3",
             StringComparison.Ordinal);
 
@@ -104,7 +104,46 @@ public sealed class IndexedDbBackupServiceTests
             () => IndexedDbBackupService.Inspect(older));
 
         Assert.Contains("version 3", exception.Message, StringComparison.Ordinal);
-        Assert.Contains($"version {KazoOsIndexedDbSchema.CurrentVersion}", exception.Message, StringComparison.Ordinal);
+        Assert.Contains($"version {KazoOsIndexedDbSchema.BackupSchemaVersion}", exception.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Backup_still_names_schema_version_4_so_a_previous_release_restores_it()
+    {
+        // ADR 0272 §5: database version 5 kept the stores and records of a backup.
+        FakeIndexedDbModule module = new(CreateSnapshot());
+        await using IndexedDbBackupService service = new(new FakeJsRuntime(module));
+
+        using JsonDocument document = JsonDocument.Parse(await service.ExportAsync());
+
+        Assert.Equal(5, KazoOsIndexedDbSchema.CurrentVersion);
+        Assert.Equal(4, document.RootElement.GetProperty("databaseSchemaVersion").GetInt32());
+    }
+
+    [Fact]
+    public async Task Restore_asks_for_content_chunks_in_their_binary_form()
+    {
+        JsonElement[] snapshot = CreateSnapshot();
+        int contentIndex = KazoOsIndexedDbSchema.ObjectStores
+            .Select((store, index) => (store, index))
+            .Single(item => item.store.Name == KazoOsIndexedDbSchema.FileContentStoreName).index;
+        // A chunk as indexedDb.js hands it to C#: in its JSON form, base64 with its hash.
+        snapshot[contentIndex] = JsonDocument.Parse(
+            "[{\"contentHash\":\"abc\",\"chunkIndex\":0,\"dataBase64\":\"aGVsbG8=\",\"chunkHash\":\"2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824\",\"createdUtcMs\":1}]")
+            .RootElement.Clone();
+        FakeIndexedDbModule module = new(snapshot);
+        await using IndexedDbBackupService service = new(new FakeJsRuntime(module));
+        string backup = await service.ExportAsync();
+
+        await service.RestoreAsync(backup, IndexedDbRestoreMode.Merge);
+
+        IndexedDbOperation chunk = Assert.Single(
+            module.Transactions[^1].Operations,
+            operation => operation.ObjectStoreName == KazoOsIndexedDbSchema.FileContentStoreName);
+        Assert.True(chunk.BinaryChunk);
+        Assert.All(
+            module.Transactions[^1].Operations.Where(operation => operation.ObjectStoreName != KazoOsIndexedDbSchema.FileContentStoreName),
+            operation => Assert.Null(operation.BinaryChunk));
     }
 
     private static JsonElement[] CreateSnapshot()

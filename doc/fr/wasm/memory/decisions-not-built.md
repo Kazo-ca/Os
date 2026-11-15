@@ -155,6 +155,16 @@ Rien n'est codé.
   vérifie chaque bloc par son hachage. Aucune question ouverte. La conversion
   fait partie du chantier 1, qui règle #520 d'après le profilage de #538 et
   peut partir dès que les ADR sont fusionnées dans `storage/base`.
+- **Chantier 1 fait le 2026-11-15** (branche `storage/1-binary-file-content`,
+  PR vers `storage/base`) : blocs binaires avec leur `chunkHash`, base en
+  version 5, conversion unique au démarrage avec écran d'attente, sauvegardes
+  gardées en version de schéma 4 (`BackupSchemaVersion`), fixture
+  `kazoos-v4.json`. Mesuré en publication Release trimmée, Chromium, conteneur
+  cloud : l'enregistrement de 52,5 Mio passe de 3,4 à 3,5 s à 1,0 à 1,1 s.
+  Firefox et Safari pas mesurés (absents du conteneur) ; la lecture de
+  52,5 Mio par `cat` dans le Terminal n'a pas fini dans le temps du parcours,
+  donc la lecture n'est pas mesurée. Suite : chantiers 3, 4 et 6 en parallèle,
+  puis 5.
 
 ## Questions posées, réponse à confirmer
 

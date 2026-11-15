@@ -147,7 +147,7 @@ public sealed class RenamedStorageMigrationTests
         {
             ["formatVersion"] = 1,
             ["databaseName"] = "hackeros",
-            ["databaseSchemaVersion"] = KazoOsIndexedDbSchema.CurrentVersion,
+            ["databaseSchemaVersion"] = KazoOsIndexedDbSchema.BackupSchemaVersion,
             ["createdAtUtc"] = new DateTimeOffset(2026, 10, 1, 12, 0, 0, TimeSpan.Zero).ToString("O"),
             ["stores"] = stores,
         };

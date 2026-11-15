@@ -374,26 +374,32 @@ journaux, processus, intentions, environnement, shell). Exemple : voir le
 ### Fixtures de montée de version IndexedDB
 
 ADR 0099 §4. `Tests/fixtures/indexeddb/` contient un vidage de la base de
-l'OS par version de schéma déjà publiée. Ils ont été enregistrés avant le
-renommage, sous le nom `hackeros`, et ne changent pas : l'OS déplace d'abord
-cette base vers `kazoos` avec les noms de Kazo OS
-([`rename-migration.md`](rename-migration.md), ADR 0230). `IndexedDbUpgradeFixtureTests`
+l'OS par version de schéma déjà publiée. Les vidages des versions 2 et 3 ont
+été enregistrés avant le renommage, sous le nom `hackeros`, et ne changent
+pas : l'OS déplace d'abord cette base vers `kazoos` avec les noms de Kazo OS
+([`rename-migration.md`](rename-migration.md), ADR 0230). À partir de la
+version 4, un vidage s'appelle `kazoos-v<n>.json` et nomme `kazoos`. `IndexedDbUpgradeFixtureTests`
 (`Kazo.Os.UI.E2E.Tests`) recrée chaque base à son ancienne version avec
 `indexedDB.open(nom, ancienneVersion)`, depuis une page de la même origine
 qui ne démarre pas l'OS (servie par Playwright lui-même ; l'attente de l'hôte
-se fait en HTTP, car ouvrir la page de l'OS créerait une base v4 neuve), puis
+se fait en HTTP, car ouvrir la page de l'OS créerait une base neuve à la version courante), puis
 démarre l'OS courant et vérifie :
 
 - l'écran « Sign in » (pas l'accueil « Create administrator ») et la connexion
   avec le mot de passe de l'administrateur du vidage : le compte a survécu ;
 - `cat` du fichier du vidage dans le Terminal : entrées, liens et contenu ;
-- `cat /etc/kazoos/appearance.config` contient `accent=cyan` : le réglage
-  rangé dans l'ancien magasin `settings` a été repris par la migration vers les
-  fichiers (ADR 0044) ;
-- la base est `kazoos`, en version 4 avec `serverConnection`, `syncCursors`
+- `cat` du fichier d'apparence du vidage contient `accent=cyan` :
+  `/etc/kazoos/appearance.config` pour v2 et v3 (le réglage rangé dans l'ancien
+  magasin `settings` a été repris par la migration vers les fichiers,
+  ADR 0044), le fichier nommé par `expectations.setting.path` pour les vidages
+  suivants (`~/.config/kazoos/appearance.config` pour v4) ;
+- la base est `kazoos`, en version 5 avec `serverConnection`, `syncCursors`
   et `syncRecordState` ;
 - la base `hackeros` a disparu et aucun enregistrement de `kazoos` ne contient
-  d'ancien nom (ADR 0230).
+  d'ancien nom (ADR 0230) ;
+- chaque bloc de `fsContent` est binaire et concorde avec son propre
+  `chunkHash`, et `syncMetadata` note que la conversion unique est faite
+  (ADR 0272).
 
 `IndexedDbUpgradeFixtureCatalogTests` (`Kazo.Os.Infrastructure.Browser.Tests`,
 sans navigateur, donc dans chaque passe ordinaire) vérifie qu'un vidage existe
@@ -406,6 +412,7 @@ auto-incrément, administrateur présent).
 | — | 1 | aucun | **Pas de vidage.** La version 1 n'a existé avant aucun commit du dépôt : le commit racine `fdca68e` déclare déjà `CurrentVersion = 2`. Aucun build ne peut la produire et un vidage reconstitué serait inventé. L'étape 1 du plan reste testée par la création d'une base neuve (chaque démarrage à vide). |
 | `hackeros-v2.json` | 2 | `e46e897` (dernier commit en v2, avant `7a20401`) | OS démarré pour de vrai |
 | `hackeros-v3.json` | 3 | `7a20401` (seul commit en v3, avant `2481d67`) | OS démarré pour de vrai |
+| `kazoos-v4.json` | 4 | `a7e8d7a` (`storage/base` avant l'ADR 0272) | Publication Release trimmée de l'hôte Ecosystem démarrée pour de vrai (2026-11-15) : fichier écrit avec `echo` dans le Terminal, accent choisi dans Paramètres |
 
 Chaque vidage contient `databaseName`, `version`, `producedFrom` (commit,
 méthode, hôte, date), `expectations` (identifiants de l'administrateur,
@@ -436,6 +443,10 @@ un magasin sans chemin de clé ; aucun pour l'instant).
    texte de `7a20401` n'enregistre pas un nouveau fichier), choisit l'accent
    Cyan dans Paramètres, puis vide tous les magasins et refuse un vidage dont la
    version n'est pas celle attendue.
+   Pour un build d'après le renommage (version 4 et suivantes), servir sa
+   publication Ecosystem trimmée et lancer `node Tests/fixtures/indexeddb/produce-fixture-kazoos.js <url> <commit> Tests/fixtures/indexeddb/kazoos-v<version>.json <préfixe-captures>` :
+   il écrit le fichier avec `echo` dans le Terminal et note le chemin du
+   fichier d'apparence de la personne dans `expectations.setting.path`.
 5. Lancer `IndexedDbUpgradeFixtureTests` et
    `IndexedDbUpgradeFixtureCatalogTests` ; ajouter la version au
    `[InlineData]` du premier.
@@ -532,5 +543,6 @@ dotnet test Tests/Kazo.Os.UI.E2E.Tests -c Release --no-build --filter "FullyQual
 - [x] Fixtures de montée de version IndexedDB (ADR 0099 §4, `v3/7`) :
   - [x] historique du schéma : v1 absente du dépôt, v2 jusqu'à `e46e897`, v3 en `7a20401` ;
   - [x] vidages v2 et v3 produits en démarrant l'OS de ces commits (`produce-fixture.js`) ;
-  - [x] test E2E par vidage (compte, fichier, réglage, version 4) ;
+  - [x] vidage v4 produit depuis la publication Ecosystem trimmée de `a7e8d7a` (ADR 0272) ;
+  - [x] test E2E par vidage (compte, fichier, réglage, version 5, contenu binaire) ;
   - [x] contrôle sans navigateur de la règle « un vidage par version précédente ».

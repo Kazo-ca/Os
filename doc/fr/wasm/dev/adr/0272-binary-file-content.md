@@ -196,14 +196,16 @@ s'il le faut, lui fait proposer le redémarrage sur la nouvelle version
 
 ## Tâches
 
-- [ ] Module JavaScript du dépôt de contenu, `[JSImport]`, `MemoryView`.
-- [ ] Écriture binaire avec `chunkHash`, SHA-256 par WebCrypto.
-- [ ] Lecture de la forme binaire, vérification par bloc.
-- [ ] Base en version 5, étape de migration vide, test d'une page plus ancienne.
-- [ ] Sauvegarde et restauration (format 1 gardé), instantané de diagnostic.
-- [ ] Conversion en une fois au premier démarrage : écran d'attente avec
-  avancement, reprise après une fermeture, un seul onglet à la fois, test sur
-  une base de la version 4.
-- [ ] Mesures avant et après dans Chromium, Firefox et Safari.
-- [ ] Docs (FR et EN) : `browser-infrastructure.md`, sauvegarde, mémoire,
+- [x] Module JavaScript du dépôt de contenu, `[JSImport]`, `MemoryView` (`fileContent.js`, `BrowserFileContentChunkStore`).
+- [x] Écriture binaire avec `chunkHash`, SHA-256 par WebCrypto.
+- [x] Lecture de la forme binaire, vérification par bloc.
+- [x] Base en version 5, étape de migration vide. Page plus ancienne : comportement décrit dans `browser-infrastructure.md` (erreur de version, rechargement), sans test automatique.
+- [x] Sauvegarde et restauration (format 1 et version de schéma 4 gardés, `BackupSchemaVersion`), instantané de diagnostic.
+- [x] Conversion en une fois au premier démarrage : écran d'attente avec
+  avancement, reprise après une fermeture (position dans `syncMetadata`), un
+  seul onglet à la fois (Web Lock), test sur une base de la version 4
+  (`kazoos-v4.json`, avec les vidages v2 et v3). La reprise après une
+  fermeture n'a pas de test automatique.
+- [x] Mesures avant et après dans Chromium (Release trimmée, enregistrement de 52,5 Mio : 3,4 à 3,5 s avant, 1,0 à 1,1 s après). Firefox et Safari : pas mesurés, absents du conteneur. Lecture : pas mesurée (un `cat` de 52,5 Mio dans le Terminal n'a pas fini dans le temps du parcours).
+- [x] Docs (FR et EN) : `browser-infrastructure.md`, sauvegarde, mémoire,
   `features.md`, entrée de changement.

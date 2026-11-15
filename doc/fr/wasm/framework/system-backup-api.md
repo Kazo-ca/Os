@@ -16,6 +16,12 @@ refusée **avant** toute écriture, avec un message qui nomme les deux versions 
 This backup uses database schema version 3; this Kazo OS uses version 4. It cannot be restored here.
 ```
 
+La version de schéma que nomme une sauvegarde est `KazoOsIndexedDbSchema.BackupSchemaVersion`
+(4), pas la version de la base (5 depuis l'ADR 0272) : le contenu des fichiers y est
+écrit sous sa forme base64, comme avant, donc une sauvegarde faite maintenant se
+restaure encore sur une version précédente, et sa restauration range le contenu en
+binaire.
+
 Nom : `kazoos-AAAAMMJJ-HHMMSSZ.kosbak` (heure UTC de l'export).
 Avant 3.0.0, l'extension était `.hosbak` : le sélecteur la propose encore, et
 une telle archive se restaure comme les autres (elle est reconnue par son contenu).
