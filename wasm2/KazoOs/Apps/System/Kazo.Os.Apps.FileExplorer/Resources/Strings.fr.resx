@@ -595,4 +595,49 @@
   <data name="OpenWith.StoreFailed" xml:space="preserve">
     <value>Le Kazo OS Store n'a pas pu être ouvert.</value>
   </data>
+  <data name="OpenWith.SearchLabel" xml:space="preserve">
+    <value>Rechercher dans les applications installées</value>
+  </data>
+  <data name="OpenWith.SearchPlaceholder" xml:space="preserve">
+    <value>Rechercher une application…</value>
+  </data>
+  <data name="OpenWith.CategoryLabel" xml:space="preserve">
+    <value>Catégorie</value>
+  </data>
+  <data name="OpenWith.AllCategories" xml:space="preserve">
+    <value>Toutes les catégories</value>
+  </data>
+  <data name="OpenWith.NoMatch" xml:space="preserve">
+    <value>Aucune application installée ne correspond à cette recherche.</value>
+  </data>
+  <data name="Category.Developer" xml:space="preserve">
+    <value>Développement</value>
+  </data>
+  <data name="Category.Editors" xml:space="preserve">
+    <value>Éditeurs</value>
+  </data>
+  <data name="Category.Graphics" xml:space="preserve">
+    <value>Graphisme</value>
+  </data>
+  <data name="Category.Internet" xml:space="preserve">
+    <value>Internet</value>
+  </data>
+  <data name="Category.Multimedia" xml:space="preserve">
+    <value>Multimédia</value>
+  </data>
+  <data name="Category.Network" xml:space="preserve">
+    <value>Réseau</value>
+  </data>
+  <data name="Category.Office" xml:space="preserve">
+    <value>Bureautique</value>
+  </data>
+  <data name="Category.Productivity" xml:space="preserve">
+    <value>Productivité</value>
+  </data>
+  <data name="Category.System" xml:space="preserve">
+    <value>Système</value>
+  </data>
+  <data name="Category.Utilities" xml:space="preserve">
+    <value>Utilitaires</value>
+  </data>
 </root>

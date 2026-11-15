@@ -74,3 +74,22 @@ public static class StorageSpacePolicy
     public static bool IsInRootReserve(StorageCapacity capacity) =>
         capacity.QuotaBytes > 0 && capacity.AvailableBytes < ReserveBytes(capacity.QuotaBytes);
 }
+
+/// <summary>
+/// Gives back the space of stored data nothing points to any more (orphan file content), like a
+/// filesystem freeing the blocks of deleted files. Implemented by infrastructure code only (the
+/// IndexedDB content store); the OS storage monitor runs it at boot and when storage gets low.
+/// </summary>
+public interface IStorageReclaimer
+{
+    /// <summary>
+    /// Deletes orphan data older than the store's retention window, in bounded passes, and returns
+    /// the number of chunks deleted.
+    /// </summary>
+    /// <param name="lowSpace">
+    /// <see langword="true"/> when storage is low (<see cref="StorageSpacePolicy.IsLow"/>): the
+    /// short low-space retention window applies.
+    /// </param>
+    /// <param name="cancellationToken">Cancels between two passes.</param>
+    ValueTask<long> ReclaimAsync(bool lowSpace, CancellationToken cancellationToken = default);
+}

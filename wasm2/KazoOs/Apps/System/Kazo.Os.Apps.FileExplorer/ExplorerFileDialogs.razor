@@ -32,8 +32,43 @@
                 {
                     <p class="dialog-status no-handler" role="status">@L["OpenWith.NoInstalledApp"]</p>
                 }
+                @if (ShowFilters)
+                {
+                    <div class="app-filters" role="search">
+                        <label class="app-search" for="@_searchId">
+                            <KazoIcon Library="IconLibrary.Lucide" Name="search" Size="14" Title="" />
+                            <input id="@_searchId"
+                                   type="search"
+                                   autocomplete="off"
+                                   spellcheck="false"
+                                   placeholder="@L["OpenWith.SearchPlaceholder"]"
+                                   aria-label="@L["OpenWith.SearchLabel"]"
+                                   @bind="_search"
+                                   @bind:event="oninput"
+                                   @bind:after="OnFilterChanged" />
+                        </label>
+                        @if (_categories.Count > 1)
+                        {
+                            <select id="@_categoryId"
+                                    class="app-category"
+                                    aria-label="@L["OpenWith.CategoryLabel"]"
+                                    @bind="_category"
+                                    @bind:after="OnFilterChanged">
+                                <option value="">@L["OpenWith.AllCategories"]</option>
+                                @foreach (string category in _categories)
+                                {
+                                    <option value="@category">@CategoryLabel(category)</option>
+                                }
+                            </select>
+                        }
+                    </div>
+                }
+                @if (VisibleApps is { Count: 0 })
+                {
+                    <p class="dialog-status no-match" role="status">@L["OpenWith.NoMatch"]</p>
+                }
                 <div class="app-list" role="radiogroup" aria-label="@L["Dialog.OpenWith.Title"]" @onkeydown="OnAppListKeyDown">
-                    @foreach (KazoAppInfo app in _apps)
+                    @foreach (KazoAppInfo app in VisibleApps)
                     {
                         <button type="button"
                                 role="radio"
@@ -43,8 +78,8 @@
                                 @onclick="() => _selectedAppId = app.Id"
                                 @ondblclick="() => ChooseApp(app.Id)">
                             <span class="app-mark" aria-hidden="true">@(app.Id == _selectedAppId ? "▣" : "□")</span>
-                            <span class="app-name">@app.Name</span>
-                            <span class="app-id">@app.Id</span>
+                            <span class="app-name" title="@app.Name">@app.Name</span>
+                            <span class="app-id" title="@app.Id">@app.Id</span>
                         </button>
                     }
                 </div>

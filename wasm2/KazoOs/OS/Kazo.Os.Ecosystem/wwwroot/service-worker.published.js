@@ -41,7 +41,8 @@ const cacheName = `${cacheNamePrefix}${self.assetsManifest.version}`;
 const offlineAssetsInclude = [ /\.dll$/, /\.pdb$/, /\.wasm/, /\.html/, /\.js$/, /\.json$/, /\.css$/, /\.woff2?$/, /\.ttf$/, /\.svg$/, /\.webp$/, /\.png$/, /\.jpe?g$/, /\.gif$/, /\.ico$/, /\.blat$/, /\.dat$/, /\.webmanifest$/ ];
 // kazoos-host.json is never cached (ADR 0137): Kazo.Os.Server answers that path itself
 // ("a server delivered this OS"), so its bytes differ from the static file's integrity hash.
-const offlineAssetsExclude = [ /^service-worker\.js$/, /^kazoos-host\.json$/ ];
+// social-preview.png is only read by link previews (Facebook…), never by the OS: not cached offline.
+const offlineAssetsExclude = [ /^service-worker\.js$/, /^kazoos-host\.json$/, /^social-preview\.png$/ ];
 // appsettings.json is cached without its integrity hash (ADR 0226 §4): whoever deploys the OS
 // edits it in the published files (KazoOs:SignIn:FactoryReset, CrossOriginIsolation…) without
 // rebuilding, and an edited file must not make the whole release cache fail to install.

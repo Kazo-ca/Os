@@ -8,3 +8,8 @@ Kazo.Os.Platform.Core.Apps.Packages.AppPackageIndexEntry.MinimumSdkVersion.get -
 Kazo.Os.Platform.Core.Apps.Packages.AppPackageIndexEntry.MinimumSdkVersion.init -> void
 Kazo.Os.Platform.Core.Apps.Packages.AppPackageIndexEntry.MaximumSdkVersion.get -> string?
 Kazo.Os.Platform.Core.Apps.Packages.AppPackageIndexEntry.MaximumSdkVersion.init -> void
+Kazo.Os.Platform.Core.Storage.StorageSpaceMonitor.Reclaimer.get -> Kazo.Os.Simulation.Abstractions.Metrics.IStorageReclaimer?
+Kazo.Os.Platform.Core.Storage.StorageSpaceMonitor.Reclaimer.init -> void
+static readonly Kazo.Os.Platform.Core.Storage.StorageSpaceMonitor.ReclaimRequestDelay -> System.TimeSpan
+Kazo.Os.Platform.Core.Storage.StorageSpaceMonitor.RequestReclaim() -> void
+static readonly Kazo.Os.Platform.Core.Storage.StorageSpaceMonitor.ReclaimInterval -> System.TimeSpan
