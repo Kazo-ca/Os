@@ -54,7 +54,7 @@ et une PR vers `storage/base`.
 | 3 | `storage/3-partial-read` | Lecture d'une plage dans le dépôt de contenu, flux de lecture à la demande pour les fichiers de plus de 16 Mio | [0275](../adr/0275-partial-read-and-file-address.md) §1, 2 | 1 |
 | 4 | `storage/4-single-copy-of-app-files` | Magasin `servedFiles`, publication sans copie, lecteur de blocs du service worker (flux, `Range`), fin du cache `kazoos-installed-apps` | [0274](../adr/0274-single-copy-of-app-files.md) | 1, #537 |
 | 5 | `storage/5-file-address` | `KazoFile.CreateUrlAsync`, route `_kazo/files/`, disque `/` et lecteurs réseau, apps en Web Worker | [0275](../adr/0275-partial-read-and-file-address.md) §3 | 4 |
-| 6 | `storage/6-streamed-write` | Écriture sans garder tout le fichier dans la mémoire .NET | [0275](../adr/0275-partial-read-and-file-address.md) §4 | 1 |
+| 6 | `storage/6-streamed-write` | Écriture sans garder tout le fichier dans la mémoire .NET. **Fait le 2026-11-15** : le premier enregistrement de 52,5 Mio fait monter la mémoire WebAssembly de 88 Mio au lieu de 214 Mio, et deux enregistrements de 214 Mio au lieu de 395 Mio (Release trimmée, Chromium) | [0275](../adr/0275-partial-read-and-file-address.md) §4 | 1 |
 | 7 | `storage/7-docs-and-version` | `features.md`, `browser-infrastructure.md`, mémoire, entrées de changement vérifiées, API repliée, mesures finales dans Chromium, Firefox et Safari | | tous |
 
 **Ordre et parallèle.** Le chantier 1 d'abord : il change la forme des blocs

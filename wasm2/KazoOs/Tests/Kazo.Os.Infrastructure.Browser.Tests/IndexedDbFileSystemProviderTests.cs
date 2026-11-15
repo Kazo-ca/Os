@@ -180,7 +180,8 @@ public sealed class IndexedDbFileSystemProviderTests
     public async Task WriteAsync_ContentOverTheMaximumFileSizeReturnsFileTooLargeBeforeAnyWrite()
     {
         ScriptedModule module = new(Walk(Entry(ChildId, FileSystemEntryKind.File, revision: 4)));
-        await using IndexedDbFileSystemProvider provider = new(new FakeJsRuntime(module));
+        MemoryFileContentChunkStore chunks = new();
+        await using IndexedDbFileSystemProvider provider = WithChunks(module, chunks);
 
         FileSystemMutationResult result = await provider.WriteAsync(
             new FileSystemWriteRequest(VirtualPath.Parse("/big.bin"), 4),
@@ -189,6 +190,8 @@ public sealed class IndexedDbFileSystemProviderTests
 
         Assert.Equal(FileSystemErrorCode.FileTooLarge, result.Transaction.Error?.Code);
         Assert.Single(module.ExecuteArguments);
+        Assert.Equal(0, chunks.WriteCalls);
+        Assert.Equal(0, chunks.OpenStagedWrites);
     }
 
     [Fact]
@@ -500,6 +503,9 @@ public sealed class IndexedDbFileSystemProviderTests
             int chunkSize,
             CancellationToken cancellationToken) =>
             _inner.ReadChunksAsync(contentHash, firstIndex, count, destination, chunkSize, cancellationToken);
+
+        public ValueTask<IStagedFileContent> BeginStagedWriteAsync(CancellationToken cancellationToken) =>
+            _inner.BeginStagedWriteAsync(cancellationToken);
     }
 
     private sealed class ScriptedModule(params JsonElement[]?[] results) : IJSObjectReference

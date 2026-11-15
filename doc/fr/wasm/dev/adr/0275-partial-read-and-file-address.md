@@ -169,7 +169,7 @@ cette écriture en flux enlève les autres. Le passage de l'iframe à .NET et
 - [ ] `KazoFile.CreateUrlAsync`, `KazoFileUrl`, libération avec l'instance ;
   apps en Web Worker ; repli `blob:`.
 - [ ] Disque `/` et lecteurs réseau.
-- [ ] Écriture en flux ; mesure de la mémoire avant et après.
+- [x] Écriture en flux ; mesure de la mémoire avant et après (chantier 6, `storage/6-streamed-write`).
 - [ ] `PublicAPI.Unshipped.txt`, fixture de compatibilité du SDK, docs du
   framework (FR et EN), `features.md`, entrée de changement.
 - [ ] Issue dans Os-App-Webamp.

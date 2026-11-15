@@ -165,7 +165,7 @@ they do not change for speed.
 - [ ] `KazoFile.CreateUrlAsync`, `KazoFileUrl`, release with the instance;
   apps in a Web Worker; `blob:` fallback.
 - [ ] `/` disk and network drives.
-- [ ] Streamed write; memory measured before and after.
+- [x] Streamed write; memory measured before and after (work item 6, `storage/6-streamed-write`).
 - [ ] `PublicAPI.Unshipped.txt`, SDK compatibility fixture, framework docs (FR
   and EN), `features.md`, change entry.
 - [ ] Issue in Os-App-Webamp.

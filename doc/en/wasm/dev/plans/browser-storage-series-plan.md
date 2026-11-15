@@ -54,7 +54,7 @@ and a PR to `storage/base`.
 | 3 | `storage/3-partial-read` | Range read in the content repository, on-demand read stream for files over 16 MiB | [0275](../adr/0275-partial-read-and-file-address.md) §1, 2 | 1 |
 | 4 | `storage/4-single-copy-of-app-files` | `servedFiles` store, publication without copy, chunk reader of the service worker (stream, `Range`), end of the `kazoos-installed-apps` cache | [0274](../adr/0274-single-copy-of-app-files.md) | 1, #537 |
 | 5 | `storage/5-file-address` | `KazoFile.CreateUrlAsync`, `_kazo/files/` route, `/` disk and network drives, apps in a Web Worker | [0275](../adr/0275-partial-read-and-file-address.md) §3 | 4 |
-| 6 | `storage/6-streamed-write` | Writing without keeping the whole file in .NET memory | [0275](../adr/0275-partial-read-and-file-address.md) §4 | 1 |
+| 6 | `storage/6-streamed-write` | Writing without keeping the whole file in .NET memory. **Done on 2026-11-15**: the first save of 52.5 MiB grows the WebAssembly memory by 88 MiB instead of 214 MiB, and two saves by 214 MiB instead of 395 MiB (trimmed Release, Chromium) | [0275](../adr/0275-partial-read-and-file-address.md) §4 | 1 |
 | 7 | `storage/7-docs-and-version` | `features.md`, `browser-infrastructure.md`, memory, change entries checked, API folded, final measurements in Chromium, Firefox and Safari | | all |
 
 **Order and parallel work.** Work item 1 first: it changes the form of the

@@ -55,6 +55,14 @@ navigateur, dans la composition de l'hôte.
   avec WebCrypto, puis range 64 blocs par transaction ; une lecture vérifie chaque bloc
   (numéro, longueur, `chunkHash`) et refuse un fichier abîmé au lieu de rendre de faux
   octets.
+- Écriture en flux (ADR 0275 §4) : le dépôt lit le flux à écrire par lots de 16 Mio
+  (64 blocs). Un fichier qui tient dans un lot est haché et rangé depuis ce lot, comme
+  avant. Un fichier plus grand est passé au navigateur lot par lot
+  (`IFileContentChunkStore.BeginStagedWriteAsync`, `IStagedFileContent`) : chaque lot est
+  copié dans un `Blob` de la page dès qu'il arrive, puis le navigateur assemble le fichier,
+  le hache et range ses blocs, 64 par transaction. La mémoire .NET ne porte qu'un lot à la
+  fois ; la limite de 128 Mio est vérifiée avant de ranger le premier bloc, et une écriture
+  qui échoue libère ce que la page gardait.
 - L'adaptateur JSON (`indexedDb.js`) voit toujours les blocs sous leur forme base64 :
   `binaryChunks.js` change un bloc binaire qu'il lit en `dataBase64`, et une opération
   marquée `BinaryChunk` (restauration d'une sauvegarde, migration du renommage) de
