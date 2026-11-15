@@ -67,7 +67,9 @@ workflow keeps its diagnostics and performs no deployment. See
 ## Assembly and routing
 
 `build/assemble-pages.ps1` copies the WASM publication unmodified into
-`artifacts/pages/`, then the legacy bundle into `artifacts/pages/legacy/`. It
+`artifacts/pages/`, then the legacy bundle into `artifacts/pages/legacy/` and the
+redirect page to the beta site (`build/pages/beta-redirect.html`) into
+`artifacts/pages/beta/index.html` ([`beta-site.md`](beta-site.md), ADR 0271). It
 adds `.nojekyll` and the `CNAME` `os.kazo.ca`. The destination folder
 must be empty; a missing required entry aborts the publication.
 
@@ -77,8 +79,8 @@ keeps Google Fonts as a browser CSS import, without downloading the font
 during compilation.
 
 The PWA integrity manifest is not rewritten and does not contain the legacy.
-The WASM service worker leaves same-origin `/legacy` and `/legacy/**`
-requests to the network: no substitution by the WASM shell, no addition of
+The WASM service worker leaves same-origin `/legacy`, `/legacy/**`, `/beta`
+and `/beta/**` requests to the network: no substitution by the WASM shell, no addition of
 its isolation headers to the legacy. Other paths keep the existing offline
 strategy.
 

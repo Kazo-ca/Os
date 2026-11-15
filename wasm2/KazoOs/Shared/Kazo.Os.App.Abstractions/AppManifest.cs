@@ -27,6 +27,15 @@ public sealed record AppManifest
     public required AppKind Kind { get; init; }
 
     /// <summary>
+    /// Gets the identifier of the <see cref="AppKind.Feature"/> this manifest is a child of (ADR 0260
+    /// §2), or <see langword="null"/> (omitted from <c>manifest.json</c>) for a stand-alone app, so
+    /// existing manifests keep their exact bytes. A child's id is <c>&lt;parent&gt;.&lt;suffix&gt;</c>,
+    /// its kind is never <see cref="AppKind.Feature"/>, its capabilities are a subset of its
+    /// parent's, and it is installed, activated and removed only with its parent.
+    /// </summary>
+    public string? Parent { get; init; }
+
+    /// <summary>
     /// Gets the managed assembly and type used to activate the app on every platform it supports.
     /// Mutually exclusive with <see cref="Platform"/> — exactly one of the two must be set. This is
     /// the legacy single-entry-point form; per doc/en/wasm/dev/old/mobile-interface-platform-plan.md §4.3, a
@@ -69,6 +78,15 @@ public sealed record AppManifest
     /// relay's own <c>AllowedPorts</c>. Declaring any requires <c>network.real.access</c>.
     /// </summary>
     public IReadOnlyList<string>? RealNetworkPorts { get; init; }
+
+    /// <summary>
+    /// Gets the services a <see cref="AppKind.Feature"/> provides to other apps (ADR 0262 §1), each a
+    /// contract (an interface of a shared library) and the type that implements it, or
+    /// <see langword="null"/> (omitted from <c>manifest.json</c>) when it provides none, so existing
+    /// manifests keep their exact bytes. Only a feature provides; any app consumes through
+    /// <c>KazoFeatures.GetServiceAsync&lt;T&gt;()</c>.
+    /// </summary>
+    public IReadOnlyList<AppProvidedServiceManifest>? ProvidedServices { get; init; }
 
     /// <summary>
     /// Gets the custom topic permissions this app declares and exports, gating its own shared messaging
@@ -258,3 +276,82 @@ public sealed record TerminalCommandManifest(
     string Name,
     IReadOnlyList<string> Aliases,
     string Usage);
+/// <summary>
+/// One service a feature provides (ADR 0262 §1): the contract other apps ask for and the type that
+/// implements it in an assembly of the feature. Both are written as assembly-qualified names with
+/// the simple assembly name, <c>OsX86.Interface.Ix86, Os-x86.Interface</c>.
+/// </summary>
+/// <param name="Contract">The contract, an interface of a shared library (ADR 0261 §2).</param>
+/// <param name="Implementation">The implementing type, in an assembly of the feature.</param>
+public sealed record AppProvidedServiceManifest(string Contract, string Implementation)
+{
+    /// <summary>
+    /// Gets the id of the feature's child whose capabilities the implementation runs with
+    /// (ADR 0262 §1, the feature's <c>ServiceEntryPoint</c>), or <see langword="null"/> for the
+    /// feature's whole set.
+    /// </summary>
+    public string? EntryPoint { get; init; }
+
+    /// <summary>Gets the full name of the contract type, e.g. <c>OsX86.Interface.Ix86</c>.</summary>
+
+    [System.Text.Json.Serialization.JsonIgnore]
+    public string ContractType => Split(Contract).TypeName;
+
+    /// <summary>Gets the simple assembly name of the contract, e.g. <c>Os-x86.Interface</c>.</summary>
+
+    [System.Text.Json.Serialization.JsonIgnore]
+    public string ContractAssembly => Split(Contract).AssemblyName;
+
+    /// <summary>Gets the full name of the implementing type.</summary>
+
+    [System.Text.Json.Serialization.JsonIgnore]
+    public string ImplementationType => Split(Implementation).TypeName;
+
+    /// <summary>Gets the simple assembly name of the implementing type, e.g. <c>OsX86</c>.</summary>
+
+    [System.Text.Json.Serialization.JsonIgnore]
+    public string ImplementationAssembly => Split(Implementation).AssemblyName;
+
+    /// <summary>Writes a type as the manifest names it: <c>Full.Type.Name, Assembly</c>.</summary>
+    /// <param name="type">A type with a full name.</param>
+    public static string NameOf(Type type)
+    {
+        ArgumentNullException.ThrowIfNull(type);
+        string fullName = type.FullName ?? throw new ArgumentException($"'{type}' has no full name.", nameof(type));
+        return $"{fullName}, {type.Assembly.GetName().Name}";
+    }
+
+    /// <summary>
+    /// Reads a name written <c>Full.Type.Name, Assembly</c>: exactly one comma, a type name and a
+    /// simple assembly name, neither empty, no version, culture or key.
+    /// </summary>
+    /// <param name="value">The name.</param>
+    /// <param name="typeName">The full type name.</param>
+    /// <param name="assemblyName">The simple assembly name.</param>
+    /// <returns><see langword="true"/> when the name has that form.</returns>
+    public static bool TryParseName(string? value, out string typeName, out string assemblyName)
+    {
+        typeName = string.Empty;
+        assemblyName = string.Empty;
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return false;
+        }
+
+        string[] parts = value.Split(',');
+        if (parts.Length != 2)
+        {
+            return false;
+        }
+
+        typeName = parts[0].Trim();
+        assemblyName = parts[1].Trim();
+        return typeName.Length > 0
+            && assemblyName.Length > 0
+            && !typeName.Any(char.IsWhiteSpace)
+            && !assemblyName.Any(static c => char.IsWhiteSpace(c) || c is '=' or '/' or '\\');
+    }
+
+    private static (string TypeName, string AssemblyName) Split(string value) =>
+        TryParseName(value, out string typeName, out string assemblyName) ? (typeName, assemblyName) : (value, string.Empty);
+}

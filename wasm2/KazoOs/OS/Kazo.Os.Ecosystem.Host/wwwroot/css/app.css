@@ -156,3 +156,89 @@ body {
     }
 }
 
+
+/* ADR 0272 §3: waiting screen of the one-time conversion of the stored file content
+   (storageConversion.js), shown before the OS opens a session. The progress ring of the boot is
+   hidden while it is there. */
+.kazoos-storage-converting .loading-progress,
+.kazoos-storage-converting .loading-progress-text {
+    display: none !important;
+}
+
+#kazoos-storage-conversion {
+    position: fixed;
+    inset: 0;
+    z-index: 1001;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.75rem;
+    box-sizing: border-box;
+    max-width: 44rem;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+    color: var(--kos-text-primary, #f4f7f8);
+    font-family: var(--kos-font-mono, "Cascadia Mono", Consolas, monospace);
+    line-height: 1.5;
+}
+
+#kazoos-storage-conversion h1 {
+    margin: 0 0 0.5rem;
+    padding-left: 0.75rem;
+    border-left: 0.25rem solid var(--kos-accent, #42d392);
+    font-size: 1.35rem;
+    letter-spacing: 0.04em;
+}
+
+#kazoos-storage-conversion h1::before {
+    content: "[ fsck ] ";
+    color: var(--kos-accent, #42d392);
+}
+
+#kazoos-storage-conversion[data-state="failed"] h1 {
+    border-left-color: #ff5f56;
+}
+
+#kazoos-storage-conversion[data-state="failed"] h1::before {
+    color: #ff5f56;
+}
+
+#kazoos-storage-conversion p {
+    margin: 0;
+}
+
+#kazoos-storage-conversion .storage-conversion-bar {
+    width: 100%;
+    height: 0.75rem;
+    accent-color: var(--kos-accent, #42d392);
+}
+
+#kazoos-storage-conversion[data-state="failed"] .storage-conversion-bar {
+    display: none;
+}
+
+#kazoos-storage-conversion .storage-conversion-detail {
+    color: var(--kos-text-secondary, #a8bac4);
+    font-size: 0.9rem;
+    overflow-wrap: anywhere;
+}
+
+#kazoos-storage-conversion[data-state="converting"] .storage-conversion-detail::after {
+    content: " _";
+    animation: kazoos-boot-cursor 1s steps(1) infinite;
+}
+
+#kazoos-storage-conversion .storage-conversion-retry {
+    align-self: flex-start;
+    margin-top: 0.5rem;
+    padding: 0.5rem 1.25rem;
+    border: 1px solid var(--kos-accent, #42d392);
+    background: transparent;
+    color: var(--kos-accent, #42d392);
+    font: inherit;
+    cursor: pointer;
+}
+
+#kazoos-storage-conversion .storage-conversion-retry[hidden] {
+    display: none;
+}

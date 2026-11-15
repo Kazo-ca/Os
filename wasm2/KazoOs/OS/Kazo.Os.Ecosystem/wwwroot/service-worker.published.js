@@ -20,14 +20,17 @@ self.addEventListener('fetch', event => {
     }
 
     const url = new URL(event.request.url);
-    const legacyPath = new URL('legacy/', self.registration.scope).pathname;
-    // Pages also hosts the original application. Let its requests reach the network:
-    // the WASM navigation fallback must never replace legacy HTML with index.html.
-    if (url.origin === self.location.origin
-        && (url.pathname === legacyPath.slice(0, -1) || url.pathname.startsWith(legacyPath))) return;
+    // Pages also hosts the original application (legacy/) and the redirection to the beta site
+    // (beta/, ADR 0271 §3). Let their requests reach the network: the WASM navigation fallback
+    // must never replace their HTML with index.html.
+    if (url.origin === self.location.origin && reservedPaths.some(path =>
+        url.pathname === path.slice(0, -1) || url.pathname.startsWith(path))) return;
     event.respondWith(onFetch(event));
 });
 self.addEventListener('message', event => onMessage(event));
+
+// Directories of the Pages site that are not part of the OS (assemble-pages.ps1).
+const reservedPaths = ['legacy/', 'beta/'].map(path => new URL(path, self.registration.scope).pathname);
 
 const cacheNamePrefix = 'kazoos-cache-';
 // ADR 0228 §2: caches written before the rename; onActivate deletes them like any stale version.
@@ -113,6 +116,17 @@ async function withIsolationHeaders(response, refresh) {
     return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
 }
 
+// ADR 0271 §3: Cloudflare Pages (the beta site) answers /index.html with a redirect to /, so the
+// cached shell is a "redirected" response, which a browser refuses for a navigation. A copy of the
+// body without that flag is served instead; other responses are returned untouched.
+function withoutRedirectFlag(response) {
+    if (!response.redirected) {
+        return response;
+    }
+
+    return new Response(response.body, { status: response.status, statusText: response.statusText, headers: response.headers });
+}
+
 async function onInstall(event) {
     if (installedAppAssets.installedAppsOnly) {
         // No release cache on a development host: take over at once, the OS waits for it.
@@ -161,7 +175,8 @@ async function onFetch(event) {
 }
 
 async function fetchShellOrAsset(event) {
-    // ADR 0206: an installed app's file, copied by the OS, comes before the release cache.
+    // ADR 0206: an installed app's file, read from the OS's file system (ADR 0274), comes before
+    // the release cache.
     // ADR 0243: a page load (navigation) too, so an iframe pointed at an installed app's page
     // (_content/<assembly>/host/index.html?author=…) shows that page, not a second Kazo OS; the
     // query stays on the frame's address for the page to read. An address under _content/ that no
@@ -192,7 +207,7 @@ async function fetchShellOrAsset(event) {
     const cachedResponse = await cache.match(request, { ignoreSearch });
 
     if (cachedResponse) {
-        return cachedResponse;
+        return withoutRedirectFlag(cachedResponse);
     }
 
     try {
@@ -208,7 +223,7 @@ async function fetchShellOrAsset(event) {
         if (event.request.mode === 'navigate') {
             const fallbackShell = await cache.match('index.html');
             if (fallbackShell) {
-                return fallbackShell;
+                return withoutRedirectFlag(fallbackShell);
             }
         }
         throw error;

@@ -91,7 +91,7 @@ internal sealed partial class AppManagementGateway
             parsed.Name,
             index.AppId,
             [.. index.Versions.Select(static entry => entry.Version.ToString())],
-            index.Latest?.Version.ToString(),
+            AppVersionChoice.Newest(index, packages.SdkVersion, current?.Version)?.Version.ToString() ?? index.Latest?.Version.ToString(),
             trust != AppSourceTrust.Untrusted,
             current?.Version?.ToString())
         {
@@ -126,6 +126,9 @@ internal sealed partial class AppManagementGateway
             await packages.ReadPersonalInstalledAsync(user, _principal.HomePath, cancellationToken).ConfigureAwait(false))
         {
             PackagedAppIds = (_installedPackages?.Invoke()?.Apps.Keys ?? []).Concat(systemInstalled.Sources.Keys).ToHashSet(StringComparer.Ordinal),
+            // ADR 0261 §1, §2: the libraries the installed apps carry, and those already in the page.
+            InstalledApps = [.. (_installedPackages?.Invoke()?.Apps.Values ?? []).Distinct()],
+            LoadedPackageLibraries = InstalledLibraries?.Invoke()?.LoadedFromPackages ?? new HashSet<string>(StringComparer.OrdinalIgnoreCase),
         };
         // Download and every check first: no administrator is asked for a package that would be refused.
         AppPackagePlan plan = await Translate(() => packages.PrepareAsync(parsed, context, progress, cancellationToken)).ConfigureAwait(false);
@@ -162,6 +165,9 @@ internal sealed partial class AppManagementGateway
                 {
                     BlockReason = plan.BlockReason,
                     Signed = plan.Signed,
+                    // ADR 0260 §3: the window shows the feature's set once, with what it brings.
+                    IsFeature = plan.Package.IsFeature,
+                    FeatureEntryPoints = DescribeEntryPoints(plan.Package),
                 },
                 cancellationToken).ConfigureAwait(false);
         }
@@ -173,6 +179,11 @@ internal sealed partial class AppManagementGateway
         await packages
             .CommitAsync(plan.SystemWide ? system : user, plan, by, cancellationToken, personalCopies)
             .ConfigureAwait(false);
+        if (plan.Package.IsFeature)
+        {
+            await ApproveFeatureAsync(plan.Package, cancellationToken).ConfigureAwait(false);
+        }
+
         await ActivateInstalledAppsAsync(CancellationToken.None).ConfigureAwait(false);
         return new KazoPackageInstallReport(
             manifest.Id,
@@ -189,7 +200,69 @@ internal sealed partial class AppManagementGateway
             ReplacedPersonalCopies = personalCopies.Count,
             RestartRequired = !RunsVersion(manifest.Id, plan.Package.Version),
             Signed = plan.Signed,
+            IsFeature = plan.Package.IsFeature,
+            EntryPoints = DescribeEntryPoints(plan.Package),
         };
+    }
+
+    /// <summary>The children of a feature as the approval window and <c>kazopkg</c> name them: "name (kind)".</summary>
+    private static IReadOnlyList<string> DescribeEntryPoints(AppPackage package) =>
+        [.. package.Children.Select(static child => $"{child.Name} ({child.Kind.ToString().ToLowerInvariant()})")];
+
+    /// <summary>
+    /// ADR 0260 §3: the administrator's consent to the installation is the machine approval of the
+    /// feature's dangerous capabilities. The <c>allow</c> lines of <c>/etc/kazoos/app-permissions.config</c>
+    /// (ADR 0049 §4) are written for the feature and each child, with the real-network ports each one
+    /// declares (ADR 0233 §4), so the first launch of an entry point shows no approval window. A
+    /// user's own refusal (ADR 0049 §9) stays possible in Settings ▸ Permissions.
+    /// </summary>
+    private async ValueTask ApproveFeatureAsync(AppPackage package, CancellationToken cancellationToken)
+    {
+        if (PermissionStore?.Invoke() is not { } permissions)
+        {
+            return;
+        }
+
+        foreach (AppManifest manifest in package.Manifests)
+        {
+            string[] dangerous = [.. manifest.Capabilities.Where(AppCapabilities.IsDangerous).Distinct(StringComparer.Ordinal)];
+            if (dangerous.Length == 0)
+            {
+                continue;
+            }
+
+            await permissions.WriteMachineDecisionsAsync(manifest.Id, dangerous, Policy.AppPermissionDecision.Allow, cancellationToken).ConfigureAwait(false);
+            if (dangerous.Contains(AppCapabilities.NetworkRealAccess, StringComparer.Ordinal))
+            {
+                await permissions
+                    .WriteApprovedRealNetworkPortsAsync(manifest.Id, RealNetworkPorts.Normalize(manifest.RealNetworkPorts) ?? [], cancellationToken)
+                    .ConfigureAwait(false);
+            }
+        }
+    }
+
+    /// <summary>Removes the machine decisions ADR 0260 §3 wrote for a feature and its children, once it is removed.</summary>
+    private async ValueTask ForgetFeatureApprovalsAsync(string featureId, CancellationToken cancellationToken)
+    {
+        if (PermissionStore?.Invoke() is not { } permissions)
+        {
+            return;
+        }
+
+        foreach (string appId in _catalog.GetFeatureChildren(featureId).Prepend(featureId))
+        {
+            if (!_catalog.Manifests.TryGetValue(appId, out AppManifest? manifest))
+            {
+                continue;
+            }
+
+            string[] dangerous = [.. manifest.Capabilities.Where(AppCapabilities.IsDangerous).Distinct(StringComparer.Ordinal)];
+            if (dangerous.Length > 0)
+            {
+                await permissions.WriteMachineDecisionsAsync(appId, dangerous, null, cancellationToken).ConfigureAwait(false);
+                await permissions.WriteApprovedRealNetworkPortsAsync(appId, null, cancellationToken).ConfigureAwait(false);
+            }
+        }
     }
 
     /// <inheritdoc />
@@ -207,7 +280,7 @@ internal sealed partial class AppManagementGateway
                     () => packages.RemoveAsync(user, appId, _principal.LoginName.Value, cancellationToken, _principal.HomePath))
                 .ConfigureAwait(false);
             await ActivateInstalledAppsAsync(CancellationToken.None).ConfigureAwait(false);
-            return ToPublic(appId, removedForUser, systemWide: false);
+            return ToPublic(appId, removedForUser, systemWide: false, removed: true);
         }
 
         IAppFileSystemGateway system = CreateSystemWriter();
@@ -237,11 +310,21 @@ internal sealed partial class AppManagementGateway
                 true,
                 string.Empty,
                 _principal,
-                _caller),
+                _caller)
+            {
+                IsFeature = manifest?.Kind == AppKind.Feature,
+            },
             cancellationToken).ConfigureAwait(false);
+        bool feature = manifest?.Kind == AppKind.Feature;
+        if (feature)
+        {
+            // Before the catalog forgets the children: the approvals of ADR 0260 §3 go with the feature.
+            await ForgetFeatureApprovalsAsync(appId, cancellationToken).ConfigureAwait(false);
+        }
+
         AppPackageSource removed = await Translate(() => packages.RemoveAsync(system, appId, by, cancellationToken)).ConfigureAwait(false);
         await ActivateInstalledAppsAsync(CancellationToken.None).ConfigureAwait(false);
-        return ToPublic(appId, removed, systemWide: true);
+        return ToPublic(appId, removed, systemWide: true, removed: true);
     }
 
     /// <inheritdoc />
@@ -422,13 +505,14 @@ internal sealed partial class AppManagementGateway
         return _packages?.Invoke() ?? throw new NotSupportedException("This host cannot install apps from a repository.");
     }
 
-    private KazoInstalledPackage ToPublic(string appId, AppPackageSource source, bool systemWide) => new(
+    // removed: the package was just removed; Loaded then says the app is still in the page,
+    // whatever its libraries wait for (ADR 0261 §3).
+    private KazoInstalledPackage ToPublic(string appId, AppPackageSource source, bool systemWide, bool removed = false) => new(
         appId,
         source.Name,
         source.Version?.ToString() ?? string.Empty,
-        _catalog.Manifests.TryGetValue(appId, out AppManifest? loaded)
-            && SemanticVersion.TryParse(loaded.Version, out SemanticVersion version)
-            && version == source.Version)
+        source.Version is { } installedVersion
+            && (removed ? IsInCatalogAt(appId, installedVersion) : RunsVersion(appId, installedVersion)))
     {
         SystemWide = systemWide,
     };

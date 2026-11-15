@@ -143,6 +143,47 @@ Seul #537 est codé ; la série `storage/base` reste à bâtir.
 - Rétention des contenus orphelins : courte, et suppression rapide quand l'espace
   est faible. Fait par l'ADR 0273 (1 jour, 5 minutes si l'espace est faible), qui
   remplace les 30 jours de l'ADR 0094.
+- **Série ouverte le 2026-11-15** (branche `storage/base`, aucun code) : plan
+  dans [`../dev/plans/browser-storage-series-plan.md`](../dev/plans/browser-storage-series-plan.md),
+  ADR 0272 (contenu binaire), 0273 (rétention : 1 jour, 5 minutes quand
+  l'espace est faible ; c'est l'ADR de #537), 0274 (une seule copie des
+  fichiers d'app) et 0275 (lecture partielle, adresse de fichier) proposées.
+  Les 30 jours sont en fait dans l'ADR 0094, pas dans l'ADR 0099. Benoit a
+  choisi la durée de 1 jour le 2026-11-15 (fil de #537). Réponses de
+  Benoit du 2026-11-15 : l'ancien contenu est converti en une fois au premier
+  démarrage, avec un écran d'attente (pas en arrière-plan), et une lecture
+  vérifie chaque bloc par son hachage. Aucune question ouverte. La conversion
+  fait partie du chantier 1, qui règle #520 d'après le profilage de #538 et
+  peut partir dès que les ADR sont fusionnées dans `storage/base`.
+- **Chantier 1 fait le 2026-11-15** (branche `storage/1-binary-file-content`,
+  PR vers `storage/base`) : blocs binaires avec leur `chunkHash`, base en
+  version 5, conversion unique au démarrage avec écran d'attente, sauvegardes
+  gardées en version de schéma 4 (`BackupSchemaVersion`), fixture
+  `kazoos-v4.json`. Mesuré en publication Release trimmée, Chromium, conteneur
+  cloud : l'enregistrement de 52,5 Mio passe de 3,4 à 3,5 s à 1,0 à 1,1 s.
+  Firefox et Safari pas mesurés (absents du conteneur) ; la lecture de
+  52,5 Mio par `cat` dans le Terminal n'a pas fini dans le temps du parcours,
+  donc la lecture n'est pas mesurée. Suite : chantiers 3, 4 et 6 en parallèle,
+  puis 5.
+- **Chantier 3 fait le 2026-11-15** (branche `storage/3-partial-read`, PR vers
+  `storage/base`) : `IndexedDbFileContentRepository.ReadRangeAsync` ne charge
+  que les blocs d'une plage ; un fichier de plus de 16 Mio s'ouvre en
+  `ChunkedContentReadStream` (fenêtre de 1 Mio qui grandit jusqu'à 16 Mio quand
+  la lecture continue, de nouveau 1 Mio après un `Seek`) ; une lecture synchrone
+  au-delà de la fenêtre chargée lève `NotSupportedException` ;
+  `KazoFile.ReadAllBytesAsync` fait une copie de moins. Mesuré par les
+  allocations .NET avec le magasin de blocs en mémoire (pas dans le
+  navigateur) : lire 52,5 Mio alloue 17 Mio au lieu de 53, un `Seek` suivi
+  d'une lecture de 4 Kio en alloue 1. Aucun changement de l'API publique.
+- **Chantier 4 fait le 2026-11-15** (branche `storage/4-single-app-copy`, PR
+  vers `storage/base`) : magasin `servedFiles` (base en **version 6**, la 5
+  étant celle du chantier 1), `IndexedDbServedFiles`, publication sans lecture
+  ni copie, worker qui lit les blocs de `fsContent` (flux, `Range`, `chunkHash`
+  vérifié), fin du cache `kazoos-installed-apps`, `servedFiles` compté comme
+  référence par le nettoyage, hors sauvegarde. Vidage `kazoos-v5.json` ajouté
+  (`FIXTURE_VERSION` dans `produce-fixture-kazoos.js`). Pas mesuré dans le
+  navigateur : le démarrage d'une app Craft reste pour le chantier 7. Pas de
+  test automatique pour Ctrl+F5 ni deux onglets. Suite : chantier 5.
 
 ## Questions posées, réponse à confirmer
 

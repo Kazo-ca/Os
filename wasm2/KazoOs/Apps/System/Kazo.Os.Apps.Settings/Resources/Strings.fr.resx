@@ -2163,4 +2163,13 @@
   <data name="CloudAccounts.Error.AccountMismatch" xml:space="preserve">
     <value>Vous vous êtes connecté à un autre compte : connectez-vous avec le compte de ces lecteurs.</value>
   </data>
+  <data name="Apps.Features" xml:space="preserve">
+    <value>Fonctionnalités ({0}) : installées pour toute la machine par un administrateur, avec leurs points d’entrée</value>
+  </data>
+  <data name="Apps.Feature.EntryPoint" xml:space="preserve">
+    <value>Point d’entrée de {0}</value>
+  </data>
+  <data name="Details.Kind.Feature" xml:space="preserve">
+    <value>fonctionnalité</value>
+  </data>
 </root>

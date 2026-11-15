@@ -293,7 +293,8 @@ public sealed partial class TrimmedPublishTests
         await context.RouteAsync(new Regex("^" + Regex.Escape(root)), async route =>
         {
             string relative = Uri.UnescapeDataString(new Uri(route.Request.Url).AbsolutePath)[rootPath.Length..];
-            if (relative == "catalog.json")
+            // ADR 0271 §6: a prerelease OS reads the beta channel of the official catalog.
+            if (relative is "catalog.json" or "catalog-beta.json")
             {
                 await route.FulfillAsync(new RouteFulfillOptions
                 {

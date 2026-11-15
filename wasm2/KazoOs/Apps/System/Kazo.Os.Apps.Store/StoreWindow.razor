@@ -437,6 +437,12 @@
         <div class="store-actions">
             @switch (entry.State)
             {
+                case StoreAppState.NotInstalled when entry.App is not null && !entry.CanInstallForUser:
+                    @* A feature (ADR 0260 §4) goes to the whole machine only. *@
+                    <button type="button" class="store-button is-primary" disabled="@busy" @onclick="() => InstallAsync(entry, KazoPackageScope.System)">
+                        <KazoIcon Library="IconLibrary.Lucide" Name="download" Size="14" Title="" /> @L["Action.InstallForEveryone"]
+                    </button>
+                    break;
                 case StoreAppState.NotInstalled when entry.App is not null:
                     <button type="button" class="store-button is-primary" disabled="@busy" @onclick="() => InstallAsync(entry, KazoPackageScope.User)">
                         <KazoIcon Library="IconLibrary.Lucide" Name="download" Size="14" Title="" /> @L["Action.InstallForMe"]
@@ -471,6 +477,10 @@
                     @if (entry.Installed is not null && !entry.Removed)
                     {
                         <button type="button" class="store-button is-danger" disabled="@busy" @onclick="() => RemoveAsync(entry)">@L["Action.Uninstall"]</button>
+                    }
+                    else if (entry.Removed && entry.App is not null && !entry.CanInstallForUser)
+                    {
+                        <button type="button" class="store-button" disabled="@busy" @onclick="() => InstallAsync(entry, KazoPackageScope.System)">@L["Action.InstallForEveryone"]</button>
                     }
                     else if (entry.Removed && entry.App is not null)
                     {

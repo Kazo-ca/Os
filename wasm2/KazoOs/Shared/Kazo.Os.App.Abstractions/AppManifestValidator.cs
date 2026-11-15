@@ -30,7 +30,12 @@ public static partial class AppManifestValidator
         ValidateSemanticVersion(manifest.Version, "version", errors);
         ValidatePublisherId(manifest.PublisherId, errors);
         RequireText(manifest.Description, "description", errors);
-        ValidatePlatformAndEntryPoint(manifest, errors);
+        ValidateFeatureFields(manifest, errors);
+        if (manifest.Kind != AppKind.Feature)
+        {
+            ValidatePlatformAndEntryPoint(manifest, errors);
+        }
+
         ValidateVersionRange(
             manifest.SdkCompatibility.MinimumVersion,
             manifest.SdkCompatibility.MaximumVersion,
@@ -46,8 +51,14 @@ public static partial class AppManifestValidator
         }
 
         ValidateCapabilities(manifest.Capabilities, errors);
-        ValidateCapabilityKindCompatibility(manifest.Kind, manifest.Capabilities, errors);
+        if (manifest.Kind != AppKind.Feature)
+        {
+            // ADR 0260 §3: a feature's set may hold what its window children need; the feature itself never runs.
+            ValidateCapabilityKindCompatibility(manifest.Kind, manifest.Capabilities, errors);
+        }
+
         ValidateRealNetworkPorts(manifest, errors);
+        ValidateProvidedServices(manifest, errors);
         ValidateDeclaredTopicPermissions(manifest.Id, manifest.DeclaredTopicPermissions, errors);
         ValidateDependencies(manifest.Dependencies, errors);
         ValidateAssets(manifest.Assets, errors);
@@ -84,6 +95,152 @@ public static partial class AppManifestValidator
         ValidateKindSpecificFields(manifest, errors);
 
         return new ManifestValidationResult(errors);
+    }
+
+    /// <summary>
+    /// Validates what binds a feature and its children together (ADR 0260 §2 and §3), once every
+    /// manifest is known: the package reader, the catalog and the manifest generator call it after
+    /// <see cref="Validate"/> passed on each manifest. Each child names the feature as its parent,
+    /// is of another kind, shares its version and publisher, and asks for no capability outside the
+    /// feature's set (<c>manifest.feature.capability-outside-set</c>).
+    /// </summary>
+    /// <param name="feature">The feature manifest.</param>
+    /// <param name="children">Its children, in any order.</param>
+    /// <returns>Every failure found in deterministic order; valid when empty.</returns>
+    public static ManifestValidationResult ValidateFeature(AppManifest feature, IReadOnlyList<AppManifest> children)
+    {
+        ArgumentNullException.ThrowIfNull(feature);
+        ArgumentNullException.ThrowIfNull(children);
+
+        List<ManifestValidationError> errors = [];
+        if (feature.Kind != AppKind.Feature)
+        {
+            AddError(errors, "manifest.feature.kind", "kind", $"'{feature.Id}' is not a feature: only a feature has children.");
+            return new ManifestValidationResult(errors);
+        }
+
+        HashSet<string> set = new(feature.Capabilities ?? [], StringComparer.Ordinal);
+        ValidateUniqueValues(children.Select(static child => child.Id ?? string.Empty), "id", errors);
+        foreach (AppManifest child in children.OrderBy(static child => child.Id, StringComparer.Ordinal))
+        {
+            if (!string.Equals(child.Parent, feature.Id, StringComparison.Ordinal))
+            {
+                AddError(errors, "manifest.feature.child.parent", "parent", $"'{child.Id}' names '{child.Parent}' as its parent, not '{feature.Id}'.");
+            }
+
+            if (child.Kind == AppKind.Feature)
+            {
+                AddError(errors, "manifest.feature.child.kind", "kind", $"'{child.Id}' is a feature: a feature's child is a window, a command or a service.");
+            }
+
+            if (!string.Equals(child.Version, feature.Version, StringComparison.Ordinal))
+            {
+                AddError(errors, "manifest.feature.child.version", "version", $"'{child.Id}' is version {child.Version}; its feature is {feature.Version}: a feature is one package, one version.");
+            }
+
+            if (!string.Equals(child.PublisherId, feature.PublisherId, StringComparison.Ordinal))
+            {
+                AddError(errors, "manifest.feature.child.publisher", "publisherId", $"'{child.Id}' is published by '{child.PublisherId}'; its feature by '{feature.PublisherId}'.");
+            }
+
+            foreach (string capability in (child.Capabilities ?? []).Where(capability => !set.Contains(capability)).OrderBy(static value => value, StringComparer.Ordinal))
+            {
+                // ADR 0260 §3: the administrator approved the set at installation; a child cannot ask for more.
+                AddError(errors, "manifest.feature.capability-outside-set", "capabilities", $"'{child.Id}' asks for '{capability}', which its feature '{feature.Id}' does not declare.");
+            }
+        }
+
+        // ADR 0262 §1: a service runs with the capabilities of one child of the feature, or with the whole set.
+        HashSet<string> childIds = new(children.Select(static child => child.Id ?? string.Empty), StringComparer.Ordinal);
+        foreach (AppProvidedServiceManifest service in (feature.ProvidedServices ?? []).Where(service => service.EntryPoint is not null && !childIds.Contains(service.EntryPoint)))
+        {
+            AddError(errors, "manifest.service.entry-point", "providedServices", $"The service {service.Contract} names '{service.EntryPoint}' as its entry point, which is not a child of '{feature.Id}'.");
+        }
+
+        return new ManifestValidationResult(errors);
+    }
+
+    /// <summary>
+    /// ADR 0262 §1 on one manifest: only a feature provides services; each names its contract and
+    /// its implementation as <c>Full.Type.Name, Assembly</c>, provides a contract once, and the
+    /// implementation lives in another assembly than the contract (the contract is in a shared
+    /// library, the implementation in the feature's own code). Whether the entry point is a child
+    /// is checked with the children (<see cref="ValidateFeature"/>).
+    /// </summary>
+    private static void ValidateProvidedServices(AppManifest manifest, List<ManifestValidationError> errors)
+    {
+        if (manifest.ProvidedServices is not { Count: > 0 } services)
+        {
+            return;
+        }
+
+        if (manifest.Kind != AppKind.Feature)
+        {
+            AddError(errors, "manifest.service.not-feature", "providedServices", "Only a feature provides services to other apps (ADR 0262).");
+            return;
+        }
+
+        HashSet<string> contracts = new(StringComparer.Ordinal);
+        foreach (AppProvidedServiceManifest service in services)
+        {
+            bool contractOk = AppProvidedServiceManifest.TryParseName(service.Contract, out string contractType, out string contractAssembly);
+            bool implementationOk = AppProvidedServiceManifest.TryParseName(service.Implementation, out _, out string implementationAssembly);
+            if (!contractOk || !implementationOk)
+            {
+                AddError(errors, "manifest.service.type", "providedServices", $"Write the contract and the implementation of a service as 'Full.Type.Name, Assembly' ('{service.Contract}', '{service.Implementation}').");
+                continue;
+            }
+
+            if (!contracts.Add(contractType))
+            {
+                AddError(errors, "manifest.service.duplicate", "providedServices", $"The contract {contractType} is provided twice: a feature provides a contract once.");
+            }
+
+            if (string.Equals(contractAssembly, implementationAssembly, StringComparison.OrdinalIgnoreCase))
+            {
+                AddError(errors, "manifest.service.contract-assembly", "providedServices", $"The contract {contractType} is in {contractAssembly}, the assembly of its implementation: a contract lives in a shared library its clients carry (ADR 0261).");
+            }
+        }
+    }
+
+    /// <summary>
+    /// ADR 0260 §1 and §2 on one manifest: a feature declares no entry point and no platform (its
+    /// children run, not it) and is nobody's child; a child names a valid parent id of which its own
+    /// id is a suffix, and is of another kind than <see cref="AppKind.Feature"/>. Whether the
+    /// parent exists is checked where every manifest is known (<see cref="ValidateFeature"/>, the catalog).
+    /// </summary>
+    private static void ValidateFeatureFields(AppManifest manifest, List<ManifestValidationError> errors)
+    {
+        if (manifest.Kind == AppKind.Feature)
+        {
+            if (manifest.EntryPoint is not null || manifest.Platform is not null)
+            {
+                AddError(errors, "manifest.feature.entryPoint.forbidden", manifest.EntryPoint is null ? "platform" : "entryPoint", "A feature has no entry point of its own: its children run (ADR 0260).");
+            }
+
+            if (manifest.Parent is not null)
+            {
+                AddError(errors, "manifest.feature.parent.kind", "parent", "A feature cannot be the child of another feature (ADR 0260).");
+            }
+
+            return;
+        }
+
+        if (manifest.Parent is not { } parent)
+        {
+            return;
+        }
+
+        if (!AppIdPattern().IsMatch(parent))
+        {
+            AddError(errors, "manifest.feature.parent.invalid", "parent", "Use the lowercase reverse-domain ID of the feature this app belongs to.");
+            return;
+        }
+
+        if (manifest.Id is null || !manifest.Id.StartsWith(parent + ".", StringComparison.Ordinal) || manifest.Id.Length == parent.Length + 1)
+        {
+            AddError(errors, "manifest.feature.parent.prefix", "id", $"The id of a child of '{parent}' is '{parent}.<suffix>'.");
+        }
     }
 
     /// <summary>

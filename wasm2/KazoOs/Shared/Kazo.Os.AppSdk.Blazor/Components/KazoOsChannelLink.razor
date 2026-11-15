@@ -1,0 +1,11 @@
+@namespace Kazo.Os.AppSdk.Blazor.Components
+
+@*
+    ADR 0271 §6: the link between the two release channels of Kazo OS. The stable site
+    (os.kazo.ca) offers « Try the beta », a beta offers « Back to the stable version »; any other
+    host (a server, a local build) shows nothing. Used by Settings ▸ About.
+*@
+@if (Target is { } target)
+{
+    <a class="kos-channel-link @(IsBeta(Version) ? "is-to-stable" : "is-to-beta")" href="@target" target="_blank" rel="noopener noreferrer">@Text</a>
+}

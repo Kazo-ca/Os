@@ -847,6 +847,18 @@ public static class EcosystemServiceCollectionExtensions
             new WebAppActivator(
                 () => provider.GetRequiredService<AppLifecycleOrchestrator>(),
                 provider.GetRequiredService<ListeningPortTable>())));
+        // ADR 0262: the services features provide, one instance per page, created on the first
+        // request in the feature's own process (kazoos-svc, like a system daemon).
+        services.TryAddScoped(provider => new Kazo.Os.Platform.Core.Features.FeatureServiceResolver(
+            provider.GetRequiredService<AppCatalog>(),
+            provider.GetRequiredService<IAppEnablementRegistry>(),
+            (assemblyFileName, cancellationToken) => LoadFeatureAssemblyAsync(provider, assemblyFileName, cancellationToken),
+            (runAs, implementation) => provider.GetRequiredService<AppLifecycleOrchestrator>()
+                .StartFeatureService(runAs, implementation, ServiceAccount.CreatePrincipal(
+                    InstallationId.FromGuid(Guid.NewGuid()), DeviceId.FromGuid(Guid.NewGuid()), DateTimeOffset.UtcNow))
+                .Context,
+            () => provider.GetService<IInstalledLibraryState>(),
+            provider.GetService<ILogger<Kazo.Os.Platform.Core.Features.FeatureServiceResolver>>()));
         services.AddScoped<AppExecutionContextFactory>(provider => new AppExecutionContextFactory(
             provider.GetRequiredService<ICapabilityGrantRepository>(),
             provider.GetRequiredService<IFileSystemService>(),
@@ -885,6 +897,12 @@ public static class EcosystemServiceCollectionExtensions
                 RestartForPackages = () => provider.GetRequiredService<SystemPowerService>().RestartAfterAsync(static () => Task.CompletedTask),
                 // ADR 0214 §1: registered by the browser hosts; without it, changes wait for a restart.
                 InstalledAppsActivator = () => provider.GetService<IInstalledAppsActivator>(),
+                // ADR 0261 §3: an app whose shared library waits for a restart is shown as « Restart to finish ».
+                InstalledLibraries = () => provider.GetService<IInstalledLibraryState>(),
+                // ADR 0262 §2: each app's KazoFeatures, answered by the page's resolver.
+                FeatureServices = () => provider.GetService<Kazo.Os.Platform.Core.Features.FeatureServiceResolver>(),
+                // ADR 0260 §3: the consent to a feature's installation is written as machine allow lines.
+                PermissionStore = () => provider.GetService<IAppPermissionStore>(),
             },
             // Lazy for the same reason: ShellInterpreter depends on the orchestrator (ADR 0056 section 7).
             shellHostProvider: () => provider.GetRequiredService<ShellHostService>(),
@@ -1139,6 +1157,17 @@ public static class EcosystemServiceCollectionExtensions
             provider.GetRequiredService<INotificationQueue>(),
             () => provider.GetRequiredService<ISessionService>().CurrentPrincipal,
             () => provider.GetRequiredService<Kazo.Os.Platform.Core.Globalization.SessionLocaleService>().Culture));
+        // ADR 0276: the welcome wizard's state and writes. Its language applies in the session:
+        // the login environment is read again, then the shell takes the session's locale.
+        services.AddScoped(provider => new Kazo.Os.Platform.Core.Welcome.WelcomeSetupService(
+            provider.GetRequiredService<IOsSettingsService>(),
+            async (principal, cancellationToken) =>
+            {
+                await provider.GetRequiredService<LoginEnvironmentProvider>().ReloadAsync(principal, cancellationToken);
+                await provider.GetRequiredService<Kazo.Os.Platform.Core.Globalization.SessionLocaleService>()
+                    .UseSessionLocaleAsync(principal, cancellationToken);
+            },
+            provider.GetService<ILogger<Kazo.Os.Platform.Core.Welcome.WelcomeSetupService>>()));
         // ADR 0258 §3: the direct link ?autolaunch=<appId> installs the app of the official
         // catalog for the guest and launches it; the host calls it once the guest session is open,
         // the desktop shows its progress window. The install goes through the same management
@@ -1446,6 +1475,17 @@ public static class EcosystemServiceCollectionExtensions
                 $"context-menus.d could not be updated after an install change: {exception.Message}");
         }
     }
+
+    /// <summary>
+    /// Loads the assembly of a feature's service (ADR 0262 §4) through the host's lazy loader, which
+    /// loads an installed feature's libraries first (ADR 0261 §1); <see langword="null"/> without it.
+    /// </summary>
+    [System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "A feature's assembly arrives after publishing; AppPackageApiCheck verified its references at install time.")]
+    private static async ValueTask<System.Reflection.Assembly?> LoadFeatureAssemblyAsync(
+        IServiceProvider provider, string assemblyFileName, CancellationToken cancellationToken) =>
+        provider.GetService<Kazo.Os.Platform.Blazor.LazyLoading.BuildKnownAssemblyLoaderRegistry>() is { } assemblies
+            ? (await assemblies.LoadAsync(assemblyFileName, cancellationToken).ConfigureAwait(false)).Assembly
+            : null;
 
     /// <summary>
     /// The OS's own reader of the package configuration (ADR 0189): <c>/etc/kazoos</c> and the users'

@@ -96,7 +96,8 @@ await mail.SetSecretAsync("Account.password", null);          // efface l'entré
 `StorageSnapshotRedactor` masks, in the storage snapshot of the Diagnostics
 app (`AppStorageDiagnosticsGateway`), the content of `*.private.config`
 files and of any file under `~/.local/share/keyrings/`: the
-chunk becomes `[masked: ADR 0100]`. Synchronization covers only the
+chunk becomes `[masked: ADR 0100]` (its `dataBase64`, or its binary `data`
+since ADR 0272). Synchronization covers only the
 home folder, so the private file in `/etc` (the only carrier of `Restricted`
 keys) is never synchronized. The full backup of ADR 0099,
 reserved to root, keeps everything.

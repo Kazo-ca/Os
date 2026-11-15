@@ -51,7 +51,7 @@ public sealed class IndexedDbBackupService : IAsyncDisposable
     public async ValueTask<string> ExportAsync(CancellationToken cancellationToken = default)
     {
         await _adapter.OpenAsync(IndexedDbMigrationPlan.CreateCurrent(), cancellationToken).ConfigureAwait(false);
-        IndexedDbOperation[] operations = KazoOsIndexedDbSchema.ObjectStores
+        IndexedDbOperation[] operations = KazoOsIndexedDbSchema.BackupObjectStores
             .Select(store => new IndexedDbOperation("getAll", store.Name))
             .ToArray();
         IReadOnlyList<JsonElement> results = await _adapter.ExecuteAsync(
@@ -62,7 +62,7 @@ public sealed class IndexedDbBackupService : IAsyncDisposable
 
         JsonObject payload = BuildPayload(
             _timeProvider.GetUtcNow(),
-            KazoOsIndexedDbSchema.ObjectStores.Select((store, index) => (store.Name, results[index])),
+            KazoOsIndexedDbSchema.BackupObjectStores.Select((store, index) => (store.Name, results[index])),
             KazoOsIndexedDbSchema.DatabaseName,
             KazoOsSdk.Version);
         JsonObject envelope = JsonNode.Parse(payload.ToJsonString())!.AsObject();
@@ -124,7 +124,7 @@ public sealed class IndexedDbBackupService : IAsyncDisposable
         ValidatedBackup backup = Validate(backupJson);
         return new IndexedDbBackupSummary(
             backup.CreatedAtUtc,
-            KazoOsIndexedDbSchema.CurrentVersion,
+            KazoOsIndexedDbSchema.BackupSchemaVersion,
             backup.RecordCount,
             backup.Stores.ToDictionary(store => store.Name, store => store.Records.GetArrayLength(), StringComparer.Ordinal));
     }
@@ -149,6 +149,8 @@ public sealed class IndexedDbBackupService : IAsyncDisposable
         List<IndexedDbOperation> operations = [];
         if (mode == IndexedDbRestoreMode.Replace)
         {
+            // Every store, servedFiles included (ADR 0274 §2): its rows point at the content the
+            // restore replaces, and the next launch of each installed app writes them again.
             operations.AddRange(KazoOsIndexedDbSchema.ObjectStores
                 .Select(store => new IndexedDbOperation("clear", store.Name)));
         }
@@ -157,8 +159,10 @@ public sealed class IndexedDbBackupService : IAsyncDisposable
         // keeps every other one (ADR 0099 section 1). Either way it is one transaction.
         foreach ((string storeName, JsonElement records) in backup.Stores)
         {
+            // ADR 0272 §5: a chunk comes in base64 and is stored in its binary form.
+            bool chunks = StringComparer.Ordinal.Equals(storeName, KazoOsIndexedDbSchema.FileContentStoreName);
             operations.AddRange(records.EnumerateArray().Select(record =>
-                new IndexedDbOperation("put", storeName, Value: record.Clone())));
+                new IndexedDbOperation("put", storeName, Value: record.Clone(), BinaryChunk: chunks ? true : null)));
         }
 
         await _adapter.OpenAsync(IndexedDbMigrationPlan.CreateCurrent(), cancellationToken).ConfigureAwait(false);
@@ -199,11 +203,12 @@ public sealed class IndexedDbBackupService : IAsyncDisposable
         string createdAt = RequiredString(envelope, "createdAtUtc");
         string expectedHash = RequiredString(envelope, "sha256");
         string? osVersion = envelope["osVersion"]?.GetValue<string>();
-        if (schemaVersion != KazoOsIndexedDbSchema.CurrentVersion)
+        if (schemaVersion != KazoOsIndexedDbSchema.BackupSchemaVersion)
         {
             // ADR 0099 section 1: a backup of another schema version is refused with a clear message.
+            // Database version 5 kept the backup's stores and records (ADR 0272 §5): backups name 4.
             throw new IndexedDbBackupValidationException(
-                $"This backup uses database schema version {schemaVersion}; this Kazo OS uses version {KazoOsIndexedDbSchema.CurrentVersion}. It cannot be restored here.");
+                $"This backup uses database schema version {schemaVersion}; this Kazo OS uses version {KazoOsIndexedDbSchema.BackupSchemaVersion}. It cannot be restored here.");
         }
 
         if (formatVersion != FormatVersion
@@ -216,14 +221,14 @@ public sealed class IndexedDbBackupService : IAsyncDisposable
 
         JsonObject storesNode = envelope["stores"] as JsonObject
             ?? throw new IndexedDbBackupValidationException("Backup stores object is missing.");
-        string[] expectedStores = KazoOsIndexedDbSchema.ObjectStores.Select(store => store.Name).ToArray();
+        string[] expectedStores = KazoOsIndexedDbSchema.BackupObjectStores.Select(store => store.Name).ToArray();
         if (!storesNode.Select(item => item.Key).Order().SequenceEqual(expectedStores.Order(), StringComparer.Ordinal))
         {
             throw new IndexedDbBackupValidationException("Backup store set does not match the current schema.");
         }
 
         List<(string Name, JsonElement Records)> stores = [];
-        foreach (IndexedDbObjectStoreDefinition definition in KazoOsIndexedDbSchema.ObjectStores)
+        foreach (IndexedDbObjectStoreDefinition definition in KazoOsIndexedDbSchema.BackupObjectStores)
         {
             JsonArray recordsNode = storesNode[definition.Name] as JsonArray
                 ?? throw new IndexedDbBackupValidationException($"Store '{definition.Name}' must be an array.");
@@ -317,7 +322,7 @@ public sealed class IndexedDbBackupService : IAsyncDisposable
         {
             ["formatVersion"] = FormatVersion,
             ["databaseName"] = databaseName,
-            ["databaseSchemaVersion"] = KazoOsIndexedDbSchema.CurrentVersion,
+            ["databaseSchemaVersion"] = KazoOsIndexedDbSchema.BackupSchemaVersion,
             ["createdAtUtc"] = createdAtUtc.ToUniversalTime().ToString("O"),
         };
         // ADR 0230 §2: the version that made the backup; the backups before 3.0.0 have none.

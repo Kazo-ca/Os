@@ -1,0 +1,20 @@
+# ADR 0271 §4: the app repositories that "Release Kazo OS" notifies when it publishes a version
+# (a stable version from main or a prerelease from beta). Each one receives a repository_dispatch
+# of type kazoos-sdk-released with {"version": "<Kazo OS version>", "channel": "stable" | "beta"};
+# its "Kazo OS SDK update" workflow (Os-AppTemplate, sdk-update.yml) moves the app to that version.
+#
+# One owner/name per line; blank lines and text after # are ignored. A repository not listed here
+# (a third-party app) is not told: its hourly "Kazo OS SDK update" run finds the new tag by itself.
+# The Kazo OS automation GitHub App must be installed on each repository (doc/en/wasm/dev/releases.md).
+Kazo-ca/Os-App-Chess
+Kazo-ca/Os-App-Webamp
+Kazo-ca/Os-App-IRC
+Kazo-ca/Os-App-EmulatorJS
+Kazo-ca/Os-App-Word
+Kazo-ca/Os-App-Spreadsheets
+Kazo-ca/Os-App-Pdf
+Kazo-ca/Os-App-Fig
+Kazo-ca/Os-App-Photo
+Kazo-ca/Os-App-Deck
+Kazo-ca/Os-App-Design
+Kazo-ca/Os-App-Vector

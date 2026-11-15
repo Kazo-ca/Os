@@ -32,21 +32,77 @@ navigateur, dans la composition de l'hôte.
 | `Isolation/` | `BrowserCrossOriginIsolation` : état COOP/COEP (ADR 0131, 0146). |
 | `Workers/` | `BrowserWebWorkerRuntime` : runtime des Web Workers côté navigateur ([`worker-processes.md`](worker-processes.md)). |
 | `Globalization/` | Satellites de langue chargés par le navigateur. |
-| `wwwroot/` | Scripts JavaScript servis sous `_content/Kazo.Os.Infrastructure.Browser/` : `indexedDb.js`, `storageManager.js`, `webSiteDatabases.js`, `renamedStorage.js` (migration du renommage), `cryptoHasher.js`, `hostClipboard.js`, `crossOriginIsolation.js`, `sharedRing.js` (anneau partagé des pipes des workers), `workerHost.js` et `workerBootstrap.js`. |
+| `wwwroot/` | Scripts JavaScript servis sous `_content/Kazo.Os.Infrastructure.Browser/` : `indexedDb.js`, `fileContent.js` et `binaryChunks.js` (contenu de fichier binaire, ADR 0272), `storageManager.js`, `webSiteDatabases.js`, `renamedStorage.js` (migration du renommage), `cryptoHasher.js`, `hostClipboard.js`, `crossOriginIsolation.js`, `sharedRing.js` (anneau partagé des pipes des workers), `workerHost.js` et `workerBootstrap.js`. |
 
 ## Base IndexedDB
 
-- Nom : `kazoos`. Version courante : **4** (`KazoOsIndexedDbSchema.CurrentVersion`).
+- Nom : `kazoos`. Version courante : **6** (`KazoOsIndexedDbSchema.CurrentVersion`).
   Changer la version est le seul moyen d'ajouter, retirer ou modifier un
   magasin ou un index ; chaque montée a son étape de migration.
 - Magasins principaux : `users`, `groups`, `sessions`, `settings`, `fsEntries`
   (métadonnées : fichiers, dossiers, liens), `fsLinks`, `fsContent` (blocs),
   `catalog`, `grants`, `audit`, `diagnostics`, `syncMetadata`, `serverConnection`,
-  `syncCursors`, `syncRecordState`, et une base par site ASP.Kazo (`kazoweb.<appId>`).
+  `syncCursors`, `syncRecordState`, `servedFiles` (version 6, adresses servies des apps
+  installées, ADR 0274), et une base par site ASP.Kazo (`kazoweb.<appId>`).
 - Contenu de fichier : découpé en blocs de 256 Kio au plus par défaut
   (`FileContentStoragePolicy.DefaultMaxChunkSizeBytes`), adressés par le SHA-256 du
   fichier entier et le numéro du bloc ; deux fichiers identiques partagent leur
   contenu, mais pas deux fichiers qui n'ont que des blocs en commun.
+- Depuis la version 5 (ADR 0272), un bloc est rangé en octets : `{contentHash, chunkIndex,
+  data: Uint8Array, chunkHash, createdUtcMs}`, où `chunkHash` est le SHA-256 du bloc
+  seul. `IndexedDbFileContentRepository` passe par `IFileContentChunkStore`
+  (`BrowserFileContentChunkStore`, `[JSImport]` de `fileContent.js` avec une
+  `MemoryView`) : ni base64 ni JSON entre le C# et le navigateur. Une écriture hache
+  avec WebCrypto, puis range 64 blocs par transaction ; une lecture vérifie chaque bloc
+  (numéro, longueur, `chunkHash`) et refuse un fichier abîmé au lieu de rendre de faux
+  octets.
+- Lecture partielle (ADR 0275 §1 et §2) : `ReadRangeAsync` lit une plage
+  `[début, longueur]` en ne chargeant que les blocs qui la couvrent, par lots de 64.
+  Un fichier de plus de 16 Mio (`IndexedDbFileSystemProvider.StreamedReadThresholdBytes`)
+  s'ouvre en `ChunkedContentReadStream` : un flux positionnable qui garde une seule
+  fenêtre de blocs en mémoire, comme la lecture anticipée d'un vrai disque. La fenêtre
+  fait 4 blocs (1 Mio) à l'ouverture et après un `Seek` ailleurs, et double à chaque
+  lecture qui continue, jusqu'à 64 blocs (16 Mio). Le premier lot est lu à
+  l'ouverture, donc un contenu disparu échoue toujours à l'ouverture ; un bloc perdu
+  plus loin fait échouer la lecture avec une `IOException`. Une lecture synchrone
+  n'est servie que depuis la fenêtre chargée et lève `NotSupportedException` au-delà.
+  En dessous de 16 Mio, le fichier est lu d'un coup, comme avant.
+- Écriture en flux (ADR 0275 §4) : le dépôt lit le flux à écrire par lots de 16 Mio
+  (64 blocs). Un fichier qui tient dans un lot est haché et rangé depuis ce lot, comme
+  avant. Un fichier plus grand est passé au navigateur lot par lot
+  (`IFileContentChunkStore.BeginStagedWriteAsync`, `IStagedFileContent`) : chaque lot est
+  copié dans un `Blob` de la page dès qu'il arrive, puis le navigateur assemble le fichier,
+  le hache et range ses blocs, 64 par transaction. La mémoire .NET ne porte qu'un lot à la
+  fois ; la limite de 128 Mio est vérifiée avant de ranger le premier bloc, et une écriture
+  qui échoue libère ce que la page gardait.
+- L'adaptateur JSON (`indexedDb.js`) voit toujours les blocs sous leur forme base64 :
+  `binaryChunks.js` change un bloc binaire qu'il lit en `dataBase64`, et une opération
+  marquée `BinaryChunk` (restauration d'une sauvegarde, migration du renommage) de
+  nouveau en octets après avoir vérifié son hachage. Les sauvegardes gardent le format 1
+  et la version de schéma 4 (`KazoOsIndexedDbSchema.BackupSchemaVersion`), pour qu'une
+  version précédente les restaure encore.
+- Conversion unique : au premier démarrage en version 5, avant l'ouverture de session,
+  `FileContentConversion.RunAsync` convertit les blocs base64 des anciennes versions
+  par lots de 16 Mio, derrière un écran d'attente avec la progression
+  (`storageConversion.js` de l'hôte Ecosystem). La position est gardée dans
+  `syncMetadata` (`fileContentConversion`), donc un onglet fermé reprend où il
+  s'était arrêté ; un Web Lock la réserve à un onglet, les autres attendent. Un bloc
+  abîmé est laissé tel quel et nommé dans le journal, comme `fsck` ; si la conversion
+  échoue, l'OS ne démarre pas et l'écran propose de réessayer.
+- Fichiers des apps installées (ADR 0274) : `servedFiles` associe chaque adresse
+  `_content/<assemblage>/<chemin>` au contenu du fichier dans le dossier de l'app :
+  `{url, contentHash, length, contentType, appId, chunkSize}`, index `contentHash` et
+  `appId`. `IndexedDbServedFiles` n'écrit une ligne que si le `contentHash` du fichier
+  est le SHA-256 du manifeste et que tous ses blocs sont là, dans la même transaction ;
+  aucun octet n'est lu ni copié. Le service worker (`installedAppAssets.sw.js`) ouvre
+  `kazoos` sans version, lit la ligne, puis renvoie les blocs en flux, 8 par
+  transaction, en vérifiant leur `chunkHash` ; une requête `Range` reçoit `206` avec
+  les seuls blocs couverts. La passe de nettoyage et la récupération immédiate gardent
+  un contenu qu'une ligne porte encore. `servedFiles` n'est pas sauvegardé : la
+  publication le reconstruit.
+- Un onglet d'une ancienne version encore ouvert quand une version plus récente ouvre la base ferme
+  sa connexion ; sa prochaine opération échoue avec une erreur de version et la
+  personne recharge la page.
 
 ## Récupération
 

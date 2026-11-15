@@ -23,6 +23,18 @@ public sealed class IndexedDbUpgradeFixtureCatalogTests
     /// </summary>
     private const int FirstReleasedVersion = 2;
 
+    /// <summary>
+    /// The first version whose dump was recorded after the rename (ADR 0228): from it on, a dump is
+    /// <c>kazoos-v{n}.json</c> and names <see cref="KazoOsIndexedDbSchema.DatabaseName"/>.
+    /// </summary>
+    internal const int FirstVersionAfterRename = 4;
+
+    /// <summary>The file name of the dump of <paramref name="version"/>.</summary>
+    /// <param name="version">The dumped schema version.</param>
+    internal static string FixtureFileName(int version) => version < FirstVersionAfterRename
+        ? $"hackeros-v{version}.json"
+        : $"kazoos-v{version}.json";
+
     /// <summary>Every released version below the current one has its dump.</summary>
     [Fact]
     public void Every_previous_released_schema_version_has_a_fixture()
@@ -30,7 +42,7 @@ public sealed class IndexedDbUpgradeFixtureCatalogTests
         string directory = FixtureDirectory();
         for (int version = FirstReleasedVersion; version < KazoOsIndexedDbSchema.CurrentVersion; version++)
         {
-            string path = Path.Combine(directory, $"hackeros-v{version}.json");
+            string path = Path.Combine(directory, FixtureFileName(version));
             Assert.True(
                 File.Exists(path),
                 $"Missing IndexedDB fixture for schema v{version} ({path}). A chantier that raises " +
@@ -41,9 +53,10 @@ public sealed class IndexedDbUpgradeFixtureCatalogTests
 
     /// <summary>
     /// Each dump names the OS database as the build that wrote it named it, its own version and only
-    /// known stores. Every dump was recorded before the rename (ADR 0228), under
+    /// known stores. The dumps of versions 2 and 3 were recorded before the rename (ADR 0228), under
     /// <see cref="RenamedNames.LegacyOsDatabaseName"/>; the rename migration (ADR 0230) moves that
-    /// database to <see cref="KazoOsIndexedDbSchema.DatabaseName"/> before the OS opens it.
+    /// database to <see cref="KazoOsIndexedDbSchema.DatabaseName"/> before the OS opens it. Later
+    /// dumps were recorded after it, under <see cref="KazoOsIndexedDbSchema.DatabaseName"/>.
     /// </summary>
     /// <param name="version">The dumped schema version.</param>
     [Theory]
@@ -51,12 +64,20 @@ public sealed class IndexedDbUpgradeFixtureCatalogTests
     public void Fixture_matches_the_schema_of_its_version(int version)
     {
         using JsonDocument document = JsonDocument.Parse(
-            File.ReadAllText(Path.Combine(FixtureDirectory(), $"hackeros-v{version}.json")));
+            File.ReadAllText(Path.Combine(FixtureDirectory(), FixtureFileName(version))));
         JsonElement root = document.RootElement;
 
         string databaseName = root.GetProperty("databaseName").GetString()!;
-        Assert.True(RenamedNames.IsLegacyDatabaseName(databaseName), $"v{version} names '{databaseName}', not the database of a build before 3.0.0.");
-        Assert.Equal(KazoOsIndexedDbSchema.DatabaseName, RenamedNames.Rewrite(databaseName));
+        if (version < FirstVersionAfterRename)
+        {
+            Assert.True(RenamedNames.IsLegacyDatabaseName(databaseName), $"v{version} names '{databaseName}', not the database of a build before 3.0.0.");
+            Assert.Equal(KazoOsIndexedDbSchema.DatabaseName, RenamedNames.Rewrite(databaseName));
+        }
+        else
+        {
+            Assert.Equal(KazoOsIndexedDbSchema.DatabaseName, databaseName);
+        }
+
         Assert.Equal(version, root.GetProperty("version").GetInt32());
         Assert.True(root.GetProperty("producedFrom").GetProperty("commit").GetString() is { Length: > 0 });
 

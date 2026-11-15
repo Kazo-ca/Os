@@ -1,11 +1,12 @@
 name: Verify Kazo OS WASM
 
-# Every pull request (to main and to the <series>/base integration branches) and
+# Every pull request (to main, beta and the <series>/base integration branches) and
 # every push to those branches. The docs folder under wasm2/KazoOs only holds a
 # pointer README; the real docs live in doc/wasm and are not build inputs.
+# A successful push run on main or beta starts "Release Kazo OS" (ADR 0173, ADR 0271).
 on:
   push:
-    branches: [ "main", "*/base" ]
+    branches: [ "main", "beta", "*/base" ]
     paths: [ 'wasm2/KazoOs/**', '!wasm2/KazoOs/docs/**', '.github/workflows/deploy-wasm.yml' ]
   pull_request:
     paths: [ 'wasm2/KazoOs/**', '!wasm2/KazoOs/docs/**', '.github/workflows/deploy-wasm.yml' ]
@@ -31,6 +32,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+
+      # ADR 0271 §1: main carries a stable version (X.Y.Z), beta a prerelease (X.Y.Z-preview.<n>).
+      # Checked on the pull request too, so the mistake shows before the merge, not at the release.
+      - name: Check the version of the release channel
+        env:
+          BRANCH: ${{ github.base_ref || github.ref_name }}
+        run: bash wasm2/KazoOs/build/tools/check-release-channel.sh "$BRANCH"
 
       - name: Setup .NET 10
         uses: ./.github/actions/setup-dotnet-sdk

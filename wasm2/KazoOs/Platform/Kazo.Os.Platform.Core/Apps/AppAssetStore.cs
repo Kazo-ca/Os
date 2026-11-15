@@ -136,13 +136,34 @@ public sealed class AppAssetStore
             return bytes;
         }
 
-        AppIntegrityProblem problem = new(appId, assetPath, $"expected SHA-256 {asset.Sha256}, got {actual}");
-        if (_damaged.TryAdd(appId, problem))
+        MarkDamaged(new AppIntegrityProblem(appId, assetPath, $"expected SHA-256 {asset.Sha256}, got {actual}"));
+        throw new AppAssetIntegrityException(_damaged[appId]);
+    }
+
+    /// <summary>
+    /// Records that a declared asset does not match its manifest, found without reading it through
+    /// this store: the publication of an installed app compares the hash of the stored content with
+    /// the manifest instead of reading the bytes (ADR 0274 §3). The app is marked damaged, as by
+    /// <see cref="ReadAsync"/>.
+    /// </summary>
+    /// <param name="appId">The app the asset belongs to.</param>
+    /// <param name="assetPath">The package-relative path declared in its manifest.</param>
+    /// <param name="reason">What does not match, for the log and the damaged-app notice.</param>
+    public void ReportDamaged(string appId, string assetPath, string reason)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(appId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(assetPath);
+        ArgumentException.ThrowIfNullOrWhiteSpace(reason);
+        _verified[(appId, assetPath)] = false;
+        MarkDamaged(new AppIntegrityProblem(appId, assetPath, reason));
+    }
+
+    private void MarkDamaged(AppIntegrityProblem problem)
+    {
+        if (_damaged.TryAdd(problem.AppId, problem))
         {
-            _logger?.LogWarning("catalog.asset.damaged: asset '{AssetPath}' of '{AppId}' does not match its manifest ({Reason}); the app is marked damaged.", assetPath, appId, problem.Reason);
+            _logger?.LogWarning("catalog.asset.damaged: asset '{AssetPath}' of '{AppId}' does not match its manifest ({Reason}); the app is marked damaged.", problem.AssetPath, problem.AppId, problem.Reason);
             Changed?.Invoke(this, EventArgs.Empty);
         }
-
-        throw new AppAssetIntegrityException(_damaged[appId]);
     }
 }
