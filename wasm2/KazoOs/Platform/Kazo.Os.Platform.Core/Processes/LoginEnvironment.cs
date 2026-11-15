@@ -302,6 +302,35 @@ public sealed class LoginEnvironmentProvider
         }
     }
 
+    /// <summary>
+    /// Reads the login environment of <paramref name="principal"/>'s session again, replacing the
+    /// one kept since the session started. Only for a change made before the session's desktop
+    /// shows (the welcome wizard's language, ADR 0276 §2.1): processes already started keep the
+    /// environment they inherited.
+    /// </summary>
+    /// <param name="principal">Authenticated principal of the session.</param>
+    /// <param name="cancellationToken">Cancels the reads.</param>
+    public async ValueTask<IReadOnlyDictionary<string, string>> ReloadAsync(
+        AuthenticatedPrincipal principal,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(principal);
+        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            if (_sessionId == principal.SessionId)
+            {
+                _loginVariables = null;
+            }
+        }
+        finally
+        {
+            _gate.Release();
+        }
+
+        return await GetAsync(principal, cancellationToken).ConfigureAwait(false);
+    }
+
     private async ValueTask<string?> ReadAsync(IAppFileSystemGateway gateway, VirtualPath path, CancellationToken cancellationToken)
     {
         SettingsFileReadResult read = await SettingsTextFile.ReadAsync(gateway, path, cancellationToken).ConfigureAwait(false);

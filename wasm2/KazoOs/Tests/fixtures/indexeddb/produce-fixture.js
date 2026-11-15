@@ -41,6 +41,10 @@ async function step(page, name, fn) {
     await page.getByLabel('Password', { exact: true }).fill(admin.password);
     await page.getByLabel('Confirm password').fill(admin.password);
     await page.getByRole('button', { name: 'Create local profile' }).click();
+    // The welcome wizard (ADR 0276) shows once per account: skip it when this OS version has it.
+    const skip = page.locator('.welcome-skip');
+    await skip.or(page.locator('.desktop-shell')).first().waitFor({ timeout: 60000 });
+    if (await skip.isVisible()) await skip.click();
     await page.getByRole('button', { name: 'App launcher' }).waitFor({ timeout: 60000 });
   });
 

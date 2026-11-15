@@ -104,6 +104,7 @@ public sealed class MobileHomeScreenTests(ITestOutputHelper output)
             await page.ReloadAsync();
             await page.GetByLabel("Password", new() { Exact = true }).FillAsync(E2ESupport.Password);
             await page.GetByRole(AriaRole.Button, new() { Name = "Start session" }).ClickAsync();
+            await E2ESupport.PassWelcomeAsync(page);
             await Assertions.Expect(home).ToBeVisibleAsync(new() { Timeout = 20000 });
             await Assertions.Expect(calculator).ToBeVisibleAsync();
             await Assertions.Expect(home.Locator(".mobile-app-dock").GetByRole(AriaRole.Button, new() { Name = "Calculator", Exact = true })).ToBeVisibleAsync();
