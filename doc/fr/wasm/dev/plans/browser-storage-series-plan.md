@@ -39,7 +39,7 @@ ses fichiers plus vite, sans changer ce qu'une app voit :
 | Issue | Contenu | Lien avec la série |
 | --- | --- | --- |
 | [#537](https://github.com/Kazo-ca/Os/issues/537) | Brancher la passe de nettoyage, la faire lire seulement les clés, rétention courte | Applique l'[ADR 0273](../adr/0273-short-orphan-content-retention.md), écrite ici, et l'amène dans `main` avec son code. La série s'appuie sur une passe qui tourne (chantiers 1 et 4). |
-| [#538](https://github.com/Kazo-ca/Os/issues/538) | Mesurer un enregistrement et une ouverture de 50 Mo dans l'OS réel, couche par couche | Le chantier 1 attend son résultat. Il confirme ou corrige le chantier 6 (écriture en flux), et peut changer l'ordre des chantiers. |
+| [#538](https://github.com/Kazo-ca/Os/issues/538) | Mesurer un enregistrement et une ouverture de 50 Mo dans l'OS réel, couche par couche | **Rendu le 2026-11-15.** En publication Release, 96 % du temps d'un enregistrement de 52,5 Mio (4,1 à 4,9 s) est dans le dépôt de contenu ; les 43 s de #520 venaient d'un hôte Debug. Le chantier 1 règle donc #520 et peut partir. Le premier enregistrement fait monter la mémoire d'environ 780 Mio : le chantier 6 reste justifié. Rapport : `large-file-save-profile.md` (branche `docs/large-file-save-profile`). |
 
 ## 4. Chantiers
 
@@ -49,25 +49,25 @@ et une PR vers `storage/base`.
 | N° | Branche | Contenu | ADR | Dépend de |
 | --- | --- | --- | --- | --- |
 | 0 | `storage/0-adrs-and-plan` | Ce plan et les ADR 0272 à 0275 | | |
-| 1 | `storage/1-binary-file-content` | Blocs en `Uint8Array` avec leur hachage, module JavaScript du dépôt de contenu (`[JSImport]`, `MemoryView`), SHA-256 par WebCrypto, vérification par bloc, base en version 5, **conversion de l'ancien contenu en une fois au premier démarrage avec un écran d'attente**, sauvegarde et instantané de diagnostic | [0272](../adr/0272-binary-file-content.md) | #538 |
+| 1 | `storage/1-binary-file-content` | Blocs en `Uint8Array` avec leur hachage, module JavaScript du dépôt de contenu (`[JSImport]`, `MemoryView`), SHA-256 par WebCrypto, vérification par bloc, base en version 5, **conversion de l'ancien contenu en une fois au premier démarrage avec un écran d'attente**, sauvegarde et instantané de diagnostic | [0272](../adr/0272-binary-file-content.md) | |
 | 2 | (retiré) | Fusionné dans le chantier 1 le 2026-11-15 : Benoit a choisi la conversion en une fois au premier démarrage, qui doit partir avec le contenu binaire | | |
 | 3 | `storage/3-partial-read` | Lecture d'une plage dans le dépôt de contenu, flux de lecture à la demande pour les fichiers de plus de 16 Mio | [0275](../adr/0275-partial-read-and-file-address.md) §1, 2 | 1 |
 | 4 | `storage/4-single-copy-of-app-files` | Magasin `servedFiles`, publication sans copie, lecteur de blocs du service worker (flux, `Range`), fin du cache `kazoos-installed-apps` | [0274](../adr/0274-single-copy-of-app-files.md) | 1, #537 |
 | 5 | `storage/5-file-address` | `KazoFile.CreateUrlAsync`, route `_kazo/files/`, disque `/` et lecteurs réseau, apps en Web Worker | [0275](../adr/0275-partial-read-and-file-address.md) §3 | 4 |
-| 6 | `storage/6-streamed-write` | Écriture sans garder tout le fichier dans la mémoire .NET | [0275](../adr/0275-partial-read-and-file-address.md) §4, à confirmer | 1, #538 |
+| 6 | `storage/6-streamed-write` | Écriture sans garder tout le fichier dans la mémoire .NET | [0275](../adr/0275-partial-read-and-file-address.md) §4 | 1 |
 | 7 | `storage/7-docs-and-version` | `features.md`, `browser-infrastructure.md`, mémoire, entrées de changement vérifiées, API repliée, mesures finales dans Chromium, Firefox et Safari | | tous |
 
 **Ordre et parallèle.** Le chantier 1 d'abord : il change la forme des blocs
 et convertit l'ancien contenu, donc tous les autres n'ont que la forme binaire
 à lire. Ensuite 3 et 4 peuvent avancer en même temps (ils touchent le dépôt de
 contenu et le service worker). Le chantier 5 suit le 4, dont il reprend le
-lecteur de blocs. Le chantier 6 part quand #538 a rendu son résultat.
+lecteur de blocs. Le chantier 6 suit le 1 ; il peut avancer en même temps que 3 et 4.
 
 ```text
 #537 ──────────────┐
-#538 ──► 1 ────────┼──► 3
+         1 ────────┼──► 3
          │         └──► 4 ──► 5
-         └──► 6 (après #538)
+         └──► 6
                               7 (à la fin)
 ```
 
@@ -90,7 +90,7 @@ quand il promet un gain.
   gros objets (9), sauvegarde en flux (11), mise en cache allégée de la
   version (12).
 - Les apps Craft qui reçoivent une adresse de fichier au lieu des octets
-  (module `Kazo.Os.AppSdk.Craft`) : à voir après le chantier 5 et #538.
+  (module `Kazo.Os.AppSdk.Craft`) : à voir après le chantier 5.
 
 ## 6. Réponses de Benoit (2026-11-15)
 
@@ -114,8 +114,9 @@ quand il promet un gain.
   (ADR 0225, 0237, 0241, 0243).
 - **Mesures faites dans Chromium seulement.** Firefox et Safari sont mesurés
   par le chantier 1 avant sa fusion.
-- **Le gain ne règle pas #520 à lui seul** : la couche de stockage n'y compte
-  que pour environ 3,4 s sur 43 s. La suite dépend de #538.
+- **Mesures de #538 faites dans Chromium, sur une machine.** Elles disent que
+  le chantier 1 règle #520 ; le chantier le vérifie par la même mesure, avant
+  et après.
 
 ## 8. Règles de la série
 

@@ -39,7 +39,7 @@ faster, without changing what an app sees:
 | Issue | Content | Link with the series |
 | --- | --- | --- |
 | [#537](https://github.com/Kazo-ca/Os/issues/537) | Plug the cleanup pass in, make it read keys only, short retention | Applies [ADR 0273](../adr/0273-short-orphan-content-retention.md), written here, and brings it to `main` with its code. The series relies on a pass that runs (work items 1 and 4). |
-| [#538](https://github.com/Kazo-ca/Os/issues/538) | Measure a 50 MB save and open in the real OS, layer by layer | Work item 1 waits for its result. It confirms or corrects work item 6 (streamed write), and may change the order of the work items. |
+| [#538](https://github.com/Kazo-ca/Os/issues/538) | Measure a 50 MB save and open in the real OS, layer by layer | **Delivered on 2026-11-15.** In a Release publish, 96% of the time of a 52.5 MiB save (4.1 to 4.9 s) is in the content repository; the 43 s of #520 came from a Debug host. Work item 1 therefore fixes #520 and can start. The first save raises memory by about 780 MiB: work item 6 stays justified. Report: `large-file-save-profile.md` (branch `docs/large-file-save-profile`). |
 
 ## 4. Work items
 
@@ -49,25 +49,25 @@ and a PR to `storage/base`.
 | No. | Branch | Content | ADR | Depends on |
 | --- | --- | --- | --- | --- |
 | 0 | `storage/0-adrs-and-plan` | This plan and ADRs 0272 to 0275 | | |
-| 1 | `storage/1-binary-file-content` | Chunks as `Uint8Array` with their hash, JavaScript module of the content repository (`[JSImport]`, `MemoryView`), SHA-256 by WebCrypto, per-chunk check, database at version 5, **conversion of the old content all at once at the first boot with a waiting screen**, backup and diagnostic snapshot | [0272](../adr/0272-binary-file-content.md) | #538 |
+| 1 | `storage/1-binary-file-content` | Chunks as `Uint8Array` with their hash, JavaScript module of the content repository (`[JSImport]`, `MemoryView`), SHA-256 by WebCrypto, per-chunk check, database at version 5, **conversion of the old content all at once at the first boot with a waiting screen**, backup and diagnostic snapshot | [0272](../adr/0272-binary-file-content.md) | |
 | 2 | (removed) | Merged into work item 1 on 2026-11-15: Benoit chose the one-time conversion at the first boot, which must ship with binary content | | |
 | 3 | `storage/3-partial-read` | Range read in the content repository, on-demand read stream for files over 16 MiB | [0275](../adr/0275-partial-read-and-file-address.md) §1, 2 | 1 |
 | 4 | `storage/4-single-copy-of-app-files` | `servedFiles` store, publication without copy, chunk reader of the service worker (stream, `Range`), end of the `kazoos-installed-apps` cache | [0274](../adr/0274-single-copy-of-app-files.md) | 1, #537 |
 | 5 | `storage/5-file-address` | `KazoFile.CreateUrlAsync`, `_kazo/files/` route, `/` disk and network drives, apps in a Web Worker | [0275](../adr/0275-partial-read-and-file-address.md) §3 | 4 |
-| 6 | `storage/6-streamed-write` | Writing without keeping the whole file in .NET memory | [0275](../adr/0275-partial-read-and-file-address.md) §4, to confirm | 1, #538 |
+| 6 | `storage/6-streamed-write` | Writing without keeping the whole file in .NET memory | [0275](../adr/0275-partial-read-and-file-address.md) §4 | 1 |
 | 7 | `storage/7-docs-and-version` | `features.md`, `browser-infrastructure.md`, memory, change entries checked, API folded, final measurements in Chromium, Firefox and Safari | | all |
 
 **Order and parallel work.** Work item 1 first: it changes the form of the
 chunks and converts the old content, so all the others only have the binary
 form to read. Then 3 and 4 can move at the same time (they touch the content
 repository and the service worker). Work item 5 follows 4, whose chunk reader
-it reuses. Work item 6 starts when #538 has given its result.
+it reuses. Work item 6 follows 1; it can move at the same time as 3 and 4.
 
 ```text
 #537 ──────────────┐
-#538 ──► 1 ────────┼──► 3
+         1 ────────┼──► 3
          │         └──► 4 ──► 5
-         └──► 6 (after #538)
+         └──► 6
                               7 (at the end)
 ```
 
@@ -88,7 +88,7 @@ and a before-and-after measurement when it promises a gain.
   compression (lead 7), per-chunk deduplication (8), OPFS for large objects
   (9), streamed backup (11), lighter caching of the release (12).
 - Craft apps receiving a file address instead of the bytes
-  (`Kazo.Os.AppSdk.Craft` module): to look at after work item 5 and #538.
+  (`Kazo.Os.AppSdk.Craft` module): to look at after work item 5.
 
 ## 6. Benoit's answers (2026-11-15)
 
@@ -111,8 +111,9 @@ and a before-and-after measurement when it promises a gain.
   0237, 0241, 0243).
 - **Measurements made in Chromium only.** Firefox and Safari are measured by
   work item 1 before it is merged.
-- **The gain does not fix #520 by itself**: the storage layer accounts for
-  only about 3.4 s of 43 s there. What follows depends on #538.
+- **Measurements of #538 made in Chromium, on one machine.** They say work
+  item 1 fixes #520; the work item checks it with the same measurement, before
+  and after.
 
 ## 8. Rules of the series
 

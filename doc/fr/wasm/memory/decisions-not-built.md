@@ -131,8 +131,9 @@ Analyse : [`../dev/plans/browser-storage-optimization-analysis.md`](../dev/plans
 Rien n'est codé.
 
 - Deux issues `TODO` d'abord : #537 (récupérer l'espace des contenus orphelins,
-  que rien ne ramasse aujourd'hui) et #538 (profiler #520 dans l'OS réel : le
-  stockage n'explique qu'environ 3,4 s des 43 s).
+  que rien ne ramasse aujourd'hui) et #538 (profiler #520 dans l'OS réel ; rendu le
+  2026-11-15 : en Release, 96 % des 4,1 à 4,9 s d'un enregistrement de
+  52,5 Mio sont dans le dépôt de contenu, les 43 s venaient d'un hôte Debug).
 - Ensuite une série `storage/base`, ADR avant le code : contenu binaire au lieu
   de base64, ADR 0250 à bâtir, une seule copie des fichiers d'app, lecture
   partielle et adresse de fichier (#379).
@@ -152,7 +153,8 @@ Rien n'est codé.
   Benoit du 2026-11-15 : l'ancien contenu est converti en une fois au premier
   démarrage, avec un écran d'attente (pas en arrière-plan), et une lecture
   vérifie chaque bloc par son hachage. Aucune question ouverte. La conversion
-  fait partie du chantier 1, qui attend le résultat de #538.
+  fait partie du chantier 1, qui règle #520 d'après le profilage de #538 et
+  peut partir dès que les ADR sont fusionnées dans `storage/base`.
 
 ## Questions posées, réponse à confirmer
 

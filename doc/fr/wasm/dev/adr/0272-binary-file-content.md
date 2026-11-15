@@ -10,9 +10,9 @@ Acceptée le 2026-11-15, série `storage/base`
 2026-11-15 : le contenu existant est converti **en une fois au premier
 démarrage, avec un écran d'attente** (question 1, choix B), et une lecture
 vérifie **chaque bloc par son propre hachage** (question 2, choix A). Le
-chantier attend le résultat de l'issue
-[#538](https://github.com/Kazo-ca/Os/issues/538) pour son ordre dans la série,
-pas pour son contenu.
+profilage de l'issue [#538](https://github.com/Kazo-ca/Os/issues/538), rendu
+le 2026-11-15, confirme la piste (voir les conséquences) : le chantier peut
+partir.
 
 - **Remplace :** le point 2 de l'[ADR 0245](0245-raise-the-maximum-file-size.md)
   (« format stocké inchangé », blocs encodés en base64) et, dans le point 2 de
@@ -162,9 +162,14 @@ s'il le faut, lui fait proposer le redémarrage sur la nouvelle version
   profil de plusieurs dizaines de Gio. L'écran d'attente le dit.
 - Une seule forme à lire ensuite : pas de double lecture à garder ni à
   retirer plus tard.
-- Le temps gagné ne règle pas à lui seul l'issue
-  [#520](https://github.com/Kazo-ca/Os/issues/520) : la couche de stockage
-  n'y compte que pour environ 3,4 s sur 43 s (issue #538).
+- **Cette ADR règle l'issue [#520](https://github.com/Kazo-ca/Os/issues/520).**
+  Le profilage de l'issue #538, fait dans l'OS réel pour 52,5 Mio, donne 4,1 à
+  4,9 s pour enregistrer et 3,8 à 4,1 s pour ouvrir en publication Release,
+  dont 96 % dans le dépôt de contenu : SHA-256 géré 1,5 s, base64 0,35 s,
+  interop JSON et IndexedDB 1,98 s à l'écriture. Les 43 s de l'issue #520
+  venaient d'un hôte Debug, où ces mêmes trois postes prennent 99 % du temps.
+  L'analyse disait que le stockage ne comptait que pour 3,4 s sur 43 s : elle
+  comparait un banc Release à une mesure Debug.
 - Firefox et Safari n'ont pas été mesurés ; le chantier mesure les trois
   navigateurs avant de fusionner.
 

@@ -9,9 +9,9 @@ Accepted on 2026-11-15, `storage/base` series
 2026-11-14 (storage analysis, §7) and answered the two questions on
 2026-11-15: existing content is converted **all at once at the first boot,
 with a waiting screen** (question 1, choice B), and a read checks **each chunk
-by its own hash** (question 2, choice A). The work item waits for the result
-of issue [#538](https://github.com/Kazo-ca/Os/issues/538) for its place in
-the series, not for its content.
+by its own hash** (question 2, choice A). The profiling of
+issue [#538](https://github.com/Kazo-ca/Os/issues/538), delivered on
+2026-11-15, confirms the lead (see the consequences): the work item can start.
 
 - **Supersedes:** point 2 of [ADR 0245](0245-raise-the-maximum-file-size.md)
   ("stored format unchanged", chunks encoded in base64) and, in point 2 of
@@ -158,9 +158,14 @@ onto the new version (ADR 0223, 0239) rather than a file error.
   GiB. The waiting screen says so.
 - A single form to read afterwards: no double read to keep or to remove
   later.
-- The time gained does not fix issue
-  [#520](https://github.com/Kazo-ca/Os/issues/520) by itself: the storage
-  layer accounts for only about 3.4 s of 43 s there (issue #538).
+- **This ADR fixes issue [#520](https://github.com/Kazo-ca/Os/issues/520).**
+  The profiling of issue #538, done in the real OS for 52.5 MiB, gives 4.1 to
+  4.9 s to save and 3.8 to 4.1 s to open in a Release publish, 96% of it in
+  the content repository: managed SHA-256 1.5 s, base64 0.35 s, JSON interop
+  and IndexedDB 1.98 s when writing. The 43 s of issue #520 came from a Debug
+  host, where the same three items take 99% of the time. The analysis said
+  storage accounted for only 3.4 s of 43 s: it compared a Release bench with a
+  Debug measurement.
 - Firefox and Safari were not measured; the work item measures the three
   browsers before it is merged.
 

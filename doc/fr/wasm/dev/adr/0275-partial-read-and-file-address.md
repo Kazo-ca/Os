@@ -9,8 +9,8 @@ Proposée le 2026-11-15, série `storage/base`
 [#379](https://github.com/Kazo-ca/Os/issues/379) demande (décision de Benoit
 du 2026-11-06 : une API de l'OS pour plus tard), et la piste 4 puis 5 de
 l'analyse du stockage, retenue par Benoit le 2026-11-14. Le §4 (écriture en
-flux) donne une direction ; il sera confirmé ou corrigé d'après le résultat de
-l'issue [#538](https://github.com/Kazo-ca/Os/issues/538). Aucune question
+flux) est confirmé par le profilage de l'issue
+[#538](https://github.com/Kazo-ca/Os/issues/538), rendu le 2026-11-15. Aucune question
 ouverte : les noms de l'API sont une proposition à revoir dans la PR.
 
 - **Complète :** l'[ADR 0245](0245-raise-the-maximum-file-size.md) (dont les
@@ -111,7 +111,7 @@ public sealed class KazoFileUrl : IAsyncDisposable
   adresse `blob:` après avoir lu le fichier en entier : l'app n'a pas deux
   chemins à écrire.
 
-### 4. Écriture en flux (direction, à confirmer après #538)
+### 4. Écriture en flux
 
 La clé d'un contenu est le SHA-256 du fichier entier, connu seulement à la
 fin : on ne peut pas écrire les blocs à leur clé au fil de l'eau. Direction
@@ -120,9 +120,13 @@ retenue : les octets d'une écriture s'accumulent **du côté du navigateur**
 le navigateur hache le tout et écrit les blocs. La mémoire .NET ne porte alors
 qu'un lot à la fois.
 
-Le profilage de l'issue #538 dira si le pic de mémoire vient bien de là. Si ce
-n'est pas le cas, ce paragraphe est remplacé par une nouvelle ADR avant le
-chantier.
+Le profilage de l'issue #538 le justifie : le premier enregistrement de
+52,5 Mio fait monter la mémoire de Chromium d'environ 780 Mio, sans
+redescendre. Les copies en cause sont le tableau d'octets de l'interop, la
+copie de `KazoFile`, la liste des blocs, le tampon du hachage, le base64 de
+chaque lot et le JSON du lot. L'ADR 0272 enlève déjà les trois dernières ;
+cette écriture en flux enlève les autres. Le passage de l'iframe à .NET et
+`KazoFile` ne coûtent que 0,16 s : ils ne changent pas pour la vitesse.
 
 ## Conséquences
 
@@ -165,7 +169,7 @@ chantier.
 - [ ] `KazoFile.CreateUrlAsync`, `KazoFileUrl`, libération avec l'instance ;
   apps en Web Worker ; repli `blob:`.
 - [ ] Disque `/` et lecteurs réseau.
-- [ ] Écriture en flux, après #538.
+- [ ] Écriture en flux ; mesure de la mémoire avant et après.
 - [ ] `PublicAPI.Unshipped.txt`, fixture de compatibilité du SDK, docs du
   framework (FR et EN), `features.md`, entrée de changement.
 - [ ] Issue dans Os-App-Webamp.

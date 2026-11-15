@@ -127,8 +127,9 @@ Analysis: [`../dev/plans/browser-storage-optimization-analysis.md`](../dev/plans
 Nothing is coded.
 
 - Two `TODO` issues first: #537 (reclaim the space of orphan contents, which
-  nothing collects today) and #538 (profile #520 in the real OS: storage
-  explains only about 3.4 s of the 43 s).
+  nothing collects today) and #538 (profile #520 in the real OS; delivered on
+  2026-11-15: in Release, 96% of the 4.1 to 4.9 s of a 52.5 MiB save is in
+  the content repository, the 43 s came from a Debug host).
 - Then a `storage/base` series, ADRs before the code: binary content instead of
   base64, ADR 0250 to build, a single copy of app files, partial read and file
   address (#379).
@@ -146,7 +147,8 @@ Nothing is coded.
   answers of 2026-11-15: the old content is converted all at once at the
   first boot, with a waiting screen (not in the background), and a read
   checks each chunk by its hash. No open question. The conversion is part of
-  work item 1, which waits for the result of #538.
+  work item 1, which fixes #520 according to the profiling of #538 and can
+  start as soon as the ADRs are merged into `storage/base`.
 
 ## Questions asked, answer to confirm
 

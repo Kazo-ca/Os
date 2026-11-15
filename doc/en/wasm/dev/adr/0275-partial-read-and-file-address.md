@@ -8,9 +8,9 @@ Proposed on 2026-11-15, `storage/base` series
 ([plan](../plans/browser-storage-series-plan.md)). This is the ADR that issue
 [#379](https://github.com/Kazo-ca/Os/issues/379) asks for (Benoit's decision
 of 2026-11-06: an OS API for later), and leads 4 then 5 of the storage
-analysis, kept by Benoit on 2026-11-14. §4 (streamed write) gives a direction;
-it will be confirmed or corrected from the result of issue
-[#538](https://github.com/Kazo-ca/Os/issues/538). No open question: the names
+analysis, kept by Benoit on 2026-11-14. §4 (streamed write) is confirmed by
+the profiling of issue [#538](https://github.com/Kazo-ca/Os/issues/538),
+delivered on 2026-11-15. No open question: the names
 of the API are a proposal to review in the PR.
 
 - **Completes:** [ADR 0245](0245-raise-the-maximum-file-size.md) (whose
@@ -110,7 +110,7 @@ public sealed class KazoFileUrl : IAsyncDisposable
   `blob:` address after reading the whole file: the app does not have two
   paths to write.
 
-### 4. Streamed write (direction, to confirm after #538)
+### 4. Streamed write
 
 The key of content is the SHA-256 of the whole file, known only at the end:
 chunks cannot be written at their key as they come. Direction kept: the bytes
@@ -118,8 +118,13 @@ of a write pile up **on the browser side** (a `Blob` built batch by batch),
 outside .NET memory; at close, the browser hashes it all and writes the
 chunks. .NET memory then carries only one batch at a time.
 
-The profiling of issue #538 will say whether the memory peak really comes from
-there. If not, this paragraph is replaced by a new ADR before the work item.
+The profiling of issue #538 justifies it: the first save of 52.5 MiB raises
+Chromium's memory by about 780 MiB, and it does not come back down. The copies
+involved are the byte array of the interop, the copy made by `KazoFile`, the
+list of chunks, the hash buffer, the base64 of each batch and the JSON of the
+batch. ADR 0272 already removes the last three; this streamed write removes
+the others. The hop from the iframe to .NET and `KazoFile` cost only 0.16 s:
+they do not change for speed.
 
 ## Consequences
 
@@ -160,7 +165,7 @@ there. If not, this paragraph is replaced by a new ADR before the work item.
 - [ ] `KazoFile.CreateUrlAsync`, `KazoFileUrl`, release with the instance;
   apps in a Web Worker; `blob:` fallback.
 - [ ] `/` disk and network drives.
-- [ ] Streamed write, after #538.
+- [ ] Streamed write; memory measured before and after.
 - [ ] `PublicAPI.Unshipped.txt`, SDK compatibility fixture, framework docs (FR
   and EN), `features.md`, change entry.
 - [ ] Issue in Os-App-Webamp.
