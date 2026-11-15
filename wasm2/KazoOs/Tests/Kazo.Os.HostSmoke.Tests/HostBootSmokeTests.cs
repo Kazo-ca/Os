@@ -393,8 +393,24 @@ public sealed partial class HostBootSmokeTests(ITestOutputHelper output)
             Log("desktop shown without a sign-in step.");
         }
 
+        await PassWelcomeAsync(page, BootTimeoutMs);
         await launcher.WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = BootTimeoutMs });
         Log("desktop ready.");
+    }
+
+    /// <summary>
+    /// Passes the welcome wizard (ADR 0276) when the sign-in shows it: an account sees it once, so the
+    /// test clicks « Skip » and goes on to the desktop. Does nothing when the desktop opens directly.
+    /// </summary>
+    private static async Task PassWelcomeAsync(IPage page, float timeoutMs)
+    {
+        ILocator skip = page.Locator(".welcome-skip");
+        ILocator shell = page.Locator(".desktop-shell, .mobile-shell");
+        await skip.Or(shell).First.WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = timeoutMs });
+        if (await skip.IsVisibleAsync())
+        {
+            await skip.ClickAsync();
+        }
     }
 
     /// <summary>Opens an app from the Start menu by its exact display name.</summary>

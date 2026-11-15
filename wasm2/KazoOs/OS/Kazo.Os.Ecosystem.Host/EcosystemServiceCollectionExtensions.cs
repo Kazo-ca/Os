@@ -1076,6 +1076,17 @@ public static class EcosystemServiceCollectionExtensions
             provider.GetRequiredService<INotificationQueue>(),
             () => provider.GetRequiredService<ISessionService>().CurrentPrincipal,
             () => provider.GetRequiredService<Kazo.Os.Platform.Core.Globalization.SessionLocaleService>().Culture));
+        // ADR 0276: the welcome wizard's state and writes. Its language applies in the session:
+        // the login environment is read again, then the shell takes the session's locale.
+        services.AddScoped(provider => new Kazo.Os.Platform.Core.Welcome.WelcomeSetupService(
+            provider.GetRequiredService<IOsSettingsService>(),
+            async (principal, cancellationToken) =>
+            {
+                await provider.GetRequiredService<LoginEnvironmentProvider>().ReloadAsync(principal, cancellationToken);
+                await provider.GetRequiredService<Kazo.Os.Platform.Core.Globalization.SessionLocaleService>()
+                    .UseSessionLocaleAsync(principal, cancellationToken);
+            },
+            provider.GetService<ILogger<Kazo.Os.Platform.Core.Welcome.WelcomeSetupService>>()));
         // ADR 0258 §3: the direct link ?autolaunch=<appId> installs the app of the official
         // catalog for the guest and launches it; the host calls it once the guest session is open,
         // the desktop shows its progress window. The install goes through the same management

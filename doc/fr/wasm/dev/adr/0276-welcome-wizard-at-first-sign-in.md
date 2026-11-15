@@ -155,10 +155,12 @@ suis d'accord avec tes recommendations ».
 
 ## Tâches
 
-- [ ] `WelcomeSetupService` (état, plan des étapes, langue) et
+- [x] `WelcomeSetupService` (état, plan des étapes, langue) et
   `LoginEnvironmentProvider.ReloadAsync`, avec tests.
-- [ ] Vue `Welcome` de l'hôte et composant `WelcomeWizard` (quatre étapes,
+- [x] Vue `Welcome` de l'hôte et composant `WelcomeWizard` (quatre étapes,
   bureau et téléphone, EN/FR).
-- [ ] Tests : unitaires, E2E `WelcomeWizardTests`, aides de test mises à jour.
-- [ ] Docs FR/EN (`welcome-wizard.md`, `features.md`, mémoire), captures.
-- [ ] Issue `TODO` pour les tests des dépôts d'apps.
+- [x] Tests : unitaires, E2E `WelcomeWizardTests`, aides de test mises à jour.
+- [x] Docs FR/EN (`welcome-wizard.md`, `features.md`, mémoire), captures.
+- [x] Issue `TODO` pour les tests des dépôts d'apps.
+
+Doc : [`welcome-wizard.md`](../welcome-wizard.md). Issue des tests des dépôts d'apps : [#553](https://github.com/Kazo-ca/Os/issues/553).

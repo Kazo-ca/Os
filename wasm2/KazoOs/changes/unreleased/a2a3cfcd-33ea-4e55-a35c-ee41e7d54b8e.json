@@ -1,0 +1,18 @@
+{
+  "id": "a2a3cfcd-33ea-4e55-a35c-ee41e7d54b8e",
+  "category": "new",
+  "audience": [
+    "user"
+  ],
+  "title": {
+    "en": "A welcome wizard at your first sign-in",
+    "fr": "Un assistant de bienvenue à votre première connexion"
+  },
+  "description": {
+    "en": "The first time you sign in, Kazo OS lets you choose your language, your theme, your wallpaper and your time zone before the desktop opens. Each choice applies at once, you can skip the wizard, and everything stays changeable in Settings.",
+    "fr": "À votre première connexion, Kazo OS vous laisse choisir votre langue, votre thème, votre fond d'écran et votre fuseau horaire avant d'ouvrir le bureau. Chaque choix s'applique tout de suite, vous pouvez passer l'assistant, et tout reste modifiable dans les Paramètres."
+  },
+  "links": [
+    "doc/en/wasm/dev/welcome-wizard.md"
+  ]
+}

@@ -1,0 +1,173 @@
+@namespace Kazo.Os.Ecosystem
+@using Kazo.Os.AppSdk.Globalization
+@using Kazo.Os.Platform.Core.Welcome
+@using Kazo.Os.Theming.Abstractions
+@using Kazo.Os.Theming.Blazor
+
+@* ADR 0276: the welcome wizard, shown once per account and form factor between the sign-in
+   progress and the desktop. Every choice is written on click, as in Settings. *@
+<section class="welcome-surface @(Platform == ThemePlatform.Mobile ? "is-mobile" : "is-desktop")" aria-labelledby="welcome-title">
+    <header class="welcome-header">
+        <div class="welcome-mark" aria-hidden="true">H_</div>
+        <div>
+            <p class="welcome-kicker">@L["Welcome.Kicker"]</p>
+            <h1 id="welcome-title" tabindex="-1" @ref="_title">@StepTitle</h1>
+        </div>
+        <ol class="welcome-progress" aria-label="@L["Welcome.Progress", _index + 1, Steps.Count]">
+            @for (int position = 0; position < Steps.Count; position++)
+            {
+                <li class="@ProgressClass(position)" aria-current="@(position == _index ? "step" : "false")"></li>
+            }
+        </ol>
+    </header>
+
+    <p class="welcome-intro">@StepIntro</p>
+
+    <div class="welcome-body">
+        @switch (CurrentStep)
+        {
+            case WelcomeStep.Language:
+                <div class="welcome-list" role="group" aria-label="@L["Welcome.Language.Title"]">
+                    <button type="button"
+                            class="@OptionClass(_chosenLocale is null)"
+                            aria-pressed="@(_chosenLocale is null ? "true" : "false")"
+                            disabled="@_isBusy"
+                            data-locale="system"
+                            @onclick="() => ChooseLanguageAsync(null)">
+                        <span class="welcome-option-name">@L["Welcome.Language.System"]</span>
+                    </button>
+                    @foreach (string locale in Locales)
+                    {
+                        <button type="button"
+                                class="@OptionClass(IsChosenLocale(locale))"
+                                aria-pressed="@(IsChosenLocale(locale) ? "true" : "false")"
+                                disabled="@_isBusy"
+                                data-locale="@locale"
+                                lang="@LocaleTag(locale)"
+                                @onclick="() => ChooseLanguageAsync(locale)">
+                            <span class="welcome-option-name">@LocaleName(locale)</span>
+                            <span class="welcome-option-detail">@locale</span>
+                        </button>
+                    }
+                </div>
+                break;
+            case WelcomeStep.Theme:
+                <div class="welcome-grid welcome-themes" role="group" aria-label="@L["Welcome.Theme.Title"]">
+                    @foreach (ThemeDefinition theme in BuiltInThemes)
+                    {
+                        <button type="button"
+                                class="@CardClass(theme.Id == SelectedThemeId)"
+                                aria-pressed="@(theme.Id == SelectedThemeId ? "true" : "false")"
+                                disabled="@_isBusy"
+                                data-theme-id="@theme.Id"
+                                @onclick="() => ChooseThemeAsync(theme.Id)">
+                            <ThemePreview ThemeId="@theme.Id"
+                                          AccentId="@ThemePreference.Current.AccentId"
+                                          AnimationsEnabled="@ThemePreference.Current.AnimationsEnabled" />
+                            <span class="welcome-card-label">@theme.DisplayName</span>
+                        </button>
+                    }
+                    @foreach (UserTheme theme in UserThemesForPlatform)
+                    {
+                        <button type="button"
+                                class="@CardClass(theme.Id == SelectedThemeId)"
+                                aria-pressed="@(theme.Id == SelectedThemeId ? "true" : "false")"
+                                disabled="@_isBusy"
+                                data-theme-id="@theme.Id"
+                                @onclick="() => ChooseThemeAsync(theme.Id)">
+                            <ThemePreview ThemeId="@UserThemes.Resolve(theme.Id, Platform).BaseThemeId"
+                                          Tokens="@theme.Tokens"
+                                          Title="@theme.Name"
+                                          AccentId="@ThemePreference.Current.AccentId"
+                                          AnimationsEnabled="@ThemePreference.Current.AnimationsEnabled" />
+                            <span class="welcome-card-label">@theme.Name</span>
+                        </button>
+                    }
+                </div>
+                break;
+            case WelcomeStep.Wallpaper:
+                <div class="welcome-grid welcome-wallpapers" role="group" aria-label="@L["Welcome.Wallpaper.Title"]">
+                    <button type="button"
+                            class="@CardClass(_wallpaper.Length == 0)"
+                            aria-pressed="@(_wallpaper.Length == 0 ? "true" : "false")"
+                            disabled="@_isBusy"
+                            data-wallpaper="theme"
+                            @onclick="() => ChooseWallpaperAsync(string.Empty)">
+                        <span class="welcome-wallpaper-theme" aria-hidden="true"></span>
+                        <span class="welcome-card-label">@L["Welcome.Wallpaper.Theme"]</span>
+                    </button>
+                    @foreach (BuiltInWallpaper wallpaper in WallpaperCatalog.BuiltIn)
+                    {
+                        <button type="button"
+                                class="@CardClass(_wallpaper == wallpaper.Value)"
+                                aria-pressed="@(_wallpaper == wallpaper.Value ? "true" : "false")"
+                                disabled="@_isBusy"
+                                data-wallpaper="@wallpaper.Id"
+                                @onclick="() => ChooseWallpaperAsync(wallpaper.Value)">
+                            <img class="welcome-wallpaper-image" src="@wallpaper.AssetPath" alt="" loading="lazy" />
+                            <span class="welcome-card-label">@WallpaperName(wallpaper)</span>
+                        </button>
+                    }
+                </div>
+                break;
+            case WelcomeStep.TimeZone:
+                <p class="welcome-clock" role="status">@L["Welcome.TimeZone.Now", LocalTime, ZoneLabel(TimeZones.TimeZone)]</p>
+                <button type="button"
+                        class="@OptionClass(IsAutomaticZone)"
+                        aria-pressed="@(IsAutomaticZone ? "true" : "false")"
+                        disabled="@_isBusy"
+                        data-zone="auto"
+                        @onclick="() => ChooseTimeZoneAsync(KazoTimeZone.Automatic)">
+                    <span class="welcome-option-name">@L["Welcome.TimeZone.Automatic"]</span>
+                    <span class="welcome-option-detail">@ZoneLabel(KazoTimeZone.Device)</span>
+                </button>
+                <label class="welcome-search-label" for="welcome-zone-search">@L["Welcome.TimeZone.Search"]</label>
+                <input id="welcome-zone-search" class="welcome-search" type="search" autocomplete="off"
+                       @bind="_zoneFilter" @bind:event="oninput" />
+                <div class="welcome-list welcome-zones" role="group" aria-label="@L["Welcome.TimeZone.Title"]">
+                    @foreach (TimeZoneInfo zone in ShownZones)
+                    {
+                        string id = KazoTimeZone.GetId(zone);
+                        <button type="button"
+                                class="@OptionClass(IsChosenZone(id))"
+                                aria-pressed="@(IsChosenZone(id) ? "true" : "false")"
+                                disabled="@_isBusy"
+                                data-zone="@id"
+                                @onclick="() => ChooseTimeZoneAsync(id)">
+                            <span class="welcome-option-name">@id</span>
+                            <span class="welcome-option-detail">@KazoTimeZone.FormatOffset(zone, UtcNow)</span>
+                        </button>
+                    }
+                </div>
+                @if (HiddenZoneCount > 0)
+                {
+                    <p class="welcome-more">@L["Welcome.TimeZone.More", HiddenZoneCount]</p>
+                }
+                break;
+        }
+    </div>
+
+    @if (_error is not null)
+    {
+        <p class="welcome-error" role="alert">@_error</p>
+    }
+
+    <footer class="welcome-footer">
+        <p class="welcome-hint">@L["Welcome.SettingsHint"]</p>
+        <div class="welcome-actions">
+            <button type="button" class="welcome-skip" disabled="@_isBusy" @onclick="FinishAsync">@L["Welcome.Skip"]</button>
+            @if (_index > 0)
+            {
+                <button type="button" class="welcome-back" disabled="@_isBusy" @onclick="GoBack">@L["Welcome.Back"]</button>
+            }
+            @if (_index < Steps.Count - 1)
+            {
+                <button type="button" class="welcome-next" disabled="@_isBusy" @onclick="GoNext">@L["Welcome.Next"]</button>
+            }
+            else
+            {
+                <button type="button" class="welcome-next welcome-finish" disabled="@_isBusy" @onclick="FinishAsync">@L["Welcome.Finish"]</button>
+            }
+        </div>
+    </footer>
+</section>
