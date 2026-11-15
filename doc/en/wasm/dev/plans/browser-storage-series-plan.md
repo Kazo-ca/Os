@@ -9,7 +9,8 @@
 [0273](../adr/0273-short-orphan-content-retention.md),
 [0274](../adr/0274-single-copy-of-app-files.md) and
 [0275](../adr/0275-partial-read-and-file-address.md) are written (work item 0).
-**No code has started.** Two questions are asked to Benoit (§6).
+**No code has started.** Benoit answered the questions on 2026-11-15 (§6);
+none is left.
 
 ## 1. Purpose
 
@@ -37,7 +38,7 @@ faster, without changing what an app sees:
 
 | Issue | Content | Link with the series |
 | --- | --- | --- |
-| [#537](https://github.com/Kazo-ca/Os/issues/537) | Plug the cleanup pass in, make it read keys only, short retention | Applies [ADR 0273](../adr/0273-short-orphan-content-retention.md), written here, and brings it to `main` with its code. The series relies on a pass that runs (work items 2 and 4). |
+| [#537](https://github.com/Kazo-ca/Os/issues/537) | Plug the cleanup pass in, make it read keys only, short retention | Applies [ADR 0273](../adr/0273-short-orphan-content-retention.md), written here, and brings it to `main` with its code. The series relies on a pass that runs (work items 1 and 4). |
 | [#538](https://github.com/Kazo-ca/Os/issues/538) | Measure a 50 MB save and open in the real OS, layer by layer | Work item 1 waits for its result. It confirms or corrects work item 6 (streamed write), and may change the order of the work items. |
 
 ## 4. Work items
@@ -48,8 +49,8 @@ and a PR to `storage/base`.
 | No. | Branch | Content | ADR | Depends on |
 | --- | --- | --- | --- | --- |
 | 0 | `storage/0-adrs-and-plan` | This plan and ADRs 0272 to 0275 | | |
-| 1 | `storage/1-binary-file-content` | Chunks as `Uint8Array` with their hash, JavaScript module of the content repository (`[JSImport]`, `MemoryView`), SHA-256 by WebCrypto, reading both forms, database at version 5, backup and diagnostic snapshot | [0272](../adr/0272-binary-file-content.md) §1, 2, 4, 5, 6 | #538, answers to questions 1 and 2 |
-| 2 | `storage/2-convert-existing-content` | Background conversion of the old content by the cleanup pass, resumed after a restart | [0272](../adr/0272-binary-file-content.md) §3 | 1, #537 |
+| 1 | `storage/1-binary-file-content` | Chunks as `Uint8Array` with their hash, JavaScript module of the content repository (`[JSImport]`, `MemoryView`), SHA-256 by WebCrypto, per-chunk check, database at version 5, **conversion of the old content all at once at the first boot with a waiting screen**, backup and diagnostic snapshot | [0272](../adr/0272-binary-file-content.md) | #538 |
+| 2 | (removed) | Merged into work item 1 on 2026-11-15: Benoit chose the one-time conversion at the first boot, which must ship with binary content | | |
 | 3 | `storage/3-partial-read` | Range read in the content repository, on-demand read stream for files over 16 MiB | [0275](../adr/0275-partial-read-and-file-address.md) §1, 2 | 1 |
 | 4 | `storage/4-single-copy-of-app-files` | `servedFiles` store, publication without copy, chunk reader of the service worker (stream, `Range`), end of the `kazoos-installed-apps` cache | [0274](../adr/0274-single-copy-of-app-files.md) | 1, #537 |
 | 5 | `storage/5-file-address` | `KazoFile.CreateUrlAsync`, `_kazo/files/` route, `/` disk and network drives, apps in a Web Worker | [0275](../adr/0275-partial-read-and-file-address.md) §3 | 4 |
@@ -57,17 +58,17 @@ and a PR to `storage/base`.
 | 7 | `storage/7-docs-and-version` | `features.md`, `browser-infrastructure.md`, memory, change entries checked, API folded, final measurements in Chromium, Firefox and Safari | | all |
 
 **Order and parallel work.** Work item 1 first: it changes the form of the
-chunks, which all the others read. Then 2, 3 and 4 can move at the same time
-(they touch the cleanup pass, the content repository and the service worker).
-Work item 5 follows 4, whose chunk reader it reuses. Work item 6 starts when
-#538 has given its result.
+chunks and converts the old content, so all the others only have the binary
+form to read. Then 3 and 4 can move at the same time (they touch the content
+repository and the service worker). Work item 5 follows 4, whose chunk reader
+it reuses. Work item 6 starts when #538 has given its result.
 
 ```text
-#537 ──────────────┬──────────────► 2
+#537 ──────────────┐
 #538 ──► 1 ────────┼──► 3
          │         └──► 4 ──► 5
          └──► 6 (after #538)
-                                    7 (at the end)
+                              7 (at the end)
 ```
 
 **What each work item delivers**, besides the code: its tests (unit tests, and
@@ -89,18 +90,19 @@ and a before-and-after measurement when it promises a gain.
 - Craft apps receiving a file address instead of the bytes
   (`Kazo.Os.AppSdk.Craft` module): to look at after work item 5 and #538.
 
-## 6. Questions asked to Benoit (2026-11-15)
+## 6. Benoit's answers (2026-11-15)
 
-The two questions are asked in the thread of the series, with their context.
-In the meantime, the ADRs apply the recommendation.
-
-| No. | Question | Choices | Recommended |
-| --- | --- | --- | --- |
-| 1 | How to convert the content already stored in base64? (ADR 0272 §3) | A. in the background, in small batches; B. all at once at the first boot, with a waiting screen; C. never | A |
-| 2 | What to check at each read of a file? (ADR 0272 §4) | A. each chunk by its hash; B. the whole file, as today; C. nothing at read time | A |
+| No. | Question | Choices | Recommended | Decision |
+| --- | --- | --- | --- | --- |
+| 1 | How to convert the content already stored in base64? (ADR 0272 §3) | A. in the background, in small batches; B. all at once at the first boot, with a waiting screen; C. never | A | **B** |
+| 2 | What to check at each read of a file? (ADR 0272 §4) | A. each chunk by its hash; B. the whole file, as today; C. nothing at read time | A | **A** |
+| 3 | How long to keep orphaned content? (ADR 0273 §1, asked in the thread of #537) | 1 day and 5 minutes when space is low; keep 30 days; another duration | 1 day | **1 day**, 5 minutes when space is low |
 
 ## 7. Risks
 
+- **First boot after the update.** The OS waits for the end of the
+  conversion (ADR 0272 §3): in the order of 20 seconds per GiB, to measure.
+  The waiting screen must say what is going on and resume after a close.
 - **No way back after work item 1.** The database goes to version 5: a
   previous version of the OS no longer opens it (ADR 0272 §6).
 - **Service worker.** Work items 4 and 5 change what the worker serves. The

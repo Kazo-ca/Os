@@ -4,11 +4,13 @@
 
 ## Statut
 
-Proposée le 2026-11-15, série `storage/base`
+Acceptée le 2026-11-15, série `storage/base`
 ([plan](../plans/browser-storage-series-plan.md)). Benoit a retenu la piste le
-2026-11-14 (analyse du stockage, §7). Deux questions restent posées à Benoit
-(à la fin) ; la décision applique la recommandation de chacune en attendant sa
-réponse. Le chantier attend aussi le résultat de l'issue
+2026-11-14 (analyse du stockage, §7) et a répondu aux deux questions le
+2026-11-15 : le contenu existant est converti **en une fois au premier
+démarrage, avec un écran d'attente** (question 1, choix B), et une lecture
+vérifie **chaque bloc par son propre hachage** (question 2, choix A). Le
+chantier attend le résultat de l'issue
 [#538](https://github.com/Kazo-ca/Os/issues/538) pour son ordre dans la série,
 pas pour son contenu.
 
@@ -22,7 +24,7 @@ pas pour son contenu.
 - **S'appuie sur :** l'[ADR 0015](0015-browser-storage-and-indexeddb-adapter.md)
   (adaptateur IndexedDB), l'[ADR 0018](0018-indexeddb-failure-and-recovery-policy.md)
   (pannes et reprise) et l'[ADR 0273](0273-short-orphan-content-retention.md)
-  (passe de nettoyage, qui porte aussi la conversion).
+  (passe de nettoyage).
 - **Analyse :** [`browser-storage-optimization-analysis.md`](../plans/browser-storage-optimization-analysis.md),
   constats C4 à C6, piste 2.
 
@@ -81,30 +83,41 @@ ils ne sont pas retenus.
 - `/proc/diskstats` continue de compter les octets et le temps de chaque
   transaction (ADR 0057 §4).
 
-### 3. Contenu existant : lire les deux formes, convertir en arrière-plan
+### 3. Contenu existant : converti en une fois au premier démarrage
 
-- La lecture accepte un bloc sous l'une ou l'autre forme, bloc par bloc : un
-  même fichier peut avoir des blocs convertis et d'autres non.
-- L'écriture n'écrit plus que la forme binaire.
-- La **passe de nettoyage** (ADR 0273) convertit les anciens blocs en
-  arrière-plan, par lots d'au plus 16 Mio, en parcourant le magasin par clé.
-  Elle note sa position dans le magasin `syncMetadata` et reprend là après un
-  redémarrage. Quand le parcours est fini, elle note que la base est convertie
-  et ne recommence pas. Convertir un bloc remplace l'enregistrement à la même
-  clé : aucun espace supplémentaire n'est demandé, et l'espace occupé baisse
-  d'environ 25 % à la fin.
-- La conversion s'arrête pendant qu'une app écrit ou lit un gros fichier, et
-  ne tourne pas quand l'onglet est caché.
-- La lecture de l'ancienne forme reste dans le code tant que la sauvegarde la
-  porte (§5).
+- Au premier démarrage de la version qui apporte cette ADR, **avant que l'OS
+  ouvre une session**, tout le magasin `fsContent` est converti : chaque bloc
+  en base64 est remplacé, à la même clé, par sa forme binaire avec son
+  `chunkHash`.
+- Un **écran d'attente** le dit et montre l'avancement (octets convertis sur
+  octets à convertir). L'OS ne démarre qu'une fois la conversion finie.
+- La conversion se fait du côté JavaScript, par lots d'au plus 16 Mio, une
+  transaction par lot. Elle note sa position dans le magasin `syncMetadata` :
+  si l'onglet est fermé en cours de route, le démarrage suivant reprend là.
+  Quand elle a fini, elle note que la base est convertie et ne revient plus.
+- Un seul onglet convertit ; un autre onglet ouvert pendant ce temps montre le
+  même écran et attend.
+- La passe de nettoyage (ADR 0273) tourne d'abord quand elle existe, pour ne
+  pas convertir un contenu orphelin qui va partir.
+- Remplacer un bloc à la même clé ne demande pas d'espace en plus au total, et
+  l'espace occupé baisse d'environ 25 % à la fin.
+- Un bloc qui ne se décode pas est laissé tel quel et noté dans
+  `/var/log/syslog` ; son fichier est ensuite signalé comme abîmé à la lecture
+  (ADR 0018), comme il l'aurait été avant.
+- **Après la conversion, le code ne lit plus que la forme binaire.** Le dépôt
+  de contenu, le service worker (ADR 0274) et la lecture partielle (ADR 0275)
+  n'ont donc qu'une forme à connaître. L'ancienne forme ne reste lue que par
+  la conversion et par la restauration d'une sauvegarde (§5).
+- Durée attendue : de l'ordre de 20 secondes par Gio dans Chromium, d'après
+  les mesures de l'analyse (lecture base64, hachage, écriture binaire) ; c'est
+  une estimation, que le chantier mesure dans les trois navigateurs. Un profil
+  neuf ou petit passe l'écran en moins d'une seconde.
 
 ### 4. Vérification à la lecture
 
 - Une lecture vérifie chaque bloc par son `chunkHash`, le numéro qui se suit
   et la longueur totale. Le SHA-256 du fichier entier **n'est plus recalculé à
   chaque lecture** : c'est ce qui permet la lecture partielle (ADR 0275).
-- Un bloc de l'ancienne forme n'a pas de `chunkHash` : un fichier qui en a
-  encore est vérifié comme aujourd'hui, par le SHA-256 du fichier entier.
 - La vérification du fichier entier reste disponible à la demande (passe de
   nettoyage, sauvegarde, restauration, synchro).
 
@@ -119,8 +132,9 @@ ils ne sont pas retenus.
 - **Instantané de diagnostic** (`StorageSnapshotRedactor`) : masque `data` et
   `dataBase64`.
 - **Migration du renommage** (`RenamedOsDatabaseRewriter`) : elle ne lit que
-  des bases d'avant la 3.0.0, qui n'ont que l'ancienne forme. Elle ne change
-  pas. `RenamedContentRepair` lit le contenu par le dépôt.
+  des bases d'avant la 3.0.0, qui n'ont que l'ancienne forme, et elle passe
+  avant la conversion. Elle ne change pas. `RenamedContentRepair` lit le
+  contenu par le dépôt, après la conversion.
 
 ### 6. Version de la base : 5
 
@@ -143,8 +157,11 @@ s'il le faut, lui fait proposer le redémarrage sur la nouvelle version
   précédente de l'OS ne l'ouvre plus. Remettre en ligne une version plus
   ancienne laisse les profils déjà passés sans accès à leurs fichiers jusqu'au
   retour de la nouvelle version.
-- Pendant la conversion, la base contient les deux formes ; tout code qui lit
-  `fsContent` doit passer par le dépôt ou accepter les deux.
+- Le premier démarrage après la mise à jour attend la fin de la conversion :
+  quelques secondes pour la plupart des profils, plusieurs minutes pour un
+  profil de plusieurs dizaines de Gio. L'écran d'attente le dit.
+- Une seule forme à lire ensuite : pas de double lecture à garder ni à
+  retirer plus tard.
 - Le temps gagné ne règle pas à lui seul l'issue
   [#520](https://github.com/Kazo-ca/Os/issues/520) : la couche de stockage
   n'y compte que pour environ 3,4 s sur 43 s (issue #538).
@@ -153,9 +170,10 @@ s'il le faut, lui fait proposer le redémarrage sur la nouvelle version
 
 ## Options écartées
 
-- **Conversion en une fois au démarrage, avec un écran d'attente** : simple à
-  raisonner, mais un profil de plusieurs Gio bloque l'OS plusieurs minutes au
-  premier démarrage après la mise à jour.
+- **Conversion en arrière-plan, par petits lots, en lisant les deux formes**
+  (recommandée au départ) : l'OS démarre sans attendre, mais tout code qui
+  lit `fsContent` doit connaître les deux formes pendant la conversion.
+  Écartée par Benoit au profit de la conversion en une fois.
 - **Ne jamais convertir** (lire les deux formes pour toujours) : l'ancien
   contenu garde ses 34 % de trop et la double lecture ne peut jamais être
   retirée.
@@ -164,25 +182,23 @@ s'il le faut, lui fait proposer le redémarrage sur la nouvelle version
   pour plus tard (analyse, piste 9).
 - **Garder le SHA-256 géré** : 1,2 à 1,3 s pour 52 Mio contre 0,09 s.
 
-## Questions posées à Benoit
+## Décisions de Benoit (2026-11-15)
 
-1. **Comment convertir le contenu déjà enregistré ?** A. en arrière-plan, par
-   petits lots, en lisant les deux formes entre-temps (recommandé, §3) ;
-   B. en une fois au premier démarrage, avec un écran d'attente ; C. jamais.
-2. **Que vérifier à chaque lecture ?** A. chaque bloc par son propre hachage
-   (recommandé, §4) ; B. le fichier entier comme aujourd'hui (pas de lecture
-   partielle, 1,2 s de plus pour 52 Mio) ; C. rien à la lecture, seulement
-   pendant la passe de nettoyage.
+| Question | Choix | Décision |
+| --- | --- | --- |
+| 1. Comment convertir le contenu déjà enregistré ? | A. en arrière-plan, par petits lots (recommandé) ; B. en une fois au premier démarrage, avec un écran d'attente ; C. jamais | **B** |
+| 2. Que vérifier à chaque lecture ? | A. chaque bloc par son propre hachage (recommandé) ; B. le fichier entier comme aujourd'hui ; C. rien à la lecture | **A** |
 
 ## Tâches
 
 - [ ] Module JavaScript du dépôt de contenu, `[JSImport]`, `MemoryView`.
 - [ ] Écriture binaire avec `chunkHash`, SHA-256 par WebCrypto.
-- [ ] Lecture des deux formes, vérification par bloc.
+- [ ] Lecture de la forme binaire, vérification par bloc.
 - [ ] Base en version 5, étape de migration vide, test d'une page plus ancienne.
 - [ ] Sauvegarde et restauration (format 1 gardé), instantané de diagnostic.
-- [ ] Conversion en arrière-plan dans la passe de nettoyage, reprise après
-  redémarrage.
+- [ ] Conversion en une fois au premier démarrage : écran d'attente avec
+  avancement, reprise après une fermeture, un seul onglet à la fois, test sur
+  une base de la version 4.
 - [ ] Mesures avant et après dans Chromium, Firefox et Safari.
 - [ ] Docs (FR et EN) : `browser-infrastructure.md`, sauvegarde, mémoire,
   `features.md`, entrée de changement.

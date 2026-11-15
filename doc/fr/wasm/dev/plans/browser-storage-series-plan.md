@@ -9,7 +9,8 @@
 [0273](../adr/0273-short-orphan-content-retention.md),
 [0274](../adr/0274-single-copy-of-app-files.md) et
 [0275](../adr/0275-partial-read-and-file-address.md) sont écrites (chantier 0).
-**Aucun code n'est commencé.** Deux questions sont posées à Benoit (§6).
+**Aucun code n'est commencé.** Benoit a répondu aux questions le 2026-11-15
+(§6) ; il n'en reste aucune.
 
 ## 1. Objet
 
@@ -37,7 +38,7 @@ ses fichiers plus vite, sans changer ce qu'une app voit :
 
 | Issue | Contenu | Lien avec la série |
 | --- | --- | --- |
-| [#537](https://github.com/Kazo-ca/Os/issues/537) | Brancher la passe de nettoyage, la faire lire seulement les clés, rétention courte | Applique l'[ADR 0273](../adr/0273-short-orphan-content-retention.md), écrite ici, et l'amène dans `main` avec son code. La série s'appuie sur une passe qui tourne (chantiers 2 et 4). |
+| [#537](https://github.com/Kazo-ca/Os/issues/537) | Brancher la passe de nettoyage, la faire lire seulement les clés, rétention courte | Applique l'[ADR 0273](../adr/0273-short-orphan-content-retention.md), écrite ici, et l'amène dans `main` avec son code. La série s'appuie sur une passe qui tourne (chantiers 1 et 4). |
 | [#538](https://github.com/Kazo-ca/Os/issues/538) | Mesurer un enregistrement et une ouverture de 50 Mo dans l'OS réel, couche par couche | Le chantier 1 attend son résultat. Il confirme ou corrige le chantier 6 (écriture en flux), et peut changer l'ordre des chantiers. |
 
 ## 4. Chantiers
@@ -48,26 +49,26 @@ et une PR vers `storage/base`.
 | N° | Branche | Contenu | ADR | Dépend de |
 | --- | --- | --- | --- | --- |
 | 0 | `storage/0-adrs-and-plan` | Ce plan et les ADR 0272 à 0275 | | |
-| 1 | `storage/1-binary-file-content` | Blocs en `Uint8Array` avec leur hachage, module JavaScript du dépôt de contenu (`[JSImport]`, `MemoryView`), SHA-256 par WebCrypto, lecture des deux formes, base en version 5, sauvegarde et instantané de diagnostic | [0272](../adr/0272-binary-file-content.md) §1, 2, 4, 5, 6 | #538, réponses aux questions 1 et 2 |
-| 2 | `storage/2-convert-existing-content` | Conversion en arrière-plan de l'ancien contenu par la passe de nettoyage, reprise après redémarrage | [0272](../adr/0272-binary-file-content.md) §3 | 1, #537 |
+| 1 | `storage/1-binary-file-content` | Blocs en `Uint8Array` avec leur hachage, module JavaScript du dépôt de contenu (`[JSImport]`, `MemoryView`), SHA-256 par WebCrypto, vérification par bloc, base en version 5, **conversion de l'ancien contenu en une fois au premier démarrage avec un écran d'attente**, sauvegarde et instantané de diagnostic | [0272](../adr/0272-binary-file-content.md) | #538 |
+| 2 | (retiré) | Fusionné dans le chantier 1 le 2026-11-15 : Benoit a choisi la conversion en une fois au premier démarrage, qui doit partir avec le contenu binaire | | |
 | 3 | `storage/3-partial-read` | Lecture d'une plage dans le dépôt de contenu, flux de lecture à la demande pour les fichiers de plus de 16 Mio | [0275](../adr/0275-partial-read-and-file-address.md) §1, 2 | 1 |
 | 4 | `storage/4-single-copy-of-app-files` | Magasin `servedFiles`, publication sans copie, lecteur de blocs du service worker (flux, `Range`), fin du cache `kazoos-installed-apps` | [0274](../adr/0274-single-copy-of-app-files.md) | 1, #537 |
 | 5 | `storage/5-file-address` | `KazoFile.CreateUrlAsync`, route `_kazo/files/`, disque `/` et lecteurs réseau, apps en Web Worker | [0275](../adr/0275-partial-read-and-file-address.md) §3 | 4 |
 | 6 | `storage/6-streamed-write` | Écriture sans garder tout le fichier dans la mémoire .NET | [0275](../adr/0275-partial-read-and-file-address.md) §4, à confirmer | 1, #538 |
 | 7 | `storage/7-docs-and-version` | `features.md`, `browser-infrastructure.md`, mémoire, entrées de changement vérifiées, API repliée, mesures finales dans Chromium, Firefox et Safari | | tous |
 
-**Ordre et parallèle.** Le chantier 1 d'abord : il change la forme des blocs,
-que tous les autres lisent. Ensuite 2, 3 et 4 peuvent avancer en même temps
-(ils touchent la passe de nettoyage, le dépôt de contenu et le service worker).
-Le chantier 5 suit le 4, dont il reprend le lecteur de blocs. Le chantier 6
-part quand #538 a rendu son résultat.
+**Ordre et parallèle.** Le chantier 1 d'abord : il change la forme des blocs
+et convertit l'ancien contenu, donc tous les autres n'ont que la forme binaire
+à lire. Ensuite 3 et 4 peuvent avancer en même temps (ils touchent le dépôt de
+contenu et le service worker). Le chantier 5 suit le 4, dont il reprend le
+lecteur de blocs. Le chantier 6 part quand #538 a rendu son résultat.
 
 ```text
-#537 ──────────────┬──────────────► 2
+#537 ──────────────┐
 #538 ──► 1 ────────┼──► 3
          │         └──► 4 ──► 5
          └──► 6 (après #538)
-                                    7 (à la fin)
+                              7 (à la fin)
 ```
 
 **Ce que chaque chantier livre**, en plus du code : ses tests (unitaires, et
@@ -91,18 +92,20 @@ quand il promet un gain.
 - Les apps Craft qui reçoivent une adresse de fichier au lieu des octets
   (module `Kazo.Os.AppSdk.Craft`) : à voir après le chantier 5 et #538.
 
-## 6. Questions posées à Benoit (2026-11-15)
+## 6. Réponses de Benoit (2026-11-15)
 
-Les deux questions sont posées dans le fil de la série, avec leur contexte.
-En attendant, les ADR appliquent la recommandation.
-
-| N° | Question | Choix | Recommandé |
-| --- | --- | --- | --- |
-| 1 | Comment convertir le contenu déjà enregistré en base64 ? (ADR 0272 §3) | A. en arrière-plan, par petits lots ; B. en une fois au premier démarrage, avec un écran d'attente ; C. jamais | A |
-| 2 | Que vérifier à chaque lecture d'un fichier ? (ADR 0272 §4) | A. chaque bloc par son hachage ; B. le fichier entier, comme aujourd'hui ; C. rien à la lecture | A |
+| N° | Question | Choix | Recommandé | Décision |
+| --- | --- | --- | --- | --- |
+| 1 | Comment convertir le contenu déjà enregistré en base64 ? (ADR 0272 §3) | A. en arrière-plan, par petits lots ; B. en une fois au premier démarrage, avec un écran d'attente ; C. jamais | A | **B** |
+| 2 | Que vérifier à chaque lecture d'un fichier ? (ADR 0272 §4) | A. chaque bloc par son hachage ; B. le fichier entier, comme aujourd'hui ; C. rien à la lecture | A | **A** |
+| 3 | Combien de temps garder un contenu orphelin ? (ADR 0273 §1, posée dans le fil de #537) | 1 jour et 5 minutes quand l'espace est faible ; garder 30 jours ; autre durée | 1 jour | **1 jour**, 5 minutes quand l'espace est faible |
 
 ## 7. Risques
 
+- **Premier démarrage après la mise à jour.** L'OS attend la fin de la
+  conversion (ADR 0272 §3) : de l'ordre de 20 secondes par Gio, à mesurer.
+  L'écran d'attente doit dire ce qui se passe et reprendre après une
+  fermeture.
 - **Pas de retour en arrière après le chantier 1.** La base passe en
   version 5 : une version précédente de l'OS ne l'ouvre plus (ADR 0272 §6).
 - **Service worker.** Les chantiers 4 et 5 changent ce que le worker sert. Les

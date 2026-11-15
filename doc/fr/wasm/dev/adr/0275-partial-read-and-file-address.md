@@ -45,8 +45,7 @@ ouverte : les noms de l'API sont une proposition à revoir dans la PR.
 
 Le dépôt de contenu lit une plage `[début, longueur]` d'un contenu : il ne
 charge que les blocs qui la couvrent, par lots, et vérifie chaque bloc par son
-hachage (ADR 0272 §4). Un contenu qui a encore des blocs de l'ancienne forme
-est lu en entier, comme aujourd'hui, jusqu'à sa conversion.
+hachage (ADR 0272 §4).
 
 ### 2. Un flux de lecture qui charge à la demande
 

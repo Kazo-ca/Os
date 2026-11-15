@@ -121,7 +121,7 @@ dans le même changement (voir [`AGENTS.md`](../../../AGENTS.md)).
 | [`wasm-v3-migration-analyse.md`](dev/plans/wasm-v3-migration-analyse.md) | Analyse de la migration wasm v3 (point de départ du plan de fin de migration). Historique. |
 | [`authentication-task-list.md`](dev/plans/authentication-task-list.md) | Ancienne liste de tâches de l'authentification WebAssembly. Historique. |
 | [`browser-storage-optimization-analysis.md`](dev/plans/browser-storage-optimization-analysis.md) | Analyse du stockage dans le navigateur (2026-11-14, aucun code) : ce que l'OS garde dans IndexedDB et Cache Storage, mesures, constats (contenus orphelins jamais ramassés, base64, trois copies des apps installées, `persist()` jamais appelé), douze pistes ordonnées et trois décisions de Benoit. |
-| [`browser-storage-series-plan.md`](dev/plans/browser-storage-series-plan.md) | **Plan de la série `storage/base`** (2026-11-15, aucun code commencé) : chantiers 0 à 7 (contenu binaire, conversion de l'ancien contenu, lecture partielle, une seule copie des fichiers d'app, adresse de fichier, écriture en flux), liens avec les issues #537 et #538, ADR 0272 à 0275, deux questions posées à Benoit |
+| [`browser-storage-series-plan.md`](dev/plans/browser-storage-series-plan.md) | **Plan de la série `storage/base`** (2026-11-15, aucun code commencé) : chantiers 0 à 7 (contenu binaire avec conversion de l'ancien contenu au premier démarrage, lecture partielle, une seule copie des fichiers d'app, adresse de fichier, écriture en flux), liens avec les issues #537 et #538, ADR 0272 à 0275, réponses de Benoit du 2026-11-15 |
 
 ### Sous-systèmes et apps de base
 

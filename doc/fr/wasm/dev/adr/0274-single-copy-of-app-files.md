@@ -101,7 +101,8 @@ Pour une requête `GET` sous `_content/` :
    Ce lecteur est aussi celui de l'adresse de fichier
    ([ADR 0275](0275-partial-read-and-file-address.md) §3).
 
-Le worker lit les deux formes de bloc (base64 et binaire, ADR 0272 §3).
+Le worker ne lit que la forme binaire : la base est convertie avant que l'OS
+démarre (ADR 0272 §3).
 
 **Connexion à la base.** Le worker ouvre `kazoos` sans numéro de version, et
 ferme sa connexion sur `versionchange` et après chaque réponse : une connexion
@@ -131,8 +132,7 @@ ADR 0225 §1 et 0237) ; sinon elle recommence au lancement suivant.
 - Le premier lancement d'une app dans la session ne recopie plus rien : une
   app de 60 Mo démarre sans relire ni réécrire ses 60 Mo.
 - Servir depuis IndexedDB est un peu plus lent que depuis Cache Storage
-  (0,19 s contre 0,08 s pour lire 52 Mio en binaire, 0,56 s tant que le
-  contenu est en base64). Le chantier mesure le démarrage d'une app Craft
+  (0,19 s contre 0,08 s pour lire 52 Mio en binaire). Le chantier mesure le démarrage d'une app Craft
   avant et après.
 - Modifier à la main un fichier d'une app installée arrête de le servir à la
   session suivante (son hachage ne correspond plus au manifeste), comme
@@ -157,7 +157,7 @@ ADR 0225 §1 et 0237) ; sinon elle recommence au lancement suivant.
 - [ ] Magasin `servedFiles` (base en version 5), dépôt, tests.
 - [ ] `InstalledAppAssetPublisher` : lignes au lieu de copies, comparaison des
   hachages, ménage des lignes.
-- [ ] Lecteur de blocs du service worker (flux, `Range`, deux formes), partagé
+- [ ] Lecteur de blocs du service worker (flux, `Range`), partagé
   par les deux fichiers de service worker.
 - [ ] La passe de nettoyage compte `servedFiles` comme référence.
 - [ ] Suppression du cache `kazoos-installed-apps` et de `IInstalledAppAssetCache.PutAsync`.

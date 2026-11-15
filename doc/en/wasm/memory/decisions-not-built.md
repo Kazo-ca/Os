@@ -142,11 +142,11 @@ Nothing is coded.
   ADRs 0272 (binary content), 0273 (retention: 1 day, 5 minutes when space
   is low; this is the ADR of #537), 0274 (a single copy of app files) and 0275
   (partial read, file address) proposed. The 30 days are in fact in ADR 0094,
-  not in ADR 0099. Benoit chose the 1-day duration on 2026-11-15 (thread of #537). Two
-  questions asked to Benoit on 2026-11-15 (conversion of the old content,
-  checks at read time); the ADRs apply
-  the recommendation in the meantime. Work item 1 waits for the result of
-  #538.
+  not in ADR 0099. Benoit chose the 1-day duration on 2026-11-15 (thread of #537). Benoit's
+  answers of 2026-11-15: the old content is converted all at once at the
+  first boot, with a waiting screen (not in the background), and a read
+  checks each chunk by its hash. No open question. The conversion is part of
+  work item 1, which waits for the result of #538.
 
 ## Questions asked, answer to confirm
 

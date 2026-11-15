@@ -4,13 +4,14 @@
 
 ## Status
 
-Proposed on 2026-11-15, `storage/base` series
+Accepted on 2026-11-15, `storage/base` series
 ([plan](../plans/browser-storage-series-plan.md)). Benoit kept this lead on
-2026-11-14 (storage analysis, §7). Two questions are still asked to Benoit (at
-the end); the decision applies the recommendation of each until he answers.
-The work item also waits for the result of issue
-[#538](https://github.com/Kazo-ca/Os/issues/538) for its place in the series,
-not for its content.
+2026-11-14 (storage analysis, §7) and answered the two questions on
+2026-11-15: existing content is converted **all at once at the first boot,
+with a waiting screen** (question 1, choice B), and a read checks **each chunk
+by its own hash** (question 2, choice A). The work item waits for the result
+of issue [#538](https://github.com/Kazo-ca/Os/issues/538) for its place in
+the series, not for its content.
 
 - **Supersedes:** point 2 of [ADR 0245](0245-raise-the-maximum-file-size.md)
   ("stored format unchanged", chunks encoded in base64) and, in point 2 of
@@ -22,7 +23,7 @@ not for its content.
 - **Builds on:** [ADR 0015](0015-browser-storage-and-indexeddb-adapter.md)
   (IndexedDB adapter), [ADR 0018](0018-indexeddb-failure-and-recovery-policy.md)
   (failures and recovery) and [ADR 0273](0273-short-orphan-content-retention.md)
-  (cleanup pass, which also carries the conversion).
+  (cleanup pass).
 - **Analysis:** [`browser-storage-optimization-analysis.md`](../plans/browser-storage-optimization-analysis.md),
   findings C4 to C6, lead 2.
 
@@ -80,29 +81,40 @@ The 4 MiB chunks measured in the analysis read a little faster (0.12 s against
 - `/proc/diskstats` keeps counting the bytes and the time of each transaction
   (ADR 0057 §4).
 
-### 3. Existing content: read both forms, convert in the background
+### 3. Existing content: converted all at once at the first boot
 
-- A read accepts a chunk in either form, chunk by chunk: one file can have
-  converted chunks and others not.
-- A write only writes the binary form.
-- The **cleanup pass** (ADR 0273) converts the old chunks in the background,
-  in batches of 16 MiB at most, walking the store by key. It records its
-  position in the `syncMetadata` store and resumes there after a restart. When
-  the walk is over, it records that the database is converted and does not
-  start again. Converting a chunk replaces the record at the same key: no
-  extra space is needed, and the space taken drops by about 25% at the end.
-- The conversion stops while an app writes or reads a large file, and does not
-  run when the tab is hidden.
-- Reading the old form stays in the code as long as the backup carries it
-  (§5).
+- At the first boot of the release that brings this ADR, **before the OS opens
+  a session**, the whole `fsContent` store is converted: each base64 chunk is
+  replaced, at the same key, by its binary form with its `chunkHash`.
+- A **waiting screen** says so and shows the progress (bytes converted out of
+  bytes to convert). The OS only starts once the conversion is over.
+- The conversion runs on the JavaScript side, in batches of 16 MiB at most,
+  one transaction per batch. It records its position in the `syncMetadata`
+  store: if the tab is closed on the way, the next boot resumes there. When it
+  is done, it records that the database is converted and never comes back.
+- Only one tab converts; another tab opened meanwhile shows the same screen
+  and waits.
+- The cleanup pass (ADR 0273) runs first when it exists, so that orphaned
+  content about to go is not converted.
+- Replacing a chunk at the same key needs no extra space overall, and the
+  space taken drops by about 25% at the end.
+- A chunk that does not decode is left as it is and logged in
+  `/var/log/syslog`; its file is then reported as damaged at read time
+  (ADR 0018), as it would have been before.
+- **After the conversion, the code only reads the binary form.** The content
+  repository, the service worker (ADR 0274) and partial reads (ADR 0275)
+  therefore have one form to know. The old form is only read by the conversion
+  and by the restore of a backup (§5).
+- Expected duration: in the order of 20 seconds per GiB in Chromium, from the
+  measurements of the analysis (base64 read, hashing, binary write); this is
+  an estimate, which the work item measures in the three browsers. A new or
+  small profile passes the screen in under a second.
 
 ### 4. Checks at read time
 
 - A read checks each chunk by its `chunkHash`, the numbers that follow each
   other and the total length. The SHA-256 of the whole file **is no longer
   recomputed at every read**: this is what allows partial reads (ADR 0275).
-- A chunk in the old form has no `chunkHash`: a file that still has some is
-  checked as today, by the SHA-256 of the whole file.
 - The whole-file check stays available on demand (cleanup pass, backup,
   restore, sync).
 
@@ -117,8 +129,9 @@ The 4 MiB chunks measured in the analysis read a little faster (0.12 s against
 - **Diagnostic snapshot** (`StorageSnapshotRedactor`): masks `data` and
   `dataBase64`.
 - **Rename migration** (`RenamedOsDatabaseRewriter`): it only reads databases
-  from before 3.0.0, which only have the old form. It does not change.
-  `RenamedContentRepair` reads content through the repository.
+  from before 3.0.0, which only have the old form, and it runs before the
+  conversion. It does not change. `RenamedContentRepair` reads content
+  through the repository, after the conversion.
 
 ### 6. Database version: 5
 
@@ -140,8 +153,11 @@ onto the new version (ADR 0223, 0239) rather than a file error.
   the OS no longer opens it. Putting an older release back online leaves the
   profiles already moved without access to their files until the new release
   is back.
-- During the conversion, the database holds both forms; any code that reads
-  `fsContent` must go through the repository or accept both.
+- The first boot after the update waits for the end of the conversion: a few
+  seconds for most profiles, several minutes for a profile of several tens of
+  GiB. The waiting screen says so.
+- A single form to read afterwards: no double read to keep or to remove
+  later.
 - The time gained does not fix issue
   [#520](https://github.com/Kazo-ca/Os/issues/520) by itself: the storage
   layer accounts for only about 3.4 s of 43 s there (issue #538).
@@ -150,9 +166,10 @@ onto the new version (ADR 0223, 0239) rather than a file error.
 
 ## Rejected options
 
-- **Convert all at once at boot, with a waiting screen**: simple to reason
-  about, but a profile of several GiB blocks the OS for several minutes at the
-  first boot after the update.
+- **Convert in the background, in small batches, reading both forms**
+  (recommended at first): the OS starts without waiting, but any code that
+  reads `fsContent` must know both forms during the conversion. Rejected by
+  Benoit in favour of the one-time conversion.
 - **Never convert** (read both forms forever): the old content keeps its 34%
   overhead and the double read can never be removed.
 - **OPFS for content**: the fastest, but a second store to keep consistent
@@ -160,23 +177,22 @@ onto the new version (ADR 0223, 0239) rather than a file error.
   lead 9).
 - **Keep the managed SHA-256**: 1.2 to 1.3 s for 52 MiB against 0.09 s.
 
-## Questions asked to Benoit
+## Benoit's decisions (2026-11-15)
 
-1. **How to convert the content already stored?** A. in the background, in
-   small batches, reading both forms in the meantime (recommended, §3);
-   B. all at once at the first boot, with a waiting screen; C. never.
-2. **What to check at every read?** A. each chunk by its own hash
-   (recommended, §4); B. the whole file as today (no partial read, 1.2 s more
-   for 52 MiB); C. nothing at read time, only during the cleanup pass.
+| Question | Choices | Decision |
+| --- | --- | --- |
+| 1. How to convert the content already stored? | A. in the background, in small batches (recommended); B. all at once at the first boot, with a waiting screen; C. never | **B** |
+| 2. What to check at every read? | A. each chunk by its own hash (recommended); B. the whole file as today; C. nothing at read time | **A** |
 
 ## Tasks
 
 - [ ] JavaScript module of the content repository, `[JSImport]`, `MemoryView`.
 - [ ] Binary write with `chunkHash`, SHA-256 by WebCrypto.
-- [ ] Reading both forms, per-chunk check.
+- [ ] Reading the binary form, per-chunk check.
 - [ ] Database at version 5, empty migration step, test of an older page.
 - [ ] Backup and restore (format 1 kept), diagnostic snapshot.
-- [ ] Background conversion in the cleanup pass, resumed after a restart.
+- [ ] One-time conversion at the first boot: waiting screen with progress,
+  resumed after a close, one tab at a time, test on a version 4 database.
 - [ ] Measurements before and after in Chromium, Firefox and Safari.
 - [ ] Docs (FR and EN): `browser-infrastructure.md`, backup, memory,
   `features.md`, change entry.

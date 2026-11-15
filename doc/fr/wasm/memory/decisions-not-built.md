@@ -148,10 +148,11 @@ Rien n'est codé.
   l'espace est faible ; c'est l'ADR de #537), 0274 (une seule copie des
   fichiers d'app) et 0275 (lecture partielle, adresse de fichier) proposées.
   Les 30 jours sont en fait dans l'ADR 0094, pas dans l'ADR 0099. Benoit a
-  choisi la durée de 1 jour le 2026-11-15 (fil de #537). Deux questions
-  posées à Benoit le 2026-11-15 (conversion de l'ancien contenu,
-  vérification à la lecture) ; les ADR appliquent la
-  recommandation en attendant. Le chantier 1 attend le résultat de #538.
+  choisi la durée de 1 jour le 2026-11-15 (fil de #537). Réponses de
+  Benoit du 2026-11-15 : l'ancien contenu est converti en une fois au premier
+  démarrage, avec un écran d'attente (pas en arrière-plan), et une lecture
+  vérifie chaque bloc par son hachage. Aucune question ouverte. La conversion
+  fait partie du chantier 1, qui attend le résultat de #538.
 
 ## Questions posées, réponse à confirmer
 

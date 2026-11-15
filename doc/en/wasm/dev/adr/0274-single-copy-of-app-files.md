@@ -100,7 +100,8 @@ For a `GET` request under `_content/`:
    reader is also the one of the file address
    ([ADR 0275](0275-partial-read-and-file-address.md) §3).
 
-The worker reads both chunk forms (base64 and binary, ADR 0272 §3).
+The worker only reads the binary form: the database is converted before the
+OS starts (ADR 0272 §3).
 
 **Database connection.** The worker opens `kazoos` with no version number, and
 closes its connection on `versionchange` and after each answer: a connection
@@ -129,8 +130,7 @@ and 0237); otherwise it tries again at the next launch.
 - The first launch of an app in the session no longer copies anything: a
   60 MB app starts without reading and writing its 60 MB again.
 - Serving from IndexedDB is a little slower than from Cache Storage (0.19 s
-  against 0.08 s to read 52 MiB in binary, 0.56 s as long as content is in
-  base64). The work item measures the start of a Craft app before and after.
+  against 0.08 s to read 52 MiB in binary). The work item measures the start of a Craft app before and after.
 - Editing a file of an installed app by hand stops it being served at the next
   session (its hash no longer matches the manifest), as today.
 - The service worker gains code that reads IndexedDB; it is shared by the two
@@ -152,7 +152,7 @@ and 0237); otherwise it tries again at the next launch.
 - [ ] `servedFiles` store (database at version 5), repository, tests.
 - [ ] `InstalledAppAssetPublisher`: rows instead of copies, hash comparison,
   housekeeping of the rows.
-- [ ] Chunk reader of the service worker (stream, `Range`, both forms), shared
+- [ ] Chunk reader of the service worker (stream, `Range`), shared
   by the two service-worker files.
 - [ ] The cleanup pass counts `servedFiles` as a reference.
 - [ ] Removal of the `kazoos-installed-apps` cache and of

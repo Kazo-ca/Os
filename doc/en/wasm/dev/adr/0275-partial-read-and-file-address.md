@@ -45,8 +45,7 @@ of the API are a proposal to review in the PR.
 
 The content repository reads a `[start, length]` range of content: it loads
 only the chunks that cover it, in batches, and checks each chunk by its hash
-(ADR 0272 §4). Content that still has chunks in the old form is read whole, as
-today, until it is converted.
+(ADR 0272 §4).
 
 ### 2. A read stream that loads on demand
 
