@@ -170,6 +170,10 @@ This section lists what is released in the `main` branch and online.
   `.docx`) in the File Explorer and "Open with", with "View in the Store"; the
   file opens after the install. `open` in the terminal shows the `kazopkg
   install` command. ([ADR 0257](dev/adr/0257-offer-a-store-app-for-an-unsupported-file.md))
+- **Search and categories in "Open with"**: the File Explorer's box filters the
+  installed apps by name, id or description, and by category; each row keeps
+  its name and its id inside its border, on a computer as on a phone.
+  ([`file-explorer.md`](dev/file-explorer.md))
 - **Computer folder mounted as a network drive**: a real folder of the
   computer appears in the OS (Chrome and Edge on desktop).
   ([ADR 0181](dev/adr/0181-host-folder-mounted-as-a-network-drive.md))
@@ -346,6 +350,10 @@ This section lists what is released in the `main` branch and online.
   (Kazo Word, Kazo Spreadsheets…), written once instead of one copy per app.
   ([ADR 0259](dev/adr/0259-shared-craft-app-host-module.md),
   [`craft-apps.md`](framework/craft-apps.md))
+- **Craft app exports in Kazo OS** (version 3.3.4): a Craft app's exports
+  (Export, Print to PDF, OCR… of Kazo Pdf) go through the OS save dialog
+  instead of the browser's downloads, and are saved as copies.
+  ([ADR 0264](dev/adr/0264-craft-app-exports-reach-the-window.md))
 - **`dotnet new` templates** for a windowed application, a command, a
   service, a site, a complete host or a whole application repository, shown
   in Visual Studio and Rider.
@@ -387,13 +395,18 @@ This section lists what is released in the `main` branch and online.
   ([ADR 0189](dev/adr/0189-app-sources-trust-and-per-user-install.md),
   [ADR 0208](dev/adr/0208-hack-store-sources-trust-build.md),
   [ADR 0214](dev/adr/0214-hack-store-hot-add-signing-transactions.md))
-- **Kazo OS Store**: the Kazo OS app store, pinned by default in the Start menu,
+- **Kazo OS Store**: the Kazo OS app store, in the Start menu's Quick access
+  panel ([ADR 0268](dev/adr/0268-store-in-start-menu-quick-access.md)),
   on desktop and mobile. Home by categories, search, app page (screenshots,
   description, size, license, capabilities, trust), install for oneself or for
   everyone, open, update, uninstall, Installed tab and "Restart to finish". It
   checks for updates at sign-in then every 6 hours and says so in a
   notification; `kazopkg install <appId>` reads the same catalogs and asks
-  the user to choose when several list the app.
+  the user to choose when several list the app. Since version 3.3.4: featured
+  app, grid filtered by category, "Install" button on the cards, screenshot
+  viewer, app page with a bar that stays at the top and plain-language
+  capabilities, install progress, and on the phone tabs at the bottom and
+  44 px touch targets ([ADR 0266](dev/adr/0266-store-ux-refresh.md)).
   ([ADR 0188](dev/adr/0188-hack-store-and-app-catalog.md),
   [ADR 0212](dev/adr/0212-hack-store-app-build.md),
   [ADR 0215](dev/adr/0215-hack-store-answers-notification-and-ambiguous-app-id.md))
@@ -401,7 +414,7 @@ This section lists what is released in the `main` branch and online.
   `https://os.kazo.ca/?autolaunch=<appId>` starts Kazo OS as guest when there
   is no account, installs the app from the signed official catalog and
   launches it; with an account, it opens the Store at the app's page. The link
-  survives the restart for an update (in progress: [ADR 0265](dev/adr/0265-direct-link-survives-update-restart.md)).
+  survives the restart for an update (version 3.3.4, [ADR 0265](dev/adr/0265-direct-link-survives-update-restart.md)).
   ([ADR 0258](dev/adr/0258-direct-app-launch-link.md), [`app-launch-link.md`](dev/app-launch-link.md))
 - **Installs without a restart, and safe**: an application installed or
   updated opens at once if it was not already loaded. The packages of a source
@@ -441,7 +454,6 @@ points to its PR.
 | Switch user | Open another session without closing the first one. Stays greyed out in the Power menu by Benoit's choice: one session at a time, Sign out to change account. | [0195](dev/adr/0195-start-menu-power-button.md), [0201](dev/adr/0201-switch-user-stays-greyed.md) | [#290](https://github.com/Kazo-ca/Os/issues/290) |
 | File address served on demand | An app gets an address to read a large file (audio, video) without copying it in memory, with partial reads to seek in a track. | To write | [#379](https://github.com/Kazo-ca/Os/issues/379) |
 | Drag files onto an app | Public SDK contract to receive files dragged from the File Explorer or the desktop. | To write | [#380](https://github.com/Kazo-ca/Os/issues/380) |
-| Craft app exports in Kazo OS | A Craft app's exports (Export, Print to PDF, OCR… of Kazo Pdf) go through the OS save dialog instead of the browser's downloads, and are saved as copies. | [0264](dev/adr/0264-craft-app-exports-reach-the-window.md) | — |
 | Cloud storage as a network drive | The user connects their Dropbox, their OneDrive or an S3-compatible storage and finds it under `/mnt`, like a network drive. Everything happens in the browser, with no server; they choose between their whole storage and a folder reserved for Kazo OS. | [0267](dev/adr/0267-cloud-drives-as-network-drives.md), [0270](dev/adr/0270-cloud-drives-in-the-app-sdk.md) | — |
 
 ### Kazo OS Store
@@ -449,7 +461,6 @@ points to its PR.
 | Feature | Description | ADR | Issue |
 | --- | --- | --- | --- |
 | Application catalog | Catalog format, checking and publishing of the offered applications. | [0188](dev/adr/0188-hack-store-and-app-catalog.md) | [AppMarketPlace #1](https://github.com/Kazo-ca/Os-AppMarketPlace/issues/1) |
-| New Store home and app page | Featured app, grid filtered by category, install from the cards, screenshot viewer, plain-language capabilities, install progress, reworked phone interface. Already in `store-ux/base`: quick fixes, screenshot viewer, new app page (bar that stays at the top, plain-language capabilities, file types opened, « Try it » link to copy, messages that close by themselves), install progress, new home page (featured app, grid filtered by category, card « Install » button with « for everyone » for an administrator, Themes tab hidden without a pack), phone (tabs at the bottom, 44 px touch targets, portrait screenshots first). | [0266](dev/adr/0266-store-ux-refresh.md) | Series `store-ux/base` |
 
 ### Personalization
 
@@ -478,11 +489,11 @@ with `kazopkg` and then from the Kazo OS Store.
 | EmulatorJS | Retro console emulator. | [Os-App-EmulatorJS](https://github.com/Kazo-ca/Os-App-EmulatorJS) | Coming |
 | BoxedWine | Run old Windows programs in the OS. | [Os-App-BoxedWine](https://github.com/Kazo-ca/Os-App-BoxedWine) | Coming |
 | Kazo Spreadsheets | Spreadsheet for `.xlsx` and `.ods` workbooks (and `.csv`), based on GridCraft by the ArtCraft team (MIT or Apache-2.0), compiled from source, shown in a Kazo OS window by the shared Craft app module and associated with workbook files (double-click, "Open with"), following the [Craft app port guide](dev/craft-app-port-guide.md). Version 0.1.0, alpha like GridCraft; WebGPU or WebGL 2 needed. Kazo OS 3.3.3 or later ([ADR 0259](dev/adr/0259-shared-craft-app-host-module.md), [ADR 0263](dev/adr/0263-windows-that-stay-on-their-screen.md)). **Available in the Kazo OS Store** (version 0.1.0; `kazopkg install Kazo-ca/Os-App-Spreadsheets`). | [Os-App-Spreadsheets](https://github.com/Kazo-ca/Os-App-Spreadsheets) | [Plan](https://github.com/Kazo-ca/Os-App-Spreadsheets/blob/main/doc/en/plan.md) |
-| Kazo Pdf | Pdf reader and editor, port of [PdfCraft](https://github.com/storytold/pdfcraft) (ArtCraft team) following the [Craft app port guide](dev/craft-app-port-guide.md). Planned. | [Os-App-PDF](https://github.com/Kazo-ca/Os-App-PDF) | [#1](https://github.com/Kazo-ca/Os-App-PDF/issues/1) |
+| Kazo Pdf | PDF reader and editor (annotate, fill in and create forms, sign, organize pages, text recognition), based on PdfCraft by the ArtCraft team (MIT or Apache-2.0), compiled from source with its OCR models (CC-BY-SA-4.0), shown in a Kazo OS window by the shared Craft app module and associated with `.pdf` files (double-click), following the [Craft app port guide](dev/craft-app-port-guide.md). Its exports go through the OS "Save a copy" dialog. Version 0.1.0, alpha like PdfCraft; WebGL 2 needed. Kazo OS 3.3.4 or later ([ADR 0259](dev/adr/0259-shared-craft-app-host-module.md), [ADR 0263](dev/adr/0263-windows-that-stay-on-their-screen.md), [ADR 0264](dev/adr/0264-craft-app-exports-reach-the-window.md)). **Available in the Kazo OS Store** (version 0.1.0; `kazopkg install Kazo-ca/Os-App-PDF`). | [Os-App-PDF](https://github.com/Kazo-ca/Os-App-PDF) | [Plan](https://github.com/Kazo-ca/Os-App-PDF/blob/main/doc/en/plan.md) |
 | Kazo Fig | Interface design and prototyping for `.figcraft` files (and `.fig`, `.sketch`, `.penpot`, `.jam`), based on FigCraft by the ArtCraft team (MIT or Apache-2.0), compiled from source, shown in a Kazo OS window by the shared Craft app module and associated with design files (double-click, "Open with"), each tab bound to its own file, following the [Craft app port guide](dev/craft-app-port-guide.md). Version 0.1.0, alpha like FigCraft; WebGPU or WebGL 2 needed. Kazo OS 3.3.3 or later ([ADR 0259](dev/adr/0259-shared-craft-app-host-module.md), [ADR 0263](dev/adr/0263-windows-that-stay-on-their-screen.md)). **Available in the Kazo OS Store** (version 0.1.0; `kazopkg install Kazo-ca/Os-App-Fig`). | [Os-App-Fig](https://github.com/Kazo-ca/Os-App-Fig) | [Plan](https://github.com/Kazo-ca/Os-App-Fig/blob/main/doc/en/plan.md) |
-| Kazo Deck | Presentations, port of [DeckCraft](https://github.com/storytold/deckcraft) (ArtCraft team) following the [Craft app port guide](dev/craft-app-port-guide.md). Planned. | [Os-App-Deck](https://github.com/Kazo-ca/Os-App-Deck) | [#1](https://github.com/Kazo-ca/Os-App-Deck/issues/1) |
-| Kazo Vector | Vector drawing, port of [VectorCraft](https://github.com/storytold/vectorcraft) (ArtCraft team) following the [Craft app port guide](dev/craft-app-port-guide.md). Planned. | [Os-App-Vector](https://github.com/Kazo-ca/Os-App-Vector) | [#1](https://github.com/Kazo-ca/Os-App-Vector/issues/1) |
-| Kazo Photo | Photo editing, port of [PhotoCraft](https://github.com/storytold/photocraft) (ArtCraft team) following the [Craft app port guide](dev/craft-app-port-guide.md). Planned. | [Os-App-Photo](https://github.com/Kazo-ca/Os-App-Photo) | [#1](https://github.com/Kazo-ca/Os-App-Photo/issues/1) |
+| Kazo Deck | Presentation editor (masters and layouts, themes, shapes, tables, charts, pictures, transitions, animations, slide show), based on DeckCraft by the ArtCraft team (MIT or Apache-2.0), compiled unchanged from our fork, shown in a Kazo OS window by the shared Craft app module and associated with `.pptx`, `.ppsx`, `.potx` and `.deckcraft` files (double-click, "Open with" for `.txt`, `.md`, `.rtf`), one presentation per window bound to its file, following the [Craft app port guide](dev/craft-app-port-guide.md). Slide show in the browser's full screen (F5, Shift+F5, "Present"), presenter view off for now; exports through the OS "Save a copy" dialog. Version 0.1.0, alpha like DeckCraft, English interface; needs WebGPU or WebGL 2. Kazo OS 3.3.4 or later ([ADR 0259](dev/adr/0259-shared-craft-app-host-module.md), [ADR 0263](dev/adr/0263-windows-that-stay-on-their-screen.md), [ADR 0264](dev/adr/0264-craft-app-exports-reach-the-window.md)). **Available in the Kazo OS Store** (version 0.1.0; `kazopkg install Kazo-ca/Os-App-Deck`). | [Os-App-Deck](https://github.com/Kazo-ca/Os-App-Deck) | [Plan](https://github.com/Kazo-ca/Os-App-Deck/blob/main/doc/en/plan.md) |
+| Kazo Vector | Vector drawing (pen and Bézier curves, shapes, exact path operations, gradients, live effects, type, artboards, layers, symbols), based on VectorCraft by the ArtCraft team (MIT or Apache-2.0), compiled from our fork with its host mode, shown in a Kazo OS window by the shared Craft app module and associated with `.svg`, `.svgz`, `.ai`, `.eps`, `.dxf`, `.emf`, `.wmf` and `.vectorcraft` files (double-click; "Open with" for `.pdf` and `.afdesign`), each tab bound to its own file, following the [Craft app port guide](dev/craft-app-port-guide.md). Its exports go through the OS "Save a copy" dialog; no recovery after a crash for now. Version 0.1.0, alpha like VectorCraft; WebGPU or WebGL 2 needed. Kazo OS 3.3.4 or later ([ADR 0259](dev/adr/0259-shared-craft-app-host-module.md), [ADR 0263](dev/adr/0263-windows-that-stay-on-their-screen.md), [ADR 0264](dev/adr/0264-craft-app-exports-reach-the-window.md)). **Available in the Kazo OS Store** (version 0.1.0; `kazopkg install Kazo-ca/Os-App-Vector`). | [Os-App-Vector](https://github.com/Kazo-ca/Os-App-Vector) | [Plan](https://github.com/Kazo-ca/Os-App-Vector/blob/main/doc/en/plan.md) |
+| Kazo Photo | Layered image editor (adjustment layers, masks, styles, selections, filters, type, shapes), based on PhotoCraft by the ArtCraft team (MIT or Apache-2.0), compiled from our fork with its host mode, shown in a Kazo OS window by the shared Craft app module and associated with `.psd`, `.psb`, RAW, Krita, GIMP, OpenRaster… files (double-click; "Open with" for PNG, JPEG, WebP…), each tab bound to its own file, following the [Craft app port guide](dev/craft-app-port-guide.md). Its exports go through the OS "Save a copy" dialog; about fifteen OFL font families ship with the app. Version 0.1.0, alpha like PhotoCraft; WebGPU or WebGL 2 needed. Kazo OS 3.3.4 or later ([ADR 0259](dev/adr/0259-shared-craft-app-host-module.md), [ADR 0263](dev/adr/0263-windows-that-stay-on-their-screen.md), [ADR 0264](dev/adr/0264-craft-app-exports-reach-the-window.md)). **Available in the Kazo OS Store** (version 0.1.0; `kazopkg install Kazo-ca/Os-App-Photo`). | [Os-App-Photo](https://github.com/Kazo-ca/Os-App-Photo) | [Plan](https://github.com/Kazo-ca/Os-App-Photo/blob/main/doc/en/plan.md) |
 | Kazo Design | Page layout, port of [DesignCraft](https://github.com/storytold/designcraft) (ArtCraft team) following the [Craft app port guide](dev/craft-app-port-guide.md). Planned. | [Os-App-Design](https://github.com/Kazo-ca/Os-App-Design) | [#1](https://github.com/Kazo-ca/Os-App-Design/issues/1) |
 
 ## Keeping this document current

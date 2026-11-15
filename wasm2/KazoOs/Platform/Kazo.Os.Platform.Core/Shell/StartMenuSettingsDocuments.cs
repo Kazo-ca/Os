@@ -30,10 +30,18 @@ public static class StartMenuSettingsDocuments
     public const string DefaultPinsAppliedProperty = "defaultPinsApplied";
 
     /// <summary>
-    /// Gets the apps pinned by default (ADR 0188 §1): to every new profile, and added once to the
-    /// existing profiles. The user may unpin them.
+    /// Gets the apps pinned by default (ADR 0212 §6): to every new profile, and added once to the
+    /// existing profiles. The user may unpin them. Empty since ADR 0268: the Store moved to the
+    /// Start menu's Quick access panel.
     /// </summary>
-    public static IReadOnlyList<string> DefaultPinnedAppIds { get; } = ["org.kazoos.store"];
+    public static IReadOnlyList<string> DefaultPinnedAppIds { get; } = [];
+
+    /// <summary>
+    /// Gets the apps that used to be pinned by default and no longer are (ADR 0268). A profile whose
+    /// <c>defaultPinsApplied</c> still lists one loses that pin once and forgets it, so a pin the
+    /// user adds back afterwards stays.
+    /// </summary>
+    public static IReadOnlyList<string> RetiredDefaultPinnedAppIds { get; } = ["org.kazoos.store"];
 
     /// <summary>Gets the clean-profile document containing no pins.</summary>
     public const string EmptyDocumentContent = "{\"schemaVersion\":1,\"profiles\":{}}";
