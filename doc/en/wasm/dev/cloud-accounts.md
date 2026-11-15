@@ -140,13 +140,15 @@ await accounts.RemoveAsync(account.Id);                           // unmounts, r
 
 ## App ids
 
-They are public. The host reads them from `wwwroot/appsettings.json`; they ship
-empty, so no provider is offered:
+They are public. The host reads them from `wwwroot/appsettings.json`. They are
+the ids of the Kazo OS registrations (Dropbox apps "Kazo OS Drive" and "Kazo OS
+Folder", Entra registration "Kazo OS"), valid for the redirect URIs below; an
+empty id removes the provider or the scope:
 
 ```json
 "CloudDrives": {
-  "Dropbox": { "FullAccessClientId": "", "AppFolderClientId": "" },
-  "OneDrive": { "ClientId": "", "Tenant": "common" }
+  "Dropbox": { "FullAccessClientId": "im7y4ma8wtsospi", "AppFolderClientId": "mcp8j0gt4h4v6s3" },
+  "OneDrive": { "ClientId": "7f89ba67-5655-4721-991a-53c64998f45e", "Tenant": "common" }
 }
 ```
 
