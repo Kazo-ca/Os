@@ -131,8 +131,9 @@ Analyse : [`../dev/plans/browser-storage-optimization-analysis.md`](../dev/plans
 Rien n'est codé.
 
 - Deux issues `TODO` d'abord : #537 (récupérer l'espace des contenus orphelins,
-  que rien ne ramasse aujourd'hui) et #538 (profiler #520 dans l'OS réel : le
-  stockage n'explique qu'environ 3,4 s des 43 s).
+  que rien ne ramasse aujourd'hui) et #538 (profiler #520 dans l'OS réel ; rendu le
+  2026-11-15 : en Release, 96 % du temps est dans le dépôt de contenu, les 43 s
+  venaient d'un hôte Debug).
 - Ensuite une série `storage/base`, ADR avant le code : contenu binaire au lieu
   de base64, ADR 0250 à bâtir, une seule copie des fichiers d'app, lecture
   partielle et adresse de fichier (#379).
@@ -141,7 +142,7 @@ Rien n'est codé.
   dans Cache Storage disparaît.
 - Rétention des contenus orphelins : courte (de quelques heures à un jour), et
   suppression tout de suite quand l'espace est faible ; une ADR remplace les
-  30 jours de l'ADR 0099.
+  30 jours de l'ADR 0094.
 
 ## Questions posées, réponse à confirmer
 

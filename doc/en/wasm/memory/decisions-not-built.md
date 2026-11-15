@@ -127,8 +127,9 @@ Analysis: [`../dev/plans/browser-storage-optimization-analysis.md`](../dev/plans
 Nothing is coded.
 
 - Two `TODO` issues first: #537 (reclaim the space of orphan contents, which
-  nothing collects today) and #538 (profile #520 in the real OS: storage
-  explains only about 3.4 s of the 43 s).
+  nothing collects today) and #538 (profile #520 in the real OS; delivered on
+  2026-11-15: in Release, 96 % of the time is in the content repository, the
+  43 s came from a Debug host).
 - Then a `storage/base` series, ADRs before the code: binary content instead of
   base64, ADR 0250 to build, a single copy of app files, partial read and file
   address (#379).
@@ -136,7 +137,7 @@ Nothing is coded.
   service worker serves `_content/…` from the file store and the copy in Cache
   Storage goes away.
 - Retention of orphan contents: short (from a few hours to a day), and deletion
-  at once when space is low; an ADR replaces the 30 days of ADR 0099.
+  at once when space is low; an ADR replaces the 30 days of ADR 0094.
 
 ## Questions asked, answer to confirm
 
