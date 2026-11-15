@@ -50,7 +50,7 @@ Le manifeste (`FileExplorerApp.Components`) inscrit deux composants :
 | Contrat | Composant | Rôle |
 |---|---|---|
 | `kazoos.file-view` | `ExplorerFileView` | `FileView` (implémentation interne, ADR 0155 §1) liée au menu de l'OS, avec la corbeille, le presse-papiers, les transferts et leurs conflits, l'ouverture et « Ouvrir avec ». Contrôleur `IKazoFileView`. |
-| `kazoos.file-dialogs` | `ExplorerFileDialogs` | « Ouvrir avec » (« Toujours utiliser »), « Propriétés », conflit de noms, en markup natif. |
+| `kazoos.file-dialogs` | `ExplorerFileDialogs` | « Ouvrir avec » (« Toujours utiliser », recherche et filtre par catégorie), « Propriétés », conflit de noms, en markup natif. |
 
 ```text
 App hôte ──► KazoFileView (SDK) ──► registre ──► ExplorerFileView (explorateur)
@@ -498,3 +498,24 @@ recherche dans les catalogues est décrite dans
 - [x] Tests : `AppIntentGatewayTests.SuggestCatalogAppsAsync_*`,
   `WireCodecIntentTests`, `KazoAppsIntentTests`, `StoreLaunchArgumentsTests`,
   `OpenWithStoreTests` (UI.E2E, catalogue de test qui déclare `.docx`).
+
+## Tâches du chantier `open-with/search-filter`
+
+La boîte « Ouvrir avec » de l'explorateur (`ExplorerFileDialogs`) :
+
+- [x] Chaque ligne d'app garde son nom et son identifiant dans sa bordure : le
+  bouton, élément d'une liste flex qui défile, rétrécissait jusqu'à sa hauteur
+  minimale (2,25 rem) et l'identifiant débordait dessous. `flex-shrink: 0` et
+  des textes coupés par « … » (le texte entier en bulle). Même correction dans
+  le sélecteur d'app de l'OS (`AppChooserDialog`).
+- [x] Une boîte de recherche filtre par nom, identifiant ou description
+  (chaque mot doit se trouver, sans tenir compte de la casse).
+- [x] Un sélecteur de catégorie, affiché quand les apps listées ont au moins
+  deux catégories, utilise la catégorie du manifeste (`presentation.category`)
+  ; les catégories courantes sont traduites, les autres affichées avec une
+  majuscule, comme le menu Démarrer.
+- [x] Si le filtre cache l'app choisie, la première app encore listée est
+  choisie ; aucune app trouvée : un message, et « Ouvrir » est désactivé.
+- [x] Les flèches et Entrée suivent la liste filtrée.
+- [x] Tests : `OpenWithAppFilterTests` (unitaires) et `OpenWithFilterTests`
+  (E2E, ordinateur et téléphone, axe).
