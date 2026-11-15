@@ -71,14 +71,27 @@ public sealed class CloudDrivesUiTests(ITestOutputHelper output)
         await ScanAsync(page, dialog, "desktop-connect-dialog", shots, findings);
 
         // Dropbox, configured by the test's app keys: the scope is the user's choice (ADR 0267 §8).
-        // Nothing signs in: the test stops before "Sign in and mount".
+        // Nothing signs in: the provider page is routed to an error page below.
         await dialog.GetByRole(AriaRole.Button, new() { Name = "Dropbox" }).First.ClickAsync();
         ILocator scopes = dialog.GetByRole(AriaRole.Group, new() { Name = "What Kazo OS can reach" });
         await Assertions.Expect(page.GetByRole(AriaRole.Dialog, new() { Name = "Connect Dropbox" })).ToBeVisibleAsync(new() { Timeout = 15000 });
         await Assertions.Expect(scopes.GetByRole(AriaRole.Radio)).ToHaveCountAsync(2);
+        // The reserved folder: where Dropbox puts it in the storage shows before the starting folder.
+        await scopes.GetByRole(AriaRole.Radio, new() { Name = "A folder reserved for Kazo OS" }).CheckAsync();
+        await Assertions.Expect(dialog.GetByText("/Apps/Kazo OS Folder/", new() { Exact = true })).ToBeVisibleAsync(new() { Timeout = 15000 });
         await Assertions.Expect(dialog.GetByRole(AriaRole.Button, new() { Name = "Sign in and mount" })).ToBeVisibleAsync();
         await ScanAsync(page, dialog, "desktop-dropbox-step", shots, findings);
+
+        // A provider that shows its own error page never comes back to Kazo OS, and the OS cannot see
+        // its window close (COOP, ADR 0131): Back must still work and stop the wait, with no error.
+        Task<IPage> signInWindow = page.Context.WaitForPageAsync();
+        await dialog.GetByRole(AriaRole.Button, new() { Name = "Sign in and mount" }).ClickAsync();
+        IPage providerPage = await signInWindow;
+        await Assertions.Expect(dialog.GetByText("The Dropbox sign-in window is open.", new() { Exact = false })).ToBeVisibleAsync(new() { Timeout = 15000 });
+        await providerPage.CloseAsync();
         await dialog.GetByRole(AriaRole.Button, new() { Name = "Back" }).Last.ClickAsync();
+        await Assertions.Expect(page.GetByRole(AriaRole.Dialog, new() { Name = "Connect a network drive" })).ToBeVisibleAsync(new() { Timeout = 15000 });
+        await Assertions.Expect(dialog.GetByRole(AriaRole.Alert)).ToHaveCountAsync(0);
 
         // S3: a refusal of the (routed, fake) service is shown in the dialog, which stays open.
         await dialog.GetByRole(AriaRole.Button, new() { Name = "S3 compatible storage" }).ClickAsync();
@@ -131,10 +144,16 @@ public sealed class CloudDrivesUiTests(ITestOutputHelper output)
 
     /// <summary>
     /// Gives the OS Dropbox and OneDrive app keys (no request ever reaches them: the test stops before
-    /// signing in) and answers the S3 address with an access refusal, as a bucket with wrong keys does.
+    /// signing in: the sign-in window gets an error page) and answers the S3 address with an access refusal, as a bucket with wrong keys does.
     /// </summary>
     private static async Task RouteFakeServicesAsync(IBrowserContext context)
     {
+        // The sign-in window shows the provider's own error page, as when a redirect URI is not registered.
+        await context.RouteAsync("https://www.dropbox.com/**", route => route.FulfillAsync(new()
+        {
+            ContentType = "text/html",
+            Body = "<!doctype html><title>Error</title><p>invalid_request: redirect_uri</p>"
+        }));
         await context.RouteAsync("**/appsettings.json", async route =>
         {
             IAPIResponse original = await route.FetchAsync();

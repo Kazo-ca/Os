@@ -139,3 +139,20 @@
 .network-chip-eject:focus-visible {
     color: var(--kos-danger, #f85149);
 }
+
+/* A cloud drive shows its account on the first line and its service (and start folder) below. */
+.network-drive-text {
+    display: inline-flex;
+    flex-direction: column;
+    line-height: 1.15;
+}
+
+.network-drive-detail {
+    font-size: 0.7rem;
+    color: var(--kos-text-muted, #6e7681);
+}
+
+.sidebar-entry.active .network-drive-detail {
+    color: inherit;
+    opacity: 0.8;
+}

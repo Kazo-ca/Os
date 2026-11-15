@@ -12,11 +12,15 @@ namespace Kazo.Os.Platform.Core.CloudAccounts;
 /// <param name="DropboxAppFolderClientId">App key of the "App folder" app.</param>
 /// <param name="OneDriveClientId">Application (client) id of the Microsoft Entra registration.</param>
 /// <param name="OneDriveTenant">Microsoft tenant; empty means <c>common</c>.</param>
+/// <param name="DropboxAppFolderPath">Where Dropbox puts the "App folder" app's folder, as the user sees it (<c>Apps/Kazo OS Folder</c>); shown before the start folder.</param>
+/// <param name="OneDriveAppFolderPath">Where OneDrive puts the folder reserved for the app, as the user sees it (<c>Apps/Kazo OS</c>).</param>
 public sealed record CloudProviderSettings(
     string? DropboxFullAccessClientId = null,
     string? DropboxAppFolderClientId = null,
     string? OneDriveClientId = null,
-    string? OneDriveTenant = null)
+    string? OneDriveTenant = null,
+    string? DropboxAppFolderPath = null,
+    string? OneDriveAppFolderPath = null)
 {
     /// <summary>Section of <c>appsettings.json</c>: <c>KazoOs:CloudDrives</c>.</summary>
     public const string SectionName = "KazoOs:CloudDrives";
@@ -37,7 +41,9 @@ public sealed record CloudProviderSettings(
             Pick(snapshot, CloudDrivesSettingsDocuments.DropboxFullAccessQualifiedKey, DropboxFullAccessClientId),
             Pick(snapshot, CloudDrivesSettingsDocuments.DropboxAppFolderQualifiedKey, DropboxAppFolderClientId),
             Pick(snapshot, CloudDrivesSettingsDocuments.OneDriveClientQualifiedKey, OneDriveClientId),
-            Pick(snapshot, CloudDrivesSettingsDocuments.OneDriveTenantQualifiedKey, OneDriveTenant));
+            Pick(snapshot, CloudDrivesSettingsDocuments.OneDriveTenantQualifiedKey, OneDriveTenant),
+            Pick(snapshot, CloudDrivesSettingsDocuments.DropboxAppFolderPathQualifiedKey, DropboxAppFolderPath),
+            Pick(snapshot, CloudDrivesSettingsDocuments.OneDriveAppFolderPathQualifiedKey, OneDriveAppFolderPath));
     }
 
     /// <summary>Builds the providers these settings configure, Dropbox first; a provider without any app id is left out.</summary>
@@ -45,10 +51,18 @@ public sealed record CloudProviderSettings(
     [
         .. new[]
         {
-            CloudOAuthProvider.Dropbox(DropboxFullAccessClientId, DropboxAppFolderClientId),
-            CloudOAuthProvider.OneDrive(OneDriveClientId, OneDriveTenant)
+            CloudOAuthProvider.Dropbox(DropboxFullAccessClientId, DropboxAppFolderClientId) is { } dropbox
+                ? dropbox with { AppFolderPath = Clean(DropboxAppFolderPath) }
+                : null,
+            CloudOAuthProvider.OneDrive(OneDriveClientId, OneDriveTenant) is { } oneDrive
+                ? oneDrive with { AppFolderPath = Clean(OneDriveAppFolderPath) }
+                : null
         }.OfType<CloudOAuthProvider>()
     ];
+
+    /// <summary>A folder path as the dialog shows it: trimmed, no slash at either end; empty is none.</summary>
+    private static string? Clean(string? path) =>
+        path?.Trim().Trim('/', '\\').Trim() is { Length: > 0 } cleaned ? cleaned : null;
 
     private static string? Pick(LayeredConfigSnapshot snapshot, string qualifiedKey, string? fallback) =>
         snapshot.Values.TryGetValue(qualifiedKey, out string? value) && !string.IsNullOrWhiteSpace(value)
@@ -95,7 +109,13 @@ public static class CloudDrivesSettingsDocuments
     /// <summary>Gets <c>onedrive.tenant</c>.</summary>
     public static string OneDriveTenantQualifiedKey => $"{OneDriveGroup}.tenant";
 
-    /// <summary>Gets the declared schema: four public strings, empty by default (empty keeps the host's value).</summary>
+    /// <summary>Gets the key of the Dropbox reserved folder as the user sees it (<c>Apps/Kazo OS Folder</c>).</summary>
+    public static string DropboxAppFolderPathQualifiedKey => $"{DropboxGroup}.app-folder-path";
+
+    /// <summary>Gets the key of the OneDrive reserved folder as the user sees it (<c>Apps/Kazo OS</c>).</summary>
+    public static string OneDriveAppFolderPathQualifiedKey => $"{OneDriveGroup}.app-folder-path";
+
+    /// <summary>Gets the declared schema: six public strings, empty by default (empty keeps the host's value).</summary>
     public static SettingsSchema Schema { get; } = new(
         schemaVersion: 1,
         fields:
@@ -103,7 +123,9 @@ public static class CloudDrivesSettingsDocuments
             new SettingFieldDeclaration("full-access-client-id", SettingValueType.String, string.Empty, SettingSensitivity.Public, Group: DropboxGroup),
             new SettingFieldDeclaration("app-folder-client-id", SettingValueType.String, string.Empty, SettingSensitivity.Public, Group: DropboxGroup),
             new SettingFieldDeclaration("client-id", SettingValueType.String, string.Empty, SettingSensitivity.Public, Group: OneDriveGroup),
-            new SettingFieldDeclaration("tenant", SettingValueType.String, string.Empty, SettingSensitivity.Public, Group: OneDriveGroup)
+            new SettingFieldDeclaration("tenant", SettingValueType.String, string.Empty, SettingSensitivity.Public, Group: OneDriveGroup),
+            new SettingFieldDeclaration("app-folder-path", SettingValueType.String, string.Empty, SettingSensitivity.Public, Group: DropboxGroup),
+            new SettingFieldDeclaration("app-folder-path", SettingValueType.String, string.Empty, SettingSensitivity.Public, Group: OneDriveGroup)
         ]);
 
     /// <summary>Gets the system-only layered document.</summary>

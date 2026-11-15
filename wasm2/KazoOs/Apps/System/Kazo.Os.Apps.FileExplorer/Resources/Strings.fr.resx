@@ -670,6 +670,12 @@
   <data name="CloudDrive.SignInNote" xml:space="preserve">
     <value>Une fenêtre {0} s'ouvre pour la connexion. Votre connexion reste sur cet appareil ; aucun serveur de Kazo OS ne la reçoit.</value>
   </data>
+  <data name="CloudDrive.AppFolderPrefix" xml:space="preserve">
+    <value>Le dossier que {0} réserve à Kazo OS dans votre stockage. Le lecteur commence là, ou dans le dossier que vous tapez après.</value>
+  </data>
+  <data name="CloudDrive.SigningIn" xml:space="preserve">
+    <value>La fenêtre de connexion {0} est ouverte. Si elle affiche une erreur ou si vous l'avez fermée, choisissez Retour ou Fermer pour arrêter d'attendre.</value>
+  </data>
   <data name="CloudDrive.SignInAndMount" xml:space="preserve">
     <value>Se connecter et monter</value>
   </data>

@@ -872,6 +872,11 @@ internal static class WireCodec
         {
             writer.WriteString("ac", account);
         }
+
+        if (drive.Root is { } root)
+        {
+            writer.WriteString("rt", root);
+        }
     }
 
     private static KazoDriveSnapshot ReadDriveFields(JsonElement drive) =>
@@ -879,7 +884,8 @@ internal static class WireCodec
         {
             DriveType = drive.GetOptional("ty") is { } type ? (KazoDriveType)type.GetInt32() : KazoDriveType.Fixed,
             IsReady = drive.GetOptional("rd")?.GetBoolean() ?? true,
-            Account = drive.GetOptionalString("ac")
+            Account = drive.GetOptionalString("ac"),
+            Root = drive.GetOptionalString("rt")
         };
 
     /// <summary>A network drive request (ADR 0270); the secrets cross the channel once, to the OS.</summary>
@@ -978,6 +984,11 @@ internal static class WireCodec
             }
 
             writer.WriteEndArray();
+            if (provider.AppFolderPath is { } appFolder)
+            {
+                writer.WriteString("af", appFolder);
+            }
+
             writer.WriteEndObject();
         }
 
@@ -989,7 +1000,10 @@ internal static class WireCodec
         .. element.GetProperty("cp").EnumerateArray().Select(static provider => new Kazo.Os.AppSdk.CloudAccounts.KazoCloudProvider(
             provider.GetString("id"),
             provider.GetString("dn"),
-            [.. provider.GetProperty("sc").EnumerateArray().Select(static scope => (Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccessScope)scope.GetInt32())]))
+            [.. provider.GetProperty("sc").EnumerateArray().Select(static scope => (Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccessScope)scope.GetInt32())])
+        {
+            AppFolderPath = provider.GetOptionalString("af")
+        })
     ];
 
     public static void WriteCrossOriginIsolation(Utf8JsonWriter writer, KazoCrossOriginIsolationStatus status)

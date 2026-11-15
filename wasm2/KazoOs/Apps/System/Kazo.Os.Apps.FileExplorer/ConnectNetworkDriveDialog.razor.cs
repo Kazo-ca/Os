@@ -1,5 +1,6 @@
 using Kazo.Os.AppSdk.CloudAccounts;
 using Kazo.Os.AppSdk.Globalization;
+using Kazo.Os.AppSdk.Icons;
 using Kazo.Os.AppSdk.IO;
 using Kazo.Os.Simulation.Abstractions.Gateways;
 using Microsoft.AspNetCore.Components;
@@ -38,6 +39,13 @@ public partial class ConnectNetworkDriveDialog
     private bool _cloudAllowed;
     private bool _loading = true;
     private bool _busy;
+
+    /// <summary>
+    /// Set while the provider's sign-in window is open. The OS cannot see that window close (it is
+    /// in another browsing context group, ADR 0131), and a provider that shows its own error page
+    /// never comes back: Back, Close and Escape stay usable and cancel the wait.
+    /// </summary>
+    private CancellationTokenSource? _signIn;
     private string? _error;
     private Step _step = Step.Choose;
     private KazoCloudProvider? _provider;
@@ -65,6 +73,9 @@ public partial class ConnectNetworkDriveDialog
 
     private bool HasCloudChoice =>
         _cloudAllowed && (_providers.Any(provider => _types.Contains(provider.Id)) || _types.Contains(S3Type));
+
+    /// <summary>Gets whether Back and Close work: always, except while a mount (not a sign-in) runs.</summary>
+    private bool CanLeave => !_busy || _signIn is not null;
 
     private bool HasAnyChoice => _types.Contains(HostFolderType) || HasCloudChoice;
 
@@ -158,6 +169,12 @@ public partial class ConnectNetworkDriveDialog
 
     private void Back()
     {
+        if (!CanLeave)
+        {
+            return;
+        }
+
+        CancelSignIn();
         (_step, _error) = (Step.Choose, null);
         _s3 = new S3Form();
     }
@@ -180,7 +197,23 @@ public partial class ConnectNetworkDriveDialog
         string? root = string.IsNullOrWhiteSpace(_root) ? null : _root.Trim();
         return RunAsync(async () =>
         {
-            KazoCloudAccount account = await KazoCloudAccounts.ConnectAsync(provider.Id, scope);
+            CancellationTokenSource signIn = new();
+            _signIn = signIn;
+            KazoCloudAccount account;
+            try
+            {
+                account = await KazoCloudAccounts.ConnectAsync(provider.Id, scope, signIn.Token);
+            }
+            finally
+            {
+                if (ReferenceEquals(_signIn, signIn))
+                {
+                    _signIn = null;
+                }
+
+                signIn.Dispose();
+            }
+
             return await KazoDriveInfo.MountNetworkDriveAsync(new KazoNetworkDriveRequest(provider.Id, account.Id, root));
         });
     }
@@ -209,13 +242,21 @@ public partial class ConnectNetworkDriveDialog
             return;
         }
 
-        (_busy, _error) = (true, null);
+        (_busy, _error, _left) = (true, null, false);
         try
         {
-            if (await mount() is { } drive)
+            if (await mount() is { } drive && !_left)
             {
                 await Mounted.InvokeAsync(drive);
             }
+        }
+        catch (OperationCanceledException) when (_left)
+        {
+            // The user left the step (Back, Close, Escape) while the sign-in window was open.
+        }
+        catch (KazoCloudAccountException exception) when (_left && exception.Error == KazoCloudAccountError.Cancelled)
+        {
+            // Same: the cancelled sign-in is the user's own choice, not an error to show.
         }
         catch (Exception exception) when (exception is KazoCloudAccountException or ArgumentException or NotSupportedException
             or InvalidOperationException or IOException or UnauthorizedAccessException or AppGatewayAccessDeniedException)
@@ -231,9 +272,24 @@ public partial class ConnectNetworkDriveDialog
 
     private async Task CloseAsync()
     {
-        if (!_busy)
+        if (CanLeave)
         {
+            CancelSignIn();
             await Closed.InvokeAsync();
+        }
+    }
+
+    /// <summary>Set when the user left the step during a sign-in: its late result is dropped.</summary>
+    private bool _left;
+
+    /// <summary>Stops waiting for the sign-in window, if one is open.</summary>
+    private void CancelSignIn()
+    {
+        if (_signIn is { } signIn)
+        {
+            _left = true;
+            _signIn = null;
+            signIn.Cancel();
         }
     }
 
@@ -254,11 +310,17 @@ public partial class ConnectNetworkDriveDialog
         _ => L["Network.Error", exception.Message]
     };
 
-    private static string ProviderIcon(string providerId) => providerId switch
-    {
-        S3Type => "database",
-        _ => "cloud"
-    };
+    /// <summary>The mark of the service (ADR 0267 §11), the same as in the "Network drives" list.</summary>
+    private static (IconLibrary Library, string Name) ProviderIcon(string providerId) => NetworkDriveIcons.For(providerId);
+
+    /// <summary>
+    /// Where the reserved folder is in the user's storage (<c>/Apps/Kazo OS Folder/</c>), shown before the
+    /// start folder when that scope is chosen; <see langword="null"/> otherwise or when the OS does not know it.
+    /// </summary>
+    private string? AppFolderPrefix =>
+        _scope == KazoCloudAccessScope.AppFolder && !string.IsNullOrWhiteSpace(_provider?.AppFolderPath)
+            ? "/" + _provider.AppFolderPath.Trim('/') + "/"
+            : null;
 
     private string ProviderName(string providerId) =>
         _providers.FirstOrDefault(provider => provider.Id == providerId)?.DisplayName

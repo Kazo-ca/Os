@@ -181,6 +181,33 @@
     font-size: 0.85rem;
 }
 
+/* Reserved folder: "/Apps/Kazo OS Folder/" sits in front of the start folder, joined to its field. */
+.cnd-root {
+    display: flex;
+    align-items: stretch;
+    min-width: 0;
+}
+
+.cnd-root-prefix {
+    display: inline-flex;
+    align-items: center;
+    padding: 0 0.55rem;
+    border: 1px solid var(--kos-border, #3a4b53);
+    border-right: none;
+    border-radius: var(--kos-radius-sm, 6px) 0 0 var(--kos-radius-sm, 6px);
+    background: var(--kos-bg-elevated, rgba(255, 255, 255, 0.04));
+    color: var(--kos-text-muted, #6e7681);
+    font-family: var(--kos-font-mono, "JetBrains Mono", ui-monospace, monospace);
+    font-size: 0.85rem;
+    white-space: nowrap;
+}
+
+.cnd-root input {
+    flex: 1 1 auto;
+    min-width: 0;
+    border-radius: 0 var(--kos-radius-sm, 6px) var(--kos-radius-sm, 6px) 0;
+}
+
 .cnd-field input:focus-visible,
 .cnd-field select:focus-visible {
     outline: 2px solid var(--kos-accent, #42d392);

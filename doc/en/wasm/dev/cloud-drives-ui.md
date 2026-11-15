@@ -40,9 +40,16 @@ what the user sees and how the system apps reach it through the public SDK.
    one button per configured provider whose source is present, S3.
 3. **Provider**: the user chooses the scope (all the storage or the folder
    reserved to Kazo OS) when the provider offers both, and an optional
-   starting folder. "Sign in and mount" calls `ConnectAsync` then
+   starting folder. With the reserved folder, the field is preceded by where
+   the provider puts that folder in the storage (`/Apps/Kazo OS Folder/` for
+   Dropbox, `/Apps/Kazo OS/` for OneDrive, `KazoCloudProvider.AppFolderPath`):
+   the starting folder is relative to it. "Sign in and mount" calls `ConnectAsync` then
    `MountNetworkDriveAsync` with no `await` before, so the sign-in window
-   comes from the click (user gesture).
+   comes from the click (user gesture). While the sign-in window is open,
+   the dialog says so and Back, Close and Escape stay usable: the OS cannot
+   see that window close (COOP, ADR 0131) and a provider error page never
+   comes back, so leaving cancels the wait (`ConnectAsync`'s token) and drops
+   its late result, with no error shown.
 4. **S3**: endpoint, bucket, region, prefix, addressing (automatic, path,
    virtual host), access key and secret key (masked field). The keys go in
    `Secrets`; the source keeps them in the keyring.
@@ -51,6 +58,16 @@ what the user sees and how the system apps reach it through the public SDK.
 
 Without a keyring (guest, passkey without PRF), the dialog says so and offers
 only the folder of the computer.
+
+## The explorer's "Network drives" section
+
+Each cloud drive carries the mark of its service (Dropbox; Microsoft for
+OneDrive, which has no glyph of its own in the icon fonts; a database for S3),
+from Bootstrap Icons (MIT), already shipped by the SDK. Under the account's
+name, a second line gives the service and, when there is one, the starting
+folder (`KazoDriveInfo.Root`): two accounts often carry the same e-mail
+address. On a phone, the chips keep the icon and their accessible name carries
+the same second line.
 
 ## Settings page "Cloud accounts"
 
@@ -84,6 +101,9 @@ umount /mnt/name
   (ADR 0270, Benoit's answer A).
 - `KazoNetworkDriveRequest.ToString()` masks the secrets.
 - The dialog does not keep the S3 keys after mounting.
+- The services' marks (Dropbox, Microsoft) come from the icon fonts already
+  shipped; Benoit allowed it on 2026-11-15 (the user signs in to their own
+  account of that service).
 
 ## Tests
 
@@ -112,3 +132,4 @@ umount /mnt/name
 - [x] `mount -t dropbox|onedrive|s3`, `-o remount`, `umount`.
 - [x] French and English texts, axe, screenshots.
 - [x] Screenshots of the provider (Dropbox) and S3 steps with the connectors of work items 3, 4 and 6.
+- [x] Work item 7: leaving a failed sign-in, service mark and starting folder in "Network drives", reserved folder path before the starting folder.

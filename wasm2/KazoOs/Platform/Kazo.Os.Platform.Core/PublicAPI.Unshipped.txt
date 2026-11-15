@@ -152,8 +152,6 @@ Kazo.Os.Platform.Core.CloudAccounts.CloudProviderInfo.Scopes.init -> void
 Kazo.Os.Platform.Core.CloudAccounts.CloudProviderSettings
 Kazo.Os.Platform.Core.CloudAccounts.CloudProviderSettings.<Clone>$() -> Kazo.Os.Platform.Core.CloudAccounts.CloudProviderSettings!
 Kazo.Os.Platform.Core.CloudAccounts.CloudProviderSettings.BuildProviders() -> System.Collections.Generic.IReadOnlyList<Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthProvider!>!
-Kazo.Os.Platform.Core.CloudAccounts.CloudProviderSettings.CloudProviderSettings(string? DropboxFullAccessClientId = null, string? DropboxAppFolderClientId = null, string? OneDriveClientId = null, string? OneDriveTenant = null) -> void
-Kazo.Os.Platform.Core.CloudAccounts.CloudProviderSettings.Deconstruct(out string? DropboxFullAccessClientId, out string? DropboxAppFolderClientId, out string? OneDriveClientId, out string? OneDriveTenant) -> void
 Kazo.Os.Platform.Core.CloudAccounts.CloudProviderSettings.DropboxAppFolderClientId.get -> string?
 Kazo.Os.Platform.Core.CloudAccounts.CloudProviderSettings.DropboxAppFolderClientId.init -> void
 Kazo.Os.Platform.Core.CloudAccounts.CloudProviderSettings.DropboxFullAccessClientId.get -> string?
@@ -356,3 +354,15 @@ override Kazo.Os.Platform.Core.CloudDrives.Dropbox.DropboxDriveSource.ProviderId
 override Kazo.Os.Platform.Core.CloudDrives.Dropbox.DropboxDriveSource.Type.get -> string!
 static Kazo.Os.Platform.Core.Shell.StartMenuSettingsDocuments.RetiredDefaultPinnedAppIds.get -> System.Collections.Generic.IReadOnlyList<string!>!
 Kazo.Os.Platform.Core.Shell.StartMenuPreferencesService.StartMenuPreferencesService(Kazo.Os.Platform.Core.Settings.IOsSettingsService! settings, Kazo.Os.Simulation.Abstractions.Sessions.ISessionService! session, System.Collections.Generic.IReadOnlyList<string!>! defaultPins, System.Collections.Generic.IReadOnlyList<string!>! retiredDefaultPins) -> void
+Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthProvider.AppFolderPath.get -> string?
+Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthProvider.AppFolderPath.init -> void
+Kazo.Os.Platform.Core.CloudAccounts.CloudProviderInfo.AppFolderPath.get -> string?
+Kazo.Os.Platform.Core.CloudAccounts.CloudProviderInfo.AppFolderPath.init -> void
+Kazo.Os.Platform.Core.CloudAccounts.CloudProviderSettings.CloudProviderSettings(string? DropboxFullAccessClientId = null, string? DropboxAppFolderClientId = null, string? OneDriveClientId = null, string? OneDriveTenant = null, string? DropboxAppFolderPath = null, string? OneDriveAppFolderPath = null) -> void
+Kazo.Os.Platform.Core.CloudAccounts.CloudProviderSettings.Deconstruct(out string? DropboxFullAccessClientId, out string? DropboxAppFolderClientId, out string? OneDriveClientId, out string? OneDriveTenant, out string? DropboxAppFolderPath, out string? OneDriveAppFolderPath) -> void
+Kazo.Os.Platform.Core.CloudAccounts.CloudProviderSettings.DropboxAppFolderPath.get -> string?
+Kazo.Os.Platform.Core.CloudAccounts.CloudProviderSettings.DropboxAppFolderPath.init -> void
+Kazo.Os.Platform.Core.CloudAccounts.CloudProviderSettings.OneDriveAppFolderPath.get -> string?
+Kazo.Os.Platform.Core.CloudAccounts.CloudProviderSettings.OneDriveAppFolderPath.init -> void
+static Kazo.Os.Platform.Core.CloudAccounts.CloudDrivesSettingsDocuments.DropboxAppFolderPathQualifiedKey.get -> string!
+static Kazo.Os.Platform.Core.CloudAccounts.CloudDrivesSettingsDocuments.OneDriveAppFolderPathQualifiedKey.get -> string!

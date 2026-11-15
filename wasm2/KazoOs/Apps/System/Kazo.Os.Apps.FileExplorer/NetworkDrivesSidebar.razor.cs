@@ -1,5 +1,6 @@
 using Kazo.Os.AppSdk;
 using Kazo.Os.AppSdk.Globalization;
+using Kazo.Os.AppSdk.Icons;
 using Kazo.Os.AppSdk.IO;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.Localization;
@@ -85,9 +86,39 @@ public partial class NetworkDrivesSidebar
         await Navigate.InvokeAsync(drive.Name);
     }
 
-    /// <summary>The icon of a drive: a cloud for a cloud storage, a disk for a folder of the computer.</summary>
-    private static string DriveIcon(KazoDriveInfo drive) =>
-        !drive.IsReady ? "unplug" : drive.Account is null ? "hard-drive" : "cloud";
+    /// <summary>
+    /// The icon of a drive: the mark of its service (Dropbox, OneDrive, S3), a disk for a folder of the
+    /// computer, a plug when it is disconnected.
+    /// </summary>
+    private static (IconLibrary Library, string Name) DriveIcon(KazoDriveInfo drive) =>
+        !drive.IsReady ? (IconLibrary.Lucide, "unplug")
+        : drive.Account is null ? (IconLibrary.Lucide, "hard-drive")
+        : NetworkDriveIcons.For(drive.DriveFormat);
+
+    /// <summary>
+    /// The second line of a cloud drive: its service and, when the drive starts in a folder of the
+    /// storage, that folder. Two accounts often carry the same e-mail address: this line tells them apart.
+    /// </summary>
+    private static string? Detail(KazoDriveInfo drive)
+    {
+        string? service = drive.Account is null ? null : NetworkDriveIcons.ServiceName(drive.DriveFormat);
+        string? root = string.IsNullOrWhiteSpace(drive.Root) ? null : "/" + drive.Root.Trim('/');
+        return (service, root) switch
+        {
+            (null, null) => null,
+            ({ } name, null) => name,
+            (null, { } folder) => folder,
+            ({ } name, { } folder) => $"{name} · {folder}"
+        };
+    }
+
+    /// <summary>The name a screen reader reads: the label and its detail.</summary>
+    private static string AccessibleName(KazoDriveInfo drive) =>
+        Detail(drive) is { } detail ? $"{drive.VolumeLabel}, {detail}" : drive.VolumeLabel;
+
+    /// <summary>The tooltip: the mount point, or how to reconnect a disconnected drive.</summary>
+    private string Tooltip(KazoDriveInfo drive) =>
+        drive.IsReady ? drive.Name : L["Network.Reconnect", drive.VolumeLabel];
 
     private Task OpenAsync(KazoDriveInfo drive) => RunAsync(async () =>
     {

@@ -39,7 +39,7 @@ internal sealed class AppCloudAccountsGateway(Func<CloudAccountService> accounts
     {
         _capabilities.Require(AppCapabilities.CloudAccountsManage);
         IReadOnlyList<CloudProviderInfo> providers = await Translate(() => _accounts().GetProvidersAsync(cancellationToken)).ConfigureAwait(false);
-        return [.. providers.Select(static provider => new KazoCloudProvider(provider.Id, provider.DisplayName, [.. provider.Scopes.Select(ToSdk)]))];
+        return [.. providers.Select(static provider => new KazoCloudProvider(provider.Id, provider.DisplayName, [.. provider.Scopes.Select(ToSdk)]) { AppFolderPath = provider.AppFolderPath })];
     }
 
     /// <inheritdoc />

@@ -15,13 +15,13 @@
         <header class="cnd-header">
             @if (_step != Step.Choose)
             {
-                <button type="button" class="cnd-icon-btn" @onclick="Back" disabled="@_busy"
+                <button type="button" class="cnd-icon-btn" @onclick="Back" disabled="@(!CanLeave)"
                         aria-label="@L["CloudDrive.Back"]" title="@L["CloudDrive.Back"]">
                     <KazoIcon Library="IconLibrary.Lucide" Name="arrow-left" Size="18" />
                 </button>
             }
             <h2 id="@_titleId" class="cnd-title">@Title</h2>
-            <button type="button" class="cnd-icon-btn" @onclick="CloseAsync" disabled="@_busy"
+            <button type="button" class="cnd-icon-btn" @onclick="CloseAsync" disabled="@(!CanLeave)"
                     aria-label="@L["CloudDrive.Close"]" title="@L["CloudDrive.Close"]">
                 <KazoIcon Library="IconLibrary.Lucide" Name="x" Size="18" />
             </button>
@@ -42,7 +42,7 @@
                         {
                             <li>
                                 <button type="button" class="cnd-option" disabled="@_busy" @onclick="() => MountAccountAsync(account)">
-                                    <KazoIcon Library="IconLibrary.Lucide" Name="@ProviderIcon(account.ProviderId)" Size="22" />
+                                    <KazoIcon Library="@ProviderIcon(account.ProviderId).Library" Name="@ProviderIcon(account.ProviderId).Name" Size="22" />
                                     <span class="cnd-option-text">
                                         <span class="cnd-option-title">@account.DisplayName</span>
                                         <span class="cnd-option-detail">@AccountDetail(account)</span>
@@ -75,7 +75,7 @@
                     {
                         <li>
                             <button type="button" class="cnd-option" disabled="@(_busy || !_canConnect)" @onclick="() => ChooseProvider(provider)">
-                                <KazoIcon Library="IconLibrary.Lucide" Name="@ProviderIcon(provider.Id)" Size="22" />
+                                <KazoIcon Library="@ProviderIcon(provider.Id).Library" Name="@ProviderIcon(provider.Id).Name" Size="22" />
                                 <span class="cnd-option-text">
                                     <span class="cnd-option-title">@provider.DisplayName</span>
                                     <span class="cnd-option-detail">@L["CloudDrive.ProviderDetail", provider.DisplayName]</span>
@@ -119,9 +119,24 @@
                 </fieldset>
                 <label class="cnd-field">
                     <span>@L["CloudDrive.Root"]</span>
-                    <input type="text" @bind="_root" placeholder="@L["CloudDrive.RootPlaceholder"]" disabled="@_busy" spellcheck="false" />
+                    @* In the reserved folder the drive starts where the service put that folder: say where. *@
+                    @if (AppFolderPrefix is { } prefix)
+                    {
+                        <span class="cnd-root">
+                            <span class="cnd-root-prefix" title="@L["CloudDrive.AppFolderPrefix", _provider.DisplayName]">@prefix</span>
+                            <input type="text" @bind="_root" placeholder="@L["CloudDrive.RootPlaceholder"]" disabled="@_busy" spellcheck="false" />
+                        </span>
+                    }
+                    else
+                    {
+                        <input type="text" @bind="_root" placeholder="@L["CloudDrive.RootPlaceholder"]" disabled="@_busy" spellcheck="false" />
+                    }
                 </label>
                 <p class="cnd-note">@L["CloudDrive.SignInNote", _provider.DisplayName]</p>
+                @if (_signIn is not null)
+                {
+                    <p class="cnd-note" role="status">@L["CloudDrive.SigningIn", _provider.DisplayName]</p>
+                }
             }
             else if (_step == Step.S3)
             {
@@ -172,7 +187,7 @@
         @if (_step != Step.Choose)
         {
             <footer class="cnd-actions">
-                <button type="button" class="cnd-btn" @onclick="Back" disabled="@_busy">@L["CloudDrive.Back"]</button>
+                <button type="button" class="cnd-btn" @onclick="Back" disabled="@(!CanLeave)">@L["CloudDrive.Back"]</button>
                 @if (_step == Step.Provider)
                 {
                     <button type="button" class="cnd-btn primary" @onclick="ConnectProviderAsync" disabled="@_busy">@L["CloudDrive.SignInAndMount"]</button>

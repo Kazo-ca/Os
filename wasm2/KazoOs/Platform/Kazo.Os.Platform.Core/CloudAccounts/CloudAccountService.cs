@@ -117,7 +117,7 @@ public sealed class CloudAccountService : IDisposable, CloudDrives.ICloudAccount
     {
         IReadOnlyList<CloudOAuthProvider> providers = await _catalog.GetProvidersAsync(cancellationToken).ConfigureAwait(false);
         _providers = providers;
-        return [.. providers.Select(static provider => new CloudProviderInfo(provider.Id, provider.DisplayName, provider.Scopes))];
+        return [.. providers.Select(static provider => new CloudProviderInfo(provider.Id, provider.DisplayName, provider.Scopes) { AppFolderPath = provider.AppFolderPath })];
     }
 
     /// <summary>Gets the signed-in user's accounts; none when nobody is signed in.</summary>

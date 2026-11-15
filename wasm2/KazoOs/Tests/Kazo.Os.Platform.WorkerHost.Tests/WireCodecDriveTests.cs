@@ -36,11 +36,12 @@ public sealed class WireCodecDriveTests
     }
 
     [Fact]
-    public void A_cloud_drive_keeps_its_account()
+    public void A_cloud_drive_keeps_its_account_and_its_start_folder()
     {
         KazoDriveSnapshot[] drives =
         [
-            new("/mnt/Dropbox", "dropbox", "alice", 10, 4) { DriveType = KazoDriveType.Network, Account = "a1" }
+            new("/mnt/Dropbox", "dropbox", "alice", 10, 4) { DriveType = KazoDriveType.Network, Account = "a1" },
+            new("/mnt/Photos", "onedrive", "alice", 10, 4) { DriveType = KazoDriveType.Network, Account = "a2", Root = "Pictures/2026" }
         ];
 
         Assert.Equal(drives, RoundTrip(writer => WireCodec.WriteDrives(writer, drives), WireCodec.ReadDrives));
@@ -72,7 +73,10 @@ public sealed class WireCodecDriveTests
         [
             new("a1", "dropbox", KazoCloudAccessScope.AppFolder, "alice", KazoCloudAccountState.NeedsReconnect, new DateTimeOffset(2026, 11, 13, 12, 0, 0, TimeSpan.Zero))
         ];
-        KazoCloudProvider[] providers = [new("onedrive", "OneDrive", [KazoCloudAccessScope.Full, KazoCloudAccessScope.AppFolder])];
+        KazoCloudProvider[] providers =
+        [
+            new("onedrive", "OneDrive", [KazoCloudAccessScope.Full, KazoCloudAccessScope.AppFolder]) { AppFolderPath = "Apps/Kazo OS" }
+        ];
 
         IReadOnlyList<KazoCloudAccount> accountsCopy = RoundTrip(writer => WireCodec.WriteCloudAccounts(writer, accounts), WireCodec.ReadCloudAccounts);
         KazoCloudProvider providerCopy = Assert.Single(RoundTrip(writer => WireCodec.WriteCloudProviders(writer, providers), WireCodec.ReadCloudProviders));
@@ -80,6 +84,7 @@ public sealed class WireCodecDriveTests
         Assert.Equal(accounts, accountsCopy);
         Assert.Equal(("onedrive", "OneDrive"), (providerCopy.Id, providerCopy.DisplayName));
         Assert.Equal(providers[0].Scopes, providerCopy.Scopes);
+        Assert.Equal("Apps/Kazo OS", providerCopy.AppFolderPath);
     }
 
     private static T RoundTrip<T>(Action<Utf8JsonWriter> write, Func<JsonElement, T> read)

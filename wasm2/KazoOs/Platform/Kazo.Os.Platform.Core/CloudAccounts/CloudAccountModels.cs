@@ -95,7 +95,11 @@ public sealed record CloudAccount(
 /// <param name="Id">The provider id: <c>dropbox</c> or <c>onedrive</c>.</param>
 /// <param name="DisplayName">Its name: Dropbox, OneDrive.</param>
 /// <param name="Scopes">The scopes offered; never empty.</param>
-public sealed record CloudProviderInfo(string Id, string DisplayName, IReadOnlyList<CloudAccessScope> Scopes);
+public sealed record CloudProviderInfo(string Id, string DisplayName, IReadOnlyList<CloudAccessScope> Scopes)
+{
+    /// <summary>Where the service puts the folder reserved for Kazo OS, as the user sees it (e.g. <c>Apps/Kazo OS Folder</c>); <see langword="null"/> when unknown.</summary>
+    public string? AppFolderPath { get; init; }
+}
 
 /// <summary>
 /// Releases the drives of an account before it is removed (ADR 0267 section 5: removing an account

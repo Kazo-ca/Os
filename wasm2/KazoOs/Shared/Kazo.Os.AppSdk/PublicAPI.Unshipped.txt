@@ -112,3 +112,8 @@ static Kazo.Os.AppSdk.IO.KazoDriveInfo.GetNetworkDriveTypesAsync(System.Threadin
 static Kazo.Os.AppSdk.IO.KazoDriveInfo.MountNetworkDriveAsync(Kazo.Os.AppSdk.IO.KazoNetworkDriveRequest! request, string? mountPoint = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Kazo.Os.AppSdk.IO.KazoDriveInfo?>!
 static Kazo.Os.AppSdk.IO.KazoNetworkDriveRequest.operator !=(Kazo.Os.AppSdk.IO.KazoNetworkDriveRequest? left, Kazo.Os.AppSdk.IO.KazoNetworkDriveRequest? right) -> bool
 static Kazo.Os.AppSdk.IO.KazoNetworkDriveRequest.operator ==(Kazo.Os.AppSdk.IO.KazoNetworkDriveRequest? left, Kazo.Os.AppSdk.IO.KazoNetworkDriveRequest? right) -> bool
+Kazo.Os.AppSdk.CloudAccounts.KazoCloudProvider.AppFolderPath.get -> string?
+Kazo.Os.AppSdk.CloudAccounts.KazoCloudProvider.AppFolderPath.init -> void
+Kazo.Os.AppSdk.IO.KazoDriveInfo.Root.get -> string?
+Kazo.Os.AppSdk.IO.KazoDriveSnapshot.Root.get -> string?
+Kazo.Os.AppSdk.IO.KazoDriveSnapshot.Root.init -> void

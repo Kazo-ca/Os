@@ -148,10 +148,15 @@ ci-dessous ; un identifiant vide retire le fournisseur ou l'étendue :
 
 ```json
 "CloudDrives": {
-  "Dropbox": { "FullAccessClientId": "im7y4ma8wtsospi", "AppFolderClientId": "mcp8j0gt4h4v6s3" },
-  "OneDrive": { "ClientId": "7f89ba67-5655-4721-991a-53c64998f45e", "Tenant": "common" }
+  "Dropbox": { "FullAccessClientId": "im7y4ma8wtsospi", "AppFolderClientId": "mcp8j0gt4h4v6s3", "AppFolderPath": "Apps/Kazo OS Folder" },
+  "OneDrive": { "ClientId": "7f89ba67-5655-4721-991a-53c64998f45e", "Tenant": "common", "AppFolderPath": "Apps/Kazo OS" }
 }
 ```
+
+`AppFolderPath` dit où le fournisseur met le dossier réservé dans le stockage
+de l'utilisateur, tel qu'il le voit sur le site du service (le nom de l'app
+inscrite). La fenêtre de connexion l'affiche devant le dossier de départ ;
+vide, rien n'est affiché. Il ne sert à aucun appel d'API.
 
 Un administrateur qui sert Kazo OS à une autre adresse inscrit ses propres apps
 et écrit `/etc/kazoos/cloud-drives.config` (couche système seulement) ; une clé
@@ -161,10 +166,12 @@ présente et non vide y remplace celle de l'hôte :
 [dropbox]
 full-access-client-id = …
 app-folder-client-id = …
+app-folder-path = Apps/…
 
 [onedrive]
 client-id = …
 tenant = common
+app-folder-path = Apps/…
 ```
 
 | Fournisseur | Étendue `Full` | Étendue `AppFolder` | Autres paramètres |

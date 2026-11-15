@@ -104,6 +104,21 @@ public sealed class CloudOAuthProviderTests
     }
 
     [Fact]
+    public async Task The_reserved_folder_path_comes_trimmed_from_the_host_and_the_system_file_can_replace_it()
+    {
+        SettingsFilesHarness harness = new();
+        await harness.WriteAsRootAsync("/etc/kazoos/cloud-drives.config", "[onedrive]\napp-folder-path = Applications/Kazo OS\n");
+        CloudProviderCatalog catalog = new(
+            new CloudProviderSettings("full", "folder", "client", null, " /Apps/Kazo OS Folder/ ", "Apps/Kazo OS"), harness.Settings);
+
+        IReadOnlyList<CloudOAuthProvider> providers = await catalog.GetProvidersAsync();
+
+        Assert.Equal("Apps/Kazo OS Folder", providers[0].AppFolderPath);
+        Assert.Equal("Applications/Kazo OS", providers[1].AppFolderPath);
+        Assert.Null(new CloudProviderSettings("full", "folder", DropboxAppFolderPath: " / ").BuildProviders()[0].AppFolderPath);
+    }
+
+    [Fact]
     public async Task Without_any_app_id_no_provider_is_offered()
     {
         SettingsFilesHarness harness = new();
