@@ -76,6 +76,8 @@ Nouveaux codes d'erreur : `GRANT_MISSING` (403), `RELAY_DISABLED` (503),
 | `AppNetworkGateway` | `ConnectTcpAsync`, `ConnectUdpAsync`, relais HTTP avec corps. |
 | `RelayedSocket` | `IKazoSocket` sur un flux : compte le trafic (`/proc/net/dev`) et la mémoire du noyau. |
 | `AppServerConnectionGateway.GetRelayPolicyAsync` | politique du serveur pour Paramètres, sans jamais exposer le jeton. |
+| `RelayPolicyCache` | politique du serveur gardée 30 s pour toutes les apps de l'appareil, relue quand la connexion au serveur change ou qu'un accord est synchronisé (ADR 0278). |
+| `AppNetworkGateway.GetRelayStateAsync` | état du relais pour une app : `NoServer`, `RelayDisabled`, `GrantPending` ou `Ready` avec les ports bloqués (ADR 0278). |
 
 ## Protocole d'un flux
 
@@ -280,16 +282,35 @@ KazoHttpResponse response = await http.PostAsync(url, new KazoStringContent(json
   navigateur n'a qu'un fil.
 - Un hôte du réseau simulé, ou cette machine, n'a pas de flux brut : la
   connexion est refusée (`SocketError.ConnectionRefused`).
-- Sans serveur ou sans `network.real.access`, un hôte inconnu donne
-  `SocketError.HostNotFound`.
+- Sans `network.real.access`, un hôte inconnu donne `SocketError.HostNotFound`.
+  Avec elle et sans serveur, c'est le même `SocketError`, levé dans une
+  `KazoRelayException` dont `Reason` vaut `RelayNoServer` (ADR 0278).
+- `KazoRealNetwork.GetRelayStateAsync()` dit avant d'essayer si le relais
+  marche, et `KazoRealNetwork.RelayStateChanged` quand cela change (ADR 0278,
+  voir [Réseau dans le SDK](../framework/sdk-network.md#état-du-relais-adr-0278)).
 
-| Refus du relais | `SocketError` |
-|---|---|
-| `BLOCKED_PORT`, `BLOCKED_ADDRESS`, `CONNECTION_REFUSED` | `ConnectionRefused` |
-| `HOST_UNREACHABLE` | `HostUnreachable` |
-| `TLS_FAILED` | `AuthenticationException` (comme `SslStream`), `KazoNetworkError.TlsFailed` dans la passerelle |
-| `GRANT_MISSING`, `RELAY_DISABLED`, `SIMULATED_DOMAIN_BLOCKED` | `HostNotFound` |
-| autre | `ConnectionFailed` (erreur réseau du SDK) |
+| Refus du relais | `SocketError` | `KazoRelayException.Reason` |
+|---|---|---|
+| `BLOCKED_PORT`, `BLOCKED_ADDRESS` | `ConnectionRefused` | `BlockedByAdministrator` |
+| `CONNECTION_REFUSED` | `ConnectionRefused` | (simple `SocketException`) |
+| `HOST_UNREACHABLE` | `HostUnreachable` | (simple `SocketException`) |
+| `TLS_FAILED` | `AuthenticationException` (comme `SslStream`), `KazoNetworkError.TlsFailed` dans la passerelle | |
+| `GRANT_MISSING` | `HostNotFound` | `RelayGrantPending` |
+| `RELAY_DISABLED` | `HostNotFound` | `RelayDisabled` |
+| `SIMULATED_DOMAIN_BLOCKED` | `HostNotFound` | (simple `SocketException` : le nom n'existe pas sur Internet) |
+| aucun serveur, ou pas de jeton | `HostNotFound` | `RelayNoServer` |
+| autre | `ConnectionFailed` (erreur réseau du SDK) | |
+
+En HTTP, `GRANT_MISSING` donne `RelayGrantPending`
+(`ERR_KAZO_RELAY_GRANT_PENDING`), `RELAY_DISABLED` donne `RelayDisabled`
+(`ERR_KAZO_RELAY_DISABLED`) et l'absence de serveur `RelayNoServer`
+(`ERR_KAZO_RELAY_NO_SERVER`) ; `HttpRequestError` reste celui d'avant.
+
+`GET api/proxy/policy` rend aussi `AccountGrantedApps` : les apps de
+`GrantedApps` et celles des accords synchronisés du compte (non retirés). L'OS
+s'en sert pour dire `GrantPending` ; il ne montre rien d'autre de la politique
+à l'app. Un serveur plus ancien ne l'envoie pas : l'OS compte alors l'accord
+comme reçu, et un refus `GRANT_MISSING` le dit quand même.
 
 Paramètres (section du serveur) affiche la politique du serveur connecté avec
 `KazoServerConnection.GetRelayPolicyAsync()` : ports, ports bloqués

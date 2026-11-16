@@ -127,9 +127,45 @@ port, an address or an app the operator does not allow, `TimedOut`
 `TooManyRedirects` when the relay says so, otherwise `ConnectionFailed`. The TCP
 probe gives `ConnectionFailed` and a ping `TimedOut`. A refusal when opening a socket becomes the error
 of a real stack (`SocketException`: `ConnectionRefused`, `HostUnreachable`
-or `HostNotFound`, table in `server-network-relay.md`). Without a server, nothing
-signals its absence: the result is that of a machine with no default
-gateway.
+or `HostNotFound`, table in `server-network-relay.md`).
+
+### Relay state (ADR 0278)
+
+An app holding `network.real.access` knows, **without trying**, whether the
+Kazo server's relay can carry its connections, without needing
+`server.connection.manage`:
+
+```csharp
+KazoRelayState state = await KazoRealNetwork.GetRelayStateAsync();
+bool viaServer = state.Status == KazoRelayStatus.Ready;   // show the "through the Kazo server" option
+KazoRealNetwork.RelayStateChanged += (_, changed) => Refresh(changed);
+```
+
+| `KazoRelayStatus` | Meaning |
+|---|---|
+| `NoServer` | no server connected, no token, or the server does not answer |
+| `RelayDisabled` | the operator turned the relay off (`KazoServerRelayPolicy.Enabled` false) |
+| `GrantPending` | the server has not received the app's permission yet (ADR 0233) |
+| `Ready` | the relay works; `TcpBlockedPorts` and `UdpBlockedPorts` give the ports the operator blocks |
+
+- The OS keeps the server's policy 30 seconds for the whole device and reads
+  it again when the server connection changes or a grant is synchronized. The
+  app sees nothing else of the policy.
+- `RelayStateChanged` fires when the state changes, never on every read. It is
+  not carried to a Web Worker: an app there reads the state again.
+- Without `network.real.access`, `GetRelayStateAsync` and subscribing throw
+  `UnauthorizedAccessException`.
+- The state may change between the read and the call: a failure still says
+  why. `KazoTcpClient` and `KazoUdpClient` still throw a `SocketException`
+  with the same `SocketError` as before; it is now a `KazoRelayException`
+  whose `Reason` is `RelayNoServer`, `RelayDisabled`, `RelayGrantPending` or
+  `BlockedByAdministrator` (blocked port). `KazoHttpRequestException.NetworkError`
+  carries the same values (`ERR_KAZO_RELAY_NO_SERVER`,
+  `ERR_KAZO_RELAY_DISABLED`, `ERR_KAZO_RELAY_GRANT_PENDING`). A name of the
+  simulated domain refused by the relay stays `HostNotFound`.
+- `curl`, `wget`, `cat` and the Browser's error pages say these reasons.
+- An app using it asks for the OS version that brings the API
+  (`sdkCompatibility`).
 
 ### Real sites over HTTP: redirects, cookies, source (ADR 0210)
 
@@ -163,7 +199,8 @@ reads and writes clear text, the certificate is checked by the server against
 `TargetHost` (the `host` by default). A refused certificate throws
 `AuthenticationException`, as `SslStream` does; `IsEncrypted`, `TlsProtocol`
 (`TLS 1.3`) and `RemoteCertificateSubject` say what was negotiated. Without a
-server, the host is not found. Details: [network relay](../dev/server-network-relay.md#tls-opened-by-the-relay-adr-0235-2).
+server, the host is not found (`KazoRelayException`, `Reason` =
+`RelayNoServer`). Details: [network relay](../dev/server-network-relay.md#tls-opened-by-the-relay-adr-0235-2).
 ### WebSocket to a real server (ADR 0235 §1)
 
 `KazoClientWebSocket` follows `System.Net.WebSockets.ClientWebSocket` and

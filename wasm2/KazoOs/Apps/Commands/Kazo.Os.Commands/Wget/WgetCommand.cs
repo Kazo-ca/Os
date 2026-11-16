@@ -91,9 +91,15 @@ public sealed class WgetCommand(AppManifest manifest) : TerminalAppBase(manifest
             }
             catch (KazoHttpRequestException exception)
             {
-                await log.WriteLineAsync(exception.NetworkError == KazoNetworkError.HostNotFound
-                    ? messages["CannotResolve", uri.Host]
-                    : messages["ConnectFailed", uri.Host, uri.Port, exception.Message]);
+                // ADR 0278 §2: the relay's refusals say why.
+                await log.WriteLineAsync(exception.NetworkError switch
+                {
+                    KazoNetworkError.HostNotFound => messages["CannotResolve", uri.Host].Value,
+                    KazoNetworkError.RelayNoServer => $"{messages["CannotResolve", uri.Host].Value} ({messages["Relay.NoServer"].Value})",
+                    KazoNetworkError.RelayDisabled => messages["ConnectFailed", uri.Host, uri.Port, messages["Relay.Disabled"].Value].Value,
+                    KazoNetworkError.RelayGrantPending => messages["ConnectFailed", uri.Host, uri.Port, messages["Relay.GrantPending"].Value].Value,
+                    _ => messages["ConnectFailed", uri.Host, uri.Port, exception.Message].Value
+                });
                 status = 4;
                 continue;
             }

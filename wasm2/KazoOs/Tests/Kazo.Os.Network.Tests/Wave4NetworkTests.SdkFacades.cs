@@ -105,7 +105,8 @@ public sealed partial class Wave4NetworkTests
     [Fact]
     public async Task KazoHttpClient_unknown_host_throws_name_resolution_error_with_browser_code()
     {
-        EnterApp(new GrantAllCapabilityChecker());
+        // Without network.real.access the OS has no route at all: "host not found", as before.
+        EnterApp(new GrantAllCapabilityChecker(AppCapabilities.NetworkRealAccess));
         using KazoHttpClient client = new();
 
         KazoHttpRequestException exception = await Assert.ThrowsAsync<KazoHttpRequestException>(

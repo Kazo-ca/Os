@@ -94,9 +94,15 @@ public sealed class CatCommand : TerminalAppBase
         }
         catch (KazoHttpRequestException exception)
         {
-            context.StandardError.WriteLine(exception.NetworkError == KazoNetworkError.HostNotFound
-                ? text["ResolveFailed", url]
-                : $"cat: {url}: {exception.Message}");
+            // ADR 0278 §2: the relay's refusals say why.
+            context.StandardError.WriteLine(exception.NetworkError switch
+            {
+                KazoNetworkError.HostNotFound => text["ResolveFailed", url].Value,
+                KazoNetworkError.RelayNoServer => $"{text["ResolveFailed", url].Value} ({text["Relay.NoServer"].Value})",
+                KazoNetworkError.RelayDisabled => $"cat: {url}: {text["Relay.Disabled"].Value}",
+                KazoNetworkError.RelayGrantPending => $"cat: {url}: {text["Relay.GrantPending"].Value}",
+                _ => $"cat: {url}: {exception.Message}"
+            });
             return 1;
         }
         catch (ArgumentException)
