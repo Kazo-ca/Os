@@ -87,6 +87,27 @@ Chaque ligne est un chantier, avec sa branche et sa PR.
    Le Store accepte chaque partie d'un pack quand son système existe.
    **Fait** (ADR 0202 à 0205).
 
+### Dépendances (ADR 0248)
+
+`catalog.json` gagne, pour chaque version, `dependencies` : la liste du
+manifeste, recopiée du `manifest.json` du dossier `apps/<appId>_<version>/`
+quand le catalogue publie.
+
+```json
+"dependencies": [
+  { "appId": "org.exemple.feature", "minimumVersion": "1.0.0", "maximumVersion": "1.9.9", "optional": false }
+]
+```
+
+`maximumVersion` et `optional` sont facultatifs (pas de borne haute,
+obligatoire). L'OS lit au plus 64 entrées et saute une entrée sans `appId` ou
+avec une version qui n'est pas sémantique (`AppCatalogDocument`,
+`AppCatalogVersion.Dependencies`). Sans ce champ (ancien catalogue), la fiche
+du Store ne montre pas de dépendances et l'installation les lit dans le
+paquet. La CI du catalogue qui recopie ce champ est dans
+`Kazo-ca/Os-AppMarketPlace` (même mécanisme que `fileHandlers`, issue
+AppMarketPlace #4).
+
 ## Règles
 
 - Ce dépôt ne contient le code d'aucune app du catalogue : chaque app vit dans

@@ -989,4 +989,19 @@
   <data name="AppLink.Progress.Launching" xml:space="preserve">
     <value>Starting the app…</value>
   </data>
+  <data name="InstallApproval.Plan.Title" xml:space="preserve">
+    <value>Installed with it</value>
+  </data>
+  <data name="InstallApproval.Plan.Note" xml:space="preserve">
+    <value>{0} needs these packages. This approval installs them all, or nothing.</value>
+  </data>
+  <data name="InstallApproval.Plan.Feature" xml:space="preserve">
+    <value>feature: its permissions are approved with it</value>
+  </data>
+  <data name="InstallApproval.Plan.Reactivated" xml:space="preserve">
+    <value>installed, reactivated</value>
+  </data>
+  <data name="InstallApproval.Remove.Dependents" xml:space="preserve">
+    <value>{0} will no longer work and will be disabled. Their data stays; installing this package again reactivates them.</value>
+  </data>
 </root>

@@ -235,6 +235,11 @@ internal sealed partial class AppManagementGateway
             DescriptionLanguages = [.. version.Descriptions.Keys.Order(StringComparer.OrdinalIgnoreCase)],
             FileHandlers = [.. version.FileHandlers.Select(static handler =>
                 new KazoAppFileHandler(handler.MediaType, [.. handler.Extensions], [.. handler.Actions]))],
+            // ADR 0248 §5: the Store shows them and plans the installation without downloading the package.
+            Dependencies = version.Dependencies is { } dependencies
+                ? [.. dependencies.Select(static dependency =>
+                    new KazoPackageDependency(dependency.AppId, dependency.MinimumVersion, dependency.MaximumVersion, dependency.Optional))]
+                : null,
         })],
         trust)
     {

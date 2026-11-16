@@ -102,6 +102,67 @@ public sealed record KazoInstalledPackage(string AppId, string Source, string Ve
     /// puts back (ADR 0214 §4.1), or <see langword="null"/> when none is kept.
     /// </summary>
     public string? PreviousVersion { get; init; }
+
+    /// <summary>
+    /// Gets, after a removal, the installed apps that needed the package and were disabled with it
+    /// (ADR 0248 §3): their data and their package stay, and installing the package again
+    /// reactivates them. Empty otherwise.
+    /// </summary>
+    public IReadOnlyList<string> DisabledDependents { get; init; } = [];
+}
+
+/// <summary>An installed app that needs a package through a required dependency (ADR 0248 §3).</summary>
+/// <param name="AppId">App identifier.</param>
+/// <param name="Name">App name, in the language of the calling process when the app translates it.</param>
+public sealed record KazoPackageDependent(string AppId, string Name);
+
+/// <summary>One dependency a package declares, as its manifest says it (ADR 0005, ADR 0248 §5).</summary>
+/// <param name="AppId">The app or feature it needs.</param>
+/// <param name="MinimumVersion">Lowest version it accepts.</param>
+/// <param name="MaximumVersion">Highest version it accepts, or <see langword="null"/> for no upper bound.</param>
+/// <param name="Optional">Whether it runs without it: an optional dependency is never installed with it (ADR 0248 §2).</param>
+public sealed record KazoPackageDependency(string AppId, string MinimumVersion, string? MaximumVersion, bool Optional);
+
+/// <summary>One package of an installation plan (ADR 0248 §1).</summary>
+/// <param name="AppId">Package identifier.</param>
+/// <param name="Name">Package name.</param>
+/// <param name="Version">Version it installs.</param>
+/// <param name="Source">Its source, pinned to the version.</param>
+/// <param name="PreviousVersion">The version it replaces, or <see langword="null"/>.</param>
+/// <param name="SizeBytes">Size of its files.</param>
+/// <param name="SystemWide">Whether it is installed for every user (always for a feature).</param>
+/// <param name="IsFeature">Whether it is a feature (ADR 0260).</param>
+/// <param name="Trust">Trust level of its source.</param>
+/// <param name="DangerousCapabilities">Its dangerous capabilities, the permissions a feature declares included (ADR 0246).</param>
+/// <param name="Requested">Whether it is the package the user asked for (the others are its dependencies).</param>
+public sealed record KazoPlannedPackage(
+    string AppId,
+    string Name,
+    string Version,
+    string Source,
+    string? PreviousVersion,
+    long SizeBytes,
+    bool SystemWide,
+    bool IsFeature,
+    KazoPackageTrust Trust,
+    IReadOnlyList<string> DangerousCapabilities,
+    bool Requested);
+
+/// <summary>
+/// What installing a package does, before anything is written (ADR 0248 §1): the packages in
+/// installation order (dependencies first, the requested one last) and the uninstalled
+/// dependencies it reactivates. <c>kazopkg</c> prints it and asks for a confirmation.
+/// </summary>
+/// <param name="Packages">The packages, in installation order.</param>
+/// <param name="Reactivated">Names of the installed dependencies reactivated rather than installed.</param>
+/// <param name="RequiresAdministrator">Whether an administrator approves it, once for the whole plan.</param>
+public sealed record KazoPackageInstallPlan(
+    IReadOnlyList<KazoPlannedPackage> Packages,
+    IReadOnlyList<string> Reactivated,
+    bool RequiresAdministrator)
+{
+    /// <summary>Gets whether the plan does more than the requested package.</summary>
+    public bool HasDependencies => Packages.Count > 1 || Reactivated.Count > 0;
 }
 
 /// <summary>What a repository publishes (its <c>index.json</c>, ADR 0182 §2).</summary>
@@ -185,6 +246,21 @@ public sealed record KazoPackageInstallReport(
     /// <see langword="false"/> when the source has no key and the package was checked by its SHA-256 only.
     /// </summary>
     public bool Signed { get; init; }
+
+    /// <summary>
+    /// Gets what was installed with the app because it needs it (ADR 0248 §1), in installation
+    /// order; empty when every required dependency was there already.
+    /// </summary>
+    public IReadOnlyList<KazoPackageInstallReport> Dependencies { get; init; } = [];
+
+    /// <summary>Gets the names of the installed dependencies the installation reactivated (ADR 0248 §1).</summary>
+    public IReadOnlyList<string> Reactivated { get; init; } = [];
+
+    /// <summary>
+    /// Gets the ids of the apps that the removal of this package had disabled and that installing it
+    /// again reactivated (ADR 0248 §3).
+    /// </summary>
+    public IReadOnlyList<string> ReactivatedDependents { get; init; } = [];
 }
 
 /// <summary>A package refused or a source that could not be read (ADR 0182 §5).</summary>

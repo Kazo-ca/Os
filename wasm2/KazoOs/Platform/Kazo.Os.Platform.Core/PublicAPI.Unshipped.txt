@@ -26,3 +26,93 @@ static Kazo.Os.Platform.Core.Policy.CapabilityText.Describe(string! capability, 
 static Kazo.Os.Platform.Core.Policy.CleanProfileCapabilityGrantSeeder.SeedDeclaredCapabilities(Kazo.Os.App.Abstractions.Policy.ICapabilityGrantRepository! repository, Kazo.Os.App.Abstractions.AppManifest! manifest, string! userId, bool isSystemApp, Kazo.Os.App.Abstractions.ICapabilityCatalog! catalog, System.Action<string!>? skipped = null) -> System.Collections.Generic.IReadOnlyList<Kazo.Os.App.Abstractions.Policy.CapabilityGrantMutationResult!>!
 static Kazo.Os.Platform.Core.Policy.DangerousCapabilityEvaluator.DeclaresDangerousCapabilities(Kazo.Os.App.Abstractions.AppManifest! manifest, Kazo.Os.App.Abstractions.ICapabilityCatalog! catalog) -> bool
 static Kazo.Os.Platform.Core.Policy.DangerousCapabilityEvaluator.Evaluate(Kazo.Os.App.Abstractions.AppManifest! manifest, bool isSystemApp, Kazo.Os.Platform.Core.Policy.DangerousCapabilityPolicy policy, Kazo.Os.Platform.Core.Policy.AppPermissionDecisions! decisions, Kazo.Os.App.Abstractions.ICapabilityCatalog! catalog) -> System.Collections.Generic.IReadOnlyList<Kazo.Os.Platform.Core.Policy.DangerousCapabilityStatus!>!
+const Kazo.Os.Platform.Core.Apps.AppsConfigDocument.DisabledByDependencySection = "disabled-by-dependency" -> string!
+const Kazo.Os.Platform.Core.Apps.Packages.AppCatalogDocument.MaximumDependencies = 64 -> int
+Kazo.Os.Platform.Core.Apps.Packages.AppDependencyRange
+Kazo.Os.Platform.Core.Apps.Packages.AppPackageInstallPlan.Root.get -> Kazo.Os.Platform.Core.Apps.Packages.AppPackagePlan!
+Kazo.Os.Platform.Core.Apps.Packages.AppPackageInstallPlan.Dependencies.get -> System.Collections.Generic.IReadOnlyList<Kazo.Os.Platform.Core.Apps.Packages.AppPackagePlan!>!
+Kazo.Os.Platform.Core.Apps.Packages.AppPackageInstallPlan.Reactivations.get -> System.Collections.Generic.IReadOnlyList<Kazo.Os.Platform.Core.Apps.Packages.AppPackageReactivation!>!
+Kazo.Os.Platform.Core.Apps.Packages.AppPackageInstallPlan.Root.init -> void
+Kazo.Os.Platform.Core.Apps.Packages.AppPackageInstallPlan.Dependencies.init -> void
+Kazo.Os.Platform.Core.Apps.Packages.AppPackageInstallPlan.Reactivations.init -> void
+Kazo.Os.Platform.Core.Apps.Packages.AppPackageInstallPlan
+override Kazo.Os.Platform.Core.Apps.Packages.AppPackageInstallPlan.ToString() -> string!
+static Kazo.Os.Platform.Core.Apps.Packages.AppPackageInstallPlan.operator !=(Kazo.Os.Platform.Core.Apps.Packages.AppPackageInstallPlan? left, Kazo.Os.Platform.Core.Apps.Packages.AppPackageInstallPlan? right) -> bool
+static Kazo.Os.Platform.Core.Apps.Packages.AppPackageInstallPlan.operator ==(Kazo.Os.Platform.Core.Apps.Packages.AppPackageInstallPlan? left, Kazo.Os.Platform.Core.Apps.Packages.AppPackageInstallPlan? right) -> bool
+override Kazo.Os.Platform.Core.Apps.Packages.AppPackageInstallPlan.GetHashCode() -> int
+override Kazo.Os.Platform.Core.Apps.Packages.AppPackageInstallPlan.Equals(object? obj) -> bool
+Kazo.Os.Platform.Core.Apps.Packages.AppPackageInstallPlan.Equals(Kazo.Os.Platform.Core.Apps.Packages.AppPackageInstallPlan? other) -> bool
+Kazo.Os.Platform.Core.Apps.Packages.AppPackageInstallPlan.<Clone>$() -> Kazo.Os.Platform.Core.Apps.Packages.AppPackageInstallPlan!
+Kazo.Os.Platform.Core.Apps.Packages.AppPackageInstallPlan.Deconstruct(out Kazo.Os.Platform.Core.Apps.Packages.AppPackagePlan! Root, out System.Collections.Generic.IReadOnlyList<Kazo.Os.Platform.Core.Apps.Packages.AppPackagePlan!>! Dependencies, out System.Collections.Generic.IReadOnlyList<Kazo.Os.Platform.Core.Apps.Packages.AppPackageReactivation!>! Reactivations) -> void
+Kazo.Os.Platform.Core.Elevation.AppInstallApprovalDependency.AppId.get -> string!
+Kazo.Os.Platform.Core.Elevation.AppInstallApprovalDependency.Name.get -> string!
+Kazo.Os.Platform.Core.Elevation.AppInstallApprovalDependency
+Kazo.Os.Platform.Core.Elevation.AppInstallApprovalDependency.AppId.init -> void
+Kazo.Os.Platform.Core.Elevation.AppInstallApprovalDependency.Name.init -> void
+override Kazo.Os.Platform.Core.Elevation.AppInstallApprovalDependency.ToString() -> string!
+Kazo.Os.Platform.Core.Elevation.AppInstallApprovalDependency.PreviousVersion.get -> string?
+Kazo.Os.Platform.Core.Elevation.AppInstallApprovalDependency.PreviousVersion.init -> void
+Kazo.Os.Platform.Core.Elevation.AppInstallApprovalDependency.SizeBytes.get -> long
+static Kazo.Os.Platform.Core.Elevation.AppInstallApprovalDependency.operator !=(Kazo.Os.Platform.Core.Elevation.AppInstallApprovalDependency? left, Kazo.Os.Platform.Core.Elevation.AppInstallApprovalDependency? right) -> bool
+Kazo.Os.Platform.Core.Elevation.AppInstallApprovalDependency.Version.get -> string!
+Kazo.Os.Platform.Core.Elevation.AppInstallApprovalDependency.Source.get -> string!
+Kazo.Os.Platform.Core.Elevation.AppInstallApprovalDependency.SizeBytes.init -> void
+Kazo.Os.Platform.Core.Elevation.AppInstallApprovalDependency.Version.init -> void
+static Kazo.Os.Platform.Core.Elevation.AppInstallApprovalDependency.operator ==(Kazo.Os.Platform.Core.Elevation.AppInstallApprovalDependency? left, Kazo.Os.Platform.Core.Elevation.AppInstallApprovalDependency? right) -> bool
+Kazo.Os.Platform.Core.Elevation.AppInstallApprovalDependency.Trust.get -> Kazo.Os.Platform.Core.Apps.Packages.AppSourceTrust
+Kazo.Os.Platform.Core.Elevation.AppInstallApprovalDependency.Source.init -> void
+override Kazo.Os.Platform.Core.Elevation.AppInstallApprovalDependency.GetHashCode() -> int
+Kazo.Os.Platform.Core.Elevation.AppInstallApprovalDependency.Trust.init -> void
+Kazo.Os.Platform.Core.Elevation.AppInstallApprovalDependency.SystemWide.get -> bool
+Kazo.Os.Platform.Core.Elevation.AppInstallApprovalDependency.IsFeature.get -> bool
+override Kazo.Os.Platform.Core.Elevation.AppInstallApprovalDependency.Equals(object? obj) -> bool
+Kazo.Os.Platform.Core.Elevation.AppInstallApprovalDependency.DangerousCapabilities.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Kazo.Os.Platform.Core.Elevation.AppInstallApprovalDependency.SystemWide.init -> void
+Kazo.Os.Platform.Core.Elevation.AppInstallApprovalDependency.Equals(Kazo.Os.Platform.Core.Elevation.AppInstallApprovalDependency? other) -> bool
+Kazo.Os.Platform.Core.Elevation.AppInstallApprovalDependency.DangerousCapabilities.init -> void
+Kazo.Os.Platform.Core.Elevation.AppInstallApprovalDependency.<Clone>$() -> Kazo.Os.Platform.Core.Elevation.AppInstallApprovalDependency!
+Kazo.Os.Platform.Core.Elevation.AppInstallApprovalDependency.IsFeature.init -> void
+Kazo.Os.Platform.Core.Elevation.AppInstallApprovalDependency.Deconstruct(out string! AppId, out string! Name, out string! Version, out string? PreviousVersion, out long SizeBytes, out string! Source, out Kazo.Os.Platform.Core.Apps.Packages.AppSourceTrust Trust, out bool SystemWide, out bool IsFeature, out System.Collections.Generic.IReadOnlyList<string!>! DangerousCapabilities) -> void
+const Kazo.Os.Platform.Core.Apps.Packages.AppPackageInstaller.DependencyUnresolvedCode = "apps.package.dependency-unresolved" -> string!
+const Kazo.Os.Platform.Core.Apps.Packages.AppPackageInstaller.DependencyConflictCode = "apps.package.dependency-conflict" -> string!
+const Kazo.Os.Platform.Core.Apps.Packages.AppPackageInstaller.MaximumPlanPackages = 16 -> int
+Kazo.Os.Platform.Core.Apps.Packages.AppPackageReactivation.AppId.get -> string!
+Kazo.Os.Platform.Core.Apps.Packages.AppPackageReactivation.ForMachine.get -> bool
+Kazo.Os.Platform.Core.Apps.Packages.AppPackageReactivation.Name.get -> string!
+Kazo.Os.Platform.Core.Apps.Packages.AppPackageReactivation.Name.init -> void
+Kazo.Os.Platform.Core.Apps.Packages.AppPackageReactivation.ForMachine.init -> void
+Kazo.Os.Platform.Core.Apps.Packages.AppPackageReactivation.AppId.init -> void
+Kazo.Os.Platform.Core.Apps.Packages.AppPackageReactivation
+override Kazo.Os.Platform.Core.Apps.Packages.AppPackageReactivation.ToString() -> string!
+static Kazo.Os.Platform.Core.Apps.Packages.AppPackageReactivation.operator !=(Kazo.Os.Platform.Core.Apps.Packages.AppPackageReactivation? left, Kazo.Os.Platform.Core.Apps.Packages.AppPackageReactivation? right) -> bool
+static Kazo.Os.Platform.Core.Apps.Packages.AppPackageReactivation.operator ==(Kazo.Os.Platform.Core.Apps.Packages.AppPackageReactivation? left, Kazo.Os.Platform.Core.Apps.Packages.AppPackageReactivation? right) -> bool
+override Kazo.Os.Platform.Core.Apps.Packages.AppPackageReactivation.GetHashCode() -> int
+override Kazo.Os.Platform.Core.Apps.Packages.AppPackageReactivation.Equals(object? obj) -> bool
+Kazo.Os.Platform.Core.Apps.Packages.AppPackageReactivation.Equals(Kazo.Os.Platform.Core.Apps.Packages.AppPackageReactivation? other) -> bool
+Kazo.Os.Platform.Core.Apps.Packages.AppPackageReactivation.<Clone>$() -> Kazo.Os.Platform.Core.Apps.Packages.AppPackageReactivation!
+Kazo.Os.Platform.Core.Apps.Packages.AppPackageReactivation.Deconstruct(out string! AppId, out string! Name, out bool ForMachine) -> void
+static Kazo.Os.Platform.Core.Apps.AppsConfigDocument.MarkDisabledByDependency(string? content, System.Collections.Generic.IEnumerable<string!>! appIds, string! dependencyId, string! defaultContent) -> string!
+static Kazo.Os.Platform.Core.Apps.AppsConfigDocument.ReadDisabledByDependency(string? content, string! dependencyId) -> System.Collections.Generic.IReadOnlyList<string!>!
+static Kazo.Os.Platform.Core.Apps.AppsConfigDocument.ForgetDisabledByDependency(string? content, System.Collections.Generic.IEnumerable<string!>! appIds) -> string!
+Kazo.Os.Platform.Core.Apps.Packages.AppCatalogVersion.Dependencies.get -> System.Collections.Generic.IReadOnlyList<Kazo.Os.App.Abstractions.AppDependencyManifest!>?
+Kazo.Os.Platform.Core.Apps.Packages.AppCatalogVersion.Dependencies.init -> void
+Kazo.Os.Platform.Core.Apps.Packages.AppPackageInstallPlan.AppPackageInstallPlan(Kazo.Os.Platform.Core.Apps.Packages.AppPackagePlan! Root, System.Collections.Generic.IReadOnlyList<Kazo.Os.Platform.Core.Apps.Packages.AppPackagePlan!>! Dependencies, System.Collections.Generic.IReadOnlyList<Kazo.Os.Platform.Core.Apps.Packages.AppPackageReactivation!>! Reactivations) -> void
+Kazo.Os.Platform.Core.Apps.Packages.AppPackageInstallPlan.Packages.get -> System.Collections.Generic.IReadOnlyList<Kazo.Os.Platform.Core.Apps.Packages.AppPackagePlan!>!
+Kazo.Os.Platform.Core.Apps.Packages.AppPackageInstallPlan.RequiresAdministrator.get -> bool
+Kazo.Os.Platform.Core.Apps.Packages.AppPackageInstallPlan.HasDependencies.get -> bool
+Kazo.Os.Platform.Core.Apps.Packages.AppPackageReactivation.AppPackageReactivation(string! AppId, string! Name, bool ForMachine) -> void
+static Kazo.Os.Platform.Core.Apps.Packages.AppDependencyRange.Contains(Kazo.Os.App.Abstractions.AppDependencyManifest! dependency, Kazo.Os.App.Abstractions.SemanticVersion version) -> bool
+static Kazo.Os.Platform.Core.Apps.Packages.AppDependencyRange.Describe(Kazo.Os.App.Abstractions.AppDependencyManifest! dependency) -> string!
+Kazo.Os.Platform.Core.Apps.Packages.AppPackageInstaller.BuildPlanAsync(Kazo.Os.Platform.Core.Apps.Packages.AppPackageSource! source, Kazo.Os.Platform.Core.Apps.Packages.AppPackageInstallContext! request, System.IProgress<Kazo.Os.AppSdk.Apps.KazoPackageInstallProgress!>? progress = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.Platform.Core.Apps.Packages.AppPackageInstallPlan!>
+Kazo.Os.Platform.Core.Apps.Packages.AppPackageInstaller.CommitPlanAsync(Kazo.Os.Platform.Core.Apps.Packages.AppPackageInstallPlan! plan, System.Func<Kazo.Os.Platform.Core.Apps.Packages.AppPackagePlan!, Kazo.Os.Simulation.Abstractions.Gateways.IAppFileSystemGateway!>! writerFor, string! by, System.Func<Kazo.Os.Platform.Core.Apps.Packages.AppPackagePlan!, System.Collections.Generic.IReadOnlyList<string!>!>? personalCopiesFor = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Kazo.Os.Platform.Core.Apps.Packages.AppPackageInstallContext.DisabledApps.get -> System.Collections.Generic.IReadOnlyDictionary<string!, bool>!
+Kazo.Os.Platform.Core.Apps.Packages.AppPackageInstallContext.DisabledApps.init -> void
+Kazo.Os.Platform.Core.Elevation.AppInstallApprovalRequest.Dependencies.get -> System.Collections.Generic.IReadOnlyList<Kazo.Os.Platform.Core.Elevation.AppInstallApprovalDependency!>!
+Kazo.Os.Platform.Core.Elevation.AppInstallApprovalRequest.Dependencies.init -> void
+Kazo.Os.Platform.Core.Elevation.AppInstallApprovalRequest.Reactivated.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Kazo.Os.Platform.Core.Elevation.AppInstallApprovalRequest.Reactivated.init -> void
+Kazo.Os.Platform.Core.Elevation.AppInstallApprovalRequest.PlannedFeatures.get -> System.Collections.Generic.IReadOnlyList<Kazo.Os.App.Abstractions.AppManifest!>!
+Kazo.Os.Platform.Core.Elevation.AppInstallApprovalRequest.PlannedFeatures.init -> void
+Kazo.Os.Platform.Core.Elevation.AppInstallApprovalRequest.DisabledDependents.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Kazo.Os.Platform.Core.Elevation.AppInstallApprovalRequest.DisabledDependents.init -> void
+Kazo.Os.Platform.Core.Elevation.AppInstallApprovalDependency.AppInstallApprovalDependency(string! AppId, string! Name, string! Version, string? PreviousVersion, long SizeBytes, string! Source, Kazo.Os.Platform.Core.Apps.Packages.AppSourceTrust Trust, bool SystemWide, bool IsFeature, System.Collections.Generic.IReadOnlyList<string!>! DangerousCapabilities) -> void
