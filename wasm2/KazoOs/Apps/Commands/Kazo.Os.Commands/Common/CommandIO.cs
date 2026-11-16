@@ -96,6 +96,25 @@ internal static class CommandIO
             return await context.StandardInput.ReadToEndAsync(cancellationToken);
         }
 
+        Stream? content = await OpenContentAsync(context, file, command, cancellationToken);
+        if (content is null)
+        {
+            return null;
+        }
+
+        using StreamReader reader = new(content);
+        return await reader.ReadToEndAsync(cancellationToken);
+    }
+
+    /// <summary>
+    /// Opens one file (never standard input) through the instance's own filesystem gateway, as
+    /// <see cref="ReadTextAsync"/> does, but hands back the content stream so a command can stop
+    /// reading early: <c>head -c 16 /dev/urandom</c> must not read an endless device to its end
+    /// (issue #542). The caller disposes the stream. Prints <c>cmd: file: reason</c> and returns
+    /// null on failure.
+    /// </summary>
+    public static async Task<Stream?> OpenContentAsync(TerminalExecutionContext context, string file, string command, CancellationToken cancellationToken)
+    {
         string resolved = ResolvePath(context.WorkingDirectory, file);
         FileSystemResult<FileSystemContentReadHandle> result;
         try
@@ -114,8 +133,7 @@ internal static class CommandIO
             return null;
         }
 
-        using StreamReader reader = new(result.Value.Content);
-        return await reader.ReadToEndAsync(cancellationToken);
+        return result.Value.Content;
     }
 
     /// <summary>Resolves a path against a working directory, as the shell's commands always did.</summary>
