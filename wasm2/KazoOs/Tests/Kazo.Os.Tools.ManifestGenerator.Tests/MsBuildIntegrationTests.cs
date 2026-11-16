@@ -160,6 +160,72 @@ public sealed class MsBuildIntegrationTests
         }
     }
 
+    [Theory]
+    [InlineData(null, 1, "error KOSAPP0100")]
+    [InlineData("false", 0, "warning KOSAPP0101")]
+    public async Task KazoOsPack_checks_the_package_against_the_api_surface_of_the_target_os(string? apiCheck, int expectedExitCode, string expectedLine)
+    {
+        // ADR 0277 §2 (issue #346): an OS whose System.Runtime has no type at all, so the app's
+        // first call to System.Object is a member the trimmed OS would not have.
+        string output = Directory.CreateTempSubdirectory("kazoos-pack-").FullName;
+        string surface = Path.Combine(output, "surface.json");
+        await File.WriteAllTextAsync(surface, """{"format":1,"osVersion":"9.9.9","assemblies":{"System.Runtime":{"types":{}}}}""");
+        try
+        {
+            List<string> arguments = ["-t:KazoOsPack", $"-p:KazoOsPackageOutput={Path.Combine(output, "packages")}", $"-p:KazoOsApiSurfaceFile={surface}"];
+            if (apiCheck is not null)
+            {
+                arguments.Add($"-p:KazoOsApiCheck={apiCheck}");
+            }
+
+            (int exitCode, string log) = await BuildFixtureAsync("WithLibrary", null, [.. arguments]);
+
+            Assert.True(exitCode == expectedExitCode, log);
+            Assert.Contains(expectedLine, log, StringComparison.Ordinal);
+            Assert.Contains("Kazo OS 9.9.9 (trimmed) does not have", log, StringComparison.Ordinal);
+            Assert.Equal(expectedExitCode == 0, File.Exists(Path.Combine(output, "packages", "index.json")));
+            if (expectedExitCode == 0)
+            {
+                // ADR 0277 §3: the Store checks a package built elsewhere with the same command.
+                string package = Directory.EnumerateFiles(Path.Combine(output, "packages"), "*.kazoapp", SearchOption.AllDirectories).Single();
+                (int checkExitCode, string checkLog) = await RunGeneratorAsync("check-api", "--package", package, "--api-surface", surface);
+                Assert.True(checkExitCode == 1, checkLog);
+                Assert.Contains("error KOSAPP0100", checkLog, StringComparison.Ordinal);
+                (int noSurfaceExitCode, string noSurfaceLog) = await RunGeneratorAsync("check-api", "--package", package, "--api-surface", Path.Combine(output, "missing.json.gz"));
+                Assert.True(noSurfaceExitCode == 1, noSurfaceLog);
+                Assert.Contains("KOSAPP0102", noSurfaceLog, StringComparison.Ordinal);
+            }
+        }
+        finally
+        {
+            Directory.Delete(output, recursive: true);
+        }
+    }
+
+    /// <summary>Runs the generator this test project references, as the Store runs the one of a release.</summary>
+    private static async Task<(int ExitCode, string Output)> RunGeneratorAsync(params string[] arguments)
+    {
+        ProcessStartInfo startInfo = new("dotnet")
+        {
+            UseShellExecute = false,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            CreateNoWindow = true
+        };
+        startInfo.ArgumentList.Add(typeof(ApiSurfaceFile).Assembly.Location);
+        foreach (string argument in arguments)
+        {
+            startInfo.ArgumentList.Add(argument);
+        }
+
+        using Process process = Process.Start(startInfo)!;
+        Task<string> standardOutput = process.StandardOutput.ReadToEndAsync();
+        Task<string> standardError = process.StandardError.ReadToEndAsync();
+        using CancellationTokenSource timeout = new(BuildTimeout);
+        await process.WaitForExitAsync(timeout.Token);
+        return (process.ExitCode, await standardOutput + await standardError);
+    }
+
     /// <summary>The author key variable of ADR 0219 before its 2026-11-07 amendment.</summary>
     private const string FormerAuthorKeyVariable = "HACKEROS_APP_SIGNING_KEY";
 
