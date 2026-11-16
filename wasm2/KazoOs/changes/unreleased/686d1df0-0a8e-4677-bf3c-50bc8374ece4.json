@@ -1,6 +1,6 @@
 {
   "id": "686d1df0-0a8e-4677-bf3c-50bc8374ece4",
-  "category": "added",
+  "category": "developer",
   "audience": ["developer"],
   "title": {
     "en": "A trimmed publish writes the API surface it ships",
