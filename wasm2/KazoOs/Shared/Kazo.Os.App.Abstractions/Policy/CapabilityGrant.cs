@@ -163,7 +163,9 @@ public sealed record CapabilityGrant
 
         ArgumentException.ThrowIfNullOrWhiteSpace(appId);
         ArgumentException.ThrowIfNullOrWhiteSpace(userId);
-        if (!AppCapabilities.IsKnown(capability) && !TopicPermissions.IsWellFormed(capability))
+        // ADR 0246 §1: a feature's permission is a well-formed identifier outside the built-in prefixes;
+        // whether the catalog knows it now is decided where the grant is made (the seeder, the gate).
+        if (!AppCapabilities.IsKnown(capability) && !TopicPermissions.IsWellFormed(capability) && !FeatureCapabilities.IsFeaturePermission(capability))
         {
             throw new ArgumentException($"Unknown exact capability '{capability}'.", nameof(capability));
         }

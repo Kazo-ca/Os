@@ -27,6 +27,9 @@ internal sealed partial class AppManagementGateway
     /// </summary>
     public Func<IInstalledLibraryState?>? InstalledLibraries { get; init; }
 
+    /// <summary>Gets the catalog of capabilities of the running OS (ADR 0246); <see langword="null"/> for the built-in catalog.</summary>
+    public Func<ICapabilityCatalog?>? Capabilities { get; init; }
+
     /// <summary>
     /// Gets the machine decisions of <c>/etc/kazoos/app-permissions.config</c> (ADR 0049 §4), where
     /// the administrator's consent to a feature's installation is written as <c>allow</c> for its

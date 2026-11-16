@@ -24,6 +24,7 @@ ailleurs, l'OS servi par `Kazo.Os.Server`.
 | Rechargement de la page **avant** la fin du lien (redémarrage pour une mise à jour, F5 pendant l'installation) | L'onglet a gardé le lien ([ADR 0265](adr/0265-direct-link-survives-update-restart.md)) : il est relancé, l'invité continue sans clic et l'app s'ouvre (sans nouveau téléchargement si elle était déjà installée). |
 | L'app est refusée parce qu'une version plus récente attend (ADR 0239 §2) | « Redémarrer » recharge l'onglet sur la nouvelle version, qui relance le lien et ouvre l'app. « Plus tard » oublie le lien. |
 | Rechargement de la page **après** la fin du lien | Le paramètre a été retiré de l'adresse et l'onglet a oublié le lien : rien ne recommence. L'écran habituel s'affiche. |
+| Première connexion du compte | L'[assistant de bienvenue](welcome-wizard.md) ne s'affiche pas quand un lien attend : l'app s'ouvre. Il s'affichera à la prochaine connexion (ADR 0276). |
 | Identifiant mal formé | Le lien est ignoré (mais retiré de l'adresse) ; l'OS démarre comme d'habitude. |
 
 ### Erreurs

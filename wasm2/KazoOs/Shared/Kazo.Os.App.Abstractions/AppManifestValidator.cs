@@ -50,7 +50,8 @@ public static partial class AppManifestValidator
                 errors);
         }
 
-        ValidateCapabilities(manifest.Capabilities, errors);
+        ValidateCapabilities(manifest, errors);
+        ValidateProvidedCapabilities(manifest, errors);
         if (manifest.Kind != AppKind.Feature)
         {
             // ADR 0260 §3: a feature's set may hold what its window children need; the feature itself never runs.
@@ -158,6 +159,84 @@ public static partial class AppManifestValidator
         }
 
         return new ManifestValidationResult(errors);
+    }
+
+    /// <summary>
+    /// ADR 0246 §1 and §2 on one manifest: only a feature declares permissions; it names one prefix,
+    /// not reserved by the built-in catalog; each permission is <c>&lt;prefix&gt;.&lt;name&gt;</c>,
+    /// declared once, a dangerous one with its risk statement; it covers only permissions of the same
+    /// feature, never one more dangerous than itself.
+    /// </summary>
+    private static void ValidateProvidedCapabilities(AppManifest manifest, List<ManifestValidationError> errors)
+    {
+        IReadOnlyList<AppProvidedCapabilityManifest> declared = manifest.ProvidedCapabilities ?? [];
+        if (declared.Count == 0 && manifest.CapabilityPrefix is null)
+        {
+            return;
+        }
+
+        if (manifest.Kind != AppKind.Feature)
+        {
+            AddError(errors, "manifest.capability.not-feature", "providedCapabilities", "Only a feature declares permissions of its own (ADR 0246).");
+            return;
+        }
+
+        string? prefix = manifest.CapabilityPrefix;
+        if (!FeatureCapabilities.IsWellFormedPrefix(prefix))
+        {
+            AddError(errors, "manifest.capability.prefix", "capabilityPrefix", "A feature that declares permissions names one lowercase prefix segment, such as 'x86' (ADR 0246 §2).");
+            return;
+        }
+
+        if (FeatureCapabilities.ReservedPrefixes.Contains(prefix!))
+        {
+            AddError(errors, "manifest.capability.prefix-reserved", "capabilityPrefix", $"The prefix '{prefix}' belongs to the built-in catalog of capabilities.");
+            return;
+        }
+
+        ValidateUniqueValues(declared.Select(static capability => capability.Id ?? string.Empty), "providedCapabilities", errors);
+        Dictionary<string, AppProvidedCapabilityManifest> byId = declared
+            .Where(static capability => capability.Id is not null)
+            .GroupBy(static capability => capability.Id, StringComparer.Ordinal)
+            .ToDictionary(static group => group.Key, static group => group.First(), StringComparer.Ordinal);
+        foreach (AppProvidedCapabilityManifest capability in declared)
+        {
+            ValidateProvidedCapability(capability, prefix!, byId, errors);
+        }
+    }
+
+    private static void ValidateProvidedCapability(
+        AppProvidedCapabilityManifest capability,
+        string prefix,
+        IReadOnlyDictionary<string, AppProvidedCapabilityManifest> byId,
+        List<ManifestValidationError> errors)
+    {
+        if (!FeatureCapabilities.IsFeaturePermission(capability.Id) || FeatureCapabilities.GetPrefix(capability.Id) != prefix)
+        {
+            AddError(errors, "manifest.capability.provided-id", "providedCapabilities", $"'{capability.Id}' is not a permission under the prefix '{prefix}.' (ADR 0246 §2).");
+        }
+
+        if (string.IsNullOrWhiteSpace(capability.Title))
+        {
+            AddError(errors, "manifest.capability.title", "providedCapabilities", $"'{capability.Id}' needs a title.");
+        }
+
+        if (capability.Risk == CapabilityRisk.Dangerous && string.IsNullOrWhiteSpace(capability.RiskStatement))
+        {
+            AddError(errors, "manifest.capability.risk-statement", "providedCapabilities", $"'{capability.Id}' is dangerous: it needs the sentence that explains its risk (ADR 0049 §1).");
+        }
+
+        foreach (string covered in capability.Covers ?? [])
+        {
+            if (!byId.TryGetValue(covered, out AppProvidedCapabilityManifest? target) || string.Equals(covered, capability.Id, StringComparison.Ordinal))
+            {
+                AddError(errors, "manifest.capability.covers", "providedCapabilities", $"'{capability.Id}' covers '{covered}', which is not another permission of the feature.");
+            }
+            else if (target.Risk > capability.Risk)
+            {
+                AddError(errors, "manifest.capability.covers-risk", "providedCapabilities", $"'{capability.Id}' covers the dangerous '{covered}': a covering permission is at least as dangerous as what it covers (ADR 0246 §3).");
+            }
+        }
     }
 
     /// <summary>
@@ -1001,21 +1080,28 @@ public static partial class AppManifestValidator
     }
 
     private static void ValidateCapabilities(
-        IReadOnlyList<string> capabilities,
+        AppManifest manifest,
         List<ManifestValidationError> errors)
     {
+        IReadOnlyList<string> capabilities = manifest.Capabilities ?? [];
         ValidateUniqueValues(capabilities, "capabilities", errors);
+        // ADR 0246 §2: a permission of a feature is accepted when the app declares a dependency (the
+        // feature that provides it); the catalog and the installer check it is that feature's.
+        bool mayUseFeaturePermissions = (manifest.Dependencies ?? []).Count > 0 || manifest.Parent is not null;
+        HashSet<string> ownPermissions = new((manifest.ProvidedCapabilities ?? []).Select(static capability => capability.Id), StringComparer.Ordinal);
 
         foreach (string capability in capabilities)
         {
-            if (!AppCapabilities.IsKnown(capability) && !TopicPermissions.IsWellFormed(capability))
+            bool featurePermission = FeatureCapabilities.IsFeaturePermission(capability)
+                && (mayUseFeaturePermissions || ownPermissions.Contains(capability));
+            if (!AppCapabilities.IsKnown(capability) && !TopicPermissions.IsWellFormed(capability) && !featurePermission)
             {
                 AddError(
                     errors,
                     "manifest.capability.unknown",
                     "capabilities",
-                    $"Capability '{capability}' is not recognized by this App SDK version and is not a " +
-                    "well-formed topic permission.");
+                    $"Capability '{capability}' is not recognized by this App SDK version, is not a " +
+                    "well-formed topic permission, and is not the permission of a feature the app declares as a dependency (ADR 0246).");
             }
         }
     }

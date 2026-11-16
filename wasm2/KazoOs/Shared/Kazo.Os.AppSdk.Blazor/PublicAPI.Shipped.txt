@@ -153,6 +153,10 @@ Kazo.Os.AppSdk.Blazor.Components.KazoEmbeddedComponent<TController>.Parameters.s
 Kazo.Os.AppSdk.Blazor.Components.KazoEmbeddedComponent<TController>.ProviderAppId.get -> string?
 Kazo.Os.AppSdk.Blazor.Components.KazoEmbeddedComponent<TController>.Unavailable.get -> Microsoft.AspNetCore.Components.RenderFragment<string!>?
 Kazo.Os.AppSdk.Blazor.Components.KazoEmbeddedComponent<TController>.Unavailable.set -> void
+Kazo.Os.AppSdk.Blazor.Components.KazoOsChannelLink
+Kazo.Os.AppSdk.Blazor.Components.KazoOsChannelLink.KazoOsChannelLink() -> void
+Kazo.Os.AppSdk.Blazor.Components.KazoOsChannelLink.Version.get -> string!
+Kazo.Os.AppSdk.Blazor.Components.KazoOsChannelLink.Version.set -> void
 Kazo.Os.AppSdk.Blazor.Components.KazoOsVersionLabel
 Kazo.Os.AppSdk.Blazor.Components.KazoOsVersionLabel.AvailableBuild.get -> int?
 Kazo.Os.AppSdk.Blazor.Components.KazoOsVersionLabel.AvailableBuild.set -> void
@@ -925,6 +929,8 @@ const Kazo.Os.AppSdk.Blazor.Charts.KazoChartGeometry.Height = 100 -> double
 const Kazo.Os.AppSdk.Blazor.Charts.KazoChartGeometry.Width = 600 -> double
 const Kazo.Os.AppSdk.Blazor.Charts.KazoLineChart.ColorSlots = 8 -> int
 const Kazo.Os.AppSdk.Blazor.Components.KazoComponentResolution.PlatformProviderId = "platform" -> string!
+const Kazo.Os.AppSdk.Blazor.Components.KazoOsChannelLink.BetaSiteAddress = "https://os-beta.kazo.ca/" -> string!
+const Kazo.Os.AppSdk.Blazor.Components.KazoOsChannelLink.StableSiteAddress = "https://os.kazo.ca/" -> string!
 const Kazo.Os.AppSdk.Blazor.ContextMenus.KazoMenuAttributes.Menu = "data-kazo-menu" -> string!
 const Kazo.Os.AppSdk.Blazor.ContextMenus.KazoMenuAttributes.Suppress = "data-kazo-menu-suppress" -> string!
 const Kazo.Os.AppSdk.Blazor.ContextMenus.KazoMenuAttributes.Token = "data-kazo-menu-token" -> string!
@@ -1089,6 +1095,8 @@ static Kazo.Os.AppSdk.Blazor.Components.KazoComponentResolution.Resolved(string!
 static Kazo.Os.AppSdk.Blazor.Components.KazoComponentResolution.Unavailable(string! contract, string! error, string? providerAppId = null) -> Kazo.Os.AppSdk.Blazor.Components.KazoComponentResolution!
 static Kazo.Os.AppSdk.Blazor.Components.KazoComponentResolution.operator !=(Kazo.Os.AppSdk.Blazor.Components.KazoComponentResolution? left, Kazo.Os.AppSdk.Blazor.Components.KazoComponentResolution? right) -> bool
 static Kazo.Os.AppSdk.Blazor.Components.KazoComponentResolution.operator ==(Kazo.Os.AppSdk.Blazor.Components.KazoComponentResolution? left, Kazo.Os.AppSdk.Blazor.Components.KazoComponentResolution? right) -> bool
+static Kazo.Os.AppSdk.Blazor.Components.KazoOsChannelLink.GetSwitchTarget(Kazo.Os.App.Abstractions.SemanticVersion running, System.Uri! page) -> System.Uri?
+static Kazo.Os.AppSdk.Blazor.Components.KazoOsChannelLink.IsBeta(string? version) -> bool
 static Kazo.Os.AppSdk.Blazor.ContextMenus.KazoMenuRegistration.operator !=(Kazo.Os.AppSdk.Blazor.ContextMenus.KazoMenuRegistration? left, Kazo.Os.AppSdk.Blazor.ContextMenus.KazoMenuRegistration? right) -> bool
 static Kazo.Os.AppSdk.Blazor.ContextMenus.KazoMenuRegistration.operator ==(Kazo.Os.AppSdk.Blazor.ContextMenus.KazoMenuRegistration? left, Kazo.Os.AppSdk.Blazor.ContextMenus.KazoMenuRegistration? right) -> bool
 static Kazo.Os.AppSdk.Blazor.CredentialPromptDialogRequest.operator !=(Kazo.Os.AppSdk.Blazor.CredentialPromptDialogRequest? left, Kazo.Os.AppSdk.Blazor.CredentialPromptDialogRequest? right) -> bool
@@ -1210,6 +1218,7 @@ virtual Kazo.Os.AppSdk.Blazor.WindowAppBase.OnWindowStateChangedAsync(Kazo.Os.Ap
 virtual Kazo.Os.AppSdk.Blazor.WindowAppBase.ShouldRenderApp() -> bool
 ~override Kazo.Os.AppSdk.Blazor.Charts.KazoLineChart.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
 ~override Kazo.Os.AppSdk.Blazor.Components.KazoEmbeddedComponent<TController>.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
+~override Kazo.Os.AppSdk.Blazor.Components.KazoOsChannelLink.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
 ~override Kazo.Os.AppSdk.Blazor.Components.KazoOsVersionLabel.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
 ~override Kazo.Os.AppSdk.Blazor.KazoWindowSize.Equals(object obj) -> bool
 ~override Kazo.Os.AppSdk.Blazor.KazoWindowSize.ToString() -> string

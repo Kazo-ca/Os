@@ -45,6 +45,7 @@ classement.
 | `shell.control` | normale (ADR 0051 : n'agit que sur le shell de l'utilisateur qui a tapé la commande, voir [`shell-commands.md`](../dev/shell-commands.md)) |
 | `screens.manage` | normale (ADR 0184 : lister, ouvrir, restaurer, fermer et identifier les écrans par `KazoScreens`, comme Paramètres ▸ Écrans ; chaque appel part d'un clic de l'utilisateur) |
 | `shell.context-menu` | normale (ADR 0151 §6 : ajouter des entrées aux menus des fichiers ; sans elle, le générateur produit `KOSAPP0027` et l'OS ignore les entrées, voir [`context-menu.md`](context-menu.md#entrées-des-apps-dans-les-menus-des-fichiers-chantier-4)) |
+| `cloud-accounts.manage` | **dangereuse** (`KazoCloudAccounts` et le montage d'un lecteur cloud par `KazoDriveInfo.MountNetworkDriveAsync`, ADR 0270 ; déclarée par l'Explorateur de fichiers, Paramètres et `mount`) |
 | `permissions.manage` | **dangereuse** (`KazoPermissionAdministration`, ADR 0056 §9 ; déclarée par Paramètres) |
 | `server.connection.manage` | **dangereuse** (`KazoServerConnection`, ADR 0056 §10 ; déclarée par Paramètres) |
 | `system.power` | **dangereuse** (`KazoSystem` : redémarrage, réinitialisation, ADR 0056 §11 ; déclarée par Paramètres) |
@@ -74,7 +75,7 @@ opération de fichier demande, avant les bits de permission :
 | `~/.config/<appId>/` (ses paramètres, ADR 0044) | `filesystem.private.read` | `filesystem.private.write` |
 | `/etc/<appId>/` | `filesystem.private.read` | `filesystem.system.write` (et l'autorité d'administrateur) |
 | `/home/<utilisateur>/` de l'utilisateur qui agit | `filesystem.user-home.read` | `filesystem.user-home.write` |
-| un lecteur réseau (`hostfs`, ADR 0181) monté par l'utilisateur qui agit ([ADR 0231](../dev/adr/0231-network-drives-count-as-personal-files.md)) | `filesystem.user-home.read` | `filesystem.user-home.write` |
+| un lecteur réseau (`hostfs`, ADR 0181, ou cloud, [ADR 0267](../dev/adr/0267-cloud-drives-as-network-drives.md)) monté par l'utilisateur qui agit ([ADR 0231](../dev/adr/0231-network-drives-count-as-personal-files.md)) | `filesystem.user-home.read` | `filesystem.user-home.write` |
 | tout le reste : `/mnt` lui-même, le lecteur d'un autre utilisateur, `/etc`, `/var`… | `filesystem.system.read` | `filesystem.system.write` |
 
 Pour son propre lecteur réseau, une app qui n'a que `filesystem.system.*`
@@ -137,6 +138,66 @@ approbation machine : l'OS écrit les lignes `allow` de
 l'installation, et aucune fenêtre ne demande au premier lancement d'un point
 d'entrée. Le refus par usager reste possible. Voir
 [`app-installation.md`](../dev/app-installation.md#fonctionnalités-adr-0260).
+
+## Permissions déclarées par une Feature (ADR 0246)
+
+L'[ADR 0246](../dev/adr/0246-provider-declared-permissions.md) fait du
+catalogue des capacités un **service**, `ICapabilityCatalog` : le catalogue
+intégré (`AppCapabilities`), les permissions sujet de l'ADR 0040 et les
+permissions que **les fonctionnalités installées et activées** déclarent
+(`InstalledCapabilityCatalog`, qui suit le catalogue des apps en cours).
+
+- **Déclarer** (la fonctionnalité) : un préfixe à elle (`CapabilityPrefix`,
+  un segment en minuscules qu'aucune capacité intégrée n'utilise, `x86`) et
+  ses permissions (`ProvidedCapabilities`), chacune `<préfixe>.<nom>` avec un
+  titre, un niveau (`Normal` ou `Dangerous`), la phrase de risque d'une
+  dangereuse et ce qu'elle couvre (`Covers`) :
+
+```csharp
+public override string? CapabilityPrefix => "x86";
+
+public override IReadOnlyList<ProvidedCapability> ProvidedCapabilities =>
+[
+    new("x86.programs.launch", CapabilityRisk.Normal, "Lancer des programmes"),
+    new("x86.vm.use", CapabilityRisk.Normal, "Utiliser les VM"),
+    new("x86.vm.destroy", CapabilityRisk.Dangerous, "Supprimer des VM") { RiskStatement = "…" },
+    new("x86.vm", CapabilityRisk.Dangerous, "Gérer les VM") { RiskStatement = "…", Covers = ["x86.vm.use", "x86.vm.destroy"] },
+];
+```
+
+  Le manifeste les écrit dans `capabilityPrefix` et `providedCapabilities`.
+  Le validateur refuse un préfixe réservé (`manifest.capability.prefix-reserved`),
+  une permission hors du préfixe, une dangereuse sans phrase de risque, une
+  couverture d'une permission plus dangereuse ou d'une autre fonctionnalité.
+  L'installeur refuse un préfixe déjà pris par une autre fonctionnalité
+  (`apps.package.capability-prefix-taken`) et un identifiant déjà déclaré
+  (`apps.package.capability-already-provided`).
+- **Demander** (l'app cliente) : elle les liste dans `Capabilities`, avec une
+  **dépendance** vers la fonctionnalité (ADR 0262 §3), sans quoi
+  `manifest.capability.unknown`. Quand la fonctionnalité qui porte le préfixe
+  est installée, la dépendance doit la nommer.
+- **Accorder, jamais en silence** : à la connexion, le semeur n'accorde que ce
+  que le catalogue connaît. Une permission normale d'une fonctionnalité est
+  accordée si et seulement si la fonctionnalité est installée et activée ;
+  une dangereuse suit l'ADR 0049 mot pour mot (ligne `allow` machine après
+  l'approbation d'un administrateur, refus par usager, politique `block`).
+  Un identifiant **inconnu** n'est jamais accordé : il est écrit une fois dans
+  `/var/log/syslog` (`capability.unknown-skipped`). Les **permissions sujet**
+  de l'ADR 0040 sont **dangereuses** : elles demandent une approbation, comme
+  l'ADR 0040 l'exigeait (correction de l'issue #432).
+- **Couvrir** : accorder `x86.vm` accorde `x86.vm.use` et `x86.vm.destroy`
+  (`AppCapabilityChecker` et `CapabilityCatalogExtensions.IsGranted`).
+- **Retirer** la fonctionnalité retire ses permissions du catalogue : une
+  vérification les refuse, quelle que soit la ligne ou l'octroi restant ;
+  ils redeviennent effectifs à la réinstallation.
+- **Vérifier** (le service de la fonctionnalité) : chaque opération appelle
+  `context.Caller.Require("x86.vm.use")`, qui lève
+  `UnauthorizedAccessException` quand l'app appelante ne la détient pas
+  ([`feature-services.md`](feature-services.md)).
+- **Montrer** : l'écran d'approbation d'une installation, Paramètres ▸
+  Permissions et le rapport de `kazopkg install` montrent une permission de
+  fonctionnalité avec son titre, sa phrase de risque et la fonctionnalité qui
+  la déclare.
 
 ## Politique `policy.config`
 

@@ -172,6 +172,15 @@ désactivation et au retrait, et la commande d'un enfant `Terminal` passe avant
 celle d'une app ordinaire de même nom (après les apps système). Voir
 [`app-installation.md`](../dev/app-installation.md#fonctionnalités-adr-0260).
 
+#### Permissions déclarées : `ProvidedCapabilities` (ADR 0246)
+
+Une fonctionnalité déclare ses propres permissions sous un préfixe à elle
+(`CapabilityPrefix => "x86"`, `ProvidedCapabilities`), normales ou dangereuses,
+avec un titre, une phrase de risque et ce qu'elles couvrent ; une app cliente
+les demande dans `Capabilities` avec une dépendance vers la fonctionnalité.
+Elles suivent les règles du catalogue de l'OS : voir
+[`capabilities.md`](capabilities.md#permissions-déclarées-par-une-feature-adr-0246).
+
 #### Services fournis : `ProvidedServices` (ADR 0262)
 
 Une fonctionnalité fournit des **services** aux autres apps : chacun associe un

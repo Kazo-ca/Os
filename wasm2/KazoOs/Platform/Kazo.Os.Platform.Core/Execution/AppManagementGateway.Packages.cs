@@ -202,6 +202,8 @@ internal sealed partial class AppManagementGateway
             Signed = plan.Signed,
             IsFeature = plan.Package.IsFeature,
             EntryPoints = DescribeEntryPoints(plan.Package),
+            // ADR 0246: dangerous as the catalog of the running OS says, features' permissions included.
+            DangerousCapabilities = [.. manifest.Capabilities.Where((Capabilities?.Invoke() ?? BuiltInCapabilityCatalog.Instance).IsDangerous)],
         };
     }
 

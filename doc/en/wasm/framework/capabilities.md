@@ -45,6 +45,7 @@ classification.
 | `shell.control` | normal (ADR 0051: acts only on the shell of the user who typed the command, see [`shell-commands.md`](../dev/shell-commands.md)) |
 | `screens.manage` | normal (ADR 0184: list, open, restore, close and identify screens through `KazoScreens`, as Settings ▸ Screens does; each call comes from a user click) |
 | `shell.context-menu` | normal (ADR 0151 §6: add entries to file menus; without it, the generator produces `KOSAPP0027` and the OS ignores the entries, see [`context-menu.md`](context-menu.md#app-entries-in-the-file-menus-work-item-4)) |
+| `cloud-accounts.manage` | **dangerous** (`KazoCloudAccounts` and mounting a cloud drive through `KazoDriveInfo.MountNetworkDriveAsync`, ADR 0270; declared by File Explorer, Settings and `mount`) |
 | `permissions.manage` | **dangerous** (`KazoPermissionAdministration`, ADR 0056 §9; declared by Settings) |
 | `server.connection.manage` | **dangerous** (`KazoServerConnection`, ADR 0056 §10; declared by Settings) |
 | `system.power` | **dangerous** (`KazoSystem`: restart, reset, ADR 0056 §11; declared by Settings) |
@@ -74,7 +75,7 @@ file operation asks for, before the permission bits:
 | `~/.config/<appId>/` (its settings, ADR 0044) | `filesystem.private.read` | `filesystem.private.write` |
 | `/etc/<appId>/` | `filesystem.private.read` | `filesystem.system.write` (and administrator authority) |
 | `/home/<user>/` of the acting user | `filesystem.user-home.read` | `filesystem.user-home.write` |
-| a network drive (`hostfs`, ADR 0181) mounted by the acting user ([ADR 0231](../dev/adr/0231-network-drives-count-as-personal-files.md)) | `filesystem.user-home.read` | `filesystem.user-home.write` |
+| a network drive (`hostfs`, ADR 0181, or cloud, [ADR 0267](../dev/adr/0267-cloud-drives-as-network-drives.md)) mounted by the acting user ([ADR 0231](../dev/adr/0231-network-drives-count-as-personal-files.md)) | `filesystem.user-home.read` | `filesystem.user-home.write` |
 | everything else: `/mnt` itself, another user's drive, `/etc`, `/var`… | `filesystem.system.read` | `filesystem.system.write` |
 
 On their own network drive, an app that holds only `filesystem.system.*`
@@ -136,6 +137,64 @@ consent is the machine approval: the OS writes the `allow` lines of
 installation, and no window asks at the first launch of an entry point. A
 user's own refusal stays possible. See
 [`app-installation.md`](../dev/app-installation.md#features-adr-0260).
+
+## Permissions declared by a Feature (ADR 0246)
+
+[ADR 0246](../dev/adr/0246-provider-declared-permissions.md) makes the catalog
+of capabilities a **service**, `ICapabilityCatalog`: the built-in catalog
+(`AppCapabilities`), the topic permissions of ADR 0040 and the permissions that
+**the installed, enabled features** declare (`InstalledCapabilityCatalog`,
+which follows the running app catalog).
+
+- **Declaring** (the feature): a prefix of its own (`CapabilityPrefix`, one
+  lowercase segment no built-in capability uses, `x86`) and its permissions
+  (`ProvidedCapabilities`), each `<prefix>.<name>` with a title, a level
+  (`Normal` or `Dangerous`), the risk statement of a dangerous one and what it
+  covers (`Covers`):
+
+```csharp
+public override string? CapabilityPrefix => "x86";
+
+public override IReadOnlyList<ProvidedCapability> ProvidedCapabilities =>
+[
+    new("x86.programs.launch", CapabilityRisk.Normal, "Launch programs"),
+    new("x86.vm.use", CapabilityRisk.Normal, "Use virtual machines"),
+    new("x86.vm.destroy", CapabilityRisk.Dangerous, "Delete virtual machines") { RiskStatement = "…" },
+    new("x86.vm", CapabilityRisk.Dangerous, "Manage virtual machines") { RiskStatement = "…", Covers = ["x86.vm.use", "x86.vm.destroy"] },
+];
+```
+
+  The manifest writes them in `capabilityPrefix` and `providedCapabilities`.
+  The validator refuses a reserved prefix (`manifest.capability.prefix-reserved`),
+  a permission outside the prefix, a dangerous one without a risk statement,
+  covering a more dangerous permission or one of another feature. The
+  installer refuses a prefix another feature already took
+  (`apps.package.capability-prefix-taken`) and an identifier already declared
+  (`apps.package.capability-already-provided`).
+- **Asking** (the client app): it lists them in `Capabilities`, with a
+  **dependency** on the feature (ADR 0262 §3), otherwise
+  `manifest.capability.unknown`. When the feature that holds the prefix is
+  installed, the dependency must name it.
+- **Granting, never silently**: at sign-in, the seeder grants only what the
+  catalog knows. A normal permission of a feature is granted if and only if
+  the feature is installed and enabled; a dangerous one follows ADR 0049 word
+  for word (a machine `allow` line after an administrator's approval, refusal
+  per user, `block` policy). An **unknown** identifier is never granted: it is
+  written once to `/var/log/syslog` (`capability.unknown-skipped`). The
+  **topic permissions** of ADR 0040 are **dangerous**: they need an approval,
+  as ADR 0040 required (fix of issue #432).
+- **Covering**: granting `x86.vm` grants `x86.vm.use` and `x86.vm.destroy`
+  (`AppCapabilityChecker` and `CapabilityCatalogExtensions.IsGranted`).
+- **Removing** the feature removes its permissions from the catalog: a check
+  refuses them, whatever line or grant remains; they apply again once the
+  feature is reinstalled.
+- **Checking** (the feature's service): each operation calls
+  `context.Caller.Require("x86.vm.use")`, which throws
+  `UnauthorizedAccessException` when the calling app does not hold it
+  ([`feature-services.md`](feature-services.md)).
+- **Showing**: the approval window of an installation, Settings ▸ Permissions
+  and the report of `kazopkg install` show a feature's permission with its
+  title, its risk statement and the feature that declares it.
 
 ## `policy.config` policy
 

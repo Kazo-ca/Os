@@ -67,7 +67,14 @@ public sealed class X86Service(IFeatureServiceContext context) : Ix86
   `KazoNet`…) called directly acts **for the caller**. `EnterFeature()` makes
   the feature's context ambient for a block; `Caller` keeps naming the caller.
 - A permission the caller lacks is an **exception** of the operation
-  (`UnauthorizedAccessException`), never a `null` at resolution.
+  (`UnauthorizedAccessException`), never a `null` at resolution. The feature
+  declares its permissions
+  ([ADR 0246](../dev/adr/0246-provider-declared-permissions.md),
+  [`capabilities.md`](capabilities.md#permissions-declared-by-a-feature-adr-0246))
+  and each operation requires them with `context.Caller.Require("x86.vm.use")`,
+  or tests them with `context.Caller.Has(...)`: the OS decides (grant,
+  administrator approval, covering permission), the feature never reads a
+  decision file.
 
 ## Consuming a service (the app)
 

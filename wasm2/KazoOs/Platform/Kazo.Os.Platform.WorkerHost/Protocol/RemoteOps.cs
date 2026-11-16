@@ -73,6 +73,15 @@ internal static class RemoteOps
     public const string DriveMount = "drv.mount";
     public const string DriveReconnect = "drv.reconnect";
     public const string DriveUnmount = "drv.umount";
+    public const string DriveTypes = "drv.types";
+    public const string DriveMountNetwork = "drv.mountnet";
+    public const string CloudCanConnect = "cld.can";
+    public const string CloudPrepare = "cld.prepare";
+    public const string CloudProviders = "cld.providers";
+    public const string CloudAccounts = "cld.accounts";
+    public const string CloudConnect = "cld.connect";
+    public const string CloudReconnect = "cld.reconnect";
+    public const string CloudRemove = "cld.remove";
     public const string CrossOriginIsolation = "coi.get";
     public const string IntentLaunch = "int.launch";
     public const string IntentOpenFile = "int.open";

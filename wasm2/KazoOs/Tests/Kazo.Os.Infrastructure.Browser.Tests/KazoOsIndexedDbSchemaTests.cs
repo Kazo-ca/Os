@@ -12,7 +12,7 @@ public sealed class KazoOsIndexedDbSchemaTests
     public void DatabaseIdentity_MatchesAdr0015()
     {
         Assert.Equal("kazoos", KazoOsIndexedDbSchema.DatabaseName);
-        Assert.Equal(4, KazoOsIndexedDbSchema.CurrentVersion);
+        Assert.Equal(6, KazoOsIndexedDbSchema.CurrentVersion);
     }
 
     [Fact]
@@ -22,7 +22,7 @@ public sealed class KazoOsIndexedDbSchemaTests
         [
             "users", "groups", "sessions", "settings", "fsEntries", "fsLinks", "fsContent",
             "catalog", "grants", "audit", "diagnostics", "syncMetadata", "serverConnection",
-            "syncCursors", "syncRecordState"
+            "syncCursors", "syncRecordState", "servedFiles"
         ];
 
         string[] actual = [.. KazoOsIndexedDbSchema.ObjectStores.Select(store => store.Name)];

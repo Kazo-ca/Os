@@ -132,24 +132,34 @@ public sealed partial class AppInstallApprovalOverlay
                 : L["InstallApproval.MiB", (bytes / (Kibibyte * Kibibyte)).ToString("0.#", culture)];
     }
 
-    /// <summary>The capabilities with their title and risk sentence (ADR 0104), dangerous ones first.</summary>
-    private static IEnumerable<CapabilityLine> Describe(IReadOnlyList<string> capabilities) =>
-        capabilities
-            .Select(static capability =>
+    /// <summary>Gets the catalog of capabilities of the running OS (ADR 0246); absent in a host without one.</summary>
+    [Inject]
+    private IServiceProvider Services { get; set; } = default!;
+
+    /// <summary>
+    /// The capabilities with their title and risk sentence (ADR 0104), dangerous ones first, as the
+    /// catalog of the running OS describes them (ADR 0246): a feature's permission shows its own texts
+    /// and the feature that declares it.
+    /// </summary>
+    private IEnumerable<CapabilityLine> Describe(IReadOnlyList<string> capabilities)
+    {
+        ICapabilityCatalog catalog = Services?.GetService(typeof(ICapabilityCatalog)) as ICapabilityCatalog ?? BuiltInCapabilityCatalog.Instance;
+        return capabilities
+            .Select(capability =>
             {
-                try
+                if (catalog.Find(capability) is not { } found)
                 {
-                    CapabilityDescription description = CapabilityText.Describe(capability, CultureInfo.CurrentUICulture);
-                    return new CapabilityLine(capability, description.Title, description.RiskDescription, AppCapabilities.IsDangerous(capability));
-                }
-                catch (ArgumentException)
-                {
-                    // An app-declared topic permission is not in the catalog: show its identifier.
+                    // Unknown to this OS (a feature not installed yet): show its identifier.
                     return new CapabilityLine(capability, capability, null, false);
                 }
+
+                CapabilityDescription description = CapabilityText.Localize(found, CultureInfo.CurrentUICulture);
+                string title = description.ProviderId is { } provider ? $"{description.Title} ({provider})" : description.Title;
+                return new CapabilityLine(capability, title, description.RiskDescription, description.Risk == CapabilityRisk.Dangerous);
             })
             .OrderByDescending(static line => line.Dangerous)
             .ThenBy(static line => line.Id, StringComparer.Ordinal);
+    }
 
     private sealed record CapabilityLine(string Id, string Title, string? Risk, bool Dangerous);
 }

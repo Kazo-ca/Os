@@ -264,4 +264,82 @@
   <data name="AppLink.StoreAfterLogin" xml:space="preserve">
     <value>{0} will open in the Kazo OS Store after you sign in.</value>
   </data>
+  <data name="Welcome.Kicker" xml:space="preserve">
+    <value>Welcome to Kazo OS</value>
+  </data>
+  <data name="Welcome.Progress" xml:space="preserve">
+    <value>Step {0} of {1}</value>
+  </data>
+  <data name="Welcome.Language.Title" xml:space="preserve">
+    <value>Choose your language</value>
+  </data>
+  <data name="Welcome.Language.Intro" xml:space="preserve">
+    <value>Kazo OS and its apps speak the language you choose.</value>
+  </data>
+  <data name="Welcome.Language.System" xml:space="preserve">
+    <value>Follow the system language</value>
+  </data>
+  <data name="Welcome.Theme.Title" xml:space="preserve">
+    <value>Choose your theme</value>
+  </data>
+  <data name="Welcome.Theme.Intro" xml:space="preserve">
+    <value>Pick a look. The whole screen changes as soon as you choose.</value>
+  </data>
+  <data name="Welcome.Wallpaper.Title" xml:space="preserve">
+    <value>Choose your wallpaper</value>
+  </data>
+  <data name="Welcome.Wallpaper.Intro" xml:space="preserve">
+    <value>Keep the background of your theme or pick an image. You can use your own images later in Settings.</value>
+  </data>
+  <data name="Welcome.Wallpaper.Theme" xml:space="preserve">
+    <value>Theme background</value>
+  </data>
+  <data name="Welcome.Wallpaper.hacker-grid" xml:space="preserve">
+    <value>Grid</value>
+  </data>
+  <data name="Welcome.Wallpaper.circuit" xml:space="preserve">
+    <value>Circuit</value>
+  </data>
+  <data name="Welcome.Wallpaper.aurora" xml:space="preserve">
+    <value>Aurora</value>
+  </data>
+  <data name="Welcome.Wallpaper.nebula" xml:space="preserve">
+    <value>Nebula</value>
+  </data>
+  <data name="Welcome.TimeZone.Title" xml:space="preserve">
+    <value>Choose your time zone</value>
+  </data>
+  <data name="Welcome.TimeZone.Intro" xml:space="preserve">
+    <value>The clock and the apps show the time of this zone.</value>
+  </data>
+  <data name="Welcome.TimeZone.Automatic" xml:space="preserve">
+    <value>Automatic (the zone of this device)</value>
+  </data>
+  <data name="Welcome.TimeZone.Search" xml:space="preserve">
+    <value>Search a time zone</value>
+  </data>
+  <data name="Welcome.TimeZone.Now" xml:space="preserve">
+    <value>It is {0} in {1}.</value>
+  </data>
+  <data name="Welcome.TimeZone.More" xml:space="preserve">
+    <value>{0} more zones. Type in the search box to find one.</value>
+  </data>
+  <data name="Welcome.SettingsHint" xml:space="preserve">
+    <value>You can change all of this later in Settings.</value>
+  </data>
+  <data name="Welcome.Skip" xml:space="preserve">
+    <value>Skip</value>
+  </data>
+  <data name="Welcome.Back" xml:space="preserve">
+    <value>Back</value>
+  </data>
+  <data name="Welcome.Next" xml:space="preserve">
+    <value>Next</value>
+  </data>
+  <data name="Welcome.Finish" xml:space="preserve">
+    <value>Finish</value>
+  </data>
+  <data name="Welcome.Error" xml:space="preserve">
+    <value>This choice could not be saved: {0}</value>
+  </data>
 </root>

@@ -77,6 +77,30 @@ public sealed class PlatformLocalizationTests
     }
 
     [Fact]
+    public async Task A_reload_takes_a_language_written_during_the_session()
+    {
+        // ADR 0276 §2.1: the welcome wizard writes ~/.config/locale.conf before the desktop shows.
+        VirtualFileSystemFixture fixture = await VirtualFileSystemFixture.CreateSeededAsync();
+        LoginEnvironmentProvider environment = new(fixture.Service, fixture.Clock);
+        SessionLocaleService locale = new(environment, fixture.Service, fixture.Clock);
+        AuthenticatedPrincipal alice = Principal("alice");
+        await locale.UseSessionLocaleAsync(alice);
+        Assert.Equal("en", locale.Culture.Name);
+        await WriteAsync(fixture, "/home/alice/.config/locale.conf", "LANG=fr_CA.UTF-8\n");
+
+        // The session keeps the environment read at sign-in...
+        await locale.UseSessionLocaleAsync(alice);
+        Assert.Equal("en", locale.Culture.Name);
+
+        // ...until it is read again.
+        IReadOnlyDictionary<string, string> reloaded = await environment.ReloadAsync(alice);
+        await locale.UseSessionLocaleAsync(alice);
+
+        Assert.Equal("fr_CA.UTF-8", reloaded["LANG"]);
+        Assert.Equal(("fr", "fr-CA"), (locale.Culture.Name, locale.FormatCulture.Name));
+    }
+
+    [Fact]
     public async Task Without_a_LANG_the_session_is_English()
     {
         VirtualFileSystemFixture fixture = await VirtualFileSystemFixture.CreateSeededAsync();

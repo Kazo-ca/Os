@@ -98,7 +98,7 @@ public sealed class SettingsNavigationTests
         Assert.DoesNotContain(minimal, static page => page.Id == SettingsWindow.ApplicationPageId);
         Assert.Contains(full, static page => page.Id == SettingsWindow.BackupPageId);
         Assert.Contains(full, static page => page.Id == SettingsWindow.ApplicationPageId);
-        Assert.Equal(21, minimal.Count);
+        Assert.Equal(22, minimal.Count);
         Assert.Equal(SettingsWindow.AllPages.Count, full.Count);
     }
 
@@ -110,6 +110,16 @@ public sealed class SettingsNavigationTests
 
         Assert.Equal("app-sources", pages[installed + 1].Id);
         Assert.Equal("Nav.Group.Applications", pages[installed + 1].GroupKey);
+    }
+
+    [Fact]
+    public void Cloud_accounts_are_a_network_page_listed_on_every_host()
+    {
+        SettingsPage page = Assert.Single(
+            SettingsWindow.PagesFor(backupSupported: false, hasAppPage: false),
+            static page => page.Id == SettingsWindow.CloudAccountsPageId);
+
+        Assert.Equal("Nav.Group.Network", page.GroupKey);
     }
 
     [Fact]

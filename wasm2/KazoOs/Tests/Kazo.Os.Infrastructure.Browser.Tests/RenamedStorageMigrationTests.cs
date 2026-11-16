@@ -138,7 +138,7 @@ public sealed class RenamedStorageMigrationTests
     private static string LegacyBackup(Dictionary<string, IReadOnlyList<JsonObject>> records)
     {
         JsonObject stores = [];
-        foreach (IndexedDbObjectStoreDefinition store in KazoOsIndexedDbSchema.ObjectStores)
+        foreach (IndexedDbObjectStoreDefinition store in KazoOsIndexedDbSchema.BackupObjectStores)
         {
             stores[store.Name] = new JsonArray([.. (records.GetValueOrDefault(store.Name) ?? []).Select(record => (JsonNode)record.DeepClone())]);
         }
@@ -147,7 +147,7 @@ public sealed class RenamedStorageMigrationTests
         {
             ["formatVersion"] = 1,
             ["databaseName"] = "hackeros",
-            ["databaseSchemaVersion"] = KazoOsIndexedDbSchema.CurrentVersion,
+            ["databaseSchemaVersion"] = KazoOsIndexedDbSchema.BackupSchemaVersion,
             ["createdAtUtc"] = new DateTimeOffset(2026, 10, 1, 12, 0, 0, TimeSpan.Zero).ToString("O"),
             ["stores"] = stores,
         };

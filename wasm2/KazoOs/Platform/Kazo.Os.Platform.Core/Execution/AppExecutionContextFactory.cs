@@ -255,6 +255,7 @@ public sealed class AppExecutionContextFactory
                 RestartForPackages = _appCatalog.RestartForPackages,
                 InstalledAppsActivator = _appCatalog.InstalledAppsActivator,
                 InstalledLibraries = _appCatalog.InstalledLibraries,
+                Capabilities = _appCatalog.Capabilities,
                 PermissionStore = _appCatalog.PermissionStore,
             };
 
@@ -308,7 +309,11 @@ public sealed class AppExecutionContextFactory
         };
 
         ICapabilityChecker capabilities = new AppCapabilityChecker(
-            _grantRepository, manifest.Id, userId, principal.Authority);
+            _grantRepository, manifest.Id, userId, principal.Authority)
+        {
+            // ADR 0246: the permissions of the installed features, and what they cover.
+            Capabilities = _appCatalog?.Capabilities?.Invoke(),
+        };
 
         CancellationToken cancellationToken = _processManager.GetCancellationToken(process.Pid);
 
@@ -395,7 +400,8 @@ public sealed class AppExecutionContextFactory
                     process.Pid,
                     _metrics?.KernelMemory,
                     _localNetwork is null ? null : new Network.Local.LocalNetworkCaller(_localNetwork, manifest, principal, isRootElevated)),
-            _metrics?.Drives,
+            // ADR 0270: the shared drive gateway, with this app's check of cloud-accounts.manage.
+            _metrics?.Drives is { } drives ? new CapabilityCheckedDriveGateway(drives, capabilities) : null,
             clipboardGateway,
             administration.SystemSettings,
             administration.Permissions,
@@ -445,6 +451,12 @@ public sealed class AppExecutionContextFactory
         {
             // ADR 0120: accounts and passwords, set after construction like the backup gateway.
             context.UserAccounts = administration.UserAccounts;
+        }
+
+        if (_administration?.CloudAccounts is { } cloudAccounts)
+        {
+            // ADR 0270: the session user's cloud accounts, behind cloud-accounts.manage, set like the backup gateway.
+            context.CloudAccounts = new CloudAccounts.AppCloudAccountsGateway(cloudAccounts, capabilities);
         }
 
         if (administration.ComponentProviders is not null)
@@ -647,6 +659,12 @@ public sealed record AppCatalogGatewayServices(
     /// without them, where every contract is « not installed ».
     /// </summary>
     public Func<Features.FeatureServiceResolver?>? FeatureServices { get; init; }
+
+    /// <summary>
+    /// Gets the catalog of capabilities of the running OS (ADR 0246): the built-in catalog and the
+    /// permissions of the installed features; <see langword="null"/> checks the grants alone.
+    /// </summary>
+    public Func<ICapabilityCatalog?>? Capabilities { get; init; }
 
     /// <summary>
     /// Gets the machine permission decisions (ADR 0049 §4) a feature's installation writes

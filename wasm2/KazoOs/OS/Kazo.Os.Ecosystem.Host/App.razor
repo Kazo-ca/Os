@@ -52,8 +52,10 @@
     <MudDialogProvider />
     <MudSnackbarProvider />
     @* ADR 0197 §5: in a session, « Update ready » is a notification (bubble + clock panel); the
-       sign-in screens have neither, so they keep this notice in the bottom corner. *@
-    @if (State.UpdateAvailable && State.View != EcosystemHostView.Desktop)
+       sign-in screens have neither, so they keep this notice in the bottom corner. The welcome
+       wizard (ADR 0276) has its buttons in that corner and lasts a moment: the notice waits for
+       the desktop, which shows the notification. *@
+    @if (State.UpdateAvailable && State.View is not (EcosystemHostView.Desktop or EcosystemHostView.Welcome))
     {
         <aside class="update-notice" role="status">
             <span>@(State.AvailableVersion is { } version ? L["Update.VersionReady", version] : L["Update.Ready"]) @L["Update.Detail"]</span>
@@ -221,6 +223,10 @@
         case EcosystemHostView.LoginProgress:
             <LoginProgressScreen />
             break;
+        case EcosystemHostView.Welcome:
+            @* ADR 0276: the welcome wizard, once per account and form factor, before the desktop. *@
+            <WelcomeWizard Steps="@WelcomeSteps" Platform="@ActiveThemePlatform" OnFinished="CompleteWelcome" />
+            break;
         case EcosystemHostView.Desktop:
             @if (PlatformPreference.Current.ActivePlatform == WellKnownAppPlatforms.Mobile)
             {
@@ -325,6 +331,9 @@
     private bool KeepGuestFiles { get; set; } = true;
     private GuestAccountRequests? GuestRequests { get; set; }
     private bool IsRestartingForUpdate { get; set; }
+
+    /// <summary>ADR 0276: the steps of the welcome wizard shown before this session's desktop.</summary>
+    private IReadOnlyList<Kazo.Os.Platform.Core.Welcome.WelcomeStep> WelcomeSteps { get; set; } = [];
 
     /// <summary>ADR 0239 §1: the boot found a newer version and restarts onto it.</summary>
     private bool IsUpdatingAtBoot { get; set; }
@@ -935,7 +944,7 @@
             AuthenticatedPrincipal principal = await SessionService.LoginAsync(loginName, SetupPassword);
             await UseSessionLocaleAsync(principal);
             ClearPasswords();
-            State.CompleteLogin();
+            await EnterSessionAsync();
         }
         catch (Exception exception) when (exception is FormatException or InvalidOperationException)
         {
@@ -999,6 +1008,45 @@
         }
     }
 
+    /// <summary>
+    /// The session is open: shows the welcome wizard when this account still has steps to see on
+    /// this form factor (ADR 0276 §3, §4), the desktop otherwise. A waiting direct link
+    /// (<c>?autolaunch</c>, ADR 0258) goes straight to the desktop and leaves the wizard for the
+    /// next sign-in. Reading the plan never fails the sign-in.
+    /// </summary>
+    private async Task EnterSessionAsync()
+    {
+        WelcomeSteps = [];
+        if (State.PendingAppLaunch is null
+            && Services.GetService<Kazo.Os.Platform.Core.Welcome.WelcomeSetupService>() is { } welcome)
+        {
+            try
+            {
+                WelcomeSteps = await welcome.GetPendingStepsAsync(ActiveThemePlatform);
+            }
+            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidOperationException)
+            {
+                // The service already logs what it could not read; the desktop opens.
+            }
+        }
+
+        if (WelcomeSteps.Count > 0)
+        {
+            State.BeginWelcome();
+        }
+        else
+        {
+            State.CompleteLogin();
+        }
+    }
+
+    /// <summary>ADR 0276: the wizard was finished or skipped; the desktop shows.</summary>
+    private void CompleteWelcome()
+    {
+        WelcomeSteps = [];
+        State.CompleteLogin();
+    }
+
     private async Task SignInGuestAsync(LocalLoginName loginName)
     {
         State.BeginLoginProgress();
@@ -1007,7 +1055,7 @@
         AuthenticatedPrincipal principal = await SessionService.LoginAsync(loginName, password: null);
         await UseSessionLocaleAsync(principal);
         ClearPasswords();
-        State.CompleteLogin();
+        await EnterSessionAsync();
     }
 
     private void OpenGuestAccountForm()
@@ -1085,7 +1133,7 @@
             ShowGuestAccountForm = false;
             await UseSessionLocaleAsync(principal);
             ClearPasswords();
-            State.CompleteLogin();
+            await EnterSessionAsync();
         }
         catch (Exception exception) when (exception is ArgumentException or FormatException or InvalidOperationException)
         {
@@ -1112,7 +1160,7 @@
             AuthenticatedPrincipal principal = await SessionService.LoginAsync(LocalLoginName.Parse(SelectedLogin), LoginPassword);
             await UseSessionLocaleAsync(principal);
             ClearPasswords();
-            State.CompleteLogin();
+            await EnterSessionAsync();
         }
         catch (Exception exception) when (exception is FormatException or InvalidOperationException)
         {
@@ -1170,7 +1218,7 @@
             AuthenticatedPrincipal principal = await sessions.LoginWithPasskeyAsync(loginName, passkeys);
             await UseSessionLocaleAsync(principal);
             ClearPasswords();
-            State.CompleteLogin();
+            await EnterSessionAsync();
         }
         catch (OperationCanceledException)
         {

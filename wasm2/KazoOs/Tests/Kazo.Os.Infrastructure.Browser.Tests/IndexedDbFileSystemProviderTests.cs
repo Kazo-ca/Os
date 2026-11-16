@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Kazo.Os.App.Abstractions;
 using Kazo.Os.Infrastructure.Browser.FileSystem;
+using Kazo.Os.Infrastructure.Browser.Schema;
 using Kazo.Os.Simulation.Abstractions.FileSystem;
 using Microsoft.JSInterop;
 
@@ -71,7 +72,8 @@ public sealed class IndexedDbFileSystemProviderTests
     [Fact]
     public async Task ReadAsync_ReconstructsPersistedTextChunks()
     {
-        const string contentHash = "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824";
+        MemoryFileContentChunkStore chunks = new();
+        string contentHash = chunks.Put(System.Text.Encoding.UTF8.GetBytes("hello"));
         ScriptedModule module = new(
             Walk(Entry(
                 ChildId,
@@ -81,9 +83,8 @@ public sealed class IndexedDbFileSystemProviderTests
                 contentHash: contentHash,
                 contentKind: FileSystemContentKind.Text,
                 mediaType: "text/plain",
-                encodingName: "utf-8")),
-            One($"[{{\"contentHash\":\"{contentHash}\",\"chunkIndex\":0,\"dataBase64\":\"aGVsbG8=\"}}]"));
-        await using IndexedDbFileSystemProvider provider = new(new FakeJsRuntime(module));
+                encodingName: "utf-8")));
+        await using IndexedDbFileSystemProvider provider = WithChunks(module, chunks);
 
         FileSystemResult<FileSystemContentReadHandle> result = await provider.ReadAsync(
             new FileSystemReadRequest(VirtualPath.Parse("/file.txt")),
@@ -95,6 +96,70 @@ public sealed class IndexedDbFileSystemProviderTests
         Assert.Equal("hello", await reader.ReadToEndAsync());
         Assert.Equal(FileSystemContentKind.Text, handle.Descriptor.Kind);
         Assert.Equal(4, handle.Entry.Metadata.Revision);
+        Assert.Equal(1, chunks.ReadCalls);
+    }
+
+    [Fact]
+    public async Task ReadAsync_FileOverOneBatch_IsReadAsItIsConsumed()
+    {
+        MemoryFileContentChunkStore chunks = new();
+        byte[] original = IndexedDbFileContentRepositoryTests.Pattern((int)IndexedDbFileSystemProvider.StreamedReadThresholdBytes + 1);
+        string contentHash = chunks.PutChunked(original, (int)FileContentStoragePolicy.DefaultMaxChunkSizeBytes);
+        ScriptedModule module = new(
+            Walk(Entry(ChildId, FileSystemEntryKind.File, revision: 2, length: original.Length, contentHash: contentHash)));
+        await using IndexedDbFileSystemProvider provider = WithChunks(module, chunks);
+
+        FileSystemResult<FileSystemContentReadHandle> result = await provider.ReadAsync(
+            new FileSystemReadRequest(VirtualPath.Parse("/large.bin")),
+            Context());
+
+        Assert.True(result.Succeeded);
+        await using FileSystemContentReadHandle handle = result.Value!;
+        Assert.IsType<ChunkedContentReadStream>(handle.Content);
+        Assert.Equal(ChunkedContentReadStream.InitialWindowChunks, chunks.ChunksRead);
+        using MemoryStream copy = new();
+        await handle.Content.CopyToAsync(copy);
+        Assert.Equal(original, copy.ToArray());
+    }
+
+    [Fact]
+    public async Task ReadAsync_FileOfOneBatch_IsReadWhole()
+    {
+        MemoryFileContentChunkStore chunks = new();
+        byte[] original = IndexedDbFileContentRepositoryTests.Pattern((int)IndexedDbFileSystemProvider.StreamedReadThresholdBytes);
+        string contentHash = chunks.PutChunked(original, (int)FileContentStoragePolicy.DefaultMaxChunkSizeBytes);
+        ScriptedModule module = new(
+            Walk(Entry(ChildId, FileSystemEntryKind.File, revision: 2, length: original.Length, contentHash: contentHash)));
+        await using IndexedDbFileSystemProvider provider = WithChunks(module, chunks);
+
+        FileSystemResult<FileSystemContentReadHandle> result = await provider.ReadAsync(
+            new FileSystemReadRequest(VirtualPath.Parse("/batch.bin")),
+            Context());
+
+        await using FileSystemContentReadHandle handle = result.Value!;
+        Assert.IsType<MemoryStream>(handle.Content);
+        Assert.Equal(FileContentStoragePolicy.ChunksPerTransaction, chunks.ChunksRead);
+    }
+
+    [Fact]
+    public async Task ReadAsync_FileOverOneBatchWhoseContentIsGone_FailsAtOpen()
+    {
+        MemoryFileContentChunkStore chunks = new();
+        ScriptedModule module = new(
+            Walk(Entry(
+                ChildId,
+                FileSystemEntryKind.File,
+                revision: 2,
+                length: IndexedDbFileSystemProvider.StreamedReadThresholdBytes + 1,
+                contentHash: new string('a', 64))));
+        await using IndexedDbFileSystemProvider provider = WithChunks(module, chunks);
+
+        FileSystemResult<FileSystemContentReadHandle> result = await provider.ReadAsync(
+            new FileSystemReadRequest(VirtualPath.Parse("/gone.bin")),
+            Context());
+
+        Assert.False(result.Succeeded);
+        Assert.Equal(FileSystemErrorCode.ProviderFailure, result.Error!.Code);
     }
 
     [Fact]
@@ -123,15 +188,16 @@ public sealed class IndexedDbFileSystemProviderTests
     public async Task WriteAsync_PersistsChunksThenPublishesRevisionedMetadata()
     {
         const string expectedHash = "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824";
+        MemoryFileContentChunkStore chunks = new();
         ScriptedModule module = new(
             Walk(Entry(ChildId, FileSystemEntryKind.File, revision: 4)),
-            One("{\"added\":true}"),
             [Parse("4"), Parse("1"), Parse("null")]);
         await using IndexedDbFileSystemProvider provider = new(
             new FakeJsRuntime(module),
             new FixedTimeProvider(),
             null,
-            () => Guid.Parse("88888888-8888-8888-8888-888888888888"));
+            () => Guid.Parse("88888888-8888-8888-8888-888888888888"),
+            contentChunks: chunks);
 
         FileSystemMutationResult result = await provider.WriteAsync(
             new FileSystemWriteRequest(VirtualPath.Parse("/file.txt"), 4),
@@ -141,21 +207,22 @@ public sealed class IndexedDbFileSystemProviderTests
         Assert.True(result.Succeeded);
         Assert.Equal(5, result.Entry!.Metadata.Revision);
         Assert.Equal(5, Assert.IsType<FileMetadata>(result.Entry.Metadata).Length);
-        Assert.Equal(3, module.ExecuteArguments.Count);
-        IReadOnlyList<Kazo.Os.Infrastructure.Browser.Interop.IndexedDbOperation> chunkOperations =
-            Assert.IsAssignableFrom<IReadOnlyList<Kazo.Os.Infrastructure.Browser.Interop.IndexedDbOperation>>(
-                module.ExecuteArguments[1][4]);
-        Assert.Equal(expectedHash, Assert.IsType<object[]>(Assert.Single(chunkOperations).Key)[0]);
+        // The chunks go through the binary chunk store (ADR 0272), the metadata through the JSON adapter.
+        Assert.Equal(2, module.ExecuteArguments.Count);
+        MemoryFileContentChunkStore.StoredChunk stored =
+            chunks.Chunks[MemoryFileContentChunkStore.Key(expectedHash, 0)];
+        Assert.Equal("hello"u8.ToArray(), stored.Data);
+        Assert.Equal(expectedHash, stored.ChunkHash);
         IReadOnlyList<Kazo.Os.Infrastructure.Browser.Interop.IndexedDbOperation> metadataOperations =
             Assert.IsAssignableFrom<IReadOnlyList<Kazo.Os.Infrastructure.Browser.Interop.IndexedDbOperation>>(
-                module.ExecuteArguments[2][4]);
+                module.ExecuteArguments[1][4]);
         // ADR 0273 section 3: the entry is published only if its one chunk is present.
         Assert.Equal(["assertPropertyEquals", "assertCount", "put"], metadataOperations.Select(operation => operation.Kind));
         Assert.Equal(1, metadataOperations[1].ExpectedValue);
         Assert.Equal(expectedHash, metadataOperations[1].Query);
         Assert.Contains(
             Kazo.Os.Infrastructure.Browser.Schema.KazoOsIndexedDbSchema.FileContentStoreName,
-            Assert.IsAssignableFrom<IEnumerable<string>>(module.ExecuteArguments[2][2]));
+            Assert.IsAssignableFrom<IEnumerable<string>>(module.ExecuteArguments[1][2]));
         IndexedDbFileSystemEntryRecord updated =
             Assert.IsType<IndexedDbFileSystemEntryRecord>(metadataOperations[2].Value);
         Assert.Equal(expectedHash, updated.ContentHash);
@@ -167,15 +234,14 @@ public sealed class IndexedDbFileSystemProviderTests
     {
         ScriptedModule module = new(
             Walk(Entry(ChildId, FileSystemEntryKind.File, revision: 4)),
-            One("{\"added\":false}"),
             ScriptedModule.ContentMissing,
-            One("{\"added\":true}"),
             [Parse("4"), Parse("1"), Parse("null")]);
         await using IndexedDbFileSystemProvider provider = new(
             new FakeJsRuntime(module),
             new FixedTimeProvider(),
             null,
-            () => Guid.NewGuid());
+            () => Guid.NewGuid(),
+            contentChunks: new MemoryFileContentChunkStore());
 
         FileSystemMutationResult result = await provider.WriteAsync(
             new FileSystemWriteRequest(VirtualPath.Parse("/file.txt"), 4),
@@ -183,9 +249,10 @@ public sealed class IndexedDbFileSystemProviderTests
             Context());
 
         // ADR 0273 section 3: an orphan pass removed the reused content between the content write
-        // and the entry; the content is written again and the entry published.
+        // and the entry; the content is written again and the entry published. The chunks go
+        // through the binary chunk store (ADR 0272): walk, refused entry, published entry.
         Assert.True(result.Succeeded);
-        Assert.Equal(5, module.ExecuteArguments.Count);
+        Assert.Equal(3, module.ExecuteArguments.Count);
     }
 
     [Fact]
@@ -193,15 +260,14 @@ public sealed class IndexedDbFileSystemProviderTests
     {
         ScriptedModule module = new(
             Walk(Entry(ChildId, FileSystemEntryKind.File, revision: 4)),
-            One("{\"added\":true}"),
             ScriptedModule.ContentMissing,
-            One("{\"added\":true}"),
             ScriptedModule.ContentMissing);
         await using IndexedDbFileSystemProvider provider = new(
             new FakeJsRuntime(module),
             new FixedTimeProvider(),
             null,
-            () => Guid.NewGuid());
+            () => Guid.NewGuid(),
+            contentChunks: new MemoryFileContentChunkStore());
 
         FileSystemMutationResult result = await provider.WriteAsync(
             new FileSystemWriteRequest(VirtualPath.Parse("/file.txt"), 4),
@@ -217,13 +283,13 @@ public sealed class IndexedDbFileSystemProviderTests
     {
         ScriptedModule module = new(
             Walk(Entry(ChildId, FileSystemEntryKind.File, revision: 4, length: 3, contentHash: "old-hash")),
-            One("{\"added\":true}"),
             [Parse("4"), Parse("1"), Parse("null"), Parse("{\"deleted\":1,\"referenced\":false}")]);
         await using IndexedDbFileSystemProvider provider = new(
             new FakeJsRuntime(module),
             new FixedTimeProvider(),
             null,
-            () => Guid.NewGuid());
+            () => Guid.NewGuid(),
+            contentChunks: new MemoryFileContentChunkStore());
 
         FileSystemMutationResult result = await provider.WriteAsync(
             new FileSystemWriteRequest(VirtualPath.Parse("/file.txt"), 4),
@@ -233,11 +299,14 @@ public sealed class IndexedDbFileSystemProviderTests
         Assert.True(result.Succeeded);
         IReadOnlyList<Kazo.Os.Infrastructure.Browser.Interop.IndexedDbOperation> operations =
             Assert.IsAssignableFrom<IReadOnlyList<Kazo.Os.Infrastructure.Browser.Interop.IndexedDbOperation>>(
-                module.ExecuteArguments[2][4]);
+                module.ExecuteArguments[1][4]);
         Kazo.Os.Infrastructure.Browser.Interop.IndexedDbOperation delete = operations[^1];
         Assert.Equal("deleteAllByIndexIfUnreferenced", delete.Kind);
         Assert.Equal("old-hash", delete.Query);
         Assert.Null(delete.CompareProperty);
+        // ADR 0274 §4: the old content stays while an installed app's address still serves it.
+        Assert.Equal("servedFiles", delete.ExtraReferenceObjectStoreName);
+        Assert.Equal("contentHash", delete.ExtraReferenceIndexName);
     }
 
     [Fact]
@@ -245,13 +314,13 @@ public sealed class IndexedDbFileSystemProviderTests
     {
         ScriptedModule module = new(
             Walk(Entry(ChildId, FileSystemEntryKind.File, revision: 4, length: 3, contentHash: "old-hash")),
-            One("{\"added\":true}"),
             [Parse("4"), Parse("1"), Parse("null")]);
         await using IndexedDbFileSystemProvider provider = new(
             new FakeJsRuntime(module),
             new FixedTimeProvider(),
             null,
-            () => Guid.NewGuid());
+            () => Guid.NewGuid(),
+            contentChunks: new MemoryFileContentChunkStore());
 
         FileSystemMutationResult result = await provider.WriteAsync(
             new FileSystemWriteRequest(VirtualPath.Parse("/file.txt"), 4),
@@ -261,7 +330,7 @@ public sealed class IndexedDbFileSystemProviderTests
         Assert.True(result.Succeeded);
         IReadOnlyList<Kazo.Os.Infrastructure.Browser.Interop.IndexedDbOperation> operations =
             Assert.IsAssignableFrom<IReadOnlyList<Kazo.Os.Infrastructure.Browser.Interop.IndexedDbOperation>>(
-                module.ExecuteArguments[2][4]);
+                module.ExecuteArguments[1][4]);
         Assert.Equal(["assertPropertyEquals", "assertCount", "put"], operations.Select(operation => operation.Kind));
     }
 
@@ -270,10 +339,8 @@ public sealed class IndexedDbFileSystemProviderTests
     {
         // The chunk transaction fails with QuotaExceededError (ADR 0099 section 2): no metadata
         // transaction follows, so the file keeps its previous content.
-        ScriptedModule module = new(
-            Walk(Entry(ChildId, FileSystemEntryKind.File, revision: 4)),
-            ScriptedModule.QuotaExceeded);
-        await using IndexedDbFileSystemProvider provider = new(new FakeJsRuntime(module));
+        ScriptedModule module = new(Walk(Entry(ChildId, FileSystemEntryKind.File, revision: 4)));
+        await using IndexedDbFileSystemProvider provider = WithChunks(module, new FullChunkStore());
 
         FileSystemMutationResult result = await provider.WriteAsync(
             new FileSystemWriteRequest(VirtualPath.Parse("/file.txt"), 4),
@@ -282,14 +349,15 @@ public sealed class IndexedDbFileSystemProviderTests
 
         Assert.Equal(FileSystemTransactionStatus.Rejected, result.Transaction.Status);
         Assert.Equal(FileSystemErrorCode.NoSpace, result.Transaction.Error?.Code);
-        Assert.Equal(2, module.ExecuteArguments.Count);
+        Assert.Single(module.ExecuteArguments);
     }
 
     [Fact]
     public async Task WriteAsync_ContentOverTheMaximumFileSizeReturnsFileTooLargeBeforeAnyWrite()
     {
         ScriptedModule module = new(Walk(Entry(ChildId, FileSystemEntryKind.File, revision: 4)));
-        await using IndexedDbFileSystemProvider provider = new(new FakeJsRuntime(module));
+        MemoryFileContentChunkStore chunks = new();
+        await using IndexedDbFileSystemProvider provider = WithChunks(module, chunks);
 
         FileSystemMutationResult result = await provider.WriteAsync(
             new FileSystemWriteRequest(VirtualPath.Parse("/big.bin"), 4),
@@ -298,6 +366,8 @@ public sealed class IndexedDbFileSystemProviderTests
 
         Assert.Equal(FileSystemErrorCode.FileTooLarge, result.Transaction.Error?.Code);
         Assert.Single(module.ExecuteArguments);
+        Assert.Equal(0, chunks.WriteCalls);
+        Assert.Equal(0, chunks.OpenStagedWrites);
     }
 
     [Fact]
@@ -592,6 +662,41 @@ public sealed class IndexedDbFileSystemProviderTests
             string identifier,
             CancellationToken cancellationToken,
             object?[]? args) => ValueTask.FromResult((TValue)module);
+    }
+
+    private static IndexedDbFileSystemProvider WithChunks(ScriptedModule module, IFileContentChunkStore chunks) =>
+        new(new FakeJsRuntime(module), TimeProvider.System, null, null, contentChunks: chunks);
+
+    /// <summary>A chunk store whose write fails like a full browser storage.</summary>
+    private sealed class FullChunkStore : IFileContentChunkStore
+    {
+        private readonly MemoryFileContentChunkStore _inner = new();
+
+        public ValueTask<string> HashAsync(ArraySegment<byte> bytes, CancellationToken cancellationToken) =>
+            _inner.HashAsync(bytes, cancellationToken);
+
+        public ValueTask<int> WriteChunksAsync(
+            string contentHash,
+            int firstIndex,
+            ArraySegment<byte> bytes,
+            int chunkSize,
+            long createdUtcMs,
+            CancellationToken cancellationToken) =>
+            throw new Kazo.Os.Infrastructure.Browser.Storage.BrowserStorageQuotaException(
+                "full",
+                new InvalidOperationException("QuotaExceededError"));
+
+        public ValueTask ReadChunksAsync(
+            string contentHash,
+            int firstIndex,
+            int count,
+            ArraySegment<byte> destination,
+            int chunkSize,
+            CancellationToken cancellationToken) =>
+            _inner.ReadChunksAsync(contentHash, firstIndex, count, destination, chunkSize, cancellationToken);
+
+        public ValueTask<IStagedFileContent> BeginStagedWriteAsync(CancellationToken cancellationToken) =>
+            _inner.BeginStagedWriteAsync(cancellationToken);
     }
 
     private sealed class ScriptedModule(params JsonElement[]?[] results) : IJSObjectReference

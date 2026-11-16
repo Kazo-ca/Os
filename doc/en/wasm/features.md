@@ -181,6 +181,28 @@ This section lists what is released in the `main` branch and online.
   reads and writes the user's network drives like their personal files,
   without a dangerous capability; another user's drive and `/mnt` stay system
   files. ([ADR 0231](dev/adr/0231-network-drives-count-as-personal-files.md))
+- **Cloud storage as a network drive**: the user connects their Dropbox, their
+  OneDrive (personal or work) or an S3-compatible storage and finds it under
+  `/mnt`, in the File Explorer, Settings ▸ Network ▸ Cloud accounts and
+  `mount -t`. Everything happens in the browser, with no server; they choose
+  between their whole storage and a folder reserved for Kazo OS. Apps go
+  through the SDK behind `cloud-accounts.manage`.
+  ([ADR 0267](dev/adr/0267-cloud-drives-as-network-drives.md),
+  [ADR 0269](dev/adr/0269-cloud-tokens-stay-on-the-device.md),
+  [ADR 0270](dev/adr/0270-cloud-drives-in-the-app-sdk.md),
+  [`cloud-drives.md`](dev/cloud-drives.md))
+- **Faster and lighter files**: content is kept in binary instead of base64 (about 25%
+  less space, saving 52.5 MiB from 3.4 s to 1.0 s in Chromium), each 256 KiB chunk checked
+  by its fingerprint when read; old content is converted once at the first boot, behind a
+  waiting screen. ([ADR 0272](dev/adr/0272-binary-file-content.md))
+- **Large files read and written in pieces**: beyond 16 MiB, a file opens as a stream that
+  loads only the chunks read, and is saved in batches handed to the browser, which halves
+  the memory taken. ([ADR 0275](dev/adr/0275-partial-read-and-file-address.md) §1, 2 and 4)
+- **A single copy of the files of an installed app**: the service worker serves an app's
+  files from its folder, with no copy in a cache; a 64 MiB app whose previous version is kept
+  takes 128 MiB instead of 236 MiB. ([ADR 0274](dev/adr/0274-single-copy-of-app-files.md))
+- **Space reclaimed after a rewrite or a deletion**: old content is erased after 1 day, or
+  after 5 minutes when space is short. ([ADR 0273](dev/adr/0273-short-orphan-content-retention.md))
 - **Backup and restore** of the whole machine in a downloaded archive.
   ([`system-backup.md`](dev/system-backup.md))
 
@@ -315,6 +337,11 @@ This section lists what is released in the `main` branch and online.
   each app does, and the Start menu, the desktop and the explorer show each
   app's own icon, installed apps included.
   ([ADR 0232](dev/adr/0232-illustrated-app-icons-everywhere.md))
+- **Welcome wizard**: at the first sign-in, users choose their language,
+  theme, wallpaper and time zone before the desktop; each choice applies at
+  once and the wizard can be skipped.
+  ([`welcome-wizard.md`](dev/welcome-wizard.md),
+  [ADR 0276](dev/adr/0276-welcome-wizard-at-first-sign-in.md))
 - **OS themes**, and an editor to create your own.
   ([`theme-files.md`](framework/theme-files.md))
 - **Image wallpapers**: a PNG, JPEG or WebP image (4 shipped with the OS,
@@ -458,16 +485,15 @@ points to its PR.
 | Feature | Description | ADR | Issue |
 | --- | --- | --- | --- |
 | Switch user | Open another session without closing the first one. Stays greyed out in the Power menu by Benoit's choice: one session at a time, Sign out to change account. | [0195](dev/adr/0195-start-menu-power-button.md), [0201](dev/adr/0201-switch-user-stays-greyed.md) | [#290](https://github.com/Kazo-ca/Os/issues/290) |
-| File address served on demand | An app gets an address to read a large file (audio, video) without copying it in memory, with partial reads to seek in a track. | To write | [#379](https://github.com/Kazo-ca/Os/issues/379) |
+| File address served on demand | An app gets an address to read a large file (audio, video) without copying it in memory, with partial reads to seek in a track. `storage/base` series; the partial read is done (work item 3), the address is still to do. | [0275](dev/adr/0275-partial-read-and-file-address.md) | [#379](https://github.com/Kazo-ca/Os/issues/379) |
 | Drag files onto an app | Public SDK contract to receive files dragged from the File Explorer or the desktop. | To write | [#380](https://github.com/Kazo-ca/Os/issues/380) |
-| Reclaim the space of rewritten or deleted files | The old content of a rewritten or deleted file is erased after 1 day, or after 5 minutes when storage is low, instead of staying in the browser forever. | [0273](dev/adr/0273-short-orphan-content-retention.md) | [#537](https://github.com/Kazo-ca/Os/issues/537) |
 
 ### Kazo OS Store
 
 | Feature | Description | ADR | Issue |
 | --- | --- | --- | --- |
 | Application catalog | Catalog format, checking and publishing of the offered applications. | [0188](dev/adr/0188-hack-store-and-app-catalog.md) | [AppMarketPlace #1](https://github.com/Kazo-ca/Os-AppMarketPlace/issues/1) |
-| Beta channel and automatic app updates | A beta version of Kazo OS online (`os-beta.kazo.ca`), the SDK as a prerelease on nuget.org, and each app rebuilding and offering its update when the SDK ships. The OS side is done: the `beta` branch, the beta site with its "Beta" badge, the beta catalog and the reusable app workflows. Prerelease 3.4.0-preview.1 shipped on 2026-11-15. Each app repository still has to be aligned (work item 7). | [0271](dev/adr/0271-beta-channel-and-automatic-app-updates.md), [plan](dev/plans/release-channels-plan.md) | [#456](https://github.com/Kazo-ca/Os/issues/456) |
+| Beta channel and automatic app updates | A beta version of Kazo OS online (`os-beta.kazo.ca`), the SDK as a prerelease on nuget.org, and each app rebuilding and offering its update when the SDK ships. The OS side is done: the `beta` branch, the beta site with its "Beta" badge, the beta catalog and the reusable app workflows. Prereleases 3.4.0-preview.1 to 4 shipped on 2026-11-15, each app repository is aligned (work item 7) and the apps offered their beta version by themselves; the stable 3.4.0 follows. What is left is the trial of the app updates for the stable 3.4.0 (work item 8). | [0271](dev/adr/0271-beta-channel-and-automatic-app-updates.md), [plan](dev/plans/release-channels-plan.md) | [#456](https://github.com/Kazo-ca/Os/issues/456) |
 
 ### Personalization
 
@@ -492,7 +518,7 @@ one row per ADR).
 
 | Feature | Description | ADR | Issue |
 | --- | --- | --- | --- |
-| Permissions declared by a Feature | A Feature declares its own permissions, dangerous ones included; they follow the rules of the OS catalog and are never granted silently. | [0246](dev/adr/0246-provider-declared-permissions.md) | — |
+| Permissions declared by a Feature | A Feature declares its own permissions, dangerous ones included; they follow the rules of the OS catalog and are never granted silently. Code delivered by work item `feature/17` (`ProvidedCapabilities`, reserved prefix, the `ICapabilityCatalog` catalog of capabilities, a seeder that grants only what is known and dangerous topic permissions, issue #432, `Covers`, `Caller.Require`, the secure window even from the terminal; [`capabilities.md`](framework/capabilities.md#permissions-declared-by-a-feature-adr-0246)). | [0246](dev/adr/0246-provider-declared-permissions.md) | — |
 | Roles declared by a Feature | A Feature declares roles an administrator assigns; every sensitive operation goes through the OS authentication. | [0247](dev/adr/0247-feature-declared-roles.md) | — |
 | Dependency resolution | The Store and `kazopkg` install the dependencies declared in the manifest, with one consent; removing a package warns and disables the dependent apps. | [0248](dev/adr/0248-store-and-kazopkg-dependency-resolution.md) | — |
 | “Features” section of Settings | Settings lists the installed Features and shows the pages they provide, by the user's role. | [0249](dev/adr/0249-settings-features-section.md) | — |

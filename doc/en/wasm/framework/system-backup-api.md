@@ -7,7 +7,7 @@ This document describes what an app sees of the machine backup: the `KazoSystemB
 ## `.kosbak` archive
 
 The `formatVersion: 1` JSON of `IndexedDbBackupService` (schema version,
-all stores, SHA-256), compressed with gzip. `ReadArchive` recognizes gzip
+all stores but `servedFiles`, ADR 0274, SHA-256), compressed with gzip. `ReadArchive` recognizes gzip
 by its first two bytes (`1F 8B`) and also accepts raw JSON. An archive that is
 damaged, empty, tampered with (wrong hash) or from another schema version is
 refused **before** any write, with a message that names both versions:
@@ -15,6 +15,11 @@ refused **before** any write, with a message that names both versions:
 ```text
 This backup uses database schema version 3; this Kazo OS uses version 4. It cannot be restored here.
 ```
+
+The schema version a backup names is `KazoOsIndexedDbSchema.BackupSchemaVersion`
+(4), not the version of the database (5 since ADR 0272): file content is written
+in its base64 form, as before, so a backup made now still restores on an older
+release, and its restore stores the content in binary.
 
 Name: `kazoos-AAAAMMJJ-HHMMSSZ.kosbak` (UTC time of the export).
 Before 3.0.0 the extension was `.hosbak`: the picker still offers it, and such

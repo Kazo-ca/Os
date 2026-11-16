@@ -1,3 +1,5 @@
+using Kazo.Os.App.Abstractions;
+using Kazo.Os.Infrastructure.Browser.FileSystem;
 using Kazo.Os.Platform.Blazor.LazyLoading;
 using Kazo.Os.Platform.Core.Apps;
 using Kazo.Os.Platform.Core.Apps.Packages;
@@ -6,8 +8,9 @@ using Microsoft.Extensions.Logging;
 namespace Kazo.Os.Ecosystem;
 
 /// <summary>
-/// The cache a service worker serves installed apps' <c>wwwroot/</c> files from (ADR 0206). The
-/// browser implementation is <c>BrowserInstalledAppAssets</c> (Cache Storage); tests use a dictionary.
+/// The table of addresses the service worker serves installed apps' <c>wwwroot/</c> files at
+/// (ADR 0206, ADR 0274). The browser implementation is <c>BrowserInstalledAppAssetCache</c> (the
+/// <c>servedFiles</c> store of the OS database, read by the worker); tests use a dictionary.
 /// Addresses are relative to the page's base: <c>_content/&lt;assembly&gt;/&lt;path&gt;</c>.
 /// </summary>
 public interface IInstalledAppAssetCache
@@ -16,24 +19,28 @@ public interface IInstalledAppAssetCache
     /// <param name="cancellationToken">Cancels the wait.</param>
     ValueTask<bool> PrepareAsync(CancellationToken cancellationToken);
 
-    /// <summary>Lists every cached address.</summary>
+    /// <summary>Lists every served address.</summary>
     /// <param name="cancellationToken">Cancels the read.</param>
     ValueTask<IReadOnlyList<string>> ListAsync(CancellationToken cancellationToken);
 
-    /// <summary>Stores one file.</summary>
-    /// <param name="url">Its address.</param>
-    /// <param name="bytes">Its verified bytes.</param>
-    /// <param name="contentType">The <c>Content-Type</c> to answer with.</param>
-    /// <param name="cancellationToken">Cancels the write.</param>
-    ValueTask PutAsync(string url, byte[] bytes, string contentType, CancellationToken cancellationToken);
+    /// <summary>
+    /// Serves files of an app from the content of the files in its folder, without reading or
+    /// copying them (ADR 0274 §3): a file whose stored content is not the declared one is not
+    /// served, and its address stops being served.
+    /// </summary>
+    /// <param name="appId">The installed app.</param>
+    /// <param name="files">Its files, with the SHA-256 its manifest declares.</param>
+    /// <param name="cancellationToken">Cancels the publication.</param>
+    /// <returns>One result per file.</returns>
+    ValueTask<IReadOnlyList<ServedFileResult>> ServeAsync(string appId, IReadOnlyList<ServedFileRequest> files, CancellationToken cancellationToken);
 
-    /// <summary>Removes one address.</summary>
-    /// <param name="url">Its address.</param>
+    /// <summary>Stops serving addresses.</summary>
+    /// <param name="urls">The addresses.</param>
     /// <param name="cancellationToken">Cancels the removal.</param>
-    ValueTask RemoveAsync(string url, CancellationToken cancellationToken);
+    ValueTask RemoveAsync(IReadOnlyList<string> urls, CancellationToken cancellationToken);
 
     /// <summary>
-    /// Links a cached style sheet to the page, once per address (an installed app's scoped CSS,
+    /// Links a served style sheet to the page, once per address (an installed app's scoped CSS,
     /// ADR 0221 §2).
     /// </summary>
     /// <param name="url">Its address.</param>
@@ -43,18 +50,21 @@ public interface IInstalledAppAssetCache
 
 /// <summary>
 /// Publishes the <c>wwwroot/</c> files of an installed app (ADR 0206) before its first launch in the
-/// session: each file declared in its manifest is read through <see cref="AppAssetStore"/> (so its
-/// SHA-256 is checked, ADR 0098 §5) and copied into the cache the service worker serves at
-/// <c>_content/&lt;assembly&gt;/&lt;path&gt;</c>, the address Blazor gives a built-in app's files.
+/// session: each file declared in its manifest is served by the service worker at
+/// <c>_content/&lt;assembly&gt;/&lt;path&gt;</c>, the address Blazor gives a built-in app's files,
+/// straight from the file in the app's folder (ADR 0274): the file system is the only copy.
 /// </summary>
 /// <remarks>
-/// Like a package manager unpacking files where the web server finds them, the copy is made once
-/// per session per app, at its first launch. The first publication also drops every cached address
+/// Like a web server pointed at the folder a package manager unpacked, nothing is copied: the
+/// publication writes one row per address, after checking that the stored content of the file is
+/// the one whose SHA-256 the manifest declares (ADR 0098 §5); no byte is read. It runs once per
+/// session per app, at its first launch. The first publication also drops every served address
 /// no installed app declares any more, neither in this page nor on disk (an app removed by
 /// <c>kazopkg remove</c> or updated before the restart; ADR 0225 §2 for an app another tab installed).
 /// Without a service worker controlling the page, nothing is copied and the next launch asks again
-/// (ADR 0225 §1). A damaged or missing file is left out, with a <c>/var/log/syslog</c> line; the launch
-/// goes on, as with a built-in app's missing file. Once its files are copied, the app's scoped CSS
+/// (ADR 0225 §1). A damaged or missing file is left out, with a <c>/var/log/syslog</c> line, and a
+/// damaged one marks the app damaged in <see cref="AppAssetStore"/>; the launch goes on, as with a
+/// built-in app's missing file. Once its files are served, the app's scoped CSS
 /// (<c>&lt;assembly&gt;.bundle.scp.css</c>) is linked to the page (ADR 0221 §2), as the host's
 /// <c>styles.css</c> links a built-in app's.
 /// </remarks>
@@ -70,8 +80,8 @@ public sealed class InstalledAppAssetPublisher
 
     /// <summary>Creates the publisher.</summary>
     /// <param name="installed">The installed apps of this session.</param>
-    /// <param name="cache">The cache the service worker serves.</param>
-    /// <param name="store">Reads and checks the files (resolved late: it comes with the OS services).</param>
+    /// <param name="cache">The table of addresses the service worker serves.</param>
+    /// <param name="store">Records a damaged file (resolved late: it comes with the OS services).</param>
     /// <param name="logger">Receives the <c>/var/log/syslog</c> lines.</param>
     public InstalledAppAssetPublisher(InstalledAppsBoot installed, IInstalledAppAssetCache cache, Func<AppAssetStore> store, ILogger<InstalledAppAssetPublisher>? logger = null)
     {
@@ -109,7 +119,7 @@ public sealed class InstalledAppAssetPublisher
 
     /// <summary>
     /// Publishes the files of <paramref name="app"/> unless it was done in this session. Never throws
-    /// for a file or cache failure (it is logged); only <paramref name="cancellationToken"/> stops it.
+    /// for a file or table failure (it is logged); only <paramref name="cancellationToken"/> stops it.
     /// </summary>
     /// <param name="app">The installed app about to start.</param>
     /// <param name="cancellationToken">Cancels the publication.</param>
@@ -138,7 +148,7 @@ public sealed class InstalledAppAssetPublisher
 
             if (_served)
             {
-                await CopyAsync(app, cancellationToken).ConfigureAwait(false);
+                await ServeAsync(app, cancellationToken).ConfigureAwait(false);
             }
             else
             {
@@ -168,14 +178,14 @@ public sealed class InstalledAppAssetPublisher
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            _logger?.LogWarning(exception, "apps: the cache of installed apps' wwwroot/ files cannot be used");
+            _logger?.LogWarning(exception, "apps: the table of installed apps' wwwroot/ files cannot be used");
             return false;
         }
     }
 
     private async Task DropStaleAsync(CancellationToken cancellationToken)
     {
-        // ADR 0225 §2: the cache is shared by every tab and window of the OS. An app another tab
+        // ADR 0225 §2: the table is shared by every tab and window of the OS. An app another tab
         // installed is on disk but not yet in this page's catalog: its files stay. The apps this page
         // runs stay too (a loaded copy keeps its version until the restart).
         HashSet<string> declared = new(StringComparer.Ordinal);
@@ -185,47 +195,87 @@ public sealed class InstalledAppAssetPublisher
             declared.UnionWith(app.Manifest.Assets.Select(asset => GetUrl(app, asset.Path)));
         }
 
-        foreach (string url in await _cache.ListAsync(cancellationToken).ConfigureAwait(false))
-        {
-            if (!declared.Contains(url))
-            {
-                await _cache.RemoveAsync(url, cancellationToken).ConfigureAwait(false);
-            }
-        }
+        string[] stale = [.. (await _cache.ListAsync(cancellationToken).ConfigureAwait(false)).Where(url => !declared.Contains(url))];
+        // ADR 0274 §4: once its row is gone, the content of a removed app's file is an orphan and
+        // follows the ordinary retention (ADR 0273).
+        await _cache.RemoveAsync(stale, cancellationToken).ConfigureAwait(false);
     }
 
-    private async Task CopyAsync(InstalledApp app, CancellationToken cancellationToken)
+    private async Task ServeAsync(InstalledApp app, CancellationToken cancellationToken)
     {
-        AppAssetStore store = _store();
         string styles = GetScopedCssBundlePath(app);
-        bool stylesCopied = false;
-        int copied = 0;
-        foreach (string assetPath in app.Manifest.Assets.Select(static asset => asset.Path))
+        List<string> assetPaths = [];
+        List<ServedFileRequest> requests = [];
+        foreach (AssetManifest asset in app.Manifest.Assets)
         {
-            string url = GetUrl(app, assetPath);
-            try
+            if (!AppPackage.IsSafeRelativePath(asset.Path))
             {
-                byte[] bytes = await store.ReadAsync(app.AppId, assetPath, cancellationToken).ConfigureAwait(false);
-                await _cache.PutAsync(url, bytes, InstalledAppAssetContentTypes.For(assetPath), cancellationToken).ConfigureAwait(false);
-                stylesCopied |= string.Equals(assetPath, styles, StringComparison.Ordinal);
-                copied++;
+                _logger?.LogWarning("apps: {Path} of {AppId} is not a path inside the app, it is not served", asset.Path, app.AppId);
+                continue;
             }
-            catch (Exception exception) when (exception is not OperationCanceledException)
+
+            assetPaths.Add(asset.Path);
+            requests.Add(new ServedFileRequest(
+                GetUrl(app, asset.Path),
+                app.GetAssetPath(asset.Path),
+                asset.Sha256,
+                InstalledAppAssetContentTypes.For(asset.Path)));
+        }
+
+        IReadOnlyList<ServedFileResult> results;
+        try
+        {
+            results = await _cache.ServeAsync(app.AppId, requests, cancellationToken).ConfigureAwait(false);
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            _logger?.LogWarning(exception, "apps: the wwwroot/ files of {AppId} could not be served", app.AppId);
+            return;
+        }
+
+        int served = 0;
+        bool stylesServed = false;
+        string stylesUrl = GetUrl(app, styles);
+        for (int index = 0; index < requests.Count && index < results.Count; index++)
+        {
+            ServedFileRequest request = requests[index];
+            ServedFileResult result = results[index];
+            if (result.Outcome == ServedFileOutcome.Served)
             {
-                // AppAssetStore already logged a damaged file; a stale copy must not be served instead.
-                _logger?.LogWarning("apps: {Url} of {AppId} is not served ({Reason})", url, app.AppId, exception.Message);
-                await TryRemoveAsync(url, cancellationToken).ConfigureAwait(false);
+                served++;
+                stylesServed |= string.Equals(request.Url, stylesUrl, StringComparison.Ordinal);
+                continue;
+            }
+
+            _logger?.LogWarning("apps: {Url} of {AppId} is not served ({Reason})", request.Url, app.AppId, result.Outcome);
+            if (result.Outcome == ServedFileOutcome.HashMismatch)
+            {
+                ReportDamaged(app, request, assetPaths[index]);
             }
         }
 
-        _logger?.LogInformation("apps: {Count} wwwroot/ file(s) of {AppId} {Version} served", copied, app.AppId, app.Version);
-        if (stylesCopied)
+        _logger?.LogInformation("apps: {Count} wwwroot/ file(s) of {AppId} {Version} served", served, app.AppId, app.Version);
+        if (stylesServed)
         {
-            await LinkStylesAsync(app, GetUrl(app, styles), cancellationToken).ConfigureAwait(false);
+            await LinkStylesAsync(app, stylesUrl, cancellationToken).ConfigureAwait(false);
         }
     }
 
-    // ADR 0221 §2: the scoped CSS of the app's components, linked once its verified copy is served.
+    // ADR 0098 §5: a file whose content is not the declared one marks the app damaged, as a read
+    // through AppAssetStore would.
+    private void ReportDamaged(InstalledApp app, ServedFileRequest request, string assetPath)
+    {
+        try
+        {
+            _store().ReportDamaged(app.AppId, assetPath, $"expected SHA-256 {request.Sha256}, the stored content differs");
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            _logger?.LogWarning(exception, "apps: {AppId} could not be marked damaged", app.AppId);
+        }
+    }
+
+    // ADR 0221 §2: the scoped CSS of the app's components, linked once it is served.
     private async Task LinkStylesAsync(InstalledApp app, string url, CancellationToken cancellationToken)
     {
         try
@@ -236,18 +286,6 @@ public sealed class InstalledAppAssetPublisher
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
             _logger?.LogWarning(exception, "apps: the scoped CSS of {AppId} could not be loaded", app.AppId);
-        }
-    }
-
-    private async Task TryRemoveAsync(string url, CancellationToken cancellationToken)
-    {
-        try
-        {
-            await _cache.RemoveAsync(url, cancellationToken).ConfigureAwait(false);
-        }
-        catch (Exception exception) when (exception is not OperationCanceledException)
-        {
-            _logger?.LogWarning(exception, "apps: {Url} could not be removed from the cache", url);
         }
     }
 }

@@ -75,6 +75,7 @@ public sealed class AppCapabilitiesTests
         { AppCapabilities.ShellHost, CapabilityRisk.Dangerous },
         { AppCapabilities.KeyringReadAll, CapabilityRisk.Dangerous },
         { AppCapabilities.UsersManage, CapabilityRisk.Dangerous },
+        { AppCapabilities.CloudAccountsManage, CapabilityRisk.Dangerous },
     };
 
     [Theory]

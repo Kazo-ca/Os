@@ -1,0 +1,50 @@
+/* Shared style of the static legal pages (privacy.html, terms.html): no WebAssembly, no script. */
+:root {
+    color-scheme: dark;
+    --bg: #0d1117;
+    --panel: #161b22;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --accent: #3fb950;
+    --border: #30363d;
+}
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 16px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+main {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 32px 16px 64px;
+}
+
+header nav {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    font-size: 14px;
+}
+
+a { color: var(--accent); }
+
+h1 { font-size: 28px; margin: 24px 0 4px; }
+h2 { font-size: 20px; margin: 32px 0 8px; border-bottom: 1px solid var(--border); padding-bottom: 4px; }
+h3 { font-size: 17px; margin: 24px 0 4px; }
+
+.updated { color: var(--muted); font-size: 14px; margin: 0 0 16px; }
+
+section.language {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 24px 24px;
+    margin-top: 32px;
+}
+
+code { background: #21262d; padding: 1px 5px; border-radius: 4px; font-size: 14px; }
