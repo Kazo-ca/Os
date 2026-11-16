@@ -54,9 +54,11 @@ dans un vrai Chrome). Il a choisi le premier.
 4. **Réserve de root.** Elle reste calculée d'après la mesure. Une écriture
    refusée ne l'active pas : la limite réelle est déjà atteinte, la réserve ne
    protège plus rien.
-5. **Test.** `LowStorageSpaceTests` abaisse le quota juste au-dessus de
-   l'usage réel (lu par `Storage.getUsageAndQuota`) : la première écriture du
-   système qui dépasse est refusée et l'avertissement doit arriver. La suite du
+5. **Test.** `LowStorageSpaceTests` fixe le quota à 8 Mio avant la première
+   navigation (Chromium n'applique pas un quota posé après le premier accès de
+   l'origine à son stockage), le remplit d'octets aléatoires, puis écrit un
+   fichier depuis le terminal : l'écriture est refusée (« No space left on
+   device ») et l'avertissement doit arriver. La suite du
    test vérifie que l'administrateur se reconnecte quand même.
 
 ## Conséquences

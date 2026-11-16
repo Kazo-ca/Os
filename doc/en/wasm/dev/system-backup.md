@@ -199,8 +199,10 @@ Dumps of versions 2 and 3 in `Tests/fixtures/indexeddb/` (version 1 was never co
 - `Tests/Kazo.Os.Commands.Wave5.Tests/KazobackupCommandTests.cs`: usage, root
   required, creation, default merge, replace, archive rejected, host without
   backup.
-- `Tests/Kazo.Os.UI.E2E.Tests/LowStorageSpaceTests.cs`: Chromium quota lowered
-  (`Storage.overrideQuotaForOrigin`) to 3 % free; the notification arrives, the
+- `Tests/Kazo.Os.UI.E2E.Tests/LowStorageSpaceTests.cs`: Chromium quota set to
+  8 MiB (`Storage.overrideQuotaForOrigin`, before the first navigation) then
+  filled; the browser refuses a terminal write ("No space left on device"),
+  the notification arrives (ADR 0279), the
   "Open Diagnostic" action is there, and the administrator reconnects after a
   reload (the system still writes into the reserve).
 - `Tests/Kazo.Os.App.Abstractions.Tests/AppCapabilitiesTests.cs`:
