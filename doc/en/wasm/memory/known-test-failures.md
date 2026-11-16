@@ -29,6 +29,9 @@ request any more while offline). The causes are in
 - `Kazo.Os.UI.E2E.Tests`: `FileExplorerDownload` and `BrowserHomePage` when
   the whole suite runs;
 - `Kazo.Os.Platform.WorkerHost.Tests`: one timing test.
+- `Kazo.Os.TrimmedPublish.E2E.Tests`: `Trimmed_publish_runs_every_app…` sometimes
+  stays on the Intranet's People page after the click on Board (seen once in two
+  runs on 2026-11-16).
 
 CI reruns a failed test once and reports "Flaky test" if it passes on the
 second try ([`../dev/ci-workflows.md`](../dev/ci-workflows.md)).

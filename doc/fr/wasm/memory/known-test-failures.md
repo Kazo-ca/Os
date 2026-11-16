@@ -30,6 +30,9 @@ aucune requête réseau hors ligne). Les causes sont dans
 - `Kazo.Os.UI.E2E.Tests` : `FileExplorerDownload` et `BrowserHomePage` quand
   toute la suite tourne ;
 - `Kazo.Os.Platform.WorkerHost.Tests` : un test de temps.
+- `Kazo.Os.TrimmedPublish.E2E.Tests` : `Trimmed_publish_runs_every_app…` reste
+  parfois sur la page People de l'Intranet après le clic sur Board (vu une fois
+  sur deux passes le 2026-11-16).
 
 La CI relance une fois un test en échec et signale « Flaky test » s'il passe au
 second essai ([`../dev/ci-workflows.md`](../dev/ci-workflows.md)).
