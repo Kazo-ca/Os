@@ -116,6 +116,21 @@ The `kazoos-host` template publishes trimmed in the same way. The
 packages whole; app templates start with `IsTrimmable=true`, and the package
 enables the trimming analysis in an app project that does not set it.
 
+### API surface of the publish (ADR 0277)
+
+A trimmed publish of a host writes `kazoos-api-surface.json.gz` at the root of
+the publish folder, next to `wwwroot/`, so the site never serves it. The file
+lists every assembly ILLink wrote (`obj/Release/net10.0/linked/`, before
+Webcil), with its types, methods (name, arity, exact parameter types), fields
+and forwarded types. The `_KazoOsWriteApiSurface` target writes it with the
+generator's `api-surface` command; `KazoOsWriteApiSurface=false` skips it.
+
+The file answers the same questions as `LoadedRuntimeApiSurface` in the OS, so
+`AppPackageApiCheck` gives the same verdict at build time as at install time
+(`ApiSurfaceTests`). For Kazo OS 3.4.1: 115 assemblies, 1.7 MiB compressed. The
+packaging check (`KazoOsPack`, `KOSAPP0100`) and the file in
+`Kazo.Os.App.Build` are the next work item of the `todo-wins/base` series.
+
 ### Pitfall: successive publications
 
 The SDK's WebCIL conversion is incremental by file dates. A non-trimmed

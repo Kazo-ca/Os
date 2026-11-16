@@ -611,6 +611,29 @@
     </ItemGroup>
   </Target>
 
+  <!--
+    ADR 0277 §1: a trimmed publish of a host writes the API surface it ships (kazoos-api-surface.json.gz:
+    every assembly ILLink wrote, with its types, methods and fields), read from the linked assemblies
+    before Webcil wraps them. It lands next to wwwroot/ in the publish folder, so the site never serves
+    it; KazoOsPack checks an app against it (ADR 0277 §2). KazoOsWriteApiSurface=false skips it.
+  -->
+  <Target Name="_KazoOsWriteApiSurface"
+          AfterTargets="ILLink"
+          DependsOnTargets="_KazoOsResolveManifestGeneratorPath"
+          Condition="'$(KazoOsAppHost)' == 'true' and '$(PublishTrimmed)' == 'true' and '$(KazoOsWriteApiSurface)' != 'false'">
+    <PropertyGroup>
+      <_KazoOsApiSurfaceVersion>$(KazoOsVersion)</_KazoOsApiSurfaceVersion>
+      <_KazoOsApiSurfaceVersion Condition="'$(_KazoOsApiSurfaceVersion)' == ''">$(Version)</_KazoOsApiSurfaceVersion>
+      <_KazoOsApiSurfaceFile>$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(IntermediateOutputPath)', 'kazoos-api-surface.json.gz'))</_KazoOsApiSurfaceFile>
+      <_KazoOsLinkedDir>$([MSBuild]::NormalizeDirectory('$(MSBuildProjectDirectory)', '$(IntermediateLinkDir)'))</_KazoOsLinkedDir>
+    </PropertyGroup>
+    <Exec Command="&quot;$(_KazoOsDotnetHost)&quot; &quot;$(_KazoOsManifestGeneratorPath)&quot; api-surface --linked &quot;$(_KazoOsLinkedDir.TrimEnd('/').TrimEnd('\'))&quot; --version &quot;$(_KazoOsApiSurfaceVersion)&quot; --output &quot;$(_KazoOsApiSurfaceFile)&quot;" />
+    <ItemGroup>
+      <FileWrites Include="$(_KazoOsApiSurfaceFile)" />
+      <ResolvedFileToPublish Include="$(_KazoOsApiSurfaceFile)" RelativePath="kazoos-api-surface.json.gz" CopyToPublishDirectory="PreserveNewest" />
+    </ItemGroup>
+  </Target>
+
   <!-- ===================================================================================== -->
   <!-- App packages (ADR 0098 §2)                                                             -->
   <!-- ===================================================================================== -->
