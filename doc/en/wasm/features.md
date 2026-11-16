@@ -493,6 +493,7 @@ points to its PR.
 | Feature | Description | ADR | Issue |
 | --- | --- | --- | --- |
 | Application catalog | Catalog format, checking and publishing of the offered applications. | [0188](dev/adr/0188-hack-store-and-app-catalog.md) | [AppMarketPlace #1](https://github.com/Kazo-ca/Os-AppMarketPlace/issues/1) |
+| API check before publishing | An app's build (`KazoOsPack`) and the Store's CI refuse an app that calls an API the published OS removed, listing the missing members, instead of refusing it only at install time. `todo-wins/base` series. | [0277](dev/adr/0277-trimmed-api-check-before-publishing.md) | [#346](https://github.com/Kazo-ca/Os/issues/346) |
 | Beta channel and automatic app updates | A beta version of Kazo OS online (`os-beta.kazo.ca`), the SDK as a prerelease on nuget.org, and each app rebuilding and offering its update when the SDK ships. The OS side is done: the `beta` branch, the beta site with its "Beta" badge, the beta catalog and the reusable app workflows. Prereleases 3.4.0-preview.1 to 4 shipped on 2026-11-15, each app repository is aligned (work item 7) and the apps offered their beta version by themselves; the stable 3.4.0 follows. What is left is the trial of the app updates for the stable 3.4.0 (work item 8). | [0271](dev/adr/0271-beta-channel-and-automatic-app-updates.md), [plan](dev/plans/release-channels-plan.md) | [#456](https://github.com/Kazo-ca/Os/issues/456) |
 
 ### Personalization
