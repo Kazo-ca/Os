@@ -14,7 +14,8 @@ namespace Kazo.Os.AppSdk.Net;
 /// The OS tries the simulated network first. When the target is not part of it, the app holds
 /// <c>network.real.access</c> and the optional server is connected, the OS relays the call through
 /// the server proxy, managing the access token itself. The app sees neither the token nor the
-/// state of the server: without a server the outcome is <see cref="KazoNetworkError.HostNotFound"/>.
+/// server: without a server the outcome is <see cref="KazoNetworkError.RelayNoServer"/>, and
+/// <see cref="GetRelayStateAsync"/> tells beforehand whether the relay works (ADR 0278).
 /// </para>
 /// <para>
 /// Capabilities: <c>network.simulated.read</c> for resolution, ping, GET, HEAD and probes;
@@ -146,6 +147,25 @@ public interface IAppNetworkGateway
     ValueTask<KazoNetworkResult<System.Net.WebSockets.WebSocket>> ConnectWebSocketAsync(
         Uri uri, IReadOnlyList<string> subProtocols, CancellationToken cancellationToken = default) =>
         throw new NotSupportedException("This network gateway cannot open WebSockets.");
+
+    /// <summary>
+    /// Reads whether the optional Kazo server's relay can carry this app's real-network
+    /// connections (ADR 0278 §1). Apps use it through <see cref="KazoRealNetwork.GetRelayStateAsync"/>.
+    /// </summary>
+    /// <remarks>Needs <c>network.real.access</c> only.</remarks>
+    /// <param name="cancellationToken">Cancels the read.</param>
+    ValueTask<KazoRelayState> GetRelayStateAsync(CancellationToken cancellationToken = default) =>
+        throw new NotSupportedException("This network gateway cannot read the relay's state.");
+
+    /// <summary>
+    /// Raised when the relay's status changes for this app (ADR 0278 §1). A gateway that cannot
+    /// observe it ignores the handlers.
+    /// </summary>
+    event EventHandler<KazoRelayState>? RelayStateChanged
+    {
+        add { }
+        remove { }
+    }
 }
 
 /// <summary>
@@ -291,7 +311,22 @@ public enum KazoNetworkError
     /// name that does not match (ADR 0235 §2). <see cref="KazoTcpClient"/> throws
     /// <c>AuthenticationException</c> for it, as <c>SslStream</c> does.
     /// </summary>
-    TlsFailed
+    TlsFailed,
+
+    /// <summary>
+    /// The target is on the real network, but no Kazo server is connected to relay it
+    /// (<c>ERR_KAZO_RELAY_NO_SERVER</c>, ADR 0278 §2).
+    /// </summary>
+    RelayNoServer,
+
+    /// <summary>The Kazo server's operator turned the relay off (<c>ERR_KAZO_RELAY_DISABLED</c>).</summary>
+    RelayDisabled,
+
+    /// <summary>
+    /// The Kazo server has not received the app's real-network permission yet
+    /// (<c>ERR_KAZO_RELAY_GRANT_PENDING</c>, ADR 0233).
+    /// </summary>
+    RelayGrantPending
 }
 
 /// <summary>Outcome of one <see cref="IAppNetworkGateway"/> call: a value or a <see cref="KazoNetworkError"/>.</summary>
@@ -342,6 +377,9 @@ public static class KazoNetworkErrorCodes
         KazoNetworkError.AddressInUse => "ERR_ADDRESS_IN_USE",
         KazoNetworkError.TimedOut => "ERR_TIMED_OUT",
         KazoNetworkError.BlockedByAdministrator => "ERR_BLOCKED_BY_ADMINISTRATOR",
+        KazoNetworkError.RelayNoServer => "ERR_KAZO_RELAY_NO_SERVER",
+        KazoNetworkError.RelayDisabled => "ERR_KAZO_RELAY_DISABLED",
+        KazoNetworkError.RelayGrantPending => "ERR_KAZO_RELAY_GRANT_PENDING",
         _ => string.Empty
     };
 }

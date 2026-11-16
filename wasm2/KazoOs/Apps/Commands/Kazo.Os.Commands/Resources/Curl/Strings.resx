@@ -54,4 +54,13 @@
   <data name="WriteFailed" xml:space="preserve">
     <value>curl: (23) Failure writing output to destination: {0}: {1}</value>
   </data>
+  <data name="Relay.NoServer" xml:space="preserve">
+    <value>no Kazo server is connected to relay it</value>
+  </data>
+  <data name="Relay.Disabled" xml:space="preserve">
+    <value>the Kazo server's relay is turned off</value>
+  </data>
+  <data name="Relay.GrantPending" xml:space="preserve">
+    <value>the Kazo server has not received this command's permission yet</value>
+  </data>
 </root>

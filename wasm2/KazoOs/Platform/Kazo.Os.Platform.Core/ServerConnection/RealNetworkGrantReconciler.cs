@@ -51,6 +51,12 @@ public sealed class RealNetworkGrantReconciler(
     private readonly Dictionary<(string Server, string AppId, string UserId), string> _acknowledged = [];
     private readonly SemaphoreSlim _gate = new(1, 1);
 
+    /// <summary>
+    /// Called after a grant was issued or withdrawn on the server, so the apps that follow the
+    /// relay's state see the change (ADR 0278 §1); <see langword="null"/> when nothing follows it.
+    /// </summary>
+    public Action? GrantsChanged { get; init; }
+
     /// <inheritdoc />
     public async Task ReconcileAsync(string userId, string? appId = null, CancellationToken cancellationToken = default)
     {
@@ -109,6 +115,7 @@ public sealed class RealNetworkGrantReconciler(
             {
                 await proxy.IssueGrantAsync(server, accessToken, request, cancellationToken).ConfigureAwait(false);
                 _acknowledged[key] = signature;
+                GrantsChanged?.Invoke();
             }
             catch (ServerConnectionException exception) when (exception.ProxyErrorCode == ProxyErrorCode.GrantIssuingDisabled)
             {
