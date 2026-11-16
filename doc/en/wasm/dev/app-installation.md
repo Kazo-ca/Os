@@ -331,7 +331,10 @@ approval:
   ([ADR 0261](adr/0261-app-libraries-and-shared-versions.md),
   [section below](#app-libraries-and-shared-versions-adr-0261)).
 - **`wwwroot/` resources** ([ADR 0206](adr/0206-serve-installed-app-assets.md)):
-  at the app's first launch in the session, the OS writes for each declared
+  at the app's first launch in the session (its icons,
+  `presentation.iconAssetPaths`, as soon as the OS starts and after its
+  install or update, so the launcher, the Start menu and the desktop show them
+  before that launch, issue #420), the OS writes for each declared
   resource a `servedFiles` row pointing at the content of the file in the
   app's folder, without reading or copying it: the file's `contentHash` must
   be the manifest's SHA-256, otherwise the address is not served and the app
