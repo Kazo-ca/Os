@@ -13,7 +13,8 @@
                     aria-haspopup="dialog"
                     aria-expanded="@Launcher.IsOpen.ToString().ToLowerInvariant()"
                     @onclick="HandleLauncherToggleClick">
-                <span class="launcher-mark" aria-hidden="true">@Options.LauncherMark</span>
+                @* The mark is drawn by CSS (::before) so it is not part of the visible text axe compares with the name. *@
+                <span class="launcher-mark" aria-hidden="true" data-mark="@Options.LauncherMark"></span>
                 <span class="launcher-label">@LauncherLabel</span>
                 @if (Launcher.HasAttention)
                 {

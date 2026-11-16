@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using Microsoft.Playwright;
 using Xunit.Abstractions;
+using System.Text.RegularExpressions;
 
 namespace Kazo.Os.UI.E2E.Tests;
 
@@ -51,7 +52,7 @@ public sealed class FrenchSessionTests(ITestOutputHelper output)
             await launcher.WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 60000 });
             await launcher.ClickAsync();
             await page.GetByRole(AriaRole.Combobox, new() { Name = "Rechercher des applications" }).FillAsync("Calc");
-            await page.GetByRole(AriaRole.Button, new() { Name = "Lancer Calculatrice", Exact = true }).ClickAsync(new() { Timeout = 20000 });
+            await page.GetByRole(AriaRole.Button, new() { NameRegex = new Regex("^Lancer Calculatrice(,|$)") }).ClickAsync(new() { Timeout = 20000 });
             output.WriteLine("[test] the launcher speaks French and names the Calculator « Calculatrice ».");
 
             // The Calculator is loaded lazily: its French satellite assembly must have been loaded too.
@@ -62,7 +63,7 @@ public sealed class FrenchSessionTests(ITestOutputHelper output)
             // --- A command runs in a Web Worker and answers in the language of its process ---
             await launcher.ClickAsync();
             await page.GetByRole(AriaRole.Combobox, new() { Name = "Rechercher des applications" }).FillAsync("Terminal");
-            await page.GetByRole(AriaRole.Button, new() { Name = "Lancer Terminal", Exact = true }).ClickAsync(new() { Timeout = 20000 });
+            await page.GetByRole(AriaRole.Button, new() { NameRegex = new Regex("^Lancer Terminal(,|$)") }).ClickAsync(new() { Timeout = 20000 });
             ILocator frenchRows = page.Locator("[data-terminal-panel] .xterm-rows").Last;
             ILocator frenchScreen = page.Locator("[data-terminal-panel] .xterm-screen").Last;
             await WaitForTextAsync(frenchRows, text => text.Contains('$', StringComparison.Ordinal), "the shell prompt");

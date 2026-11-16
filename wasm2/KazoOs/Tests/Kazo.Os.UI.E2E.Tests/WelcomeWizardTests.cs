@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using Microsoft.Playwright;
 using Xunit.Abstractions;
+using System.Text.RegularExpressions;
 
 namespace Kazo.Os.UI.E2E.Tests;
 
@@ -82,7 +83,7 @@ public sealed class WelcomeWizardTests(ITestOutputHelper output)
 
             await launcher.ClickAsync();
             await page.GetByRole(AriaRole.Combobox, new() { Name = "Rechercher des applications" }).FillAsync("Terminal");
-            await page.GetByRole(AriaRole.Button, new() { Name = "Lancer Terminal", Exact = true }).ClickAsync(new() { Timeout = 20000 });
+            await page.GetByRole(AriaRole.Button, new() { NameRegex = new Regex("^Lancer Terminal(,|$)") }).ClickAsync(new() { Timeout = 20000 });
             ILocator rows = page.Locator("[data-terminal-panel] .xterm-rows").First;
             ILocator screen = page.Locator("[data-terminal-panel] .xterm-screen").First;
             await WaitForTextAsync(rows, text => text.Contains('$', StringComparison.Ordinal), "the shell prompt");
