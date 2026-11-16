@@ -61,6 +61,7 @@ build and test commands are in
 | Unstable E2E tests when several suites run | The Playwright suites compete for CPU and ports | Run `E2E`, `UI.E2E`, `Pwa.E2E` and `TrimmedPublish.E2E` **one at a time**. |
 | Chromium not found for Playwright | Browsers not installed at the expected location | `ChromiumLauncher` falls back to `/opt/pw-browsers/chromium`. Never run `playwright install`. |
 | A test reads the terminal output before it is complete | The output of a command in a worker arrives in several writes | Wait for the next prompt (`OutputFinished`) before reading. |
+| `Window_runtime_*` time out; the console says "setPointerCapture … No active pointer with the given id" | `PointerEvent`s built in script have no active pointer behind them: `setPointerCapture` throws and the window chrome drops the gesture | Use the browser's real input (CDP `Input.dispatchMouseEvent` with `pointerType: pen`, `Input.dispatchTouchEvent`) and aim at a point of the handle that is really hit (`elementFromPoint`) once the opening animation is over: a corner handle is partly under the Close button (#493). |
 | The Mobile choice test fails intermittently | Writing the setting in `~/.config/kazoos` is not instantaneous (2 s before [ADR 0090](adr/0090-filesystem-path-lookup-in-one-request.md), 235 ms after) | Wait for the switch before reloading. |
 | Wrong ARIA states or red axe test | An ARIA attribute bound directly to a `bool` in Razor disappears when it is `false` | Write `"true"`/`"false"` ([`old/common-pitfalls.md`](old/common-pitfalls.md) §8). |
 
