@@ -488,6 +488,12 @@ points to its PR.
 | File address served on demand | An app gets an address to read a large file (audio, video) without copying it in memory, with partial reads to seek in a track. `storage/base` series; the partial read is done (work item 3), the address is still to do. | [0275](dev/adr/0275-partial-read-and-file-address.md) | [#379](https://github.com/Kazo-ca/Os/issues/379) |
 | Drag files onto an app | Public SDK contract to receive files dragged from the File Explorer or the desktop. | To write | [#380](https://github.com/Kazo-ca/Os/issues/380) |
 
+### Network
+
+| Feature | Description | ADR | Issue |
+| --- | --- | --- | --- |
+| Kazo server relay state for apps | An app with access to the real network knows, without trying, whether the Kazo server's relay is ready (no server, relay turned off, permission pending), and a connection failure gives the real reason. `todo-wins/base` series. | [0278](dev/adr/0278-real-network-relay-state-for-apps.md) | [#418](https://github.com/Kazo-ca/Os/issues/418) |
+
 ### Kazo OS Store
 
 | Feature | Description | ADR | Issue |

@@ -506,6 +506,12 @@ dans `main`, le lien mène à sa PR.
 | Adresse de fichier servie à la demande | Une app reçoit une adresse pour lire un gros fichier (audio, vidéo) sans le copier en mémoire, avec lecture partielle pour avancer dans un morceau. Série `storage/base` ; la lecture partielle est faite (chantier 3), l'adresse reste à faire. | [0275](dev/adr/0275-partial-read-and-file-address.md) | [#379](https://github.com/Kazo-ca/Os/issues/379) |
 | Glisser des fichiers vers une app | Contrat public du SDK pour recevoir des fichiers glissés depuis l'explorateur ou le bureau. | À écrire | [#380](https://github.com/Kazo-ca/Os/issues/380) |
 
+### Réseau
+
+| Fonctionnalité | Description | ADR | Issue |
+| --- | --- | --- | --- |
+| État du relais du serveur Kazo pour les apps | Une app qui a accès au vrai réseau sait, sans essayer, si le relais du serveur Kazo est prêt (aucun serveur, relais arrêté, autorisation en attente), et un échec de connexion dit la vraie raison. Série `todo-wins/base`. | [0278](dev/adr/0278-real-network-relay-state-for-apps.md) | [#418](https://github.com/Kazo-ca/Os/issues/418) |
+
 ### Kazo OS Store
 
 | Fonctionnalité | Description | ADR | Issue |
