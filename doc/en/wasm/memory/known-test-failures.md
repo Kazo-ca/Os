@@ -19,11 +19,11 @@ Fixed on 2026-11-16 by the `known-failures` series (#493, PRs #580 to #582): the
 `label-content-name-mismatch` tests of the taskbar, the Start menu and the
 Calculator, and `Trimmed_publish_boots_offline_after_the_first_load` (no network
 request any more while offline). The causes are in
-[`../dev/pitfalls.md`](../dev/pitfalls.md) §4.
+[`../dev/pitfalls.md`](../dev/pitfalls.md) §4. The flaky `AppInstallationService` test is fixed by the same series
+(`apps.config` is watched before it is read).
 
 ## Flaky (pass alone, sometimes fail under load)
 
-- `AppInstallationService` (unit tests);
 - `LocalNetworkTests` with a web worker;
 - the detached-window E2E harness;
 - `Kazo.Os.UI.E2E.Tests`: `FileExplorerDownload` and `BrowserHomePage` when

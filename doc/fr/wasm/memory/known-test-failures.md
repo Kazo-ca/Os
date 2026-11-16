@@ -20,11 +20,11 @@ tests `Window_runtime_*` (vrais gestes stylet et tactile par CDP), les tests axe
 `label-content-name-mismatch` de la barre des tâches, du menu Démarrer et de la
 calculatrice, et `Trimmed_publish_boots_offline_after_the_first_load` (plus
 aucune requête réseau hors ligne). Les causes sont dans
-[`../dev/pitfalls.md`](../dev/pitfalls.md) §4.
+[`../dev/pitfalls.md`](../dev/pitfalls.md) §4. Le test instable `AppInstallationService` est corrigé par la même série
+(la surveillance d'`apps.config` démarre avant sa lecture).
 
 ## Instables (passent seuls, échouent parfois sous charge)
 
-- `AppInstallationService` (tests unitaires) ;
 - `LocalNetworkTests` avec un web worker ;
 - le harnais E2E des fenêtres détachées ;
 - `Kazo.Os.UI.E2E.Tests` : `FileExplorerDownload` et `BrowserHomePage` quand
