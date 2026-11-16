@@ -42,6 +42,12 @@ public partial class FileView : IAsyncDisposable
     private long _currentDirectoryRevision;
     private ITopicChannelSubscription<FileSystemChangeEvent>? _watchSubscription;
     private CancellationTokenSource? _watchLoopCts;
+
+    /// <summary>
+    /// Set once <see cref="DisposeAsync"/> starts, so a navigation still waiting for its watch
+    /// subscription closes it instead of starting a watch loop on a disposed view (issue #519).
+    /// </summary>
+    private bool _disposed;
     private FileViewContextMenu? _contextMenu;
     private IJSObjectReference? _jsModule;
     private DotNetObjectReference<FileView>? _pasteCallbacks;
@@ -1488,17 +1494,50 @@ public partial class FileView : IAsyncDisposable
             return;
         }
 
-        _watchLoopCts?.Cancel();
-        _watchLoopCts?.Dispose();
+        StopWatchLoop();
         if (_watchSubscription is not null)
         {
             await _watchSubscription.DisposeAsync();
             _watchSubscription = null;
         }
 
-        _watchSubscription = await Watch.WatchAsync(path, FileSystemWatchScope.ImmediateChildren, cancellationToken);
+        ITopicChannelSubscription<FileSystemChangeEvent> subscription =
+            await Watch.WatchAsync(path, FileSystemWatchScope.ImmediateChildren, cancellationToken);
+        if (_disposed)
+        {
+            // The view was disposed while WatchAsync ran (a file dialog closed right after entering a
+            // folder): close the new subscription instead of watching for a component that is gone.
+            await subscription.DisposeAsync();
+            return;
+        }
+
+        // Another navigation may have attached its own watch while this one awaited WatchAsync.
+        StopWatchLoop();
+        if (_watchSubscription is not null)
+        {
+            await _watchSubscription.DisposeAsync();
+        }
+
+        _watchSubscription = subscription;
         _watchLoopCts = new CancellationTokenSource();
         _ = WatchLoopAsync(_watchSubscription, _watchLoopCts.Token);
+    }
+
+    /// <summary>
+    /// Cancels and releases the current watch loop's token source, and forgets it so a later
+    /// call (another navigation or <see cref="DisposeAsync"/>) never cancels a disposed source.
+    /// </summary>
+    private void StopWatchLoop()
+    {
+        CancellationTokenSource? cts = _watchLoopCts;
+        _watchLoopCts = null;
+        if (cts is null)
+        {
+            return;
+        }
+
+        cts.Cancel();
+        cts.Dispose();
     }
 
     private async Task WatchLoopAsync(ITopicChannelSubscription<FileSystemChangeEvent> subscription, CancellationToken cancellationToken)
@@ -1522,12 +1561,13 @@ public partial class FileView : IAsyncDisposable
     /// <inheritdoc />
     public async ValueTask DisposeAsync()
     {
+        _disposed = true;
         await StopPreviewWatchesAsync();
-        _watchLoopCts?.Cancel();
-        _watchLoopCts?.Dispose();
+        StopWatchLoop();
         if (_watchSubscription is not null)
         {
             await _watchSubscription.DisposeAsync();
+            _watchSubscription = null;
         }
 
         if (_jsModule is not null)
