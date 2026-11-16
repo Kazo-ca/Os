@@ -49,6 +49,58 @@ public sealed class InstalledAppAssetPublisherTests
     }
 
     [Fact]
+    public async Task Icons_are_served_before_the_first_launch_without_the_other_files_or_the_styles()
+    {
+        // Issue #420: the launcher asked for _content/<assembly>/icons/app.svg before the app had
+        // ever started in the session, and got a 404.
+        MemoryCache cache = new();
+        byte[] icon = Encoding.UTF8.GetBytes("<svg xmlns='http://www.w3.org/2000/svg'/>");
+        byte[] styles = Encoding.UTF8.GetBytes(".board[b-1x2y3z] { display: grid; }");
+        AppManifest manifest = Manifest(
+            new AssetManifest("icons/app.svg", AssetKind.Image, Hash(icon)),
+            new AssetManifest("Kazo.Sample.bundle.scp.css", AssetKind.Css, Hash(styles)),
+            new AssetManifest("engine/engine.js", AssetKind.JavaScriptModule, Hash(Engine)));
+        manifest = manifest with { Presentation = manifest.Presentation with { IconAssetPaths = ["icons/app.svg"] } };
+        (InstalledAppAssetPublisher publisher, InstalledApp app, _) = Create(cache, new()
+        {
+            [Folder + "icons/app.svg"] = icon,
+            [Folder + "Kazo.Sample.bundle.scp.css"] = styles,
+            [Folder + "engine/engine.js"] = Engine,
+        }, manifest);
+
+        await publisher.PublishIconsAsync([app]);
+
+        Assert.Equal(["_content/Kazo.Sample/icons/app.svg"], cache.Files.Keys);
+        Assert.Equal("image/svg+xml", cache.Files["_content/Kazo.Sample/icons/app.svg"].ContentType);
+        Assert.Empty(cache.StyleSheets);
+        Assert.Equal(0, cache.FileReads);
+
+        // The first launch still serves everything and links the styles.
+        await publisher.PublishAsync(app);
+
+        Assert.Equal(3, cache.Files.Count);
+        Assert.Equal(["_content/Kazo.Sample/Kazo.Sample.bundle.scp.css"], cache.StyleSheets);
+    }
+
+    [Fact]
+    public async Task Icons_of_an_app_without_declared_icons_or_without_a_service_worker_serve_nothing()
+    {
+        MemoryCache cache = new() { CanServe = false };
+        byte[] icon = Encoding.UTF8.GetBytes("<svg/>");
+        AppManifest manifest = Manifest(new AssetManifest("icons/app.svg", AssetKind.Image, Hash(icon)));
+        manifest = manifest with { Presentation = manifest.Presentation with { IconAssetPaths = ["icons/app.svg"] } };
+        (InstalledAppAssetPublisher publisher, InstalledApp app, _) = Create(cache, new() { [Folder + "icons/app.svg"] = icon }, manifest);
+
+        await publisher.PublishIconsAsync([app]);
+        Assert.Empty(cache.Files);
+
+        // A later call, once a worker controls the page, serves them.
+        cache.CanServe = true;
+        await publisher.PublishIconsAsync([app]);
+        Assert.True(cache.Files.ContainsKey("_content/Kazo.Sample/icons/app.svg"));
+    }
+
+    [Fact]
     public async Task Every_declared_file_is_served_at_the_address_of_a_built_in_app_with_its_type()
     {
         MemoryCache cache = new();

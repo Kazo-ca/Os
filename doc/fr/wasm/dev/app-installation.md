@@ -333,7 +333,10 @@ validation en deux étapes :
   ([ADR 0261](adr/0261-app-libraries-and-shared-versions.md),
   [section plus bas](#bibliothèques-dapp-et-versions-partagées-adr-0261)).
 - **Ressources `wwwroot/`** ([ADR 0206](adr/0206-serve-installed-app-assets.md)) :
-  au premier lancement de l'app dans la session, l'OS écrit pour chaque
+  au premier lancement de l'app dans la session (ses icônes,
+  `presentation.iconAssetPaths`, dès le démarrage de l'OS et après son
+  installation ou sa mise à jour, pour que le lanceur, le menu Démarrer et le
+  bureau les montrent avant ce lancement, issue #420), l'OS écrit pour chaque
   ressource déclarée une ligne de `servedFiles` qui pointe vers le contenu du
   fichier dans le dossier de l'app, sans le relire ni le copier : le
   `contentHash` du fichier doit être le SHA-256 du manifeste, sinon l'adresse
