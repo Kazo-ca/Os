@@ -2,6 +2,7 @@ using System.Diagnostics;
 using Deque.AxeCore.Playwright;
 using Microsoft.Playwright;
 using Xunit.Abstractions;
+using System.Text.RegularExpressions;
 
 namespace Kazo.Os.UI.E2E.Tests;
 
@@ -60,7 +61,7 @@ public sealed class AccessibilityPreferencesTests(ITestOutputHelper output)
             ILocator focused = page.Locator("article.window-host.is-focused");
 
             // 1. Tab to the launcher button, open it with Enter, search, pick with the arrows, launch with Enter.
-            await TabToAsync(page, "App launcher");
+            await TabToAsync(page, "Applications, app launcher");
             await AssertFocusVisibleAsync(page, "launcher button");
             await page.Keyboard.PressAsync("Enter");
             ILocator search = page.GetByRole(AriaRole.Combobox, new() { Name = "Search applications" });
@@ -69,7 +70,7 @@ public sealed class AccessibilityPreferencesTests(ITestOutputHelper output)
             await LaunchFromSearchAsync(page, "Calculator");
             await Assertions.Expect(windows).ToHaveCountAsync(1, new() { Timeout = 15000 });
 
-            await TabToAsync(page, "App launcher");
+            await TabToAsync(page, "Applications, app launcher");
             await page.Keyboard.PressAsync("Enter");
             await Assertions.Expect(search).ToBeFocusedAsync(new() { Timeout = 15000 });
             await LaunchFromSearchAsync(page, "Text Editor");
@@ -275,7 +276,7 @@ public sealed class AccessibilityPreferencesTests(ITestOutputHelper output)
     private static async Task LaunchFromSearchAsync(IPage page, string app)
     {
         await page.Keyboard.TypeAsync(app);
-        await page.GetByRole(AriaRole.Button, new() { Name = $"Launch {app}", Exact = true })
+        await page.GetByRole(AriaRole.Button, new() { NameRegex = new Regex($"^Launch {Regex.Escape(app)}(,|$)") })
             .WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible });
         await page.Keyboard.PressAsync("ArrowDown");
         await page.Keyboard.PressAsync("Enter");
