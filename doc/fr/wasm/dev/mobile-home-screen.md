@@ -55,6 +55,20 @@ avec leur composant desktop ; le générateur émet la forme `platform` avec les
 deux plateformes. Le filtre du tiroir et l’orchestrateur conservent les contrôles
 de compatibilité pour les autres apps.
 
+## Barre d'état du haut (issue #408)
+
+Comme la barre d'état d'un téléphone, la poignée du volet de notifications a sa propre
+bande en haut de l'écran : la zone sûre de l'encoche (`env(safe-area-inset-top)`) plus
+1,75 rem. La couche de l'app active (`.mobile-app-layer`) commence sous cette bande, donc
+les boutons qu'une app met tout en haut de sa fenêtre reçoivent les touchers. L'accueil
+garde toute la hauteur : il laisse déjà cette place.
+
+- `--kos-mobile-top-inset` (posée sur `.mobile-shell`) : hauteur de la bande. Une app
+  n'a plus à décaler son contenu.
+- `--kos-mobile-status-bar-background` : fond de la bande quand une app est ouverte
+  (par défaut `--kos-bg-surface`).
+- Test : `UI.E2E` `MobileShadeHandleTests`.
+
 ## Persistance et paramètres
 
 `~/Desktop/.mobile/layout.conf` :
