@@ -26,8 +26,10 @@ is set before the first navigation).
 
 - `LocalNetworkTests` with a web worker;
 - the detached-window E2E harness;
-- `Kazo.Os.UI.E2E.Tests`: `FileExplorerDownload` and `BrowserHomePage` when
-  the whole suite runs;
+- `Kazo.Os.UI.E2E.Tests`: `FileExplorerDownload`, `BrowserHomePage` and
+  `FileExplorerUpload…non_empty_folder` (the prepared file does not show within
+  30 s; seen once on 2026-11-16, 3 passes out of 3 alone) when the whole suite
+  runs;
 - `Kazo.Os.Platform.WorkerHost.Tests`: one timing test.
 - `Kazo.Os.TrimmedPublish.E2E.Tests`: `Trimmed_publish_runs_every_app…` sometimes
   stays on the Intranet's People page after the click on Board (seen once in two
