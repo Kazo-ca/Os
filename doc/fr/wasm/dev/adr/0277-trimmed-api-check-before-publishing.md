@@ -52,10 +52,11 @@ l'issue [#346](https://github.com/Kazo-ca/Os/issues/346) (`TODO`).
   (`build/api-surface/kazoos-api-surface.json`, compressé). Un auteur qui
   compile contre le SDK `X.Y.Z` a donc la surface de l'OS `X.Y.Z`, sans
   téléchargement.
-- Les assemblages du SDK et de la plateforme (`Kazo.Os.*`) ne sont pas dans la
-  surface : ils ne sont pas élagués pour les apps
-  ([ADR 0098](0098-sdk-versions-packages-and-manifest-checks.md)) et leurs API
-  sont déjà suivies par `PublicAPI.Shipped.txt` et la fixture `sdk-compat`.
+- La surface couvre **tous** les assemblages de la publication, `Kazo.Os.*`
+  compris : sans eux, le contrôle signalerait chaque référence au SDK comme
+  absente. Ils sont gardés entiers ([ADR 0113](0113-trimming-implementation-adjustments.md)),
+  leur présence ne coûte donc que leur part du fichier. Pour Kazo OS 3.4.1 : 115
+  assemblages, 1,7 Mio compressé (mesuré au chantier 1).
 
 ### 2. `KazoOsPack` vérifie le paquet qu'il vient d'écrire
 
@@ -113,8 +114,7 @@ Posée dans le fil le 2026-11-16.
 
 - Une app qui appelle une API retirée échoue à son build Release, avec la
   liste des membres et un remplacement quand on en connaît un.
-- `Kazo.Os.App.Build` grossit de la surface compressée (taille à mesurer dans
-  le chantier 1).
+- `Kazo.Os.App.Build` grossit de la surface compressée (1,7 Mio pour 3.4.1).
 - Le contrôle n'ajoute aucune dépendance au serveur ni au réseau.
 
 ## Chantiers

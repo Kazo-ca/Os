@@ -51,11 +51,11 @@ issue [#346](https://github.com/Kazo-ca/Os/issues/346) (`TODO`).
   (`build/api-surface/kazoos-api-surface.json`, compressed). An author who
   builds against SDK `X.Y.Z` therefore has the surface of OS `X.Y.Z`, with no
   download.
-- The SDK and platform assemblies (`Kazo.Os.*`) are not in the surface: they
-  are not trimmed for apps
-  ([ADR 0098](0098-sdk-versions-packages-and-manifest-checks.md)) and their
-  APIs are already tracked by `PublicAPI.Shipped.txt` and the `sdk-compat`
-  fixture.
+- The surface covers **every** assembly of the publish, `Kazo.Os.*`
+  included: without them, the check would report every SDK reference as
+  missing. They are kept whole ([ADR 0113](0113-trimming-implementation-adjustments.md)),
+  so they only cost their share of the file. For Kazo OS 3.4.1: 115
+  assemblies, 1.7 MiB compressed (measured in work item 1).
 
 ### 2. `KazoOsPack` checks the package it just wrote
 
@@ -110,8 +110,7 @@ Asked in the thread on 2026-11-16.
 
 - An app that calls a removed API fails its Release build, with the list of
   members and a replacement when one is known.
-- `Kazo.Os.App.Build` grows by the compressed surface (size to measure in
-  work item 1).
+- `Kazo.Os.App.Build` grows by the compressed surface (1.7 MiB for 3.4.1).
 - The check adds no dependency on the server or the network.
 
 ## Work items
