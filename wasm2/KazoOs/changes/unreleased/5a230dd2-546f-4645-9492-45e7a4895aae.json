@@ -1,0 +1,14 @@
+{
+  "id": "5a230dd2-546f-4645-9492-45e7a4895aae",
+  "category": "fixed",
+  "audience": ["user", "developer"],
+  "title": {
+    "en": "On mobile, the top of an app answers touches again",
+    "fr": "Sur mobile, le haut d'une app répond de nouveau aux touchers"
+  },
+  "description": {
+    "en": "The notification shade's handle now has a status-bar strip of its own above the open app, instead of covering the app's top buttons.",
+    "fr": "La poignée du volet de notifications a maintenant sa propre bande, comme une barre d'état, au-dessus de l'app ouverte, au lieu de couvrir les boutons du haut de l'app."
+  },
+  "links": ["doc/en/wasm/dev/mobile-home-screen.md"]
+}
