@@ -1,4 +1,5 @@
 using Microsoft.Playwright;
+using System.Text.RegularExpressions;
 
 namespace Kazo.Os.Pwa.E2E.Tests;
 
@@ -207,7 +208,7 @@ internal static class PwaTestSupport
         await page.GetByRole(AriaRole.Combobox, new() { Name = "Search applications" }).FillAsync(appDisplayName);
         ILocator launchButton = page.GetByRole(
             AriaRole.Button,
-            new() { Name = $"Launch {appDisplayName}", Exact = true });
+            new() { NameRegex = new Regex($"^Launch {Regex.Escape(appDisplayName)}(,|$)") });
         await launchButton.WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible });
         await launchButton.ClickAsync();
     }
