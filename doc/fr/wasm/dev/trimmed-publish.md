@@ -117,6 +117,22 @@ Le gabarit `kazoos-host` publie trimmé de la même façon. Les cibles de
 entiers ; les gabarits d'apps partent avec `IsTrimmable=true`, et le paquet
 active l'analyse de trimming dans un projet d'app qui ne la règle pas.
 
+### Surface d'API de la publication (ADR 0277)
+
+Une publication trimmée d'un hôte écrit `kazoos-api-surface.json.gz` à la
+racine du dossier de publication, à côté de `wwwroot/` : le site ne le sert
+donc pas. Le fichier liste chaque assemblage qu'ILLink a écrit
+(`obj/Release/net10.0/linked/`, avant Webcil), avec ses types, ses méthodes
+(nom, arité, types exacts des paramètres), ses champs et ses types redirigés.
+La cible `_KazoOsWriteApiSurface` le produit avec la commande
+`api-surface` du générateur ; `KazoOsWriteApiSurface=false` la saute.
+
+Le fichier répond aux mêmes questions que `LoadedRuntimeApiSurface` dans l'OS :
+`AppPackageApiCheck` donne donc le même verdict au build qu'à l'installation
+(`ApiSurfaceTests`). Pour Kazo OS 3.4.1 : 115 assemblages, 1,7 Mio compressé.
+Le contrôle au packaging (`KazoOsPack`, `KOSAPP0100`) et le fichier dans
+`Kazo.Os.App.Build` sont le chantier suivant de la série `todo-wins/base`.
+
 ### Piège : publications successives
 
 La conversion WebCIL du SDK est incrémentale par dates de fichiers. Une

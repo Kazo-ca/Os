@@ -40,6 +40,7 @@ public static class Program
                 "aggregate" => Aggregate(ParseOptions(args.AsSpan(1))),
                 "pack" => Pack(ParseOptions(args.AsSpan(1))),
                 "validate" when args.Length == 2 => Validate(args[1]),
+                "api-surface" => WriteApiSurface(ParseOptions(args.AsSpan(1))),
                 _ => Fail("ManifestGenerator", new GeneratorDiagnostic(GeneratorCodes.InvalidArguments, "arguments", $"Unknown command line: {string.Join(' ', args)}"))
             };
         }
@@ -298,6 +299,30 @@ public static class Program
             : System.Text.Encoding.UTF8.GetBytes(AppManifestJsonSerializer.SerializeCanonical(packaged));
     }
 
+    /// <summary>
+    /// <c>api-surface --linked &lt;dir&gt; --version &lt;os version&gt; --output &lt;file.json.gz&gt;</c> (ADR 0277 §1):
+    /// writes the API surface of a trimmed publish from the assemblies ILLink wrote.
+    /// </summary>
+    private static int WriteApiSurface(IReadOnlyDictionary<string, string> options)
+    {
+        string linked = Path.GetFullPath(Required(options, "linked"));
+        string version = Required(options, "version");
+        string output = Path.GetFullPath(Required(options, "output"));
+        ApiSurfaceFile surface;
+        try
+        {
+            surface = ApiSurfaceGenerator.Generate(linked, version);
+        }
+        catch (Exception exception) when (exception is DirectoryNotFoundException or InvalidDataException or IOException)
+        {
+            return Fail(linked, new GeneratorDiagnostic(GeneratorCodes.InvalidArguments, linked, exception.Message));
+        }
+
+        surface.Write(output);
+        Console.WriteLine($"[OK] API surface of Kazo OS {version}: {surface.Document.Assemblies.Count} assemblies -> {output} ({new FileInfo(output).Length} bytes).");
+        return 0;
+    }
+
     private static int Validate(string manifestPath)
     {
         if (!File.Exists(manifestPath))
@@ -353,5 +378,6 @@ public static class Program
         Console.WriteLine("  aggregate --project <host.csproj> --apps <list file> --output <BuiltInApplications.json> [--trimmer-roots <roots.xml>]");
         Console.WriteLine("  pack --manifest <manifest.json> --bin <output dir> --webroot <wwwroot> --output <packages dir> [--web-assets <staticwebassets.build.json>] [--libraries <list file>]");
         Console.WriteLine("  validate <manifest.json>");
+        Console.WriteLine("  api-surface --linked <trimmed assemblies dir> --version <os version> --output <kazoos-api-surface.json.gz>");
     }
 }

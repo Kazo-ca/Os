@@ -21,6 +21,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Reads the trimmed framework without loading it (ADR 0277 §1). MIT, from dotnet/runtime. -->
+    <PackageReference Include="System.Reflection.MetadataLoadContext" Version="10.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\Shared\Kazo.Os.App.Abstractions\Kazo.Os.App.Abstractions.csproj" />
     <ProjectReference Include="..\..\Platform\Kazo.Os.Platform.Core\Kazo.Os.Platform.Core.csproj" />
   </ItemGroup>
