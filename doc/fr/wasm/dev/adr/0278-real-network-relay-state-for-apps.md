@@ -4,8 +4,7 @@
 
 ## Statut
 
-Proposée le 2026-11-16, recommandation appliquée en attendant la réponse de
-Benoit à Q1. Série `todo-wins/base`, pour l'issue
+Acceptée le 2026-11-16 : Benoit a choisi Q1 = C (les deux). Série `todo-wins/base`, pour l'issue
 [#418](https://github.com/Kazo-ca/Os/issues/418) (`TODO`).
 
 - **Complète :** l'[ADR 0102](0102-server-network-relay-tcp-udp-and-policy.md)
@@ -49,7 +48,7 @@ Benoit à Q1. Série `todo-wins/base`, pour l'issue
   serveur Kazo » sans essayer, et un échec pendant la connexion dit quand même
   la vraie raison (l'état a pu changer entre la lecture et l'appel).
 
-## Décision (recommandation C)
+## Décision (C)
 
 ### 1. Lire l'état du relais
 

@@ -4,7 +4,7 @@
 
 ## Status
 
-Proposed on 2026-11-16, recommendation applied while Benoit answers Q1.
+Accepted on 2026-11-16: Benoit chose Q1 = C (both).
 Series `todo-wins/base`, for issue
 [#418](https://github.com/Kazo-ca/Os/issues/418) (`TODO`).
 
@@ -48,7 +48,7 @@ Series `todo-wins/base`, for issue
   server" option without trying, and a failure during the connection still
   gives the real reason (the state may change between the read and the call).
 
-## Decision (recommendation C)
+## Decision (C)
 
 ### 1. Read the relay's state
 
