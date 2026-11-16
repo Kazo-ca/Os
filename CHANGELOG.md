@@ -6,6 +6,12 @@ The changes of Kazo OS, by version. This file is generated from `wasm2/KazoOs/ch
 `wasm2/KazoOs/build/tools/collect-changes.sh` (ADR 0186): do not edit it by hand. Changes already
 deployed but not released yet are in the Settings ▸ What's new page of the OS.
 
+## 3.4.1 (2026-11-15)
+
+### Fixed
+
+- **Open keeps the order of a multiple selection.** When the File Explorer's folder refreshed while several files were selected, the selection went back to the listing's order, so Open sent the files to their app in another order than they were picked. The selection now keeps the order in which its items were chosen. ([file-explorer.md](doc/en/wasm/dev/file-explorer.md))
+
 ## 3.4.0 (2026-11-15)
 
 ### New
