@@ -47,7 +47,7 @@ public sealed class FrenchSessionTests(ITestOutputHelper output)
             await page.GetByRole(AriaRole.Button, new() { Name = "Start session", Exact = true }).ClickAsync();
             await E2ESupport.PassWelcomeAsync(page);
 
-            ILocator launcher = page.GetByRole(AriaRole.Button, new() { Name = "Lanceur d'applications", Exact = true });
+            ILocator launcher = page.GetByRole(AriaRole.Button, new() { Name = "Applications, lanceur d'applications", Exact = true });
             await launcher.WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 60000 });
             await launcher.ClickAsync();
             await page.GetByRole(AriaRole.Combobox, new() { Name = "Rechercher des applications" }).FillAsync("Calc");
@@ -57,7 +57,7 @@ public sealed class FrenchSessionTests(ITestOutputHelper output)
             // The Calculator is loaded lazily: its French satellite assembly must have been loaded too.
             ILocator memoryClear = page.Locator("#calc-mc");
             await memoryClear.WaitForAsync(new LocatorWaitForOptions { Timeout = 30000 });
-            Assert.Equal("Effacer la mémoire", await memoryClear.GetAttributeAsync("aria-label"));
+            Assert.Equal("MC, Effacer la mémoire", await memoryClear.GetAttributeAsync("aria-label"));
 
             // --- A command runs in a Web Worker and answers in the language of its process ---
             await launcher.ClickAsync();

@@ -75,7 +75,7 @@ public sealed class WelcomeWizardTests(ITestOutputHelper output)
             await wizard.Locator(".welcome-finish").ClickAsync();
 
             // --- The desktop opens in French; the files hold the choices ---
-            ILocator launcher = page.GetByRole(AriaRole.Button, new() { Name = "Lanceur d'applications", Exact = true });
+            ILocator launcher = page.GetByRole(AriaRole.Button, new() { Name = "Applications, lanceur d'applications", Exact = true });
             await launcher.WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 60000 });
             await Assertions.Expect(wizard).ToHaveCountAsync(0);
             output.WriteLine("[test] the desktop opened in French after « Terminer ».");

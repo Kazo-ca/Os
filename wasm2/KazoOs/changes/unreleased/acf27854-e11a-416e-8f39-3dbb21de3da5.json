@@ -1,0 +1,18 @@
+{
+  "id": "acf27854-e11a-416e-8f39-3dbb21de3da5",
+  "category": "fixed",
+  "audience": [
+    "user"
+  ],
+  "title": {
+    "en": "Screen readers and voice control name the taskbar and Calculator keys by what they show",
+    "fr": "Les lecteurs d'écran et la commande vocale nomment la barre des tâches et la calculatrice d'après ce qu'elles affichent"
+  },
+  "description": {
+    "en": "The app launcher button, the taskbar clock and the Calculator keys MC, MR, M+, M-, C, AC and x² now have accessible names that start with their visible text, so you can say what you see.",
+    "fr": "Le bouton du lanceur d'applications, l'horloge de la barre des tâches et les touches MC, MR, M+, M-, C, AC et x² de la calculatrice ont maintenant un nom accessible qui commence par leur texte visible : il suffit de dire ce qu'on voit."
+  },
+  "links": [
+    "https://github.com/Kazo-ca/Os/issues/493"
+  ]
+}
