@@ -240,7 +240,7 @@ grep -E '^\s*\[(trimmed|chromium)\]' "$LOGS/tests.log" | sed "s/^ */    /"
 # (ADR 0196, TrimmedPublishTests.Notifications.cs), the direct link with no account, with an
 # account, and for a missing app and a cancel (ADR 0258, TrimmedPublishTests.AppLaunchLink.cs), and
 # a Craft app window on the OS module, installed by kazopkg (ADR 0259, TrimmedPublishTests.CraftApps.cs).
-EXPECTED_TESTS=14
+EXPECTED_TESTS=15
 if [[ $code -eq 0 ]] && grep -qE "^\s*Passed: +$EXPECTED_TESTS\s*$" "$LOGS/tests.log" && ! grep -qE '^\s*Skipped: +[1-9]' "$LOGS/tests.log"; then
     [[ -z "$PWA_URL" ]] && log "note: the offline test did not run (no 127.0.0.2)"
     log "RESULT: PASS"
