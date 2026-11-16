@@ -63,6 +63,7 @@ build and test commands are in
 | A test reads the terminal output before it is complete | The output of a command in a worker arrives in several writes | Wait for the next prompt (`OutputFinished`) before reading. |
 | The Mobile choice test fails intermittently | Writing the setting in `~/.config/kazoos` is not instantaneous (2 s before [ADR 0090](adr/0090-filesystem-path-lookup-in-one-request.md), 235 ms after) | Wait for the switch before reloading. |
 | Wrong ARIA states or red axe test | An ARIA attribute bound directly to a `bool` in Razor disappears when it is `false` | Write `"true"`/`"false"` ([`old/common-pitfalls.md`](old/common-pitfalls.md) §8). |
+| Red axe test on `label-content-name-mismatch` (launcher, clock, Calculator keys MC, AC, x²) | The `aria-label` replaces the visible text without containing it (WCAG 2.5.3 "Label in Name") | Start the accessible name with the visible text: "Applications, app launcher", "09:00:00, System clock…", "MC, Memory clear" (#493). `aria-hidden` text (the `H_` mark) does not count. |
 
 ### Unstable tests: causes found and fixed (2026-10-25)
 
