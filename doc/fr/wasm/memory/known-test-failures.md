@@ -11,9 +11,7 @@ cette liste. Les causes déjà trouvées et corrigées sont dans
 
 ## Échouent à chaque fois (conteneur cloud Linux)
 
-| Suite | Test | Symptôme |
-| --- | --- | --- |
-| `Kazo.Os.UI.E2E.Tests` | `LowStorageSpaceTests.A_full_quota_warns_once…` | « No low-space notification within 60 s ». |
+Aucun.
 
 Corrigés le 2026-11-16 par la série `known-failures` (#493, PR #580 à #582) : les
 tests `Window_runtime_*` (vrais gestes stylet et tactile par CDP), les tests axe
@@ -21,14 +19,18 @@ tests `Window_runtime_*` (vrais gestes stylet et tactile par CDP), les tests axe
 calculatrice, et `Trimmed_publish_boots_offline_after_the_first_load` (plus
 aucune requête réseau hors ligne). Les causes sont dans
 [`../dev/pitfalls.md`](../dev/pitfalls.md) §4. Le test instable `AppInstallationService` est corrigé par la même série
-(la surveillance d'`apps.config` démarre avant sa lecture).
+(la surveillance d'`apps.config` démarre avant sa lecture), ainsi que
+`LowStorageSpaceTests` (une écriture refusée vaut disque plein, ADR 0279 ; le
+quota est posé avant la première navigation).
 
 ## Instables (passent seuls, échouent parfois sous charge)
 
 - `LocalNetworkTests` avec un web worker ;
 - le harnais E2E des fenêtres détachées ;
-- `Kazo.Os.UI.E2E.Tests` : `FileExplorerDownload` et `BrowserHomePage` quand
-  toute la suite tourne ;
+- `Kazo.Os.UI.E2E.Tests` : `FileExplorerDownload`, `BrowserHomePage` et
+  `FileExplorerUpload…non_empty_folder` (le fichier préparé n'apparaît pas en
+  30 s ; vu une fois le 2026-11-16, 3 passes sur 3 seul) quand toute la suite
+  tourne ;
 - `Kazo.Os.Platform.WorkerHost.Tests` : un test de temps.
 - `Kazo.Os.TrimmedPublish.E2E.Tests` : `Trimmed_publish_runs_every_app…` reste
   parfois sur la page People de l'Intranet après le clic sur Board (vu une fois

@@ -1,1 +1,3 @@
 #nullable enable
+Kazo.Os.Platform.Core.Storage.StorageSpaceMonitor.ReportWriteRefused() -> void
+static readonly Kazo.Os.Platform.Core.Storage.StorageSpaceMonitor.RefusalHoldTime -> System.TimeSpan

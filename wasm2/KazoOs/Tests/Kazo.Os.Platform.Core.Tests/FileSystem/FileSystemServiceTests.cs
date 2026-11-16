@@ -87,6 +87,8 @@ public sealed class FileSystemServiceTests
 
         Assert.Equal(FileSystemErrorCode.NoSpace, result.Transaction.Error?.Code);
         Assert.Equal(1, guard.Refreshes);
+        // The reserve refused it, not the browser (ADR 0279): no refused write is reported.
+        Assert.Equal(0, guard.RefusedWrites);
     }
 
     [Fact]
@@ -313,7 +315,11 @@ public sealed class FileSystemServiceTests
 
         public int Refreshes { get; private set; }
 
+        public int RefusedWrites { get; private set; }
+
         public void RequestRefresh() => Refreshes++;
+
+        public void ReportWriteRefused() => RefusedWrites++;
     }
 
     private sealed class FixedTimeProvider : TimeProvider

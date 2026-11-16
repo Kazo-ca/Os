@@ -10,9 +10,7 @@ in [`../dev/pitfalls.md`](../dev/pitfalls.md) §4.
 
 ## Fail every time (Linux cloud container)
 
-| Suite | Test | Symptom |
-| --- | --- | --- |
-| `Kazo.Os.UI.E2E.Tests` | `LowStorageSpaceTests.A_full_quota_warns_once…` | "No low-space notification within 60 s". |
+None.
 
 Fixed on 2026-11-16 by the `known-failures` series (#493, PRs #580 to #582): the
 `Window_runtime_*` tests (real pen and touch gestures through CDP), the axe
@@ -20,14 +18,18 @@ Fixed on 2026-11-16 by the `known-failures` series (#493, PRs #580 to #582): the
 Calculator, and `Trimmed_publish_boots_offline_after_the_first_load` (no network
 request any more while offline). The causes are in
 [`../dev/pitfalls.md`](../dev/pitfalls.md) §4. The flaky `AppInstallationService` test is fixed by the same series
-(`apps.config` is watched before it is read).
+(`apps.config` is watched before it is read), and so is
+`LowStorageSpaceTests` (a refused write means a full disk, ADR 0279; the quota
+is set before the first navigation).
 
 ## Flaky (pass alone, sometimes fail under load)
 
 - `LocalNetworkTests` with a web worker;
 - the detached-window E2E harness;
-- `Kazo.Os.UI.E2E.Tests`: `FileExplorerDownload` and `BrowserHomePage` when
-  the whole suite runs;
+- `Kazo.Os.UI.E2E.Tests`: `FileExplorerDownload`, `BrowserHomePage` and
+  `FileExplorerUpload…non_empty_folder` (the prepared file does not show within
+  30 s; seen once on 2026-11-16, 3 passes out of 3 alone) when the whole suite
+  runs;
 - `Kazo.Os.Platform.WorkerHost.Tests`: one timing test.
 - `Kazo.Os.TrimmedPublish.E2E.Tests`: `Trimmed_publish_runs_every_app…` sometimes
   stays on the Intranet's People page after the click on Board (seen once in two

@@ -53,9 +53,11 @@ He chose the first.
 4. **Root reserve.** It is still computed from the measure. A refused write
    does not turn it on: the real limit is already reached, the reserve no
    longer protects anything.
-5. **Test.** `LowStorageSpaceTests` lowers the quota just above the real usage
-   (read with `Storage.getUsageAndQuota`): the first system write that goes
-   over is refused and the warning must come. The rest of the test checks that
+5. **Test.** `LowStorageSpaceTests` sets the quota to 8 MiB before the first
+   navigation (Chromium does not enforce a quota set after the origin first
+   opened its storage), fills it with random bytes, then writes a file from the
+   terminal: the write is refused ("No space left on device") and the warning
+   must come. The rest of the test checks that
    the administrator still signs in again.
 
 ## Consequences
