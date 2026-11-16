@@ -4,10 +4,8 @@
 
 ## Statut
 
-Proposée le 2026-11-16, série `todo-wins/base`, pour l'issue
-[#346](https://github.com/Kazo-ca/Os/issues/346) (`TODO`). La question Q1 a
-été posée à Benoit dans le fil le 2026-11-16. En attendant sa réponse, la
-décision applique la recommandation (A).
+Acceptée le 2026-11-16 : Benoit a choisi Q1 = A. Série `todo-wins/base`, pour
+l'issue [#346](https://github.com/Kazo-ca/Os/issues/346) (`TODO`).
 
 - **Complète :** l'[ADR 0182](0182-install-apps-from-github.md) §5.3 (la
   vérification des API à l'installation) et l'[ADR 0242](0242-framework-api-for-installed-apps.md)
@@ -103,7 +101,7 @@ Posée dans le fil le 2026-11-16.
 
 **Q1. Où vérifier qu'une app n'appelle pas d'API retirée par l'OS rogné ?**
 
-- **A (recommandé) :** au packaging (`KazoOsPack`) et dans la CI du Store.
+- **A (recommandé, choisi) :** au packaging (`KazoOsPack`) et dans la CI du Store.
   L'erreur arrive chez l'auteur, à son build, avant toute publication ; le
   Store reste une seconde barrière.
 - **B :** seulement dans la CI du Store. Moins de travail, mais l'auteur ne

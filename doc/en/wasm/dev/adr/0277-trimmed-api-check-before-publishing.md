@@ -4,10 +4,8 @@
 
 ## Status
 
-Proposed on 2026-11-16, series `todo-wins/base`, for issue
-[#346](https://github.com/Kazo-ca/Os/issues/346) (`TODO`). Question Q1 was
-asked to Benoit in the thread on 2026-11-16. Until he answers, the decision
-applies the recommendation (A).
+Accepted on 2026-11-16: Benoit chose Q1 = A. Series `todo-wins/base`, for
+issue [#346](https://github.com/Kazo-ca/Os/issues/346) (`TODO`).
 
 - **Completes:** [ADR 0182](0182-install-apps-from-github.md) §5.3 (the API
   check at install time) and [ADR 0242](0242-framework-api-for-installed-apps.md)
@@ -100,7 +98,7 @@ Asked in the thread on 2026-11-16.
 
 **Q1. Where do we check that an app calls no API the trimmed OS removed?**
 
-- **A (recommended):** at packaging time (`KazoOsPack`) and in the Store's CI.
+- **A (recommended, chosen):** at packaging time (`KazoOsPack`) and in the Store's CI.
   The error reaches the author at build time, before any publish; the Store
   stays a second barrier.
 - **B:** only in the Store's CI. Less work, but the author only learns it when
