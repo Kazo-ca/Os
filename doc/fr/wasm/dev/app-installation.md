@@ -302,7 +302,9 @@ validation en deux étapes :
   différentes de la même app, la plus récente est chargée pour les deux.
 - **Vérifications avant la demande d'administrateur** : SHA-256 du paquet
   (`index.json`) et de chaque fichier, identifiant, `sdkCompatibility`, API
-  présentes dans l'OS, app sur le fil principal.
+  présentes dans l'OS, app sur le fil principal. `KazoOsPack` fait déjà le
+  contrôle des API au build, contre la surface publiée avec l'OS
+  ([ADR 0277](adr/0277-trimmed-api-check-before-publishing.md)) ; celui-ci reste.
 - **Écriture pour tous** : `/usr/lib/kazoos/apps/<appId>/<version>/` et une ligne
   `<appId>=github:owner/repo@version` dans `[installed]` de
   `/etc/kazoos/apps.config`. Le dossier de la version précédente est gardé pour

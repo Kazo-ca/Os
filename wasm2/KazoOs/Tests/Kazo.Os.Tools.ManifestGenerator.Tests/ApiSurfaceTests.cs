@@ -167,9 +167,9 @@ public sealed class ApiSurfaceTests(RuntimeSurfaceFixture fixture) : IClassFixtu
     }
 
     /// <summary>Calls the member the trimmed test surface removes, so this assembly references it.</summary>
-    private static HashSet<string> CallsToHashSet(IEnumerable<string> values) => values.ToHashSet();
+    internal static HashSet<string> CallsToHashSet(IEnumerable<string> values) => values.ToHashSet();
 
-    private static ApiSurfaceAssembly WithoutMethod(ApiSurfaceAssembly assembly, string typeName, string methodPrefix)
+    internal static ApiSurfaceAssembly WithoutMethod(ApiSurfaceAssembly assembly, string typeName, string methodPrefix)
     {
         SortedDictionary<string, ApiSurfaceType> types = new(assembly.Types, StringComparer.Ordinal);
         ApiSurfaceType type = types[typeName];

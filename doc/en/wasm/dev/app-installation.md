@@ -301,7 +301,9 @@ approval:
   for both.
 - **Checks before the administrator prompt**: SHA-256 of the package
   (`index.json`) and of each file, identifier, `sdkCompatibility`, APIs present
-  in the OS, app on the main thread.
+  in the OS, app on the main thread. `KazoOsPack` already runs the API check at
+  build time, against the surface published with the OS
+  ([ADR 0277](adr/0277-trimmed-api-check-before-publishing.md)); this one stays.
 - **Writing for everyone**: `/usr/lib/kazoos/apps/<appId>/<version>/` and a line
   `<appId>=github:owner/repo@version` in `[installed]` of
   `/etc/kazoos/apps.config`. The previous version's folder is kept for

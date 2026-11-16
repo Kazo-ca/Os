@@ -226,6 +226,13 @@ public static class Program
                 children,
                 libraries);
             AppPackage read = AppPackage.Read(package);
+
+            // ADR 0277 §2: the install-time API check, run before the package is written.
+            if (!CheckPackageApis(manifestPath, read, options))
+            {
+                return 1;
+            }
+
             string relativePath = AppPackageWriter.GetPackagePath(read.AppId, read.Version);
             string packagePath = Path.Combine(output, relativePath);
             Directory.CreateDirectory(Path.GetDirectoryName(packagePath)!);
@@ -323,6 +330,50 @@ public static class Program
         return 0;
     }
 
+    /// <summary>
+    /// Runs <see cref="PackageApiCheck"/> when <c>--api-surface</c> names a surface. Prints each
+    /// finding; returns <see langword="false"/> when one is an error. <c>--api-check warning</c>
+    /// (<c>KazoOsApiCheck=false</c>) turns the errors into warnings.
+    /// </summary>
+    private static bool CheckPackageApis(string manifestPath, AppPackage package, IReadOnlyDictionary<string, string> options)
+    {
+        if (!options.TryGetValue("api-surface", out string? surfacePath))
+        {
+            return true;
+        }
+
+        if (!File.Exists(surfacePath))
+        {
+            Console.WriteLine($"{manifestPath} : warning {GeneratorCodes.PackageApiSurfaceMissing}: No API surface of the target OS at '{surfacePath}': the package was not checked against the trimmed OS (ADR 0277).");
+            return true;
+        }
+
+        ApiSurfaceFile surface;
+        try
+        {
+            surface = ApiSurfaceFile.Read(surfacePath);
+        }
+        catch (InvalidDataException exception)
+        {
+            Console.WriteLine($"{manifestPath} : warning {GeneratorCodes.PackageApiSurfaceMissing}: The API surface '{surfacePath}' cannot be read ({exception.Message}): the package was not checked against the trimmed OS (ADR 0277).");
+            return true;
+        }
+
+        bool asError = !options.TryGetValue("api-check", out string? mode) || !string.Equals(mode, "warning", StringComparison.OrdinalIgnoreCase);
+        IReadOnlyList<PackageApiDiagnostic> findings = PackageApiCheck.Check(package.Assemblies, surface, asError);
+        foreach (PackageApiDiagnostic finding in findings)
+        {
+            (finding.IsError ? Console.Error : Console.Out).WriteLine(finding.ToMsBuildLine(manifestPath));
+        }
+
+        if (findings.Count == 0)
+        {
+            Console.WriteLine($"  APIs checked against Kazo OS {surface.OsVersion} (trimmed)");
+        }
+
+        return !findings.Any(static finding => finding.IsError);
+    }
+
     private static int Validate(string manifestPath)
     {
         if (!File.Exists(manifestPath))
@@ -376,7 +427,7 @@ public static class Program
         Console.WriteLine("Kazo OS manifest generator (ADR 0047)");
         Console.WriteLine("  generate --assembly <app.dll> --project <app.csproj> --stamp <file> [--dependencies <list file>]");
         Console.WriteLine("  aggregate --project <host.csproj> --apps <list file> --output <BuiltInApplications.json> [--trimmer-roots <roots.xml>]");
-        Console.WriteLine("  pack --manifest <manifest.json> --bin <output dir> --webroot <wwwroot> --output <packages dir> [--web-assets <staticwebassets.build.json>] [--libraries <list file>]");
+        Console.WriteLine("  pack --manifest <manifest.json> --bin <output dir> --webroot <wwwroot> --output <packages dir> [--web-assets <staticwebassets.build.json>] [--libraries <list file>] [--api-surface <kazoos-api-surface.json.gz> [--api-check error|warning]]");
         Console.WriteLine("  validate <manifest.json>");
         Console.WriteLine("  api-surface --linked <trimmed assemblies dir> --version <os version> --output <kazoos-api-surface.json.gz>");
     }

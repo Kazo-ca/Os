@@ -160,6 +160,37 @@ public sealed class MsBuildIntegrationTests
         }
     }
 
+    [Theory]
+    [InlineData(null, 1, "error KOSAPP0100")]
+    [InlineData("false", 0, "warning KOSAPP0101")]
+    public async Task KazoOsPack_checks_the_package_against_the_api_surface_of_the_target_os(string? apiCheck, int expectedExitCode, string expectedLine)
+    {
+        // ADR 0277 §2 (issue #346): an OS whose System.Runtime has no type at all, so the app's
+        // first call to System.Object is a member the trimmed OS would not have.
+        string output = Directory.CreateTempSubdirectory("kazoos-pack-").FullName;
+        string surface = Path.Combine(output, "surface.json");
+        await File.WriteAllTextAsync(surface, """{"format":1,"osVersion":"9.9.9","assemblies":{"System.Runtime":{"types":{}}}}""");
+        try
+        {
+            List<string> arguments = ["-t:KazoOsPack", $"-p:KazoOsPackageOutput={Path.Combine(output, "packages")}", $"-p:KazoOsApiSurfaceFile={surface}"];
+            if (apiCheck is not null)
+            {
+                arguments.Add($"-p:KazoOsApiCheck={apiCheck}");
+            }
+
+            (int exitCode, string log) = await BuildFixtureAsync("WithLibrary", null, [.. arguments]);
+
+            Assert.True(exitCode == expectedExitCode, log);
+            Assert.Contains(expectedLine, log, StringComparison.Ordinal);
+            Assert.Contains("Kazo OS 9.9.9 (trimmed) does not have", log, StringComparison.Ordinal);
+            Assert.Equal(expectedExitCode == 0, File.Exists(Path.Combine(output, "packages", "index.json")));
+        }
+        finally
+        {
+            Directory.Delete(output, recursive: true);
+        }
+    }
+
     /// <summary>The author key variable of ADR 0219 before its 2026-11-07 amendment.</summary>
     private const string FormerAuthorKeyVariable = "HACKEROS_APP_SIGNING_KEY";
 

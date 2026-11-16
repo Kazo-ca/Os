@@ -378,7 +378,25 @@
     <ItemGroup>
       <FileWrites Include="$(_KazoOsPackLibraries)" />
     </ItemGroup>
-    <Exec Command="&quot;$(_KazoOsDotnetHost)&quot; &quot;$(_KazoOsManifestGeneratorPath)&quot; pack --manifest &quot;%(_KazoOsPackManifest.Identity)&quot; --bin &quot;$(_KazoOsPackBin)&quot; --webroot &quot;$(MSBuildProjectDirectory)/wwwroot&quot; --output &quot;$(_KazoOsPackOutput)&quot;$(_KazoOsPackWebAssetsArgument) --libraries &quot;$(_KazoOsPackLibraries)&quot;" />
+    <!--
+      ADR 0277 §2: the package is checked against the API surface of the trimmed OS, the same check
+      kazopkg runs at install time. The surface is KazoOsApiSurfaceFile when set, else the one
+      Kazo.Os.App.Build carries (its own OS version), else, in this repository, the one the last
+      trimmed publish of the Ecosystem wrote. KazoOsApiCheck=false turns KOSAPP0100 into the warning
+      KOSAPP0101; with no surface at all, KOSAPP0102 says the package was not checked. That last
+      surface can be older than the code being packed, so in this repository it only warns unless
+      KazoOsApiCheck=true (build/publish-trimmed.sh packs its fixtures right after publishing, with it).
+    -->
+    <PropertyGroup>
+      <_KazoOsPackApiCheck>$(KazoOsApiCheck)</_KazoOsPackApiCheck>
+      <_KazoOsPackApiSurface>$(KazoOsApiSurfaceFile)</_KazoOsPackApiSurface>
+      <_KazoOsPackApiSurface Condition="'$(_KazoOsPackApiSurface)' == '' and '$(KazoOsBuildFromPackage)' == 'true'">$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', 'api-surface', 'kazoos-api-surface.json.gz'))</_KazoOsPackApiSurface>
+      <_KazoOsPackApiCheck Condition="'$(_KazoOsPackApiSurface)' == '' and '$(_KazoOsPackApiCheck)' == ''">false</_KazoOsPackApiCheck>
+      <_KazoOsPackApiSurface Condition="'$(_KazoOsPackApiSurface)' == ''">$(_KazoOsRepoRoot)OS/Kazo.Os.Ecosystem/obj/Release/net10.0/kazoos-api-surface.json.gz</_KazoOsPackApiSurface>
+      <_KazoOsPackApiArgument> --api-surface &quot;$(_KazoOsPackApiSurface)&quot;</_KazoOsPackApiArgument>
+      <_KazoOsPackApiArgument Condition="'$(_KazoOsPackApiCheck)' == 'false'">$(_KazoOsPackApiArgument) --api-check warning</_KazoOsPackApiArgument>
+    </PropertyGroup>
+    <Exec Command="&quot;$(_KazoOsDotnetHost)&quot; &quot;$(_KazoOsManifestGeneratorPath)&quot; pack --manifest &quot;%(_KazoOsPackManifest.Identity)&quot; --bin &quot;$(_KazoOsPackBin)&quot; --webroot &quot;$(MSBuildProjectDirectory)/wwwroot&quot; --output &quot;$(_KazoOsPackOutput)&quot;$(_KazoOsPackWebAssetsArgument) --libraries &quot;$(_KazoOsPackLibraries)&quot;$(_KazoOsPackApiArgument)" />
   </Target>
 
   <!-- ===================================================================================== -->

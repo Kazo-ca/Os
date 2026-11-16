@@ -1,0 +1,14 @@
+{
+  "id": "b09d72eb-9c09-4b6a-bb75-37e9837867b2",
+  "category": "added",
+  "audience": ["developer"],
+  "title": {
+    "en": "An app's build refuses APIs the trimmed OS removed",
+    "fr": "Le build d'une app refuse les API que l'OS rogné a retirées"
+  },
+  "description": {
+    "en": "KazoOsPack now checks the package against the API surface of the targeted Kazo OS, which Kazo.Os.App.Build brings: a call to a member the trimmed OS does not have fails the build with KOSAPP0100 and a replacement when one is known, instead of being refused at installation. KazoOsApiCheck=false turns it into the warning KOSAPP0101 (ADR 0277).",
+    "fr": "KazoOsPack vérifie maintenant le paquet contre la surface d'API du Kazo OS visé, que Kazo.Os.App.Build apporte : un appel à un membre que l'OS rogné n'a pas fait échouer le build avec KOSAPP0100 et un remplacement quand il en connaît un, au lieu d'être refusé à l'installation. KazoOsApiCheck=false le change en avertissement KOSAPP0101 (ADR 0277)."
+  },
+  "links": ["doc/en/wasm/framework/app-repository.md"]
+}
