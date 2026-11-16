@@ -6,6 +6,12 @@ Les changements de Kazo OS, par version. Ce fichier est généré à partir de `
 `wasm2/KazoOs/build/tools/collect-changes.sh` (ADR 0186) : ne pas le modifier à la main. Les changements
 déjà déployés mais pas encore publiés sont dans la page Paramètres ▸ Nouveautés de l'OS.
 
+## 3.4.1 (2026-11-15)
+
+### Corrigé
+
+- **Ouvrir garde l'ordre d'une sélection multiple.** Quand le dossier de l'explorateur de fichiers se rafraîchissait alors que plusieurs fichiers étaient sélectionnés, la sélection reprenait l'ordre de la liste : Ouvrir envoyait alors les fichiers à leur app dans un autre ordre que celui du choix. La sélection garde maintenant l'ordre dans lequel ses éléments ont été choisis. ([file-explorer.md](doc/fr/wasm/dev/file-explorer.md))
+
 ## 3.4.0 (2026-11-15)
 
 ### Nouveau

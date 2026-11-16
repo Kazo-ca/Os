@@ -53,6 +53,9 @@ The manifest (`FileExplorerApp.Components`) registers two components:
 | `kazoos.file-view` | `ExplorerFileView` | `FileView` (internal implementation, ADR 0155 §1) bound to the OS menu, with the trash, the clipboard, transfers and their conflicts, opening and "Open with". Controller `IKazoFileView`. |
 | `kazoos.file-dialogs` | `ExplorerFileDialogs` | "Open with" ("Always use", search and category filter), "Properties", name conflict, in native markup. |
 
+"Open" on a multiple selection opens the files one at a time, in the order they
+were picked; a refresh of the folder keeps that order.
+
 ```text
 Host app ──► KazoFileView (SDK) ──► registry ──► ExplorerFileView (explorer)
                                                    ├─ FileView + FileViewMenuBinding ──► Menus.Attach (OS menu)
