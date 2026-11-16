@@ -189,7 +189,9 @@ manifest.json : error KOSAPP0100: My.App.dll calls System.Linq.Enumerable.ToHash
 - **`KazoOsApiSurfaceFile`** names another surface (for example the one of a
   preview). Without a readable surface, **`KOSAPP0102`** warns that the package
   was not checked.
-- The Store checks every submission again, against the latest stable OS.
+- The Store checks every submission again, against the latest stable OS: it
+  runs the `check-api --package <file.kazoapp> --api-surface <surface>` command
+  of the generator that `Kazo.Os.App.Build` of that version carries.
 
 ## Publishing to the Kazo OS Store
 

@@ -196,7 +196,9 @@ manifest.json : error KOSAPP0100: Mon.App.dll calls System.Linq.Enumerable.ToHas
   préversion). Sans surface lisible, **`KOSAPP0102`** avertit que le paquet
   n'a pas été vérifié.
 - Le Store refait le contrôle sur chaque demande, contre la dernière version
-  stable de l'OS.
+  stable de l'OS : il lance la commande `check-api --package <fichier.kazoapp>
+  --api-surface <surface>` du générateur que `Kazo.Os.App.Build` de cette
+  version emporte.
 
 ## Publier dans le Kazo OS Store
 

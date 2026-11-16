@@ -1,6 +1,6 @@
 {
   "id": "b09d72eb-9c09-4b6a-bb75-37e9837867b2",
-  "category": "added",
+  "category": "developer",
   "audience": ["developer"],
   "title": {
     "en": "An app's build refuses APIs the trimmed OS removed",

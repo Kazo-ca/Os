@@ -41,6 +41,7 @@ public static class Program
                 "pack" => Pack(ParseOptions(args.AsSpan(1))),
                 "validate" when args.Length == 2 => Validate(args[1]),
                 "api-surface" => WriteApiSurface(ParseOptions(args.AsSpan(1))),
+                "check-api" => CheckApi(ParseOptions(args.AsSpan(1))),
                 _ => Fail("ManifestGenerator", new GeneratorDiagnostic(GeneratorCodes.InvalidArguments, "arguments", $"Unknown command line: {string.Join(' ', args)}"))
             };
         }
@@ -331,6 +332,35 @@ public static class Program
     }
 
     /// <summary>
+    /// <c>check-api --package &lt;file.kazoapp&gt; --api-surface &lt;kazoos-api-surface.json.gz&gt;</c> (ADR 0277 §3):
+    /// checks a package built elsewhere, as the Store does with the generator and the surface that
+    /// <c>Kazo.Os.App.Build</c> of the latest stable OS carries. Without a readable surface it fails:
+    /// the caller asked for the check.
+    /// </summary>
+    private static int CheckApi(IReadOnlyDictionary<string, string> options)
+    {
+        string packagePath = Path.GetFullPath(Required(options, "package"));
+        string surfacePath = Required(options, "api-surface");
+        if (!File.Exists(surfacePath))
+        {
+            return Fail(packagePath, new GeneratorDiagnostic(GeneratorCodes.PackageApiSurfaceMissing, surfacePath, "No API surface at this path (ADR 0277)."));
+        }
+
+        AppPackage package;
+        try
+        {
+            package = AppPackage.Read(File.ReadAllBytes(packagePath));
+            _ = ApiSurfaceFile.Read(surfacePath);
+        }
+        catch (Exception exception) when (exception is AppPackageException or IOException or UnauthorizedAccessException or InvalidDataException)
+        {
+            return Fail(packagePath, new GeneratorDiagnostic(GeneratorCodes.PackageFailed, packagePath, exception.Message));
+        }
+
+        return CheckPackageApis(packagePath, package, options) ? 0 : 1;
+    }
+
+    /// <summary>
     /// Runs <see cref="PackageApiCheck"/> when <c>--api-surface</c> names a surface. Prints each
     /// finding; returns <see langword="false"/> when one is an error. <c>--api-check warning</c>
     /// (<c>KazoOsApiCheck=false</c>) turns the errors into warnings.
@@ -429,6 +459,7 @@ public static class Program
         Console.WriteLine("  aggregate --project <host.csproj> --apps <list file> --output <BuiltInApplications.json> [--trimmer-roots <roots.xml>]");
         Console.WriteLine("  pack --manifest <manifest.json> --bin <output dir> --webroot <wwwroot> --output <packages dir> [--web-assets <staticwebassets.build.json>] [--libraries <list file>] [--api-surface <kazoos-api-surface.json.gz> [--api-check error|warning]]");
         Console.WriteLine("  validate <manifest.json>");
+        Console.WriteLine("  check-api --package <file.kazoapp> --api-surface <kazoos-api-surface.json.gz> [--api-check error|warning]");
         Console.WriteLine("  api-surface --linked <trimmed assemblies dir> --version <os version> --output <kazoos-api-surface.json.gz>");
     }
 }
