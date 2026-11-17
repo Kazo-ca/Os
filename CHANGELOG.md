@@ -6,6 +6,12 @@ The changes of Kazo OS, by version. This file is generated from `wasm2/KazoOs/ch
 `wasm2/KazoOs/build/tools/collect-changes.sh` (ADR 0186): do not edit it by hand. Changes already
 deployed but not released yet are in the Settings ▸ What's new page of the OS.
 
+## 3.4.2 (2026-11-17)
+
+### Fixed
+
+- **Store apps can use LINQ, regular expressions and channels.** The published OS now keeps System.Linq, System.Text.RegularExpressions and System.Threading.Channels whole, so Kazo AI installs from the Store. ([#595](https://github.com/Kazo-ca/Os/pull/595), [0280-keep-linq-regex-channels-whole.md](doc/en/wasm/dev/adr/0280-keep-linq-regex-channels-whole.md))
+
 ## 3.4.1 (2026-11-15)
 
 ### Fixed

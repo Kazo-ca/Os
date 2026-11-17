@@ -296,7 +296,7 @@ public sealed partial class TrimmedPublishTests(ITestOutputHelper output)
     {
         await page.GetByRole(AriaRole.Button, new() { Name = "App launcher" }).ClickAsync();
         await page.GetByRole(AriaRole.Combobox, new() { Name = "Search applications" }).FillAsync(appName);
-        await page.GetByRole(AriaRole.Button, new() { Name = $"Launch {appName}", Exact = true }).ClickAsync();
+        await page.GetByRole(AriaRole.Button, new() { NameRegex = new Regex($"^Launch {Regex.Escape(appName)}(,|$)") }).ClickAsync();
     }
 
     /// <summary>Types a command line into the xterm.js screen, as a person would.</summary>

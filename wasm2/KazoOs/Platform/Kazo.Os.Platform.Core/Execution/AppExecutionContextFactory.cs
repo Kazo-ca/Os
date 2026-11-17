@@ -45,6 +45,13 @@ public sealed class AppExecutionContextFactory
     private readonly ISimulatedNetworkService? _network;
     private readonly IServerConnectionService? _serverConnection;
     private readonly IProxyClient? _proxy;
+
+    /// <summary>
+    /// Gets the device's relay policy cache (ADR 0278 §1), shared by the network gateway of every
+    /// app; <see langword="null"/> without a server connection. The host invalidates it when the
+    /// server connection or the real-network grants change.
+    /// </summary>
+    public Network.RelayPolicyCache? RelayPolicy { get; }
     private readonly SystemMetricsServices? _metrics;
     private readonly SystemAdministrationGatewayServices? _administration;
     private readonly Clipboard.SystemClipboard _clipboard;
@@ -172,6 +179,7 @@ public sealed class AppExecutionContextFactory
         _network = network;
         _serverConnection = serverConnection;
         _proxy = proxy;
+        RelayPolicy = serverConnection is not null && proxy is not null ? new Network.RelayPolicyCache(serverConnection, proxy) : null;
         _shellHostProvider = shellHostProvider;
         _metrics = metrics;
         _administration = administration;
@@ -342,6 +350,26 @@ public sealed class AppExecutionContextFactory
         AppManagementGateway? managementGateway = CreateManagementGateway(capabilities, manifest, principal, isRootElevated, language);
         AppClipboardGateway clipboardGateway = new(_clipboard, capabilities, process.SessionId, process.Pid);
 
+        // ADR 0278: the device's relay policy cache is shared by every app, and the gateway stops
+        // following the relay when the process ends.
+        AppNetworkGateway? networkGateway = _network is null
+            ? null
+            : new AppNetworkGateway(
+                _network,
+                capabilities,
+                manifest.Id,
+                _serverConnection,
+                _proxy,
+                _metrics?.Network,
+                _metrics?.ProcessIo,
+                process.Pid,
+                _metrics?.KernelMemory,
+                _localNetwork is null ? null : new Network.Local.LocalNetworkCaller(_localNetwork, manifest, principal, isRootElevated))
+            {
+                RelayPolicy = RelayPolicy,
+                Lifetime = cancellationToken
+            };
+
         AppFileSystemGateway fileSystem = new(
             _fileSystem, _clock, operationContext, groupIds, notifyPermissionError: permissionErrors.Raise, kernelMemory: _metrics?.KernelMemory)
         {
@@ -387,19 +415,7 @@ public sealed class AppExecutionContextFactory
             principal.DisplayName,
             catalogGateway,
             managementGateway,
-            _network is null
-                ? null
-                : new AppNetworkGateway(
-                    _network,
-                    capabilities,
-                    manifest.Id,
-                    _serverConnection,
-                    _proxy,
-                    _metrics?.Network,
-                    _metrics?.ProcessIo,
-                    process.Pid,
-                    _metrics?.KernelMemory,
-                    _localNetwork is null ? null : new Network.Local.LocalNetworkCaller(_localNetwork, manifest, principal, isRootElevated)),
+            networkGateway,
             // ADR 0270: the shared drive gateway, with this app's check of cloud-accounts.manage.
             _metrics?.Drives is { } drives ? new CapabilityCheckedDriveGateway(drives, capabilities) : null,
             clipboardGateway,
@@ -420,6 +436,7 @@ public sealed class AppExecutionContextFactory
         // ADR 0043: callbacks these gateways invoke on the app's behalf re-enter its ambient context.
         events.BindAmbientContext(context);
         clock.BindAmbientContext(context);
+        networkGateway?.BindAmbientContext(context);
         catalogGateway?.BindAmbientContext(context);
         accessibilityGateway?.BindAmbientContext(context);
         // ADR 0262 §2: the services of the features of the page, answered for this app's manifest.
@@ -428,6 +445,18 @@ public sealed class AppExecutionContextFactory
             Features.AppFeatureGateway features = new(featureServices, manifest);
             features.BindAmbientContext(context);
             context.Features = features;
+        }
+
+        if (_appCatalog?.Roles?.Invoke() is { } roleService)
+        {
+            // ADR 0247: the roles the user holds (all of them for an administrator), and the OS's
+            // authentication of a feature's operations for a feature and its entry points.
+            context.Roles = roleService.RolesOf(principal, isRootElevated);
+            string? ownerName = manifest.Parent is { } owner && _appCatalog.Catalog.Manifests.TryGetValue(owner, out AppManifest? ownerManifest)
+                ? ownerManifest.Name
+                : null;
+            context.FeatureAuthentication = new Roles.AppFeatureAuthenticationGateway(
+                _appCatalog.AuthenticationAgent, () => roleService, manifest, principal, isRootElevated, ownerName, language);
         }
 
         administration.SystemSettings?.BindAmbientContext(context);
@@ -555,7 +584,9 @@ public sealed class AppExecutionContextFactory
             {
                 Accounts = _administration.Accounts,
                 Passkeys = _administration.Passkeys,
-                GuestRequests = _administration.GuestRequests
+                GuestRequests = _administration.GuestRequests,
+                // ADR 0247 §1: Settings ▸ Users and kazorole grant and revoke the roles of the features.
+                Roles = _appCatalog?.Roles,
             },
             new AppComponentProviderAdministrationGateway(_administration.ComponentProviders, _administration.ApprovalPrompt, capabilities, gate),
             new AppFileMenuEntryAdministrationGateway(_administration.FileMenuEntries, capabilities, language));
@@ -678,6 +709,12 @@ public sealed record AppCatalogGatewayServices(
     /// permissions of the installed features; <see langword="null"/> checks the grants alone.
     /// </summary>
     public Func<ICapabilityCatalog?>? Capabilities { get; init; }
+
+    /// <summary>
+    /// Gets the roles of the features (ADR 0247): the roles of each context, and the OS's authentication
+    /// of a feature's operations; <see langword="null"/> gives no role and no authentication.
+    /// </summary>
+    public Func<Roles.FeatureRoleService?>? Roles { get; init; }
 
     /// <summary>
     /// Gets the machine permission decisions (ADR 0049 §4) a feature's installation writes

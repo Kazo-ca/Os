@@ -26,7 +26,8 @@ public sealed class ManifestSchemaConformanceTests
         "feature.valid.json",
         "feature-child-terminal.valid.json",
         "feature-provides-service.valid.json",
-        "feature-declares-permissions.valid.json"
+        "feature-declares-permissions.valid.json",
+        "feature-declares-roles.valid.json"
     };
 
     public static TheoryData<string> InvalidFixtureNames => new()

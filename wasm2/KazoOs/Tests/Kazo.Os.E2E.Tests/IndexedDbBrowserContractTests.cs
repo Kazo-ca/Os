@@ -244,14 +244,8 @@ public sealed partial class IndexedDbBrowserContractTests
                 await NavigateWhenReadyAsync(page, $"{address}/?scenario=window");
                 ILocator primary = page.Locator("[data-app-id='org.kazoos.browser.primary']").Locator("xpath=ancestor::article");
                 await primary.WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible });
-                await primary.Locator($"[data-resize-edge='{edge}']").EvaluateAsync(
-                    """
-                    element => {
-                        element.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, pointerId: 51, pointerType: 'pen', clientX: 400, clientY: 200, button: 0 }));
-                        element.dispatchEvent(new PointerEvent('pointermove', { bubbles: true, pointerId: 51, pointerType: 'pen', clientX: 420, clientY: 215, buttons: 1 }));
-                        element.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerId: 51, pointerType: 'pen', clientX: 420, clientY: 215, button: 0 }));
-                    }
-                    """);
+                // A real pen drag of 20 px right and 15 px down, starting on the handle (#493).
+                await DragWithPenAsync(page, primary.Locator($"[data-resize-edge='{edge}']"), 20, 15);
                 await page.WaitForFunctionAsync(
                     "expected => { const data = document.querySelector('[data-app-id=\"org.kazoos.browser.primary\"]')?.closest('article')?.dataset; return data?.windowX === expected.x && data?.windowY === expected.y && data?.windowWidth === expected.width && data?.windowHeight === expected.height; }",
                     new { x, y, width, height });
@@ -317,14 +311,8 @@ public sealed partial class IndexedDbBrowserContractTests
             int secondaryZ = int.Parse((await secondary.GetAttributeAsync("data-window-z"))!);
             Assert.True(primaryZ > secondaryZ, $"Primary z={primaryZ}; secondary z={secondaryZ}.");
 
-            await primary.Locator("[data-resize-edge='right']").EvaluateAsync(
-                """
-                element => {
-                    element.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, pointerId: 41, pointerType: 'touch', clientX: 499, clientY: 190, button: 0 }));
-                    element.dispatchEvent(new PointerEvent('pointermove', { bubbles: true, pointerId: 41, pointerType: 'touch', clientX: 549, clientY: 190, buttons: 1 }));
-                    element.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerId: 41, pointerType: 'touch', clientX: 549, clientY: 190, button: 0 }));
-                }
-                """);
+            // A real touch drag of 50 px to the right, starting on the right handle (#493).
+            await DragWithTouchAsync(page, primary.Locator("[data-resize-edge='right']"), 50, 0);
             await page.WaitForFunctionAsync("() => document.querySelector('[data-app-id=\"org.kazoos.browser.primary\"]')?.closest('article')?.dataset.windowWidth === '410'");
             Assert.Equal("410", await primary.GetAttributeAsync("data-window-width"));
             Assert.InRange((await primary.BoundingBoxAsync())!.Width, 409.5, 410.5);
@@ -902,6 +890,97 @@ public sealed partial class IndexedDbBrowserContractTests
             StopProcess(server);
         }
     }
+
+    /// <summary>
+    /// Drags <paramref name="handle"/> with a pen through the browser's own input pipeline (CDP
+    /// <c>Input.dispatchMouseEvent</c>, <c>pointerType: pen</c>), from a point of it that is hit, by
+    /// (<paramref name="dx"/>, <paramref name="dy"/>).
+    /// </summary>
+    /// <remarks>
+    /// #493: pointer events built in script (<c>new PointerEvent(…)</c>) have no active pointer
+    /// behind them, so <c>setPointerCapture</c> throws « No active pointer with the given id » and
+    /// the window chrome rightly drops the gesture. Real input keeps the pointer active, as a user's.
+    /// </remarks>
+    private static async Task DragWithPenAsync(IPage page, ILocator handle, double dx, double dy)
+    {
+        (double x, double y) = await HitPointOfAsync(handle);
+        ICDPSession input = await page.Context.NewCDPSessionAsync(page);
+        await input.SendAsync("Input.dispatchMouseEvent", PenEvent("mouseMoved", x, y, buttons: 0));
+        await input.SendAsync("Input.dispatchMouseEvent", PenEvent("mousePressed", x, y, buttons: 1));
+        await input.SendAsync("Input.dispatchMouseEvent", PenEvent("mouseMoved", x + dx, y + dy, buttons: 1));
+        await input.SendAsync("Input.dispatchMouseEvent", PenEvent("mouseReleased", x + dx, y + dy, buttons: 0));
+        await input.DetachAsync();
+    }
+
+    /// <summary>
+    /// Drags <paramref name="handle"/> with one finger through the browser's own input pipeline
+    /// (CDP <c>Input.dispatchTouchEvent</c>), from a point of it that is hit, by (<paramref name="dx"/>, <paramref name="dy"/>).
+    /// The page needs a context created with <c>HasTouch</c>. See <see cref="DragWithPenAsync"/> for why.
+    /// </summary>
+    private static async Task DragWithTouchAsync(IPage page, ILocator handle, double dx, double dy)
+    {
+        (double x, double y) = await HitPointOfAsync(handle);
+        ICDPSession input = await page.Context.NewCDPSessionAsync(page);
+        await input.SendAsync("Input.dispatchTouchEvent", TouchEvent("touchStart", x, y));
+        await input.SendAsync("Input.dispatchTouchEvent", TouchEvent("touchMove", x + dx, y + dy));
+        await input.SendAsync("Input.dispatchTouchEvent", new Dictionary<string, object> { ["type"] = "touchEnd", ["touchPoints"] = Array.Empty<object>() });
+        await input.DetachAsync();
+    }
+
+    /// <summary>
+    /// Finds a point where <paramref name="element"/> itself is hit, once its box stops moving (a
+    /// window opens with a short scale animation). A corner handle is partly under the title bar's
+    /// buttons, so its center can hit the Close button: the point is the center when the handle is
+    /// hit there, else the first point of a grid over the handle that hits it, like a user aiming at
+    /// the visible part of the corner.
+    /// </summary>
+    private static async Task<(double X, double Y)> HitPointOfAsync(ILocator element)
+    {
+        double[] point = await element.EvaluateAsync<double[]>(
+            """
+            element => new Promise((resolve, reject) => {
+                let last = '';
+                let stable = 0;
+                const aim = () => {
+                    const box = element.getBoundingClientRect();
+                    const candidates = [[box.left + box.width / 2, box.top + box.height / 2]];
+                    for (let row = 1; row < 8; row++) {
+                        for (let column = 1; column < 8; column++) {
+                            candidates.push([box.left + box.width * column / 8, box.top + box.height * row / 8]);
+                        }
+                    }
+                    const hit = candidates.find(([x, y]) => document.elementFromPoint(x, y) === element);
+                    hit ? resolve(hit) : reject(new Error('Every point of the handle is covered.'));
+                };
+                const check = () => {
+                    const box = element.getBoundingClientRect();
+                    const current = [box.x, box.y, box.width, box.height].join();
+                    stable = current === last ? stable + 1 : 0;
+                    last = current;
+                    if (stable >= 3) aim(); else requestAnimationFrame(check);
+                };
+                requestAnimationFrame(check);
+            })
+            """);
+        return (point[0], point[1]);
+    }
+
+    private static Dictionary<string, object> PenEvent(string type, double x, double y, int buttons) => new()
+    {
+        ["type"] = type,
+        ["x"] = x,
+        ["y"] = y,
+        ["button"] = type == "mouseMoved" ? "none" : "left",
+        ["buttons"] = buttons,
+        ["clickCount"] = type == "mouseMoved" ? 0 : 1,
+        ["pointerType"] = "pen",
+    };
+
+    private static Dictionary<string, object> TouchEvent(string type, double x, double y) => new()
+    {
+        ["type"] = type,
+        ["touchPoints"] = new object[] { new Dictionary<string, object> { ["x"] = x, ["y"] = y, ["id"] = 1 } },
+    };
 
     private static async Task NavigateWhenReadyAsync(IPage page, string address)
     {

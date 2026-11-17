@@ -219,6 +219,90 @@ public sealed class StorageSpaceMonitorTests
             DateTimeOffset.UnixEpoch);
     }
 
+    [Fact]
+    public async Task A_write_refused_by_the_browser_warns_even_when_the_rounded_measure_looks_roomy()
+    {
+        // Chromium rounds navigator.storage.estimate(): 4 GiB "quota", almost nothing used (ADR 0279).
+        Probe probe = new(new StorageCapacity(UsageBytes: 1 * MiB, QuotaBytes: 4096 * MiB));
+        InMemoryNotificationQueue queue = new(maxEntriesPerUser: 10);
+        AuthenticatedPrincipal alice = Principal("alice");
+        int reclaims = 0;
+        await using StorageSpaceMonitor monitor = new(probe, queue, () => alice)
+        {
+            Reclaimer = new Reclaimer(() => Interlocked.Increment(ref reclaims))
+        };
+
+        monitor.ReportWriteRefused();
+        Notification warning = await WaitForSingleAsync(queue, alice);
+
+        Assert.True(monitor.IsLowSpace);
+        Assert.False(monitor.IsRootReserveReached);
+        Assert.Equal("Low storage space", warning.Title);
+        Assert.StartsWith("The browser refused to save data", warning.Message, StringComparison.Ordinal);
+        Assert.True(Volatile.Read(ref reclaims) >= 1);
+
+        // Once per session user, like the measured warning.
+        monitor.ReportWriteRefused();
+        await monitor.RefreshAsync();
+        Assert.Single(queue.GetActive(alice.UserId, DateTimeOffset.UtcNow));
+    }
+
+    [Fact]
+    public async Task A_refused_write_holds_the_storage_low_for_ten_minutes_then_the_measure_decides()
+    {
+        Probe probe = new(new StorageCapacity(UsageBytes: 1 * MiB, QuotaBytes: 4096 * MiB));
+        ManualTime time = new();
+        await using StorageSpaceMonitor monitor = new(probe, time: time);
+
+        monitor.ReportWriteRefused();
+        await monitor.RefreshAsync();
+        Assert.True(monitor.IsLowSpace);
+
+        time.Advance(StorageSpaceMonitor.RefusalHoldTime);
+        await monitor.RefreshAsync();
+        Assert.False(monitor.IsLowSpace);
+    }
+
+    [Fact]
+    public async Task A_refused_write_is_written_in_the_session_language()
+    {
+        Probe probe = new(null);
+        InMemoryNotificationQueue queue = new(maxEntriesPerUser: 10);
+        AuthenticatedPrincipal alice = Principal("alice");
+        await using StorageSpaceMonitor monitor = new(
+            probe, queue, () => alice, language: () => System.Globalization.CultureInfo.GetCultureInfo("fr"));
+
+        monitor.ReportWriteRefused();
+        Notification warning = await WaitForSingleAsync(queue, alice);
+
+        Assert.Equal("Espace de stockage faible", warning.Title);
+        Assert.StartsWith("Le navigateur a refusé d'enregistrer des données", warning.Message, StringComparison.Ordinal);
+    }
+
+    /// <summary>Waits for the one warning <see cref="StorageSpaceMonitor.ReportWriteRefused"/> posts in the background.</summary>
+    private static async Task<Notification> WaitForSingleAsync(InMemoryNotificationQueue queue, AuthenticatedPrincipal user)
+    {
+        DateTime deadline = DateTime.UtcNow.AddSeconds(10);
+        while (queue.GetActive(user.UserId, DateTimeOffset.UtcNow).Count == 0 && DateTime.UtcNow < deadline)
+        {
+            await Task.Delay(10);
+        }
+
+        return Assert.Single(queue.GetActive(user.UserId, DateTimeOffset.UtcNow));
+    }
+
+    /// <summary>A clock the test moves by hand (timestamps in ticks).</summary>
+    private sealed class ManualTime : TimeProvider
+    {
+        private long _ticks = TimeSpan.TicksPerDay;
+
+        public override long TimestampFrequency => TimeSpan.TicksPerSecond;
+
+        public override long GetTimestamp() => Interlocked.Read(ref _ticks);
+
+        public void Advance(TimeSpan by) => Interlocked.Add(ref _ticks, by.Ticks);
+    }
+
     private sealed class Probe(StorageCapacity? capacity) : IStorageCapacityProbe
     {
         public StorageCapacity? Capacity { get; set; } = capacity;

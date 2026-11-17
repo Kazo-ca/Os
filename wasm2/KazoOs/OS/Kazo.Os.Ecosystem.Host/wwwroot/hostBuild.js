@@ -10,9 +10,14 @@ export function runningBuildMarkup() {
 
 /**
  * The page as the origin serves it now, past the HTTP cache, or null when it cannot be reached
- * (offline, server down): that is not an update.
+ * (offline, server down): that is not an update. With navigator.onLine false, no request is made.
  */
 export async function servedBuildMarkup() {
+    // No network at all: nothing to ask, and a failing fetch would log a console error.
+    if (navigator.onLine === false) {
+        return null;
+    }
+
     try {
         const response = await fetch(document.baseURI, { cache: 'no-store', credentials: 'same-origin' });
         return response.ok ? await response.text() : null;

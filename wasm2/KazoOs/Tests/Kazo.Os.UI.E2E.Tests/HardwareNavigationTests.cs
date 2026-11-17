@@ -68,6 +68,11 @@ public sealed class HardwareNavigationTests(ITestOutputHelper output)
             // The tab's own Back (what Android's Back button and the iOS swipe do) stays in Kazo OS.
             int historyLength = await page.EvaluateAsync<int>("() => history.length");
             Assert.True(historyLength >= 2, $"the sentinel entry was not pushed (history.length = {historyLength})");
+
+            // A history Back within 500 ms of the keyboard Back above counts as the same gesture
+            // (DUPLICATE_WINDOW_MS in HardwareNavigationListener.razor.js, for Firefox and Safari):
+            // on a fast machine the steps above take less than that, so wait it out first.
+            await page.WaitForTimeoutAsync(600);
             await page.EvaluateAsync("() => history.back()");
             await Assertions.Expect(addressInput).ToHaveValueAsync(E2ESupport.HomePath, new() { Timeout = 10000 });
             output.WriteLine("[test] the tab's Back went back inside the explorer.");

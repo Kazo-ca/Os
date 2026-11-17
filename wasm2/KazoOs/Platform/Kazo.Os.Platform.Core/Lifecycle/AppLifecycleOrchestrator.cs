@@ -197,6 +197,16 @@ public sealed class AppLifecycleOrchestrator
     public AppDataGuard? DataGuard { get; init; }
 
     /// <summary>
+    /// Gets the roles of the features (ADR 0247 §2): an entry point marked <c>requiresRole</c> starts
+    /// only for a user who holds the role, an administrator or <c>sudo</c>. Without it, such an entry
+    /// point starts for an administrator or under <c>sudo</c> only (fail closed).
+    /// </summary>
+    public Func<Roles.FeatureRoleService?>? Roles { get; init; }
+
+    /// <summary>The error code of a launch refused for want of the entry point's role (ADR 0247 §2).</summary>
+    public const string RoleRequiredErrorCode = "lifecycle.role.required";
+
+    /// <summary>
     /// Gets or sets how long a service may stay <c>activating</c> (its <c>OnStartAsync</c>) before
     /// the OS kills it and marks it <c>failed (Result: timeout)</c> (ADR 0097, section 1). 30 s, like
     /// systemd's <c>TimeoutStartSec</c> default of 90 s scaled to the simulation.
@@ -384,6 +394,30 @@ public sealed class AppLifecycleOrchestrator
     }
 
     /// <summary>
+    /// The role check of a launch (ADR 0247 §2): <see langword="null"/> when the entry point requires no
+    /// role or the user holds it, otherwise the <see cref="AppLaunchStatus.RoleRequired"/> result.
+    /// </summary>
+    private AppLaunchResult? RefuseForRole(AppManifest manifest, AuthenticatedPrincipal principal, bool isRootElevated)
+    {
+        if (manifest.RequiresRole is not { } role)
+        {
+            return null;
+        }
+
+        Roles.FeatureRoleService? roles = this.Roles?.Invoke();
+        if (Kazo.Os.Platform.Core.Roles.FeatureRoleService.OpensTo(roles, manifest, principal, isRootElevated))
+        {
+            return null;
+        }
+
+        roles?.RecordDenied(manifest, principal);
+        return new AppLaunchResult(
+            AppLaunchStatus.RoleRequired,
+            ErrorCode: RoleRequiredErrorCode,
+            ErrorMessage: $"{manifest.Id}: the role '{role}' is required.");
+    }
+
+    /// <summary>
     /// Launches one catalog app. For a singleton <see cref="AppKind.Window"/> app that already has
     /// an active process, focuses the existing instance instead of starting a new one
     /// (`P1-APP-006`). <see cref="AppKind.Terminal"/> apps run to completion synchronously, since
@@ -434,12 +468,26 @@ public sealed class AppLifecycleOrchestrator
             return new AppLaunchResult(AppLaunchStatus.Disabled, ErrorCode: "lifecycle.app.disabled");
         }
 
+        // ADR 0247 §2: the role is checked before a running instance receives the request and before
+        // an elevation ticket is used up. A request that claims sudo is checked again once its ticket
+        // is consumed (root holds every role), but never reaches a running instance on that claim.
+        bool claimsRoot = request.ElevationToken is not null && request.ElevationScope == ElevationScope.SudoRoot;
+        if (!request.SystemScope && !claimsRoot && RefuseForRole(descriptor.Manifest, request.Principal, isRootElevated: false) is { } earlyRefusal)
+        {
+            return earlyRefusal;
+        }
+
         // A web site is one process, like a service (ADR 0073): a second activation finds it running.
         bool isImplicitlySingleton =
             (descriptor.Manifest.Kind == AppKind.Window && descriptor.Manifest.SingleInstancePerUser)
             || descriptor.Manifest.Kind is AppKind.Service or AppKind.Web;
         if (isImplicitlySingleton && _processManager.TryGetSingleton(request.AppId, out ProcessRecord existing))
         {
+            if (!request.SystemScope && RefuseForRole(descriptor.Manifest, request.Principal, isRootElevated: false) is { } singletonRefusal)
+            {
+                return singletonRefusal;
+            }
+
             DeliverToRunningInstance(existing, request);
             return new AppLaunchResult(AppLaunchStatus.FocusedExisting, existing);
         }
@@ -463,6 +511,13 @@ public sealed class AppLifecycleOrchestrator
             {
                 capabilityTicket = ticket;
             }
+        }
+
+        // ADR 0247 §2: an entry point that requires a role opens only for its holders (every
+        // administrator, and root under sudo, holds them all); the refusal goes to auth.log.
+        if (!request.SystemScope && RefuseForRole(descriptor.Manifest, request.Principal, isRootElevated) is { } roleRefusal)
+        {
+            return roleRefusal;
         }
 
         // ADR 0049 section 5: decide pending dangerous capabilities before the process exists, so

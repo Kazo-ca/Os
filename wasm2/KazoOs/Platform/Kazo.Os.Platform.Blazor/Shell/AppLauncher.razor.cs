@@ -74,6 +74,24 @@ public partial class AppLauncher : ComponentBase, IDisposable
     public EventCallback OnCreateAccount { get; set; }
 
     /// <summary>The guest account is the only one named <c>guest</c>: the login is reserved (ADR 0187).</summary>
+    /// <summary>
+    /// Builds the accessible name of an app button. It starts with the action
+    /// ("Launch Terminal") and ends with the visible text the button shows, so the
+    /// name contains its visible label (WCAG 2.5.3, axe <c>label-content-name-mismatch</c>).
+    /// </summary>
+    private string LaunchAppName(AppManifest app) =>
+        string.IsNullOrWhiteSpace(app.Description)
+            ? L["Launcher.LaunchApp", app.Name]
+            : $"{L["Launcher.LaunchApp", app.Name]}, {app.Description}";
+
+    /// <summary>
+    /// Builds the accessible name of a Quick access link: the action ("Open Settings")
+    /// followed by the hint shown under the title, so the visible text stays inside
+    /// the name (WCAG 2.5.3).
+    /// </summary>
+    private string QuickLinkName(string actionKey, string hintKey) =>
+        $"{L[actionKey]}, {L[hintKey]}";
+
     private bool IsGuestSession => OnCreateAccount.HasDelegate
         && _principal?.LoginName.Value == Kazo.Os.Platform.Core.Sessions.GuestAccountService.LoginName;
 
@@ -352,7 +370,10 @@ public partial class AppLauncher : ComponentBase, IDisposable
     private void RebuildProjection(bool resetSelection = false)
     {
         _projection = LauncherAppProjection.Create(
-            Catalog.Manifests.Values.Select(manifest => Catalog.Localize(manifest, Locale.Culture)),
+            // ADR 0247 §2: an entry point that requires a role the user does not hold is absent.
+            Catalog.Manifests.Values
+                .Where(manifest => EntryPointRoleFilter.OpensToCurrentUser(Services, manifest))
+                .Select(manifest => Catalog.Localize(manifest, Locale.Culture)),
             Enablement,
             _pinnedAppIds,
             _selectedCategory,

@@ -449,6 +449,13 @@ internal sealed class RemoteNetworkGateway(RemoteProcessChannel channel) : IAppN
 
     public async ValueTask<IReadOnlyList<KazoTcpListenerInfo>> GetTcpListenersAsync(CancellationToken cancellationToken = default) =>
         WireCodec.ReadListeners(await channel.CallAsync(RemoteOps.NetListeners, null, cancellationToken).ConfigureAwait(false));
+
+    /// <summary>
+    /// Reads the relay's state in the OS (ADR 0278 §1). The <see cref="IAppNetworkGateway.RelayStateChanged"/>
+    /// event is not carried to a worker: an app there reads the state again when it needs it.
+    /// </summary>
+    public async ValueTask<KazoRelayState> GetRelayStateAsync(CancellationToken cancellationToken = default) =>
+        WireCodec.ReadRelayState(await channel.CallAsync(RemoteOps.NetRelayState, null, cancellationToken).ConfigureAwait(false));
 }
 
 /// <summary>

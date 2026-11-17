@@ -175,7 +175,7 @@ public sealed class ShellHostService
         public string? NavigateHistory(int delta) => _session.NavigateHistory(delta);
 
         public IReadOnlyList<ShellCommandInfo> GetInstalledCommands() =>
-            _interpreter.GetInstalledCommands(Kazo.Os.AppSdk.Globalization.KazoLocale.ResolveLanguage(_session.GetVariable));
+            _interpreter.GetInstalledCommandsFor(_session.Principal, Kazo.Os.AppSdk.Globalization.KazoLocale.ResolveLanguage(_session.GetVariable));
 
         public bool NeedsMoreInput(string text) => ShellParser.Parse(text ?? string.Empty).IsIncomplete;
 
@@ -243,7 +243,7 @@ public sealed class ShellHostService
             using (KazoExecutionContext.Enter(_context))
             {
                 return await ShellCompletion.CompleteAsync(
-                    commandLine, cursor, [.. _interpreter.GetInstalledCommands(), .. _interpreter.GetLaunchableApplications()], _session.HomeDirectory, cancellationToken).ConfigureAwait(false);
+                    commandLine, cursor, [.. _interpreter.GetInstalledCommandsFor(_session.Principal, null), .. _interpreter.GetLaunchableApplicationsFor(_session.Principal, null)], _session.HomeDirectory, cancellationToken).ConfigureAwait(false);
             }
         }
 

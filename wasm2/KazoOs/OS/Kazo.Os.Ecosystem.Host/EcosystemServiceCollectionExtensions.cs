@@ -398,7 +398,11 @@ public static class EcosystemServiceCollectionExtensions
             provider.GetRequiredService<IOsSettingsService>(),
             provider.GetRequiredService<IServerConnectionService>(),
             provider.GetRequiredService<IProxyClient>(),
-            provider.GetService<ILogger<RealNetworkGrantReconciler>>()));
+            provider.GetService<ILogger<RealNetworkGrantReconciler>>())
+        {
+            // ADR 0278 §1: a grant synchronized on the server changes what the apps see of the relay.
+            GrantsChanged = () => provider.GetService<AppExecutionContextFactory>()?.RelayPolicy?.Invalidate()
+        });
 
         // FileAssociations domain sync (ADR 0033): /etc/kazoos/file-associations.json under its own
         // domain string. The AppCatalog domain is retired by ADR 0048: uninstalls are apps.config
@@ -487,8 +491,18 @@ public static class EcosystemServiceCollectionExtensions
             // ADR 0168 section 4: an administrator may confirm with a passkey instead of a password.
             PasskeyVerifier = provider.GetRequiredService<IAdminElevationVerifier>() is AdminElevationVerifier verifier
                 ? (login, ct) => verifier.VerifyWithPasskeyAsync(login, provider.GetRequiredService<PasskeyService>(), ct)
-                : null
+                : null,
+            // ADR 0247 §3: the holder of a feature's role authenticates with their own password.
+            UserVerifier = provider.GetRequiredService<IAdminElevationVerifier>() is AdminElevationVerifier userVerifier
+                ? userVerifier.VerifyUserAsync
+                : null,
         });
+        // ADR 0247: the roles the features declare and who holds them (/etc/kazoos/roles.config);
+        // grants and refusals go to /var/log/auth.log.
+        services.AddScoped<Kazo.Os.Platform.Core.Roles.FeatureRoleService>(provider => new Kazo.Os.Platform.Core.Roles.FeatureRoleService(
+            () => provider.GetRequiredService<AppCatalog>(),
+            provider.GetRequiredService<IOsSettingsService>(),
+            provider.GetRequiredService<IAuditLog>()));
         services.AddScoped<AppPermissionAdministration>(provider => new AppPermissionAdministration(
             provider.GetRequiredService<AppCatalog>(),
             provider.GetRequiredService<IAppPermissionStore>(),
@@ -808,6 +822,8 @@ public static class EcosystemServiceCollectionExtensions
             coordinator.EvictionDetector = provider.GetService<StorageEvictionDetector>();
             coordinator.OriginStorage = provider.GetService<OriginStorageService>();
             coordinator.KernelLog = provider.GetService<KernelLog>();
+            // ADR 0247 §1: roles.config read at boot.
+            coordinator.FeatureRoles = provider.GetService<Kazo.Os.Platform.Core.Roles.FeatureRoleService>();
             return coordinator;
         });
 
@@ -896,7 +912,7 @@ public static class EcosystemServiceCollectionExtensions
                 .Context,
             () => provider.GetService<IInstalledLibraryState>(),
             provider.GetService<ILogger<Kazo.Os.Platform.Core.Features.FeatureServiceResolver>>()));
-        services.AddScoped<AppExecutionContextFactory>(provider => new AppExecutionContextFactory(
+        services.AddScoped<AppExecutionContextFactory>(provider => WithRelayFollowingTheServer(provider, new AppExecutionContextFactory(
             provider.GetRequiredService<ICapabilityGrantRepository>(),
             provider.GetRequiredService<IFileSystemService>(),
             provider.GetRequiredService<IEventBus>(),
@@ -942,6 +958,8 @@ public static class EcosystemServiceCollectionExtensions
                 Capabilities = () => provider.GetService<ICapabilityCatalog>(),
                 // ADR 0260 §3: the consent to a feature's installation is written as machine allow lines.
                 PermissionStore = () => provider.GetService<IAppPermissionStore>(),
+                // ADR 0247: each app's roles and the OS's authentication of a feature's operations.
+                Roles = () => provider.GetService<Kazo.Os.Platform.Core.Roles.FeatureRoleService>(),
             },
             // Lazy for the same reason: ShellInterpreter depends on the orchestrator (ADR 0056 section 7).
             shellHostProvider: () => provider.GetRequiredService<ShellHostService>(),
@@ -1021,7 +1039,7 @@ public static class EcosystemServiceCollectionExtensions
             BackgroundJobs = () => provider.GetRequiredService<BackgroundJobService>(),
             // ADR 0193: IAppExecutionContext.TimeZone follows Settings > Date and time.
             TimeZones = provider.GetRequiredService<Kazo.Os.Platform.Core.Globalization.SessionTimeZoneService>(),
-        });
+        }));
         services.AddScoped<BackgroundJobService>(provider => new BackgroundJobService(
             provider.GetRequiredService<IProcessManager>(),
             // Lazy: the orchestrator depends on the context factory, which carries this service.
@@ -1085,6 +1103,8 @@ public static class EcosystemServiceCollectionExtensions
             // ADR 0214 §4.2: the data of an installed app is backed up when its version changes.
             DataGuard = new AppDataGuard(
                 () => provider.GetService<InstalledPackageCatalog>(), provider.GetService<ILogger<AppDataGuard>>()),
+            // ADR 0247 §2: an entry point that requires a role opens only for its holders.
+            Roles = () => provider.GetService<Kazo.Os.Platform.Core.Roles.FeatureRoleService>(),
         });
         // Uninstall/reinstall through /etc/kazoos/apps.config + ~/.config/kazoos/apps.config
         // (ADR 0048). Started by EcosystemBootCoordinator once storage is ready; feeds the
@@ -1480,6 +1500,20 @@ public static class EcosystemServiceCollectionExtensions
     /// uninstalled for the machine. Runs after each change of the installed state; a failure is
     /// written to the system log and never blocks the uninstall.
     /// </summary>
+    /// <summary>
+    /// Reads the relay policy again when the server connects, disconnects or stops answering
+    /// (ADR 0278 §1), so the apps that follow the relay's state see the change.
+    /// </summary>
+    private static AppExecutionContextFactory WithRelayFollowingTheServer(IServiceProvider provider, AppExecutionContextFactory factory)
+    {
+        if (factory.RelayPolicy is { } relayPolicy && provider.GetService<ServerPresenceService>() is { } presence)
+        {
+            presence.Changed += relayPolicy.Invalidate;
+        }
+
+        return factory;
+    }
+
     private static async Task RemoveUninstalledComponentProvidersAsync(IServiceProvider provider, AppInstallationService installation)
     {
         try

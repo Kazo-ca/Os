@@ -2253,4 +2253,31 @@
   <data name="Storage.GiB" xml:space="preserve">
     <value>{0} Gio</value>
   </data>
+  <data name="Roles.Title" xml:space="preserve">
+    <value>Rôles des Features</value>
+  </data>
+  <data name="Roles.Description" xml:space="preserve">
+    <value>Une Feature peut déclarer des rôles, comme le gestionnaire de ses machines virtuelles. Un administrateur en attribue un à un compte ordinaire ici ou avec {0} ; il faut {1}, et le système demande un administrateur dans sa propre fenêtre. Chaque administrateur détient implicitement tous les rôles.</value>
+  </data>
+  <data name="Roles.Account" xml:space="preserve">
+    <value>Compte</value>
+  </data>
+  <data name="Roles.Implicit" xml:space="preserve">
+    <value>implicites (administrateur)</value>
+  </data>
+  <data name="Roles.Toggle" xml:space="preserve">
+    <value>{0} pour {1}</value>
+  </data>
+  <data name="Roles.Granted" xml:space="preserve">
+    <value>{1} détient maintenant le rôle {0}.</value>
+  </data>
+  <data name="Roles.Revoked" xml:space="preserve">
+    <value>{1} ne détient plus le rôle {0}.</value>
+  </data>
+  <data name="Roles.Unchanged" xml:space="preserve">
+    <value>Rien n'a changé pour {1} et le rôle {0}.</value>
+  </data>
+  <data name="Roles.Error" xml:space="preserve">
+    <value>Rôle inchangé : {0}</value>
+  </data>
 </root>

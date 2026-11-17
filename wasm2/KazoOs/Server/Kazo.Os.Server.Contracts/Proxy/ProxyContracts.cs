@@ -349,6 +349,13 @@ public sealed record ProxyPolicyResponse(
 
     /// <summary>The account's apps whose synchronized grant approves declared ports (ADR 0235 §3).</summary>
     public IReadOnlyList<ProxyAppPorts>? AppPorts { get; init; }
+
+    /// <summary>
+    /// Every app the relay serves for the calling account: the operator's <see cref="GrantedApps"/>
+    /// and the apps of the account's synchronized grants (ADR 0278 §1). The OS reads it to tell an
+    /// app whether its grant reached the server; <see langword="null"/> from an older server.
+    /// </summary>
+    public IReadOnlyList<string>? AccountGrantedApps { get; init; }
 }
 
 /// <summary>

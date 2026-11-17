@@ -74,3 +74,48 @@ virtual Kazo.Os.App.Abstractions.FeatureDefinition.ProvidedCapabilities.get -> S
 ~Kazo.Os.App.Abstractions.AppManifestJsonSerializerContext.AppProvidedCapabilityManifest.get -> System.Text.Json.Serialization.Metadata.JsonTypeInfo<Kazo.Os.App.Abstractions.AppProvidedCapabilityManifest>
 ~Kazo.Os.App.Abstractions.AppManifestJsonSerializerContext.CapabilityRisk.get -> System.Text.Json.Serialization.Metadata.JsonTypeInfo<Kazo.Os.App.Abstractions.CapabilityRisk>
 ~Kazo.Os.App.Abstractions.AppManifestJsonSerializerContext.IReadOnlyListAppProvidedCapabilityManifest.get -> System.Text.Json.Serialization.Metadata.JsonTypeInfo<System.Collections.Generic.IReadOnlyList<Kazo.Os.App.Abstractions.AppProvidedCapabilityManifest>>
+Kazo.Os.App.Abstractions.AppRoleManifest.Id.get -> string!
+Kazo.Os.App.Abstractions.AppRoleManifest.Title.get -> string!
+Kazo.Os.App.Abstractions.AppRoleManifest.Id.init -> void
+Kazo.Os.App.Abstractions.AppRoleManifest.Title.init -> void
+Kazo.Os.App.Abstractions.AppRoleManifest
+override Kazo.Os.App.Abstractions.AppRoleManifest.ToString() -> string!
+static Kazo.Os.App.Abstractions.AppRoleManifest.operator !=(Kazo.Os.App.Abstractions.AppRoleManifest? left, Kazo.Os.App.Abstractions.AppRoleManifest? right) -> bool
+static Kazo.Os.App.Abstractions.AppRoleManifest.operator ==(Kazo.Os.App.Abstractions.AppRoleManifest? left, Kazo.Os.App.Abstractions.AppRoleManifest? right) -> bool
+override Kazo.Os.App.Abstractions.AppRoleManifest.GetHashCode() -> int
+override Kazo.Os.App.Abstractions.AppRoleManifest.Equals(object? obj) -> bool
+Kazo.Os.App.Abstractions.AppRoleManifest.Equals(Kazo.Os.App.Abstractions.AppRoleManifest? other) -> bool
+Kazo.Os.App.Abstractions.AppRoleManifest.<Clone>$() -> Kazo.Os.App.Abstractions.AppRoleManifest!
+Kazo.Os.App.Abstractions.AppRoleManifest.Deconstruct(out string! Id, out string! Title) -> void
+Kazo.Os.App.Abstractions.FeatureRole.Id.get -> string!
+Kazo.Os.App.Abstractions.FeatureRole.Title.get -> string!
+Kazo.Os.App.Abstractions.FeatureRole.Title.init -> void
+Kazo.Os.App.Abstractions.FeatureRole.Id.init -> void
+Kazo.Os.App.Abstractions.FeatureRole
+override Kazo.Os.App.Abstractions.FeatureRole.ToString() -> string!
+static Kazo.Os.App.Abstractions.FeatureRole.operator !=(Kazo.Os.App.Abstractions.FeatureRole? left, Kazo.Os.App.Abstractions.FeatureRole? right) -> bool
+static Kazo.Os.App.Abstractions.FeatureRole.operator ==(Kazo.Os.App.Abstractions.FeatureRole? left, Kazo.Os.App.Abstractions.FeatureRole? right) -> bool
+override Kazo.Os.App.Abstractions.FeatureRole.GetHashCode() -> int
+override Kazo.Os.App.Abstractions.FeatureRole.Equals(object? obj) -> bool
+Kazo.Os.App.Abstractions.FeatureRole.Equals(Kazo.Os.App.Abstractions.FeatureRole? other) -> bool
+Kazo.Os.App.Abstractions.FeatureRole.<Clone>$() -> Kazo.Os.App.Abstractions.FeatureRole!
+Kazo.Os.App.Abstractions.FeatureRole.Deconstruct(out string! Id, out string! Title) -> void
+Kazo.Os.App.Abstractions.AppManifest.RequiresRole.get -> string?
+Kazo.Os.App.Abstractions.AppManifest.Roles.init -> void
+Kazo.Os.App.Abstractions.AppManifest.Roles.get -> System.Collections.Generic.IReadOnlyList<Kazo.Os.App.Abstractions.AppRoleManifest!>?
+Kazo.Os.App.Abstractions.AppManifest.RequiresRole.init -> void
+Kazo.Os.App.Abstractions.AppRoleManifest.AppRoleManifest(string! Id, string! Title) -> void
+Kazo.Os.App.Abstractions.AppRoleManifest.Description.get -> string?
+Kazo.Os.App.Abstractions.AppRoleManifest.Description.init -> void
+Kazo.Os.App.Abstractions.AppRoleManifest.Grants.get -> System.Collections.Generic.IReadOnlyList<string!>?
+Kazo.Os.App.Abstractions.AppRoleManifest.Grants.init -> void
+virtual Kazo.Os.App.Abstractions.FeatureDefinition.Roles.get -> System.Collections.Generic.IReadOnlyList<Kazo.Os.App.Abstractions.FeatureRole!>!
+Kazo.Os.App.Abstractions.FeatureEntryPoint.RequiresRole.get -> string?
+Kazo.Os.App.Abstractions.FeatureEntryPoint.RequiresRole.init -> void
+Kazo.Os.App.Abstractions.FeatureRole.FeatureRole(string! Id, string! Title) -> void
+Kazo.Os.App.Abstractions.FeatureRole.Description.get -> string?
+Kazo.Os.App.Abstractions.FeatureRole.Description.init -> void
+Kazo.Os.App.Abstractions.FeatureRole.Grants.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Kazo.Os.App.Abstractions.FeatureRole.Grants.init -> void
+~Kazo.Os.App.Abstractions.AppManifestJsonSerializerContext.AppRoleManifest.get -> System.Text.Json.Serialization.Metadata.JsonTypeInfo<Kazo.Os.App.Abstractions.AppRoleManifest>
+~Kazo.Os.App.Abstractions.AppManifestJsonSerializerContext.IReadOnlyListAppRoleManifest.get -> System.Text.Json.Serialization.Metadata.JsonTypeInfo<System.Collections.Generic.IReadOnlyList<Kazo.Os.App.Abstractions.AppRoleManifest>>

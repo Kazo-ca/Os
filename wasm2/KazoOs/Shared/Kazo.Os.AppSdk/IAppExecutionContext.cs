@@ -71,6 +71,19 @@ public interface IAppExecutionContext
     /// <summary>Gets the capabilities granted to this app instance by OS policy.</summary>
     IReadOnlySet<string> GrantedCapabilities { get; }
 
+    /// <summary>
+    /// Gets the roles of the installed features the acting user holds (ADR 0247 §1): those an
+    /// administrator granted them, or every declared role for an administrator. Empty by default.
+    /// </summary>
+    IReadOnlySet<string> Roles => NoRoles.Instance;
+
+    /// <summary>
+    /// Gets the OS's authentication of the sensitive operations of a feature, behind
+    /// <see cref="Kazo.Os.AppSdk.Features.KazoFeatureAuthentication"/> (ADR 0247 §3). Unsupported by default; the
+    /// trusted platform factory sets it for a feature and its entry points.
+    /// </summary>
+    Kazo.Os.AppSdk.Features.IKazoFeatureAuthentication FeatureAuthentication => Kazo.Os.AppSdk.Features.UnsupportedFeatureAuthentication.Instance;
+
     /// <summary>Gets the session this app instance belongs to.</summary>
     SessionId SessionId { get; }
 

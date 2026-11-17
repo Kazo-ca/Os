@@ -426,6 +426,9 @@ Cette section liste ce qui est publié dans la branche `main` et en ligne.
   n'est pas élaguée), et l'installation refuse avec la méthode exacte une app
   qui appelle une méthode que l'OS publié n'a pas, au lieu de la laisser
   planter. ([ADR 0242](dev/adr/0242-framework-api-for-installed-apps.md))
+  LINQ, les expressions régulières et les canaux (`System.Linq`,
+  `System.Text.RegularExpressions`, `System.Threading.Channels`) sont aussi
+  entiers. ([ADR 0280](dev/adr/0280-keep-linq-regex-channels-whole.md))
   Elle peut afficher ses propres pages HTML dans une iframe, avec des paramètres
   dans l'adresse, aussi une fois l'OS publié et hors ligne.
   ([ADR 0243](dev/adr/0243-serve-installed-app-pages.md))
@@ -506,11 +509,18 @@ dans `main`, le lien mène à sa PR.
 | Adresse de fichier servie à la demande | Une app reçoit une adresse pour lire un gros fichier (audio, vidéo) sans le copier en mémoire, avec lecture partielle pour avancer dans un morceau. Série `storage/base` ; la lecture partielle est faite (chantier 3), l'adresse reste à faire. | [0275](dev/adr/0275-partial-read-and-file-address.md) | [#379](https://github.com/Kazo-ca/Os/issues/379) |
 | Glisser des fichiers vers une app | Contrat public du SDK pour recevoir des fichiers glissés depuis l'explorateur ou le bureau. | À écrire | [#380](https://github.com/Kazo-ca/Os/issues/380) |
 
+### Réseau
+
+| Fonctionnalité | Description | ADR | Issue |
+| --- | --- | --- | --- |
+| État du relais du serveur Kazo pour les apps | Une app qui a accès au vrai réseau sait, sans essayer, si le relais du serveur Kazo est prêt (aucun serveur, relais arrêté, autorisation en attente), et un échec de connexion dit la vraie raison. Série `todo-wins/base`. | [0278](dev/adr/0278-real-network-relay-state-for-apps.md) | [#418](https://github.com/Kazo-ca/Os/issues/418) |
+
 ### Kazo OS Store
 
 | Fonctionnalité | Description | ADR | Issue |
 | --- | --- | --- | --- |
 | Catalogue des applications | Format du catalogue, vérification et publication des applications proposées. | [0188](dev/adr/0188-hack-store-and-app-catalog.md) | [AppMarketPlace #1](https://github.com/Kazo-ca/Os-AppMarketPlace/issues/1) |
+| Contrôle des API avant publication | Le build d'une app (`KazoOsPack`) et la CI du Store refusent une app qui appelle une API que l'OS publié a retirée, avec la liste des membres manquants, au lieu de la refuser seulement à l'installation. Série `todo-wins/base`. | [0277](dev/adr/0277-trimmed-api-check-before-publishing.md) | [#346](https://github.com/Kazo-ca/Os/issues/346) |
 | Canal bêta et mises à jour automatiques des apps | Une version bêta de Kazo OS en ligne (`os-beta.kazo.ca`), le SDK en préversion sur nuget.org, et chaque app qui se reconstruit et propose sa mise à jour quand le SDK sort. Côté OS, c'est fait : la branche `beta`, le site bêta avec sa pastille « Bêta », le catalogue bêta et les workflows réutilisables des apps. Les préversions 3.4.0-preview.1 à 4 sont sorties le 2026-11-15, chaque dépôt d'app est aligné (chantier 7) et les apps ont proposé leur version bêta d'elles-mêmes ; la 3.4.0 stable suit. Reste l'essai des mises à jour des apps pour la 3.4.0 stable (chantier 8). | [0271](dev/adr/0271-beta-channel-and-automatic-app-updates.md), [plan](dev/plans/release-channels-plan.md) | [#456](https://github.com/Kazo-ca/Os/issues/456) |
 
 ### Personnalisation
@@ -537,7 +547,7 @@ demande à l'OS le type d'app « Feature » et les points d'extension ci-dessous
 | Fonctionnalité | Description | ADR | Issue |
 | --- | --- | --- | --- |
 | Permissions déclarées par une Feature | Une Feature déclare ses propres permissions, dangereuses comprises ; elles suivent les règles du catalogue de l'OS et ne sont jamais accordées en silence. Code livré par le chantier `feature/17` (`ProvidedCapabilities`, préfixe réservé, catalogue des capacités `ICapabilityCatalog`, semeur qui n'accorde que le connu et permissions sujet dangereuses, issue #432, `Covers`, `Caller.Require`, fenêtre sécurisée même depuis le terminal ; [`capabilities.md`](framework/capabilities.md#permissions-déclarées-par-une-feature-adr-0246)). | [0246](dev/adr/0246-provider-declared-permissions.md) | — |
-| Rôles déclarés par une Feature | Une Feature déclare des rôles qu'un administrateur attribue ; chaque opération sensible passe par l'authentification de l'OS. | [0247](dev/adr/0247-feature-declared-roles.md) | — |
+| Rôles déclarés par une Feature | Une Feature déclare des rôles qu'un administrateur attribue ; chaque opération sensible passe par l'authentification de l'OS. Code livré par le chantier `feature/20` (`FeatureDefinition.Roles`, `RequiresRole`, `/etc/kazoos/roles.config`, rôles implicites des administrateurs, point d'entrée absent et code 126 sans le rôle, colonne des rôles dans Paramètres ▸ Utilisateurs, `kazorole`, `KazoFeatureAuthentication` et billets liés à l'opération, entrées `feature.*` et `role.*` d'`auth.log` ; `KazoUser.Current.IsInRole("x86:vm-manager")` et rôle de l'OS `admin`, ajustés par l'[ADR 0283](dev/adr/0283-feature-roles-isinrole-adjustments.md) ; [`system-administration.md`](framework/system-administration.md#rôles-des-features-adr-0247-ajustée-par-ladr-0283)). | [0247](dev/adr/0247-feature-declared-roles.md), [0283](dev/adr/0283-feature-roles-isinrole-adjustments.md) | — |
 | Résolution des dépendances | Le Store et `kazopkg` installent les dépendances déclarées dans le manifeste, avec un seul consentement ; retirer un paquet avertit et désactive les apps dépendantes. Code livré par le chantier `feature/18` (plan `BuildPlanAsync`, transaction sur le plan, `dependency-unresolved` et `dependency-conflict`, `kazopkg --yes`, plan dans la fenêtre de validation avec les permissions des Features, dépendances sur la fiche du Store, `KazoApps.RequestInstallAsync`, `dependencies` de `catalog.json` ; [`app-installation.md`](dev/app-installation.md#dépendances-entre-paquets-adr-0248)). | [0248](dev/adr/0248-store-and-kazopkg-dependency-resolution.md) | — |
 | Section « Fonctionnalités » des Paramètres | Paramètres liste les Features installées et affiche les pages qu'elles fournissent, selon le rôle de l'usager. | [0249](dev/adr/0249-settings-features-section.md) | — |
 | Persistance et éviction du stockage | L'OS demande au navigateur de ne pas effacer son stockage, affiche le quota et avertit quand le navigateur a tout de même effacé des données. Code livré par le chantier `feature/19` (`KazoStorage`, `persist()` une fois par origine, détection d'éviction avant l'ouverture des bases, témoins des Features, Paramètres ▸ Système ▸ Stockage, `df` ; [`system-administration.md`](framework/system-administration.md#stockage-du-navigateur-kazostorage-adr-0250)). | [0250](dev/adr/0250-storage-persistence-and-eviction.md) | — |

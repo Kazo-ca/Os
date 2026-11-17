@@ -169,6 +169,30 @@ on Kazo OS) writes the same line itself:
 
 OS side: [`app-installation.md`](../dev/app-installation.md#app-libraries-and-shared-versions-adr-0261).
 
+## APIs of the trimmed OS checked at packaging
+
+[ADR 0277](../dev/adr/0277-trimmed-api-check-before-publishing.md). Kazo OS is
+published trimmed: a .NET method the OS does not use can be missing, and the OS
+refuses to install an app that calls it (`apps.package.missing-api`).
+`KazoOsPack` runs the same check on the package it just built, against the API
+surface of the targeted Kazo OS version (`kazoos-api-surface.json.gz`, which
+`Kazo.Os.App.Build` brings):
+
+```text
+manifest.json : error KOSAPP0100: My.App.dll calls System.Linq.Enumerable.ToHashSet``1(...) in System.Linq, which Kazo OS 3.4.1 (trimmed) does not have: use new HashSet<T>(source) instead. The OS would refuse to install the package (ADR 0277).
+```
+
+- **`KOSAPP0100`** (error): the package is not written. The message suggests a
+  replacement when it knows one.
+- **`KazoOsApiCheck=false`** in the app's project turns the error into the
+  warning **`KOSAPP0101`**: the package is written, but the OS may refuse it.
+- **`KazoOsApiSurfaceFile`** names another surface (for example the one of a
+  preview). Without a readable surface, **`KOSAPP0102`** warns that the package
+  was not checked.
+- The Store checks every submission again, against the latest stable OS: it
+  runs the `check-api --package <file.kazoapp> --api-surface <surface>` command
+  of the generator that `Kazo.Os.App.Build` of that version carries.
+
 ## Publishing to the Kazo OS Store
 
 1. Fill `store/`: 256×256 PNG icon (200 KB at most), English short description

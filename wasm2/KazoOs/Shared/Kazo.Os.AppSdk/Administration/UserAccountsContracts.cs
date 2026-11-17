@@ -33,6 +33,26 @@ public sealed record KazoUserAccount(
     /// while no registered account exists, turned into a real account by "Create my account".
     /// </summary>
     public bool IsGuest { get; init; }
+
+    /// <summary>
+    /// Gets the roles of the features the account holds (ADR 0247 §1): those an administrator granted
+    /// it, or every declared role for an administrator, who holds them implicitly.
+    /// </summary>
+    public IReadOnlyList<string> Roles { get; init; } = [];
+}
+
+/// <summary>
+/// One role a feature declares (ADR 0247 §1), as <see cref="KazoUserAccounts.ListRolesAsync(CancellationToken)"/>
+/// shows it in Settings ▸ Users and <c>kazorole list</c>.
+/// </summary>
+/// <param name="Id">The role, <c>&lt;prefix&gt;:&lt;name&gt;</c>, such as <c>x86:vm-manager</c> (ADR 0283).</param>
+/// <param name="Title">Its short title.</param>
+/// <param name="FeatureId">The feature that declares it.</param>
+/// <param name="FeatureName">The name of that feature.</param>
+public sealed record KazoFeatureRole(string Id, string Title, string FeatureId, string FeatureName)
+{
+    /// <summary>Gets what the role lets its holder do, or <see langword="null"/>.</summary>
+    public string? Description { get; init; }
 }
 
 /// <summary>
@@ -135,4 +155,33 @@ public interface IAppUserAccountsGateway
     /// <returns><see langword="true"/> when the form will be shown; <see langword="false"/> otherwise.</returns>
     ValueTask<bool> RequestGuestAccountCreationAsync(CancellationToken cancellationToken = default) =>
         ValueTask.FromResult(false);
+
+    /// <summary>Lists the roles the installed features declare (ADR 0247 §1).</summary>
+    /// <param name="cancellationToken">Cancels the read.</param>
+    /// <returns>The roles, by id.</returns>
+    ValueTask<IReadOnlyList<KazoFeatureRole>> ListRolesAsync(CancellationToken cancellationToken = default) =>
+        ValueTask.FromResult<IReadOnlyList<KazoFeatureRole>>([]);
+
+    /// <summary>
+    /// Grants a role of a feature to an ordinary account (ADR 0247 §1); needs <c>users.manage</c> and an
+    /// administrator. An administrator already holds every role: nothing changes and no one is asked.
+    /// </summary>
+    /// <param name="loginName">The account.</param>
+    /// <param name="role">The role.</param>
+    /// <param name="cancellationToken">Cancels the change.</param>
+    /// <returns><see langword="true"/> when <c>/etc/kazoos/roles.config</c> changed.</returns>
+    /// <exception cref="UnauthorizedAccessException">No <c>users.manage</c>, or no administrator confirmed.</exception>
+    /// <exception cref="ArgumentException">The account does not exist, or no installed feature declares the role.</exception>
+    ValueTask<bool> GrantRoleAsync(string loginName, string role, CancellationToken cancellationToken = default) =>
+        throw new NotSupportedException("This Kazo OS host has no roles of features.");
+
+    /// <summary>Takes a role of a feature back from an ordinary account (ADR 0247 §1); needs <c>users.manage</c> and an administrator.</summary>
+    /// <param name="loginName">The account.</param>
+    /// <param name="role">The role.</param>
+    /// <param name="cancellationToken">Cancels the change.</param>
+    /// <returns><see langword="true"/> when <c>/etc/kazoos/roles.config</c> changed.</returns>
+    /// <exception cref="UnauthorizedAccessException">No <c>users.manage</c>, or no administrator confirmed.</exception>
+    /// <exception cref="ArgumentException">The account does not exist, or no installed feature declares the role.</exception>
+    ValueTask<bool> RevokeRoleAsync(string loginName, string role, CancellationToken cancellationToken = default) =>
+        throw new NotSupportedException("This Kazo OS host has no roles of features.");
 }

@@ -378,4 +378,13 @@
   <data name="Error.NameNotResolved.Hint.Server" xml:space="preserve">
     <value>Pour ouvrir un vrai site, connectez cette machine à un serveur Kazo OS (Paramètres ▸ Réseau ▸ Serveur facultatif).</value>
   </data>
+  <data name="Error.RelayNoServer.Message" xml:space="preserve">
+    <value>{0} est sur le vrai réseau, et aucun serveur Kazo OS n'est connecté pour l'atteindre.</value>
+  </data>
+  <data name="Error.RelayDisabled.Hint" xml:space="preserve">
+    <value>L'opérateur du serveur Kazo OS a arrêté son relais (réglages KazoOs:Proxy).</value>
+  </data>
+  <data name="Error.RelayGrantPending.Hint" xml:space="preserve">
+    <value>Le serveur Kazo OS n'a pas encore reçu l'autorisation de ce navigateur : elle arrive à la prochaine synchronisation.</value>
+  </data>
 </root>

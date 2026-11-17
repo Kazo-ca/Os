@@ -78,6 +78,11 @@ opération de fichier demande, avant les bits de permission :
 | un lecteur réseau (`hostfs`, ADR 0181, ou cloud, [ADR 0267](../dev/adr/0267-cloud-drives-as-network-drives.md)) monté par l'utilisateur qui agit ([ADR 0231](../dev/adr/0231-network-drives-count-as-personal-files.md)) | `filesystem.user-home.read` | `filesystem.user-home.write` |
 | tout le reste : `/mnt` lui-même, le lecteur d'un autre utilisateur, `/etc`, `/var`… | `filesystem.system.read` | `filesystem.system.write` |
 
+Une app qui n'a que `filesystem.private.*` crée son dossier avec
+`KazoDirectory.CreateDirectoryAsync("~/.config/<appId>")` même si elle ne peut pas regarder
+`~/.config` : comme `mkdir -p`, le SDK commence la création au premier parent qu'il n'a pas le
+droit de regarder, et le système de fichiers vérifie chaque création (issue #407).
+
 Pour son propre lecteur réseau, une app qui n'a que `filesystem.system.*`
 (`mount`, `umount`, `df`…) garde l'accès qu'elle avait : l'ADR 0231 élargit,
 elle ne retire rien. Les bits de permission et le propriétaire s'appliquent

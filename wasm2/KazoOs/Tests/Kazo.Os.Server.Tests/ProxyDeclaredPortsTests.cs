@@ -202,6 +202,23 @@ public sealed class ProxyDeclaredPortsTests : IDisposable
         Assert.Equal(["tcp/6667", "tcp/6697"], irc.Ports);
     }
 
+    [Fact]
+    public async Task PolicyResponse_ListsEveryAppTheRelayServesForTheAccount()
+    {
+        // ADR 0278 §1: the OS tells an app whether its grant reached the server.
+        Guid device = AddDevice();
+        AddGrant(IrcApp, "tcp/6697");
+        AddGrant("org.example.nodeclared");
+        Guid revoked = Guid.NewGuid();
+        AddGrant(revoked, 1, "org.example.revoked", revoked: false);
+        AddGrant(revoked, 2, "org.example.revoked", revoked: true);
+
+        ProxyPolicyResponse policy = await Proxy(new ProxyOptions { GrantedApps = ["org.kazoos.operator"] })
+            .GetPolicyAsync(_accountId, device, CancellationToken.None);
+
+        Assert.Equal([IrcApp, "org.example.nodeclared", "org.kazoos.operator"], policy.AccountGrantedApps!.Order(StringComparer.Ordinal));
+    }
+
     // ── Helpers ─────────────────────────────────────────────────────────────
 
     private ProxyService Proxy(ProxyOptions? options = null) =>

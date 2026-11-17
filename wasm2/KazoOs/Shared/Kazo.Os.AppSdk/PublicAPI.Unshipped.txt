@@ -203,3 +203,113 @@ static Kazo.Os.AppSdk.Storage.KazoStorage.RequestPersistenceAsync(System.Threadi
 static Kazo.Os.AppSdk.Storage.KazoStorage.RegisterMarkerAsync(string! path, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
 static Kazo.Os.AppSdk.Storage.KazoStorage.ReportUsageAsync(long bytes, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
 static Kazo.Os.AppSdk.Storage.KazoStorage.GetFeatureUsageAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.Storage.KazoFeatureStorageUsage!>!>
+Kazo.Os.AppSdk.Net.IAppNetworkGateway.GetRelayStateAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.Net.KazoRelayState!>
+Kazo.Os.AppSdk.Net.IAppNetworkGateway.RelayStateChanged -> System.EventHandler<Kazo.Os.AppSdk.Net.KazoRelayState!>?
+Kazo.Os.AppSdk.Net.KazoNetworkError.RelayDisabled = 11 -> Kazo.Os.AppSdk.Net.KazoNetworkError
+Kazo.Os.AppSdk.Net.KazoNetworkError.RelayGrantPending = 12 -> Kazo.Os.AppSdk.Net.KazoNetworkError
+Kazo.Os.AppSdk.Net.KazoNetworkError.RelayNoServer = 10 -> Kazo.Os.AppSdk.Net.KazoNetworkError
+Kazo.Os.AppSdk.Net.KazoRealNetwork
+Kazo.Os.AppSdk.Net.KazoRelayException
+Kazo.Os.AppSdk.Net.KazoRelayException.Code.get -> string!
+Kazo.Os.AppSdk.Net.KazoRelayException.KazoRelayException(Kazo.Os.AppSdk.Net.KazoNetworkError reason, System.Net.Sockets.SocketError socketError, string? message = null) -> void
+Kazo.Os.AppSdk.Net.KazoRelayException.Reason.get -> Kazo.Os.AppSdk.Net.KazoNetworkError
+Kazo.Os.AppSdk.Net.KazoRelayState
+Kazo.Os.AppSdk.Net.KazoRelayState.<Clone>$() -> Kazo.Os.AppSdk.Net.KazoRelayState!
+Kazo.Os.AppSdk.Net.KazoRelayState.Deconstruct(out Kazo.Os.AppSdk.Net.KazoRelayStatus Status) -> void
+Kazo.Os.AppSdk.Net.KazoRelayState.Equals(Kazo.Os.AppSdk.Net.KazoRelayState? other) -> bool
+Kazo.Os.AppSdk.Net.KazoRelayState.KazoRelayState(Kazo.Os.AppSdk.Net.KazoRelayStatus Status) -> void
+Kazo.Os.AppSdk.Net.KazoRelayState.Status.get -> Kazo.Os.AppSdk.Net.KazoRelayStatus
+Kazo.Os.AppSdk.Net.KazoRelayState.Status.init -> void
+Kazo.Os.AppSdk.Net.KazoRelayState.TcpBlockedPorts.get -> System.Collections.Generic.IReadOnlyList<int>!
+Kazo.Os.AppSdk.Net.KazoRelayState.TcpBlockedPorts.init -> void
+Kazo.Os.AppSdk.Net.KazoRelayState.UdpBlockedPorts.get -> System.Collections.Generic.IReadOnlyList<int>!
+Kazo.Os.AppSdk.Net.KazoRelayState.UdpBlockedPorts.init -> void
+Kazo.Os.AppSdk.Net.KazoRelayStatus
+Kazo.Os.AppSdk.Net.KazoRelayStatus.GrantPending = 2 -> Kazo.Os.AppSdk.Net.KazoRelayStatus
+Kazo.Os.AppSdk.Net.KazoRelayStatus.NoServer = 0 -> Kazo.Os.AppSdk.Net.KazoRelayStatus
+Kazo.Os.AppSdk.Net.KazoRelayStatus.Ready = 3 -> Kazo.Os.AppSdk.Net.KazoRelayStatus
+Kazo.Os.AppSdk.Net.KazoRelayStatus.RelayDisabled = 1 -> Kazo.Os.AppSdk.Net.KazoRelayStatus
+override Kazo.Os.AppSdk.Net.KazoRelayState.Equals(object? obj) -> bool
+override Kazo.Os.AppSdk.Net.KazoRelayState.GetHashCode() -> int
+override Kazo.Os.AppSdk.Net.KazoRelayState.ToString() -> string!
+static Kazo.Os.AppSdk.Net.KazoRealNetwork.GetRelayStateAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.Net.KazoRelayState!>
+static Kazo.Os.AppSdk.Net.KazoRealNetwork.RelayStateChanged -> System.EventHandler<Kazo.Os.AppSdk.Net.KazoRelayState!>?
+static Kazo.Os.AppSdk.Net.KazoRelayState.operator !=(Kazo.Os.AppSdk.Net.KazoRelayState? left, Kazo.Os.AppSdk.Net.KazoRelayState? right) -> bool
+static Kazo.Os.AppSdk.Net.KazoRelayState.operator ==(Kazo.Os.AppSdk.Net.KazoRelayState? left, Kazo.Os.AppSdk.Net.KazoRelayState? right) -> bool
+Kazo.Os.AppSdk.Features.KazoAuthenticationScope.RoleHolder = 0 -> Kazo.Os.AppSdk.Features.KazoAuthenticationScope
+Kazo.Os.AppSdk.Features.KazoAuthenticationScope.Administrator = 1 -> Kazo.Os.AppSdk.Features.KazoAuthenticationScope
+Kazo.Os.AppSdk.Features.KazoAuthenticationScope
+Kazo.Os.AppSdk.Features.IKazoFeatureAuthentication
+Kazo.Os.AppSdk.Features.KazoAuthenticationTicket.Token.get -> System.Guid
+Kazo.Os.AppSdk.Features.KazoAuthenticationTicket
+Kazo.Os.AppSdk.Features.KazoAuthenticationTicket.Operation.get -> string!
+Kazo.Os.AppSdk.Features.KazoAuthenticationTicket.Token.init -> void
+Kazo.Os.AppSdk.Features.KazoAuthenticationTicket.Scope.get -> Kazo.Os.AppSdk.Features.KazoAuthenticationScope
+override Kazo.Os.AppSdk.Features.KazoAuthenticationTicket.ToString() -> string!
+Kazo.Os.AppSdk.Features.KazoAuthenticationTicket.Operation.init -> void
+Kazo.Os.AppSdk.Features.KazoAuthenticationTicket.AuthenticatedBy.get -> string!
+Kazo.Os.AppSdk.Features.KazoAuthenticationTicket.Scope.init -> void
+Kazo.Os.AppSdk.Features.KazoAuthenticationTicket.ExpiresAtUtc.get -> System.DateTimeOffset
+Kazo.Os.AppSdk.Features.KazoAuthenticationTicket.FeatureId.get -> string!
+static Kazo.Os.AppSdk.Features.KazoAuthenticationTicket.operator !=(Kazo.Os.AppSdk.Features.KazoAuthenticationTicket? left, Kazo.Os.AppSdk.Features.KazoAuthenticationTicket? right) -> bool
+Kazo.Os.AppSdk.Features.KazoAuthenticationTicket.AuthenticatedBy.init -> void
+Kazo.Os.AppSdk.Features.KazoAuthenticationTicket.ExpiresAtUtc.init -> void
+static Kazo.Os.AppSdk.Features.KazoAuthenticationTicket.operator ==(Kazo.Os.AppSdk.Features.KazoAuthenticationTicket? left, Kazo.Os.AppSdk.Features.KazoAuthenticationTicket? right) -> bool
+Kazo.Os.AppSdk.Features.KazoAuthenticationTicket.FeatureId.init -> void
+override Kazo.Os.AppSdk.Features.KazoAuthenticationTicket.GetHashCode() -> int
+override Kazo.Os.AppSdk.Features.KazoAuthenticationTicket.Equals(object? obj) -> bool
+Kazo.Os.AppSdk.Features.KazoAuthenticationTicket.Equals(Kazo.Os.AppSdk.Features.KazoAuthenticationTicket? other) -> bool
+Kazo.Os.AppSdk.Features.KazoAuthenticationTicket.<Clone>$() -> Kazo.Os.AppSdk.Features.KazoAuthenticationTicket!
+Kazo.Os.AppSdk.Features.KazoAuthenticationTicket.Deconstruct(out System.Guid Token, out string! FeatureId, out string! Operation, out Kazo.Os.AppSdk.Features.KazoAuthenticationScope Scope, out string! AuthenticatedBy, out System.DateTimeOffset ExpiresAtUtc) -> void
+Kazo.Os.AppSdk.Features.UnsupportedFeatureAuthentication
+Kazo.Os.AppSdk.Features.KazoFeatureAuthentication
+Kazo.Os.AppSdk.Features.KazoAuthenticationTicket.KazoAuthenticationTicket(System.Guid Token, string! FeatureId, string! Operation, Kazo.Os.AppSdk.Features.KazoAuthenticationScope Scope, string! AuthenticatedBy, System.DateTimeOffset ExpiresAtUtc) -> void
+Kazo.Os.AppSdk.Features.IKazoFeatureAuthentication.IsSupported.get -> bool
+Kazo.Os.AppSdk.Features.IKazoFeatureAuthentication.AuthenticateAsync(string! operation, Kazo.Os.AppSdk.Features.KazoAuthenticationScope scope, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.Features.KazoAuthenticationTicket!>
+static Kazo.Os.AppSdk.Features.UnsupportedFeatureAuthentication.Instance.get -> Kazo.Os.AppSdk.Features.UnsupportedFeatureAuthentication!
+Kazo.Os.AppSdk.Features.UnsupportedFeatureAuthentication.IsSupported.get -> bool
+Kazo.Os.AppSdk.Features.UnsupportedFeatureAuthentication.AuthenticateAsync(string! operation, Kazo.Os.AppSdk.Features.KazoAuthenticationScope scope, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.Features.KazoAuthenticationTicket!>
+static Kazo.Os.AppSdk.Features.KazoFeatureAuthentication.AuthenticateAsync(string! operation, Kazo.Os.AppSdk.Features.KazoAuthenticationScope scope, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.Features.KazoAuthenticationTicket!>
+Kazo.Os.AppSdk.IAppExecutionContext.FeatureAuthentication.get -> Kazo.Os.AppSdk.Features.IKazoFeatureAuthentication!
+Kazo.Os.AppSdk.IAppExecutionContext.Roles.get -> System.Collections.Generic.IReadOnlySet<string!>!
+Kazo.Os.AppSdk.KazoUserInfo.Roles.get -> System.Collections.Generic.IReadOnlySet<string!>!
+Kazo.Os.AppSdk.KazoUserInfo.Roles.init -> void
+Kazo.Os.AppSdk.Administration.KazoFeatureRole.Id.get -> string!
+Kazo.Os.AppSdk.Administration.KazoFeatureRole.Title.get -> string!
+Kazo.Os.AppSdk.Administration.KazoFeatureRole.FeatureName.get -> string!
+Kazo.Os.AppSdk.Administration.KazoFeatureRole.FeatureId.get -> string!
+Kazo.Os.AppSdk.Administration.KazoFeatureRole.Id.init -> void
+Kazo.Os.AppSdk.Administration.KazoFeatureRole.Title.init -> void
+Kazo.Os.AppSdk.Administration.KazoFeatureRole.FeatureName.init -> void
+Kazo.Os.AppSdk.Administration.KazoFeatureRole.FeatureId.init -> void
+Kazo.Os.AppSdk.Administration.KazoFeatureRole
+override Kazo.Os.AppSdk.Administration.KazoFeatureRole.ToString() -> string!
+static Kazo.Os.AppSdk.Administration.KazoFeatureRole.operator !=(Kazo.Os.AppSdk.Administration.KazoFeatureRole? left, Kazo.Os.AppSdk.Administration.KazoFeatureRole? right) -> bool
+static Kazo.Os.AppSdk.Administration.KazoFeatureRole.operator ==(Kazo.Os.AppSdk.Administration.KazoFeatureRole? left, Kazo.Os.AppSdk.Administration.KazoFeatureRole? right) -> bool
+override Kazo.Os.AppSdk.Administration.KazoFeatureRole.GetHashCode() -> int
+override Kazo.Os.AppSdk.Administration.KazoFeatureRole.Equals(object? obj) -> bool
+Kazo.Os.AppSdk.Administration.KazoFeatureRole.Equals(Kazo.Os.AppSdk.Administration.KazoFeatureRole? other) -> bool
+Kazo.Os.AppSdk.Administration.KazoFeatureRole.<Clone>$() -> Kazo.Os.AppSdk.Administration.KazoFeatureRole!
+Kazo.Os.AppSdk.Administration.KazoFeatureRole.Deconstruct(out string! Id, out string! Title, out string! FeatureId, out string! FeatureName) -> void
+Kazo.Os.AppSdk.Administration.IAppUserAccountsGateway.ListRolesAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.Administration.KazoFeatureRole!>!>
+Kazo.Os.AppSdk.Administration.IAppUserAccountsGateway.GrantRoleAsync(string! loginName, string! role, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<bool>
+Kazo.Os.AppSdk.Administration.IAppUserAccountsGateway.RevokeRoleAsync(string! loginName, string! role, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<bool>
+Kazo.Os.AppSdk.Administration.KazoFeatureRole.Description.get -> string?
+Kazo.Os.AppSdk.Administration.KazoFeatureRole.Description.init -> void
+Kazo.Os.AppSdk.Administration.KazoFeatureRole.KazoFeatureRole(string! Id, string! Title, string! FeatureId, string! FeatureName) -> void
+Kazo.Os.AppSdk.Administration.KazoUserAccount.Roles.init -> void
+Kazo.Os.AppSdk.Administration.KazoUserAccount.Roles.get -> System.Collections.Generic.IReadOnlyList<string!>!
+static Kazo.Os.AppSdk.Administration.KazoUserAccounts.ListRolesAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.Administration.KazoFeatureRole!>!>!
+static Kazo.Os.AppSdk.Administration.KazoUserAccounts.ListRolesAsync(Kazo.Os.AppSdk.IAppExecutionContext! context, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.Administration.KazoFeatureRole!>!>!
+static Kazo.Os.AppSdk.Administration.KazoUserAccounts.GrantRoleAsync(string! loginName, string! role, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<bool>!
+static Kazo.Os.AppSdk.Administration.KazoUserAccounts.GrantRoleAsync(Kazo.Os.AppSdk.IAppExecutionContext! context, string! loginName, string! role, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<bool>!
+static Kazo.Os.AppSdk.Administration.KazoUserAccounts.RevokeRoleAsync(string! loginName, string! role, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<bool>!
+static Kazo.Os.AppSdk.Administration.KazoUserAccounts.RevokeRoleAsync(Kazo.Os.AppSdk.IAppExecutionContext! context, string! loginName, string! role, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<bool>!
+Kazo.Os.AppSdk.Features.IKazoFeatureAuthentication.ConsumeAsync(Kazo.Os.AppSdk.Features.KazoAuthenticationTicket! ticket, string! operation, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.Features.KazoAuthenticationTicket!>
+Kazo.Os.AppSdk.Features.UnsupportedFeatureAuthentication.ConsumeAsync(Kazo.Os.AppSdk.Features.KazoAuthenticationTicket! ticket, string! operation, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.Features.KazoAuthenticationTicket!>
+static Kazo.Os.AppSdk.Features.KazoFeatureAuthentication.ConsumeAsync(Kazo.Os.AppSdk.Features.KazoAuthenticationTicket! ticket, string! operation, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.Features.KazoAuthenticationTicket!>
+const Kazo.Os.AppSdk.KazoRoles.Administrator = "admin" -> string!
+const Kazo.Os.AppSdk.KazoRoles.FeatureSeparator = ':' -> char
+Kazo.Os.AppSdk.KazoRoles
+static Kazo.Os.AppSdk.KazoUser.IsInRole(string! role) -> bool
+Kazo.Os.AppSdk.KazoUserInfo.IsInRole(string! role) -> bool

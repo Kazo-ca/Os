@@ -57,6 +57,20 @@ their desktop component; the generator emits the `platform` form with both
 platforms. The drawer filter and the orchestrator keep the compatibility
 checks for the other apps.
 
+## Top status bar (issue #408)
+
+Like a phone's status bar, the notification shade's handle has a strip of its own at the
+top of the screen: the notch's safe area (`env(safe-area-inset-top)`) plus 1.75 rem. The
+active app's layer (`.mobile-app-layer`) starts below that strip, so the buttons an app puts
+at the very top of its window get the touches. The home screen keeps the full height: it
+already leaves that room.
+
+- `--kos-mobile-top-inset` (set on `.mobile-shell`): height of the strip. An app no longer
+  has to shift its content.
+- `--kos-mobile-status-bar-background`: background of the strip while an app is open
+  (`--kos-bg-surface` by default).
+- Test: `UI.E2E` `MobileShadeHandleTests`.
+
 ## Persistence and settings
 
 `~/Desktop/.mobile/layout.conf`:

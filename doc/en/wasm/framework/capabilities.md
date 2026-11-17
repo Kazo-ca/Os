@@ -78,6 +78,11 @@ file operation asks for, before the permission bits:
 | a network drive (`hostfs`, ADR 0181, or cloud, [ADR 0267](../dev/adr/0267-cloud-drives-as-network-drives.md)) mounted by the acting user ([ADR 0231](../dev/adr/0231-network-drives-count-as-personal-files.md)) | `filesystem.user-home.read` | `filesystem.user-home.write` |
 | everything else: `/mnt` itself, another user's drive, `/etc`, `/var`… | `filesystem.system.read` | `filesystem.system.write` |
 
+An app with only `filesystem.private.*` creates its folder with
+`KazoDirectory.CreateDirectoryAsync("~/.config/<appId>")` although it may not look at
+`~/.config`: like `mkdir -p`, the SDK starts creating at the first parent it may not look at,
+and the filesystem still checks each creation (issue #407).
+
 On their own network drive, an app that holds only `filesystem.system.*`
 (`mount`, `umount`, `df`…) keeps the access it had: ADR 0231 widens, it takes
 nothing away. The permission bits and the owner then apply as everywhere (the

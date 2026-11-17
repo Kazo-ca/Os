@@ -597,6 +597,9 @@ Cancel: decide at the next launch.</value>
   <data name="Shell.UnboundVariable" xml:space="preserve">
     <value>{0}: unbound variable</value>
   </data>
+  <data name="Storage.Full.Message" xml:space="preserve">
+    <value>The browser refused to save data: the storage is full. Delete files or empty the trash; open Diagnostic to see what uses the space.</value>
+  </data>
   <data name="Storage.LowSpace.Message" xml:space="preserve">
     <value>Only {0:0.#} MiB left of {1:0.#} MiB. Delete files or empty the trash; open Diagnostic to see what uses the space.</value>
   </data>
@@ -797,5 +800,17 @@ Cancel: decide at the next launch.</value>
   </data>
   <data name="Storage.Evicted.OpenSettings" xml:space="preserve">
     <value>Storage settings</value>
+  </data>
+  <data name="Feature.Authenticate.Operation" xml:space="preserve">
+    <value>{0} asks: {1}</value>
+  </data>
+  <data name="Shell.RoleRequired" xml:space="preserve">
+    <value>{0}: role required</value>
+  </data>
+  <data name="Admin.GrantRole" xml:space="preserve">
+    <value>Grant the role {0} to account {1}</value>
+  </data>
+  <data name="Admin.RevokeRole" xml:space="preserve">
+    <value>Take the role {0} back from account {1}</value>
   </data>
 </root>

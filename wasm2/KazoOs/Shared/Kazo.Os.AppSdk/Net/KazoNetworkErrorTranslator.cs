@@ -16,7 +16,8 @@ internal static class KazoNetworkErrorTranslator
     /// <summary>The <see cref="SocketError"/> a socket API reports for <paramref name="error"/>.</summary>
     public static SocketError ToSocketError(KazoNetworkError error) => error switch
     {
-        KazoNetworkError.HostNotFound => SocketError.HostNotFound,
+        KazoNetworkError.HostNotFound or KazoNetworkError.RelayNoServer or KazoNetworkError.RelayDisabled
+            or KazoNetworkError.RelayGrantPending => SocketError.HostNotFound,
         KazoNetworkError.HostUnreachable => SocketError.HostUnreachable,
         KazoNetworkError.ConnectionRefused => SocketError.ConnectionRefused,
         KazoNetworkError.ConnectionFailed or KazoNetworkError.TimedOut => SocketError.TimedOut,
@@ -24,9 +25,28 @@ internal static class KazoNetworkErrorTranslator
         _ => SocketError.SocketError
     };
 
-    /// <summary>Returns the value, or throws the <see cref="SocketException"/> of a DNS or socket API.</summary>
-    public static T UnwrapSocket<T>(KazoNetworkResult<T> result) =>
-        result.Succeeded ? result.Value! : throw new SocketException((int)ToSocketError(result.Error));
+    /// <summary>
+    /// Returns the value, or throws the <see cref="SocketException"/> of a DNS or socket API. A
+    /// refusal of the Kazo server's relay throws <see cref="KazoRelayException"/> with the
+    /// <see cref="SocketError"/> earlier versions threw (ADR 0278 §2): <see cref="SocketError.HostNotFound"/>,
+    /// or <see cref="SocketError.ConnectionRefused"/> for a port the operator blocks.
+    /// </summary>
+    public static T UnwrapSocket<T>(KazoNetworkResult<T> result)
+    {
+        if (result.Succeeded)
+        {
+            return result.Value!;
+        }
+
+        throw result.Error switch
+        {
+            KazoNetworkError.RelayNoServer or KazoNetworkError.RelayDisabled or KazoNetworkError.RelayGrantPending =>
+                new KazoRelayException(result.Error, SocketError.HostNotFound, result.Message),
+            KazoNetworkError.BlockedByAdministrator =>
+                new KazoRelayException(result.Error, SocketError.ConnectionRefused, result.Message),
+            _ => new SocketException((int)ToSocketError(result.Error))
+        };
+    }
 
     /// <summary>Returns the value, or throws <see cref="KazoHttpRequestException"/> as <c>HttpClient</c> does.</summary>
     public static T UnwrapHttp<T>(KazoNetworkResult<T> result, Uri requestUri)
@@ -38,7 +58,9 @@ internal static class KazoNetworkErrorTranslator
 
         HttpRequestError httpError = result.Error switch
         {
-            KazoNetworkError.HostNotFound => HttpRequestError.NameResolutionError,
+            // ADR 0278 §2: each relay refusal keeps the HttpRequestError it had before (no server was
+            // "host not found", a refusal of the operator a connection error).
+            KazoNetworkError.HostNotFound or KazoNetworkError.RelayNoServer => HttpRequestError.NameResolutionError,
             KazoNetworkError.TooManyRedirects => HttpRequestError.Unknown,
             _ => HttpRequestError.ConnectionError
         };
@@ -48,6 +70,9 @@ internal static class KazoNetworkErrorTranslator
             KazoNetworkError.TooManyRedirects => "Maximum (10) redirects followed",
             KazoNetworkError.TimedOut => $"Connection to {requestUri.Host} timed out",
             KazoNetworkError.BlockedByAdministrator => $"Access to {requestUri.Host} is blocked by the administrator",
+            KazoNetworkError.RelayNoServer => $"Could not resolve host: {requestUri.Host} (no Kazo server is connected to relay it)",
+            KazoNetworkError.RelayDisabled => $"Access to {requestUri.Host} is blocked: the Kazo server's relay is turned off",
+            KazoNetworkError.RelayGrantPending => $"Access to {requestUri.Host} is blocked: the Kazo server has not received this app's permission yet",
             _ => $"Failed to connect to {requestUri.Host}"
         };
         throw new KazoHttpRequestException(result.Error, httpError, message);

@@ -221,6 +221,13 @@ internal sealed class AppExecutionContext : IAppExecutionContext
     /// <inheritdoc />
     public IReadOnlySet<string> GrantedCapabilities { get; }
 
+    /// <summary>Gets the roles of the features the user holds (ADR 0247 §1), set after construction.</summary>
+    public IReadOnlySet<string> Roles { get; internal set; } = new HashSet<string>(StringComparer.Ordinal);
+
+    /// <summary>Gets the OS's authentication of the operations of a feature (ADR 0247 §3), set after construction.</summary>
+    public Kazo.Os.AppSdk.Features.IKazoFeatureAuthentication FeatureAuthentication { get; internal set; } =
+        Kazo.Os.AppSdk.Features.UnsupportedFeatureAuthentication.Instance;
+
     /// <inheritdoc />
     public SessionId SessionId { get; }
 
