@@ -342,4 +342,25 @@
   <data name="Welcome.Error" xml:space="preserve">
     <value>This choice could not be saved: {0}</value>
   </data>
+  <data name="StorageEvicted.Title" xml:space="preserve">
+    <value>The browser erased Kazo OS's data</value>
+  </data>
+  <data name="StorageEvicted.Explanation" xml:space="preserve">
+    <value>Kazo OS had started in this browser, but its files, accounts and settings are gone: the browser erased them (lack of space, a site not visited for a long time, or cleared site data). Kazo OS starts again as a new installation.</value>
+  </data>
+  <data name="StorageEvicted.LastBoot" xml:space="preserve">
+    <value>Last start</value>
+  </data>
+  <data name="StorageEvicted.LastBootUnknown" xml:space="preserve">
+    <value>unknown</value>
+  </data>
+  <data name="StorageEvicted.Code" xml:space="preserve">
+    <value>Code</value>
+  </data>
+  <data name="StorageEvicted.Restore" xml:space="preserve">
+    <value>To get your data back, create your account, then restore your last backup (.kosbak) in Settings ▸ Backup.</value>
+  </data>
+  <data name="StorageEvicted.Protect" xml:space="preserve">
+    <value>Settings ▸ Storage can then ask the browser to protect Kazo OS's storage against erasure.</value>
+  </data>
 </root>

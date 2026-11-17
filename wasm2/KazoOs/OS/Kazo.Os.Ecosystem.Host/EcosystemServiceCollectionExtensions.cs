@@ -544,6 +544,20 @@ public static class EcosystemServiceCollectionExtensions
             Reclaimer = provider.GetRequiredService<IStorageReclaimer>(),
         });
         services.AddScoped<IStorageSpaceGuard>(provider => provider.GetRequiredService<StorageSpaceMonitor>());
+        // ADR 0250: the eviction check runs before anything opens the OS database (InstalledAppsBoot),
+        // so it lives in the root provider with its own access to the browser's storage.
+        services.AddSingleton<StorageEvictionDetector>(provider =>
+            new StorageEvictionDetector(new BrowserStorageManager(provider.GetRequiredService<Microsoft.JSInterop.IJSRuntime>())));
+        services.AddScoped<OriginStorageService>(provider =>
+            new OriginStorageService(
+                new BrowserStorageManager(provider.GetRequiredService<Microsoft.JSInterop.IJSRuntime>()),
+                provider.GetRequiredService<IFileSystemService>(),
+                provider.GetRequiredService<ISimulationClock>(),
+                provider.GetRequiredService<StorageEvictionDetector>(),
+                provider.GetRequiredService<INotificationQueue>(),
+                () => provider.GetRequiredService<ISessionService>().CurrentPrincipal,
+                provider.GetService<KernelLog>(),
+                language: () => provider.GetRequiredService<Kazo.Os.Platform.Core.Globalization.SessionLocaleService>().Culture));
 
         // User keyring (ADR 0100 section 2): ~/.local/share/keyrings/login.keyring, sealed with
         // AES-GCM through Web Crypto, unlocked by the session service at login.
@@ -787,7 +801,15 @@ public static class EcosystemServiceCollectionExtensions
         services.TryAddSingleton<SystemStartupSignal>();
         // ADR 0131: what the page found at boot; the browser host also registers the probe.
         services.TryAddSingleton<CrossOriginIsolationState>();
-        services.AddScoped<EcosystemBootCoordinator>();
+        services.AddScoped<EcosystemBootCoordinator>(provider =>
+        {
+            EcosystemBootCoordinator coordinator = ActivatorUtilities.CreateInstance<EcosystemBootCoordinator>(provider);
+            // ADR 0250: the eviction check, the features' markers and kern.log.
+            coordinator.EvictionDetector = provider.GetService<StorageEvictionDetector>();
+            coordinator.OriginStorage = provider.GetService<OriginStorageService>();
+            coordinator.KernelLog = provider.GetService<KernelLog>();
+            return coordinator;
+        });
 
         services.AddSingleton(_ => catalog ?? CreateEmptyCatalog());
         // ADR 0098 §5: assets checked against their manifest hash at first read. The WebAssembly host
@@ -991,6 +1013,8 @@ public static class EcosystemServiceCollectionExtensions
                 Screens = OperatingSystem.IsBrowser() ? () => provider.GetRequiredService<ScreenControl>() : null,
                 // KazoWhatsNew (ADR 0186): the served change list, on a host that registers its source.
                 WhatsNew = provider.GetService<Kazo.Os.Platform.Core.WhatsNew.IWhatsNewSource>() is null ? null : () => provider.GetRequiredService<Kazo.Os.Platform.Core.WhatsNew.WhatsNewService>(),
+                // ADR 0250: the browser storage of the page behind KazoStorage.
+                OriginStorage = () => provider.GetRequiredService<OriginStorageService>(),
             })
         {
             // KazoBackground (ADR 0128): each task a child process, in a worker when the host has some.
