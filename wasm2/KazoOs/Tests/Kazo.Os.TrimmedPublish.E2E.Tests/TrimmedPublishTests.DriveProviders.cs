@@ -6,8 +6,8 @@ namespace Kazo.Os.TrimmedPublish.E2E.Tests;
 /// ADR 0282 (series <c>drive-providers/base</c>, work item 7): a third-party drive provider,
 /// packed from <c>Apps/Samples/Kazo.Os.Samples.WebDavDrive</c> as a Store package would be, installed
 /// by <c>kazopkg</c> as a feature for the machine in the trimmed OS. The full journey (connect by the
-/// form, write, read back against a test WebDAV server) waits for the connect dialog of work item 6
-/// and comes with work item 9 (Benoit, 2026-11-17: answer 2 A).
+/// form, write, read back against a test WebDAV server) comes with work item 9 (Benoit, 2026-11-17:
+/// answer 2 A); the connect dialog of work item 6 is checked up to the host it writes before saving.
 /// </summary>
 public sealed partial class TrimmedPublishTests
 {
@@ -88,6 +88,33 @@ public sealed partial class TrimmedPublishTests
                 rows, text => text.Contains("Usage: mount -t webdav -o", StringComparison.Ordinal) && text.Contains("server", StringComparison.Ordinal),
                 "mount writing the syntax of the webdav form");
             Log("after the install, mount knows the webdav type and writes the syntax of its form.");
+
+            // --- The connect dialog offers the type, and writes the host before saving (ADR 0282 §5, ADR 0284 §2) ---
+            await OpenAppAsync(page, "File Explorer");
+            await page.GetByRole(AriaRole.Button, new() { Name = "Connect a network drive…" }).ClickAsync(new() { Timeout = StepTimeoutMs });
+            ILocator dialog = page.Locator(".cnd-dialog[role='dialog']");
+            await dialog.Locator("button.cnd-option", new() { HasText = "WebDAV" }).ClickAsync(new() { Timeout = StepTimeoutMs });
+            await Assertions.Expect(dialog.Locator(".cnd-provider")).ToContainTextAsync("Provided by", new() { Timeout = StepTimeoutMs });
+            ILocator server = dialog.GetByLabel("Server address");
+            ILocator mount = dialog.GetByRole(AriaRole.Button, new() { Name = "Mount" });
+            await dialog.GetByLabel("User name").FillAsync("alice");
+            await dialog.GetByLabel("Password").FillAsync("not-a-real-password");
+            await server.FillAsync("http://dav.example.com/remote.php/dav");
+            await Assertions.Expect(dialog.Locator(".cnd-host.refused")).ToContainTextAsync("https", new() { Timeout = StepTimeoutMs });
+            await Assertions.Expect(mount).ToBeDisabledAsync();
+            await server.FillAsync("https://dav.example.com/remote.php/dav");
+            await Assertions.Expect(dialog.Locator(".cnd-host")).ToHaveTextAsync("This provider will reach dav.example.com.", new() { Timeout = StepTimeoutMs });
+            await Assertions.Expect(mount).ToBeEnabledAsync();
+            if (settings.ArtifactsDirectory is { } artifacts)
+            {
+                Directory.CreateDirectory(artifacts);
+                await dialog.ScreenshotAsync(new LocatorScreenshotOptions { Path = Path.Combine(artifacts, "trimmed-webdav-server-host.png") });
+            }
+
+            Log("the connect dialog offered WebDAV, refused an http server and wrote the host of an https one.");
+            // Nothing is saved: the dialog closes, and its overlay with it, before the windows close.
+            await dialog.Locator("header button.cnd-icon-btn").Last.ClickAsync();
+            await dialog.WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Hidden, Timeout = StepTimeoutMs });
 
             session.AssertNoErrors("drive provider feature");
             await CloseAllWindowsAsync(page);

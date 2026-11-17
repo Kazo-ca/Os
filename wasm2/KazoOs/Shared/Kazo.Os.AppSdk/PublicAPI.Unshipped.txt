@@ -241,6 +241,8 @@ Kazo.Os.AppSdk.IO.KazoNetworkDriveField.Default.get -> string?
 Kazo.Os.AppSdk.IO.KazoNetworkDriveField.Default.init -> void
 Kazo.Os.AppSdk.IO.KazoNetworkDriveField.Equals(Kazo.Os.AppSdk.IO.KazoNetworkDriveField? other) -> bool
 Kazo.Os.AppSdk.IO.KazoNetworkDriveField.IsSecret.get -> bool
+Kazo.Os.AppSdk.IO.KazoNetworkDriveField.IsServerAddress.get -> bool
+Kazo.Os.AppSdk.IO.KazoNetworkDriveField.IsServerAddress.init -> void
 Kazo.Os.AppSdk.IO.KazoNetworkDriveField.KazoNetworkDriveField(string! Name, string! Label, Kazo.Os.AppSdk.IO.KazoNetworkDriveFieldKind Kind) -> void
 Kazo.Os.AppSdk.IO.KazoNetworkDriveField.Kind.get -> Kazo.Os.AppSdk.IO.KazoNetworkDriveFieldKind
 Kazo.Os.AppSdk.IO.KazoNetworkDriveField.Kind.init -> void

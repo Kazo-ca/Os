@@ -449,7 +449,9 @@ A declared type shows everywhere like the OS types, with no code to write
   `ProviderFeatureId` / `ProviderFeatureName`. File Explorer and Settings
   write "Provided by <feature name> (<id>)".
 - **Form.** The fields show in the declared order, with their label, example
-  and choices; `Secret` is masked and `Required = false` adds "(optional)".
+  and choices; `Secret` is masked and `Required = false` adds "(optional)". Under the `ServerAddress` field, the
+  dialog writes "This provider will reach <host>" before saving, or why the
+  address is refused (ADR 0284 §2).
   The OS checks the values against the declaration (kind, choices, length, no
   secret among the plain values) before creating the account, named after the
   host of the first address and the next value (`dav.example.com (alice)`).

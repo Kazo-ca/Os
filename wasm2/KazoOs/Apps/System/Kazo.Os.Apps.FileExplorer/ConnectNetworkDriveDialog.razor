@@ -158,6 +158,24 @@
                         </label>
                     }
                 </div>
+                @* ADR 0284 §2: the host the provider will be allowed to reach, written before saving. *@
+                @if (_form.ServerHost() is { } server)
+                {
+                    @if (server.Allowed)
+                    {
+                        <p class="cnd-host" role="status">
+                            <KazoIcon Library="IconLibrary.Lucide" Name="globe" Size="14" />
+                            <span>@L["CloudDrive.ServerHost", server.Host]</span>
+                        </p>
+                    }
+                    else
+                    {
+                        <p class="cnd-host refused" role="status">
+                            <KazoIcon Library="IconLibrary.Lucide" Name="shield-alert" Size="14" />
+                            <span>@L["CloudDrive.ServerHostRefused"]</span>
+                        </p>
+                    }
+                }
                 <p class="cnd-note">@L["CloudDrive.FormCorsNote", _type.DisplayName]</p>
             }
 

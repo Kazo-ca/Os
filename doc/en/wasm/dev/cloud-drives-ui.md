@@ -70,6 +70,12 @@ the OS gives it (section "Types described by the OS").
    values go in `Secrets`, the others in `Options`; the OS checks them against
    the declaration before creating the account (`FeatureDriveForm.Check`) and
    keeps the secrets in the keyring.
+   Under a field marked as the server address (`IsServerAddress`,
+   [ADR 0284](adr/0284-drive-provider-hosts-and-typed-server-address.md) §2),
+   the dialog writes the host the provider will be allowed to reach, before
+   saving: "This provider will reach dav.example.com.". An address the OS
+   cannot allow (`http`, a user name or password in the URL, an IP address,
+   `localhost`) is refused with the reason, and **Mount** stays disabled.
 5. An error shows in the dialog with the translated text of
    `CloudDrive.Error.{reason}`. The mounted drive opens in the explorer.
 
@@ -114,7 +120,7 @@ original id. On a phone, the same drives are greyed chips.
   Feature writes it for the others), `Icon` or `IconUrl`;
 - `Connection`: `HostFolder`, `OAuth` (with `Scopes` and `AppFolderPath`) or
   `Form` (with `Fields`: name, label, kind, required, default value,
-  example, choices);
+  example, choices, server address);
 - `ProviderFeatureId`, `ProviderFeatureName` and `IsThirdParty` for a type a
   Feature provides.
 

@@ -1005,6 +1005,7 @@ internal static class WireCodec
                 writer.WriteString("l", field.Label);
                 writer.WriteNumber("k", (int)field.Kind);
                 writer.WriteBoolean("r", field.Required);
+                writer.WriteBoolean("sa", field.IsServerAddress);
                 WriteOptional(writer, "d", field.Default);
                 WriteOptional(writer, "p", field.Placeholder);
                 writer.WriteStartArray("c");
@@ -1048,6 +1049,7 @@ internal static class WireCodec
                     (KazoNetworkDriveFieldKind)field.GetProperty("k").GetInt32())
                 {
                     Required = field.GetProperty("r").GetBoolean(),
+                    IsServerAddress = field.TryGetProperty("sa", out JsonElement serverAddress) && serverAddress.GetBoolean(),
                     Default = field.GetOptionalString("d"),
                     Placeholder = field.GetOptionalString("p"),
                     Choices = [.. field.GetProperty("c").EnumerateArray().Select(static choice => new KazoNetworkDriveFieldChoice(choice.GetString("v"), choice.GetString("l")))]

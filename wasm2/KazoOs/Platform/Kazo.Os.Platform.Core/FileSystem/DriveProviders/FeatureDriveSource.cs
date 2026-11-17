@@ -181,6 +181,9 @@ public sealed class FeatureDriveSource : IDescribedNetworkDriveSource, IDisposab
         {
             Required = field.Required,
             Default = field.Secret ? null : field.Default,
+            // ADR 0284 §2: the same test as AppDriveProviders.ServerAddressField, so the dialog shows the
+            // host for exactly the field whose host the OS allows.
+            IsServerAddress = field is { ServerAddress: true, Kind: AppDriveFormFieldKind.Url, Secret: false },
             Choices = [.. (field.Choices ?? []).Select(static choice => new KazoNetworkDriveFieldChoice(choice, choice))]
         };
 

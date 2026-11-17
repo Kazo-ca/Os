@@ -72,6 +72,12 @@ l'OS lui donne (section « Types décrits par l'OS »).
    « (facultatif) ». Les valeurs secrètes partent dans `Secrets`, les autres
    dans `Options` ; l'OS les vérifie contre la déclaration avant de créer le
    compte (`FeatureDriveForm.Check`) et range les secrets dans le trousseau.
+   Sous un champ marqué adresse du serveur (`IsServerAddress`,
+   [ADR 0284](adr/0284-drive-provider-hosts-and-typed-server-address.md) §2),
+   la fenêtre écrit l'hôte que le fournisseur pourra joindre, avant
+   d'enregistrer : « Ce fournisseur joindra dav.exemple.fr. ». Une adresse que
+   l'OS ne peut pas permettre (`http`, nom ou mot de passe dans l'URL, adresse
+   IP, `localhost`) est refusée avec la raison, et **Monter** reste grisé.
 5. Une erreur s'affiche dans la fenêtre avec le texte traduit de
    `CloudDrive.Error.{raison}`. Le lecteur monté s'ouvre dans l'explorateur.
 
@@ -115,7 +121,7 @@ d'origine. Sur téléphone, les mêmes lecteurs sont des puces grisées.
   l'OS, tel que la Feature l'écrit pour les autres), `Icon` ou `IconUrl` ;
 - `Connection` : `HostFolder`, `OAuth` (avec `Scopes` et `AppFolderPath`) ou
   `Form` (avec `Fields` : nom, libellé, type, obligatoire, valeur par défaut,
-  exemple, choix) ;
+  exemple, choix, adresse du serveur) ;
 - `ProviderFeatureId`, `ProviderFeatureName` et `IsThirdParty` pour un type
   qu'une Feature fournit.
 

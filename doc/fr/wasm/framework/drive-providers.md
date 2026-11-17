@@ -454,7 +454,9 @@ Un type déclaré apparaît partout comme les types de l'OS, sans code à écrir
   écrivent « Fourni par <nom de la fonctionnalité> (<id>) ».
 - **Formulaire.** Les champs s'affichent dans l'ordre déclaré, avec leur
   libellé, leur exemple et leurs choix ; `Secret` est masqué et
-  `Required = false` ajoute « (facultatif) ». L'OS vérifie les valeurs contre
+  `Required = false` ajoute « (facultatif) ». Sous le champ `ServerAddress`,
+  la fenêtre écrit « Ce fournisseur joindra <hôte> » avant d'enregistrer, ou
+  la raison du refus (ADR 0284 §2). L'OS vérifie les valeurs contre
   la déclaration (type, choix, longueur, pas de secret dans les valeurs en
   clair) avant de créer le compte, nommé d'après l'hôte de la première
   adresse et la valeur suivante (`dav.exemple.com (alice)`).
