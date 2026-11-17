@@ -60,7 +60,7 @@
   "execution": "mainThread",
   "roles": [
     {
-      "id": "x86.vm-admin",
+      "id": "x86:vm-admin",
       "title": "VM manager",
       "description": "Opens the VM administration pages and commands.",
       "grants": [

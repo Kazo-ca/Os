@@ -328,7 +328,7 @@ public static class KazoUserAccounts
 
     /// <summary>Grants a role of a feature to an ordinary account (ADR 0247, ambient context).</summary>
     /// <param name="loginName">The account.</param>
-    /// <param name="role">The role, such as <c>x86.vm-manager</c>.</param>
+    /// <param name="role">The role, such as <c>x86:vm-manager</c>.</param>
     /// <param name="cancellationToken">Cancels the change.</param>
     /// <returns><see langword="true"/> when the grant was written; <see langword="false"/> for an administrator, who holds every role.</returns>
     public static Task<bool> GrantRoleAsync(string loginName, string role, CancellationToken cancellationToken = default) =>

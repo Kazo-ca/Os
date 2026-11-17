@@ -41,7 +41,7 @@ public sealed class RoleFeature : FeatureDefinition
 public static class FeatureRoleFixtures
 {
     public const string FeatureId = "org.test.vm";
-    public const string Manager = "vm.manager";
+    public const string Manager = "vm:manager";
     public const string DeleteShared = "vm.delete-shared";
 
     public static FeatureManifests Manifests() => AppDefinitionMapper.ToFeatureManifests(new RoleFeature(), KazoOsSdk.Version);

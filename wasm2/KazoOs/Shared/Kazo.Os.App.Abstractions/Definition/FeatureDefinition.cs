@@ -70,8 +70,8 @@ public abstract class FeatureDefinition : AppDefinition
     public virtual IReadOnlyList<ProvidedCapability> ProvidedCapabilities => [];
 
     /// <summary>
-    /// Gets the roles the feature declares (ADR 0247 §1), each <c>&lt;prefix&gt;.&lt;name&gt;</c> under
-    /// <see cref="CapabilityPrefix"/>: an administrator grants one to an ordinary user, and an entry
+    /// Gets the roles the feature declares (ADR 0247 §1), each <c>&lt;prefix&gt;:&lt;name&gt;</c> with
+    /// <see cref="CapabilityPrefix"/> as prefix (ADR 0283): an administrator grants one to an ordinary user, and an entry
     /// point marked <see cref="FeatureEntryPoint.RequiresRole"/> opens only for a user who holds it.
     /// Every administrator holds them all, implicitly. Empty by default.
     /// </summary>

@@ -135,17 +135,12 @@ internal sealed class AppFeatureAuthenticationGateway : IKazoFeatureAuthenticati
 
         string featureId = RequireFeature();
         FeatureRoleService roles = _roles();
-        if (scope == KazoAuthenticationScope.RoleHolder)
+        if (scope == KazoAuthenticationScope.RoleHolder && !HoldsRoleFor(roles, featureId))
         {
-            // The scope proves the holder of the entry point's role: an entry point that requires no
-            // role has no holder to prove, so the scope fails closed there (use Administrator).
-            if (_caller.RequiresRole is not { } role || !roles.HasRole(_principal, role, _isRootElevated))
-            {
-                roles.RecordDenied(_caller, _principal);
-                throw new KazoUnauthorizedAccessException(_caller.RequiresRole is null
-                    ? $"{_caller.Id} requires no role: the RoleHolder scope is for an entry point marked RequiresRole."
-                    : $"{_caller.Id}: the role '{_caller.RequiresRole}' is required.");
-            }
+            roles.RecordDenied(_caller, _principal);
+            throw new KazoUnauthorizedAccessException(_caller.RequiresRole is { } required
+                ? $"{_caller.Id}: the role '{required}' is required."
+                : $"{_caller.Id}: the RoleHolder scope needs a role of the feature '{featureId}'.");
         }
 
         IAdministratorAuthenticationAgent agent = _agent?.Invoke()
@@ -178,6 +173,24 @@ internal sealed class AppFeatureAuthenticationGateway : IKazoFeatureAuthenticati
         return _roles().Tickets.TryConsume(ticket.Token, featureId, operation, _principal.UserId.ToString()) is { } stored
             ? ValueTask.FromResult(stored)
             : throw new KazoUnauthorizedAccessException($"{_featureName}: the ticket does not authorize '{operation}' (expired, used, of another user, or for another operation).");
+    }
+
+    /// <summary>
+    /// ADR 0283: the RoleHolder scope needs the role of an entry point marked <c>RequiresRole</c>, or,
+    /// from another entry point (a subcommand of a command open to all, such as <c>x86 admin</c>), any
+    /// role of the feature: the feature checks the exact one with <c>KazoUser.IsInRole</c>. A user with
+    /// no role of the feature never gets the scope.
+    /// </summary>
+    private bool HoldsRoleFor(FeatureRoleService roles, string featureId)
+    {
+        if (_caller.RequiresRole is { } required)
+        {
+            return roles.HasRole(_principal, required, _isRootElevated);
+        }
+
+        IReadOnlySet<string> held = roles.RolesOf(_principal, _isRootElevated);
+        return roles.DeclaredRoles.Any(declared =>
+            string.Equals(declared.FeatureId, featureId, StringComparison.Ordinal) && held.Contains(declared.Role.Id));
     }
 
     private string RequireFeature() =>

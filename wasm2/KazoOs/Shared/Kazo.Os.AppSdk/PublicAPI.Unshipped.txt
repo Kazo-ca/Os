@@ -274,7 +274,6 @@ Kazo.Os.AppSdk.IAppExecutionContext.FeatureAuthentication.get -> Kazo.Os.AppSdk.
 Kazo.Os.AppSdk.IAppExecutionContext.Roles.get -> System.Collections.Generic.IReadOnlySet<string!>!
 Kazo.Os.AppSdk.KazoUserInfo.Roles.get -> System.Collections.Generic.IReadOnlySet<string!>!
 Kazo.Os.AppSdk.KazoUserInfo.Roles.init -> void
-Kazo.Os.AppSdk.KazoUserInfo.HasRole(string! role) -> bool
 Kazo.Os.AppSdk.Administration.KazoFeatureRole.Id.get -> string!
 Kazo.Os.AppSdk.Administration.KazoFeatureRole.Title.get -> string!
 Kazo.Os.AppSdk.Administration.KazoFeatureRole.FeatureName.get -> string!
@@ -309,3 +308,8 @@ static Kazo.Os.AppSdk.Administration.KazoUserAccounts.RevokeRoleAsync(Kazo.Os.Ap
 Kazo.Os.AppSdk.Features.IKazoFeatureAuthentication.ConsumeAsync(Kazo.Os.AppSdk.Features.KazoAuthenticationTicket! ticket, string! operation, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.Features.KazoAuthenticationTicket!>
 Kazo.Os.AppSdk.Features.UnsupportedFeatureAuthentication.ConsumeAsync(Kazo.Os.AppSdk.Features.KazoAuthenticationTicket! ticket, string! operation, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.Features.KazoAuthenticationTicket!>
 static Kazo.Os.AppSdk.Features.KazoFeatureAuthentication.ConsumeAsync(Kazo.Os.AppSdk.Features.KazoAuthenticationTicket! ticket, string! operation, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.Features.KazoAuthenticationTicket!>
+const Kazo.Os.AppSdk.KazoRoles.Administrator = "admin" -> string!
+const Kazo.Os.AppSdk.KazoRoles.FeatureSeparator = ':' -> char
+Kazo.Os.AppSdk.KazoRoles
+static Kazo.Os.AppSdk.KazoUser.IsInRole(string! role) -> bool
+Kazo.Os.AppSdk.KazoUserInfo.IsInRole(string! role) -> bool

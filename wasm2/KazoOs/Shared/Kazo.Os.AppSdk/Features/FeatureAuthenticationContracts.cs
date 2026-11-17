@@ -3,7 +3,11 @@ namespace Kazo.Os.AppSdk.Features;
 /// <summary>Who authenticates for a sensitive operation of a feature (ADR 0247 §3).</summary>
 public enum KazoAuthenticationScope
 {
-    /// <summary>The user in session authenticates again, like <c>sudo</c>; they must hold the role of the entry point.</summary>
+    /// <summary>
+    /// The user in session authenticates again, like <c>sudo</c>. From an entry point marked
+    /// <c>RequiresRole</c>, they must hold that role; from another entry point of the feature, a role of
+    /// the feature, the feature checking the exact one with <see cref="KazoUserInfo.IsInRole(string)"/> (ADR 0283).
+    /// </summary>
     RoleHolder = 0,
 
     /// <summary>An enabled administrator authenticates, themselves or another account.</summary>
@@ -38,9 +42,10 @@ public interface IKazoFeatureAuthentication
 
     /// <summary>
     /// Asks the OS to authenticate <paramref name="operation"/>; three failures cancel. The
-    /// <see cref="KazoAuthenticationScope.RoleHolder"/> scope is for an entry point marked
-    /// <c>RequiresRole</c>, whose role the user must hold; elsewhere (an entry point without a role, a
-    /// service) it is refused, and <see cref="KazoAuthenticationScope.Administrator"/> applies.
+    /// <see cref="KazoAuthenticationScope.RoleHolder"/> scope needs a user who holds the role of an
+    /// entry point marked <c>RequiresRole</c>, or a role of the feature from another entry point (a
+    /// subcommand checks its exact role with <see cref="KazoUserInfo.IsInRole(string)"/> first, ADR 0283);
+    /// a service, or a user without any role of the feature, is refused.
     /// </summary>
     /// <param name="operation">The operation, shown in the window and written to <c>/var/log/auth.log</c>.</param>
     /// <param name="scope">Who authenticates.</param>

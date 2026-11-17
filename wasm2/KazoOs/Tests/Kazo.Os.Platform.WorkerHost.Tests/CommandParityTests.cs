@@ -60,7 +60,7 @@ public sealed class CommandParityTests
         new("nmap", ["nmap example.kazoos", "nmap -p 80-443 -sV 10.0.0.10"]),
         new("passwd", ["passwd -S", "passwd bob", "passwd -x"]),
         // ADR 0247: listing, a usage error and a grant without sudo (refused, exit 1).
-        new("kazorole", ["kazorole", "kazorole bogus", "kazorole grant bob vm.manager"]),
+        new("kazorole", ["kazorole", "kazorole bogus", "kazorole grant bob vm:manager"]),
         new("ping", ["ping example.kazoos", "ping nowhere.invalid"]),
         new("prlimit", ["prlimit --nofile --nproc", "prlimit --nofile=512:1024 --nofile", "prlimit --pid 99999", "prlimit --bogus"]),
         new("printf", ["printf '%s-%d\\n' a 1 b 2"]),

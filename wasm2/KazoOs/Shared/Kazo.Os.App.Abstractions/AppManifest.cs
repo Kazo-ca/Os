@@ -383,7 +383,7 @@ public sealed record AppProvidedServiceManifest(string Contract, string Implemen
 }
 
 /// <summary>One role a feature declares, as its manifest writes it (ADR 0247 §1).</summary>
-/// <param name="Id">The identifier, <c>&lt;prefix&gt;.&lt;name&gt;</c>.</param>
+/// <param name="Id">The identifier, <c>&lt;prefix&gt;:&lt;name&gt;</c> (ADR 0283).</param>
 /// <param name="Title">The short title shown in Settings ▸ Users.</param>
 public sealed record AppRoleManifest(string Id, string Title)
 {

@@ -16,7 +16,7 @@ namespace Kazo.Os.Commands.Wave5.Tests;
 /// </summary>
 public sealed class KazoroleCommandTests
 {
-    private const string Manager = "x86.vm-manager";
+    private const string Manager = "x86:vm-manager";
 
     [Fact]
     public async Task List_shows_each_role_with_the_ordinary_accounts_that_hold_it()
@@ -92,12 +92,12 @@ public sealed class KazoroleCommandTests
     public async Task An_unknown_account_or_role_exits_1()
     {
         (int noUser, _, string userError) = await RunAsync(root: true, new FakeRoles(), "grant", "dave", Manager);
-        (int noRole, _, string roleError) = await RunAsync(root: true, new FakeRoles(), "grant", "alice", "x86.unknown");
+        (int noRole, _, string roleError) = await RunAsync(root: true, new FakeRoles(), "grant", "alice", "x86:unknown");
 
         Assert.Equal(1, noUser);
         Assert.Contains("user 'dave' does not exist", userError, StringComparison.Ordinal);
         Assert.Equal(1, noRole);
-        Assert.Contains("No installed feature declares the role 'x86.unknown'.", roleError, StringComparison.Ordinal);
+        Assert.Contains("No installed feature declares the role 'x86:unknown'.", roleError, StringComparison.Ordinal);
     }
 
     private static async Task<(int Exit, string Stdout, string Stderr)> RunAsync(bool root, FakeRoles roles, params string[] args)

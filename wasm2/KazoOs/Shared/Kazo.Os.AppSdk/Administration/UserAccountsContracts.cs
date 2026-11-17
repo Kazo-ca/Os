@@ -45,7 +45,7 @@ public sealed record KazoUserAccount(
 /// One role a feature declares (ADR 0247 §1), as <see cref="KazoUserAccounts.ListRolesAsync(CancellationToken)"/>
 /// shows it in Settings ▸ Users and <c>kazorole list</c>.
 /// </summary>
-/// <param name="Id">The role, <c>&lt;prefix&gt;.&lt;name&gt;</c>, such as <c>x86.vm-manager</c>.</param>
+/// <param name="Id">The role, <c>&lt;prefix&gt;:&lt;name&gt;</c>, such as <c>x86:vm-manager</c> (ADR 0283).</param>
 /// <param name="Title">Its short title.</param>
 /// <param name="FeatureId">The feature that declares it.</param>
 /// <param name="FeatureName">The name of that feature.</param>

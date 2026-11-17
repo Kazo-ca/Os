@@ -171,7 +171,7 @@ public static partial class AppManifestValidator
 
     /// <summary>
     /// ADR 0247 §1: only a feature declares roles, each under its permission prefix
-    /// (<c>&lt;prefix&gt;.&lt;name&gt;</c>, a lowercase name after the dot), with a title; only an entry
+    /// (<c>&lt;prefix&gt;:&lt;name&gt;</c>, ADR 0283: its own prefix, a lowercase name after the colon), with a title; only an entry
     /// point of a feature names one in <c>requiresRole</c>.
     /// </summary>
     private static void ValidateRoles(AppManifest manifest, List<ManifestValidationError> errors)
@@ -204,10 +204,12 @@ public static partial class AppManifestValidator
         foreach (AppRoleManifest role in roles)
         {
             string id = role.Id ?? string.Empty;
-            string name = id.StartsWith(prefix + ".", StringComparison.Ordinal) ? id[(prefix!.Length + 1)..] : string.Empty;
+            // ADR 0283: the prefix is the feature's own; another feature's prefix is refused here and
+            // the installer refuses a prefix an installed feature already took (ADR 0246 §2).
+            string name = id.StartsWith(prefix + ":", StringComparison.Ordinal) ? id[(prefix!.Length + 1)..] : string.Empty;
             if (name.Length == 0 || !name.All(static c => c is (>= 'a' and <= 'z') or (>= '0' and <= '9') or '-'))
             {
-                AddError(errors, "manifest.role.id", "roles", $"The role '{id}' is not '{prefix}.<name>' with a lowercase name.");
+                AddError(errors, "manifest.role.id", "roles", $"The role '{id}' is not '{prefix}:<name>' with a lowercase name.");
             }
 
             if (string.IsNullOrWhiteSpace(role.Title))

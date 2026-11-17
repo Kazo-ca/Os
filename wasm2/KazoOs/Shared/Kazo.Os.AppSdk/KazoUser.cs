@@ -16,15 +16,34 @@ public sealed record KazoUserInfo(string LoginName, string DisplayName, string H
     public IReadOnlySet<string> Roles { get; init; } = NoRoles.Instance;
 
     /// <summary>
-    /// Gets whether the user holds <paramref name="role"/> (ADR 0247 §1): granted by an administrator,
-    /// or held implicitly by every administrator (and by root under <c>sudo</c>).
+    /// Gets whether the user is in <paramref name="role"/> (ADR 0247 §1, ADR 0283). A role of the OS has
+    /// a simple name: <see cref="KazoRoles.Administrator"/> (<c>admin</c>). A role of a feature is
+    /// <c>&lt;feature&gt;:&lt;role&gt;</c>, the feature's prefix then its role, such as
+    /// <c>x86:vm-manager</c>: granted by an administrator, or held implicitly by every administrator
+    /// (and by root under <c>sudo</c>). Any other simple name is no role of the OS: <see langword="false"/>.
     /// </summary>
-    /// <param name="role">The role, such as <c>x86.vm-admin</c>.</param>
-    public bool HasRole(string role)
+    /// <param name="role">The role, such as <c>admin</c> or <c>x86:vm-manager</c>.</param>
+    /// <example><code>if (KazoUser.Current.IsInRole("x86:vm-manager")) { /* the admin subcommand */ }</code></example>
+    public bool IsInRole(string role)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(role);
-        return IsAdministrator || Roles.Contains(role);
+        if (string.Equals(role, KazoRoles.Administrator, StringComparison.Ordinal))
+        {
+            return IsAdministrator;
+        }
+
+        return role.Contains(KazoRoles.FeatureSeparator, StringComparison.Ordinal) && (IsAdministrator || Roles.Contains(role));
     }
+}
+
+/// <summary>The names of the roles (ADR 0283).</summary>
+public static class KazoRoles
+{
+    /// <summary>The role of the OS's administrators (and of root under <c>sudo</c>).</summary>
+    public const string Administrator = "admin";
+
+    /// <summary>Separates a feature's prefix from its role: <c>x86:vm-manager</c>.</summary>
+    public const char FeatureSeparator = ':';
 }
 
 /// <summary>The empty set of roles.</summary>
@@ -51,6 +70,11 @@ public static class KazoUser
     /// <summary>Gets the effective user of the current process.</summary>
     /// <exception cref="KazoExecutionContextMissingException">No app context is active.</exception>
     public static KazoUserInfo Current => Describe(KazoExecutionContext.Current);
+
+    /// <summary>Gets whether the effective user is in <paramref name="role"/>: <see cref="KazoUserInfo.IsInRole(string)"/> of <see cref="Current"/>.</summary>
+    /// <param name="role">The role, such as <c>admin</c> or <c>x86:vm-manager</c>.</param>
+    /// <exception cref="KazoExecutionContextMissingException">No app context is active.</exception>
+    public static bool IsInRole(string role) => Current.IsInRole(role);
 
     /// <summary>
     /// Describes the effective user of <paramref name="context"/>. Useful where no ambient scope is

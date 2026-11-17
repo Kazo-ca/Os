@@ -80,7 +80,23 @@ public sealed class FeatureAuthenticationTests
     }
 
     [Fact]
-    public async Task The_role_holder_scope_is_refused_from_an_entry_point_that_requires_no_role()
+    public async Task From_an_entry_point_open_to_all_the_holder_of_a_role_of_the_feature_may_use_the_role_holder_scope()
+    {
+        FeatureRoleHarness harness = await FeatureRoleHarness.CreateAsync();
+        AuthenticatedPrincipal bob = await harness.LoginAsync(harness.Files.Bob);
+        await harness.Roles.GrantAsync(FeatureRoleFixtures.Manager, harness.Files.Bob, "carol");
+        TypedCredentials window = new(("bob", SettingsFilesHarness.Password));
+
+        // ADR 0283: a subcommand of a command open to all (x86 admin) checks IsInRole, then asks the OS.
+        KazoAuthenticationTicket ticket = await harness.Gateway(harness.Agent(window), FeatureRoleFixtures.Run(), bob)
+            .AuthenticateAsync(FeatureRoleFixtures.DeleteShared, KazoAuthenticationScope.RoleHolder);
+
+        Assert.Equal(1, window.Shown);
+        Assert.Equal((KazoAuthenticationScope.RoleHolder, "bob"), (ticket.Scope, ticket.AuthenticatedBy));
+    }
+
+    [Fact]
+    public async Task The_role_holder_scope_is_refused_from_an_entry_point_open_to_all_without_any_role_of_the_feature()
     {
         FeatureRoleHarness harness = await FeatureRoleHarness.CreateAsync();
         AuthenticatedPrincipal alice = await harness.LoginAsync(harness.Files.Alice);

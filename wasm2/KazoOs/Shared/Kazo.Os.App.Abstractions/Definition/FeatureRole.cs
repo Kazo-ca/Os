@@ -6,7 +6,11 @@ namespace Kazo.Os.App.Abstractions;
 /// every administrator holds it implicitly. It opens entry points; each sensitive operation still asks
 /// the OS's authentication (<c>KazoFeatureAuthentication</c>).
 /// </summary>
-/// <param name="Id">The identifier, <c>&lt;prefix&gt;.&lt;name&gt;</c> under the feature's <see cref="FeatureDefinition.CapabilityPrefix"/>.</param>
+/// <param name="Id">
+/// The identifier, <c>&lt;prefix&gt;:&lt;name&gt;</c> (ADR 0283): the prefix is the feature's own
+/// <see cref="FeatureDefinition.CapabilityPrefix"/>, such as <c>x86:vm-manager</c>; a feature never
+/// declares a role under another feature's prefix.
+/// </param>
 /// <param name="Title">The short title shown in Settings ▸ Users.</param>
 public sealed record FeatureRole(string Id, string Title)
 {

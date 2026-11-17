@@ -7,20 +7,20 @@ using Kazo.Os.Simulation.Abstractions.Sessions;
 namespace Kazo.Os.AppSdk.Tests;
 
 /// <summary>
-/// <see cref="KazoUserInfo.HasRole(string)"/> (ADR 0247 §1, answer 233 B): the roles the context
+/// <see cref="KazoUserInfo.IsInRole(string)"/> (ADR 0247 §1, answer 233 B): the roles the context
 /// carries, every role for an administrator and for root; no authentication on a host without it.
 /// </summary>
 public sealed class KazoUserRolesTests
 {
-    private const string Manager = "x86.vm-manager";
+    private const string Manager = "x86:vm-manager";
 
     [Fact]
     public void An_ordinary_user_holds_the_roles_granted_to_them_only()
     {
         KazoUserInfo user = KazoUser.Describe(new RolesContext(AppAuthority.User, isRoot: false, new HashSet<string> { Manager }));
 
-        Assert.True(user.HasRole(Manager));
-        Assert.False(user.HasRole("x86.other"));
+        Assert.True(user.IsInRole(Manager));
+        Assert.False(user.IsInRole("x86:other"));
         Assert.Equal([Manager], user.Roles);
     }
 
@@ -29,7 +29,7 @@ public sealed class KazoUserRolesTests
     {
         KazoUserInfo user = KazoUser.Describe(new RolesContext(AppAuthority.User, isRoot: false, new HashSet<string>()));
 
-        Assert.False(user.HasRole(Manager));
+        Assert.False(user.IsInRole(Manager));
     }
 
     [Fact]
@@ -37,13 +37,34 @@ public sealed class KazoUserRolesTests
     {
         KazoUserInfo user = KazoUser.Describe(new RolesContext(AppAuthority.Administrator, isRoot: false, new HashSet<string>()));
 
-        Assert.True(user.HasRole(Manager));
+        Assert.True(user.IsInRole(Manager));
     }
 
     [Fact]
     public void Root_under_sudo_holds_every_role()
     {
-        Assert.True(KazoUser.Describe(new RolesContext(AppAuthority.User, isRoot: true, new HashSet<string>())).HasRole(Manager));
+        Assert.True(KazoUser.Describe(new RolesContext(AppAuthority.User, isRoot: true, new HashSet<string>())).IsInRole(Manager));
+    }
+
+    [Fact]
+    public void Admin_is_the_role_of_the_administrators_and_another_simple_name_is_no_role()
+    {
+        KazoUserInfo administrator = KazoUser.Describe(new RolesContext(AppAuthority.Administrator, isRoot: false, new HashSet<string>()));
+        KazoUserInfo user = KazoUser.Describe(new RolesContext(AppAuthority.User, isRoot: false, new HashSet<string> { Manager }));
+
+        Assert.True(administrator.IsInRole(KazoRoles.Administrator));
+        Assert.False(user.IsInRole("admin"));
+        Assert.False(administrator.IsInRole("manager"));
+        Assert.False(user.IsInRole("vm-manager"));
+    }
+
+    [Fact]
+    public void The_facade_answers_for_the_user_of_the_process()
+    {
+        using IDisposable scope = KazoExecutionContext.Enter(new RolesContext(AppAuthority.User, isRoot: false, new HashSet<string> { Manager }));
+
+        Assert.True(KazoUser.IsInRole(Manager));
+        Assert.False(KazoUser.IsInRole(KazoRoles.Administrator));
     }
 
     [Fact]
