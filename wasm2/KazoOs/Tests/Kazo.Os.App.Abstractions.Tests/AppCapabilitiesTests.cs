@@ -62,6 +62,7 @@ public sealed class AppCapabilitiesTests
         { AppCapabilities.NetworkSimulatedRead, CapabilityRisk.Normal },
         { AppCapabilities.NetworkSimulatedWrite, CapabilityRisk.Normal },
         { AppCapabilities.NetworkRealAccess, CapabilityRisk.Dangerous },
+        { AppCapabilities.NetworkDirectAccess, CapabilityRisk.Dangerous },
         { AppCapabilities.NetworkListen, CapabilityRisk.Normal },
         { AppCapabilities.NetworkListenPrivileged, CapabilityRisk.Dangerous },
         { AppCapabilities.ShellControl, CapabilityRisk.Normal },

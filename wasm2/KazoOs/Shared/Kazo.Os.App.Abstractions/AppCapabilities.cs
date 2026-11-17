@@ -113,6 +113,14 @@ public static class AppCapabilities
     public const string NetworkRealAccess = "network.real.access";
 
     /// <summary>
+    /// Reach real web services directly through the browser's <c>fetch</c>, without the Kazo server
+    /// (ADR 0282 §4), only to the hosts the manifest declares in
+    /// <see cref="AppManifest.DirectNetworkHosts"/>. Dangerous: the app sends data to those services
+    /// and receives theirs, and the approval window names every declared host.
+    /// </summary>
+    public const string NetworkDirectAccess = "network.direct.access";
+
+    /// <summary>
     /// Act on the interactive shell that ran the command: change its directory, its environment,
     /// list its commands or ask it to run a command as root (ADR 0051, section 3). Normal: it only
     /// reaches the shell of the user who typed the command.
@@ -260,6 +268,10 @@ public static class AppCapabilities
             NetworkRealAccess,
             "Accéder au vrai réseau",
             "Joindre de vrais serveurs sur Internet par le serveur relais."),
+        Dangerous(
+            NetworkDirectAccess,
+            "Joindre des services web directement",
+            "Envoyer et recevoir des données auprès des services web nommés par l'application, directement depuis le navigateur."),
         Normal(NetworkListen, "Écouter un port réseau"),
         Dangerous(
             NetworkListenPrivileged,

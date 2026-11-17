@@ -163,3 +163,55 @@ virtual Kazo.Os.AppSdk.Drives.KazoDriveFolder.CreateFileAsync(Kazo.Os.AppSdk.Dri
 virtual Kazo.Os.AppSdk.Drives.KazoDriveFolder.DisposeAsync() -> System.Threading.Tasks.ValueTask
 virtual Kazo.Os.AppSdk.Drives.KazoDriveFolder.GetQuotaAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.Drives.KazoDriveQuota?>
 virtual Kazo.Os.AppSdk.Drives.KazoDriveFolder.TryMoveAsync(Kazo.Os.AppSdk.Drives.KazoDrivePath! from, Kazo.Os.AppSdk.Drives.KazoDrivePath! to, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<bool>
+Kazo.Os.AppSdk.Net.IAppNetworkGateway.SendDirectAsync(Kazo.Os.AppSdk.Net.KazoDirectHttpRequest! request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.Net.KazoNetworkResult<Kazo.Os.AppSdk.Net.KazoDirectHttpResponse!>!>
+Kazo.Os.AppSdk.Net.KazoDirectHttpClient
+Kazo.Os.AppSdk.Net.KazoDirectHttpClient.BaseAddress.get -> System.Uri?
+Kazo.Os.AppSdk.Net.KazoDirectHttpClient.BaseAddress.set -> void
+Kazo.Os.AppSdk.Net.KazoDirectHttpClient.DefaultRequestHeaders.get -> System.Collections.Generic.IDictionary<string!, string!>!
+Kazo.Os.AppSdk.Net.KazoDirectHttpClient.DeleteAsync(string! requestUri, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Kazo.Os.AppSdk.Net.KazoDirectHttpResponse!>!
+Kazo.Os.AppSdk.Net.KazoDirectHttpClient.Dispose() -> void
+Kazo.Os.AppSdk.Net.KazoDirectHttpClient.GetAsync(string! requestUri, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Kazo.Os.AppSdk.Net.KazoDirectHttpResponse!>!
+Kazo.Os.AppSdk.Net.KazoDirectHttpClient.GetByteArrayAsync(string! requestUri, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<byte[]!>!
+Kazo.Os.AppSdk.Net.KazoDirectHttpClient.GetFromJsonAsync<T>(string! requestUri, System.Text.Json.Serialization.Metadata.JsonTypeInfo<T>! jsonTypeInfo, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<T?>!
+Kazo.Os.AppSdk.Net.KazoDirectHttpClient.GetStringAsync(string! requestUri, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<string!>!
+Kazo.Os.AppSdk.Net.KazoDirectHttpClient.KazoDirectHttpClient() -> void
+Kazo.Os.AppSdk.Net.KazoDirectHttpClient.PatchAsync(string! requestUri, Kazo.Os.AppSdk.Net.KazoDirectHttpContent? content, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Kazo.Os.AppSdk.Net.KazoDirectHttpResponse!>!
+Kazo.Os.AppSdk.Net.KazoDirectHttpClient.PostAsJsonAsync<T>(string! requestUri, T value, System.Text.Json.Serialization.Metadata.JsonTypeInfo<T>! jsonTypeInfo, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Kazo.Os.AppSdk.Net.KazoDirectHttpResponse!>!
+Kazo.Os.AppSdk.Net.KazoDirectHttpClient.PostAsync(string! requestUri, Kazo.Os.AppSdk.Net.KazoDirectHttpContent? content, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Kazo.Os.AppSdk.Net.KazoDirectHttpResponse!>!
+Kazo.Os.AppSdk.Net.KazoDirectHttpClient.PutAsync(string! requestUri, Kazo.Os.AppSdk.Net.KazoDirectHttpContent? content, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Kazo.Os.AppSdk.Net.KazoDirectHttpResponse!>!
+Kazo.Os.AppSdk.Net.KazoDirectHttpClient.SendAsync(Kazo.Os.AppSdk.Net.KazoDirectHttpRequest! request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Kazo.Os.AppSdk.Net.KazoDirectHttpResponse!>!
+Kazo.Os.AppSdk.Net.KazoDirectHttpClient.SendAsync(System.Net.Http.HttpMethod! method, string! requestUri, Kazo.Os.AppSdk.Net.KazoDirectHttpContent? content = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Kazo.Os.AppSdk.Net.KazoDirectHttpResponse!>!
+Kazo.Os.AppSdk.Net.KazoDirectHttpClient.Timeout.get -> System.TimeSpan
+Kazo.Os.AppSdk.Net.KazoDirectHttpClient.Timeout.set -> void
+Kazo.Os.AppSdk.Net.KazoDirectHttpContent
+Kazo.Os.AppSdk.Net.KazoDirectHttpContent.ContentType.get -> string!
+Kazo.Os.AppSdk.Net.KazoDirectHttpContent.Length.get -> long?
+Kazo.Os.AppSdk.Net.KazoDirectHttpRequest
+Kazo.Os.AppSdk.Net.KazoDirectHttpRequest.Content.get -> Kazo.Os.AppSdk.Net.KazoDirectHttpContent?
+Kazo.Os.AppSdk.Net.KazoDirectHttpRequest.Content.set -> void
+Kazo.Os.AppSdk.Net.KazoDirectHttpRequest.Headers.get -> System.Collections.Generic.IList<System.Collections.Generic.KeyValuePair<string!, string!>>!
+Kazo.Os.AppSdk.Net.KazoDirectHttpRequest.KazoDirectHttpRequest(System.Net.Http.HttpMethod! method, System.Uri! requestUri) -> void
+Kazo.Os.AppSdk.Net.KazoDirectHttpRequest.Method.get -> System.Net.Http.HttpMethod!
+Kazo.Os.AppSdk.Net.KazoDirectHttpRequest.RequestUri.get -> System.Uri!
+Kazo.Os.AppSdk.Net.KazoDirectHttpResponse
+Kazo.Os.AppSdk.Net.KazoDirectHttpResponse.Content.get -> System.IO.Stream!
+Kazo.Os.AppSdk.Net.KazoDirectHttpResponse.ContentLength.get -> long?
+Kazo.Os.AppSdk.Net.KazoDirectHttpResponse.ContentType.get -> string?
+Kazo.Os.AppSdk.Net.KazoDirectHttpResponse.Dispose() -> void
+Kazo.Os.AppSdk.Net.KazoDirectHttpResponse.DisposeAsync() -> System.Threading.Tasks.ValueTask
+Kazo.Os.AppSdk.Net.KazoDirectHttpResponse.EnsureSuccessStatusCode() -> Kazo.Os.AppSdk.Net.KazoDirectHttpResponse!
+Kazo.Os.AppSdk.Net.KazoDirectHttpResponse.GetHeader(string! name) -> string?
+Kazo.Os.AppSdk.Net.KazoDirectHttpResponse.Headers.get -> System.Collections.Generic.IReadOnlyList<System.Collections.Generic.KeyValuePair<string!, string!>>!
+Kazo.Os.AppSdk.Net.KazoDirectHttpResponse.IsSuccessStatusCode.get -> bool
+Kazo.Os.AppSdk.Net.KazoDirectHttpResponse.KazoDirectHttpResponse(int statusCode, string! reasonPhrase, System.Uri! requestUri, System.Collections.Generic.IReadOnlyList<System.Collections.Generic.KeyValuePair<string!, string!>>! headers, System.IO.Stream! content) -> void
+Kazo.Os.AppSdk.Net.KazoDirectHttpResponse.ReadAsByteArrayAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<byte[]!>!
+Kazo.Os.AppSdk.Net.KazoDirectHttpResponse.ReadAsStringAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<string!>!
+Kazo.Os.AppSdk.Net.KazoDirectHttpResponse.ReadFromJsonAsync<T>(System.Text.Json.Serialization.Metadata.JsonTypeInfo<T>! jsonTypeInfo, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<T?>!
+Kazo.Os.AppSdk.Net.KazoDirectHttpResponse.ReasonPhrase.get -> string!
+Kazo.Os.AppSdk.Net.KazoDirectHttpResponse.RequestUri.get -> System.Uri!
+Kazo.Os.AppSdk.Net.KazoDirectHttpResponse.StatusCode.get -> int
+static Kazo.Os.AppSdk.Net.KazoDirectHttpContent.From(Kazo.Os.AppSdk.Net.KazoHttpContent! content) -> Kazo.Os.AppSdk.Net.KazoDirectHttpContent!
+static Kazo.Os.AppSdk.Net.KazoDirectHttpContent.FromBytes(System.ReadOnlyMemory<byte> content, string! contentType = "application/octet-stream") -> Kazo.Os.AppSdk.Net.KazoDirectHttpContent!
+static Kazo.Os.AppSdk.Net.KazoDirectHttpContent.FromJson<T>(T value, System.Text.Json.Serialization.Metadata.JsonTypeInfo<T>! jsonTypeInfo) -> Kazo.Os.AppSdk.Net.KazoDirectHttpContent!
+static Kazo.Os.AppSdk.Net.KazoDirectHttpContent.FromStream(System.IO.Stream! content, string! contentType = "application/octet-stream", long? length = null) -> Kazo.Os.AppSdk.Net.KazoDirectHttpContent!
+static Kazo.Os.AppSdk.Net.KazoDirectHttpContent.FromString(string! content, string! mediaType = "text/plain") -> Kazo.Os.AppSdk.Net.KazoDirectHttpContent!

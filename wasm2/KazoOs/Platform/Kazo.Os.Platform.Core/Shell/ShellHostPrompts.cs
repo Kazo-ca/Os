@@ -120,6 +120,12 @@ internal sealed class ShellHostPrompts : IDangerousCapabilityApprovalPrompt
             {
                 await WriteAsync($"    {text["Prompt.Dangerous.RealNetworkPorts", ports]}", KazoPromptLineKind.Warning).ConfigureAwait(false);
             }
+
+            // ADR 0282 section 4: the web services the app reaches without the server.
+            if (DirectNetworkHostText.For(app, capability.Capability) is { } hosts)
+            {
+                await WriteAsync($"    {text["Prompt.Dangerous.DirectNetworkHosts", hosts]}", KazoPromptLineKind.Warning).ConfigureAwait(false);
+            }
         }
 
         await WriteAsync(text["Prompt.Dangerous.AuditNotice"], KazoPromptLineKind.Info).ConfigureAwait(false);

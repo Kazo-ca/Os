@@ -362,7 +362,9 @@ public sealed class AppExecutionContextFactory
                 _localNetwork is null ? null : new Network.Local.LocalNetworkCaller(_localNetwork, manifest, principal, isRootElevated))
             {
                 RelayPolicy = RelayPolicy,
-                Lifetime = cancellationToken
+                Lifetime = cancellationToken,
+                // ADR 0282 §4: the only hosts a direct request may reach.
+                DirectHosts = manifest.DirectNetworkHosts ?? []
             };
 
         AppFileSystemGateway fileSystem = new(

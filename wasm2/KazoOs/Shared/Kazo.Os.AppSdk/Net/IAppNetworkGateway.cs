@@ -158,6 +158,24 @@ public interface IAppNetworkGateway
         throw new NotSupportedException("This network gateway cannot read the relay's state.");
 
     /// <summary>
+    /// Sends a request straight to a real web service through the browser's <c>fetch</c>, without
+    /// the simulated network or the Kazo server (ADR 0282 §4); returns once the response headers
+    /// arrive, the body still to be read as a stream. Apps use it through
+    /// <see cref="KazoDirectHttpClient"/>.
+    /// </summary>
+    /// <remarks>
+    /// Needs <c>network.direct.access</c> (denial: <see cref="Simulation.Abstractions.Gateways.AppGatewayAccessDeniedException"/>)
+    /// and a host declared in the manifest's <c>directNetworkHosts</c> (otherwise
+    /// <see cref="UnauthorizedAccessException"/>). A network failure or a CORS refusal is
+    /// <see cref="KazoNetworkError.ConnectionFailed"/>.
+    /// </remarks>
+    /// <param name="request">The request; its URI is absolute <c>https</c>.</param>
+    /// <param name="cancellationToken">Aborts the request.</param>
+    ValueTask<KazoNetworkResult<KazoDirectHttpResponse>> SendDirectAsync(
+        KazoDirectHttpRequest request, CancellationToken cancellationToken = default) =>
+        throw new NotSupportedException("This network gateway cannot send direct web requests.");
+
+    /// <summary>
     /// Raised when the relay's status changes for this app (ADR 0278 §1). A gateway that cannot
     /// observe it ignores the handlers.
     /// </summary>

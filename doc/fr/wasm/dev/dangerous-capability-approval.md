@@ -167,6 +167,23 @@ moment ; un refus ou une remise à zéro retire la ligne. Seul le fichier machin
 approuve des ports : une telle ligne dans le fichier de l'utilisateur est
 ignorée avec un avertissement, comme une ligne mal écrite.
 
+Sous `network.direct.access` (ADR 0282 §4), la fenêtre et le mode texte du
+terminal listent de la même façon les hôtes web que l'app joint sans serveur
+(`directNetworkHosts`) : « Services web joints directement : *.example.org,
+api.example.com » (`DirectNetworkHostText`). L'approbation les écrit dans la
+section `[direct-network-hosts]` du fichier machine, avec les mêmes règles que
+les ports : un hôte ajouté par une mise à jour remet la capacité en `Pending`,
+un `allow` des Paramètres approuve les hôtes déclarés à ce moment, un refus ou
+une remise à zéro retire la ligne, et seul le fichier machine approuve.
+
+```text
+[permissions]
+ca.exemple.pcloud:network.direct.access=allow
+
+[direct-network-hosts]
+ca.exemple.pcloud=*.pcloud.com,api.pcloud.com
+```
+
 `DangerousCapabilityApprovalBroker` montre une demande à la fois. Sans fenêtre
 attachée, une demande finit en `Unavailable` (donc `capability.deferred`) ; si
 la coque disparaît (déconnexion), les demandes en cours sont fermées sans

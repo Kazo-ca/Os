@@ -58,6 +58,8 @@ public static class AppDefinitionMapper
             Capabilities = [.. definition.Capabilities],
             // ADR 0235 §3: copied as declared (the validator refuses a bad entry), omitted when empty.
             RealNetworkPorts = definition.RealNetworkPorts.Count == 0 ? null : [.. definition.RealNetworkPorts],
+            // ADR 0282 §4: copied as declared (the validator refuses a bad entry), omitted when empty.
+            DirectNetworkHosts = definition.DirectNetworkHosts.Count == 0 ? null : [.. definition.DirectNetworkHosts],
             DeclaredTopicPermissions = [.. definition.DeclaredTopicPermissions],
             Resources = definition.Resources,
             Settings = definition.Settings,
@@ -134,6 +136,8 @@ public static class AppDefinitionMapper
             Localizations = [.. definition.Localizations],
             Capabilities = [.. definition.Capabilities],
             RealNetworkPorts = definition.RealNetworkPorts.Count == 0 ? null : [.. definition.RealNetworkPorts],
+            // ADR 0282 §4: copied as declared (the validator refuses a bad entry), omitted when empty.
+            DirectNetworkHosts = definition.DirectNetworkHosts.Count == 0 ? null : [.. definition.DirectNetworkHosts],
             DeclaredTopicPermissions = [.. definition.DeclaredTopicPermissions],
             Resources = definition.Resources,
             Settings = definition.Settings,
@@ -176,6 +180,10 @@ public static class AppDefinitionMapper
                 Capabilities = [.. entry.Capabilities],
                 // ADR 0235 §3: the ports go with the capability that needs them.
                 RealNetworkPorts = carriesRealNetwork && definition.RealNetworkPorts.Count > 0 ? [.. definition.RealNetworkPorts] : null,
+                // ADR 0282 §4: the hosts go with the capability that needs them.
+                DirectNetworkHosts = entry.Capabilities.Contains(AppCapabilities.NetworkDirectAccess, StringComparer.Ordinal) && definition.DirectNetworkHosts.Count > 0
+                    ? [.. definition.DirectNetworkHosts]
+                    : null,
                 DeclaredTopicPermissions = [],
                 Resources = entry.Resources ?? definition.Resources,
                 Settings = entry.Settings,
