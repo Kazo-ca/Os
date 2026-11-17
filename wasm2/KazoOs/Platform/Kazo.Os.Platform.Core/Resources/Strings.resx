@@ -597,6 +597,9 @@ Cancel: decide at the next launch.</value>
   <data name="Shell.UnboundVariable" xml:space="preserve">
     <value>{0}: unbound variable</value>
   </data>
+  <data name="Storage.Full.Message" xml:space="preserve">
+    <value>The browser refused to save data: the storage is full. Delete files or empty the trash; open Diagnostic to see what uses the space.</value>
+  </data>
   <data name="Storage.LowSpace.Message" xml:space="preserve">
     <value>Only {0:0.#} MiB left of {1:0.#} MiB. Delete files or empty the trash; open Diagnostic to see what uses the space.</value>
   </data>

@@ -131,8 +131,14 @@ public static partial class KazoOsBrowserHostExtensions
         builder.Services.AddSingleton(provider => new HostBuildUpdateMonitor(provider.GetRequiredService<IHostBuildProbe>()));
         // ADR 0174: every five minutes, the OS reads the version.json its origin serves and shows
         // a newer release next to the restart offer.
-        builder.Services.AddSingleton<IHostReleaseProbe>(new BrowserHostReleaseProbe(
-            new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) }));
+        // #493: offline (navigator.onLine false), the probe answers "unreachable" without a fetch
+        // that would log a console error (BrowserOfflineHandler).
+        string releaseBaseAddress = builder.HostEnvironment.BaseAddress;
+        builder.Services.AddSingleton<IHostReleaseProbe>(provider => new BrowserHostReleaseProbe(
+            new HttpClient(new BrowserOfflineHandler(provider.GetRequiredService<Microsoft.JSInterop.IJSRuntime>()))
+            {
+                BaseAddress = new Uri(releaseBaseAddress),
+            }));
         // ADR 0236: with the build number the CI wrote on the host's entry assembly, so a new
         // build of the same version is an update too, and the sign-in screen shows « build N ».
         builder.Services.AddSingleton(provider => new HostReleaseMonitor(
@@ -197,6 +203,10 @@ public static partial class KazoOsBrowserHostExtensions
             cloudDrives["OneDrive:Tenant"],
             cloudDrives["Dropbox:AppFolderPath"],
             cloudDrives["OneDrive:AppFolderPath"]));
+        // ADR 0182, ADR 0188: catalogs and packages are downloaded with fetch; offline, the download
+        // fails as "unreachable" without a fetch that would log a console error (#493).
+        builder.Services.AddSingleton<IAppPackageDownloader>(provider => new HttpAppPackageDownloader(
+            new HttpClient(new BrowserOfflineHandler(provider.GetRequiredService<Microsoft.JSInterop.IJSRuntime>()))));
         builder.Services.AddKazoOsEcosystem(
             apps.Catalog,
             provider => provider.GetRequiredService<BuildKnownLazyAppDescriptorRegistry>().Descriptors,

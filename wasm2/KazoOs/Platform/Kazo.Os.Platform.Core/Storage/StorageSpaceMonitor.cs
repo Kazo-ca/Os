@@ -36,6 +36,12 @@ namespace Kazo.Os.Platform.Core.Storage;
 /// short low-space retention and measures again: the warning is posted only if the storage is still
 /// low.
 /// </para>
+/// <para>
+/// <b>Refused writes (ADR 0279).</b> Chromium rounds the quota <c>navigator.storage.estimate()</c>
+/// reports, so the measure may never go down. A write the browser refused
+/// (<see cref="ReportWriteRefused"/>) holds the storage as low for <see cref="RefusalHoldTime"/>,
+/// reclaims the orphan content with the short retention and posts the warning.
+/// </para>
 /// </remarks>
 public sealed class StorageSpaceMonitor : IStorageSpaceGuard, IAsyncDisposable
 {
@@ -47,6 +53,13 @@ public sealed class StorageSpaceMonitor : IStorageSpaceGuard, IAsyncDisposable
 
     /// <summary>Interval between two periodic measures.</summary>
     public static readonly TimeSpan PollInterval = TimeSpan.FromSeconds(30);
+
+    /// <summary>
+    /// How long a write refused by the browser holds the storage as low, whatever the measure says
+    /// (ADR 0279): long enough for the short retention to reclaim, short enough to let the state
+    /// clear once the user freed space.
+    /// </summary>
+    public static readonly TimeSpan RefusalHoldTime = TimeSpan.FromMinutes(10);
 
     /// <summary>Shortest interval between two measures asked by <see cref="RequestRefresh"/>.</summary>
     public static readonly TimeSpan MinimumRefreshSpacing = TimeSpan.FromSeconds(5);
@@ -69,6 +82,7 @@ public sealed class StorageSpaceMonitor : IStorageSpaceGuard, IAsyncDisposable
     private readonly CancellationTokenSource _stopping = new();
     private Task? _loop;
     private long _lastRefreshTicks = long.MinValue;
+    private long _lastRefusalTicks = long.MinValue;
     private LocalUserId? _warnedUser;
     private int _reclaimRequested;
     private volatile bool _isRootReserveReached;
@@ -173,6 +187,42 @@ public sealed class StorageSpaceMonitor : IStorageSpaceGuard, IAsyncDisposable
         _ = RefreshQuietlyAsync();
     }
 
+    /// <summary>
+    /// Records a write the browser refused for lack of space (ADR 0279) and, without waiting, reclaims
+    /// the orphan content and posts the warning.
+    /// </summary>
+    public void ReportWriteRefused()
+    {
+        if (Volatile.Read(ref _disposed) == 1)
+        {
+            return;
+        }
+
+        Interlocked.Exchange(ref _lastRefusalTicks, _time.GetTimestamp());
+        _isLowSpace = true;
+        _ = HandleRefusalQuietlyAsync();
+    }
+
+    private async Task HandleRefusalQuietlyAsync()
+    {
+        try
+        {
+            await ReclaimQuietlyAsync(lowSpace: true, _stopping.Token).ConfigureAwait(false);
+            await MeasureAsync(warn: true, _stopping.Token).ConfigureAwait(false);
+        }
+        catch (Exception exception) when (exception is OperationCanceledException or ObjectDisposedException or InvalidOperationException)
+        {
+            // Stopping, or the host is going away: the warning waits for the next refusal.
+        }
+    }
+
+    /// <summary>Gets whether the browser refused a write less than <see cref="RefusalHoldTime"/> ago.</summary>
+    private bool IsRefusalRecent()
+    {
+        long last = Interlocked.Read(ref _lastRefusalTicks);
+        return last != long.MinValue && _time.GetElapsedTime(last) < RefusalHoldTime;
+    }
+
     /// <summary>Measures now, updates the reserve state and posts the warning when the storage became low.</summary>
     /// <param name="cancellationToken">Cancels the measure.</param>
     public async Task RefreshAsync(CancellationToken cancellationToken = default)
@@ -199,16 +249,23 @@ public sealed class StorageSpaceMonitor : IStorageSpaceGuard, IAsyncDisposable
             Interlocked.Exchange(ref _lastRefreshTicks, _time.GetTimestamp());
             StorageCapacity? capacity = await _probe.GetCapacityAsync(cancellationToken).ConfigureAwait(false);
             _last = capacity;
+            bool refused = IsRefusalRecent();
             if (capacity is not { } measured)
             {
                 // Unknown quota: nothing is reserved, only the browser's own limit applies.
                 _isRootReserveReached = false;
-                _isLowSpace = false;
+                _isLowSpace = refused;
+                if (refused && warn)
+                {
+                    Warn(null);
+                }
+
                 return false;
             }
 
             _isRootReserveReached = StorageSpacePolicy.IsInRootReserve(measured);
-            _isLowSpace = StorageSpacePolicy.IsLow(measured);
+            bool measuredLow = StorageSpacePolicy.IsLow(measured);
+            _isLowSpace = measuredLow || refused;
             if (!_isLowSpace)
             {
                 return false;
@@ -216,7 +273,8 @@ public sealed class StorageSpaceMonitor : IStorageSpaceGuard, IAsyncDisposable
 
             if (warn || wasLow)
             {
-                Warn(measured);
+                // A refused write says more than a (possibly rounded) measure that looks fine.
+                Warn(measuredLow ? measured : null);
                 return false;
             }
 
@@ -309,8 +367,12 @@ public sealed class StorageSpaceMonitor : IStorageSpaceGuard, IAsyncDisposable
         }
     }
 
-    /// <summary>Posts the warning once per session user (a new login warns again).</summary>
-    private void Warn(StorageCapacity capacity)
+    /// <summary>
+    /// Posts the warning once per session user (a new login warns again). Without a low measure
+    /// (<paramref name="capacity"/> is <see langword="null"/>), it says the browser refused to save
+    /// data instead of giving the free MiB (ADR 0279).
+    /// </summary>
+    private void Warn(StorageCapacity? capacity)
     {
         if (_notifications is null || _currentUser() is not { } user || _warnedUser == user.UserId)
         {
@@ -326,7 +388,9 @@ public sealed class StorageSpaceMonitor : IStorageSpaceGuard, IAsyncDisposable
             NotificationSourceAppId,
             NotificationSeverity.Warning,
             text["Storage.LowSpace.Title"],
-            text["Storage.LowSpace.Message", ToMebibytes(capacity.AvailableBytes), ToMebibytes(capacity.QuotaBytes)],
+            capacity is { } measured
+                ? text["Storage.LowSpace.Message", ToMebibytes(measured.AvailableBytes), ToMebibytes(measured.QuotaBytes)]
+                : text["Storage.Full.Message"],
             [NotificationAction.LaunchApp(DiagnosticAppId, text["Storage.LowSpace.OpenDiagnostic"])],
             now,
             expiresAtUtc: null));

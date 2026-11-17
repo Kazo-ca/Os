@@ -3,6 +3,7 @@ using System.Text.Json.Nodes;
 using Deque.AxeCore.Commons;
 using Deque.AxeCore.Playwright;
 using Microsoft.Playwright;
+using System.Text.RegularExpressions;
 
 namespace Kazo.Os.TrimmedPublish.E2E.Tests;
 
@@ -150,7 +151,7 @@ public sealed partial class TrimmedPublishTests
         {
             await page.GetByRole(AriaRole.Button, new() { Name = "App launcher" }).ClickAsync();
             await page.GetByRole(AriaRole.Combobox, new() { Name = "Search applications" }).FillAsync("Calculator");
-            await page.GetByRole(AriaRole.Button, new() { Name = "Launch Calculator", Exact = true }).WaitForAsync();
+            await page.GetByRole(AriaRole.Button, new() { NameRegex = new Regex("^Launch Calculator(,|$)") }).WaitForAsync();
             opens.Add(Math.Round(await page.EvaluateAsync<double>(OpenScript)));
             if (open < Opens - 1)
             {
@@ -226,7 +227,7 @@ public sealed partial class TrimmedPublishTests
     private const string OpenScript = """
         async () => {
             const t0 = performance.now();
-            document.querySelector('[aria-label="Launch Calculator"]').click();
+            document.querySelector('[aria-label^="Launch Calculator"]').click();
             await new Promise(resolve => {
                 const check = () => {
                     const display = document.querySelector('#calc-display-current');

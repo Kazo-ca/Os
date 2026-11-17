@@ -418,7 +418,7 @@ public sealed partial class HostBootSmokeTests(ITestOutputHelper output)
     {
         await page.GetByRole(AriaRole.Button, new() { Name = "App launcher" }).ClickAsync();
         await page.GetByRole(AriaRole.Combobox, new() { Name = "Search applications" }).FillAsync(appName);
-        ILocator launch = page.GetByRole(AriaRole.Button, new() { Name = $"Launch {appName}", Exact = true });
+        ILocator launch = page.GetByRole(AriaRole.Button, new() { NameRegex = new Regex($"^Launch {Regex.Escape(appName)}(,|$)") });
         await launch.ClickAsync();
         Log($"launched '{appName}'.");
     }

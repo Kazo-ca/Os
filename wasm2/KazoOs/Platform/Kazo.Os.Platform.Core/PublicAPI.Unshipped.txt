@@ -1,4 +1,6 @@
 #nullable enable
+Kazo.Os.Platform.Core.Storage.StorageSpaceMonitor.ReportWriteRefused() -> void
+static readonly Kazo.Os.Platform.Core.Storage.StorageSpaceMonitor.RefusalHoldTime -> System.TimeSpan
 Kazo.Os.Platform.Core.Execution.AppExecutionContextFactory.RelayPolicy.get -> Kazo.Os.Platform.Core.Network.RelayPolicyCache?
 Kazo.Os.Platform.Core.Network.AppNetworkGateway.GetRelayStateAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.Net.KazoRelayState!>
 Kazo.Os.Platform.Core.Network.AppNetworkGateway.Lifetime.get -> System.Threading.CancellationToken

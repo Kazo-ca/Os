@@ -104,7 +104,7 @@ alerte `IL…`, sert la publication sur `127.0.0.1` et `127.0.0.2`, puis lance
 | `A_direct_link_reports_a_missing_app_and_can_be_cancelled` | ADR 0258 : app absente du catalogue officiel → notification dont le bouton ouvre le Store ; **Annuler** pendant le téléchargement → ni app ni notification |
 | `A_craft_app_on_the_os_module_opens_saves_and_follows_the_os` | ADR 0259 : le paquet de test `Tests/fixtures/craft-app` (une fenêtre Craft sur le module `Kazo.Os.AppSdk.Craft`, autour d'une fausse app Craft ; emballé par le script dans `kazoos-packages-craft`, sans le module) est installé par `sudo kazopkg install` ; `xdg-open seed.fake` ouvre la fenêtre sur le fichier, la frappe met `*` dans le titre, Ctrl+S réécrit le fichier et l'app reçoit `saved`, F12 (touche réservée par la fenêtre) fait Enregistrer sous par le dialogue de l'OS, une erreur après `ready` devient un message, le thème clair puis sombre suit, Ctrl+O passe par le dialogue d'ouverture de l'OS, la fermeture avec des modifications demande, une deuxième fenêtre relit le réglage écrit par la première ([`craft-apps.md`](../framework/craft-apps.md)) |
 
-Le script exige que les quatorze tests passent (`EXPECTED_TESTS`). Pour les trois tests du lien direct, il
+Le script exige que les quinze tests passent (`EXPECTED_TESTS`). Pour les trois tests du lien direct, il
 crée à chaque exécution une clé P-256 (`openssl`, dans `artifacts/publish-trimmed/test-catalog-signing/`)
 et publie avec `-p:KazoOsAppSigningKeys=catalog:official=<clé publique>` : la publication testée
 accepte cette clé pour le catalogue officiel, à côté de la vraie.

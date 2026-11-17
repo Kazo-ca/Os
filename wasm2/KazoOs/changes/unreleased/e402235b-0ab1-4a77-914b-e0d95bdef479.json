@@ -1,0 +1,18 @@
+{
+  "id": "e402235b-0ab1-4a77-914b-e0d95bdef479",
+  "category": "fixed",
+  "audience": [
+    "user"
+  ],
+  "title": {
+    "en": "A warning when the browser storage is full",
+    "fr": "Un avertissement quand le stockage du navigateur est plein"
+  },
+  "description": {
+    "en": "Chromium no longer tells web pages how much space is really left, so Kazo OS now shows the \"Low storage space\" notification as soon as the browser refuses to save something, and frees the data of deleted files sooner to make room.",
+    "fr": "Chromium ne dit plus aux pages web combien de place il reste vraiment : Kazo OS affiche donc la notification « Espace de stockage faible » dès que le navigateur refuse d'enregistrer quelque chose, et libère plus tôt les données des fichiers supprimés pour faire de la place."
+  },
+  "links": [
+    "https://github.com/Kazo-ca/Os/issues/493"
+  ]
+}

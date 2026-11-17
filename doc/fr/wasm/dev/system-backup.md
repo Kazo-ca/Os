@@ -204,8 +204,10 @@ Vidages des versions 2 et 3 dans `Tests/fixtures/indexeddb/` (la version 1 n'a j
 - `Tests/Kazo.Os.Commands.Wave5.Tests/KazobackupCommandTests.cs` : usage,
   root exigé, création, fusion par défaut, remplacement, archive refusée,
   hôte sans sauvegarde.
-- `Tests/Kazo.Os.UI.E2E.Tests/LowStorageSpaceTests.cs` : quota de Chromium abaissé
-  (`Storage.overrideQuotaForOrigin`) à 3 % de libre ; la notification arrive,
+- `Tests/Kazo.Os.UI.E2E.Tests/LowStorageSpaceTests.cs` : quota de Chromium fixé à
+  8 Mio (`Storage.overrideQuotaForOrigin`, avant la première navigation) puis
+  rempli ; le navigateur refuse une écriture du terminal (« No space left on
+  device »), la notification arrive (ADR 0279),
   l'action « Open Diagnostic » est là, et l'administrateur se reconnecte après
   un rechargement (le système écrit encore dans la réserve).
 - `Tests/Kazo.Os.App.Abstractions.Tests/AppCapabilitiesTests.cs` :

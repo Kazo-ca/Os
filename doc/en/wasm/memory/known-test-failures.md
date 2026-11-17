@@ -2,7 +2,7 @@
 
 # Known pre-existing test failures
 
-State as of **2026-10-30**. These tests fail or are flaky on `main` with no
+State as of **2026-11-16**. These tests fail or are flaky on `main` with no
 link to any PR. A PR that sees them fail **names** them in its Tests section;
 it does not disable, skip or quarantine them. If one of these tests passes
 reliably again, remove it from this list. Causes already found and fixed are
@@ -10,21 +10,30 @@ in [`../dev/pitfalls.md`](../dev/pitfalls.md) §4.
 
 ## Fail every time (Linux cloud container)
 
-| Suite | Test | Symptom |
-| --- | --- | --- |
-| `Kazo.Os.E2E.Tests` | `Window_runtime_renders_and_handles_mouse_and_touch_pointer_gestures`, `Window_runtime_handles_every_resize_edge_in_real_browser` | Time-out; still there after ADR 0177. |
-| `Kazo.Os.UI.E2E.Tests` | `Every_listed_surface_has_no_serious_axe_violation…`, `Representative_real_app_surfaces…` (axe) | `label-content-name-mismatch` on the taskbar's `.launcher-trigger` and `.taskbar-clock`. |
-| `Kazo.Os.TrimmedPublish.E2E.Tests` | Calculator test (axe) | `label-content-name-mismatch` on the MC, MR, M+, M-, AC, x² keys. |
-| `Kazo.Os.UI.E2E.Tests` | `LowStorageSpaceTests.A_full_quota_warns_once…` | "No low-space notification within 60 s". |
+None.
+
+Fixed on 2026-11-16 by the `known-failures` series (#493, PRs #580 to #582): the
+`Window_runtime_*` tests (real pen and touch gestures through CDP), the axe
+`label-content-name-mismatch` tests of the taskbar, the Start menu and the
+Calculator, and `Trimmed_publish_boots_offline_after_the_first_load` (no network
+request any more while offline). The causes are in
+[`../dev/pitfalls.md`](../dev/pitfalls.md) §4. The flaky `AppInstallationService` test is fixed by the same series
+(`apps.config` is watched before it is read), and so is
+`LowStorageSpaceTests` (a refused write means a full disk, ADR 0279; the quota
+is set before the first navigation).
 
 ## Flaky (pass alone, sometimes fail under load)
 
-- `AppInstallationService` (unit tests);
 - `LocalNetworkTests` with a web worker;
 - the detached-window E2E harness;
-- `Kazo.Os.UI.E2E.Tests`: `FileExplorerDownload` and `BrowserHomePage` when
-  the whole suite runs;
+- `Kazo.Os.UI.E2E.Tests`: `FileExplorerDownload`, `BrowserHomePage` and
+  `FileExplorerUpload…non_empty_folder` (the prepared file does not show within
+  30 s; seen once on 2026-11-16, 3 passes out of 3 alone) when the whole suite
+  runs;
 - `Kazo.Os.Platform.WorkerHost.Tests`: one timing test.
+- `Kazo.Os.TrimmedPublish.E2E.Tests`: `Trimmed_publish_runs_every_app…` sometimes
+  stays on the Intranet's People page after the click on Board (seen once in two
+  runs on 2026-11-16).
 
 CI reruns a failed test once and reports "Flaky test" if it passes on the
 second try ([`../dev/ci-workflows.md`](../dev/ci-workflows.md)).

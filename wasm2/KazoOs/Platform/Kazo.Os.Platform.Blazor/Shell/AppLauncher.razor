@@ -53,7 +53,7 @@
                                     <li class="pinned-row">
                                         <button type="button"
                                                 class="app-launch-button"
-                                                aria-label="@L["Launcher.LaunchApp", app.Name]"
+                                                aria-label="@LaunchAppName(app)"
                                                 @attributes="AppMenuAttributes(app)"
                                                 @onclick="() => LaunchAppAsync(app)">
                                             <span class="app-icon-shell" aria-hidden="true">
@@ -154,7 +154,7 @@
                                         <div class="app-launch-cell" role="gridcell">
                                             <button type="button"
                                                     class="app-launch-button"
-                                                    aria-label="@L["Launcher.LaunchApp", app.Name]"
+                                                    aria-label="@LaunchAppName(app)"
                                                     @attributes="AppMenuAttributes(app)"
                                                     @onclick="() => LaunchAppAsync(app)">
                                                 <span class="app-icon-shell" aria-hidden="true">
@@ -227,7 +227,7 @@
                 <button type="button"
                         class="quick-link"
                         disabled="@(FileExplorerApp is null)"
-                        aria-label="@L["Launcher.OpenFileExplorer"]"
+                        aria-label="@QuickLinkName("Launcher.OpenFileExplorer", "Launcher.FileExplorerHint")"
                         @onclick="() => LaunchQuickAppAsync(FileExplorerAppId)">
                     <span class="quick-icon" aria-hidden="true">
                         @if (FileExplorerApp is { } explorerApp)
@@ -248,7 +248,7 @@
                 <button type="button"
                         class="quick-link"
                         disabled="@(StoreApp is null)"
-                        aria-label="@L["Launcher.OpenStore"]"
+                        aria-label="@QuickLinkName("Launcher.OpenStore", "Launcher.StoreHint")"
                         @onclick="() => LaunchQuickAppAsync(StoreAppId)">
                     <span class="quick-icon" aria-hidden="true">
                         @if (StoreApp is { } storeApp)
@@ -268,7 +268,7 @@
                 <button type="button"
                         class="quick-link"
                         disabled="@(SettingsApp is null)"
-                        aria-label="@L["Launcher.OpenSettings"]"
+                        aria-label="@QuickLinkName("Launcher.OpenSettings", "Launcher.SettingsHint")"
                         @onclick="() => LaunchQuickAppAsync(SettingsAppId)">
                     <span class="quick-icon" aria-hidden="true">
                         @if (SettingsApp is { } settingsApp)

@@ -9,12 +9,13 @@
         {
             <button type="button"
                     class="launcher-trigger @(Launcher.IsOpen ? "is-active" : "")"
-                    aria-label="@(Launcher.HasAttention ? L["Taskbar.LauncherWithNews"] : L["Taskbar.Launcher"])"
+                    aria-label="@LauncherName"
                     aria-haspopup="dialog"
                     aria-expanded="@Launcher.IsOpen.ToString().ToLowerInvariant()"
                     @onclick="HandleLauncherToggleClick">
-                <span class="launcher-mark" aria-hidden="true">@Options.LauncherMark</span>
-                <span class="launcher-label">@(Options.LauncherLabel ?? L["Taskbar.LauncherLabel"])</span>
+                @* The mark is drawn by CSS (::before) so it is not part of the visible text axe compares with the name. *@
+                <span class="launcher-mark" aria-hidden="true" data-mark="@Options.LauncherMark"></span>
+                <span class="launcher-label">@LauncherLabel</span>
                 @if (Launcher.HasAttention)
                 {
                     <span class="launcher-attention" aria-hidden="true"></span>
@@ -114,7 +115,7 @@
             <div class="taskbar-clock-region">
                 <button type="button"
                         class="taskbar-clock @(ClockPanelSource?.IsOpen == true ? "is-active" : "")"
-                        aria-label="@ClockName"
+                        aria-label="@ClockAccessibleName"
                         title="@ClockName"
                         aria-expanded="@((ClockPanelSource?.IsOpen ?? false).ToString().ToLowerInvariant())"
                         @onclick="HandleClockPanelToggleClick">
@@ -228,6 +229,25 @@
         1 => L["Taskbar.ClockWithOneUnread"],
         int count => L["Taskbar.ClockWithUnread", count],
     };
+
+    /// <summary>
+    /// Gets the clock's accessible name: the time it shows, then its tooltip. The visible time is part
+    /// of the name (WCAG 2.5.3 "Label in Name", axe rule label-content-name-mismatch); the tooltip
+    /// stays <see cref="ClockName"/> alone so it does not repeat the time under the pointer.
+    /// </summary>
+    private string ClockAccessibleName => string.IsNullOrEmpty(FormattedTime)
+        ? ClockName
+        : $"{FormattedTime}, {ClockName}";
+
+    /// <summary>Gets the text shown on the launcher button: the host's label, or the localized default.</summary>
+    private string LauncherLabel => Options.LauncherLabel ?? L["Taskbar.LauncherLabel"];
+
+    /// <summary>
+    /// Gets the launcher's accessible name. It starts with the visible label (WCAG 2.5.3 "Label in
+    /// Name", axe rule label-content-name-mismatch), then says it is the app launcher and, when the
+    /// launcher has news, that there are changes to see.
+    /// </summary>
+    private string LauncherName => L[Launcher?.HasAttention == true ? "Taskbar.LauncherWithNews" : "Taskbar.Launcher", LauncherLabel];
 
     /// <summary>Gets the taskbar's texts: the host's session language, or English without localization.</summary>
     private IStringLocalizer L => _localizer ??= PackageStringLocalizer.Resolve<Strings>(LocalizationServices);
