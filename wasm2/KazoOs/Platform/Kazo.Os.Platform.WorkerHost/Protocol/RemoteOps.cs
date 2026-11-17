@@ -56,6 +56,9 @@ internal static class RemoteOps
     public const string NetUnlisten = "net.unlisten";
     public const string NetListeners = "net.listeners";
 
+    /// <summary>The relay's state for the app (ADR 0278 §1); its event is not carried to a worker.</summary>
+    public const string NetRelayState = "net.relay";
+
     // App catalog, services, drives, intents, clipboard.
     public const string CatalogInstalled = "cat.installed";
     public const string CatalogHandlers = "cat.handlers";

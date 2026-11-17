@@ -3,6 +3,7 @@ using System.Net;
 using System.Net.Sockets;
 using Microsoft.Playwright;
 using Xunit.Abstractions;
+using System.Text.RegularExpressions;
 
 namespace Kazo.Os.UI.E2E.Tests;
 
@@ -191,7 +192,7 @@ internal static class E2ESupport
         // named applications and remains independent of the launcher's visual layout.
         ILocator launchButton = page.GetByRole(
             AriaRole.Button,
-            new() { Name = $"Launch {appDisplayName}", Exact = true });
+            new() { NameRegex = new Regex($"^Launch {Regex.Escape(appDisplayName)}(,|$)") });
         await launchButton.WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible });
         await launchButton.ClickAsync();
         output.WriteLine($"[harness] launched app '{appDisplayName}'.");

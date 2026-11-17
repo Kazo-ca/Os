@@ -47,6 +47,15 @@ public interface IProxyGrantAuthority
     /// <param name="accountId">The authenticated account.</param>
     /// <param name="cancellationToken">Cancels the lookup.</param>
     Task<IReadOnlyList<ProxyAppGrant>> ListGrantsWithPortsAsync(Guid accountId, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Every app the relay serves for the account: the operator's <see cref="ProxyRelayPolicy.GrantedApps"/>
+    /// and the apps of its non-revoked synchronized grants, for <c>GET /api/proxy/policy</c>. The OS
+    /// reads it to tell an app whether its grant reached the server (ADR 0278 §1).
+    /// </summary>
+    /// <param name="accountId">The authenticated account.</param>
+    /// <param name="cancellationToken">Cancels the lookup.</param>
+    Task<IReadOnlyList<string>> ListGrantedAppsAsync(Guid accountId, CancellationToken cancellationToken);
 }
 
 /// <summary>
@@ -85,6 +94,14 @@ public sealed class ProxyGrantAuthority(ProxyRelayPolicy policy, KazoOsServerDbC
         [.. (await ReadSynchronizedGrantsAsync(accountId, cancellationToken).ConfigureAwait(false))
             .Where(static grant => grant.ApprovedPorts.Count > 0)
             .OrderBy(static grant => grant.AppId, StringComparer.Ordinal)];
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<string>> ListGrantedAppsAsync(Guid accountId, CancellationToken cancellationToken) =>
+        [.. (await ReadSynchronizedGrantsAsync(accountId, cancellationToken).ConfigureAwait(false))
+            .Select(static grant => grant.AppId)
+            .Concat(policy.GrantedApps)
+            .Distinct(StringComparer.Ordinal)
+            .Order(StringComparer.Ordinal)];
 
     /// <summary>
     /// The non-revoked <c>network.real.access</c> grants of the account, one per app. The latest

@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using Microsoft.Playwright;
 using Xunit.Abstractions;
+using System.Text.RegularExpressions;
 
 namespace Kazo.Os.UI.E2E.Tests;
 
@@ -26,7 +27,7 @@ public sealed class WindowAppIconTests(ITestOutputHelper output)
             // ADR 0232 §2: the Start menu draws the app's own icon, not the Lucide icon of its category.
             await page.GetByRole(AriaRole.Button, new() { Name = "App launcher" }).ClickAsync();
             await page.GetByRole(AriaRole.Combobox, new() { Name = "Search applications" }).FillAsync("Text Editor");
-            ILocator launcherIcon = page.GetByRole(AriaRole.Button, new() { Name = "Launch Text Editor", Exact = true })
+            ILocator launcherIcon = page.GetByRole(AriaRole.Button, new() { NameRegex = new Regex("^Launch Text Editor(,|$)") })
                 .Locator(".shell-app-icon-image");
             await Assertions.Expect(launcherIcon).ToHaveAttributeAsync("src", editorIcon);
             await WaitForImageAsync(launcherIcon);

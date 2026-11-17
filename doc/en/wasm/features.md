@@ -411,6 +411,9 @@ This section lists what is released in the `main` branch and online.
   trimmed), and the install refuses, with the exact method, an app that calls
   a method the published OS lacks, instead of letting it crash.
   ([ADR 0242](dev/adr/0242-framework-api-for-installed-apps.md))
+  LINQ, regular expressions and channels (`System.Linq`,
+  `System.Text.RegularExpressions`, `System.Threading.Channels`) are whole
+  too. ([ADR 0280](dev/adr/0280-keep-linq-regex-channels-whole.md))
   It can show its own HTML pages in an iframe, with parameters in the address,
   also once the OS is published and offline.
   ([ADR 0243](dev/adr/0243-serve-installed-app-pages.md))
@@ -488,11 +491,18 @@ points to its PR.
 | File address served on demand | An app gets an address to read a large file (audio, video) without copying it in memory, with partial reads to seek in a track. `storage/base` series; the partial read is done (work item 3), the address is still to do. | [0275](dev/adr/0275-partial-read-and-file-address.md) | [#379](https://github.com/Kazo-ca/Os/issues/379) |
 | Drag files onto an app | Public SDK contract to receive files dragged from the File Explorer or the desktop. | To write | [#380](https://github.com/Kazo-ca/Os/issues/380) |
 
+### Network
+
+| Feature | Description | ADR | Issue |
+| --- | --- | --- | --- |
+| Kazo server relay state for apps | An app with access to the real network knows, without trying, whether the Kazo server's relay is ready (no server, relay turned off, permission pending), and a connection failure gives the real reason. `todo-wins/base` series. | [0278](dev/adr/0278-real-network-relay-state-for-apps.md) | [#418](https://github.com/Kazo-ca/Os/issues/418) |
+
 ### Kazo OS Store
 
 | Feature | Description | ADR | Issue |
 | --- | --- | --- | --- |
 | Application catalog | Catalog format, checking and publishing of the offered applications. | [0188](dev/adr/0188-hack-store-and-app-catalog.md) | [AppMarketPlace #1](https://github.com/Kazo-ca/Os-AppMarketPlace/issues/1) |
+| API check before publishing | An app's build (`KazoOsPack`) and the Store's CI refuse an app that calls an API the published OS removed, listing the missing members, instead of refusing it only at install time. `todo-wins/base` series. | [0277](dev/adr/0277-trimmed-api-check-before-publishing.md) | [#346](https://github.com/Kazo-ca/Os/issues/346) |
 | Beta channel and automatic app updates | A beta version of Kazo OS online (`os-beta.kazo.ca`), the SDK as a prerelease on nuget.org, and each app rebuilding and offering its update when the SDK ships. The OS side is done: the `beta` branch, the beta site with its "Beta" badge, the beta catalog and the reusable app workflows. Prereleases 3.4.0-preview.1 to 4 shipped on 2026-11-15, each app repository is aligned (work item 7) and the apps offered their beta version by themselves; the stable 3.4.0 follows. What is left is the trial of the app updates for the stable 3.4.0 (work item 8). | [0271](dev/adr/0271-beta-channel-and-automatic-app-updates.md), [plan](dev/plans/release-channels-plan.md) | [#456](https://github.com/Kazo-ca/Os/issues/456) |
 
 ### Personalization

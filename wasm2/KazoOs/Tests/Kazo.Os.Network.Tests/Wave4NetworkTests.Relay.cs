@@ -80,13 +80,17 @@ public sealed partial class Wave4NetworkTests
     }
 
     [Fact]
-    public async Task KazoTcpClient_connect_without_a_server_finds_no_host()
+    public async Task KazoTcpClient_connect_without_a_server_finds_no_host_and_says_no_server()
     {
         EnterApp(new GrantAllCapabilityChecker());
 
-        SocketException unknown = await Assert.ThrowsAsync<SocketException>(() => KazoTcpClient.ConnectAsync("real-external-site.example", 443));
+        // ADR 0278 §2: still the SocketException of earlier versions, now saying why.
+        SocketException unknown = await Assert.ThrowsAnyAsync<SocketException>(() => KazoTcpClient.ConnectAsync("real-external-site.example", 443));
 
         Assert.Equal(SocketError.HostNotFound, unknown.SocketErrorCode);
+        KazoRelayException relay = Assert.IsType<KazoRelayException>(unknown);
+        Assert.Equal(KazoNetworkError.RelayNoServer, relay.Reason);
+        Assert.Equal("ERR_KAZO_RELAY_NO_SERVER", relay.Code);
     }
 
     [Fact]
@@ -111,19 +115,31 @@ public sealed partial class Wave4NetworkTests
     }
 
     [Theory]
-    [InlineData(ProxyErrorCode.BlockedPort, SocketError.ConnectionRefused)]
-    [InlineData(ProxyErrorCode.ConnectionRefused, SocketError.ConnectionRefused)]
-    [InlineData(ProxyErrorCode.HostUnreachable, SocketError.HostUnreachable)]
-    [InlineData(ProxyErrorCode.GrantMissing, SocketError.HostNotFound)]
-    [InlineData(ProxyErrorCode.RelayDisabled, SocketError.HostNotFound)]
-    public async Task KazoTcpClient_maps_a_relay_refusal_to_the_socket_error_of_a_real_stack(string errorCode, SocketError expected)
+    [InlineData(ProxyErrorCode.BlockedPort, SocketError.ConnectionRefused, KazoNetworkError.BlockedByAdministrator)]
+    [InlineData(ProxyErrorCode.BlockedAddress, SocketError.ConnectionRefused, KazoNetworkError.BlockedByAdministrator)]
+    [InlineData(ProxyErrorCode.ConnectionRefused, SocketError.ConnectionRefused, KazoNetworkError.None)]
+    [InlineData(ProxyErrorCode.HostUnreachable, SocketError.HostUnreachable, KazoNetworkError.None)]
+    [InlineData(ProxyErrorCode.GrantMissing, SocketError.HostNotFound, KazoNetworkError.RelayGrantPending)]
+    [InlineData(ProxyErrorCode.RelayDisabled, SocketError.HostNotFound, KazoNetworkError.RelayDisabled)]
+    [InlineData(ProxyErrorCode.SimulatedDomainBlocked, SocketError.HostNotFound, KazoNetworkError.None)]
+    public async Task KazoTcpClient_maps_a_relay_refusal_to_the_socket_error_of_a_real_stack(
+        string errorCode, SocketError expected, KazoNetworkError reason)
     {
         UseServer(new ConnectedServerConnectionService(), new RecordingStreamProxyClient { Refusal = errorCode });
         EnterApp(new GrantAllCapabilityChecker());
 
-        SocketException failure = await Assert.ThrowsAsync<SocketException>(() => KazoTcpClient.ConnectAsync("real-external-site.example", 8443));
+        SocketException failure = await Assert.ThrowsAnyAsync<SocketException>(() => KazoTcpClient.ConnectAsync("real-external-site.example", 8443));
 
+        // ADR 0278 §2: the SocketError of earlier versions; a relay refusal also says why.
         Assert.Equal(expected, failure.SocketErrorCode);
+        if (reason == KazoNetworkError.None)
+        {
+            Assert.IsNotType<KazoRelayException>(failure);
+        }
+        else
+        {
+            Assert.Equal(reason, Assert.IsType<KazoRelayException>(failure).Reason);
+        }
     }
 
     [Fact]
@@ -183,10 +199,11 @@ public sealed partial class Wave4NetworkTests
     {
         EnterApp(new GrantAllCapabilityChecker());
 
-        SocketException unknown = await Assert.ThrowsAsync<SocketException>(() => KazoTcpClient.ConnectAsync(
+        SocketException unknown = await Assert.ThrowsAnyAsync<SocketException>(() => KazoTcpClient.ConnectAsync(
             "real-external-site.example", 6697, new KazoTcpConnectOptions { UseTls = true }, CancellationToken.None));
 
         Assert.Equal(SocketError.HostNotFound, unknown.SocketErrorCode);
+        Assert.Equal(KazoNetworkError.RelayNoServer, Assert.IsType<KazoRelayException>(unknown).Reason);
     }
 
     [Fact]

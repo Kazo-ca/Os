@@ -134,6 +134,21 @@ jobs:
         if: steps.plan.outputs.mode != 'none'
         run: dotnet workload install wasm-tools
 
+      # ADR 0236: the build number shown on the sign-in screen and written in version.json.
+      - name: Compute the build number
+        shell: bash
+        run: echo "KazoOsBuildNumber=$(wasm2/KazoOs/build/build-number.sh)" >> "$GITHUB_ENV"
+
+      # ADR 0277 §2: the trimmed publish writes the API surface of this version, which
+      # Kazo.Os.App.Build carries, so it runs before the packages are packed.
+      - name: Publish the WASM site
+        if: steps.plan.outputs.mode != 'none'
+        working-directory: ${{ env.KAZOOS_SOLUTION_DIR }}
+        run: >-
+          dotnet publish OS/Kazo.Os.Ecosystem/Kazo.Os.Ecosystem.csproj
+          --configuration Release
+          --output artifacts/release/publish
+
       - name: Pack the published libraries
         if: steps.plan.outputs.mode != 'none'
         working-directory: ${{ env.KAZOOS_SOLUTION_DIR }}
@@ -152,25 +167,17 @@ jobs:
             echo "::error title=Packages::No Kazo.Os.*.$VERSION.nupkg was produced."
             exit 1
           fi
+          build_package="$RELEASE_DIR/nupkg/Kazo.Os.App.Build.$VERSION.nupkg"
+          if ! unzip -l "$build_package" | grep -q 'kazoos-build/api-surface/kazoos-api-surface.json.gz'; then
+            echo "::error title=Packages::$(basename "$build_package") has no API surface (ADR 0277)."
+            exit 1
+          fi
           mkdir -p "$RELEASE_DIR/assets"
           cp "$RELEASE_DIR"/nupkg/Kazo.Os.*."$VERSION".nupkg "$RELEASE_DIR"/nupkg/Kazo.Os.*."$VERSION".snupkg "$RELEASE_DIR/assets/"
           {
             echo "${#packages[@]} packages:"
             for package in "${packages[@]}"; do echo "- $(basename "$package")"; done
           } >> "$GITHUB_STEP_SUMMARY"
-
-      # ADR 0236: the build number shown on the sign-in screen and written in version.json.
-      - name: Compute the build number
-        shell: bash
-        run: echo "KazoOsBuildNumber=$(wasm2/KazoOs/build/build-number.sh)" >> "$GITHUB_ENV"
-
-      - name: Publish the WASM site
-        if: steps.plan.outputs.mode == 'release'
-        working-directory: ${{ env.KAZOOS_SOLUTION_DIR }}
-        run: >-
-          dotnet publish OS/Kazo.Os.Ecosystem/Kazo.Os.Ecosystem.csproj
-          --configuration Release
-          --output artifacts/release/publish
 
       - name: Zip the WASM site
         if: steps.plan.outputs.mode == 'release'

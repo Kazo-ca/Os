@@ -45,6 +45,13 @@ public sealed class AppExecutionContextFactory
     private readonly ISimulatedNetworkService? _network;
     private readonly IServerConnectionService? _serverConnection;
     private readonly IProxyClient? _proxy;
+
+    /// <summary>
+    /// Gets the device's relay policy cache (ADR 0278 §1), shared by the network gateway of every
+    /// app; <see langword="null"/> without a server connection. The host invalidates it when the
+    /// server connection or the real-network grants change.
+    /// </summary>
+    public Network.RelayPolicyCache? RelayPolicy { get; }
     private readonly SystemMetricsServices? _metrics;
     private readonly SystemAdministrationGatewayServices? _administration;
     private readonly Clipboard.SystemClipboard _clipboard;
@@ -172,6 +179,7 @@ public sealed class AppExecutionContextFactory
         _network = network;
         _serverConnection = serverConnection;
         _proxy = proxy;
+        RelayPolicy = serverConnection is not null && proxy is not null ? new Network.RelayPolicyCache(serverConnection, proxy) : null;
         _shellHostProvider = shellHostProvider;
         _metrics = metrics;
         _administration = administration;
@@ -342,6 +350,26 @@ public sealed class AppExecutionContextFactory
         AppManagementGateway? managementGateway = CreateManagementGateway(capabilities, manifest, principal, isRootElevated, language);
         AppClipboardGateway clipboardGateway = new(_clipboard, capabilities, process.SessionId, process.Pid);
 
+        // ADR 0278: the device's relay policy cache is shared by every app, and the gateway stops
+        // following the relay when the process ends.
+        AppNetworkGateway? networkGateway = _network is null
+            ? null
+            : new AppNetworkGateway(
+                _network,
+                capabilities,
+                manifest.Id,
+                _serverConnection,
+                _proxy,
+                _metrics?.Network,
+                _metrics?.ProcessIo,
+                process.Pid,
+                _metrics?.KernelMemory,
+                _localNetwork is null ? null : new Network.Local.LocalNetworkCaller(_localNetwork, manifest, principal, isRootElevated))
+            {
+                RelayPolicy = RelayPolicy,
+                Lifetime = cancellationToken
+            };
+
         AppFileSystemGateway fileSystem = new(
             _fileSystem, _clock, operationContext, groupIds, notifyPermissionError: permissionErrors.Raise, kernelMemory: _metrics?.KernelMemory)
         {
@@ -387,19 +415,7 @@ public sealed class AppExecutionContextFactory
             principal.DisplayName,
             catalogGateway,
             managementGateway,
-            _network is null
-                ? null
-                : new AppNetworkGateway(
-                    _network,
-                    capabilities,
-                    manifest.Id,
-                    _serverConnection,
-                    _proxy,
-                    _metrics?.Network,
-                    _metrics?.ProcessIo,
-                    process.Pid,
-                    _metrics?.KernelMemory,
-                    _localNetwork is null ? null : new Network.Local.LocalNetworkCaller(_localNetwork, manifest, principal, isRootElevated)),
+            networkGateway,
             // ADR 0270: the shared drive gateway, with this app's check of cloud-accounts.manage.
             _metrics?.Drives is { } drives ? new CapabilityCheckedDriveGateway(drives, capabilities) : null,
             clipboardGateway,
@@ -420,6 +436,7 @@ public sealed class AppExecutionContextFactory
         // ADR 0043: callbacks these gateways invoke on the app's behalf re-enter its ambient context.
         events.BindAmbientContext(context);
         clock.BindAmbientContext(context);
+        networkGateway?.BindAmbientContext(context);
         catalogGateway?.BindAmbientContext(context);
         accessibilityGateway?.BindAmbientContext(context);
         // ADR 0262 §2: the services of the features of the page, answered for this app's manifest.

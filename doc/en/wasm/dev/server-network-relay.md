@@ -76,6 +76,8 @@ New error codes: `GRANT_MISSING` (403), `RELAY_DISABLED` (503),
 | `AppNetworkGateway` | `ConnectTcpAsync`, `ConnectUdpAsync`, HTTP relay with body. |
 | `RelayedSocket` | `IKazoSocket` over a stream: counts traffic (`/proc/net/dev`) and kernel memory. |
 | `AppServerConnectionGateway.GetRelayPolicyAsync` | server policy for Settings, without ever exposing the token. |
+| `RelayPolicyCache` | the server's policy kept 30 s for every app of the device, read again when the server connection changes or a grant is synchronized (ADR 0278). |
+| `AppNetworkGateway.GetRelayStateAsync` | relay state for one app: `NoServer`, `RelayDisabled`, `GrantPending` or `Ready` with the blocked ports (ADR 0278). |
 
 ## Stream protocol
 
@@ -277,16 +279,35 @@ KazoHttpResponse response = await http.PostAsync(url, new KazoStringContent(json
   browser has only one thread.
 - A host of the simulated network, or this machine, has no raw stream: the
   connection is refused (`SocketError.ConnectionRefused`).
-- Without a server or without `network.real.access`, an unknown host gives
-  `SocketError.HostNotFound`.
+- Without `network.real.access`, an unknown host gives `SocketError.HostNotFound`.
+  With it and without a server, it is the same `SocketError`, thrown in a
+  `KazoRelayException` whose `Reason` is `RelayNoServer` (ADR 0278).
+- `KazoRealNetwork.GetRelayStateAsync()` tells before trying whether the relay
+  works, and `KazoRealNetwork.RelayStateChanged` when that changes (ADR 0278,
+  see [Network in the SDK](../framework/sdk-network.md#relay-state-adr-0278)).
 
-| Relay refusal | `SocketError` |
-|---|---|
-| `BLOCKED_PORT`, `BLOCKED_ADDRESS`, `CONNECTION_REFUSED` | `ConnectionRefused` |
-| `HOST_UNREACHABLE` | `HostUnreachable` |
-| `TLS_FAILED` | `AuthenticationException` (as `SslStream`), `KazoNetworkError.TlsFailed` in the gateway |
-| `GRANT_MISSING`, `RELAY_DISABLED`, `SIMULATED_DOMAIN_BLOCKED` | `HostNotFound` |
-| other | `ConnectionFailed` (SDK network error) |
+| Relay refusal | `SocketError` | `KazoRelayException.Reason` |
+|---|---|---|
+| `BLOCKED_PORT`, `BLOCKED_ADDRESS` | `ConnectionRefused` | `BlockedByAdministrator` |
+| `CONNECTION_REFUSED` | `ConnectionRefused` | (plain `SocketException`) |
+| `HOST_UNREACHABLE` | `HostUnreachable` | (plain `SocketException`) |
+| `TLS_FAILED` | `AuthenticationException` (as `SslStream`), `KazoNetworkError.TlsFailed` in the gateway | |
+| `GRANT_MISSING` | `HostNotFound` | `RelayGrantPending` |
+| `RELAY_DISABLED` | `HostNotFound` | `RelayDisabled` |
+| `SIMULATED_DOMAIN_BLOCKED` | `HostNotFound` | (plain `SocketException`: the name does not exist on the Internet) |
+| no server, or no token | `HostNotFound` | `RelayNoServer` |
+| other | `ConnectionFailed` (SDK network error) | |
+
+Over HTTP, `GRANT_MISSING` gives `RelayGrantPending`
+(`ERR_KAZO_RELAY_GRANT_PENDING`), `RELAY_DISABLED` gives `RelayDisabled`
+(`ERR_KAZO_RELAY_DISABLED`) and no server `RelayNoServer`
+(`ERR_KAZO_RELAY_NO_SERVER`); `HttpRequestError` stays the one of before.
+
+`GET api/proxy/policy` also returns `AccountGrantedApps`: the apps of
+`GrantedApps` and those of the account's synchronized grants (not withdrawn).
+The OS uses it to say `GrantPending`; it shows nothing else of the policy to
+the app. An older server does not send it: the OS then counts the grant as
+received, and a `GRANT_MISSING` refusal still says so.
 
 Settings (server section) displays the policy of the connected server with
 `KazoServerConnection.GetRelayPolicyAsync()`: ports, blocked ports

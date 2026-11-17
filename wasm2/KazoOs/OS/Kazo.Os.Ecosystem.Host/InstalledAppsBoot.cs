@@ -220,6 +220,13 @@ public sealed class InstalledAppsActivator(
     /// </summary>
     public InstalledAppLibraries? Libraries { get; init; }
 
+    /// <summary>
+    /// Gets the publisher of the installed apps' files: after an install or update, it serves the
+    /// icons of the apps it brought, so the launcher shows them before their first launch
+    /// (issue #420). <see langword="null"/> serves none.
+    /// </summary>
+    public InstalledAppAssetPublisher? Assets { get; init; }
+
     /// <inheritdoc />
     public async ValueTask<InstalledAppsActivation> ActivateAsync(CancellationToken cancellationToken = default)
     {
@@ -246,6 +253,13 @@ public sealed class InstalledAppsActivator(
 
             // ADR 0261 §3: a feature just installed may carry a newer copy of a library already in the page.
             Libraries?.ReportPendingRestarts();
+            if (Assets is { } assets && (activation.Added.Count > 0 || activation.Updated.Count > 0))
+            {
+                HashSet<string> changed = new([.. activation.Added, .. activation.Updated], StringComparer.Ordinal);
+                await assets.PublishIconsAsync([.. installed.Current.Installed.Where(app => changed.Contains(app.AppId))], cancellationToken)
+                    .ConfigureAwait(false);
+            }
+
             return activation;
         }
         finally
@@ -421,6 +435,26 @@ public static class InstalledAppsBootExtensions
         foreach (string warning in boot.Warnings)
         {
             logger?.LogWarning("{Warning}", warning);
+        }
+
+        // Issue #420: the launcher, the Start menu and the desktop show the installed apps' icons
+        // before their first launch. In the background: waiting for the service worker must not
+        // hold the boot.
+        if (host.Services.GetService<InstalledAppAssetPublisher>() is { } assets && boot.Current.Installed.Count > 0)
+        {
+            _ = PublishIconsInBackgroundAsync(assets, boot.Current.Installed, logger);
+        }
+    }
+
+    private static async Task PublishIconsInBackgroundAsync(InstalledAppAssetPublisher assets, IReadOnlyList<InstalledApp> apps, ILogger? logger)
+    {
+        try
+        {
+            await assets.PublishIconsAsync(apps).ConfigureAwait(false);
+        }
+        catch (Exception exception)
+        {
+            logger?.LogWarning(exception, "apps: the installed apps' icons could not be served at boot");
         }
     }
 

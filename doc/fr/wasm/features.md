@@ -426,6 +426,9 @@ Cette section liste ce qui est publié dans la branche `main` et en ligne.
   n'est pas élaguée), et l'installation refuse avec la méthode exacte une app
   qui appelle une méthode que l'OS publié n'a pas, au lieu de la laisser
   planter. ([ADR 0242](dev/adr/0242-framework-api-for-installed-apps.md))
+  LINQ, les expressions régulières et les canaux (`System.Linq`,
+  `System.Text.RegularExpressions`, `System.Threading.Channels`) sont aussi
+  entiers. ([ADR 0280](dev/adr/0280-keep-linq-regex-channels-whole.md))
   Elle peut afficher ses propres pages HTML dans une iframe, avec des paramètres
   dans l'adresse, aussi une fois l'OS publié et hors ligne.
   ([ADR 0243](dev/adr/0243-serve-installed-app-pages.md))
@@ -506,11 +509,18 @@ dans `main`, le lien mène à sa PR.
 | Adresse de fichier servie à la demande | Une app reçoit une adresse pour lire un gros fichier (audio, vidéo) sans le copier en mémoire, avec lecture partielle pour avancer dans un morceau. Série `storage/base` ; la lecture partielle est faite (chantier 3), l'adresse reste à faire. | [0275](dev/adr/0275-partial-read-and-file-address.md) | [#379](https://github.com/Kazo-ca/Os/issues/379) |
 | Glisser des fichiers vers une app | Contrat public du SDK pour recevoir des fichiers glissés depuis l'explorateur ou le bureau. | À écrire | [#380](https://github.com/Kazo-ca/Os/issues/380) |
 
+### Réseau
+
+| Fonctionnalité | Description | ADR | Issue |
+| --- | --- | --- | --- |
+| État du relais du serveur Kazo pour les apps | Une app qui a accès au vrai réseau sait, sans essayer, si le relais du serveur Kazo est prêt (aucun serveur, relais arrêté, autorisation en attente), et un échec de connexion dit la vraie raison. Série `todo-wins/base`. | [0278](dev/adr/0278-real-network-relay-state-for-apps.md) | [#418](https://github.com/Kazo-ca/Os/issues/418) |
+
 ### Kazo OS Store
 
 | Fonctionnalité | Description | ADR | Issue |
 | --- | --- | --- | --- |
 | Catalogue des applications | Format du catalogue, vérification et publication des applications proposées. | [0188](dev/adr/0188-hack-store-and-app-catalog.md) | [AppMarketPlace #1](https://github.com/Kazo-ca/Os-AppMarketPlace/issues/1) |
+| Contrôle des API avant publication | Le build d'une app (`KazoOsPack`) et la CI du Store refusent une app qui appelle une API que l'OS publié a retirée, avec la liste des membres manquants, au lieu de la refuser seulement à l'installation. Série `todo-wins/base`. | [0277](dev/adr/0277-trimmed-api-check-before-publishing.md) | [#346](https://github.com/Kazo-ca/Os/issues/346) |
 | Canal bêta et mises à jour automatiques des apps | Une version bêta de Kazo OS en ligne (`os-beta.kazo.ca`), le SDK en préversion sur nuget.org, et chaque app qui se reconstruit et propose sa mise à jour quand le SDK sort. Côté OS, c'est fait : la branche `beta`, le site bêta avec sa pastille « Bêta », le catalogue bêta et les workflows réutilisables des apps. Les préversions 3.4.0-preview.1 à 4 sont sorties le 2026-11-15, chaque dépôt d'app est aligné (chantier 7) et les apps ont proposé leur version bêta d'elles-mêmes ; la 3.4.0 stable suit. Reste l'essai des mises à jour des apps pour la 3.4.0 stable (chantier 8). | [0271](dev/adr/0271-beta-channel-and-automatic-app-updates.md), [plan](dev/plans/release-channels-plan.md) | [#456](https://github.com/Kazo-ca/Os/issues/456) |
 
 ### Personnalisation

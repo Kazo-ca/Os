@@ -597,6 +597,9 @@ Annuler : décider au prochain lancement.</value>
   <data name="Shell.UnboundVariable" xml:space="preserve">
     <value>{0} : variable sans liaison</value>
   </data>
+  <data name="Storage.Full.Message" xml:space="preserve">
+    <value>Le navigateur a refusé d'enregistrer des données : le stockage est plein. Supprimez des fichiers ou videz la corbeille ; ouvrez Diagnostic pour voir ce qui prend la place.</value>
+  </data>
   <data name="Storage.LowSpace.Message" xml:space="preserve">
     <value>Plus que {0:0.#} Mio libres sur {1:0.#} Mio. Supprimez des fichiers ou videz la Corbeille ; ouvrez Diagnostic pour voir ce qui occupe l'espace.</value>
   </data>

@@ -111,12 +111,15 @@ public sealed class AppInstallationService : IAppInstallationService, IAsyncDisp
     /// </summary>
     public Packages.InstalledPackageCatalog? InstalledPackages { get; init; }
 
-    /// <summary>Reads both files, applies them and starts watching them. Called at boot; idempotent.</summary>
+    /// <summary>
+    /// Starts watching both files, then reads and applies them. Called at boot; idempotent.
+    /// Watching first means an edit made meanwhile is never lost (see <see cref="OnSessionChangedAsync"/>).
+    /// </summary>
     /// <param name="cancellationToken">Cancels the reads.</param>
     public async ValueTask StartAsync(CancellationToken cancellationToken = default)
     {
-        await ReloadAsync(cancellationToken).ConfigureAwait(false);
         await RewatchAsync(cancellationToken).ConfigureAwait(false);
+        await ReloadAsync(cancellationToken).ConfigureAwait(false);
     }
 
     /// <inheritdoc />
@@ -523,8 +526,11 @@ public sealed class AppInstallationService : IAppInstallationService, IAsyncDisp
         try
         {
             // The user layer now points at another home (or at none after a logout).
-            await ReloadAsync().ConfigureAwait(false);
+            // Watch first, then read: an edit made while the watchers start is then
+            // either seen by the reload or reported by a watcher. Read-then-watch
+            // missed an edit made between the two (a flaky test under load, #493).
             await RewatchAsync(CancellationToken.None).ConfigureAwait(false);
+            await ReloadAsync().ConfigureAwait(false);
         }
         catch (Exception exception) when (exception is not OutOfMemoryException)
         {
