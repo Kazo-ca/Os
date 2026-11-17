@@ -249,3 +249,8 @@ Kazo.Os.Platform.Core.Roles.FeatureRoleService.Tickets.get -> Kazo.Os.Platform.C
 Kazo.Os.Platform.Core.Roles.FeatureOperationTickets.FeatureOperationTickets(System.Func<System.DateTimeOffset>? clock = null) -> void
 Kazo.Os.Platform.Core.Roles.FeatureOperationTickets.Issue(string! featureId, string! operation, Kazo.Os.AppSdk.Features.KazoAuthenticationScope scope, string! authenticatedBy) -> Kazo.Os.AppSdk.Features.KazoAuthenticationTicket!
 Kazo.Os.Platform.Core.Roles.FeatureOperationTickets.TryConsume(System.Guid token, string! featureId, string! operation) -> bool
+Kazo.Os.Platform.Core.Lifecycle.AppLaunchStatus.RoleRequired = 7 -> Kazo.Os.Platform.Core.Lifecycle.AppLaunchStatus
+const Kazo.Os.Platform.Core.Lifecycle.AppLifecycleOrchestrator.RoleRequiredErrorCode = "lifecycle.role.required" -> string!
+Kazo.Os.Platform.Core.Shell.ShellFailure.RoleRequired = 7 -> Kazo.Os.Platform.Core.Shell.ShellFailure
+Kazo.Os.Platform.Core.Lifecycle.AppLifecycleOrchestrator.Roles.get -> System.Func<Kazo.Os.Platform.Core.Roles.FeatureRoleService?>?
+Kazo.Os.Platform.Core.Lifecycle.AppLifecycleOrchestrator.Roles.init -> void

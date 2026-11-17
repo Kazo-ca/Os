@@ -804,4 +804,7 @@ Annuler : décider au prochain lancement.</value>
   <data name="Feature.Authenticate.Operation" xml:space="preserve">
     <value>{0} demande : {1}</value>
   </data>
+  <data name="Shell.RoleRequired" xml:space="preserve">
+    <value>{0} : rôle requis</value>
+  </data>
 </root>
