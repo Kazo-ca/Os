@@ -415,7 +415,9 @@ with a **form connection**: server address (`ServerAddress`), user name,
 app password (`Secret`, sealed by the OS). It sends WebDAV (RFC 4918) through
 `KazoDirectHttpClient`, signs each request with HTTP Basic using the password
 it asks the OS for each time, and takes the `ETag` as the revision (`If-Match`
-for a conditional write, `If-None-Match: *` for a create). It declares no host:
+for a conditional write, `If-None-Match: *` for a create). It reads the
+`207 Multi-Status` answers with its own small XML reader (`WebDavXml`: namespace prefixes,
+entities, CDATA, no `DOCTYPE`), since the published OS has no `System.Xml`. It declares no host:
 the server the user types is enough. Its tests
 (`Tests/Kazo.Os.Samples.WebDavDrive.Tests`) pass the whole suite against a
 local in-memory WebDAV server (`LocalWebDavServer`). On the published, trimmed OS,
@@ -435,6 +437,10 @@ headers included), then reads and writes a file from the terminal.
   no bare wildcard) and the review reads the code: the hosts reached must be
   the declared ones, no token or secret may leave to another host, no
   JavaScript that goes around the SDK.
+- **No `System.Xml` in the published OS**: the trimmed OS ships no XML assembly (about 1 MB more
+  at every start). `KazoOsPack` refuses a package that calls it (`KOSAPP0100`, ADR 0277). A
+  provider reads the little XML it receives itself, like the WebDAV sample and the OS's S3
+  connector. On-demand XML is TODO [#618](https://github.com/Kazo-ca/Os/issues/618).
 - **CORS**: without the service's consent, nothing gets through
   ([above](#cors-what-the-service-must-accept)).
 - **Phishing**: the OS always shows the feature's name next to the service's

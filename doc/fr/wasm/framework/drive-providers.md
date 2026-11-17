@@ -419,7 +419,9 @@ recopier, avec une **connexion par formulaire** : adresse du serveur
 scellé par l'OS). Il envoie du WebDAV (RFC 4918) par `KazoDirectHttpClient`,
 signe chaque requête en HTTP Basic avec le mot de passe demandé à l'OS à
 chaque fois, et prend l'`ETag` comme révision (`If-Match` pour une écriture
-conditionnelle, `If-None-Match: *` pour une création). Il ne déclare aucun hôte :
+conditionnelle, `If-None-Match: *` pour une création). Il lit les réponses
+`207 Multi-Status` avec son propre petit lecteur XML (`WebDavXml` : préfixes d'espace de noms,
+entités, CDATA, aucun `DOCTYPE`), car l'OS publié n'a pas `System.Xml`. Il ne déclare aucun hôte :
 le serveur tapé par l'utilisateur suffit. Ses tests
 (`Tests/Kazo.Os.Samples.WebDavDrive.Tests`) passent toute la suite contre un
 serveur WebDAV local en mémoire (`LocalWebDavServer`). Sur l'OS publié et rogné,
@@ -440,6 +442,10 @@ en-têtes CORS compris), puis lit et écrit un fichier depuis le terminal.
   pas de joker nu) et la revue lit le code : les hôtes joints doivent être
   ceux déclarés, aucun jeton ni secret ne doit sortir vers un autre hôte, pas
   de JavaScript qui contourne le SDK.
+- **Pas de `System.Xml` dans l'OS publié** : l'OS rogné ne livre aucune assembly XML (environ
+  1 Mo de plus à chaque démarrage). `KazoOsPack` refuse un paquet qui l'appelle (`KOSAPP0100`,
+  ADR 0277). Un fournisseur lit le peu de XML qu'il reçoit lui-même, comme l'exemple WebDAV et le
+  connecteur S3 de l'OS. Le XML à la demande est la TODO [#618](https://github.com/Kazo-ca/Os/issues/618).
 - **CORS** : sans l'accord du service, rien ne passe ([plus haut](#cors--ce-que-le-service-doit-accepter)).
 - **Hameçonnage** : l'OS montre toujours le nom de la fonctionnalité à côté du
   nom du service dans le dialogue de connexion et Paramètres.

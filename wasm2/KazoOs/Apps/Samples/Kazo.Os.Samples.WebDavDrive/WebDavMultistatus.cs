@@ -1,7 +1,5 @@
 using System.Globalization;
 using System.Text;
-using System.Xml;
-using System.Xml.Linq;
 
 namespace Kazo.Os.Samples.WebDavDrive;
 
@@ -24,7 +22,7 @@ public sealed record WebDavResource(string Path, bool IsCollection, long Length,
 public static class WebDavMultistatus
 {
     /// <summary>The <c>DAV:</c> namespace.</summary>
-    public static readonly XNamespace Dav = "DAV:";
+    public const string Dav = "DAV:";
 
     /// <summary>The body asking for what a <see cref="WebDavResource"/> holds, the quota excepted.</summary>
     public static readonly byte[] EntryProperties = Encoding.UTF8.GetBytes(
@@ -38,6 +36,9 @@ public static class WebDavMultistatus
 
     private const int MaxResponses = 100_000;
 
+    /// <summary>The largest answer read: 100 000 entries of a few hundred bytes each.</summary>
+    private const int MaxBodyBytes = 64 * 1024 * 1024;
+
     /// <summary>Reads a <c>207 Multi-Status</c> body.</summary>
     /// <param name="body">The XML.</param>
     /// <param name="cancellationToken">Cancels the read.</param>
@@ -46,26 +47,25 @@ public static class WebDavMultistatus
     public static async Task<IReadOnlyList<WebDavResource>> ParseAsync(Stream body, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(body);
-        XDocument document;
+        WebDavXmlElement root;
         try
         {
-            // No DTD and no external entity: the server is not trusted (XXE).
-            XmlReaderSettings settings = new() { DtdProcessing = DtdProcessing.Prohibit, XmlResolver = null, Async = true };
-            using XmlReader reader = XmlReader.Create(body, settings);
-            document = await XDocument.LoadAsync(reader, LoadOptions.None, cancellationToken).ConfigureAwait(false);
+            // The sample's own reader: the published OS has no XML library (see WebDavXml). It
+            // refuses a DOCTYPE, so the untrusted server cannot expand entities (XXE).
+            root = WebDavXml.Parse(await ReadTextAsync(body, cancellationToken).ConfigureAwait(false));
         }
-        catch (XmlException exception)
+        catch (FormatException exception)
         {
             throw new FormatException("The server's answer is not a WebDAV multistatus document.", exception);
         }
 
-        if (document.Root?.Name != Dav + "multistatus")
+        if (root.Namespace != Dav || root.LocalName != "multistatus")
         {
             throw new FormatException("The server's answer is not a WebDAV multistatus document.");
         }
 
         List<WebDavResource> resources = [];
-        foreach (XElement response in document.Root.Elements(Dav + "response").Take(MaxResponses))
+        foreach (WebDavXmlElement response in root.Elements(Dav, "response").Take(MaxResponses))
         {
             if (Read(response) is { } resource)
             {
@@ -89,21 +89,21 @@ public static class WebDavMultistatus
         return decoded.Length > 1 ? decoded.TrimEnd('/') : decoded;
     }
 
-    private static WebDavResource? Read(XElement response)
+    private static WebDavResource? Read(WebDavXmlElement response)
     {
-        string? href = response.Element(Dav + "href")?.Value;
+        string? href = response.Element(Dav, "href")?.Value;
         if (string.IsNullOrWhiteSpace(href))
         {
             return null;
         }
 
         // Only the properties the server found (status 200); the others are absent, not empty.
-        XElement[] found = [.. response.Elements(Dav + "propstat")
-            .Where(static propstat => propstat.Element(Dav + "status")?.Value.Contains(" 200 ", StringComparison.Ordinal) == true)
-            .SelectMany(static propstat => propstat.Elements(Dav + "prop").Elements())];
-        XElement? Prop(string name) => found.FirstOrDefault(element => element.Name == Dav + name);
+        WebDavXmlElement[] found = [.. response.Elements(Dav, "propstat")
+            .Where(static propstat => propstat.Element(Dav, "status")?.Value.Contains(" 200 ", StringComparison.Ordinal) == true)
+            .SelectMany(static propstat => propstat.Elements(Dav, "prop").SelectMany(static prop => prop.Children))];
+        WebDavXmlElement? Prop(string name) => found.FirstOrDefault(element => element.Namespace == Dav && element.LocalName == name);
 
-        bool collection = Prop("resourcetype")?.Element(Dav + "collection") is not null;
+        bool collection = Prop("resourcetype")?.Element(Dav, "collection") is not null;
         return new WebDavResource(
             DecodePath(href),
             collection,
@@ -116,6 +116,26 @@ public static class WebDavMultistatus
             QuotaAvailable = ParseLong(Prop("quota-available-bytes")?.Value),
             QuotaUsed = ParseLong(Prop("quota-used-bytes")?.Value),
         };
+    }
+
+    /// <summary>Reads the answer as UTF-8 text (RFC 4918 §8.2), at most <see cref="MaxBodyBytes"/>.</summary>
+    private static async Task<string> ReadTextAsync(Stream body, CancellationToken cancellationToken)
+    {
+        using MemoryStream copy = new();
+        byte[] buffer = new byte[81_920];
+        int read;
+        while ((read = await body.ReadAsync(buffer, cancellationToken).ConfigureAwait(false)) > 0)
+        {
+            if (copy.Length + read > MaxBodyBytes)
+            {
+                throw new FormatException("The server's answer is larger than a WebDAV listing should be.");
+            }
+
+            copy.Write(buffer, 0, read);
+        }
+
+        return new UTF8Encoding(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: false)
+            .GetString(copy.GetBuffer(), 0, (int)copy.Length).TrimStart('\uFEFF');
     }
 
     private static long? ParseLong(string? text) =>
