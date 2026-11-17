@@ -20,7 +20,8 @@ navigateur vers le service. La seule chose à faire chez le fournisseur est une
 
 ## Architecture
 
-Tout est dans `Platform/Kazo.Os.Platform.Core/CloudDrives/S3/`, sans
+Tout est dans `Platform/Kazo.Os.Platform.CloudDrives/S3/` (assemblage à part depuis
+l'ADR 0282 §5, retiré par `-p:KazoOsS3Drives=false`), sans
 dépendance au navigateur : `HttpClient` devient `fetch` sous WebAssembly.
 
 | Pièce | Rôle |

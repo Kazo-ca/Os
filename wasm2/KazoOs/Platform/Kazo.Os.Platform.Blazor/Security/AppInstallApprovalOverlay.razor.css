@@ -143,6 +143,14 @@
     color: #c9d5db;
 }
 
+/* ADR 0284: the hosts and typed servers a capability allows, as on the capability approval window. */
+.iap-capability-hosts {
+    grid-column: 1 / -1;
+    font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+    font-size: 0.78rem;
+    color: #ffb4a8;
+}
+
 
 
 

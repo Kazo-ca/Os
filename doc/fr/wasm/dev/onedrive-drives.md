@@ -21,14 +21,16 @@ Kazo OS (`Files.ReadWrite.AppFolder`, `Apps/Kazo OS`), et
 
 | Élément | Projet | Rôle |
 | --- | --- | --- |
-| `OneDriveDriveSource` | Platform.Core (`CloudDrives/OneDrive/`) | La source `onedrive`, sur la base commune `CloudDriveSource` : aucune fenêtre à la création, aucun réseau à la réouverture, `AvailabilityChanged` quand un compte change ou que le réseau revient. |
+| `OneDriveDriveSource` | Platform.CloudDrives (`OneDrive/`) | La source `onedrive`, sur la base commune `CloudDriveSource` : aucune fenêtre à la création, aucun réseau à la réouverture, `AvailabilityChanged` quand un compte change ou que le réseau revient. |
 | `OneDriveFolder` | idem | Le `IHostFolder` du lecteur, avec `IHostFolderQuota` et `IConditionalHostFolder`. |
 | `OneDriveGraphClient` (interne) | idem | Les requêtes Graph par `CloudDriveConnection` (jeton, renouvellement après un 401, réseau et 5xx en `Unavailable`) ; les adresses pré-authentifiées par `HttpClient` seul, **sans** jeton ; les refus de Graph en erreurs de l'OS. |
-| `CloudDriveConnection`, `CloudDriveSource`, `ICloudAccountTokens` | Platform.Core (`CloudDrives/`) | Base commune des connecteurs, écrite au chantier 3 (Dropbox). |
+| `CloudDriveConnection`, `CloudDriveSource` ; `ICloudAccountTokens` | Platform.CloudDrives ; Platform.Core (`CloudDrives/`) | Base commune des connecteurs, écrite au chantier 3 (Dropbox). |
 | `HostFolderErrorKind.FileTooLarge` | Simulation.Abstractions | Un fichier de plus de 128 Mio (ADR 0245, ADR 0267 §10) : `EFBIG`. |
 
-L'hôte Ecosystem enregistre la source :
-`services.AddScoped<INetworkDriveSource>(… new OneDriveDriveSource(CloudAccountService, ICloudProviderCatalog, new HttpClient(), IHostActivitySignal))`.
+L'hôte Ecosystem enregistre la source dans `AddKazoOsShippedCloudDrives`
+(`CloudDriveServiceCollectionExtensions`) quand le build la garde
+(`KazoOsOneDriveDrives`, ADR 0282 §5), derrière un `SwitchableDriveSource` :
+`new OneDriveDriveSource(CloudAccountService, ICloudProviderCatalog, new HttpClient(), IHostActivitySignal)`.
 
 ## Correspondance avec Graph
 

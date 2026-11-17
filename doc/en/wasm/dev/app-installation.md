@@ -457,6 +457,11 @@ SDK model (`FeatureDefinition`, `FeatureEntryPoint`, child manifests) is in
   library of the package (`apps.package.service-contract-not-shared`), and
   the installer a feature that provides a contract another feature of the
   catalog already provides (`apps.package.service-already-provided`).
+- **Provided drive types** ([ADR 0282](adr/0282-third-party-drive-providers.md) §1,
+  [`drive-providers.md`](../framework/drive-providers.md)): the installer refuses
+  a feature that declares a drive type another feature of the catalog already
+  provides (`apps.package.drive-type-already-provided`); an update of the same
+  feature is not compared with itself.
   `AppCatalog` no longer removes an app for an **optional** dependency out of
   range: `KazoFeatures` answers it `VersionMismatch`.
 

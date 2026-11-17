@@ -4,8 +4,9 @@
 
 @*
     "Network drives" of the Places (ADR 0181 §11, ADR 0267 §11): the folders of the computer and the
-    cloud storage mounted in /mnt, a disconnected one greyed with a reconnect click, an eject button to
-    unmount, and "Connect a network drive…", shown when this OS can mount something here. On a computer
+    cloud storage mounted in /mnt, a disconnected one greyed with a reconnect click, a drive whose
+    provider is missing greyed with the reason (and "Install the provider" when the Store has it,
+    ADR 0282 §5), an eject button to unmount, and "Connect a network drive…", shown when this OS can mount something here. On a computer
     it is a sidebar section; on a phone (Compact) the same drives are chips next to Home and Trash.
 *@
 @if (Compact)
@@ -25,6 +26,18 @@
             </button>
         }
     }
+    @foreach (KazoDriveInfo drive in _missing)
+    {
+        <button type="button" class="network-chip missing" @onclick="() => InstallProviderAsync(drive)" disabled="@_busy"
+                aria-disabled="@(CanInstall(drive) ? "false" : "true")"
+                title="@MissingReason(drive)" aria-label="@MissingName(drive)">
+            <KazoIcon Library="@DriveIcon(drive).Library" Name="@DriveIcon(drive).Name" Size="16" /> <span>@drive.VolumeLabel</span>
+        </button>
+        <button type="button" class="network-chip-eject" @onclick="() => UnmountAsync(drive)" disabled="@_busy"
+                aria-label="@L["Network.Disconnect", drive.VolumeLabel]" title="@L["Network.Disconnect", drive.VolumeLabel]">
+            <KazoIcon Library="IconLibrary.Lucide" Name="circle-x" Size="16" />
+        </button>
+    }
     @if (_canConnect)
     {
         <button type="button" class="network-chip network-connect-chip" @onclick="OpenDialog" disabled="@_busy"
@@ -33,7 +46,7 @@
         </button>
     }
 }
-else if (_canConnect || _drives.Count > 0)
+else if (_canConnect || _drives.Count > 0 || _missing.Count > 0)
 {
     <div class="sidebar-heading network-heading">@L["Network.Heading"]</div>
     @foreach (KazoDriveInfo drive in _drives)
@@ -49,6 +62,29 @@ else if (_canConnect || _drives.Count > 0)
                     @if (Detail(drive) is { } detail)
                     {
                         <span class="network-drive-detail">@detail</span>
+                    }
+                </span>
+            </button>
+            <button class="network-eject" @onclick="() => UnmountAsync(drive)" title="@L["Network.Disconnect", drive.VolumeLabel]"
+                    aria-label="@L["Network.Disconnect", drive.VolumeLabel]" disabled="@_busy">
+                <KazoIcon Library="IconLibrary.Lucide" Name="circle-x" Size="14" />
+            </button>
+        </div>
+    }
+    @foreach (KazoDriveInfo drive in _missing)
+    {
+        <div class="network-drive">
+            <button class="sidebar-entry missing" @onclick="() => InstallProviderAsync(drive)"
+                    aria-disabled="@(CanInstall(drive) ? "false" : "true")"
+                    title="@MissingReason(drive)" disabled="@_busy">
+                <KazoIcon Library="@DriveIcon(drive).Library" Name="@DriveIcon(drive).Name" Size="16" />
+                @* The name a screen reader reads is the visible text; the hidden commas only separate its lines. *@
+                <span class="network-drive-text">
+                    <span class="network-drive-label">@drive.VolumeLabel</span>
+                    <span class="network-drive-detail"><span class="network-sr">, </span>@MissingReason(drive)</span>
+                    @if (CanInstall(drive))
+                    {
+                        <span class="network-drive-action"><span class="network-sr">, </span>@L["Drives.ProviderMissing.Install"]</span>
                     }
                 </span>
             </button>

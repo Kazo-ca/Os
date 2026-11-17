@@ -310,6 +310,19 @@ public sealed class AppPermissionAdministration
             await _permissions.RemoveUserDenialAsync(appId, capability, cancellationToken).ConfigureAwait(false);
         }
 
+        if (DangerousCapabilityEvaluator.HostCapabilities.Contains(capability))
+        {
+            // ADR 0282 §4 and ADR 0284 §1: an allow approves the hosts the capability names now (a
+            // later new host asks again); a refusal withdraws them, keeping those another capability
+            // of the app still names.
+            AppPermissionDecisions before = await _permissions.ReadAsync(cancellationToken).ConfigureAwait(false);
+            bool allowed = decision == AppPermissionDecision.Allow;
+            IReadOnlyCollection<string>? hosts = DangerousCapabilityEvaluator.HostsToApprove(
+                _catalog.Manifests[appId], before.GetApprovedDirectNetworkHosts(appId), allowed ? [capability] : [], allowed ? [] : [capability]);
+            await _permissions.WriteApprovedDirectNetworkHostsAsync(appId, hosts, cancellationToken).ConfigureAwait(false);
+            return;
+        }
+
         if (!string.Equals(capability, AppCapabilities.NetworkRealAccess, StringComparison.Ordinal))
         {
             return;

@@ -174,6 +174,25 @@ tenant = common
 app-folder-path = Apps/…
 ```
 
+Une clé `disabled` hors section (`disabled = dropbox, s3`) cache des types de
+lecteurs livrés sur cette machine ; elle s'ajoute à `KazoOs:CloudDrives:Disabled`
+de l'hôte et ne rallume jamais un type éteint (ADR 0282 §5,
+[`cloud-drives.md`](cloud-drives.md#connecteurs-désactivables-adr-0282-5)). Un
+fournisseur désactivé n'est plus rendu par `CloudProviderCatalog`.
+
+Une fonctionnalité qui déclare un type OAuth (ADR 0282 §3) a sa propre
+section, au nom du type : `client-id` remplace l'identifiant de l'accès
+complet, ou du seul accès déclaré ; `app-folder-client-id` celui du dossier
+réservé quand le type déclare les deux. Une clé absente ou vide garde
+l'identifiant du manifeste. Le type `locked` ne peut pas avoir de section (nom
+réservé des fichiers de réglages, ADR 0044).
+
+```ini
+[exemple]
+client-id = …
+app-folder-client-id = …
+```
+
 | Fournisseur | Étendue `Full` | Étendue `AppFolder` | Autres paramètres |
 | --- | --- | --- | --- |
 | Dropbox | App « Full Dropbox » | App « App folder » | `token_access_type=offline` ; révocation `2/auth/token/revoke` ; identité `2/users/get_current_account` |
@@ -208,6 +227,54 @@ connecteur ; des clés illisibles mettent le compte en `NeedsReconnect`. Un
 compte à clés refuse `GetAccessTokenAsync` et `ReconnectAsync`
 (`ProviderNotConfigured`) : on le reconnecte en saisissant de nouveau ses clés.
 Le retrait est le même que pour les autres comptes.
+
+## Types déclarés par une fonctionnalité (ADR 0282 §3)
+
+Une fonctionnalité du Store qui fournit un type de lecteur
+([`../framework/drive-providers.md`](../framework/drive-providers.md)) ne mène
+jamais la connexion : l'OS la mène à partir de sa déclaration.
+
+- **OAuth** : `CloudProviderCatalog.DeclaredProviders` lit, à chaque appel, les
+  types `oauth` des fonctionnalités installées et activées
+  (`AppCatalog.GetDriveProviders`, `IAppEnablementRegistry`), et
+  `DeclaredCloudProviders.Build` en fait un `CloudOAuthProvider` (adresses du
+  manifeste, en `https` seulement ; `FeatureId` dit quelle fonctionnalité le
+  déclare). Ils viennent après Dropbox et OneDrive ; un type de l'OS ne peut
+  pas être déclaré. Ensuite tout est comme pour Dropbox : même fenêtre, même
+  page de retour, PKCE, jetons scellés sur l'appareil, renouvellement par
+  l'OS. Sans adresse d'identité, le compte prend le nom du service et la
+  reconnexion ne peut pas vérifier qu'il s'agit du même compte.
+- **Formulaire** : `CloudAccountService.SaveFormAccountAsync(type,
+  fonctionnalité, nom, options, secrets)` range un compte à clés (`"credential": "keys"`) : les
+  valeurs non secrètes sont lisibles dans la liste (`options`, rendues par
+  `CloudAccount.Options`), les champs secrets sont scellés comme des jetons. Le
+  même type avec les mêmes valeurs non secrètes retrouve le même compte (son
+  identifiant chez le service est `form:` suivi du SHA-256 de ces valeurs, sans
+  aucun secret) : saisir un nouveau mot de passe remplace l'ancien.
+- **Fonctionnalité du compte** : chaque compte d'un type déclaré garde l'id de
+  la fonctionnalité qui servait son type quand il a été ajouté (`featureId`
+  dans la liste, `CloudAccount.FeatureId` ; `null` pour Dropbox, OneDrive et
+  S3). Si une autre fonctionnalité sert plus tard le même type, elle n'atteint
+  jamais ce compte : son contexte est refusé, la reconnexion est refusée
+  (`ProviderNotConfigured`) sans ouvrir de fenêtre, et une nouvelle connexion
+  au même compte du service crée un compte distinct. Même règle que les
+  lecteurs, qui ne se remontent qu'avec la même fonctionnalité (réponse A de
+  Benoit, 2026-11-17).
+- **Ce qui est prêté au fournisseur** :
+  `CloudAccountService.CreateDriveProviderContextAsync(type, fonctionnalité,
+  compte)` rend un `IKazoDriveProviderContext` lié à **un** compte, **un** type
+  et **une** fonctionnalité. Un compte d'un autre type ou d'une autre
+  fonctionnalité est refusé (`AccountNotFound`), à la création comme à chaque
+  appel. À chaque appel, le contexte
+  relit la liste : `GetAccessTokenAsync` rend le jeton d'accès de ce compte
+  (renouvelé par l'OS), `GetSecretAsync` un champ secret de ce compte, et rien
+  une fois le compte retiré. Le contexte ne garde ni jeton ni secret, et le
+  jeton de renouvellement ne sort jamais de l'OS. Les refus deviennent des
+  `KazoDriveException` : `SignInRequired` (reconnexion, trousseau verrouillé,
+  compte retiré) ou `Unavailable` (service injoignable).
+
+Le branchement sur les lecteurs (qui crée le contexte à l'ouverture d'un
+lecteur) est le chantier 4 ; l'interface qui propose ces types, le chantier 6.
 
 ## Pages publiques pour les fournisseurs
 
@@ -249,6 +316,11 @@ sont dans [`legal-pages.md`](legal-pages.md).
   rotation, refus → `NeedsReconnect`, hors ligne, mauvais compte, retrait,
   fenêtre bloquée ou refusée, invité refusé, clé perdue, autre utilisateur,
   apps exclues.
+- `Tests/Kazo.Os.Platform.Core.Tests/CloudAccounts/DeclaredDriveProviderTests.cs` :
+  types déclarés offerts puis retirés avec leur fonctionnalité, identifiants
+  remplacés par `cloud-drives.config`, connexion OAuth d'un type déclaré,
+  compte à formulaire (valeurs en clair, secrets scellés), contexte limité au
+  compte et au type du lecteur ouvert, jeton de renouvellement jamais rendu.
 - `Tests/Kazo.Os.Infrastructure.Browser.Tests/CloudAccounts/` : adresse de
   retour selon l'adresse de base, réponses du module.
 - `Tests/Kazo.Os.Pwa.E2E.Tests/CloudSignInWindowTests.cs` : sur la PWA publiée
@@ -274,3 +346,5 @@ sont dans [`legal-pages.md`](legal-pages.md).
 - [x] Brancher `ICloudAccountDrives` sur `NetworkDriveService` (`ReleaseAsync`).
 - [x] Interface (chantier 5) : [`cloud-drives-ui.md`](cloud-drives-ui.md).
 - [ ] Connecteurs (chantiers 3 et 4).
+- [x] Types déclarés par une fonctionnalité : OAuth, formulaire, contexte du
+  fournisseur (série `drive-providers`, chantier 5).

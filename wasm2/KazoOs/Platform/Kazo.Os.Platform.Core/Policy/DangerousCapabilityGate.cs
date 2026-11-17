@@ -223,6 +223,20 @@ public sealed class DangerousCapabilityGate : IDangerousCapabilityGate
                         .WriteApprovedRealNetworkPortsAsync(manifest.Id, RealNetworkPorts.Normalize(manifest.RealNetworkPorts) ?? [], ct)
                         .ConfigureAwait(false);
                 }
+
+                if (pending.Any(DangerousCapabilityEvaluator.HostCapabilities.Contains))
+                {
+                    // ADR 0282 §4 and ADR 0284 §1: the hosts the window listed are the ones approved,
+                    // next to those another capability of the app had approved before.
+                    AppPermissionDecisions before = await _permissions.ReadAsync(ct).ConfigureAwait(false);
+                    await _permissions
+                        .WriteApprovedDirectNetworkHostsAsync(
+                            manifest.Id,
+                            DangerousCapabilityEvaluator.HostsToApprove(manifest, before.GetApprovedDirectNetworkHosts(manifest.Id), pending, []),
+                            ct)
+                        .ConfigureAwait(false);
+                }
+
                 approved = true;
                 RecordApprove(manifest.Id, capabilityList, principal, verification.LoginName ?? login ?? string.Empty, null, AuditOutcome.Success);
                 return new DangerousCapabilityApprovalAttempt(true, DangerousCapabilityApprovalRequest.MaxAttempts - failures);

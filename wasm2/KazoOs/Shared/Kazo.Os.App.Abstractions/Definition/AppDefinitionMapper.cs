@@ -58,6 +58,8 @@ public static class AppDefinitionMapper
             Capabilities = [.. definition.Capabilities],
             // ADR 0235 §3: copied as declared (the validator refuses a bad entry), omitted when empty.
             RealNetworkPorts = definition.RealNetworkPorts.Count == 0 ? null : [.. definition.RealNetworkPorts],
+            // ADR 0282 §4: copied as declared (the validator refuses a bad entry), omitted when empty.
+            DirectNetworkHosts = definition.DirectNetworkHosts.Count == 0 ? null : [.. definition.DirectNetworkHosts],
             DeclaredTopicPermissions = [.. definition.DeclaredTopicPermissions],
             Resources = definition.Resources,
             Settings = definition.Settings,
@@ -134,6 +136,8 @@ public static class AppDefinitionMapper
             Localizations = [.. definition.Localizations],
             Capabilities = [.. definition.Capabilities],
             RealNetworkPorts = definition.RealNetworkPorts.Count == 0 ? null : [.. definition.RealNetworkPorts],
+            // ADR 0282 §4: copied as declared (the validator refuses a bad entry), omitted when empty.
+            DirectNetworkHosts = definition.DirectNetworkHosts.Count == 0 ? null : [.. definition.DirectNetworkHosts],
             DeclaredTopicPermissions = [.. definition.DeclaredTopicPermissions],
             Resources = definition.Resources,
             Settings = definition.Settings,
@@ -145,6 +149,8 @@ public static class AppDefinitionMapper
             OomScoreAdj = definition.OomScoreAdjust,
             // ADR 0262 §1: the services the feature provides, in its own assemblies.
             ProvidedServices = ToProvidedServices(definition),
+            // ADR 0282 §1: the types of network drive the feature provides.
+            DriveProviders = ToDriveProviders(definition),
             // ADR 0246 §1: the permissions it declares, under its prefix.
             CapabilityPrefix = definition.CapabilityPrefix,
             ProvidedCapabilities = definition.ProvidedCapabilities is not { Count: > 0 } declared
@@ -193,6 +199,10 @@ public static class AppDefinitionMapper
                 RequiresRole = entry.RequiresRole,
                 // ADR 0235 §3: the ports go with the capability that needs them.
                 RealNetworkPorts = carriesRealNetwork && definition.RealNetworkPorts.Count > 0 ? [.. definition.RealNetworkPorts] : null,
+                // ADR 0282 §4: the hosts go with the capability that needs them.
+                DirectNetworkHosts = entry.Capabilities.Contains(AppCapabilities.NetworkDirectAccess, StringComparer.Ordinal) && definition.DirectNetworkHosts.Count > 0
+                    ? [.. definition.DirectNetworkHosts]
+                    : null,
                 DeclaredTopicPermissions = [],
                 Resources = entry.Resources ?? definition.Resources,
                 Settings = entry.Settings,
@@ -235,6 +245,30 @@ public static class AppDefinitionMapper
             return new AppProvidedServiceManifest(AppProvidedServiceManifest.NameOf(contract), AppProvidedServiceManifest.NameOf(implementation))
             {
                 EntryPoint = entryPoint,
+            };
+        })];
+    }
+
+    private static IReadOnlyList<AppDriveProviderManifest>? ToDriveProviders(FeatureDefinition definition)
+    {
+        IReadOnlyList<KazoDriveProviderDeclaration> providers = definition.DriveProviders
+            ?? throw new InvalidOperationException($"'{definition.GetType().FullName}' returned null DriveProviders.");
+        if (providers.Count == 0)
+        {
+            return null;
+        }
+
+        return [.. providers.Select(declaration =>
+        {
+            ArgumentNullException.ThrowIfNull(declaration);
+            Type provider = declaration.Provider
+                ?? throw new InvalidOperationException($"The drive provider '{declaration.Type}' of '{definition.Id}' has a null Provider.");
+            AppDriveConnectionManifest connection = declaration.Connection
+                ?? throw new InvalidOperationException($"The drive provider '{declaration.Type}' of '{definition.Id}' has a null Connection.");
+            return new AppDriveProviderManifest(declaration.Type, declaration.Name, AppProvidedServiceManifest.NameOf(provider), connection)
+            {
+                Icon = declaration.Icon,
+                Hosts = [.. declaration.Hosts ?? []],
             };
         })];
     }

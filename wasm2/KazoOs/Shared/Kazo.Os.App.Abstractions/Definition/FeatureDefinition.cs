@@ -56,6 +56,15 @@ public abstract class FeatureDefinition : AppDefinition
     public virtual string? ServiceEntryPoint => null;
 
     /// <summary>
+    /// Gets the types of network drive the feature provides (ADR 0282 §1): each pairs a filesystem
+    /// type (<c>exemple</c>) with the class of the feature that talks to the service, the way the
+    /// user connects, and the hosts the class reaches. The OS loads the class on the first drive of
+    /// that type and runs it in the feature's context; declaring any requires the capability
+    /// <c>drives.provide</c>. Empty by default.
+    /// </summary>
+    public virtual IReadOnlyList<KazoDriveProviderDeclaration> DriveProviders => [];
+
+    /// <summary>
     /// Gets the prefix of the permissions the feature declares (ADR 0246 §2): one lowercase segment,
     /// <c>x86</c>, that no built-in capability uses and no other installed feature took. Required
     /// when <see cref="ProvidedCapabilities"/> is not empty.

@@ -327,10 +327,14 @@ Kazo.Os.Infrastructure.Browser.Settings.IndexedDbLegacySettingsStore.IndexedDbLe
 Kazo.Os.Infrastructure.Browser.Settings.IndexedDbLegacySettingsStore.ReadAllAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<Kazo.Os.Simulation.Abstractions.Settings.LegacySettingsRecord!>!>
 Kazo.Os.Infrastructure.Browser.Storage.BrowserStorageManager
 Kazo.Os.Infrastructure.Browser.Storage.BrowserStorageManager.BrowserStorageManager(Microsoft.JSInterop.IJSRuntime! runtime) -> void
+Kazo.Os.Infrastructure.Browser.Storage.BrowserStorageManager.DatabaseExistsAsync(string! name, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<bool?>
 Kazo.Os.Infrastructure.Browser.Storage.BrowserStorageManager.DisposeAsync() -> System.Threading.Tasks.ValueTask
+Kazo.Os.Infrastructure.Browser.Storage.BrowserStorageManager.FileExistsAsync(string! path, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<bool?>
 Kazo.Os.Infrastructure.Browser.Storage.BrowserStorageManager.GetCapacityAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.Simulation.Abstractions.Metrics.StorageCapacity?>
 Kazo.Os.Infrastructure.Browser.Storage.BrowserStorageManager.GetStatusAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.Infrastructure.Browser.Storage.BrowserStorageStatus!>
+Kazo.Os.Infrastructure.Browser.Storage.BrowserStorageManager.ReadBootMarkerAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<string?>
 Kazo.Os.Infrastructure.Browser.Storage.BrowserStorageManager.RequestPersistenceAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<bool>
+Kazo.Os.Infrastructure.Browser.Storage.BrowserStorageManager.WriteBootMarkerAsync(string! marker, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
 Kazo.Os.Infrastructure.Browser.Storage.BrowserStorageQuotaException
 Kazo.Os.Infrastructure.Browser.Storage.BrowserStorageQuotaException.BrowserStorageQuotaException(string! message, System.Exception! innerException) -> void
 Kazo.Os.Infrastructure.Browser.Storage.BrowserStorageStatus

@@ -21,14 +21,16 @@ a chosen folder.
 
 | Piece | Project | Role |
 | --- | --- | --- |
-| `OneDriveDriveSource` | Platform.Core (`CloudDrives/OneDrive/`) | The `onedrive` source, on the shared `CloudDriveSource`: no window at creation, no network at reopening, `AvailabilityChanged` when an account changes or the network returns. |
+| `OneDriveDriveSource` | Platform.CloudDrives (`OneDrive/`) | The `onedrive` source, on the shared `CloudDriveSource`: no window at creation, no network at reopening, `AvailabilityChanged` when an account changes or the network returns. |
 | `OneDriveFolder` | same | The drive's `IHostFolder`, with `IHostFolderQuota` and `IConditionalHostFolder`. |
 | `OneDriveGraphClient` (internal) | same | Graph requests through `CloudDriveConnection` (token, renewal after a 401, network and 5xx as `Unavailable`); pre-authenticated addresses through `HttpClient` alone, **without** the token; Graph's refusals as the OS's errors. |
-| `CloudDriveConnection`, `CloudDriveSource`, `ICloudAccountTokens` | Platform.Core (`CloudDrives/`) | Shared base of the connectors, written in work item 3 (Dropbox). |
+| `CloudDriveConnection`, `CloudDriveSource`; `ICloudAccountTokens` | Platform.CloudDrives; Platform.Core (`CloudDrives/`) | Shared base of the connectors, written in work item 3 (Dropbox). |
 | `HostFolderErrorKind.FileTooLarge` | Simulation.Abstractions | A file over 128 MiB (ADR 0245, ADR 0267 §10): `EFBIG`. |
 
-The Ecosystem host registers the source:
-`services.AddScoped<INetworkDriveSource>(… new OneDriveDriveSource(CloudAccountService, ICloudProviderCatalog, new HttpClient(), IHostActivitySignal))`.
+The Ecosystem host registers the source in `AddKazoOsShippedCloudDrives`
+(`CloudDriveServiceCollectionExtensions`) when the build keeps it
+(`KazoOsOneDriveDrives`, ADR 0282 §5), behind a `SwitchableDriveSource`:
+`new OneDriveDriveSource(CloudAccountService, ICloudProviderCatalog, new HttpClient(), IHostActivitySignal)`.
 
 ## Mapping to Graph
 

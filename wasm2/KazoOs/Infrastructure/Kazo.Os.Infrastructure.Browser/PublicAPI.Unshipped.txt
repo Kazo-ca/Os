@@ -1,5 +1,1 @@
 #nullable enable
-Kazo.Os.Infrastructure.Browser.Storage.BrowserStorageManager.ReadBootMarkerAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<string?>
-Kazo.Os.Infrastructure.Browser.Storage.BrowserStorageManager.WriteBootMarkerAsync(string! marker, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
-Kazo.Os.Infrastructure.Browser.Storage.BrowserStorageManager.DatabaseExistsAsync(string! name, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<bool?>
-Kazo.Os.Infrastructure.Browser.Storage.BrowserStorageManager.FileExistsAsync(string! path, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<bool?>

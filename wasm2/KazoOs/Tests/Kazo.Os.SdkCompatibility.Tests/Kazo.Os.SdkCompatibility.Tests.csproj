@@ -22,6 +22,8 @@
     <!-- The SDK an app may reference (ADR 0055) and the catalog that admits it (ADR 0098 §3). -->
     <ProjectReference Include="..\..\Shared\Kazo.Os.AppSdk\Kazo.Os.AppSdk.csproj" />
     <ProjectReference Include="..\..\Shared\Kazo.Os.AppSdk.Blazor\Kazo.Os.AppSdk.Blazor.csproj" />
+    <!-- ADR 0282: the public conformance suite a drive provider of the fixtures runs against. -->
+    <ProjectReference Include="..\..\Shared\Kazo.Os.AppSdk.Testing\Kazo.Os.AppSdk.Testing.csproj" />
     <ProjectReference Include="..\..\Platform\Kazo.Os.Platform.Core\Kazo.Os.Platform.Core.csproj" />
     <ProjectReference Include="..\Kazo.Os.Tests.Support\Kazo.Os.Tests.Support.csproj" />
   </ItemGroup>

@@ -197,6 +197,20 @@ Cette section liste ce qui est publié dans la branche `main` et en ligne.
   [ADR 0269](dev/adr/0269-cloud-tokens-stay-on-the-device.md),
   [ADR 0270](dev/adr/0270-cloud-drives-in-the-app-sdk.md),
   [`cloud-drives.md`](dev/cloud-drives.md))
+- **Fournisseurs de lecteurs réseau tiers** : une fonctionnalité du Store peut ajouter
+  un type de lecteur réseau (par exemple WebDAV) ; il apparaît sans redémarrage dans la
+  fenêtre « Connecter un lecteur réseau », Paramètres ▸ Comptes cloud et `mount -t`,
+  marqué « Fourni par <fonctionnalité> ». L'OS mène la connexion (OAuth avec PKCE ou
+  formulaire), garde les jetons et les secrets scellés sur l'appareil, et ne prête au
+  fournisseur que ce qui sert au lecteur ouvert. L'administrateur qui installe la
+  fonctionnalité approuve `drives.provide` sur un écran qui nomme les hôtes joints. Un
+  lecteur dont le fournisseur a été retiré reste grisé avec **Installer le fournisseur**.
+  Dropbox, OneDrive et S3 restent livrés et peuvent être retirés à la publication
+  (`KazoOsDropboxDrives`, `KazoOsOneDriveDrives`, `KazoOsS3Drives`, paquet
+  `Kazo.Os.Platform.CloudDrives`) ou masqués sans republier (`KazoOs:CloudDrives:Disabled`).
+  ([ADR 0282](dev/adr/0282-third-party-drive-providers.md),
+  [ADR 0284](dev/adr/0284-drive-provider-hosts-and-typed-server-address.md),
+  [`drive-providers.md`](framework/drive-providers.md))
 - **Confidentialité et conditions d'utilisation** : `os.kazo.ca/privacy.html` et
   `terms.html`, en français et en anglais, disent ce que Kazo OS fait des
   données (rien sur un serveur de l'éditeur ; tiers listés) ; liées depuis
@@ -499,6 +513,7 @@ Cette section liste ce qui est publié dans la branche `main` et en ligne.
 - **Fonctionnalités installables (type « Feature »)** : une fonctionnalité facultative de l'OS installée pour toute la machine par un administrateur, avec ses points d'entrée enfants. ([ADR 0260](dev/adr/0260-feature-app-type.md), [`app-installation.md`](dev/app-installation.md#fonctionnalités-adr-0260))
 - **Bibliothèques d'app et versions partagées** : un paquet emporte les bibliothèques de l'app, et une bibliothèque partagée (`KazoOsSharedLibrary`) est chargée une seule fois, dans sa version compatible la plus récente. ([ADR 0261](dev/adr/0261-app-libraries-and-shared-versions.md), [ADR 0256](dev/adr/0256-app-libraries-implementation-adjustments.md))
 - **Services des Features** : une app demande une interface qu'une Feature fournit, avec `KazoFeatures.GetServiceAsync<T>()`, sans dépendance dans son binaire. ([ADR 0262](dev/adr/0262-feature-service-registry-and-async-resolution.md), [`feature-services.md`](framework/feature-services.md))
+- **Fournisseurs de lecteurs réseau et accès web direct** (version 3.5.0) : une Feature déclare un type de lecteur et dérive `KazoDriveProvider` ; le modèle `dotnet new kazoos-drive-provider`, la suite de conformité publique `KazoDriveProviderTests` (paquet `Kazo.Os.AppSdk.Testing`) et l'exemple WebDAV par formulaire montrent comment. `KazoDirectHttpClient` envoie des requêtes au web directement depuis le navigateur, sans le serveur Kazo, vers les hôtes déclarés (`network.direct.access`, `directNetworkHosts`). ([ADR 0282](dev/adr/0282-third-party-drive-providers.md), [ADR 0284](dev/adr/0284-drive-provider-hosts-and-typed-server-address.md), [`drive-providers.md`](framework/drive-providers.md))
 
 ## En cours de développement
 

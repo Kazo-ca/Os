@@ -771,6 +771,17 @@ internal sealed class RemoteProcessSession
                 Kazo.Os.AppSdk.Net.KazoRelayState state = await c.Network.GetRelayStateAsync(cancellationToken).ConfigureAwait(false);
                 return writer => WireCodec.WriteRelayState(writer, state);
             }
+            case RemoteOps.NetDirectCheck:
+            {
+                // ADR 0282 §4: the worker sends with its own fetch once the OS has said yes.
+                if (c.Network is not Kazo.Os.Platform.Core.Network.AppNetworkGateway direct)
+                {
+                    throw new NotSupportedException("This network gateway cannot send direct web requests.");
+                }
+
+                direct.AuthorizeDirect(WireCodec.ReadDirectCheck(a));
+                return static _ => { };
+            }
 
             case RemoteOps.CatalogInstalled:
             {
@@ -838,6 +849,19 @@ internal sealed class RemoteProcessSession
             {
                 IReadOnlyList<string> types = await c.Drives.GetNetworkDriveTypesAsync(cancellationToken).ConfigureAwait(false);
                 return writer => WireCodec.WriteStrings(writer, "ts", types);
+            }
+            case RemoteOps.DriveDescribeTypes:
+            {
+                System.Globalization.CultureInfo language = Kazo.Os.AppSdk.Globalization.KazoLocale.ToLanguage(a.GetOptionalString("lg"));
+                IReadOnlyList<Kazo.Os.AppSdk.IO.KazoNetworkDriveTypeInfo> described = await c.Drives
+                    .DescribeNetworkDriveTypesAsync(language, cancellationToken)
+                    .ConfigureAwait(false);
+                return writer => WireCodec.WriteDriveTypeInfos(writer, described);
+            }
+            case RemoteOps.DriveProviderMissing:
+            {
+                IReadOnlyList<Kazo.Os.AppSdk.IO.KazoDriveSnapshot> missing = await c.Drives.GetProviderMissingDrivesAsync(cancellationToken).ConfigureAwait(false);
+                return writer => WireCodec.WriteDrives(writer, missing);
             }
             case RemoteOps.DriveMountNetwork:
             {

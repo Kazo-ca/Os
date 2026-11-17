@@ -779,6 +779,7 @@ public sealed partial class AppPackageInstaller
 
         CheckLibraries(package, catalog, packagedAppIds, installedApps, loadedPackageLibraries);
         CheckProvidedServices(package, catalog);
+        CheckProvidedDriveTypes(package.Manifest, catalog);
         CheckProvidedCapabilities(package, catalog);
         IReadOnlyList<MissingRuntimeApi> missing = AppPackageApiCheck.FindMissing(package.Assemblies, _runtime);
         if (missing.Count > 0)
@@ -879,6 +880,26 @@ public sealed partial class AppPackageInstaller
                 throw new AppPackageException(
                     "apps.package.service-already-provided",
                     $"{package.AppId} provides {service.ContractType}, which the feature {other.Feature.Name} ({other.Feature.Id}) already provides: a contract has one provider (ADR 0262 §1).");
+            }
+        }
+    }
+
+    /// <summary>
+    /// ADR 0282 §1: one provider per network drive type. A feature that declares a type another
+    /// feature of the catalog already provides is refused; an update of the same feature is not
+    /// compared with itself. The types of the OS are refused earlier, by the manifest validator.
+    /// </summary>
+    internal static void CheckProvidedDriveTypes(AppManifest feature, AppCatalog catalog)
+    {
+        foreach (AppDriveProviderManifest provider in feature.DriveProviders ?? [])
+        {
+            if (catalog.GetDriveProviders().FirstOrDefault(registration =>
+                    string.Equals(registration.Provider.Type, provider.Type, StringComparison.Ordinal)
+                    && !string.Equals(registration.Feature.Id, feature.Id, StringComparison.Ordinal)) is { } other)
+            {
+                throw new AppPackageException(
+                    "apps.package.drive-type-already-provided",
+                    $"{feature.Id} provides the drive type '{provider.Type}', which the feature {other.Feature.Name} ({other.Feature.Id}) already provides: a drive type has one provider (ADR 0282 §1).");
             }
         }
     }

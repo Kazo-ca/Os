@@ -273,6 +273,8 @@ internal sealed partial class AppManagementGateway
             // ADR 0260 §3: the window shows the feature's set once, with what it brings.
             IsFeature = root.Package.IsFeature,
             FeatureEntryPoints = DescribeEntryPoints(root.Package),
+            // ADR 0284: the hosts and typed servers the approval allows.
+            Manifest = manifest,
             Dependencies = [.. plan.Dependencies.Select(package => new AppInstallApprovalDependency(
                 package.Package.AppId,
                 package.Package.Manifest.Name,

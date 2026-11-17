@@ -103,6 +103,13 @@
       "uniqueItems": true,
       "items": { "type": "string", "pattern": "^(?:[tT][cC][pP]|[uU][dD][pP])/[1-9][0-9]{0,4}$" }
     },
+    "directNetworkHosts": {
+      "description": "Web hosts the app reaches directly through the browser's fetch, without the Kazo server (ADR 0282): an exact host name ('api.example.com') or a subdomain wildcard ('*.example.com'), always over https. Requires the network.direct.access capability. Omitted: no direct request.",
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "pattern": "^(?:\\*\\.)?[^*/:@?#\\s\\[\\]]+\\.[^*/:@?#\\s\\[\\]]+$" }
+    },
     "declaredTopicPermissions": {
       "type": "array",
       "items": {
@@ -251,6 +258,44 @@
           "contract": { "type": "string", "pattern": "^[^,\\s]+, *[^,\\s=/\\\\]+$" },
           "implementation": { "type": "string", "pattern": "^[^,\\s]+, *[^,\\s=/\\\\]+$" },
           "entryPoint": { "type": "string", "pattern": "^[a-z][a-z0-9-]*(\\.[a-z][a-z0-9-]*){3,}$" }
+        }
+      }
+    },
+    "driveProviders": {
+      "description": "Types of network drive a feature provides (ADR 0282 §1): the filesystem type, the service's name, the class deriving from KazoDriveProvider written 'Full.Type.Name, Assembly', how the user connects (oauth or form) and the hosts the class reaches over https. Only a feature declares them, with the capability drives.provide.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["type", "name", "provider", "connection"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "maxLength": 32,
+            "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$",
+            "not": { "enum": ["hostfs", "dropbox", "onedrive", "s3", "idbfs", "proc", "procfs", "devfs", "sysfs", "devtmpfs", "tmpfs", "ramfs", "devpts", "cgroup", "cgroup2", "overlay", "squashfs", "fuse", "nfs", "nfs4", "cifs", "smb", "smb3", "ext2", "ext3", "ext4", "btrfs", "xfs", "vfat", "exfat", "ntfs", "iso9660", "none"] }
+          },
+          "name": { "type": "string", "minLength": 1 },
+          "provider": { "type": "string", "pattern": "^[^,\\s]+, *[^,\\s=/\\\\]+$" },
+          "icon": { "type": "string", "minLength": 1 },
+          "hosts": {
+            "type": "array",
+            "items": { "type": "string", "pattern": "^(\\*\\.)?[a-z0-9]([a-z0-9-]*[a-z0-9])?(\\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$" }
+          },
+          "connection": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["kind"],
+            "properties": {
+              "kind": { "enum": ["oauth", "form"] },
+              "oauth": { "$ref": "#/$defs/driveOAuth" },
+              "fields": { "type": "array", "items": { "$ref": "#/$defs/driveFormField" } }
+            },
+            "oneOf": [
+              { "properties": { "kind": { "const": "oauth" } }, "required": ["oauth"] },
+              { "properties": { "kind": { "const": "form" }, "fields": { "minItems": 1 } }, "required": ["fields"], "not": { "required": ["oauth"] } }
+            ]
+          }
         }
       }
     },
@@ -442,6 +487,14 @@
       "then": { "not": { "required": ["providedServices"] } }
     },
     {
+      "description": "Only a feature provides a type of network drive (ADR 0282 §1).",
+      "if": {
+        "required": ["kind"],
+        "properties": { "kind": { "not": { "const": "feature" } } }
+      },
+      "then": { "not": { "required": ["driveProviders"] } }
+    },
+    {
       "description": "Only a feature declares permissions of its own (ADR 0246 §1).",
       "if": {
         "required": ["kind"],
@@ -475,6 +528,65 @@
     }
   ],
   "$defs": {
+    "httpsAddress": {
+      "type": "string",
+      "pattern": "^https://[^/@\\s]+(/\\S*)?$"
+    },
+    "driveOAuthClient": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["clientId"],
+      "properties": {
+        "clientId": { "type": "string", "minLength": 1 },
+        "scope": { "type": "string" }
+      }
+    },
+    "driveOAuth": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["authorizationEndpoint", "tokenEndpoint"],
+      "properties": {
+        "authorizationEndpoint": { "$ref": "#/$defs/httpsAddress" },
+        "tokenEndpoint": { "$ref": "#/$defs/httpsAddress" },
+        "revocationEndpoint": { "$ref": "#/$defs/httpsAddress" },
+        "fullAccess": { "$ref": "#/$defs/driveOAuthClient" },
+        "appFolder": { "$ref": "#/$defs/driveOAuthClient" },
+        "appFolderPath": { "type": "string" },
+        "extraAuthorizationParameters": { "type": "object", "additionalProperties": { "type": "string" } },
+        "identity": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["address", "idPath"],
+          "properties": {
+            "address": { "$ref": "#/$defs/httpsAddress" },
+            "idPath": { "type": "string", "minLength": 1 },
+            "usePost": { "type": "boolean" },
+            "namePaths": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+          }
+        }
+      },
+      "anyOf": [{ "required": ["fullAccess"] }, { "required": ["appFolder"] }]
+    },
+    "driveFormField": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "label", "kind"],
+      "properties": {
+        "name": { "type": "string", "maxLength": 64, "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$" },
+        "label": { "type": "string", "minLength": 1 },
+        "kind": { "enum": ["text", "url", "number", "choice"] },
+        "secret": { "type": "boolean" },
+        "required": { "type": "boolean" },
+        "default": { "type": "string" },
+        "choices": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "serverAddress": { "type": "boolean" }
+      },
+      "allOf": [
+        { "if": { "properties": { "secret": { "const": true } }, "required": ["secret"] }, "then": { "not": { "required": ["default"] } } },
+        { "if": { "properties": { "serverAddress": { "const": true } }, "required": ["serverAddress"] }, "then": { "properties": { "kind": { "const": "url" }, "secret": { "const": false }, "required": { "const": true } } } },
+        { "if": { "properties": { "kind": { "const": "choice" } } }, "then": { "required": ["choices"] }, "else": { "not": { "required": ["choices"] } } }
+      ]
+    },
     "platformId": {
       "type": "string",
       "minLength": 1,

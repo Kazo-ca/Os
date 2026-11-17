@@ -178,3 +178,10 @@
 .cloud-result {
     color: var(--kos-text-primary, #f4f7f8);
 }
+
+/* "Provided by <Feature>" under a service a Feature provides (ADR 0282 §5). */
+.cloud-provided-by {
+    margin: 0.25rem 0 0;
+    color: var(--kos-text-secondary, #8b949e);
+    font-size: 0.78rem;
+}

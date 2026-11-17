@@ -42,6 +42,12 @@
   <data name="Approval.RealNetworkPorts" xml:space="preserve">
     <value>Real servers on ports: {0}</value>
   </data>
+  <data name="Approval.DirectNetworkHosts" xml:space="preserve">
+    <value>Web services reached directly: {0}</value>
+  </data>
+  <data name="Approval.TypedServers" xml:space="preserve">
+    <value>Each user's server, typed in: {0}</value>
+  </data>
   <data name="Approval.Footer" xml:space="preserve">
     <value>This decision will be recorded in /var/log/auth.log</value>
   </data>

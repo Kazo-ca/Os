@@ -292,11 +292,23 @@ internal sealed record CloudAccountRecord(
     /// <summary>Value of <see cref="Credential"/> for an account that signs its requests with the user's keys.</summary>
     public const string KeysCredential = "keys";
 
+    /// <summary>
+    /// Gets the values of the form the user filled in that are not secrets (ADR 0282 §3), by field
+    /// name, or <see langword="null"/> for an OAuth account and an S3 account (whose values are sealed with its keys).
+    /// </summary>
+    public IReadOnlyDictionary<string, string>? Options { get; init; }
+
+    /// <summary>
+    /// Gets the id of the feature whose declared drive type the account belongs to (ADR 0282 §3), or
+    /// <see langword="null"/> for an account of a type the OS ships (Dropbox, OneDrive, S3).
+    /// </summary>
+    public string? FeatureId { get; init; }
+
     /// <summary>Gets whether the account holds keys rather than OAuth tokens.</summary>
     [JsonIgnore]
     public bool HasKeys => string.Equals(Credential, KeysCredential, StringComparison.Ordinal);
 
-    public CloudAccount Describe() => new(Id, Provider, Scope, DisplayName, ProviderAccountId, State, ConnectedAtUtc);
+    public CloudAccount Describe() => new(Id, Provider, Scope, DisplayName, ProviderAccountId, State, ConnectedAtUtc) { Options = Options, FeatureId = FeatureId };
 }
 
 /// <summary>On-disk shape of <c>cloud-accounts.json</c>.</summary>
@@ -310,6 +322,7 @@ internal sealed record TokenPayload(string AccessToken, string? RefreshToken, Da
 /// <summary>Source-generated JSON of the account list and the sealed payload.</summary>
 [JsonSerializable(typeof(CloudAccountTable))]
 [JsonSerializable(typeof(TokenPayload))]
+[JsonSerializable(typeof(Dictionary<string, string>))]
 [JsonSourceGenerationOptions(
     PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
     WriteIndented = true,

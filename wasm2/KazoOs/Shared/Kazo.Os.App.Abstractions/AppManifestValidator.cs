@@ -60,7 +60,9 @@ public static partial class AppManifestValidator
         }
 
         ValidateRealNetworkPorts(manifest, errors);
+        ValidateDirectNetworkHosts(manifest, errors);
         ValidateProvidedServices(manifest, errors);
+        ValidateDriveProviders(manifest, errors);
         ValidateDeclaredTopicPermissions(manifest.Id, manifest.DeclaredTopicPermissions, errors);
         ValidateDependencies(manifest.Dependencies, errors);
         ValidateAssets(manifest.Assets, errors);
@@ -1202,6 +1204,47 @@ public static partial class AppManifestValidator
                 "manifest.realNetworkPorts.capability",
                 "realNetworkPorts",
                 $"Declaring real-network ports requires the '{AppCapabilities.NetworkRealAccess}' capability (ADR 0235).");
+        }
+    }
+
+    /// <summary>
+    /// ADR 0282 §4: each declared direct-network host is an exact host name or a subdomain wildcard
+    /// (<see cref="Abstractions.DirectNetworkHosts"/>), declared once, and only by an app that
+    /// requests <c>network.direct.access</c> (the approval window shows the hosts with it).
+    /// </summary>
+    private static void ValidateDirectNetworkHosts(AppManifest manifest, List<ManifestValidationError> errors)
+    {
+        if (manifest.DirectNetworkHosts is not { } declared)
+        {
+            return;
+        }
+
+        if (declared.Count == 0)
+        {
+            AddError(errors, "manifest.directNetworkHosts.empty", "directNetworkHosts", "directNetworkHosts must list at least one host, or be omitted (ADR 0282).");
+            return;
+        }
+
+        HashSet<string> seen = new(StringComparer.Ordinal);
+        foreach (string value in declared)
+        {
+            if (!Abstractions.DirectNetworkHosts.TryParse(value, out string host, out string? error))
+            {
+                AddError(errors, "manifest.directNetworkHost.invalid", "directNetworkHosts", error!);
+            }
+            else if (!seen.Add(host))
+            {
+                AddError(errors, "manifest.directNetworkHost.duplicate", "directNetworkHosts", $"Direct-network host '{host}' is declared twice.");
+            }
+        }
+
+        if (!manifest.Capabilities.Contains(AppCapabilities.NetworkDirectAccess, StringComparer.Ordinal))
+        {
+            AddError(
+                errors,
+                "manifest.directNetworkHosts.capability",
+                "directNetworkHosts",
+                $"Declaring direct-network hosts requires the '{AppCapabilities.NetworkDirectAccess}' capability (ADR 0282).");
         }
     }
 

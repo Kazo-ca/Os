@@ -40,12 +40,14 @@ classification.
 | `notifications.post`, `clipboard.read`, `clipboard.write` | normal |
 | `network.simulated.read`, `network.simulated.write` | normal |
 | `network.real.access` | **dangerous** (also checked by the optional server before relaying, ADR 0102 §4 and 0108 §1; also required by `KazoClientWebSocket`, without the server, ADR 0235 §1, [`sdk-network.md`](sdk-network.md#websocket-to-a-real-server-adr-0235-1)). The app declares in `RealNetworkPorts` the real ports it needs outside `AllowedPorts` (`tcp/6697`); the approval shows them and the relay opens them unless `BlockedPorts` (ADR 0235 §3, [network relay](../dev/server-network-relay.md)) |
+| `network.direct.access` | **dangerous** (ADR 0282 §4). Direct web requests through the browser's `fetch`, without the Kazo server, only to the hosts the app declares in `DirectNetworkHosts` (`api.example.com`, `*.example.org`, always over `https`); the OS refuses any other host, the approval shows the list, and a host added by an update asks for approval again ([approval](../dev/dangerous-capability-approval.md)) |
 | `network.listen` | normal (listen on a port that is not a URL of its manifest, [`listening-ports-and-dns.md`](listening-ports-and-dns.md)) |
 | `network.listen.privileged` | **dangerous** (listen on a port below 1024, like `CAP_NET_BIND_SERVICE`) |
 | `shell.control` | normal (ADR 0051: acts only on the shell of the user who typed the command, see [`shell-commands.md`](../dev/shell-commands.md)) |
 | `screens.manage` | normal (ADR 0184: list, open, restore, close and identify screens through `KazoScreens`, as Settings ▸ Screens does; each call comes from a user click) |
 | `shell.context-menu` | normal (ADR 0151 §6: add entries to file menus; without it, the generator produces `KOSAPP0027` and the OS ignores the entries, see [`context-menu.md`](context-menu.md#app-entries-in-the-file-menus-work-item-4)) |
 | `cloud-accounts.manage` | **dangerous** (`KazoCloudAccounts` and mounting a cloud drive through `KazoDriveInfo.MountNetworkDriveAsync`, ADR 0270; declared by File Explorer, Settings and `mount`) |
+| `drives.provide` | **dangerous** (ADR 0282: provide a type of network drive through `FeatureDefinition.DriveProviders`; a feature only can declare it, `manifest.feature.only` and `KOSAPP0033` otherwise; is enough to reach the hosts of the declarations and the server typed in a `serverAddress` field, ADR 0284; see [`drive-providers.md`](drive-providers.md)) |
 | `permissions.manage` | **dangerous** (`KazoPermissionAdministration`, ADR 0056 §9; declared by Settings) |
 | `server.connection.manage` | **dangerous** (`KazoServerConnection`, ADR 0056 §10; declared by Settings) |
 | `system.power` | **dangerous** (`KazoSystem`: restart, reset, ADR 0056 §11; declared by Settings) |

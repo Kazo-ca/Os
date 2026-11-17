@@ -467,6 +467,11 @@ manifestes enfants) est dans
   une bibliothèque partagée du paquet (`apps.package.service-contract-not-shared`),
   et l'installeur une fonctionnalité qui fournit un contrat qu'une autre
   fonctionnalité du catalogue fournit déjà (`apps.package.service-already-provided`).
+- **Types de lecteurs fournis** ([ADR 0282](adr/0282-third-party-drive-providers.md) §1,
+  [`drive-providers.md`](../framework/drive-providers.md)) : l'installeur refuse
+  une fonctionnalité qui déclare un type de lecteur qu'une autre fonctionnalité
+  du catalogue fournit déjà (`apps.package.drive-type-already-provided`) ; une
+  mise à jour de la même fonctionnalité n'est pas comparée à elle-même.
   `AppCatalog` ne retire plus une app pour une dépendance **facultative** hors
   plage : `KazoFeatures` lui répond `VersionMismatch`.
 

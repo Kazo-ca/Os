@@ -52,6 +52,13 @@ public sealed class AppExecutionContextFactory
     /// server connection or the real-network grants change.
     /// </summary>
     public Network.RelayPolicyCache? RelayPolicy { get; }
+
+    /// <summary>
+    /// Gets the servers users typed for the open drives of a provider (ADR 0284 §2), shared with the
+    /// drive sources, or <see langword="null"/> when the host keeps none: each app's network gateway
+    /// then allows no typed server.
+    /// </summary>
+    public Network.DriveServerHosts? DriveServerHosts { get; init; }
     private readonly SystemMetricsServices? _metrics;
     private readonly SystemAdministrationGatewayServices? _administration;
     private readonly Clipboard.SystemClipboard _clipboard;
@@ -367,7 +374,11 @@ public sealed class AppExecutionContextFactory
                 _localNetwork is null ? null : new Network.Local.LocalNetworkCaller(_localNetwork, manifest, principal, isRootElevated))
             {
                 RelayPolicy = RelayPolicy,
-                Lifetime = cancellationToken
+                Lifetime = cancellationToken,
+                // ADR 0282 §4 and ADR 0284: the only hosts a direct request may reach.
+                DirectHosts = manifest.DirectNetworkHosts ?? [],
+                ProviderHosts = AppDriveProviders.HostsOf(manifest),
+                ServerHosts = DriveServerHosts
             };
 
         AppFileSystemGateway fileSystem = new(

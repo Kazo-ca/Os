@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json.schemastore.org/template",
+  "author": "Kazo OS",
+  "classifications": [ "Kazo OS", "Feature", "Drive provider" ],
+  "identity": "Kazo.Os.Templates.DriveProvider",
+  "groupIdentity": "Kazo.Os.Templates.DriveProvider",
+  "name": "Kazo OS drive provider",
+  "description": "A Kazo OS Feature that provides a type of network drive (ADR 0282): the provider over a web API reached with KazoDirectHttpClient, its declaration, and the public conformance suite run against an in-memory service.",
+  "shortName": "kazoos-drive-provider",
+  "sourceName": "Kazo.Os.Template.DriveProvider",
+  "preferNameDirectory": true,
+  "tags": { "language": "C#", "type": "solution" },
+  "symbols": {
+    "appId": {
+      "type": "parameter",
+      "datatype": "text",
+      "description": "Feature id (reverse-DNS, lowercase), unique in the catalog.",
+      "defaultValue": "com.example.my-drive",
+      "replaces": "com.example.template-app"
+    },
+    "publisherId": {
+      "type": "parameter",
+      "datatype": "text",
+      "description": "Publisher id written in the manifest.",
+      "defaultValue": "pub.example",
+      "replaces": "pub.template"
+    },
+    "driveType": {
+      "type": "parameter",
+      "datatype": "text",
+      "description": "The filesystem type of the drives, as mount -t shows it: lowercase letters, digits and dashes.",
+      "defaultValue": "exemple",
+      "replaces": "template-drive"
+    },
+    "apiHost": {
+      "type": "parameter",
+      "datatype": "text",
+      "description": "The host of the service's API, reached over https; it must accept CORS from the OS page.",
+      "defaultValue": "api.example.com",
+      "replaces": "api.template-drive.example"
+    }
+  }
+}

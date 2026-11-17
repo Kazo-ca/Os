@@ -205,6 +205,28 @@ public sealed class AppDefinitionMapperTests
         Assert.Null(sized.RealNetworkPorts);
     }
 
+    [Fact]
+    public void ToManifest_copies_the_declared_direct_network_hosts_and_omits_them_when_empty()
+    {
+        AppManifest provider = AppDefinitionMapper.ToManifest(new DirectApp(), "1.0.0");
+        AppManifest sized = AppDefinitionMapper.ToManifest(new SizedWindowApp(), "1.0.0");
+
+        Assert.Equal(["api.example.com", "*.example.org"], provider.DirectNetworkHosts);
+        Assert.True(AppManifestValidator.Validate(provider).IsValid);
+        Assert.Null(sized.DirectNetworkHosts);
+    }
+
+    /// <summary>ADR 0282 section 4: an app that reaches web services directly.</summary>
+    private sealed class DirectApp : AppDefinition
+    {
+        public override string Id => "org.kazoos.tests.direct";
+        public override string Name => "Direct";
+        public override AppKind Kind => AppKind.Window;
+        public override Type EntryPoint => typeof(FakeWindow);
+        public override IReadOnlyList<string> Capabilities => [AppCapabilities.NetworkDirectAccess];
+        public override IReadOnlyList<string> DirectNetworkHosts => ["api.example.com", "*.example.org"];
+    }
+
     /// <summary>ADR 0235 section 3: an app that reaches real servers on its own ports.</summary>
     private sealed class ChatApp : AppDefinition
     {

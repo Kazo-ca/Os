@@ -167,6 +167,42 @@ moment ; un refus ou une remise à zéro retire la ligne. Seul le fichier machin
 approuve des ports : une telle ligne dans le fichier de l'utilisateur est
 ignorée avec un avertissement, comme une ligne mal écrite.
 
+Sous `network.direct.access` (ADR 0282 §4), la fenêtre et le mode texte du
+terminal listent de la même façon les hôtes web que l'app joint sans serveur
+(`directNetworkHosts`) : « Services web joints directement : *.example.org,
+api.example.com » (`DirectNetworkHostText`). L'approbation les écrit dans la
+section `[direct-network-hosts]` du fichier machine, avec les mêmes règles que
+les ports : un hôte ajouté par une mise à jour remet la capacité en `Pending`,
+un `allow` des Paramètres approuve les hôtes déclarés à ce moment, un refus ou
+une remise à zéro retire la ligne, et seul le fichier machine approuve.
+
+```text
+[permissions]
+ca.exemple.drive:network.direct.access=allow
+
+[direct-network-hosts]
+ca.exemple.drive=*.example.com,api.example.com
+```
+
+Sous `drives.provide`
+([ADR 0284](adr/0284-drive-provider-hosts-and-typed-server-address.md) §1),
+la même ligne nomme les hôtes des déclarations `driveProviders`
+(`DirectNetworkHostText.For`), et une seconde ligne le champ d'adresse du
+serveur s'il y en a un : « Le serveur que chaque utilisateur tape dans :
+Adresse du serveur » (`DirectNetworkHostText.TypedServersFor`). Les hôtes des
+deux capacités partagent la section `[direct-network-hosts]` : approuver ou
+refuser l'une garde les hôtes approuvés que l'autre déclare encore
+(`DangerousCapabilityEvaluator.HostsToApprove`), et un hôte ajouté à un
+fournisseur par une mise à jour remet `drives.provide` en `Pending`. Le serveur
+tapé n'est jamais écrit : il est permis tant que le lecteur est ouvert
+(`DriveServerHosts`).
+
+Une Feature installée pour la machine fait approuver ses capacités une fois
+pour toutes dans la fenêtre d'approbation de l'installation (ADR 0260 §3) :
+cette fenêtre montre les deux mêmes lignes sous `network.direct.access` et
+`drives.provide`, à partir du manifeste que porte la demande
+(`AppInstallApprovalRequest.Manifest`).
+
 `DangerousCapabilityApprovalBroker` montre une demande à la fois. Sans fenêtre
 attachée, une demande finit en `Unavailable` (donc `capability.deferred`) ; si
 la coque disparaît (déconnexion), les demandes en cours sont fermées sans

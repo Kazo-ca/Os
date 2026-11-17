@@ -1,3 +1,4 @@
+using Kazo.Os.App.Abstractions;
 using Kazo.Os.AppSdk.CloudAccounts;
 using Kazo.Os.AppSdk.Globalization;
 using Kazo.Os.AppSdk.Icons;
@@ -11,29 +12,28 @@ using Microsoft.JSInterop;
 namespace Kazo.Os.Apps.FileExplorer;
 
 /// <summary>
-/// The "Connect a network drive" dialog of the explorer (ADR 0267 §11, ADR 0270), on a computer and
-/// on a phone. It reads what the OS can mount (<see cref="KazoDriveInfo.GetNetworkDriveTypesAsync"/>)
-/// and the user's cloud accounts (<see cref="KazoCloudAccounts"/>), then mounts through
-/// <see cref="KazoDriveInfo.MountNetworkDriveAsync"/>.
+/// The "Connect a network drive" dialog of the explorer (ADR 0267 §11, ADR 0270, ADR 0282 §5), on a
+/// computer and on a phone. It reads the types the OS can mount, each with its name, icon and
+/// connection (<see cref="KazoDriveInfo.DescribeNetworkDriveTypesAsync"/>), and the user's cloud
+/// accounts (<see cref="KazoCloudAccounts"/>), then mounts through <see cref="KazoDriveInfo.MountNetworkDriveAsync"/>.
+/// It names no service itself: Dropbox, OneDrive, S3 and a type a feature provides go through the
+/// same three paths (folder dialog, sign-in, form).
 /// </summary>
 /// <remarks>
 /// The browser opens a folder dialog or a sign-in window only right after a click. So the dialog
 /// loads everything when it opens (<see cref="KazoCloudAccounts.PrepareAsync"/> included), and each
 /// button calls the OS first thing in its handler. Without <c>cloud-accounts.manage</c> (a host that
-/// denies it), only the folder of the computer is offered.
+/// denies it), only the folder of the computer is offered. Next to a type a feature provides, the
+/// dialog always names that feature (ADR 0282, Security: a feature cannot pass for another service).
 /// </remarks>
 public partial class ConnectNetworkDriveDialog
 {
     /// <summary>Type of a folder of the computer (ADR 0181).</summary>
     internal const string HostFolderType = "hostfs";
 
-    /// <summary>Type of an S3 compatible storage (ADR 0267, work item 6).</summary>
-    internal const string S3Type = "s3";
-
     private readonly string _titleId = "cnd-title-" + Guid.NewGuid().ToString("N");
     private readonly string _scopeGroup = "cnd-scope-" + Guid.NewGuid().ToString("N");
-    private IReadOnlyList<string> _types = [];
-    private IReadOnlyList<KazoCloudProvider> _providers = [];
+    private IReadOnlyList<KazoNetworkDriveTypeInfo> _types = [];
     private IReadOnlyList<KazoCloudAccount> _accounts = [];
     private bool _canConnect;
     private bool _cloudAllowed;
@@ -48,16 +48,16 @@ public partial class ConnectNetworkDriveDialog
     private CancellationTokenSource? _signIn;
     private string? _error;
     private Step _step = Step.Choose;
-    private KazoCloudProvider? _provider;
+    private KazoNetworkDriveTypeInfo? _type;
     private KazoCloudAccessScope _scope;
     private string? _root;
-    private S3Form _s3 = new();
+    private DriveForm _form = new([]);
 
     private enum Step
     {
         Choose,
         Provider,
-        S3
+        Form
     }
 
     /// <summary>The explorer's texts in the language of its process (ADR 0104).</summary>
@@ -71,18 +71,28 @@ public partial class ConnectNetworkDriveDialog
     [Parameter]
     public EventCallback Closed { get; set; }
 
-    private bool HasCloudChoice =>
-        _cloudAllowed && (_providers.Any(provider => _types.Contains(provider.Id)) || _types.Contains(S3Type));
+    /// <summary>The types offered as a new drive: a cloud type only when cloud accounts are allowed here.</summary>
+    /// <summary>
+    /// The types offered, in a stable order: the folder of the computer first, then the OS's own
+    /// services, then the ones Features provide, each group by name.
+    /// </summary>
+    private IEnumerable<KazoNetworkDriveTypeInfo> OfferedTypes =>
+        _types.Where(type => type.Connection == KazoNetworkDriveConnection.HostFolder || _cloudAllowed)
+            .OrderBy(static type => type.Connection != KazoNetworkDriveConnection.HostFolder)
+            .ThenBy(static type => type.IsThirdParty)
+            .ThenBy(static type => type.DisplayName, StringComparer.CurrentCultureIgnoreCase);
+
+    private bool HasCloudChoice => _cloudAllowed && _types.Any(static type => type.Connection != KazoNetworkDriveConnection.HostFolder);
 
     /// <summary>Gets whether Back and Close work: always, except while a mount (not a sign-in) runs.</summary>
     private bool CanLeave => !_busy || _signIn is not null;
 
-    private bool HasAnyChoice => _types.Contains(HostFolderType) || HasCloudChoice;
+    private bool HasAnyChoice => OfferedTypes.Any();
 
     private string Title => _step switch
     {
-        Step.Provider when _provider is not null => L["CloudDrive.ProviderTitle", _provider.DisplayName],
-        Step.S3 => L["CloudDrive.S3"],
+        Step.Provider when _type is not null => L["CloudDrive.ProviderTitle", _type.DisplayName],
+        Step.Form when _type is not null => _type.DisplayName,
         _ => L["CloudDrive.Title"]
     };
 
@@ -117,8 +127,8 @@ public partial class ConnectNetworkDriveDialog
     {
         try
         {
-            _types = await KazoDriveInfo.GetNetworkDriveTypesAsync();
-            if (_types.Any(static type => type != HostFolderType))
+            _types = await KazoDriveInfo.DescribeNetworkDriveTypesAsync();
+            if (_types.Any(static type => type.Connection != KazoNetworkDriveConnection.HostFolder))
             {
                 await LoadCloudAsync();
             }
@@ -133,21 +143,20 @@ public partial class ConnectNetworkDriveDialog
         }
     }
 
-    /// <summary>Reads the providers and the accounts, and readies the sign-in window for the click.</summary>
+    /// <summary>Reads the accounts, and readies the sign-in window for the click.</summary>
     private async Task LoadCloudAsync()
     {
         try
         {
             _canConnect = await KazoCloudAccounts.CanConnectAsync();
-            _providers = await KazoCloudAccounts.GetProvidersAsync();
-            _accounts = [.. (await KazoCloudAccounts.GetAccountsAsync()).Where(account => _types.Contains(account.ProviderId))];
+            _accounts = [.. (await KazoCloudAccounts.GetAccountsAsync()).Where(account => TypeOf(account.ProviderId) is not null)];
             await KazoCloudAccounts.PrepareAsync();
             _cloudAllowed = true;
         }
         catch (Exception exception) when (exception is UnauthorizedAccessException or AppGatewayAccessDeniedException or NotSupportedException)
         {
             // No cloud-accounts.manage, or a host without cloud accounts: only the folder of the computer.
-            (_providers, _accounts, _cloudAllowed) = ([], [], false);
+            (_accounts, _cloudAllowed) = ([], false);
         }
         catch (KazoCloudAccountException exception)
         {
@@ -155,16 +164,25 @@ public partial class ConnectNetworkDriveDialog
         }
     }
 
-    private void ChooseProvider(KazoCloudProvider provider)
+    /// <summary>A type was chosen: the folder dialog opens at once (it needs this click), the others show their step.</summary>
+    private Task ChooseAsync(KazoNetworkDriveTypeInfo type)
     {
-        (_provider, _scope, _root, _error) = (provider, provider.Scopes[0], null, null);
-        _step = Step.Provider;
-    }
+        _error = null;
+        switch (type.Connection)
+        {
+            case KazoNetworkDriveConnection.HostFolder:
+                return RunAsync(() => KazoDriveInfo.MountNetworkDriveAsync(new KazoNetworkDriveRequest(type.Type)));
+            case KazoNetworkDriveConnection.OAuth when type.Scopes.Count > 0:
+                (_type, _scope, _root) = (type, type.Scopes[0], null);
+                _step = Step.Provider;
+                break;
+            case KazoNetworkDriveConnection.Form:
+                (_type, _form) = (type, new DriveForm(type.Fields));
+                _step = Step.Form;
+                break;
+        }
 
-    private void ChooseS3()
-    {
-        (_s3, _error) = (new S3Form(), null);
-        _step = Step.S3;
+        return Task.CompletedTask;
     }
 
     private void Back()
@@ -175,12 +193,9 @@ public partial class ConnectNetworkDriveDialog
         }
 
         CancelSignIn();
-        (_step, _error) = (Step.Choose, null);
-        _s3 = new S3Form();
+        (_step, _error, _type) = (Step.Choose, null, null);
+        _form = new DriveForm([]);
     }
-
-    private Task MountHostFolderAsync() =>
-        RunAsync(() => KazoDriveInfo.MountNetworkDriveAsync(new KazoNetworkDriveRequest(HostFolderType)));
 
     private Task MountAccountAsync(KazoCloudAccount account) =>
         RunAsync(() => KazoDriveInfo.MountNetworkDriveAsync(new KazoNetworkDriveRequest(account.ProviderId, account.Id)));
@@ -188,7 +203,7 @@ public partial class ConnectNetworkDriveDialog
     /// <summary>Signs in (the window opens inside this click), then mounts the new account's storage.</summary>
     private Task ConnectProviderAsync()
     {
-        if (_provider is not { } provider)
+        if (_type is not { } type)
         {
             return Task.CompletedTask;
         }
@@ -202,7 +217,7 @@ public partial class ConnectNetworkDriveDialog
             KazoCloudAccount account;
             try
             {
-                account = await KazoCloudAccounts.ConnectAsync(provider.Id, scope, signIn.Token);
+                account = await KazoCloudAccounts.ConnectAsync(type.Type, scope, signIn.Token);
             }
             finally
             {
@@ -214,23 +229,26 @@ public partial class ConnectNetworkDriveDialog
                 signIn.Dispose();
             }
 
-            return await KazoDriveInfo.MountNetworkDriveAsync(new KazoNetworkDriveRequest(provider.Id, account.Id, root));
+            return await KazoDriveInfo.MountNetworkDriveAsync(new KazoNetworkDriveRequest(type.Type, account.Id, root));
         });
     }
 
-    private Task MountS3Async()
+    private bool IsFormComplete => _form.IsComplete;
+
+    /// <summary>Mounts with the form's values: the plain ones in <c>Options</c>, the secret ones in <c>Secrets</c>.</summary>
+    private Task MountFormAsync()
     {
-        if (!_s3.IsComplete)
+        if (_type is not { } type || !_form.IsComplete)
         {
             return Task.CompletedTask;
         }
 
-        KazoNetworkDriveRequest request = _s3.ToRequest();
+        KazoNetworkDriveRequest request = _form.ToRequest(type.Type);
         return RunAsync(async () =>
         {
             KazoDriveInfo? drive = await KazoDriveInfo.MountNetworkDriveAsync(request);
-            // The keys are in the OS now: the form forgets them.
-            _s3 = new S3Form();
+            // The secrets are in the OS now: the form forgets them.
+            _form = new DriveForm(type.Fields);
             return drive;
         });
     }
@@ -310,86 +328,143 @@ public partial class ConnectNetworkDriveDialog
         _ => L["Network.Error", exception.Message]
     };
 
-    /// <summary>The mark of the service (ADR 0267 §11), the same as in the "Network drives" list.</summary>
-    private static (IconLibrary Library, string Name) ProviderIcon(string providerId) => NetworkDriveIcons.For(providerId);
+    /// <summary>The description of a type the OS offers now; <see langword="null"/> otherwise.</summary>
+    private KazoNetworkDriveTypeInfo? TypeOf(string type) => NetworkDriveIcons.Find(type, _types);
+
+    /// <summary>
+    /// "Provided by &lt;feature&gt; (&lt;id&gt;)" next to a type a feature provides (ADR 0282, Security);
+    /// <see langword="null"/> for the OS's own types.
+    /// </summary>
+    internal string? ProvidedBy(KazoNetworkDriveTypeInfo type)
+    {
+        if (type.ProviderFeatureId is not { } id)
+        {
+            return null;
+        }
+
+        string text = L["CloudDrive.ProvidedBy", type.ProviderFeatureName ?? id, id];
+        return text;
+    }
+
+    /// <summary>The second line of a type: what choosing it does.</summary>
+    private string TypeDetail(KazoNetworkDriveTypeInfo type) => type.Connection switch
+    {
+        KazoNetworkDriveConnection.HostFolder => L["CloudDrive.HostFolderDetail"],
+        KazoNetworkDriveConnection.OAuth => L["CloudDrive.ProviderDetail", type.DisplayName],
+        _ => L["CloudDrive.FormDetail"]
+    };
 
     /// <summary>
     /// Where the reserved folder is in the user's storage (<c>/Apps/Kazo OS Folder/</c>), shown before the
     /// start folder when that scope is chosen; <see langword="null"/> otherwise or when the OS does not know it.
     /// </summary>
     private string? AppFolderPrefix =>
-        _scope == KazoCloudAccessScope.AppFolder && !string.IsNullOrWhiteSpace(_provider?.AppFolderPath)
-            ? "/" + _provider.AppFolderPath.Trim('/') + "/"
+        _scope == KazoCloudAccessScope.AppFolder && !string.IsNullOrWhiteSpace(_type?.AppFolderPath)
+            ? "/" + _type.AppFolderPath.Trim('/') + "/"
             : null;
 
-    private string ProviderName(string providerId) =>
-        _providers.FirstOrDefault(provider => provider.Id == providerId)?.DisplayName
-        ?? (providerId == S3Type ? L["CloudDrive.S3"] : providerId);
+    private string ServiceName(string providerId) => TypeOf(providerId)?.DisplayName ?? providerId;
 
     private string AccountDetail(KazoCloudAccount account) =>
-        account.ProviderId == S3Type
-            ? ProviderName(account.ProviderId)
-            : L["CloudDrive.AccountDetail", ProviderName(account.ProviderId), ScopeShort(account.Scope)];
+        TypeOf(account.ProviderId) is { Connection: KazoNetworkDriveConnection.OAuth }
+            ? L["CloudDrive.AccountDetail", ServiceName(account.ProviderId), ScopeShort(account.Scope)]
+            : ServiceName(account.ProviderId);
 
     private string ScopeShort(KazoCloudAccessScope scope) =>
         scope == KazoCloudAccessScope.AppFolder ? L["CloudDrive.Scope.AppFolderShort"] : L["CloudDrive.Scope.FullShort"];
 
-    private string ScopeTitle(KazoCloudAccessScope scope, KazoCloudProvider provider) =>
-        scope == KazoCloudAccessScope.AppFolder ? L["CloudDrive.Scope.AppFolder"] : L["CloudDrive.Scope.Full", provider.DisplayName];
+    private string ScopeTitle(KazoCloudAccessScope scope, KazoNetworkDriveTypeInfo type) =>
+        scope == KazoCloudAccessScope.AppFolder ? L["CloudDrive.Scope.AppFolder"] : L["CloudDrive.Scope.Full", type.DisplayName];
 
     private string ScopeDetail(KazoCloudAccessScope scope) =>
         scope == KazoCloudAccessScope.AppFolder ? L["CloudDrive.Scope.AppFolderDetail"] : L["CloudDrive.Scope.FullDetail"];
 
-    /// <summary>What the S3 form holds; the keys leave it as soon as the OS has them.</summary>
-    internal sealed class S3Form
+    /// <summary>The label of a field, with "(optional)" when the form can go without it.</summary>
+    private string FieldLabel(KazoNetworkDriveField field) =>
+        field.Required || field.Kind == KazoNetworkDriveFieldKind.Choice || field.Label.Contains('(', StringComparison.Ordinal)
+            ? field.Label
+            : L["CloudDrive.Optional", field.Label];
+
+    /// <summary>The input of a field: a masked one for a secret.</summary>
+    internal static string InputType(KazoNetworkDriveField field) => field.Kind switch
     {
-        public string? Endpoint { get; set; }
+        KazoNetworkDriveFieldKind.Secret => "password",
+        KazoNetworkDriveFieldKind.Url => "url",
+        KazoNetworkDriveFieldKind.Number => "number",
+        _ => "text"
+    };
 
-        public string? Region { get; set; }
+    /// <summary>Addresses and secrets take the whole row; short values share it.</summary>
+    private static bool IsWide(KazoNetworkDriveField field) =>
+        field.Kind is KazoNetworkDriveFieldKind.Url or KazoNetworkDriveFieldKind.Secret;
 
-        public string? Bucket { get; set; }
+    /// <summary>What a form holds; the secrets leave it as soon as the OS has them.</summary>
+    /// <param name="fields">The type's fields.</param>
+    internal sealed class DriveForm(IReadOnlyList<KazoNetworkDriveField> fields)
+    {
+        private readonly Dictionary<string, string> _values = fields
+            .Where(static field => field.Default is not null)
+            .ToDictionary(static field => field.Name, static field => field.Default!, StringComparer.Ordinal);
 
-        public string? Prefix { get; set; }
+        /// <summary>Gets the value of a field, empty when none.</summary>
+        public string Get(string name) => _values.GetValueOrDefault(name) ?? string.Empty;
 
-        public string? Addressing { get; set; }
+        /// <summary>Sets the value of a field.</summary>
+        public void Set(string name, string? value) => _values[name] = value ?? string.Empty;
 
-        public string? AccessKeyId { get; set; }
-
-        public string? SecretAccessKey { get; set; }
-
-        /// <summary>Gets whether the required fields are filled: address, bucket and both keys.</summary>
+        /// <summary>
+        /// Gets whether every required field is filled and a typed server address is one the OS can
+        /// allow (ADR 0284 §2): a drive on a refused address could never reach its server.
+        /// </summary>
         public bool IsComplete =>
-            !string.IsNullOrWhiteSpace(Endpoint) && !string.IsNullOrWhiteSpace(Bucket)
-            && !string.IsNullOrWhiteSpace(AccessKeyId) && !string.IsNullOrEmpty(SecretAccessKey);
+            fields.All(entry => !entry.Required || !string.IsNullOrWhiteSpace(Get(entry.Name)))
+            && ServerHost() is not { Allowed: false };
 
-        /// <summary>The request of ADR 0270: settings in <c>Options</c>, keys in <c>Secrets</c>.</summary>
-        public KazoNetworkDriveRequest ToRequest()
+        /// <summary>
+        /// Reads the host of the field marked as the server address (ADR 0284 §2), checked with the
+        /// rules the OS applies when the drive opens (<see cref="AppDriveProviders.TryGetServerHost"/>).
+        /// </summary>
+        /// <returns><see langword="null"/> when the type has no such field or it is still empty; otherwise the
+        /// host (empty when refused) and whether the OS will allow it.</returns>
+        public (string Host, bool Allowed)? ServerHost()
         {
-            Dictionary<string, string> options = new(StringComparer.Ordinal)
+            if (fields.FirstOrDefault(static entry => entry.IsServerAddress) is not { } field
+                || Get(field.Name).Trim() is not { Length: > 0 } address)
             {
-                ["endpoint"] = Endpoint!.Trim(),
-                ["bucket"] = Bucket!.Trim()
-            };
-            Add(options, "region", Region);
-            Add(options, "prefix", Prefix);
-            Add(options, "addressing", Addressing);
-            return new KazoNetworkDriveRequest(S3Type)
-            {
-                Options = options,
-                Secrets = new Dictionary<string, string>(StringComparer.Ordinal)
-                {
-                    ["access-key-id"] = AccessKeyId!.Trim(),
-                    ["secret-access-key"] = SecretAccessKey!
-                }
-            };
+                return null;
+            }
+
+            return AppDriveProviders.TryGetServerHost(address, out string host) ? (host, true) : (string.Empty, false);
         }
 
-        private static void Add(Dictionary<string, string> options, string key, string? value)
+        /// <summary>The request of ADR 0270: plain values in <c>Options</c>, secrets in <c>Secrets</c>, empty ones left out.</summary>
+        public KazoNetworkDriveRequest ToRequest(string type)
         {
-            if (!string.IsNullOrWhiteSpace(value))
+            Dictionary<string, string> options = new(StringComparer.Ordinal);
+            Dictionary<string, string> secrets = new(StringComparer.Ordinal);
+            foreach (KazoNetworkDriveField field in fields)
             {
-                options[key] = value.Trim();
+                string value = Get(field.Name);
+                if (field.IsSecret ? value.Length == 0 : string.IsNullOrWhiteSpace(value))
+                {
+                    continue;
+                }
+
+                if (field.IsSecret)
+                {
+                    secrets[field.Name] = value;
+                }
+                else
+                {
+                    options[field.Name] = value.Trim();
+                }
             }
+
+            return new KazoNetworkDriveRequest(type)
+            {
+                Options = options,
+                Secrets = secrets.Count == 0 ? null : secrets
+            };
         }
     }
 }

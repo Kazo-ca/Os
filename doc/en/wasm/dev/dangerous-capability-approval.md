@@ -167,6 +167,40 @@ tab of Settings approves the ports the manifest declares at that time; a
 denial or a reset removes the line. Only the machine file approves ports: such
 a line in the user's file is ignored with a warning, like a badly written line.
 
+Under `network.direct.access` (ADR 0282 §4), the window and the terminal's
+text mode list in the same way the web hosts the app reaches without the
+server (`directNetworkHosts`): "Web services reached directly: *.example.org,
+api.example.com" (`DirectNetworkHostText`). The approval writes them in the
+`[direct-network-hosts]` section of the machine file, with the same rules as
+the ports: a host added by an update puts the capability back in `Pending`, an
+`allow` from Settings approves the hosts declared at that time, a denial or a
+reset removes the line, and only the machine file approves.
+
+```text
+[permissions]
+ca.example.drive:network.direct.access=allow
+
+[direct-network-hosts]
+ca.example.drive=*.example.com,api.example.com
+```
+
+Under `drives.provide`
+([ADR 0284](adr/0284-drive-provider-hosts-and-typed-server-address.md) §1),
+the same line names the hosts of the `driveProviders` declarations
+(`DirectNetworkHostText.For`), and a second line the server address field when
+there is one: "Each user's server, typed in: Server address"
+(`DirectNetworkHostText.TypedServersFor`). The hosts of both capabilities
+share the `[direct-network-hosts]` section: allowing or refusing one keeps the
+approved hosts the other still declares
+(`DangerousCapabilityEvaluator.HostsToApprove`), and a host an update adds to
+a provider puts `drives.provide` back in `Pending`. The typed server is never
+written: it is allowed while the drive is open (`DriveServerHosts`).
+
+A Feature installed for the machine has its capabilities approved once and
+for all in the install approval window (ADR 0260 §3): that window shows the
+same two lines under `network.direct.access` and `drives.provide`, from the
+manifest the request carries (`AppInstallApprovalRequest.Manifest`).
+
 `DangerousCapabilityApprovalBroker` shows one request at a time. Without an
 attached window, a request ends as `Unavailable` (hence
 `capability.deferred`); if the shell disappears (logout), pending requests are

@@ -232,6 +232,17 @@ internal sealed partial class AppManagementGateway
                     .WriteApprovedRealNetworkPortsAsync(manifest.Id, RealNetworkPorts.Normalize(manifest.RealNetworkPorts) ?? [], cancellationToken)
                     .ConfigureAwait(false);
             }
+
+            if (dangerous.Any(Policy.DangerousCapabilityEvaluator.HostCapabilities.Contains))
+            {
+                // ADR 0282 §4 and ADR 0284 §1: every capability is approved at once, with its hosts.
+                await permissions
+                    .WriteApprovedDirectNetworkHostsAsync(
+                        manifest.Id,
+                        Policy.DangerousCapabilityEvaluator.HostsToApprove(manifest, new HashSet<string>(), dangerous, []),
+                        cancellationToken)
+                    .ConfigureAwait(false);
+            }
         }
     }
 
@@ -255,6 +266,7 @@ internal sealed partial class AppManagementGateway
             {
                 await permissions.WriteMachineDecisionsAsync(appId, dangerous, null, cancellationToken).ConfigureAwait(false);
                 await permissions.WriteApprovedRealNetworkPortsAsync(appId, null, cancellationToken).ConfigureAwait(false);
+                await permissions.WriteApprovedDirectNetworkHostsAsync(appId, null, cancellationToken).ConfigureAwait(false);
             }
         }
     }

@@ -16,14 +16,14 @@ public sealed record CloudIdentityEndpoint(Uri Address, bool UsePost, string IdP
 /// One OAuth provider of ADR 0267 (section 6): its endpoints, the app ids per access scope it is
 /// configured with, and the extra parameters of its authorization request.
 /// </summary>
-/// <param name="Id">Provider id: <c>dropbox</c> or <c>onedrive</c>.</param>
+/// <param name="Id">Provider id: <c>dropbox</c>, <c>onedrive</c>, or the type a feature declares (ADR 0282 §3).</param>
 /// <param name="DisplayName">Name shown to the user.</param>
 /// <param name="AuthorizationEndpoint">Page opened in the sign-in window.</param>
 /// <param name="TokenEndpoint">Where the code and the refresh token are exchanged (CORS, no secret).</param>
 /// <param name="RevocationEndpoint">Where a token is revoked when the account is removed, or <see langword="null"/> when the provider has none for public clients.</param>
 /// <param name="Clients">App id and scope string per access scope; a scope without an app id is not offered.</param>
 /// <param name="ExtraAuthorizationParameters">Provider-specific parameters of the authorization request.</param>
-/// <param name="Identity">Where to read the account's id and name.</param>
+/// <param name="Identity">Where to read the account's id and name, or <see langword="null"/> when the service has no such address (a declared provider may omit it).</param>
 public sealed record CloudOAuthProvider(
     string Id,
     string DisplayName,
@@ -32,7 +32,7 @@ public sealed record CloudOAuthProvider(
     Uri? RevocationEndpoint,
     IReadOnlyDictionary<CloudAccessScope, CloudOAuthClient> Clients,
     IReadOnlyDictionary<string, string> ExtraAuthorizationParameters,
-    CloudIdentityEndpoint Identity)
+    CloudIdentityEndpoint? Identity)
 {
     /// <summary>Id of the Dropbox provider.</summary>
     public const string DropboxId = "dropbox";
@@ -49,6 +49,12 @@ public sealed record CloudOAuthProvider(
     /// service names it after the app registration, so the host gives it with the app ids.
     /// </summary>
     public string? AppFolderPath { get; init; }
+
+    /// <summary>
+    /// Gets the feature that declares this provider in its manifest (ADR 0282 §3), or
+    /// <see langword="null"/> for a provider shipped with the OS (Dropbox, OneDrive).
+    /// </summary>
+    public string? FeatureId { get; init; }
 
     /// <summary>Gets the access scopes this provider has an app id for, <see cref="CloudAccessScope.Full"/> first.</summary>
     public IReadOnlyList<CloudAccessScope> Scopes =>
