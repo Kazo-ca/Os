@@ -1,1 +1,178 @@
 #nullable enable
+const Kazo.Os.App.Abstractions.AppCapabilities.DrivesProvide = "drives.provide" -> string!
+const Kazo.Os.App.Abstractions.AppDriveProviders.MaxTypeLength = 32 -> int
+Kazo.Os.App.Abstractions.AppDriveConnectionKind
+Kazo.Os.App.Abstractions.AppDriveConnectionKind.Form = 1 -> Kazo.Os.App.Abstractions.AppDriveConnectionKind
+Kazo.Os.App.Abstractions.AppDriveConnectionKind.OAuth = 0 -> Kazo.Os.App.Abstractions.AppDriveConnectionKind
+Kazo.Os.App.Abstractions.AppDriveConnectionManifest
+Kazo.Os.App.Abstractions.AppDriveConnectionManifest.<Clone>$() -> Kazo.Os.App.Abstractions.AppDriveConnectionManifest!
+Kazo.Os.App.Abstractions.AppDriveConnectionManifest.AppDriveConnectionManifest(Kazo.Os.App.Abstractions.AppDriveConnectionKind Kind) -> void
+Kazo.Os.App.Abstractions.AppDriveConnectionManifest.Deconstruct(out Kazo.Os.App.Abstractions.AppDriveConnectionKind Kind) -> void
+Kazo.Os.App.Abstractions.AppDriveConnectionManifest.Equals(Kazo.Os.App.Abstractions.AppDriveConnectionManifest? other) -> bool
+Kazo.Os.App.Abstractions.AppDriveConnectionManifest.Fields.get -> System.Collections.Generic.IReadOnlyList<Kazo.Os.App.Abstractions.AppDriveFormFieldManifest!>!
+Kazo.Os.App.Abstractions.AppDriveConnectionManifest.Fields.init -> void
+Kazo.Os.App.Abstractions.AppDriveConnectionManifest.Kind.get -> Kazo.Os.App.Abstractions.AppDriveConnectionKind
+Kazo.Os.App.Abstractions.AppDriveConnectionManifest.Kind.init -> void
+Kazo.Os.App.Abstractions.AppDriveConnectionManifest.OAuth.get -> Kazo.Os.App.Abstractions.AppDriveOAuthManifest?
+Kazo.Os.App.Abstractions.AppDriveConnectionManifest.OAuth.init -> void
+Kazo.Os.App.Abstractions.AppDriveFormFieldKind
+Kazo.Os.App.Abstractions.AppDriveFormFieldKind.Choice = 3 -> Kazo.Os.App.Abstractions.AppDriveFormFieldKind
+Kazo.Os.App.Abstractions.AppDriveFormFieldKind.Number = 2 -> Kazo.Os.App.Abstractions.AppDriveFormFieldKind
+Kazo.Os.App.Abstractions.AppDriveFormFieldKind.Text = 0 -> Kazo.Os.App.Abstractions.AppDriveFormFieldKind
+Kazo.Os.App.Abstractions.AppDriveFormFieldKind.Url = 1 -> Kazo.Os.App.Abstractions.AppDriveFormFieldKind
+Kazo.Os.App.Abstractions.AppDriveFormFieldManifest
+Kazo.Os.App.Abstractions.AppDriveFormFieldManifest.<Clone>$() -> Kazo.Os.App.Abstractions.AppDriveFormFieldManifest!
+Kazo.Os.App.Abstractions.AppDriveFormFieldManifest.AppDriveFormFieldManifest(string! Name, string! Label, Kazo.Os.App.Abstractions.AppDriveFormFieldKind Kind) -> void
+Kazo.Os.App.Abstractions.AppDriveFormFieldManifest.Choices.get -> System.Collections.Generic.IReadOnlyList<string!>?
+Kazo.Os.App.Abstractions.AppDriveFormFieldManifest.Choices.init -> void
+Kazo.Os.App.Abstractions.AppDriveFormFieldManifest.Deconstruct(out string! Name, out string! Label, out Kazo.Os.App.Abstractions.AppDriveFormFieldKind Kind) -> void
+Kazo.Os.App.Abstractions.AppDriveFormFieldManifest.Default.get -> string?
+Kazo.Os.App.Abstractions.AppDriveFormFieldManifest.Default.init -> void
+Kazo.Os.App.Abstractions.AppDriveFormFieldManifest.Equals(Kazo.Os.App.Abstractions.AppDriveFormFieldManifest? other) -> bool
+Kazo.Os.App.Abstractions.AppDriveFormFieldManifest.Kind.get -> Kazo.Os.App.Abstractions.AppDriveFormFieldKind
+Kazo.Os.App.Abstractions.AppDriveFormFieldManifest.Kind.init -> void
+Kazo.Os.App.Abstractions.AppDriveFormFieldManifest.Label.get -> string!
+Kazo.Os.App.Abstractions.AppDriveFormFieldManifest.Label.init -> void
+Kazo.Os.App.Abstractions.AppDriveFormFieldManifest.Name.get -> string!
+Kazo.Os.App.Abstractions.AppDriveFormFieldManifest.Name.init -> void
+Kazo.Os.App.Abstractions.AppDriveFormFieldManifest.Required.get -> bool
+Kazo.Os.App.Abstractions.AppDriveFormFieldManifest.Required.init -> void
+Kazo.Os.App.Abstractions.AppDriveFormFieldManifest.Secret.get -> bool
+Kazo.Os.App.Abstractions.AppDriveFormFieldManifest.Secret.init -> void
+Kazo.Os.App.Abstractions.AppDriveIdentityManifest
+Kazo.Os.App.Abstractions.AppDriveIdentityManifest.<Clone>$() -> Kazo.Os.App.Abstractions.AppDriveIdentityManifest!
+Kazo.Os.App.Abstractions.AppDriveIdentityManifest.Address.get -> string!
+Kazo.Os.App.Abstractions.AppDriveIdentityManifest.Address.init -> void
+Kazo.Os.App.Abstractions.AppDriveIdentityManifest.AppDriveIdentityManifest(string! Address, string! IdPath) -> void
+Kazo.Os.App.Abstractions.AppDriveIdentityManifest.Deconstruct(out string! Address, out string! IdPath) -> void
+Kazo.Os.App.Abstractions.AppDriveIdentityManifest.Equals(Kazo.Os.App.Abstractions.AppDriveIdentityManifest? other) -> bool
+Kazo.Os.App.Abstractions.AppDriveIdentityManifest.IdPath.get -> string!
+Kazo.Os.App.Abstractions.AppDriveIdentityManifest.IdPath.init -> void
+Kazo.Os.App.Abstractions.AppDriveIdentityManifest.NamePaths.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Kazo.Os.App.Abstractions.AppDriveIdentityManifest.NamePaths.init -> void
+Kazo.Os.App.Abstractions.AppDriveIdentityManifest.UsePost.get -> bool
+Kazo.Os.App.Abstractions.AppDriveIdentityManifest.UsePost.init -> void
+Kazo.Os.App.Abstractions.AppDriveOAuthClientManifest
+Kazo.Os.App.Abstractions.AppDriveOAuthClientManifest.<Clone>$() -> Kazo.Os.App.Abstractions.AppDriveOAuthClientManifest!
+Kazo.Os.App.Abstractions.AppDriveOAuthClientManifest.AppDriveOAuthClientManifest(string! ClientId) -> void
+Kazo.Os.App.Abstractions.AppDriveOAuthClientManifest.ClientId.get -> string!
+Kazo.Os.App.Abstractions.AppDriveOAuthClientManifest.ClientId.init -> void
+Kazo.Os.App.Abstractions.AppDriveOAuthClientManifest.Deconstruct(out string! ClientId) -> void
+Kazo.Os.App.Abstractions.AppDriveOAuthClientManifest.Equals(Kazo.Os.App.Abstractions.AppDriveOAuthClientManifest? other) -> bool
+Kazo.Os.App.Abstractions.AppDriveOAuthClientManifest.Scope.get -> string?
+Kazo.Os.App.Abstractions.AppDriveOAuthClientManifest.Scope.init -> void
+Kazo.Os.App.Abstractions.AppDriveOAuthManifest
+Kazo.Os.App.Abstractions.AppDriveOAuthManifest.<Clone>$() -> Kazo.Os.App.Abstractions.AppDriveOAuthManifest!
+Kazo.Os.App.Abstractions.AppDriveOAuthManifest.AppDriveOAuthManifest(string! AuthorizationEndpoint, string! TokenEndpoint) -> void
+Kazo.Os.App.Abstractions.AppDriveOAuthManifest.AppFolder.get -> Kazo.Os.App.Abstractions.AppDriveOAuthClientManifest?
+Kazo.Os.App.Abstractions.AppDriveOAuthManifest.AppFolder.init -> void
+Kazo.Os.App.Abstractions.AppDriveOAuthManifest.AppFolderPath.get -> string?
+Kazo.Os.App.Abstractions.AppDriveOAuthManifest.AppFolderPath.init -> void
+Kazo.Os.App.Abstractions.AppDriveOAuthManifest.AuthorizationEndpoint.get -> string!
+Kazo.Os.App.Abstractions.AppDriveOAuthManifest.AuthorizationEndpoint.init -> void
+Kazo.Os.App.Abstractions.AppDriveOAuthManifest.Deconstruct(out string! AuthorizationEndpoint, out string! TokenEndpoint) -> void
+Kazo.Os.App.Abstractions.AppDriveOAuthManifest.Equals(Kazo.Os.App.Abstractions.AppDriveOAuthManifest? other) -> bool
+Kazo.Os.App.Abstractions.AppDriveOAuthManifest.ExtraAuthorizationParameters.get -> System.Collections.Generic.IReadOnlyDictionary<string!, string!>?
+Kazo.Os.App.Abstractions.AppDriveOAuthManifest.ExtraAuthorizationParameters.init -> void
+Kazo.Os.App.Abstractions.AppDriveOAuthManifest.FullAccess.get -> Kazo.Os.App.Abstractions.AppDriveOAuthClientManifest?
+Kazo.Os.App.Abstractions.AppDriveOAuthManifest.FullAccess.init -> void
+Kazo.Os.App.Abstractions.AppDriveOAuthManifest.Identity.get -> Kazo.Os.App.Abstractions.AppDriveIdentityManifest?
+Kazo.Os.App.Abstractions.AppDriveOAuthManifest.Identity.init -> void
+Kazo.Os.App.Abstractions.AppDriveOAuthManifest.RevocationEndpoint.get -> string?
+Kazo.Os.App.Abstractions.AppDriveOAuthManifest.RevocationEndpoint.init -> void
+Kazo.Os.App.Abstractions.AppDriveOAuthManifest.TokenEndpoint.get -> string!
+Kazo.Os.App.Abstractions.AppDriveOAuthManifest.TokenEndpoint.init -> void
+Kazo.Os.App.Abstractions.AppDriveProviderManifest
+Kazo.Os.App.Abstractions.AppDriveProviderManifest.<Clone>$() -> Kazo.Os.App.Abstractions.AppDriveProviderManifest!
+Kazo.Os.App.Abstractions.AppDriveProviderManifest.AppDriveProviderManifest(string! Type, string! Name, string! Provider, Kazo.Os.App.Abstractions.AppDriveConnectionManifest! Connection) -> void
+Kazo.Os.App.Abstractions.AppDriveProviderManifest.Connection.get -> Kazo.Os.App.Abstractions.AppDriveConnectionManifest!
+Kazo.Os.App.Abstractions.AppDriveProviderManifest.Connection.init -> void
+Kazo.Os.App.Abstractions.AppDriveProviderManifest.Deconstruct(out string! Type, out string! Name, out string! Provider, out Kazo.Os.App.Abstractions.AppDriveConnectionManifest! Connection) -> void
+Kazo.Os.App.Abstractions.AppDriveProviderManifest.Equals(Kazo.Os.App.Abstractions.AppDriveProviderManifest? other) -> bool
+Kazo.Os.App.Abstractions.AppDriveProviderManifest.Hosts.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Kazo.Os.App.Abstractions.AppDriveProviderManifest.Hosts.init -> void
+Kazo.Os.App.Abstractions.AppDriveProviderManifest.Icon.get -> string?
+Kazo.Os.App.Abstractions.AppDriveProviderManifest.Icon.init -> void
+Kazo.Os.App.Abstractions.AppDriveProviderManifest.Name.get -> string!
+Kazo.Os.App.Abstractions.AppDriveProviderManifest.Name.init -> void
+Kazo.Os.App.Abstractions.AppDriveProviderManifest.Provider.get -> string!
+Kazo.Os.App.Abstractions.AppDriveProviderManifest.Provider.init -> void
+Kazo.Os.App.Abstractions.AppDriveProviderManifest.ProviderAssembly.get -> string!
+Kazo.Os.App.Abstractions.AppDriveProviderManifest.ProviderType.get -> string!
+Kazo.Os.App.Abstractions.AppDriveProviderManifest.Type.get -> string!
+Kazo.Os.App.Abstractions.AppDriveProviderManifest.Type.init -> void
+Kazo.Os.App.Abstractions.AppDriveProviders
+Kazo.Os.App.Abstractions.AppManifest.DriveProviders.get -> System.Collections.Generic.IReadOnlyList<Kazo.Os.App.Abstractions.AppDriveProviderManifest!>?
+Kazo.Os.App.Abstractions.AppManifest.DriveProviders.init -> void
+Kazo.Os.App.Abstractions.KazoDriveProviderDeclaration
+Kazo.Os.App.Abstractions.KazoDriveProviderDeclaration.<Clone>$() -> Kazo.Os.App.Abstractions.KazoDriveProviderDeclaration!
+Kazo.Os.App.Abstractions.KazoDriveProviderDeclaration.Connection.get -> Kazo.Os.App.Abstractions.AppDriveConnectionManifest!
+Kazo.Os.App.Abstractions.KazoDriveProviderDeclaration.Connection.init -> void
+Kazo.Os.App.Abstractions.KazoDriveProviderDeclaration.Deconstruct(out string! Type, out string! Name, out System.Type! Provider, out Kazo.Os.App.Abstractions.AppDriveConnectionManifest! Connection) -> void
+Kazo.Os.App.Abstractions.KazoDriveProviderDeclaration.Equals(Kazo.Os.App.Abstractions.KazoDriveProviderDeclaration? other) -> bool
+Kazo.Os.App.Abstractions.KazoDriveProviderDeclaration.Hosts.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Kazo.Os.App.Abstractions.KazoDriveProviderDeclaration.Hosts.init -> void
+Kazo.Os.App.Abstractions.KazoDriveProviderDeclaration.Icon.get -> string?
+Kazo.Os.App.Abstractions.KazoDriveProviderDeclaration.Icon.init -> void
+Kazo.Os.App.Abstractions.KazoDriveProviderDeclaration.KazoDriveProviderDeclaration(string! Type, string! Name, System.Type! Provider, Kazo.Os.App.Abstractions.AppDriveConnectionManifest! Connection) -> void
+Kazo.Os.App.Abstractions.KazoDriveProviderDeclaration.Name.get -> string!
+Kazo.Os.App.Abstractions.KazoDriveProviderDeclaration.Name.init -> void
+Kazo.Os.App.Abstractions.KazoDriveProviderDeclaration.Provider.get -> System.Type!
+Kazo.Os.App.Abstractions.KazoDriveProviderDeclaration.Provider.init -> void
+Kazo.Os.App.Abstractions.KazoDriveProviderDeclaration.Type.get -> string!
+Kazo.Os.App.Abstractions.KazoDriveProviderDeclaration.Type.init -> void
+override Kazo.Os.App.Abstractions.AppDriveConnectionManifest.Equals(object? obj) -> bool
+override Kazo.Os.App.Abstractions.AppDriveConnectionManifest.GetHashCode() -> int
+override Kazo.Os.App.Abstractions.AppDriveConnectionManifest.ToString() -> string!
+override Kazo.Os.App.Abstractions.AppDriveFormFieldManifest.Equals(object? obj) -> bool
+override Kazo.Os.App.Abstractions.AppDriveFormFieldManifest.GetHashCode() -> int
+override Kazo.Os.App.Abstractions.AppDriveFormFieldManifest.ToString() -> string!
+override Kazo.Os.App.Abstractions.AppDriveIdentityManifest.Equals(object? obj) -> bool
+override Kazo.Os.App.Abstractions.AppDriveIdentityManifest.GetHashCode() -> int
+override Kazo.Os.App.Abstractions.AppDriveIdentityManifest.ToString() -> string!
+override Kazo.Os.App.Abstractions.AppDriveOAuthClientManifest.Equals(object? obj) -> bool
+override Kazo.Os.App.Abstractions.AppDriveOAuthClientManifest.GetHashCode() -> int
+override Kazo.Os.App.Abstractions.AppDriveOAuthClientManifest.ToString() -> string!
+override Kazo.Os.App.Abstractions.AppDriveOAuthManifest.Equals(object? obj) -> bool
+override Kazo.Os.App.Abstractions.AppDriveOAuthManifest.GetHashCode() -> int
+override Kazo.Os.App.Abstractions.AppDriveOAuthManifest.ToString() -> string!
+override Kazo.Os.App.Abstractions.AppDriveProviderManifest.Equals(object? obj) -> bool
+override Kazo.Os.App.Abstractions.AppDriveProviderManifest.GetHashCode() -> int
+override Kazo.Os.App.Abstractions.AppDriveProviderManifest.ToString() -> string!
+override Kazo.Os.App.Abstractions.KazoDriveProviderDeclaration.Equals(object? obj) -> bool
+override Kazo.Os.App.Abstractions.KazoDriveProviderDeclaration.GetHashCode() -> int
+override Kazo.Os.App.Abstractions.KazoDriveProviderDeclaration.ToString() -> string!
+static Kazo.Os.App.Abstractions.AppDriveConnectionManifest.operator !=(Kazo.Os.App.Abstractions.AppDriveConnectionManifest? left, Kazo.Os.App.Abstractions.AppDriveConnectionManifest? right) -> bool
+static Kazo.Os.App.Abstractions.AppDriveConnectionManifest.operator ==(Kazo.Os.App.Abstractions.AppDriveConnectionManifest? left, Kazo.Os.App.Abstractions.AppDriveConnectionManifest? right) -> bool
+static Kazo.Os.App.Abstractions.AppDriveConnectionManifest.WithForm(params Kazo.Os.App.Abstractions.AppDriveFormFieldManifest![]! fields) -> Kazo.Os.App.Abstractions.AppDriveConnectionManifest!
+static Kazo.Os.App.Abstractions.AppDriveConnectionManifest.WithOAuth(Kazo.Os.App.Abstractions.AppDriveOAuthManifest! oauth) -> Kazo.Os.App.Abstractions.AppDriveConnectionManifest!
+static Kazo.Os.App.Abstractions.AppDriveFormFieldManifest.operator !=(Kazo.Os.App.Abstractions.AppDriveFormFieldManifest? left, Kazo.Os.App.Abstractions.AppDriveFormFieldManifest? right) -> bool
+static Kazo.Os.App.Abstractions.AppDriveFormFieldManifest.operator ==(Kazo.Os.App.Abstractions.AppDriveFormFieldManifest? left, Kazo.Os.App.Abstractions.AppDriveFormFieldManifest? right) -> bool
+static Kazo.Os.App.Abstractions.AppDriveIdentityManifest.operator !=(Kazo.Os.App.Abstractions.AppDriveIdentityManifest? left, Kazo.Os.App.Abstractions.AppDriveIdentityManifest? right) -> bool
+static Kazo.Os.App.Abstractions.AppDriveIdentityManifest.operator ==(Kazo.Os.App.Abstractions.AppDriveIdentityManifest? left, Kazo.Os.App.Abstractions.AppDriveIdentityManifest? right) -> bool
+static Kazo.Os.App.Abstractions.AppDriveOAuthClientManifest.operator !=(Kazo.Os.App.Abstractions.AppDriveOAuthClientManifest? left, Kazo.Os.App.Abstractions.AppDriveOAuthClientManifest? right) -> bool
+static Kazo.Os.App.Abstractions.AppDriveOAuthClientManifest.operator ==(Kazo.Os.App.Abstractions.AppDriveOAuthClientManifest? left, Kazo.Os.App.Abstractions.AppDriveOAuthClientManifest? right) -> bool
+static Kazo.Os.App.Abstractions.AppDriveOAuthManifest.operator !=(Kazo.Os.App.Abstractions.AppDriveOAuthManifest? left, Kazo.Os.App.Abstractions.AppDriveOAuthManifest? right) -> bool
+static Kazo.Os.App.Abstractions.AppDriveOAuthManifest.operator ==(Kazo.Os.App.Abstractions.AppDriveOAuthManifest? left, Kazo.Os.App.Abstractions.AppDriveOAuthManifest? right) -> bool
+static Kazo.Os.App.Abstractions.AppDriveProviderManifest.operator !=(Kazo.Os.App.Abstractions.AppDriveProviderManifest? left, Kazo.Os.App.Abstractions.AppDriveProviderManifest? right) -> bool
+static Kazo.Os.App.Abstractions.AppDriveProviderManifest.operator ==(Kazo.Os.App.Abstractions.AppDriveProviderManifest? left, Kazo.Os.App.Abstractions.AppDriveProviderManifest? right) -> bool
+static Kazo.Os.App.Abstractions.AppDriveProviders.IsReservedType(string? type) -> bool
+static Kazo.Os.App.Abstractions.AppDriveProviders.IsValidFieldName(string? name) -> bool
+static Kazo.Os.App.Abstractions.AppDriveProviders.IsValidHost(string? host) -> bool
+static Kazo.Os.App.Abstractions.AppDriveProviders.IsValidHttpsAddress(string? address) -> bool
+static Kazo.Os.App.Abstractions.AppDriveProviders.IsValidType(string? type) -> bool
+static Kazo.Os.App.Abstractions.AppDriveProviders.ReservedTypes.get -> System.Collections.Generic.IReadOnlySet<string!>!
+static Kazo.Os.App.Abstractions.KazoDriveProviderDeclaration.operator !=(Kazo.Os.App.Abstractions.KazoDriveProviderDeclaration? left, Kazo.Os.App.Abstractions.KazoDriveProviderDeclaration? right) -> bool
+static Kazo.Os.App.Abstractions.KazoDriveProviderDeclaration.operator ==(Kazo.Os.App.Abstractions.KazoDriveProviderDeclaration? left, Kazo.Os.App.Abstractions.KazoDriveProviderDeclaration? right) -> bool
+virtual Kazo.Os.App.Abstractions.FeatureDefinition.DriveProviders.get -> System.Collections.Generic.IReadOnlyList<Kazo.Os.App.Abstractions.KazoDriveProviderDeclaration!>!
+~Kazo.Os.App.Abstractions.AppManifestJsonSerializerContext.AppDriveConnectionKind.get -> System.Text.Json.Serialization.Metadata.JsonTypeInfo<Kazo.Os.App.Abstractions.AppDriveConnectionKind>
+~Kazo.Os.App.Abstractions.AppManifestJsonSerializerContext.AppDriveConnectionManifest.get -> System.Text.Json.Serialization.Metadata.JsonTypeInfo<Kazo.Os.App.Abstractions.AppDriveConnectionManifest>
+~Kazo.Os.App.Abstractions.AppManifestJsonSerializerContext.AppDriveFormFieldKind.get -> System.Text.Json.Serialization.Metadata.JsonTypeInfo<Kazo.Os.App.Abstractions.AppDriveFormFieldKind>
+~Kazo.Os.App.Abstractions.AppManifestJsonSerializerContext.AppDriveFormFieldManifest.get -> System.Text.Json.Serialization.Metadata.JsonTypeInfo<Kazo.Os.App.Abstractions.AppDriveFormFieldManifest>
+~Kazo.Os.App.Abstractions.AppManifestJsonSerializerContext.AppDriveIdentityManifest.get -> System.Text.Json.Serialization.Metadata.JsonTypeInfo<Kazo.Os.App.Abstractions.AppDriveIdentityManifest>
+~Kazo.Os.App.Abstractions.AppManifestJsonSerializerContext.AppDriveOAuthClientManifest.get -> System.Text.Json.Serialization.Metadata.JsonTypeInfo<Kazo.Os.App.Abstractions.AppDriveOAuthClientManifest>
+~Kazo.Os.App.Abstractions.AppManifestJsonSerializerContext.AppDriveOAuthManifest.get -> System.Text.Json.Serialization.Metadata.JsonTypeInfo<Kazo.Os.App.Abstractions.AppDriveOAuthManifest>
+~Kazo.Os.App.Abstractions.AppManifestJsonSerializerContext.AppDriveProviderManifest.get -> System.Text.Json.Serialization.Metadata.JsonTypeInfo<Kazo.Os.App.Abstractions.AppDriveProviderManifest>
+~Kazo.Os.App.Abstractions.AppManifestJsonSerializerContext.IReadOnlyDictionaryStringString.get -> System.Text.Json.Serialization.Metadata.JsonTypeInfo<System.Collections.Generic.IReadOnlyDictionary<string, string>>
+~Kazo.Os.App.Abstractions.AppManifestJsonSerializerContext.IReadOnlyListAppDriveFormFieldManifest.get -> System.Text.Json.Serialization.Metadata.JsonTypeInfo<System.Collections.Generic.IReadOnlyList<Kazo.Os.App.Abstractions.AppDriveFormFieldManifest>>
+~Kazo.Os.App.Abstractions.AppManifestJsonSerializerContext.IReadOnlyListAppDriveProviderManifest.get -> System.Text.Json.Serialization.Metadata.JsonTypeInfo<System.Collections.Generic.IReadOnlyList<Kazo.Os.App.Abstractions.AppDriveProviderManifest>>

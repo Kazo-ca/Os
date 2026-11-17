@@ -618,4 +618,10 @@
   <data name="Capability.cloud-accounts.manage.Risk" xml:space="preserve">
     <value>Connect or remove your Dropbox, OneDrive or S3 accounts and mount their storage as network drives.</value>
   </data>
+  <data name="Capability.drives.provide.Title" xml:space="preserve">
+    <value>Provide a type of network drive</value>
+  </data>
+  <data name="Capability.drives.provide.Risk" xml:space="preserve">
+    <value>Read and write every file of the drives of that type, with an access token of their users' accounts.</value>
+  </data>
 </root>

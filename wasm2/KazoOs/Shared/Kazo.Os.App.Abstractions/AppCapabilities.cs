@@ -183,6 +183,14 @@ public static class AppCapabilities
     public const string CloudAccountsManage = "cloud-accounts.manage";
 
     /// <summary>
+    /// Provide a type of network drive (ADR 0282 §1): a feature's <c>KazoDriveProvider</c> reads and
+    /// writes every file of the drives of that type and receives an access token of their accounts.
+    /// Dangerous; only a feature declares it (<c>manifest.feature.only</c>), and the administrator
+    /// approves it once, at installation.
+    /// </summary>
+    public const string DrivesProvide = "drives.provide";
+
+    /// <summary>
     /// Add entries to the file menus of the OS (ADR 0151 §6): an app declares it with its
     /// <c>[RegisterFileContextMenu]</c> method, and the OS ignores the entries of an app without it.
     /// Normal: an entry only launches the app with its own rights, and the user can hide it in Settings.
@@ -295,7 +303,11 @@ public static class AppCapabilities
         Dangerous(
             CloudAccountsManage,
             "Gérer les comptes cloud",
-            "Connecter ou retirer vos comptes Dropbox, OneDrive ou S3 et monter leur stockage comme lecteurs réseau.")
+            "Connecter ou retirer vos comptes Dropbox, OneDrive ou S3 et monter leur stockage comme lecteurs réseau."),
+        Dangerous(
+            DrivesProvide,
+            "Fournir un type de lecteur réseau",
+            "Lire et écrire tous les fichiers des lecteurs de ce type, avec un jeton d'accès des comptes de ses utilisateurs.")
     }.ToFrozenDictionary(description => description.Capability, StringComparer.Ordinal);
 
     private static readonly FrozenSet<string> KnownIdentifiers = Descriptions.Keys.ToFrozenSet(StringComparer.Ordinal);
