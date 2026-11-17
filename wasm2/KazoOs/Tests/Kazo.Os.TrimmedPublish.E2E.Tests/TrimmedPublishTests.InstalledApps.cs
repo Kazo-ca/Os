@@ -109,6 +109,8 @@ public sealed partial class TrimmedPublishTests
             Log("its French satellite assembly loaded without a restart.");
             // ADR 0242: CoreLib stays whole, so overloads the OS does not use itself still run.
             await Assertions.Expect(page.Locator("[data-probe-corelib]")).ToHaveTextAsync("corelib 42 0 2", new() { Timeout = StepTimeoutMs });
+            // ADR 0280: System.Linq, System.Text.RegularExpressions and System.Threading.Channels kept whole.
+            await Assertions.Expect(page.Locator("[data-probe-framework-libraries]")).ToHaveTextAsync("libraries a<1>b<2> Kazo_OS 4 True", new() { Timeout = StepTimeoutMs });
             Log("CoreLib overloads the OS does not use itself ran (Int32.Parse of a span, String.Compare with offsets, String.Split of strings).");
             // ADR 0261 §1 (issue #419): the package has two assemblies; the library is loaded before the app.
             await Assertions.Expect(page.Locator("[data-probe-library]")).ToHaveTextAsync(LibraryAnswer, new() { Timeout = StepTimeoutMs });
