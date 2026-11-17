@@ -196,6 +196,11 @@ approved hosts the other still declares
 a provider puts `drives.provide` back in `Pending`. The typed server is never
 written: it is allowed while the drive is open (`DriveServerHosts`).
 
+A Feature installed for the machine has its capabilities approved once and
+for all in the install approval window (ADR 0260 §3): that window shows the
+same two lines under `network.direct.access` and `drives.provide`, from the
+manifest the request carries (`AppInstallApprovalRequest.Manifest`).
+
 `DangerousCapabilityApprovalBroker` shows one request at a time. Without an
 attached window, a request ends as `Unavailable` (hence
 `capability.deferred`); if the shell disappears (logout), pending requests are

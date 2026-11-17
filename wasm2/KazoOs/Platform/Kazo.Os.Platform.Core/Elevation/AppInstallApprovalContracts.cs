@@ -68,6 +68,14 @@ public sealed record AppInstallApprovalRequest(
     /// Gets the entry points of a feature (ADR 0260 §2), as "name (kind)" lines the window lists; empty for an app.
     /// </summary>
     public IReadOnlyList<string> FeatureEntryPoints { get; init; } = [];
+
+    /// <summary>
+    /// Gets the manifest of the package installed or updated, so the window names, under
+    /// <c>network.direct.access</c> and <c>drives.provide</c>, the hosts the approval allows and the
+    /// server address fields of its drive providers (ADR 0284 §1 and §2): approving a feature approves
+    /// them once and for all. <see langword="null"/> when the window has nothing more to show.
+    /// </summary>
+    public AppManifest? Manifest { get; init; }
 }
 
 /// <summary>How the approval window ended.</summary>

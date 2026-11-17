@@ -197,6 +197,12 @@ fournisseur par une mise à jour remet `drives.provide` en `Pending`. Le serveur
 tapé n'est jamais écrit : il est permis tant que le lecteur est ouvert
 (`DriveServerHosts`).
 
+Une Feature installée pour la machine fait approuver ses capacités une fois
+pour toutes dans la fenêtre d'approbation de l'installation (ADR 0260 §3) :
+cette fenêtre montre les deux mêmes lignes sous `network.direct.access` et
+`drives.provide`, à partir du manifeste que porte la demande
+(`AppInstallApprovalRequest.Manifest`).
+
 `DangerousCapabilityApprovalBroker` montre une demande à la fois. Sans fenêtre
 attachée, une demande finit en `Unavailable` (donc `capability.deferred`) ; si
 la coque disparaît (déconnexion), les demandes en cours sont fermées sans

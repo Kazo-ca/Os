@@ -168,6 +168,8 @@ internal sealed partial class AppManagementGateway
                     // ADR 0260 §3: the window shows the feature's set once, with what it brings.
                     IsFeature = plan.Package.IsFeature,
                     FeatureEntryPoints = DescribeEntryPoints(plan.Package),
+                    // ADR 0284: the hosts and typed servers the approval allows.
+                    Manifest = manifest,
                 },
                 cancellationToken).ConfigureAwait(false);
         }

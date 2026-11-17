@@ -33,7 +33,7 @@ off at publish.
 | 6 | `drive-providers/6-ui` | Explorer, Settings ▸ Cloud accounts and `mount -t` with no service name in code: name, icon, connection form and fields read through `KazoDriveInfo.GetNetworkDriveTypesAsync`; the Feature's name next to the service; greyed-out drive and "Install the provider". Texts in French and English, mobile included. | 4, 5 |
 | 7 | `drive-providers/7-developer-kit` | Public conformance suite (`KazoDriveProviderTests`), `dotnet new` template of a provider, a complete sample provider, guide `framework/drive-providers.md`, `sdk-compat` fixture, E2E on the trimmed OS with an installed provider. | 1, 4, 5 |
 | 8 | `drive-providers/8-store-check` | Os-AppMarketPlace repository: check of the declaration in `validate.yml` (type not reserved, `https` hosts, no bare wildcard). After an OS release that carries the contract. | 2, published release |
-| 9 | `drive-providers/9-final` | Check of the series: build, every suite, trimmed publish, `features.md`, memory, minor SDK version (3.5.0). | 1 to 7 |
+| 9 | `drive-providers/9-final` | Check of the series: build, every suite, trimmed publish, `features.md`, memory, minor SDK version (3.5.0); after 3.5.0, the SDK compatibility fixture of a provider and the full journey on the trimmed OS (connect by the form, write, read back against a test WebDAV server), moved from work item 7 (Benoit, 2026-11-17). | 1 to 7 |
 
 Work items 1, 2 and 3 run in parallel. Work items 4 and 5 run in parallel
 next, then 6 and 7.

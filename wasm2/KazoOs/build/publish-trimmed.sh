@@ -12,8 +12,9 @@
 # every window app of the Start menu, a pipeline in the worker pool, the Intranet and the sample
 # Blazor site in the Browser, a reload with no network once the service worker has cached the
 # release, a test package installed by kazopkg whose wwwroot/ files and worker scripts load, then
-# installed and launched by a direct link ?autolaunch=<appId> (ADR 0258), and a Craft app window
-# built on the Kazo.Os.AppSdk.Craft module (ADR 0259).
+# installed and launched by a direct link ?autolaunch=<appId> (ADR 0258), a Craft app window
+# built on the Kazo.Os.AppSdk.Craft module (ADR 0259), and the WebDAV sample drive provider
+# installed by kazopkg as a feature, whose drive type mount then knows (ADR 0282, ADR 0284).
 # Exit code 0 only when the publish and every test (EXPECTED_TESTS) passed.
 #
 #   --skip-build      reuse the existing publish and test build
@@ -54,6 +55,9 @@ SIGNING_PUBLIC="$OUT/test-catalog-signing/public.txt"
 # ADR 0259: the Craft test package (Tests/fixtures/craft-app), a window on the OS module Kazo.Os.AppSdk.Craft.
 CRAFT_PACKAGE_PROJECT="$ROOT/Tests/fixtures/craft-app/Kazo.Os.Fixtures.CraftApp/Kazo.Os.Fixtures.CraftApp.csproj"
 CRAFT_PACKAGES="$OUT/kazoos-packages-craft"
+# ADR 0282: the WebDAV sample drive provider (Apps/Samples), a feature kazopkg installs for the machine.
+DRIVE_PACKAGE_PROJECT="$ROOT/Apps/Samples/Kazo.Os.Samples.WebDavDrive/Kazo.Os.Samples.WebDavDrive.csproj"
+DRIVE_PACKAGES="$OUT/kazoos-packages-drive"
 
 SKIP_BUILD=0
 COMPARE=0
@@ -210,6 +214,13 @@ if [[ $SKIP_BUILD -eq 0 ]]; then
         log "RESULT: FAIL (Craft test package)"
         exit 1
     fi
+    log "packing the WebDAV sample drive provider (ADR 0282)"
+    rm -rf "$DRIVE_PACKAGES"
+    if ! dotnet build "$DRIVE_PACKAGE_PROJECT" -c Release -t:KazoOsPack -p:KazoOsApiCheck=true -p:KazoOsPackageOutput="$DRIVE_PACKAGES" >"$LOGS/pack-drive.log" 2>&1; then
+        grep -E ' error ' "$LOGS/pack-drive.log" | sort -u | head -20 | sed 's/^/    /'
+        log "RESULT: FAIL (drive provider package)"
+        exit 1
+    fi
     log "building the test suite"
     if ! dotnet build "$TEST_PROJECT" -c Debug >"$LOGS/build-tests.log" 2>&1; then
         grep -E ' error ' "$LOGS/build-tests.log" | sort -u | head -20 | sed 's/^/    /'
@@ -245,6 +256,7 @@ KAZOOS_TRIMMED_ARTIFACTS="$OUT/screenshots" \
 KAZOOS_TRIMMED_PACKAGES="$PACKAGES" \
 KAZOOS_TRIMMED_SIGNING_KEY="$SIGNING_KEY" \
 KAZOOS_TRIMMED_CRAFT_PACKAGES="$CRAFT_PACKAGES" \
+KAZOOS_TRIMMED_DRIVE_PACKAGES="$DRIVE_PACKAGES" \
     dotnet test "$TEST_PROJECT" --no-build -c Debug --logger "console;verbosity=detailed" >"$LOGS/tests.log" 2>&1
 code=$?
 stop_servers
@@ -258,8 +270,9 @@ grep -E '^\s*\[(trimmed|chromium)\]' "$LOGS/tests.log" | sed "s/^ */    /"
 # (ADR 0197, TrimmedPublishTests.Toasts.cs), and the unread notifications dot next to the clock
 # (ADR 0196, TrimmedPublishTests.Notifications.cs), the direct link with no account, with an
 # account, and for a missing app and a cancel (ADR 0258, TrimmedPublishTests.AppLaunchLink.cs), and
-# a Craft app window on the OS module, installed by kazopkg (ADR 0259, TrimmedPublishTests.CraftApps.cs).
-EXPECTED_TESTS=15
+# a Craft app window on the OS module, installed by kazopkg (ADR 0259, TrimmedPublishTests.CraftApps.cs),
+# and a drive provider installed by kazopkg as a feature (ADR 0282, TrimmedPublishTests.DriveProviders.cs).
+EXPECTED_TESTS=16
 if [[ $code -eq 0 ]] && grep -qE "^\s*Passed: +$EXPECTED_TESTS\s*$" "$LOGS/tests.log" && ! grep -qE '^\s*Skipped: +[1-9]' "$LOGS/tests.log"; then
     [[ -z "$PWA_URL" ]] && log "note: the offline test did not run (no 127.0.0.2)"
     log "RESULT: PASS"

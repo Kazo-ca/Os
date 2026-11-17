@@ -153,3 +153,5 @@ static Kazo.Os.Platform.Core.Policy.DangerousCapabilityEvaluator.HostCapabilitie
 static Kazo.Os.Platform.Core.Policy.DangerousCapabilityEvaluator.HostsToApprove(Kazo.Os.App.Abstractions.AppManifest! manifest, System.Collections.Generic.IReadOnlySet<string!>! approvedBefore, System.Collections.Generic.IReadOnlyCollection<string!>! allowed, System.Collections.Generic.IReadOnlyCollection<string!>! refused) -> System.Collections.Generic.IReadOnlyCollection<string!>?
 static Kazo.Os.Platform.Core.Policy.DangerousCapabilityEvaluator.UnapprovedDirectNetworkHosts(Kazo.Os.App.Abstractions.AppManifest! manifest, Kazo.Os.Platform.Core.Policy.AppPermissionDecisions! decisions, string! capability) -> System.Collections.Generic.IReadOnlyList<string!>!
 static Kazo.Os.Platform.Core.Policy.DirectNetworkHostText.TypedServersFor(Kazo.Os.App.Abstractions.AppManifest! manifest, string! capability) -> string?
+Kazo.Os.Platform.Core.Elevation.AppInstallApprovalRequest.Manifest.get -> Kazo.Os.App.Abstractions.AppManifest?
+Kazo.Os.Platform.Core.Elevation.AppInstallApprovalRequest.Manifest.init -> void
