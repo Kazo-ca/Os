@@ -73,7 +73,7 @@ public sealed partial class CloudAccountService
     /// and it gives nothing once the account is removed, is not of <paramref name="type"/>, or was
     /// added with another feature's provider of that type. The refresh token never leaves the OS.
     /// </summary>
-    /// <param name="type">The drive type the provider serves, e.g. <c>pcloud</c>.</param>
+    /// <param name="type">The drive type the provider serves, e.g. <c>exemple</c>.</param>
     /// <param name="featureId">The feature whose provider opens the drive.</param>
     /// <param name="accountId">The account of the drive being opened.</param>
     /// <param name="availabilityChanged">Called when the provider reports that its service may be reachable again; <see langword="null"/> ignores it.</param>

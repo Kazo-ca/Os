@@ -12,7 +12,7 @@ namespace Kazo.Os.App.Abstractions;
 /// <remarks>
 /// <para>A declaration is either:</para>
 /// <list type="bullet">
-/// <item><description>an exact host name, such as <c>api.pcloud.com</c>;</description></item>
+/// <item><description>an exact host name, such as <c>api.example.com</c>;</description></item>
 /// <item><description>
 /// a subdomain wildcard, such as <c>*.example.org</c>, which matches <c>a.example.org</c> and
 /// <c>a.b.example.org</c> but not <c>example.org</c> itself (declare it too when it is needed).
@@ -41,7 +41,7 @@ public static class DirectNetworkHosts
     /// Parses one declaration and returns its canonical form: lower case, ASCII (an
     /// internationalized name becomes <c>xn--…</c>), no trailing dot.
     /// </summary>
-    /// <param name="value">Text such as <c>api.pcloud.com</c> or <c>*.example.org</c>.</param>
+    /// <param name="value">Text such as <c>api.example.com</c> or <c>*.example.org</c>.</param>
     /// <param name="host">The canonical declaration, or an empty string when refused.</param>
     /// <param name="error">Why <paramref name="value"/> is refused, or <see langword="null"/>.</param>
     /// <returns><see langword="true"/> when <paramref name="value"/> is valid.</returns>

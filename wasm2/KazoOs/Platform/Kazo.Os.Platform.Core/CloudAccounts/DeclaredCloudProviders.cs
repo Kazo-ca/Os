@@ -16,7 +16,7 @@ namespace Kazo.Os.Platform.Core.CloudAccounts;
 /// An administrator who serves Kazo OS at another address replaces the public app ids of a
 /// declared type in <c>/etc/kazoos/cloud-drives.config</c>, one section per type:
 /// <code>
-/// [pcloud]
+/// [exemple]
 /// client-id = my-own-app-id
 /// app-folder-client-id = my-folder-app-id
 /// </code>

@@ -196,7 +196,7 @@ absent or disabled: see [`feature-services.md`](feature-services.md).
 #### Network drive types: `DriveProviders` (ADR 0282)
 
 A feature that asks for the dangerous `drives.provide` capability can provide
-**network drive types** (`mount -t pcloud`): each
+**network drive types** (`mount -t exemple`): each
 `KazoDriveProviderDeclaration` gives the type, the displayed name, the class
 derived from `KazoDriveProvider`, the connection (OAuth or form), the icon and
 the hosts reached. The manifest writes them in `driveProviders`. An ordinary

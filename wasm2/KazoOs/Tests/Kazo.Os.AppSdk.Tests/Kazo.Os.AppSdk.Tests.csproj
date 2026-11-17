@@ -22,6 +22,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Shared\Kazo.Os.AppSdk\Kazo.Os.AppSdk.csproj" />
+    <ProjectReference Include="..\..\Shared\Kazo.Os.AppSdk.Testing\Kazo.Os.AppSdk.Testing.csproj" />
     <ProjectReference Include="..\Kazo.Os.Tests.Support\Kazo.Os.Tests.Support.csproj" />
     <!-- Referenced as a library, not as this project's analyzer: the SDK tests pass lambdas on purpose. -->
     <ProjectReference Include="..\..\Tools\Kazo.Os.Tools.BackgroundAnalyzer\Kazo.Os.Tools.BackgroundAnalyzer.csproj" />

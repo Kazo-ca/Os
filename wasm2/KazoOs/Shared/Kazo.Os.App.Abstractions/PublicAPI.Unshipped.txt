@@ -187,3 +187,8 @@ static Kazo.Os.App.Abstractions.DirectNetworkHosts.Normalize(System.Collections.
 static Kazo.Os.App.Abstractions.DirectNetworkHosts.ParseValid(System.Collections.Generic.IEnumerable<string!>? values) -> System.Collections.Generic.IReadOnlyList<string!>!
 static Kazo.Os.App.Abstractions.DirectNetworkHosts.TryParse(string? value, out string! host, out string? error) -> bool
 virtual Kazo.Os.App.Abstractions.AppDefinition.DirectNetworkHosts.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Kazo.Os.App.Abstractions.AppDriveFormFieldManifest.ServerAddress.get -> bool
+Kazo.Os.App.Abstractions.AppDriveFormFieldManifest.ServerAddress.init -> void
+static Kazo.Os.App.Abstractions.AppDriveProviders.HostsOf(Kazo.Os.App.Abstractions.AppManifest! manifest) -> System.Collections.Generic.IReadOnlyList<string!>!
+static Kazo.Os.App.Abstractions.AppDriveProviders.ServerAddressField(Kazo.Os.App.Abstractions.AppDriveConnectionManifest? connection) -> Kazo.Os.App.Abstractions.AppDriveFormFieldManifest?
+static Kazo.Os.App.Abstractions.AppDriveProviders.TryGetServerHost(string? address, out string! host) -> bool

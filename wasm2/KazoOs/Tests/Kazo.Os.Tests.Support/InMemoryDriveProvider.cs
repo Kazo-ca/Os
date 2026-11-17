@@ -129,6 +129,23 @@ public sealed class InMemoryDriveService : IDisposable
         }
     }
 
+    /// <summary>
+    /// Places a file the service reports as <paramref name="length"/> bytes without holding them, as
+    /// another device would upload a large video; reading it above <see cref="KazoDriveLimits.MaxFileBytes"/>
+    /// fails with <see cref="KazoDriveErrorKind.FileTooLarge"/>.
+    /// </summary>
+    /// <param name="path">The file, <c>/a/b.bin</c>.</param>
+    /// <param name="length">The size the service reports.</param>
+    public void SeedLargeFile(string path, long length)
+    {
+        string normalized = Normalize(path);
+        lock (_gate)
+        {
+            EnsureFolders(Parent(normalized));
+            _nodes[normalized] = new Node(false, [], ++_revision) { Length = length };
+        }
+    }
+
     /// <summary>Reads a file; <see langword="null"/> when no file is there.</summary>
     /// <param name="path">The file, <c>/a/b.txt</c>.</param>
     public byte[]? ReadRemote(string path)
@@ -209,7 +226,14 @@ public sealed class InMemoryDriveService : IDisposable
         lock (_gate)
         {
             Node node = Require(path);
-            return node.IsFolder ? throw new KazoDriveException(KazoDriveErrorKind.TypeMismatch, $"{path} is a folder.") : [.. node.Content];
+            if (node.IsFolder)
+            {
+                throw new KazoDriveException(KazoDriveErrorKind.TypeMismatch, $"{path} is a folder.");
+            }
+
+            return node.Length > KazoDriveLimits.MaxFileBytes
+                ? throw new KazoDriveException(KazoDriveErrorKind.FileTooLarge, $"{path} is larger than the limit.")
+                : [.. node.Content];
         }
     }
 
@@ -236,7 +260,7 @@ public sealed class InMemoryDriveService : IDisposable
                 throw new KazoDriveException(KazoDriveErrorKind.RevisionConflict, $"{path} is gone.");
             }
 
-            long used = _nodes.Where(pair => pair.Key != key).Sum(static pair => (long)pair.Value.Content.Length);
+            long used = _nodes.Where(pair => pair.Key != key).Sum(static pair => pair.Value.Length);
             if (used + content.Length > TotalBytes)
             {
                 throw new KazoDriveException(KazoDriveErrorKind.QuotaExceeded, "The storage is full.");
@@ -308,7 +332,7 @@ public sealed class InMemoryDriveService : IDisposable
     {
         lock (_gate)
         {
-            long used = _nodes.Values.Sum(static node => (long)node.Content.Length);
+            long used = _nodes.Values.Sum(static node => node.Length);
             return new KazoDriveQuota(TotalBytes, Math.Max(0, TotalBytes - used));
         }
     }
@@ -338,7 +362,7 @@ public sealed class InMemoryDriveService : IDisposable
     private static KazoDriveEntry Describe(string key, Node node) =>
         new(key == "/" ? string.Empty : key[(key.LastIndexOf('/') + 1)..],
             node.IsFolder ? KazoDriveEntryKind.Folder : KazoDriveEntryKind.File,
-            node.Content.Length,
+            node.IsFolder ? 0 : node.Length,
             DateTimeOffset.UnixEpoch)
         {
             Revision = node.IsFolder ? null : node.Revision.ToString(CultureInfo.InvariantCulture)
@@ -354,14 +378,39 @@ public sealed class InMemoryDriveService : IDisposable
         return separator <= 0 ? "/" : key[..separator];
     }
 
-    private sealed record Node(bool IsFolder, byte[] Content, long Revision);
+    private sealed record Node(bool IsFolder, byte[] Content, long Revision)
+    {
+        /// <summary>Gets the size the service reports: the content's, or a larger one placed by <see cref="SeedLargeFile"/>.</summary>
+        public long Length { get; init; } = Content.Length;
+    }
 }
 
 /// <summary>A drive of <see cref="InMemoryDriveProvider"/>.</summary>
 internal sealed class InMemoryDriveFolder(InMemoryDriveService service, IKazoDriveProviderContext context) : KazoDriveFolder
 {
-    public override ValueTask<KazoDriveState> GetStateAsync(CancellationToken cancellationToken = default) =>
-        ValueTask.FromResult(service.Online ? KazoDriveState.Ready : KazoDriveState.Unavailable);
+    public override async ValueTask<KazoDriveState> GetStateAsync(CancellationToken cancellationToken = default)
+    {
+        if (!service.Online)
+        {
+            return KazoDriveState.Unavailable;
+        }
+
+        // The cheapest request a real service allows: is the token accepted?
+        if (service.AcceptedToken is { } accepted)
+        {
+            try
+            {
+                string token = await context.GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
+                return string.Equals(token, accepted(), StringComparison.Ordinal) ? KazoDriveState.Ready : KazoDriveState.SignInRequired;
+            }
+            catch (KazoDriveException exception) when (exception.Kind == KazoDriveErrorKind.SignInRequired)
+            {
+                return KazoDriveState.SignInRequired;
+            }
+        }
+
+        return KazoDriveState.Ready;
+    }
 
     public override async ValueTask<KazoDriveEntry> StatAsync(KazoDrivePath path, CancellationToken cancellationToken = default)
     {

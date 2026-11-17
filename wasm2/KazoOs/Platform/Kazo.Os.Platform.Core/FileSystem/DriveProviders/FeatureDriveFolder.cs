@@ -1,5 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using Kazo.Os.App.Abstractions;
 using Kazo.Os.AppSdk.Drives;
 using Kazo.Os.Platform.Core.CloudAccounts;
 using Kazo.Os.Platform.Core.CloudDrives;
@@ -341,19 +342,47 @@ internal sealed class FeatureDriveFolder : IHostFolder, IHostFolderQuota, ICondi
             Root = _reference.Root,
             Options = connection.Options
         };
-        KazoDriveFolder? folder;
-        using (provider.Enter())
+        IDisposable? serverLease = AllowTypedServer(connection.Options);
+        try
         {
-            folder = await provider.Provider.OpenAsync(request).ConfigureAwait(false);
-        }
+            KazoDriveFolder? folder;
+            using (provider.Enter())
+            {
+                folder = await provider.Provider.OpenAsync(request).ConfigureAwait(false);
+            }
 
-        if (folder is null)
+            if (folder is null)
+            {
+                _source.LogProviderFailure($"{Name}: OpenAsync returned no folder");
+                serverLease?.Dispose();
+                return null;
+            }
+
+            return new OpenedFolder(provider, folder, context, serverLease);
+        }
+        catch
         {
-            _source.LogProviderFailure($"{Name}: OpenAsync returned no folder");
+            serverLease?.Dispose();
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// ADR 0284 §2: when the declaration marks a server address field, the host the user typed there
+    /// is allowed to the feature until the drive closes. An address the OS may not allow (http, an IP,
+    /// <c>localhost</c>) takes no lease: the provider's requests to it are refused by the gateway.
+    /// </summary>
+    private IDisposable? AllowTypedServer(IReadOnlyDictionary<string, string> options)
+    {
+        if (_source.ServerHosts is not { } hosts
+            || AppDriveProviders.ServerAddressField(_source.Registration.Provider.Connection) is not { } field
+            || !options.TryGetValue(field.Name, out string? address)
+            || !AppDriveProviders.TryGetServerHost(address, out string host))
+        {
             return null;
         }
 
-        return new OpenedFolder(provider, folder, context);
+        return hosts.Allow(_source.FeatureId, host);
     }
 
     private async ValueTask CloseAsync(OpenedFolder opened)
@@ -368,6 +397,10 @@ internal sealed class FeatureDriveFolder : IHostFolder, IHostFolderQuota, ICondi
         catch (Exception exception) when (exception is not OutOfMemoryException)
         {
             _source.LogProviderFailure($"{Name} could not be closed: {exception.GetType().Name}: {exception.Message}");
+        }
+        finally
+        {
+            opened.ServerLease?.Dispose();
         }
     }
 
@@ -501,7 +534,7 @@ internal sealed class FeatureDriveFolder : IHostFolder, IHostFolderQuota, ICondi
         };
 
     /// <summary>The loaded provider, its open folder and the context lent to it.</summary>
-    private sealed record OpenedFolder(LoadedDriveProvider Provider, KazoDriveFolder Folder, TokenTrackingContext Context);
+    private sealed record OpenedFolder(LoadedDriveProvider Provider, KazoDriveFolder Folder, TokenTrackingContext Context, IDisposable? ServerLease);
 
     /// <summary>
     /// The context lent to the provider, which remembers the last access token it gave, so a token

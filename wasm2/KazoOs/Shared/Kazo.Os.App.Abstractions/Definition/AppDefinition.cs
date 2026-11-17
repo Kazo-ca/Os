@@ -66,7 +66,7 @@ public abstract class AppDefinition
 
     /// <summary>
     /// Gets the web hosts the app reaches directly through the browser's <c>fetch</c> (ADR 0282 §4):
-    /// exact names (<c>api.pcloud.com</c>) or subdomain wildcards (<c>*.example.org</c>), always in
+    /// exact names (<c>api.example.com</c>) or subdomain wildcards (<c>*.example.org</c>), always in
     /// <c>https</c>. Requires <c>network.direct.access</c> in <see cref="Capabilities"/>; the approval
     /// window lists them and the OS refuses every other host. Empty by default.
     /// </summary>

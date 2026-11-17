@@ -34,7 +34,7 @@ chantier 0.
 | 6 | `drive-providers/6-ui` | Explorateur, Paramètres ▸ Comptes cloud et `mount -t` sans nom de service en dur : nom, icône, forme de connexion et champs lus par `KazoDriveInfo.GetNetworkDriveTypesAsync` ; nom de la Feature à côté du service ; lecteur grisé et « Installer le fournisseur ». Textes en français et en anglais, mobile compris. | 4, 5 |
 | 7 | `drive-providers/7-developer-kit` | Suite de conformité publique (`KazoDriveProviderTests`), modèle `dotnet new` d'un fournisseur, fournisseur d'exemple complet, guide `framework/drive-providers.md`, fixture `sdk-compat`, E2E sur l'OS rogné avec un fournisseur installé. | 1, 4, 5 |
 | 8 | `drive-providers/8-store-check` | Dépôt Os-AppMarketPlace : vérification de la déclaration dans `validate.yml` (type non réservé, hôtes en `https`, pas de joker nu). Après une version de l'OS qui porte le contrat. | 2, version publiée |
-| 9 | `drive-providers/9-final` | Vérification de la série : build, toutes les suites, publication rognée, `features.md`, mémoire, version mineure du SDK (3.5.0). | 1 à 7 |
+| 9 | `drive-providers/9-final` | Vérification de la série : build, toutes les suites, publication rognée, `features.md`, mémoire, version mineure du SDK (3.5.0) ; après 3.5.0, fixture de compatibilité SDK d'un fournisseur et parcours complet sur l'OS rogné (connexion par le formulaire, écriture, relecture contre un serveur WebDAV de test), reportés du chantier 7 (Benoit, 2026-11-17). | 1 à 7 |
 
 Les chantiers 1, 2 et 3 vont en parallèle. Les chantiers 4 et 5 vont en
 parallèle ensuite, puis 6 et 7.

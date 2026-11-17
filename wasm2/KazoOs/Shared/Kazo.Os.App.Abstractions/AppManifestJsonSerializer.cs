@@ -357,7 +357,7 @@ public static class AppManifestJsonSerializer
 
             if (connection.TryGetProperty("fields", out JsonElement fields))
             {
-                ValidateArray(fields, $"{at}.fields", ["name", "label", "kind", "secret", "required", "default", "choices"]);
+                ValidateArray(fields, $"{at}.fields", ["name", "label", "kind", "secret", "required", "default", "choices", "serverAddress"]);
             }
 
             if (connection.TryGetProperty("oauth", out JsonElement oauth))

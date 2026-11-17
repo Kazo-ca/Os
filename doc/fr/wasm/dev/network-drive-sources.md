@@ -142,6 +142,7 @@ voit l'auteur du fournisseur est dans
 | `FeatureDriveFolder` (interne) | Le `IHostFolder` d'un lecteur, au-dessus de `KazoDriveFolder` : quota, écriture conditionnelle, traduction des erreurs et des états, renouvellement d'un jeton refusé une fois. |
 | `FeatureDriveProviderLoader` | Charge le fournisseur au premier lecteur du type, une instance par page, dans le processus et le contexte de la fonctionnalité ; un échec n'est jamais gardé. |
 | `FeatureDriveContextFactory`, `FeatureDriveConnection` | Ce que l'OS prête au fournisseur pour un lecteur : le contexte lié au compte et les valeurs non secrètes du formulaire. |
+| `DriveServerHosts` (`Network/`) | Le serveur tapé dans le champ `serverAddress` (ADR 0284 §2) : `FeatureDriveFolder` prend un bail à l'ouverture du lecteur et le rend à la fermeture ; la passerelle réseau de la fonctionnalité permet l'hôte tant qu'un bail le tient. Une instance par page. |
 | `InMemoryDriveProvider`, `InMemoryDriveService` (`Tests/Kazo.Os.Tests.Support`) | Fournisseur et service factices en mémoire, repris par les chantiers 6 et 7. |
 
 `NetworkDriveService` lit ces sources à chaque usage, à côté de celles de l'hôte

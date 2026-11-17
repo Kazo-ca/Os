@@ -103,6 +103,19 @@
                                     {
                                         <span class="iap-capability-risk">@capability.Risk</span>
                                     }
+                                    @if (request.Manifest is { } manifest)
+                                    {
+                                        @if (Kazo.Os.Platform.Core.Policy.DirectNetworkHostText.For(manifest, capability.Id) is { } hosts)
+                                        {
+                                            @* ADR 0282 section 4, ADR 0284 section 1: the web services the package reaches without the server. *@
+                                            <span class="iap-capability-hosts">@L["Approval.DirectNetworkHosts", hosts]</span>
+                                        }
+                                        @if (Kazo.Os.Platform.Core.Policy.DirectNetworkHostText.TypedServersFor(manifest, capability.Id) is { } fields)
+                                        {
+                                            @* ADR 0284 section 2: the server each user types in a drive provider's form. *@
+                                            <span class="iap-capability-hosts">@L["Approval.TypedServers", fields]</span>
+                                        }
+                                    }
                                 </li>
                             }
                         </ul>

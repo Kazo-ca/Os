@@ -20,7 +20,7 @@ public sealed record FeatureDriveConnection(IKazoDriveProviderContext Context, I
 /// Creates what the OS lends the provider of a declared type for one drive (ADR 0282 §3): bound to
 /// the drive's account, refused when the account is missing or of another type.
 /// </summary>
-/// <param name="type">The drive type, e.g. <c>pcloud</c>.</param>
+/// <param name="type">The drive type, e.g. <c>exemple</c>.</param>
 /// <param name="accountId">The account of the drive.</param>
 /// <param name="availabilityChanged">Called when the provider reports that its service may be reachable again.</param>
 /// <param name="cancellationToken">Cancels the read of the account list.</param>
@@ -95,6 +95,13 @@ public sealed class FeatureDriveSource : IDescribedNetworkDriveSource, IDisposab
 
     /// <summary>Gets the feature and the declaration this source serves.</summary>
     public AppDriveProviderRegistration Registration { get; }
+
+    /// <summary>
+    /// Gets where an open drive allows the server its user typed to the feature (ADR 0284 §2), or
+    /// <see langword="null"/> when the host keeps none: the provider then reaches only the hosts of
+    /// its declaration.
+    /// </summary>
+    public Network.DriveServerHosts? ServerHosts { get; init; }
 
     /// <summary>Gets the id of the feature that provides the type.</summary>
     public string FeatureId => Registration.Feature.Id;

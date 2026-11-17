@@ -136,6 +136,25 @@ Kazo.Os.Platform.Core.Network.AppNetworkGateway.DirectHosts.init -> void
 Kazo.Os.Platform.Core.Network.AppNetworkGateway.DirectHttp.get -> System.Net.Http.HttpMessageInvoker?
 Kazo.Os.Platform.Core.Network.AppNetworkGateway.DirectHttp.init -> void
 Kazo.Os.Platform.Core.Network.AppNetworkGateway.SendDirectAsync(Kazo.Os.AppSdk.Net.KazoDirectHttpRequest! request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.Net.KazoNetworkResult<Kazo.Os.AppSdk.Net.KazoDirectHttpResponse!>!>
+Kazo.Os.Platform.Core.Execution.AppExecutionContextFactory.DriveServerHosts.get -> Kazo.Os.Platform.Core.Network.DriveServerHosts?
+Kazo.Os.Platform.Core.Execution.AppExecutionContextFactory.DriveServerHosts.init -> void
+Kazo.Os.Platform.Core.FileSystem.DriveProviders.FeatureDriveSource.ServerHosts.get -> Kazo.Os.Platform.Core.Network.DriveServerHosts?
+Kazo.Os.Platform.Core.FileSystem.DriveProviders.FeatureDriveSource.ServerHosts.init -> void
+Kazo.Os.Platform.Core.Network.AppNetworkGateway.ProviderHosts.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Kazo.Os.Platform.Core.Network.AppNetworkGateway.ProviderHosts.init -> void
+Kazo.Os.Platform.Core.Network.AppNetworkGateway.ServerHosts.get -> Kazo.Os.Platform.Core.Network.DriveServerHosts?
+Kazo.Os.Platform.Core.Network.AppNetworkGateway.ServerHosts.init -> void
+Kazo.Os.Platform.Core.Network.DriveServerHosts
+Kazo.Os.Platform.Core.Network.DriveServerHosts.Allow(string! appId, string! host) -> System.IDisposable!
+Kazo.Os.Platform.Core.Network.DriveServerHosts.DriveServerHosts() -> void
+Kazo.Os.Platform.Core.Network.DriveServerHosts.IsAllowed(string! appId, string! host) -> bool
+static Kazo.Os.Platform.Core.Policy.DangerousCapabilityEvaluator.DirectHostsFor(Kazo.Os.App.Abstractions.AppManifest! manifest, string! capability) -> System.Collections.Generic.IReadOnlyList<string!>!
+static Kazo.Os.Platform.Core.Policy.DangerousCapabilityEvaluator.HostCapabilities.get -> System.Collections.Generic.IReadOnlyList<string!>!
+static Kazo.Os.Platform.Core.Policy.DangerousCapabilityEvaluator.HostsToApprove(Kazo.Os.App.Abstractions.AppManifest! manifest, System.Collections.Generic.IReadOnlySet<string!>! approvedBefore, System.Collections.Generic.IReadOnlyCollection<string!>! allowed, System.Collections.Generic.IReadOnlyCollection<string!>! refused) -> System.Collections.Generic.IReadOnlyCollection<string!>?
+static Kazo.Os.Platform.Core.Policy.DangerousCapabilityEvaluator.UnapprovedDirectNetworkHosts(Kazo.Os.App.Abstractions.AppManifest! manifest, Kazo.Os.Platform.Core.Policy.AppPermissionDecisions! decisions, string! capability) -> System.Collections.Generic.IReadOnlyList<string!>!
+static Kazo.Os.Platform.Core.Policy.DirectNetworkHostText.TypedServersFor(Kazo.Os.App.Abstractions.AppManifest! manifest, string! capability) -> string?
+Kazo.Os.Platform.Core.Elevation.AppInstallApprovalRequest.Manifest.get -> Kazo.Os.App.Abstractions.AppManifest?
+Kazo.Os.Platform.Core.Elevation.AppInstallApprovalRequest.Manifest.init -> void
 Kazo.Os.Platform.Core.Execution.AppDriveGateway.CloudProviders.get -> System.Func<System.Threading.CancellationToken, System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<Kazo.Os.Platform.Core.CloudAccounts.CloudProviderInfo!>!>>?
 Kazo.Os.Platform.Core.Execution.AppDriveGateway.CloudProviders.init -> void
 Kazo.Os.Platform.Core.Execution.AppDriveGateway.DescribeNetworkDriveTypesAsync(System.Globalization.CultureInfo! language, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.IO.KazoNetworkDriveTypeInfo!>!>

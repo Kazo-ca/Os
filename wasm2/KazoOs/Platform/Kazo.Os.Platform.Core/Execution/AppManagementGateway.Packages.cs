@@ -168,6 +168,8 @@ internal sealed partial class AppManagementGateway
                     // ADR 0260 §3: the window shows the feature's set once, with what it brings.
                     IsFeature = plan.Package.IsFeature,
                     FeatureEntryPoints = DescribeEntryPoints(plan.Package),
+                    // ADR 0284: the hosts and typed servers the approval allows.
+                    Manifest = manifest,
                 },
                 cancellationToken).ConfigureAwait(false);
         }
@@ -239,10 +241,14 @@ internal sealed partial class AppManagementGateway
                     .ConfigureAwait(false);
             }
 
-            if (dangerous.Contains(AppCapabilities.NetworkDirectAccess, StringComparer.Ordinal))
+            if (dangerous.Any(Policy.DangerousCapabilityEvaluator.HostCapabilities.Contains))
             {
+                // ADR 0282 §4 and ADR 0284 §1: every capability is approved at once, with its hosts.
                 await permissions
-                    .WriteApprovedDirectNetworkHostsAsync(manifest.Id, DirectNetworkHosts.Normalize(manifest.DirectNetworkHosts) ?? [], cancellationToken)
+                    .WriteApprovedDirectNetworkHostsAsync(
+                        manifest.Id,
+                        Policy.DangerousCapabilityEvaluator.HostsToApprove(manifest, new HashSet<string>(), dangerous, []),
+                        cancellationToken)
                     .ConfigureAwait(false);
             }
         }

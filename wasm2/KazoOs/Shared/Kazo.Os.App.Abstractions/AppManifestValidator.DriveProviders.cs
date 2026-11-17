@@ -179,6 +179,7 @@ public static partial class AppManifestValidator
         }
 
         HashSet<string> names = new(StringComparer.Ordinal);
+        int serverAddresses = 0;
         foreach (AppDriveFormFieldManifest field in fields)
         {
             if (field is null || !AppDriveProviders.IsValidFieldName(field.Name))
@@ -209,6 +210,11 @@ public static partial class AppManifestValidator
                 AddError(errors, "manifest.drive-provider.form", $"{at}.default", "A secret field has no default value.");
             }
 
+            if (field.ServerAddress)
+            {
+                ValidateServerAddressField(field, at, ++serverAddresses, errors);
+            }
+
             bool hasChoices = field.Choices is { Count: > 0 };
             if (field.Kind == AppDriveFormFieldKind.Choice && !hasChoices)
             {
@@ -218,6 +224,25 @@ public static partial class AppManifestValidator
             {
                 AddError(errors, "manifest.drive-provider.form", $"{at}.choices", "Only a choice field lists values.");
             }
+        }
+    }
+
+    /// <summary>
+    /// ADR 0284 §2: the server address is a required, non-secret url field, one per provider, since
+    /// the OS allows the host typed there to the provider and shows it in the connection dialog.
+    /// </summary>
+    private static void ValidateServerAddressField(AppDriveFormFieldManifest field, string at, int count, List<ManifestValidationError> errors)
+    {
+        if (field.Kind != AppDriveFormFieldKind.Url || field.Secret || !field.Required)
+        {
+            AddError(errors, "manifest.drive-provider.server-address", $"{at}.serverAddress",
+                "A server address field is a required url field that is not secret (ADR 0284 §2).");
+        }
+
+        if (count > 1)
+        {
+            AddError(errors, "manifest.drive-provider.server-address", $"{at}.serverAddress",
+                "A provider marks one field at most as its server address (ADR 0284 §2).");
         }
     }
 

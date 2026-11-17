@@ -184,6 +184,7 @@ The package is produced with both resource measurements compiled in
 | `kazoos-command` | `hello` shell command (`TerminalAppBase`) | `Kazo.Os.AppSdk`, `Kazo.Os.App.Build` |
 | `kazoos-service` | service started at sign-in (`ServiceAppBase`, simulated clock) | same |
 | `kazoos-site` | ASP.Kazo site (`WebAppDefinition`, embedded `wwwroot/`) | `Kazo.Os.AppSdk.Web`, `Kazo.Os.App.Build` |
+| `kazoos-drive-provider` | feature providing a network drive type: provider, OAuth declaration, JSON API through `KazoDirectHttpClient`, tests running the conformance suite against an in-memory service ([`drive-providers.md`](drive-providers.md)) | `Kazo.Os.AppSdk`, `Kazo.Os.App.Build`, `Kazo.Os.AppSdk.Testing` |
 | `kazoos-host` | Blazor WebAssembly host: `Program.cs`, `index.html`, `appsettings.json`, the base apps as packages (system apps as in the Ecosystem) | `Kazo.Os.Ecosystem.Host`, `Kazo.Os.App.Build`, `Kazo.Os.Apps.*`, `Kazo.Os.Commands` |
 | `kazoos-solution` | a whole app repository: app, host, tests, Kazo OS submodule (sources in `Debug`, packages in `Release`), CI, publishing to the Kazo OS Store ([`app-repository.md`](app-repository.md), ADR 0207) | those of the app and the host, at the submodule's version |
 

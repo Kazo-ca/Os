@@ -151,7 +151,7 @@ public sealed record KazoDriveOpenRequest(string Name, IKazoDriveProviderContext
 /// </summary>
 public interface IKazoDriveProviderContext
 {
-    /// <summary>Gets the filesystem type of the drive (<c>pcloud</c>).</summary>
+    /// <summary>Gets the filesystem type of the drive (<c>exemple</c>).</summary>
     string Type { get; }
 
     /// <summary>Gets the account the drive belongs to, or <see langword="null"/> for a form connection (which has no sign-in).</summary>

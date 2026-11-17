@@ -197,7 +197,7 @@ est absente ou désactivée : voir [`feature-services.md`](feature-services.md).
 #### Types de lecteurs réseau : `DriveProviders` (ADR 0282)
 
 Une fonctionnalité qui demande la capacité dangereuse `drives.provide` peut
-fournir des **types de lecteurs réseau** (`mount -t pcloud`) : chaque
+fournir des **types de lecteurs réseau** (`mount -t exemple`) : chaque
 `KazoDriveProviderDeclaration` donne le type, le nom affiché, la classe dérivée
 de `KazoDriveProvider`, la connexion (OAuth ou formulaire), l'icône et les
 hôtes joints. Le manifeste les écrit dans `driveProviders`. Une app ordinaire

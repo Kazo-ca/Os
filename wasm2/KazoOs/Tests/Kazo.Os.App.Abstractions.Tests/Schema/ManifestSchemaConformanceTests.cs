@@ -50,7 +50,8 @@ public sealed class ManifestSchemaConformanceTests
         "invalid-drive-provider-on-service.json",
         "invalid-drive-provider-reserved-type.json",
         "invalid-drive-provider-bare-wildcard.json",
-        "invalid-drive-provider-http-endpoint.json"
+        "invalid-drive-provider-http-endpoint.json",
+        "invalid-drive-provider-secret-server-address.json"
     };
 
     [Theory]

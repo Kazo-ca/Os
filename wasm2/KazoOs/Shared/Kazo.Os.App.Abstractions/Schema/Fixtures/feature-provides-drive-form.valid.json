@@ -1,10 +1,10 @@
 {
   "schemaVersion": 1,
-  "id": "ca.example.pcloud",
-  "name": "pCloud drives",
+  "id": "ca.example.webdav",
+  "name": "WebDAV drives",
   "version": "1.0.0",
   "publisherId": "ca.example",
-  "description": "Provides pCloud storage as network drives (ADR 0282).",
+  "description": "Provides WebDAV servers as network drives (ADR 0282).",
   "kind": "feature",
   "sdkCompatibility": {
     "minimumVersion": "3.2.0"
@@ -44,7 +44,8 @@
             "label": "Address",
             "kind": "url",
             "secret": false,
-            "required": true
+            "required": true,
+            "serverAddress": true
           },
           {
             "name": "password",

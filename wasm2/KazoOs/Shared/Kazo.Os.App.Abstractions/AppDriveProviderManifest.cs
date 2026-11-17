@@ -8,11 +8,11 @@ namespace Kazo.Os.App.Abstractions;
 /// feature that talks to the service, how the user signs in, and the hosts the class reaches.
 /// </summary>
 /// <param name="Type">
-/// The filesystem type (<c>pcloud</c>, <c>webdav</c>): lowercase letters, digits and dashes, as
+/// The filesystem type (<c>exemple</c>, <c>webdav</c>): lowercase letters, digits and dashes, as
 /// <c>mount -t</c>, <c>/proc/mounts</c> and <c>df -T</c> show it. The types of the OS are reserved
 /// (<see cref="AppDriveProviders.ReservedTypes"/>).
 /// </param>
-/// <param name="Name">The name of the service, as the connect dialog and Settings show it (<c>pCloud</c>).</param>
+/// <param name="Name">The name of the service, as the connect dialog and Settings show it (<c>Exemple</c>).</param>
 /// <param name="Provider">
 /// The class of the feature that derives from <c>Kazo.Os.AppSdk.Drives.KazoDriveProvider</c>,
 /// written <c>Full.Type.Name, Assembly</c> like a provided service (ADR 0262).
@@ -32,16 +32,16 @@ public sealed record AppDriveProviderManifest(
 
     /// <summary>
     /// Gets the host names the provider's class reaches (ADR 0282 §4): an exact name
-    /// (<c>api.pcloud.com</c>) or a subdomain wildcard (<c>*.pcloud.com</c>), always over <c>https</c>.
+    /// (<c>api.example.com</c>) or a subdomain wildcard (<c>*.example.com</c>), always over <c>https</c>.
     /// A bare <c>*</c> is refused. The approval window names them.
     /// </summary>
     public IReadOnlyList<string> Hosts { get; init; } = [];
 
-    /// <summary>Gets the full name of the provider's class, e.g. <c>Pcloud.PcloudDriveProvider</c>.</summary>
+    /// <summary>Gets the full name of the provider's class, e.g. <c>Exemple.ExempleDriveProvider</c>.</summary>
     [JsonIgnore]
     public string ProviderType => AppProvidedServiceManifest.TryParseName(Provider, out string typeName, out _) ? typeName : Provider;
 
-    /// <summary>Gets the simple assembly name of the provider's class, e.g. <c>Pcloud</c>.</summary>
+    /// <summary>Gets the simple assembly name of the provider's class, e.g. <c>Exemple</c>.</summary>
     [JsonIgnore]
     public string ProviderAssembly => AppProvidedServiceManifest.TryParseName(Provider, out _, out string assemblyName) ? assemblyName : string.Empty;
 }
@@ -195,4 +195,14 @@ public sealed record AppDriveFormFieldManifest(string Name, string Label, AppDri
 
     /// <summary>Gets the allowed values of a <see cref="AppDriveFormFieldKind.Choice"/> field, in display order.</summary>
     public IReadOnlyList<string>? Choices { get; init; }
+
+    /// <summary>
+    /// Gets whether the field holds the address of the server the user connects to (ADR 0284 §2),
+    /// for a service with no host known in advance (WebDAV, a NAS). While a drive of the type is
+    /// open, the OS allows the host of the address the user typed to the feature that provides the
+    /// type, and the connection dialog writes it in plain words. Only on a required, non-secret
+    /// <see cref="AppDriveFormFieldKind.Url"/> field, and on one field of a provider at most.
+    /// </summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public bool ServerAddress { get; init; }
 }

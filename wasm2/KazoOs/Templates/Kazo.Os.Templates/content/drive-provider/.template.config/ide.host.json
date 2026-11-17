@@ -1,0 +1,11 @@
+{
+  "$schema": "http://json.schemastore.org/ide.host",
+  "order": 6,
+  "icon": "icon.png",
+  "symbolInfo": [
+    { "id": "appId", "name": { "text": "Feature id (reverse-DNS)" }, "isVisible": true },
+    { "id": "publisherId", "name": { "text": "Publisher id" }, "isVisible": true },
+    { "id": "driveType", "name": { "text": "Drive type (mount -t)" }, "isVisible": true },
+    { "id": "apiHost", "name": { "text": "Host of the service's API" }, "isVisible": true }
+  ]
+}

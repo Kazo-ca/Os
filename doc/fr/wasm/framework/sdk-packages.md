@@ -184,6 +184,7 @@ Le paquet est produit avec les deux mesures de ressources compilées
 | `kazoos-command` | commande du shell `hello` (`TerminalAppBase`) | `Kazo.Os.AppSdk`, `Kazo.Os.App.Build` |
 | `kazoos-service` | service démarré à la connexion (`ServiceAppBase`, horloge simulée) | idem |
 | `kazoos-site` | site ASP.Kazo (`WebAppDefinition`, `wwwroot/` embarqué) | `Kazo.Os.AppSdk.Web`, `Kazo.Os.App.Build` |
+| `kazoos-drive-provider` | fonctionnalité qui fournit un type de lecteur réseau : fournisseur, déclaration OAuth, API JSON par `KazoDirectHttpClient`, tests de la suite de conformité contre un service en mémoire ([`drive-providers.md`](drive-providers.md)) | `Kazo.Os.AppSdk`, `Kazo.Os.App.Build`, `Kazo.Os.AppSdk.Testing` |
 | `kazoos-host` | hôte Blazor WebAssembly : `Program.cs`, `index.html`, `appsettings.json`, les apps de base en paquets (système comme dans l'Ecosystem) | `Kazo.Os.Ecosystem.Host`, `Kazo.Os.App.Build`, `Kazo.Os.Apps.*`, `Kazo.Os.Commands` |
 | `kazoos-solution` | dépôt d'app entier : app, hôte, tests, sous-module Kazo OS (sources en `Debug`, paquets en `Release`), CI, publication dans le Kazo OS Store ([`app-repository.md`](app-repository.md), ADR 0207) | ceux de l'app et de l'hôte, à la version du sous-module |
 

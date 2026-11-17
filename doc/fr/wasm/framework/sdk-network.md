@@ -282,6 +282,10 @@ using KazoDirectHttpResponse uploaded = await client.PutAsync(
   approuve la liste ([approbation](../dev/dangerous-capability-approval.md)).
   Le client est offert à toute app (choix du mainteneur, 2026-11-17) ; c'est
   la permission qui décide.
+  Une fonctionnalité qui fournit un lecteur réseau joint les hôtes de ses
+  déclarations `driveProviders`, et le serveur tapé dans un champ
+  `serverAddress`, avec `drives.provide` seule (ADR 0284,
+  [`drive-providers.md`](drive-providers.md#joindre-le-service)).
 - **Refus.** Sans la capacité : `UnauthorizedAccessException`. Hôte non
   déclaré : `UnauthorizedAccessException` qui nomme l'hôte. Adresse `http`,
   relative sans `BaseAddress`, ou en-tête réservé au navigateur (`Host`,
