@@ -18,6 +18,7 @@ public sealed class DeclaredDriveProviderTests
 {
     private const string Table = "/home/alice/.local/state/kazoos/cloud-accounts.json";
     private const string FeatureId = "ca.example.pcloud";
+    private const string OtherFeatureId = "ca.other.pcloud";
 
     private readonly SettingsFilesHarness _harness = new(withKeyring: true);
     private readonly FakeOAuthServer _server = new("pcloud");
@@ -149,7 +150,7 @@ public sealed class DeclaredDriveProviderTests
         CloudAccount second = await accounts.ConnectAsync("pcloud", CloudAccessScope.Full);
         int calls = 0;
 
-        IKazoDriveProviderContext context = await accounts.CreateDriveProviderContextAsync("pcloud", first.Id, () => calls++);
+        IKazoDriveProviderContext context = await accounts.CreateDriveProviderContextAsync("pcloud", FeatureId, first.Id, () => calls++);
         string token = await context.GetAccessTokenAsync();
 
         Assert.NotEqual(first.Id, second.Id);
@@ -170,7 +171,7 @@ public sealed class DeclaredDriveProviderTests
         await _harness.LoginAsync(_harness.Alice);
         CloudAccountService accounts = CreateService(Catalog(Feature(FeatureId, OAuthType("pcloud"))));
         CloudAccount account = await accounts.ConnectAsync("pcloud", CloudAccessScope.Full);
-        IKazoDriveProviderContext context = await accounts.CreateDriveProviderContextAsync("pcloud", account.Id);
+        IKazoDriveProviderContext context = await accounts.CreateDriveProviderContextAsync("pcloud", FeatureId, account.Id);
         string before = await context.GetAccessTokenAsync();
 
         _time.Advance(TimeSpan.FromHours(5));
@@ -197,7 +198,7 @@ public sealed class DeclaredDriveProviderTests
         CloudAccountService accounts = CreateService(Catalog(Feature(FeatureId, OAuthType("pcloud"))));
 
         CloudAccountException refused = await Assert.ThrowsAsync<CloudAccountException>(
-            () => accounts.CreateDriveProviderContextAsync("pcloud", foreign.Id).AsTask());
+            () => accounts.CreateDriveProviderContextAsync("pcloud", FeatureId, foreign.Id).AsTask());
 
         Assert.Equal(CloudAccountError.AccountNotFound, refused.Error);
     }
@@ -208,7 +209,7 @@ public sealed class DeclaredDriveProviderTests
         await _harness.LoginAsync(_harness.Alice);
         CloudAccountService accounts = CreateService(Catalog(Feature(FeatureId, OAuthType("pcloud"))));
         CloudAccount account = await accounts.ConnectAsync("pcloud", CloudAccessScope.Full);
-        IKazoDriveProviderContext context = await accounts.CreateDriveProviderContextAsync("pcloud", account.Id);
+        IKazoDriveProviderContext context = await accounts.CreateDriveProviderContextAsync("pcloud", FeatureId, account.Id);
 
         await accounts.RemoveAsync(account.Id);
         KazoDriveException refused = await Assert.ThrowsAsync<KazoDriveException>(() => context.GetAccessTokenAsync().AsTask());
@@ -222,7 +223,7 @@ public sealed class DeclaredDriveProviderTests
         await _harness.LoginAsync(_harness.Alice);
         CloudAccountService accounts = CreateService(Catalog(Feature(FeatureId, OAuthType("pcloud"))));
         CloudAccount account = await accounts.ConnectAsync("pcloud", CloudAccessScope.Full);
-        IKazoDriveProviderContext context = await accounts.CreateDriveProviderContextAsync("pcloud", account.Id);
+        IKazoDriveProviderContext context = await accounts.CreateDriveProviderContextAsync("pcloud", FeatureId, account.Id);
         _time.Advance(TimeSpan.FromHours(5));
 
         _server.Offline = true;
@@ -243,10 +244,10 @@ public sealed class DeclaredDriveProviderTests
         CloudAccountService accounts = CreateService(catalog: null);
         Dictionary<string, string> options = new() { ["server"] = "https://dav.example.test", ["user"] = "alice" };
 
-        CloudAccount account = await accounts.SaveFormAccountAsync("webdav", "dav.example.test", options, new Dictionary<string, string> { ["password"] = "s3cr3t-one" });
-        CloudAccount again = await accounts.SaveFormAccountAsync("webdav", "dav.example.test", options, new Dictionary<string, string> { ["password"] = "s3cr3t-two" });
+        CloudAccount account = await accounts.SaveFormAccountAsync("webdav", FeatureId, "dav.example.test", options, new Dictionary<string, string> { ["password"] = "s3cr3t-one" });
+        CloudAccount again = await accounts.SaveFormAccountAsync("webdav", FeatureId, "dav.example.test", options, new Dictionary<string, string> { ["password"] = "s3cr3t-two" });
         CloudAccount other = await accounts.SaveFormAccountAsync(
-            "webdav", "dav.example.test", new Dictionary<string, string>(options) { ["user"] = "bob" }, new Dictionary<string, string> { ["password"] = "x" });
+            "webdav", FeatureId, "dav.example.test", new Dictionary<string, string>(options) { ["user"] = "bob" }, new Dictionary<string, string> { ["password"] = "x" });
 
         // Same plain values: the same account, which takes the new secret (a new password).
         Assert.Equal(account.Id, again.Id);
@@ -258,7 +259,7 @@ public sealed class DeclaredDriveProviderTests
         Assert.DoesNotContain("s3cr3t", table, StringComparison.Ordinal);
         Assert.Equal(account.Options, (await accounts.FindAccountAsync(account.Id))!.Options);
 
-        IKazoDriveProviderContext context = await accounts.CreateDriveProviderContextAsync("webdav", account.Id);
+        IKazoDriveProviderContext context = await accounts.CreateDriveProviderContextAsync("webdav", FeatureId, account.Id);
         Assert.Null(context.Account);
         Assert.Equal("s3cr3t-two", await context.GetSecretAsync("password"));
         Assert.Null(await context.GetSecretAsync("user"));
@@ -272,12 +273,73 @@ public sealed class DeclaredDriveProviderTests
         await _harness.LoginAsync(_harness.Alice);
         CloudAccountService accounts = CreateService(catalog: null);
         CloudAccount account = await accounts.SaveFormAccountAsync(
-            "webdav", "dav", new Dictionary<string, string> { ["user"] = "alice" }, new Dictionary<string, string> { ["password"] = "s3cr3t" });
+            "webdav", FeatureId, "dav", new Dictionary<string, string> { ["user"] = "alice" }, new Dictionary<string, string> { ["password"] = "s3cr3t" });
 
         CloudAccountException refused = await Assert.ThrowsAsync<CloudAccountException>(
-            () => accounts.CreateDriveProviderContextAsync("ftpcloud", account.Id).AsTask());
+            () => accounts.CreateDriveProviderContextAsync("ftpcloud", FeatureId, account.Id).AsTask());
 
         Assert.Equal(CloudAccountError.AccountNotFound, refused.Error);
+    }
+
+    [Fact]
+    public async Task An_account_belongs_to_the_feature_that_served_its_type()
+    {
+        await _harness.LoginAsync(_harness.Alice);
+        CloudAccountService accounts = CreateService(Catalog(Feature(FeatureId, OAuthType("pcloud"))));
+
+        CloudAccount account = await accounts.ConnectAsync("pcloud", CloudAccessScope.Full);
+        CloudAccountException refused = await Assert.ThrowsAsync<CloudAccountException>(
+            () => accounts.CreateDriveProviderContextAsync("pcloud", OtherFeatureId, account.Id).AsTask());
+        CloudAccountException perCall = await Assert.ThrowsAsync<CloudAccountException>(
+            () => accounts.GetProviderAccessTokenAsync("pcloud", OtherFeatureId, account.Id, CancellationToken.None).AsTask());
+
+        Assert.Equal(FeatureId, account.FeatureId);
+        Assert.Equal(FeatureId, (await accounts.FindAccountAsync(account.Id))!.FeatureId);
+        Assert.Contains($"\"featureId\": \"{FeatureId}\"", (await _harness.ReadAsync(Table))!, StringComparison.Ordinal);
+        Assert.Equal(CloudAccountError.AccountNotFound, refused.Error);
+        Assert.Equal(CloudAccountError.AccountNotFound, perCall.Error);
+        Assert.NotNull(await accounts.CreateDriveProviderContextAsync("pcloud", FeatureId, account.Id));
+    }
+
+    [Fact]
+    public async Task Another_feature_serving_the_same_type_never_reaches_the_first_features_account()
+    {
+        await _harness.LoginAsync(_harness.Alice);
+        CloudAccount first = await CreateService(Catalog(Feature(FeatureId, OAuthType("pcloud")))).ConnectAsync("pcloud", CloudAccessScope.Full);
+        // The first feature is removed and another one now declares "pcloud".
+        CloudAccountService accounts = CreateService(Catalog(Feature(OtherFeatureId, OAuthType("pcloud"))));
+        int signIns = _server.AuthorizationRequests.Count;
+
+        CloudAccountException reconnect = await Assert.ThrowsAsync<CloudAccountException>(() => accounts.ReconnectAsync(first.Id).AsTask());
+        CloudAccount second = await accounts.ConnectAsync("pcloud", CloudAccessScope.Full);
+
+        // No window opened for the refused reconnection; the same service account signed in again
+        // through the other feature is a new account, not the first one renewed.
+        Assert.Equal(CloudAccountError.ProviderNotConfigured, reconnect.Error);
+        Assert.Equal(signIns + 1, _server.AuthorizationRequests.Count);
+        Assert.NotEqual(first.Id, second.Id);
+        Assert.Equal(first.ProviderAccountId, second.ProviderAccountId);
+        Assert.Equal(OtherFeatureId, second.FeatureId);
+        Assert.Equal(FeatureId, (await accounts.FindAccountAsync(first.Id))!.FeatureId);
+    }
+
+    [Fact]
+    public async Task A_form_account_of_another_feature_is_a_separate_account_with_its_own_secrets()
+    {
+        await _harness.LoginAsync(_harness.Alice);
+        CloudAccountService accounts = CreateService(catalog: null);
+        Dictionary<string, string> options = new() { ["server"] = "https://dav.example.test", ["user"] = "alice" };
+
+        CloudAccount mine = await accounts.SaveFormAccountAsync("webdav", FeatureId, "dav", options, new Dictionary<string, string> { ["password"] = "mine" });
+        CloudAccount theirs = await accounts.SaveFormAccountAsync("webdav", OtherFeatureId, "dav", options, new Dictionary<string, string> { ["password"] = "theirs" });
+        CloudAccountException refused = await Assert.ThrowsAsync<CloudAccountException>(
+            () => accounts.GetFormSecretsAsync("webdav", OtherFeatureId, mine.Id, CancellationToken.None).AsTask());
+
+        Assert.NotEqual(mine.Id, theirs.Id);
+        Assert.Equal(FeatureId, mine.FeatureId);
+        Assert.Equal(CloudAccountError.AccountNotFound, refused.Error);
+        Assert.Equal("mine", await (await accounts.CreateDriveProviderContextAsync("webdav", FeatureId, mine.Id)).GetSecretAsync("password"));
+        Assert.Equal("theirs", await (await accounts.CreateDriveProviderContextAsync("webdav", OtherFeatureId, theirs.Id)).GetSecretAsync("password"));
     }
 
     [Fact]

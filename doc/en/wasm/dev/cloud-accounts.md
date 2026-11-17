@@ -243,17 +243,26 @@ runs the sign-in: the OS runs it from its declaration.
   same callback page, PKCE, tokens sealed on the device, renewal by the OS.
   Without an identity address, the account takes the service's name and a
   reconnection cannot check it is the same account.
-- **Form**: `CloudAccountService.SaveFormAccountAsync(type, name, options,
-  secrets)` keeps a keys account (`"credential": "keys"`): the non-secret
+- **Form**: `CloudAccountService.SaveFormAccountAsync(type, feature, name,
+  options, secrets)` keeps a keys account (`"credential": "keys"`): the non-secret
   values are readable in the list (`options`, given back by
   `CloudAccount.Options`), the secret fields are sealed like tokens. The same
   type with the same non-secret values finds the same account again (its
   service account id is `form:` followed by the SHA-256 of those values, never
   a secret): typing a new password replaces the old one.
+- **The account's feature**: each account of a declared type keeps the id of
+  the feature that served its type when it was added (`featureId` in the list,
+  `CloudAccount.FeatureId`; `null` for Dropbox, OneDrive and S3). If another
+  feature later serves the same type, it never reaches this account: its
+  context is refused, a reconnection is refused (`ProviderNotConfigured`)
+  without opening a window, and a new sign-in to the same service account
+  creates a separate account. Same rule as drives, which only mount again with
+  the same feature (Benoit's answer A, 2026-11-17).
 - **What the provider is lent**:
-  `CloudAccountService.CreateDriveProviderContextAsync(type, account)` returns
-  an `IKazoDriveProviderContext` bound to **one** account and **one** type. An
-  account of another type is refused (`AccountNotFound`). At each call the
+  `CloudAccountService.CreateDriveProviderContextAsync(type, feature, account)`
+  returns an `IKazoDriveProviderContext` bound to **one** account, **one** type
+  and **one** feature. An account of another type or of another feature is
+  refused (`AccountNotFound`), at creation and at each call. At each call the
   context reads the list again: `GetAccessTokenAsync` returns this account's
   access token (renewed by the OS), `GetSecretAsync` a secret field of this
   account, and nothing once the account is removed. The context keeps no token

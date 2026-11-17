@@ -25,21 +25,24 @@ public sealed partial class CloudAccountService
     /// (<see cref="CreateDriveProviderContextAsync"/>).
     /// </summary>
     /// <param name="type">The declared drive type, e.g. <c>webdav</c>.</param>
+    /// <param name="featureId">The feature that declares the type: the account is only ever lent to its provider.</param>
     /// <param name="displayName">What the account list shows, e.g. the address of the server.</param>
     /// <param name="options">The non-secret values, by field name.</param>
     /// <param name="secrets">The secret values, by field name.</param>
     /// <param name="cancellationToken">Cancels the write.</param>
     /// <returns>The account; its <see cref="CloudAccount.Options"/> are <paramref name="options"/>.</returns>
-    /// <exception cref="ArgumentException">The type, the name or a field name is empty.</exception>
+    /// <exception cref="ArgumentException">The type, the feature, the name or a field name is empty.</exception>
     /// <exception cref="CloudAccountException"><see cref="CloudAccountError.KeyringLocked"/> or <see cref="CloudAccountError.NotSignedIn"/>.</exception>
     public async ValueTask<CloudAccount> SaveFormAccountAsync(
         string type,
+        string featureId,
         string displayName,
         IReadOnlyDictionary<string, string> options,
         IReadOnlyDictionary<string, string> secrets,
         CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(type);
+        ArgumentException.ThrowIfNullOrWhiteSpace(featureId);
         ArgumentException.ThrowIfNullOrWhiteSpace(displayName);
         ArgumentNullException.ThrowIfNull(options);
         ArgumentNullException.ThrowIfNull(secrets);
@@ -54,7 +57,7 @@ public sealed partial class CloudAccountService
             CloudAccountJsonContext.Default.DictionaryStringString);
         try
         {
-            return await SaveKeysAccountCoreAsync(type, displayName.Trim(), FormAccountId(copiedOptions), secret, copiedOptions, cancellationToken)
+            return await SaveKeysAccountCoreAsync(type, displayName.Trim(), FormAccountId(copiedOptions), secret, copiedOptions, featureId, cancellationToken)
                 .ConfigureAwait(false);
         }
         finally
@@ -67,50 +70,54 @@ public sealed partial class CloudAccountService
     /// Creates what the OS lends the provider of a declared drive type for one drive (ADR 0282 §3):
     /// the drive's account, its access token (renewed by the OS) or the secret values of its form.
     /// The context is bound to <paramref name="accountId"/>: it can never reach another account,
-    /// and it gives nothing once the account is removed or is not of <paramref name="type"/>. The
-    /// refresh token never leaves the OS.
+    /// and it gives nothing once the account is removed, is not of <paramref name="type"/>, or was
+    /// added with another feature's provider of that type. The refresh token never leaves the OS.
     /// </summary>
     /// <param name="type">The drive type the provider serves, e.g. <c>exemple</c>.</param>
+    /// <param name="featureId">The feature whose provider opens the drive.</param>
     /// <param name="accountId">The account of the drive being opened.</param>
     /// <param name="availabilityChanged">Called when the provider reports that its service may be reachable again; <see langword="null"/> ignores it.</param>
     /// <param name="cancellationToken">Cancels the read of the account list.</param>
     /// <returns>The context.</returns>
     /// <exception cref="CloudAccountException">
-    /// <see cref="CloudAccountError.AccountNotFound"/> when the account is not in the list or is not
-    /// of <paramref name="type"/>, or <see cref="CloudAccountError.NotSignedIn"/>.
+    /// <see cref="CloudAccountError.AccountNotFound"/> when the account is not in the list, is not
+    /// of <paramref name="type"/> or belongs to another feature, or <see cref="CloudAccountError.NotSignedIn"/>.
     /// </exception>
     public async ValueTask<IKazoDriveProviderContext> CreateDriveProviderContextAsync(
         string type,
+        string featureId,
         string accountId,
         Action? availabilityChanged = null,
         CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(type);
+        ArgumentException.ThrowIfNullOrWhiteSpace(featureId);
         ArgumentException.ThrowIfNullOrWhiteSpace(accountId);
         AuthenticatedPrincipal principal = RequirePrincipal();
         List<CloudAccountRecord> records = await _store.LoadAsync(principal, cancellationToken).ConfigureAwait(false);
         CloudAccountRecord account = records.FirstOrDefault(record =>
                 string.Equals(record.Id, accountId, StringComparison.Ordinal)
-                && string.Equals(record.Provider, type, StringComparison.Ordinal))
+                && string.Equals(record.Provider, type, StringComparison.Ordinal)
+                && string.Equals(record.FeatureId, featureId, StringComparison.Ordinal))
             ?? throw NotFound(accountId);
-        return new DriveProviderContext(this, type, account.Id, account.DisplayName, account.HasKeys, availabilityChanged);
+        return new DriveProviderContext(this, type, featureId, account.Id, account.DisplayName, account.HasKeys, availabilityChanged);
     }
 
     /// <summary>
     /// Gets an access token of an OAuth account of <paramref name="type"/> for its provider's context.
-    /// An account of another type, or a form account, is refused in the same read.
+    /// An account of another type or of another feature, or a form account, is refused in the same read.
     /// </summary>
-    internal ValueTask<string> GetProviderAccessTokenAsync(string type, string accountId, CancellationToken cancellationToken) =>
-        GetAccessTokenCoreAsync(accountId, rejectedAccessToken: null, expectedProvider: type, cancellationToken);
+    internal ValueTask<string> GetProviderAccessTokenAsync(string type, string featureId, string accountId, CancellationToken cancellationToken) =>
+        GetAccessTokenCoreAsync(accountId, rejectedAccessToken: null, expectedProvider: type, cancellationToken, expectedFeature: featureId);
 
     /// <summary>
     /// Opens the secret values of a form account of <paramref name="type"/> for its provider's
-    /// context; an account of another type reads as not found.
+    /// context; an account of another type or of another feature reads as not found.
     /// </summary>
     /// <returns>The secret values by field name.</returns>
-    internal async ValueTask<IReadOnlyDictionary<string, string>> GetFormSecretsAsync(string type, string accountId, CancellationToken cancellationToken)
+    internal async ValueTask<IReadOnlyDictionary<string, string>> GetFormSecretsAsync(string type, string featureId, string accountId, CancellationToken cancellationToken)
     {
-        (_, byte[] secret) = await GetKeysAsync(accountId, type, cancellationToken).ConfigureAwait(false);
+        (_, byte[] secret) = await GetKeysAsync(accountId, type, cancellationToken, featureId).ConfigureAwait(false);
         try
         {
             return JsonSerializer.Deserialize(secret, CloudAccountJsonContext.Default.DictionaryStringString)

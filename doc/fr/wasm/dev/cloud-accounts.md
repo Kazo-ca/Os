@@ -244,17 +244,28 @@ jamais la connexion : l'OS la mène à partir de sa déclaration.
   page de retour, PKCE, jetons scellés sur l'appareil, renouvellement par
   l'OS. Sans adresse d'identité, le compte prend le nom du service et la
   reconnexion ne peut pas vérifier qu'il s'agit du même compte.
-- **Formulaire** : `CloudAccountService.SaveFormAccountAsync(type, nom,
-  options, secrets)` range un compte à clés (`"credential": "keys"`) : les
+- **Formulaire** : `CloudAccountService.SaveFormAccountAsync(type,
+  fonctionnalité, nom, options, secrets)` range un compte à clés (`"credential": "keys"`) : les
   valeurs non secrètes sont lisibles dans la liste (`options`, rendues par
   `CloudAccount.Options`), les champs secrets sont scellés comme des jetons. Le
   même type avec les mêmes valeurs non secrètes retrouve le même compte (son
   identifiant chez le service est `form:` suivi du SHA-256 de ces valeurs, sans
   aucun secret) : saisir un nouveau mot de passe remplace l'ancien.
+- **Fonctionnalité du compte** : chaque compte d'un type déclaré garde l'id de
+  la fonctionnalité qui servait son type quand il a été ajouté (`featureId`
+  dans la liste, `CloudAccount.FeatureId` ; `null` pour Dropbox, OneDrive et
+  S3). Si une autre fonctionnalité sert plus tard le même type, elle n'atteint
+  jamais ce compte : son contexte est refusé, la reconnexion est refusée
+  (`ProviderNotConfigured`) sans ouvrir de fenêtre, et une nouvelle connexion
+  au même compte du service crée un compte distinct. Même règle que les
+  lecteurs, qui ne se remontent qu'avec la même fonctionnalité (réponse A de
+  Benoit, 2026-11-17).
 - **Ce qui est prêté au fournisseur** :
-  `CloudAccountService.CreateDriveProviderContextAsync(type, compte)` rend un
-  `IKazoDriveProviderContext` lié à **un** compte et **un** type. Un compte
-  d'un autre type est refusé (`AccountNotFound`). À chaque appel, le contexte
+  `CloudAccountService.CreateDriveProviderContextAsync(type, fonctionnalité,
+  compte)` rend un `IKazoDriveProviderContext` lié à **un** compte, **un** type
+  et **une** fonctionnalité. Un compte d'un autre type ou d'une autre
+  fonctionnalité est refusé (`AccountNotFound`), à la création comme à chaque
+  appel. À chaque appel, le contexte
   relit la liste : `GetAccessTokenAsync` rend le jeton d'accès de ce compte
   (renouvelé par l'OS), `GetSecretAsync` un champ secret de ce compte, et rien
   une fois le compte retiré. Le contexte ne garde ni jeton ni secret, et le
