@@ -18,6 +18,8 @@ public partial class FeatureSettingsPageView : IAsyncDisposable
     private string? _openedId;
     private string? _message;
     private bool _canReopen;
+    private int _generation;
+    private bool _disposed;
     private IStringLocalizer<Strings>? _localizer;
 
     /// <summary>Gets or sets the page to draw.</summary>
@@ -56,7 +58,11 @@ public partial class FeatureSettingsPageView : IAsyncDisposable
     }
 
     /// <inheritdoc />
-    public async ValueTask DisposeAsync() => await CloseAsync();
+    public async ValueTask DisposeAsync()
+    {
+        _disposed = true;
+        await CloseAsync();
+    }
 
     /// <summary>Starts the page again after its process ended (task manager, <c>kill</c>).</summary>
     internal async Task ReopenAsync()
@@ -69,11 +75,29 @@ public partial class FeatureSettingsPageView : IAsyncDisposable
     {
         _message = null;
         _canReopen = false;
+        int generation = ++_generation;
         FeatureSettingsPageStart start = await FeaturePages.OpenAsync(Context, Page.Id, Context.CancellationToken);
+        if (generation != _generation || _disposed)
+        {
+            // Settings moved to another page, or closed, while this one started: it must not keep running.
+            if (start.Session is { } stale)
+            {
+                await stale.StopAsync();
+            }
+
+            return;
+        }
+
         if (start.Session is { } session)
         {
             _session = session;
             session.Exited += OnExited;
+            if (session.HasExited)
+            {
+                // The OS ended it before the subscription: show the same message as a later end.
+                OnExited();
+            }
+
             return;
         }
 
@@ -83,6 +107,8 @@ public partial class FeatureSettingsPageView : IAsyncDisposable
 
     private async Task CloseAsync()
     {
+        // A start still in progress is abandoned: OpenAsync stops it when it returns.
+        _generation++;
         if (_session is not { } session)
         {
             return;
@@ -90,12 +116,26 @@ public partial class FeatureSettingsPageView : IAsyncDisposable
 
         _session = null;
         session.Exited -= OnExited;
-        await session.StopAsync();
+        try
+        {
+            await session.StopAsync();
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            // The page's process could not be stopped: say so; the task manager can still end it.
+            _message = L["Features.Page.StopFailed", exception.Message];
+            _canReopen = false;
+        }
     }
 
     // The OS ended the page's process: Settings stays open and offers to start it again.
     private void OnExited() => _ = InvokeAsync(() =>
     {
+        if (_disposed)
+        {
+            return;
+        }
+
         _session = null;
         _message = L["Features.Page.Exited"];
         _canReopen = true;

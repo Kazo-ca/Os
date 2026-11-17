@@ -204,9 +204,11 @@ public partial class SettingsWindow : IAsyncDisposable
 
     private void OnFeaturePagesChanged(object? sender, EventArgs e) => _ = InvokeAsync(() =>
     {
+        bool showedFeaturePage = FeaturePageOf(_activePage) is not null;
         LoadFeaturePages();
-        // The page shown went away (role withdrawn, feature disabled): back to "Installed features".
-        if (_activePage.Contains('.', StringComparison.Ordinal) && FeaturePageOf(_activePage) is null)
+        // The page shown went away (role withdrawn, feature disabled): back to "Installed features",
+        // which removes its view and so stops its process.
+        if (showedFeaturePage && FeaturePageOf(_activePage) is null)
         {
             _featuresNotice = L["Features.PageUnavailable"];
             _activePage = FeaturesPageId;

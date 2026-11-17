@@ -28,6 +28,8 @@ public partial class InstalledFeaturesPanel : IDisposable
     private IReadOnlyList<KazoAppInstallInfo>? _features;
     private readonly Dictionary<string, IReadOnlyList<KazoPackageDependent>> _dependents = new(StringComparer.Ordinal);
     private IAppCatalogGateway? _catalog;
+    private readonly SemaphoreSlim _reload = new(1, 1);
+    private bool _disposed;
     private string? _message;
     private IStringLocalizer<Strings>? _localizer;
 
@@ -59,6 +61,7 @@ public partial class InstalledFeaturesPanel : IDisposable
     /// <inheritdoc />
     public void Dispose()
     {
+        _disposed = true;
         if (_catalog is not null)
         {
             _catalog.Changed -= OnCatalogChanged;
@@ -88,36 +91,62 @@ public partial class InstalledFeaturesPanel : IDisposable
 
     private void OnCatalogChanged(object? sender, EventArgs e) => _ = InvokeAsync(async () =>
     {
+        if (_disposed)
+        {
+            return;
+        }
+
         await ReloadAsync();
         StateHasChanged();
     });
 
+    /// <summary>Reads the list again, one read at a time, and shows it only once complete.</summary>
     private async Task ReloadAsync()
     {
+        await _reload.WaitAsync();
         try
         {
-            _apps = await Context.AppManagement.GetAllAsync(Context.CancellationToken);
-        }
-        catch (Exception exception) when (exception is UnauthorizedAccessException or AppGatewayAccessDeniedException or NotSupportedException)
-        {
-            _apps = [];
-            _message = L["Apps.Error.NotAllowed"];
-        }
-
-        _features = [.. _apps.Where(static entry => entry.App.Kind == AppKind.Feature)
-            .OrderBy(static entry => entry.App.Name, StringComparer.CurrentCultureIgnoreCase)];
-        _dependents.Clear();
-        foreach (KazoAppInstallInfo feature in _features)
-        {
+            IReadOnlyList<KazoAppInstallInfo> apps;
+            string? message = null;
             try
             {
-                _dependents[feature.App.Id] = await Context.AppManagement.GetPackageDependentsAsync(feature.App.Id, Context.CancellationToken);
+                apps = await Context.AppManagement.GetAllAsync(Context.CancellationToken);
             }
-            catch (Exception exception) when (exception is NotSupportedException or UnauthorizedAccessException or AppGatewayAccessDeniedException)
+            catch (Exception exception) when (exception is UnauthorizedAccessException or AppGatewayAccessDeniedException or NotSupportedException)
             {
-                // A host that cannot list dependents shows none; removing still warns (ADR 0248 §3).
-                _dependents[feature.App.Id] = [];
+                apps = [];
+                message = L["Apps.Error.NotAllowed"];
             }
+
+            IReadOnlyList<KazoAppInstallInfo> features = [.. apps.Where(static entry => entry.App.Kind == AppKind.Feature)
+                .OrderBy(static entry => entry.App.Name, StringComparer.CurrentCultureIgnoreCase)];
+            Dictionary<string, IReadOnlyList<KazoPackageDependent>> dependents = new(StringComparer.Ordinal);
+            foreach (KazoAppInstallInfo feature in features)
+            {
+                try
+                {
+                    dependents[feature.App.Id] = await Context.AppManagement.GetPackageDependentsAsync(feature.App.Id, Context.CancellationToken);
+                }
+                catch (Exception exception) when (exception is NotSupportedException or UnauthorizedAccessException or AppGatewayAccessDeniedException)
+                {
+                    // A host that cannot list dependents shows none; removing still warns (ADR 0248 §3).
+                    dependents[feature.App.Id] = [];
+                }
+            }
+
+            _apps = apps;
+            _features = features;
+            _dependents.Clear();
+            foreach ((string id, IReadOnlyList<KazoPackageDependent> list) in dependents)
+            {
+                _dependents[id] = list;
+            }
+
+            _message = message;
+        }
+        finally
+        {
+            _reload.Release();
         }
     }
 

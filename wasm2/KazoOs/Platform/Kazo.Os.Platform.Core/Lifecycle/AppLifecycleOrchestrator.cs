@@ -698,6 +698,12 @@ public sealed class AppLifecycleOrchestrator
             return new AppLaunchResult(AppLaunchStatus.Disabled, ErrorCode: "lifecycle.app.disabled");
         }
 
+        // ADR 0249 §2: a page of a disabled feature never starts, whoever asks.
+        if (kind == AppKind.SettingsPage && descriptor.Manifest.Parent is { } feature && !_enablement.IsEnabled(feature))
+        {
+            return new AppLaunchResult(AppLaunchStatus.Disabled, ErrorCode: "lifecycle.app.disabled");
+        }
+
         if (kind == AppKind.SettingsPage && RefuseForRole(descriptor.Manifest, principal, isRootElevated: false) is { } roleRefusal)
         {
             return roleRefusal;
@@ -706,16 +712,25 @@ public sealed class AppLifecycleOrchestrator
         HashSet<string> granted = ComputeGrantedCapabilities(descriptor.Manifest, principal);
         granted.Remove(AppCapabilities.NetworkListen);
         granted.Remove(AppCapabilities.NetworkListenPrivileged);
-        ProcessRecord process = _processManager.Start(new ProcessStartRequest(
-            parentPid,
-            appId,
-            AppInstanceId.FromGuid(Guid.NewGuid()),
-            kind,
-            principal.UserId,
-            principal.SessionId,
-            ToResourceProfile(descriptor.Manifest.Resources),
-            [appId, .. arguments],
-            Auxiliary: true));
+        ProcessRecord process;
+        try
+        {
+            process = _processManager.Start(new ProcessStartRequest(
+                parentPid,
+                appId,
+                AppInstanceId.FromGuid(Guid.NewGuid()),
+                kind,
+                principal.UserId,
+                principal.SessionId,
+                ToResourceProfile(descriptor.Manifest.Resources),
+                [appId, .. arguments],
+                Auxiliary: true));
+        }
+        catch (ProcessLimitExceededException exception)
+        {
+            // ADR 0125: nproc reached (EAGAIN), as for any launch; the caller shows it instead of failing.
+            return new AppLaunchResult(AppLaunchStatus.EntryPointFault, ErrorCode: ProcessLimitErrorCode, ErrorMessage: exception.Message);
+        }
         IAppExecutionContext context = _contextFactory.Create(
             descriptor.Manifest, principal, process, granted, process.AppInstanceId.Value);
 

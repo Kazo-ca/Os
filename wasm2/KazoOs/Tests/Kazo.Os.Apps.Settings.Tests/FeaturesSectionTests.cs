@@ -89,6 +89,35 @@ public sealed class FeaturesSectionTests
     }
 
     [Fact]
+    public async Task Leaving_a_page_while_it_starts_stops_it_when_its_start_returns()
+    {
+        FakeFeatureSettingsPages pages = new() { Hold = new TaskCompletionSource() };
+        FeatureSettingsPageInfo users = new("ca.kazo.x86.users", "ca.kazo.x86", "Os-x86", "Users", 2);
+        await using Harness harness = await Harness.RenderAsync<FeatureSettingsPageView>(
+            Context(), pages, new() { [nameof(FeatureSettingsPageView.Page)] = AdminPage }, quiesce: false);
+
+        // Settings moves to another page before the first one finished starting.
+        await harness.SetParameterAsync(nameof(FeatureSettingsPageView.Page), users);
+        pages.Hold!.SetResult();
+        await harness.QuiesceAsync();
+
+        Assert.Equal(["ca.kazo.x86.admin", "ca.kazo.x86.users"], pages.Opened.Select(static open => open.PageId));
+        Assert.Equal(1, pages.Stopped);
+        Assert.Contains("content of the page", harness.Html(), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task A_page_already_ended_when_it_opens_offers_to_open_it_again()
+    {
+        FakeFeatureSettingsPages pages = new() { EndedAtStart = true };
+        await using Harness harness = await Harness.RenderAsync<FeatureSettingsPageView>(
+            Context(), pages, new() { [nameof(FeatureSettingsPageView.Page)] = AdminPage });
+
+        Assert.Contains("The page stopped.", harness.Html(), StringComparison.Ordinal);
+        Assert.Contains("Open again", harness.Html(), StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task A_page_the_user_may_not_see_shows_why_instead()
     {
         FakeFeatureSettingsPages pages = new() { Denied = true };
@@ -152,6 +181,12 @@ public sealed class FeaturesSectionTests
     {
         public bool Denied { get; init; }
 
+        /// <summary>When set, the first start waits for it, as an assembly that takes time to load.</summary>
+        public TaskCompletionSource? Hold { get; init; }
+
+        /// <summary>Whether the OS ended the page before Settings subscribed to its end.</summary>
+        public bool EndedAtStart { get; init; }
+
         public List<(string Host, string PageId)> Opened { get; } = [];
 
         public int Stopped { get; set; }
@@ -164,12 +199,17 @@ public sealed class FeaturesSectionTests
 
         public IReadOnlyList<FeatureSettingsPageInfo> GetPages(IAppExecutionContext host) => [AdminPage];
 
-        public Task<FeatureSettingsPageStart> OpenAsync(IAppExecutionContext host, string pageId, CancellationToken cancellationToken = default)
+        public async Task<FeatureSettingsPageStart> OpenAsync(IAppExecutionContext host, string pageId, CancellationToken cancellationToken = default)
         {
             Opened.Add((host.Manifest.Id, pageId));
-            return Task.FromResult(Denied
+            if (Hold is { } hold && Opened.Count == 1)
+            {
+                await hold.Task;
+            }
+
+            return Denied
                 ? FeatureSettingsPageStart.Denied("role")
-                : FeatureSettingsPageStart.Started(new Session(this, host)));
+                : FeatureSettingsPageStart.Started(new Session(this, host) { HasExited = EndedAtStart });
         }
 
         private sealed class Session(FakeFeatureSettingsPages owner, IAppExecutionContext context) : IFeatureSettingsPageSession
@@ -180,7 +220,7 @@ public sealed class FeaturesSectionTests
 
             public IAppExecutionContext Context => context;
 
-            public bool HasExited { get; private set; }
+            public bool HasExited { get; set; }
 
             public event Action? Exited
             {
@@ -235,21 +275,35 @@ public sealed class FeaturesSectionTests
         }
 
         public static async Task<Harness> RenderAsync<TComponent>(
-            IAppExecutionContext context, IFeatureSettingsPages pages, Dictionary<string, object?> parameters)
+            IAppExecutionContext context, IFeatureSettingsPages pages, Dictionary<string, object?> parameters, bool quiesce = true)
             where TComponent : IComponent
         {
             ServiceProvider services = new ServiceCollection().AddSingleton(pages).BuildServiceProvider();
             Harness harness = new(services, new HtmlRenderer(services, NullLoggerFactory.Instance));
-            harness._root = await harness._renderer.Dispatcher.InvokeAsync(() => harness._renderer.RenderComponentAsync<Host>(
-                ParameterView.FromDictionary(new Dictionary<string, object?>
-                {
-                    [nameof(Host.Context)] = context,
-                    [nameof(Host.Component)] = typeof(TComponent),
-                    [nameof(Host.Parameters)] = parameters,
-                })));
-            await harness._root.QuiescenceTask;
+            ParameterView rootParameters = ParameterView.FromDictionary(new Dictionary<string, object?>
+            {
+                [nameof(Host.Context)] = context,
+                [nameof(Host.Component)] = typeof(TComponent),
+                [nameof(Host.Parameters)] = parameters,
+                [nameof(Host.Captured)] = (Action<Host>)(host => harness._host = host),
+            });
+            harness._root = await harness._renderer.Dispatcher.InvokeAsync(() => harness._renderer.BeginRenderingComponent<Host>(rootParameters));
+            if (quiesce)
+            {
+                await harness._root.QuiescenceTask;
+            }
+
             return harness;
         }
+
+        private Host _host = default!;
+
+        /// <summary>Gives the same component another parameter value, as Settings choosing another page.</summary>
+        public Task SetParameterAsync(string name, object? value) =>
+            _renderer.Dispatcher.InvokeAsync(() => _host.Change(name, value));
+
+        /// <summary>Waits until every pending render and lifecycle method finished.</summary>
+        public async Task QuiesceAsync() => await _root.QuiescenceTask;
 
         public string Html() => WebUtility.HtmlDecode(_renderer.Dispatcher.InvokeAsync(() => _root.ToHtmlString()).GetAwaiter().GetResult());
 
@@ -270,6 +324,18 @@ public sealed class FeaturesSectionTests
 
         [Parameter]
         public Dictionary<string, object?> Parameters { get; set; } = [];
+
+        [Parameter]
+        public Action<Host>? Captured { get; set; }
+
+        /// <summary>Changes one parameter of the hosted component and renders it again (same instance).</summary>
+        public void Change(string name, object? value)
+        {
+            Parameters = new Dictionary<string, object?>(Parameters) { [name] = value };
+            StateHasChanged();
+        }
+
+        protected override void OnInitialized() => Captured?.Invoke(this);
 
         protected override void BuildRenderTree(RenderTreeBuilder builder)
         {

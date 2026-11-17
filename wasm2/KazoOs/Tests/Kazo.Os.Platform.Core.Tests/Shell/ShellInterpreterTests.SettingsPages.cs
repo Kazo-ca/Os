@@ -35,11 +35,24 @@ public sealed partial class ShellInterpreterTests
     }
 
     [Fact]
+    public async Task The_process_of_a_settings_page_of_a_disabled_feature_never_starts()
+    {
+        Fixture fixture = await Fixture.CreateAsync();
+        await fixture.Roles.GrantAsync(FeatureRoleFixtures.Manager, fixture.AliceAccount, "carol");
+        fixture.Enablement.MarkDisabled([FeatureRoleFixtures.FeatureId]);
+
+        AppLaunchResult result = await fixture.Orchestrator.StartAuxiliaryAsync(
+            Fixture.SettingsPageId, fixture.Principal, fixture.Host.ProcessId, ["--type=settings-page"]);
+
+        Assert.Equal(AppLaunchStatus.Disabled, result.Status);
+    }
+
+    [Fact]
     public async Task The_process_of_a_settings_page_runs_as_the_page_under_the_given_parent()
     {
         Fixture fixture = await Fixture.CreateAsync();
         await fixture.Roles.GrantAsync(FeatureRoleFixtures.Manager, fixture.AliceAccount, "carol");
-        ProcessId parent = ProcessId.FromInt64(4242);
+        ProcessId parent = fixture.Host.ProcessId;
 
         AppLaunchResult result = await fixture.Orchestrator.StartAuxiliaryAsync(
             Fixture.SettingsPageId, fixture.Principal, parent, ["--type=settings-page"]);

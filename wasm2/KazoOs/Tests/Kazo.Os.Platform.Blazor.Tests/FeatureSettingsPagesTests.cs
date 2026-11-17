@@ -133,6 +133,31 @@ public sealed class FeatureSettingsPagesTests
     }
 
     [Fact]
+    public async Task A_page_whose_start_throws_fails_with_a_message_instead_of_taking_settings_down()
+    {
+        Harness harness = new(AppAuthority.Administrator, startThrows: true);
+
+        FeatureSettingsPageStart start = await harness.Pages.OpenAsync(harness.Settings, MinePageId);
+
+        Assert.False(start.IsStarted);
+        Assert.False(start.IsDenied);
+        Assert.Contains("process limit", start.Error, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task A_settings_window_of_another_user_gets_no_page()
+    {
+        Harness harness = new(AppAuthority.Administrator);
+        StubContext otherUser = new(harness.Catalog.Manifests[SettingsId], ProcessId.FromInt64(8), userId: "someone-else");
+
+        FeatureSettingsPageStart start = await harness.Pages.OpenAsync(otherUser, MinePageId);
+
+        Assert.Empty(harness.Pages.GetPages(otherUser));
+        Assert.True(start.IsDenied);
+        Assert.Empty(harness.Starts);
+    }
+
+    [Fact]
     public async Task The_page_reports_when_the_os_ends_its_process()
     {
         Harness harness = new(AppAuthority.Administrator);
@@ -227,19 +252,20 @@ public sealed class FeatureSettingsPagesTests
 
     private sealed class Harness
     {
-        public Harness(AppAuthority authority, bool mobile = false, bool failingPage = false)
+        public Harness(AppAuthority authority, bool mobile = false, bool failingPage = false, bool startThrows = false)
         {
             FeatureManifests feature = AppDefinitionMapper.ToFeatureManifests(new VmFeature(failingPage), "3.2.0");
             AppCatalogBuildResult built = AppCatalog.Build([.. feature.All, WindowManifest(SettingsId), WindowManifest("org.test.other")], []);
             Assert.True(built.Catalog is not null, string.Join("; ", built.Errors.Select(static error => error.ToString())));
             Catalog = built.Catalog;
             Enablement = new AppEnablementRegistry(Catalog);
-            Settings = new StubContext(Catalog.Manifests[SettingsId], ProcessId.FromInt64(7));
+            AuthenticatedPrincipal principal = CreatePrincipal(authority);
+            Settings = new StubContext(Catalog.Manifests[SettingsId], ProcessId.FromInt64(7), userId: principal.UserId.ToString());
             long nextPid = 100;
             Pages = new FeatureSettingsPages(
                 Catalog,
                 Enablement,
-                new StubSessionService(CreatePrincipal(authority)),
+                new StubSessionService(principal),
                 static () => null,
                 static () => CultureInfo.InvariantCulture,
                 () => mobile,
@@ -247,8 +273,13 @@ public sealed class FeatureSettingsPagesTests
                     (new AppDescriptor(Catalog.Manifests[appId], failingPage && appId == MinePageId ? typeof(ThrowingPage) : typeof(TestPage), typeof(TestPage).Assembly), null)),
                 (appId, _, parent, arguments, _) =>
                 {
+                    if (startThrows)
+                    {
+                        throw new InvalidOperationException("The user's process limit is reached.");
+                    }
+
                     Starts.Add((appId, parent, arguments));
-                    StubContext context = new(Catalog.Manifests[appId], ProcessId.FromInt64(nextPid++), EndPages.Token);
+                    StubContext context = new(Catalog.Manifests[appId], ProcessId.FromInt64(nextPid++), EndPages.Token, principal.UserId.ToString());
                     return Task.FromResult(new AppLaunchResult(AppLaunchStatus.Launched, Context: context));
                 },
                 (pid, reason) =>
@@ -319,11 +350,11 @@ public sealed class FeatureSettingsPagesTests
         public CancellationTokenSource CreateLinkedCancellationSource() => new();
     }
 
-    private sealed class StubContext(AppManifest manifest, ProcessId pid, CancellationToken token = default) : IAppExecutionContext
+    private sealed class StubContext(AppManifest manifest, ProcessId pid, CancellationToken token = default, string userId = "user") : IAppExecutionContext
     {
         public AppManifest Manifest => manifest;
         public Guid InstanceId { get; } = Guid.NewGuid();
-        public string UserId => "user";
+        public string UserId => userId;
         public AppAuthority UserAuthority => AppAuthority.User;
         public IReadOnlySet<string> GrantedCapabilities => new HashSet<string>(manifest.Capabilities);
         public SessionId SessionId { get; } = SessionId.FromGuid(Guid.NewGuid());

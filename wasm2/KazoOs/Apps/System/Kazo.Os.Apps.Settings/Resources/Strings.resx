@@ -2346,4 +2346,7 @@
   <data name="Storage.Features.Open" xml:space="preserve">
     <value>Open its page</value>
   </data>
+  <data name="Features.Page.StopFailed" xml:space="preserve">
+    <value>The page could not be stopped: {0}</value>
+  </data>
 </root>

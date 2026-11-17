@@ -4,6 +4,7 @@ using Kazo.Os.App.Abstractions;
 using Kazo.Os.AppSdk;
 using Kazo.Os.AppSdk.Apps;
 using Kazo.Os.AppSdk.Blazor;
+using Kazo.Os.AppSdk.Blazor.ContextMenus;
 using Kazo.Os.AppSdk.Blazor.Settings;
 using Kazo.Os.Platform.Blazor.Windows;
 using Kazo.Os.Platform.Core;
@@ -98,7 +99,7 @@ public sealed class FeatureSettingsPages : IFeatureSettingsPages, IDisposable
     {
         ArgumentNullException.ThrowIfNull(host);
         SubscribeToRoles();
-        if (!IsSettings(host) || _sessions.CurrentPrincipal is not { } principal)
+        if (!IsSettings(host) || PrincipalOf(host) is not { } principal)
         {
             return [];
         }
@@ -124,9 +125,9 @@ public sealed class FeatureSettingsPages : IFeatureSettingsPages, IDisposable
             return FeatureSettingsPageStart.Denied($"Only Settings draws the page '{pageId}'.");
         }
 
-        if (_sessions.CurrentPrincipal is not { } principal)
+        if (PrincipalOf(host) is not { } principal)
         {
-            return FeatureSettingsPageStart.Failed("No user session is open.");
+            return FeatureSettingsPageStart.Denied("No user session is open for this Settings window.");
         }
 
         if (!_catalog.Manifests.TryGetValue(pageId, out AppManifest? manifest) || !IsOpenTo(manifest, principal, _roles()))
@@ -134,6 +135,21 @@ public sealed class FeatureSettingsPages : IFeatureSettingsPages, IDisposable
             return FeatureSettingsPageStart.Denied($"The page '{pageId}' is not available to this user.");
         }
 
+        try
+        {
+            return await StartAsync(host, manifest, principal, cancellationToken).ConfigureAwait(false);
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            // A feature's page never takes Settings down (ADR 0238): its load or start failure is shown.
+            return FeatureSettingsPageStart.Failed(exception.Message);
+        }
+    }
+
+    private async Task<FeatureSettingsPageStart> StartAsync(
+        IAppExecutionContext host, AppManifest manifest, AuthenticatedPrincipal principal, CancellationToken cancellationToken)
+    {
+        string pageId = manifest.Id;
         (AppDescriptor? descriptor, string? error) = await _descriptors(pageId, cancellationToken).ConfigureAwait(false);
         if (descriptor is null)
         {
@@ -170,6 +186,12 @@ public sealed class FeatureSettingsPages : IFeatureSettingsPages, IDisposable
         }
     }
 
+    /// <summary>The session's user, when it is the user of the Settings window asking.</summary>
+    private AuthenticatedPrincipal? PrincipalOf(IAppExecutionContext host) =>
+        _sessions.CurrentPrincipal is { } principal && string.Equals(principal.UserId.ToString(), host.UserId, StringComparison.Ordinal)
+            ? principal
+            : null;
+
     /// <summary>Only Settings hosts the pages (ADR 0249 §2): no other app may draw another's page.</summary>
     private static bool IsSettings(IAppExecutionContext host) =>
         string.Equals(host.Manifest.Id, AppIntentDispatcher.SettingsAppId, StringComparison.Ordinal);
@@ -201,9 +223,20 @@ public sealed class FeatureSettingsPages : IFeatureSettingsPages, IDisposable
     /// <summary>The roles service is created after this one at boot; it is subscribed to once it exists.</summary>
     private void SubscribeToRoles()
     {
-        if (_subscribedRoles is null && _roles() is { } roles)
+        FeatureRoleService? roles = _roles();
+        if (ReferenceEquals(roles, _subscribedRoles))
         {
-            _subscribedRoles = roles;
+            return;
+        }
+
+        if (_subscribedRoles is { } previous)
+        {
+            previous.Changed -= OnSourceChanged;
+        }
+
+        _subscribedRoles = roles;
+        if (roles is not null)
+        {
             roles.Changed += OnSourceChanged;
         }
     }
@@ -282,7 +315,17 @@ public sealed class FeatureSettingsPages : IFeatureSettingsPages, IDisposable
             builder.OpenComponent<CascadingValue<IAppWindowGateway?>>(0);
             builder.AddComponentParameter(1, nameof(CascadingValue<IAppWindowGateway?>.Value), null);
             builder.AddComponentParameter(2, nameof(CascadingValue<IAppWindowGateway?>.IsFixed), true);
-            builder.AddComponentParameter(3, nameof(CascadingValue<IAppWindowGateway?>.ChildContent), (RenderFragment)RenderInBoundary);
+            builder.AddComponentParameter(3, nameof(CascadingValue<IAppWindowGateway?>.ChildContent), (RenderFragment)RenderWithoutMenus);
+            builder.CloseComponent();
+        }
+
+        // Settings' context menus are not lent either: the page receives nothing from Settings.
+        private void RenderWithoutMenus(RenderTreeBuilder builder)
+        {
+            builder.OpenComponent<CascadingValue<IKazoMenuHost?>>(0);
+            builder.AddComponentParameter(1, nameof(CascadingValue<IKazoMenuHost?>.Value), null);
+            builder.AddComponentParameter(2, nameof(CascadingValue<IKazoMenuHost?>.IsFixed), true);
+            builder.AddComponentParameter(3, nameof(CascadingValue<IKazoMenuHost?>.ChildContent), (RenderFragment)RenderInBoundary);
             builder.CloseComponent();
         }
 
