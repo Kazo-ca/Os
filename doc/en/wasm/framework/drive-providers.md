@@ -418,7 +418,10 @@ it asks the OS for each time, and takes the `ETag` as the revision (`If-Match`
 for a conditional write, `If-None-Match: *` for a create). It declares no host:
 the server the user types is enough. Its tests
 (`Tests/Kazo.Os.Samples.WebDavDrive.Tests`) pass the whole suite against a
-local in-memory WebDAV server (`LocalWebDavServer`).
+local in-memory WebDAV server (`LocalWebDavServer`). On the published, trimmed OS,
+`build/publish-trimmed.sh` installs the sample as a Feature, connects it by its
+form to a test WebDAV server answered by Playwright (`RoutedWebDavServer`, CORS
+headers included), then reads and writes a file from the terminal.
 
 ## Limits and the Store review
 
@@ -525,3 +528,9 @@ Work item 7 (developer kit):
 - [x] WebDAV sample with a form connection
 - [x] ADR 0284: `drives.provide` is enough for declared hosts, a typed server address
 - [x] This guide
+
+Work item 9 (end of the series):
+
+- [x] SDK 3.5.0: shipped API, change list
+- [x] Compatibility fixture `Contoso.Sdk35DriveProvider`: a provider compiled against 3.5.0 passes the current suite
+- [x] Full journey on the trimmed OS: form connection, read and write against a test WebDAV server

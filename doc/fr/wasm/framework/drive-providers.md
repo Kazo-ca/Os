@@ -422,7 +422,10 @@ chaque fois, et prend l'`ETag` comme révision (`If-Match` pour une écriture
 conditionnelle, `If-None-Match: *` pour une création). Il ne déclare aucun hôte :
 le serveur tapé par l'utilisateur suffit. Ses tests
 (`Tests/Kazo.Os.Samples.WebDavDrive.Tests`) passent toute la suite contre un
-serveur WebDAV local en mémoire (`LocalWebDavServer`).
+serveur WebDAV local en mémoire (`LocalWebDavServer`). Sur l'OS publié et rogné,
+`build/publish-trimmed.sh` installe l'exemple comme Feature, le connecte par son
+formulaire à un serveur WebDAV de test que Playwright répond (`RoutedWebDavServer`,
+en-têtes CORS compris), puis lit et écrit un fichier depuis le terminal.
 
 ## Limites et revue du Store
 
@@ -532,3 +535,9 @@ Chantier 7 (kit du développeur) :
 - [x] Exemple WebDAV avec connexion par formulaire
 - [x] ADR 0284 : `drives.provide` suffit pour les hôtes déclarés, adresse de serveur tapée
 - [x] Ce guide
+
+Chantier 9 (fin de série) :
+
+- [x] SDK 3.5.0 : API publiée, journal des changements
+- [x] Fixture de compatibilité `Contoso.Sdk35DriveProvider` : un fournisseur compilé contre 3.5.0 passe la suite courante
+- [x] Parcours complet sur l'OS rogné : connexion par formulaire, lecture et écriture contre un serveur WebDAV de test

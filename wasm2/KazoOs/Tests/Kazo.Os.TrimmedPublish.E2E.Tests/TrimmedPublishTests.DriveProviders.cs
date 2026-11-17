@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using Microsoft.Playwright;
 
 namespace Kazo.Os.TrimmedPublish.E2E.Tests;
@@ -5,9 +6,9 @@ namespace Kazo.Os.TrimmedPublish.E2E.Tests;
 /// <summary>
 /// ADR 0282 (series <c>drive-providers/base</c>, work item 7): a third-party drive provider,
 /// packed from <c>Apps/Samples/Kazo.Os.Samples.WebDavDrive</c> as a Store package would be, installed
-/// by <c>kazopkg</c> as a feature for the machine in the trimmed OS. The full journey (connect by the
-/// form, write, read back against a test WebDAV server) waits for the connect dialog of work item 6
-/// and comes with work item 9 (Benoit, 2026-11-17: answer 2 A).
+/// by <c>kazopkg</c> as a feature for the machine in the trimmed OS, then used: a drive connected by
+/// the form of "Connect a network drive", a file written and one read back against a test WebDAV
+/// server (<see cref="RoutedWebDavServer"/>, work item 9; Benoit, 2026-11-17: answer 2 A).
 /// </summary>
 public sealed partial class TrimmedPublishTests
 {
@@ -17,10 +18,12 @@ public sealed partial class TrimmedPublishTests
     /// Before the install, <c>mount -t webdav</c> does not know the type; <c>sudo kazopkg install</c>
     /// installs the feature for the machine and approves <c>drives.provide</c> with the
     /// administrator's consent, on a window that names the server address field; then, without a
-    /// restart, <c>mount</c> knows the type and writes the syntax of its form.
+    /// restart, <c>mount</c> knows the type and writes the syntax of its form. The user connects a
+    /// WebDAV server by the form of the File Explorer's "Connect a network drive" dialog, reads a file
+    /// the server holds and writes one the server receives, through the drive in <c>/mnt</c>.
     /// </summary>
     [TrimmedPublishFact]
-    public async Task An_installed_drive_provider_feature_adds_its_type_to_mount()
+    public async Task An_installed_drive_provider_feature_mounts_a_server_by_its_form_and_reads_and_writes_it()
     {
         TrimmedPublishSettings settings = TrimmedPublishSettings.FromEnvironment()!;
         if (settings.DrivePackagesDirectory is null)
@@ -32,6 +35,9 @@ public sealed partial class TrimmedPublishTests
         await using Session session = await Session.StartAsync(output);
         IPage page = session.Page;
         await ServePackagesLocallyAsync(session.Context, DriveRepository, settings.DrivePackagesDirectory);
+        RoutedWebDavServer server = new();
+        server.PlaceFile("from-server.txt", "written by the server");
+        await server.RouteAsync(session.Context);
         try
         {
             await NavigateWhenReadyAsync(page, settings.Url);
@@ -88,6 +94,38 @@ public sealed partial class TrimmedPublishTests
                 rows, text => text.Contains("Usage: mount -t webdav -o", StringComparison.Ordinal) && text.Contains("server", StringComparison.Ordinal),
                 "mount writing the syntax of the webdav form");
             Log("after the install, mount knows the webdav type and writes the syntax of its form.");
+            await CloseAllWindowsAsync(page);
+
+            // --- Connect: the File Explorer's dialog offers the type and shows its form ---
+            await ConnectWebDavDriveAsync(page);
+            Log($"the WebDAV drive was connected by its form; the server received {string.Join(", ", server.Methods.Distinct())}.");
+            await CloseAllWindowsAsync(page);
+
+            // --- Use: read the server's file, write one the server receives, read it back ---
+            await OpenAppAsync(page, "Terminal");
+            rows = page.Locator("[data-terminal-panel] .xterm-rows").First;
+            screen = page.Locator("[data-terminal-panel] .xterm-screen").First;
+            await WaitForTerminalTextAsync(rows, text => PromptPattern().IsMatch(text), "the shell prompt");
+            await RunCommandAsync(page, screen, "clear; mount | grep webdav");
+            string mounts = await WaitForTerminalTextAsync(rows, text => MountedWebDav().IsMatch(text), "the WebDAV drive in mount");
+            string mountPoint = MountedWebDav().Match(mounts).Groups["target"].Value;
+            Log($"the WebDAV drive is mounted on {mountPoint}.");
+
+            await RunCommandAsync(page, screen, $"clear; cat '{mountPoint}/from-server.txt'");
+            await WaitForTerminalTextAsync(rows, text => text.Contains("written by the server", StringComparison.Ordinal), "the server's file");
+            Log("cat read the file the server holds.");
+
+            await RunCommandAsync(page, screen, $"clear; echo written by kazo > '{mountPoint}/from-kazo.txt'; cat '{mountPoint}/from-kazo.txt'");
+            await WaitForTerminalTextAsync(rows, text => text.Contains("written by kazo", StringComparison.Ordinal), "the written file read back");
+            DateTime written = DateTime.UtcNow.AddMilliseconds(StepTimeoutMs);
+            while (server.ReadFile("from-kazo.txt") is not { } received || !received.Contains("written by kazo", StringComparison.Ordinal))
+            {
+                Assert.True(DateTime.UtcNow < written, "The WebDAV server never received the written file.");
+                await page.WaitForTimeoutAsync(200);
+            }
+
+            Assert.Contains("PUT", server.Methods);
+            Log("the file written in the drive reached the WebDAV server (PUT) and reads back.");
 
             session.AssertNoErrors("drive provider feature");
             await CloseAllWindowsAsync(page);
@@ -98,6 +136,39 @@ public sealed partial class TrimmedPublishTests
             throw;
         }
     }
+
+    /// <summary>
+    /// Opens the File Explorer's "Connect a network drive" dialog, chooses the WebDAV type the feature
+    /// provides (named "Provided by"), fills its form (server address, user name, password) and mounts.
+    /// </summary>
+    private async Task ConnectWebDavDriveAsync(IPage page)
+    {
+        await OpenAppAsync(page, "File Explorer");
+        await page.Locator(".sidebar-entry.network-connect").First.ClickAsync(new() { Timeout = StepTimeoutMs });
+        ILocator dialog = page.Locator(".cnd-dialog").First;
+        await dialog.WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = StepTimeoutMs });
+        ILocator option = dialog.Locator(".cnd-option").Filter(new() { HasText = "WebDAV" }).First;
+        await Assertions.Expect(option.Locator(".cnd-option-provider")).ToContainTextAsync("WebDAV drives", new() { Timeout = StepTimeoutMs });
+        await option.ClickAsync();
+
+        await dialog.Locator("input[data-field=server]").FillAsync(RoutedWebDavServer.ServerAddress);
+        await dialog.Locator("input[data-field=username]").FillAsync(RoutedWebDavServer.UserName);
+        await dialog.Locator("input[data-field=password]").FillAsync(RoutedWebDavServer.Password);
+        await dialog.Locator(".cnd-actions .cnd-btn.primary").ClickAsync();
+        try
+        {
+            await dialog.WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Hidden, Timeout = StepTimeoutMs });
+        }
+        catch (TimeoutException)
+        {
+            ILocator error = dialog.Locator(".cnd-error");
+            Assert.Fail($"The WebDAV drive was not mounted: {(await error.CountAsync() > 0 ? await error.InnerTextAsync() : "the dialog stayed open")}.");
+        }
+    }
+
+    /// <summary>A line of <c>mount</c> for the WebDAV drive, with its mount point.</summary>
+    [GeneratedRegex(@" on (?<target>/mnt/.+?) type webdav")]
+    private static partial Regex MountedWebDav();
 
     /// <summary>
     /// Answers one administrator prompt, then waits until it is gone or replaced by the next one
