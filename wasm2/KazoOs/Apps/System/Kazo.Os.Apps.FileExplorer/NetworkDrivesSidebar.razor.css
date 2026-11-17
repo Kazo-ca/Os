@@ -173,3 +173,13 @@
     color: var(--kos-accent, #42d392);
     text-decoration: underline;
 }
+
+/* Text for screen readers only: separates the lines of a drive's name when it is read aloud. */
+.network-sr {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+}

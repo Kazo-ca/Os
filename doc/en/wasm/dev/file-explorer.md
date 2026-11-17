@@ -244,6 +244,15 @@ name is translated by `Resources/AppManifest.fr.resx`.
   `filesystem.user-home.write`. The explorer keeps its capabilities; another
   user's drive stays closed (mode `0700`).
 
+- **Network drives described by the OS** ([ADR 0282](adr/0282-third-party-drive-providers.md) §5):
+  "Connect a network drive…" offers the types that
+  `KazoDriveInfo.DescribeNetworkDriveTypesAsync` describes (icon, OAuth sign-in
+  or generic form, "Provided by <Feature>"); the explorer names no service. A
+  drive whose provider is missing (`GetProviderMissingDrivesAsync`) stays
+  greyed in "Network drives" with the reason, and **Install the provider**
+  opens the Store on the removed Feature (`apps.launch` capability). Details:
+  [`cloud-drives-ui.md`](cloud-drives-ui.md).
+
 ## Tests
 
 - `Tests/Kazo.Os.Platform.Core.Tests/Execution/AppClipboardGatewayTests.cs`:

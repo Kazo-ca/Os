@@ -302,9 +302,14 @@ public sealed class AppDriveGateway : IAppDriveGateway
             return (KazoDriveProviderMissingReason.DisabledByAdministrator, null);
         }
 
-        return FeatureOfType?.Invoke(drive.Type) is { } feature
+        // The drive remembers the Feature that provided it (ADR 0282 §3); only that Feature mounts it
+        // again. Installed but switched off: disabled. Not installed, or another Feature now declares
+        // the type: removed, and the Store can bring that Feature back.
+        string? installed = FeatureOfType?.Invoke(drive.Type);
+        string? feature = drive.ProviderFeatureId ?? installed;
+        return installed is not null && string.Equals(installed, feature, StringComparison.Ordinal)
             ? (KazoDriveProviderMissingReason.Disabled, feature)
-            : (KazoDriveProviderMissingReason.Removed, null);
+            : (KazoDriveProviderMissingReason.Removed, feature);
     }
 
     private static KazoDriveSnapshot Describe(NetworkDrive drive, HostFolderQuota? quota) =>

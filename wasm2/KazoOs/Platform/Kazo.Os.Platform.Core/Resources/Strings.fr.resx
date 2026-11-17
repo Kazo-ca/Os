@@ -820,7 +820,7 @@ Annuler : décider au prochain lancement.</value>
     <value>Région</value>
   </data>
   <data name="Drives.S3.Prefix" xml:space="preserve">
-    <value>Préfixe (facultatif)</value>
+    <value>Préfixe</value>
   </data>
   <data name="Drives.S3.Addressing" xml:space="preserve">
     <value>Adressage</value>

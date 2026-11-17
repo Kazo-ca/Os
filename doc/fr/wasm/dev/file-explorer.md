@@ -244,6 +244,15 @@ l'app est traduit par `Resources/AppManifest.fr.resx`.
   l'écrire demande `filesystem.user-home.write`. L'explorateur garde ses
   capacités ; le lecteur d'un autre utilisateur reste fermé (mode `0700`).
 
+- **Lecteurs réseau décrits par l'OS** ([ADR 0282](adr/0282-third-party-drive-providers.md) §5) :
+  « Connecter un lecteur réseau… » propose les types que décrit
+  `KazoDriveInfo.DescribeNetworkDriveTypesAsync` (icône, connexion OAuth ou
+  formulaire générique, « Fourni par <Feature> ») ; l'explorateur ne nomme
+  aucun service. Un lecteur dont le fournisseur manque
+  (`GetProviderMissingDrivesAsync`) reste grisé dans « Lecteurs réseau » avec
+  la raison, et **Installer le fournisseur** ouvre le Store sur la Feature
+  retirée (capacité `apps.launch`). Détail : [`cloud-drives-ui.md`](cloud-drives-ui.md).
+
 ## Tests
 
 - `Tests/Kazo.Os.Platform.Core.Tests/Execution/AppClipboardGatewayTests.cs` :

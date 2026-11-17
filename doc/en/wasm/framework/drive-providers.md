@@ -209,6 +209,29 @@ Work item 4 wires the declared types into the file system
   (tree, revisions, quota, accepted token, offline, failures, slow or failing
   open).
 
+## In the interface and in `mount` (work item 6)
+
+A declared type shows everywhere like the OS types, with no code to write
+([ADR 0282](../dev/adr/0282-third-party-drive-providers.md) §5,
+[`cloud-drives-ui.md`](../dev/cloud-drives-ui.md)):
+
+- **Description.** `KazoDriveInfo.DescribeNetworkDriveTypesAsync` returns one
+  `KazoNetworkDriveTypeInfo` per type: the declaration's `Name`, `Icon` (the
+  package image, `IconUrl`), connection form, form fields and
+  `ProviderFeatureId` / `ProviderFeatureName`. File Explorer and Settings
+  write "Provided by <feature name> (<id>)".
+- **Form.** The fields show in the declared order, with their label, example
+  and choices; `Secret` is masked and `Required = false` adds "(optional)".
+  The OS checks the values against the declaration (kind, choices, length, no
+  secret among the plain values) before creating the account, named after the
+  host of the first address and the next value (`dav.example.com (alice)`).
+- **Terminal.** `mount -t <type> -o field=value,…` mounts a drive; secret
+  fields are asked with the echo off and refused in `-o`. A usage error writes
+  the type's syntax.
+- **Missing provider.** A drive whose feature is removed stays greyed with
+  **Install the provider**, which opens the Store on its id; when the feature
+  is turned off, it reads "Provider disabled".
+
 ## Checks
 
 | Where | Code | Case |
@@ -259,3 +282,4 @@ substance (no operation removed, the OS still keeps the tokens):
 - [x] Dangerous capability `drives.provide`
 - [x] Sign-in run by the OS, form accounts, provider context (work item 5)
 - [x] Wiring into the OS (work item 4, see above)
+- [x] Interface and `mount` for any declared type (work item 6)

@@ -71,8 +71,15 @@ public partial class ConnectNetworkDriveDialog
     public EventCallback Closed { get; set; }
 
     /// <summary>The types offered as a new drive: a cloud type only when cloud accounts are allowed here.</summary>
+    /// <summary>
+    /// The types offered, in a stable order: the folder of the computer first, then the OS's own
+    /// services, then the ones Features provide, each group by name.
+    /// </summary>
     private IEnumerable<KazoNetworkDriveTypeInfo> OfferedTypes =>
-        _types.Where(type => type.Connection == KazoNetworkDriveConnection.HostFolder || _cloudAllowed);
+        _types.Where(type => type.Connection == KazoNetworkDriveConnection.HostFolder || _cloudAllowed)
+            .OrderBy(static type => type.Connection != KazoNetworkDriveConnection.HostFolder)
+            .ThenBy(static type => type.IsThirdParty)
+            .ThenBy(static type => type.DisplayName, StringComparer.CurrentCultureIgnoreCase);
 
     private bool HasCloudChoice => _cloudAllowed && _types.Any(static type => type.Connection != KazoNetworkDriveConnection.HostFolder);
 

@@ -76,14 +76,15 @@ else if (_canConnect || _drives.Count > 0 || _missing.Count > 0)
         <div class="network-drive">
             <button class="sidebar-entry missing" @onclick="() => InstallProviderAsync(drive)"
                     aria-disabled="@(CanInstall(drive) ? "false" : "true")"
-                    title="@MissingReason(drive)" aria-label="@MissingName(drive)" disabled="@_busy">
+                    title="@MissingReason(drive)" disabled="@_busy">
                 <KazoIcon Library="@DriveIcon(drive).Library" Name="@DriveIcon(drive).Name" Size="16" />
+                @* The name a screen reader reads is the visible text; the hidden commas only separate its lines. *@
                 <span class="network-drive-text">
                     <span class="network-drive-label">@drive.VolumeLabel</span>
-                    <span class="network-drive-detail">@MissingReason(drive)</span>
+                    <span class="network-drive-detail"><span class="network-sr">, </span>@MissingReason(drive)</span>
                     @if (CanInstall(drive))
                     {
-                        <span class="network-drive-action">@L["Drives.ProviderMissing.Install"]</span>
+                        <span class="network-drive-action"><span class="network-sr">, </span>@L["Drives.ProviderMissing.Install"]</span>
                     }
                 </span>
             </button>

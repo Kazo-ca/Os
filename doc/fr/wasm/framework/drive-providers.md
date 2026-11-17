@@ -213,6 +213,30 @@ Le chantier 4 branche les types déclarés dans le système de fichiers
   mémoire (arborescence, révisions, quota, jeton accepté, hors ligne, pannes,
   ouverture lente ou en échec).
 
+## Dans l'interface et dans `mount` (chantier 6)
+
+Un type déclaré apparaît partout comme les types de l'OS, sans code à écrire
+([ADR 0282](../dev/adr/0282-third-party-drive-providers.md) §5,
+[`cloud-drives-ui.md`](../dev/cloud-drives-ui.md)) :
+
+- **Description.** `KazoDriveInfo.DescribeNetworkDriveTypesAsync` rend un
+  `KazoNetworkDriveTypeInfo` par type : `Name` de la déclaration, `Icon`
+  (image du paquet, `IconUrl`), forme de connexion, champs du formulaire et
+  `ProviderFeatureId` / `ProviderFeatureName`. L'Explorateur et Paramètres
+  écrivent « Fourni par <nom de la fonctionnalité> (<id>) ».
+- **Formulaire.** Les champs s'affichent dans l'ordre déclaré, avec leur
+  libellé, leur exemple et leurs choix ; `Secret` est masqué et
+  `Required = false` ajoute « (facultatif) ». L'OS vérifie les valeurs contre
+  la déclaration (type, choix, longueur, pas de secret dans les valeurs en
+  clair) avant de créer le compte, nommé d'après l'hôte de la première
+  adresse et la valeur suivante (`dav.exemple.com (alice)`).
+- **Terminal.** `mount -t <type> -o champ=valeur,…` monte un lecteur ; les
+  champs secrets sont demandés sans écho et refusés dans `-o`. Une erreur
+  d'usage écrit la syntaxe du type.
+- **Fournisseur absent.** Un lecteur dont la fonctionnalité est retirée reste
+  grisé avec **Installer le fournisseur**, qui ouvre le Store sur son id ;
+  désactivée, il porte « Fournisseur désactivé ».
+
 ## Vérifications
 
 | Où | Code | Cas |
@@ -264,3 +288,4 @@ fond (aucune opération retirée, l'OS garde toujours les jetons) :
 - [x] Capacité dangereuse `drives.provide`
 - [x] Connexion menée par l'OS, comptes à formulaire, contexte du fournisseur (chantier 5)
 - [x] Branchement dans l'OS (chantier 4, voir ci-dessus)
+- [x] Interface et `mount` pour tout type déclaré (chantier 6)
