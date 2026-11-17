@@ -487,6 +487,19 @@ public sealed class AppExecutionContextFactory
             context.WhatsNew = whatsNewGateway;
         }
 
+        if (_administration?.OriginStorage is { } originStorage)
+        {
+            // ADR 0250: the origin's storage, no capability to read, set like the backup gateway. An
+            // entry point of a feature acts for its feature, whose name the catalog gives.
+            string? featureName = manifest.Parent is { } parent && _appCatalog?.Catalog.Manifests.TryGetValue(parent, out AppManifest? feature) == true
+                ? feature!.Name
+                : null;
+            Storage.AppStorageGateway storageGateway = new(
+                originStorage, manifest, _appCatalog?.Catalog.IsSystemApp(manifest.Id) == true, featureName);
+            storageGateway.BindAmbientContext(context);
+            context.Storage = storageGateway;
+        }
+
         if (_shellHostProvider is not null)
         {
             // ADR 0056 section 7: the shell is a child process of this one, with this instance's
