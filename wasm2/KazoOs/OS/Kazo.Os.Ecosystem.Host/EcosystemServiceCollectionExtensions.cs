@@ -861,10 +861,14 @@ public static class EcosystemServiceCollectionExtensions
                 registration,
                 provider.GetRequiredService<FeatureDriveProviderLoader>(),
                 provider.GetRequiredService<CloudAccountService>(),
-                (type, accountId, availabilityChanged, cancellationToken) => ConnectFeatureDriveAsync(provider, type, accountId, availabilityChanged, cancellationToken))
+                (type, accountId, availabilityChanged, cancellationToken) => ConnectFeatureDriveAsync(
+                    provider, type, registration.Feature.Id, accountId, availabilityChanged, cancellationToken))
             {
-                // ADR 0282 §5: a new drive of a form type creates its account, checked against the declaration.
-                SaveFormAccount = provider.GetRequiredService<CloudAccountService>().SaveFormAccountAsync
+                // ADR 0282 §5: a new drive of a form type creates its account, checked against the
+                // declaration and owned by the feature that provides the type.
+                SaveFormAccount = (type, displayName, options, secrets, cancellationToken) =>
+                    provider.GetRequiredService<CloudAccountService>().SaveFormAccountAsync(
+                        type, registration.Feature.Id, displayName, options, secrets, cancellationToken)
             }));
         // ADR 0262: the services features provide, one instance per page, created on the first
         // request in the feature's own process (kazoos-svc, like a system daemon).
@@ -1515,17 +1519,17 @@ public static class EcosystemServiceCollectionExtensions
     /// <summary>
     /// What the OS lends the provider of a declared drive type for one drive (ADR 0282 §3): the
     /// context bound to the drive's account (work item 5) and the non-secret values of a form
-    /// account. An account that is gone or of another type is <c>SignInRequired</c>: the drive
-    /// stays disconnected.
+    /// account. An account that is gone, of another type, or added with another feature's provider
+    /// of that type is <c>SignInRequired</c>: the drive stays disconnected.
     /// </summary>
     private static async ValueTask<FeatureDriveConnection> ConnectFeatureDriveAsync(
-        IServiceProvider provider, string type, string accountId, Action availabilityChanged, CancellationToken cancellationToken)
+        IServiceProvider provider, string type, string featureId, string accountId, Action availabilityChanged, CancellationToken cancellationToken)
     {
         CloudAccountService accounts = provider.GetRequiredService<CloudAccountService>();
         try
         {
             Kazo.Os.AppSdk.Drives.IKazoDriveProviderContext context = await accounts
-                .CreateDriveProviderContextAsync(type, accountId, availabilityChanged, cancellationToken).ConfigureAwait(false);
+                .CreateDriveProviderContextAsync(type, featureId, accountId, availabilityChanged, cancellationToken).ConfigureAwait(false);
             CloudAccount? account = await accounts.FindAccountAsync(accountId, cancellationToken).ConfigureAwait(false);
             return new FeatureDriveConnection(context, account?.Options ?? new Dictionary<string, string>(StringComparer.Ordinal));
         }

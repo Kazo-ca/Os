@@ -4,14 +4,15 @@ namespace Kazo.Os.Platform.Core.CloudAccounts;
 
 /// <summary>
 /// What the OS lends the provider of a declared drive type for one drive (ADR 0282 §3,
-/// <see cref="IKazoDriveProviderContext"/>). It is bound to one account and one type at creation
-/// and checks both again at each call, against the account list as it is then: a provider can never
+/// <see cref="IKazoDriveProviderContext"/>). It is bound to one account, one type and one feature
+/// at creation and checks all three again at each call, against the account list as it is then: a provider can never
 /// reach another account's token or secrets, and gets nothing once the account is removed. It
 /// holds no token or secret itself, and never gives the refresh token, which stays sealed (ADR 0269).
 /// </summary>
 internal sealed class DriveProviderContext : IKazoDriveProviderContext
 {
     private readonly CloudAccountService _accounts;
+    private readonly string _featureId;
     private readonly string _accountId;
     private readonly bool _form;
     private readonly Action? _availabilityChanged;
@@ -19,6 +20,7 @@ internal sealed class DriveProviderContext : IKazoDriveProviderContext
     /// <summary>Initializes the context of one drive.</summary>
     /// <param name="accounts">The account service that keeps the tokens and secrets.</param>
     /// <param name="type">The drive type the provider serves.</param>
+    /// <param name="featureId">The feature whose provider the context is lent to.</param>
     /// <param name="accountId">The account of the drive.</param>
     /// <param name="displayName">The account's name, for <see cref="Account"/>.</param>
     /// <param name="form">Whether the account comes from a form (sealed values, no token).</param>
@@ -26,6 +28,7 @@ internal sealed class DriveProviderContext : IKazoDriveProviderContext
     public DriveProviderContext(
         CloudAccountService accounts,
         string type,
+        string featureId,
         string accountId,
         string displayName,
         bool form,
@@ -33,6 +36,7 @@ internal sealed class DriveProviderContext : IKazoDriveProviderContext
     {
         _accounts = accounts;
         Type = type;
+        _featureId = featureId;
         _accountId = accountId;
         _form = form;
         _availabilityChanged = availabilityChanged;
@@ -57,7 +61,7 @@ internal sealed class DriveProviderContext : IKazoDriveProviderContext
 
         try
         {
-            return await _accounts.GetProviderAccessTokenAsync(Type, _accountId, cancellationToken).ConfigureAwait(false);
+            return await _accounts.GetProviderAccessTokenAsync(Type, _featureId, _accountId, cancellationToken).ConfigureAwait(false);
         }
         catch (CloudAccountException exception)
         {
@@ -77,7 +81,7 @@ internal sealed class DriveProviderContext : IKazoDriveProviderContext
         try
         {
             IReadOnlyDictionary<string, string> secrets = await _accounts
-                .GetFormSecretsAsync(Type, _accountId, cancellationToken)
+                .GetFormSecretsAsync(Type, _featureId, _accountId, cancellationToken)
                 .ConfigureAwait(false);
             return secrets.TryGetValue(name, out string? value) ? value : null;
         }

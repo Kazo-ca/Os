@@ -155,7 +155,10 @@ public sealed partial class CloudAccountService : IDisposable, CloudDrives.IClou
         {
             List<CloudAccountRecord> records = await _store.LoadAsync(principal, cancellationToken).ConfigureAwait(false);
             CloudAccountRecord? existing = identity.AccountId is { } accountId
-                ? records.FirstOrDefault(record => record.Provider == provider.Id && record.Scope == scope && record.ProviderAccountId == accountId)
+                ? records.FirstOrDefault(record => record.Provider == provider.Id
+                    && record.Scope == scope
+                    && record.ProviderAccountId == accountId
+                    && string.Equals(record.FeatureId, provider.FeatureId, StringComparison.Ordinal))
                 : null;
             string id = existing?.Id ?? NewAccountId();
             string displayName = identity.DisplayName ?? existing?.DisplayName ?? provider.DisplayName;
@@ -163,7 +166,10 @@ public sealed partial class CloudAccountService : IDisposable, CloudDrives.IClou
                 .SealAsync(principal, id, Label(provider, displayName), tokens, cancellationToken)
                 .ConfigureAwait(false);
             saved = new CloudAccountRecord(
-                id, provider.Id, scope, displayName, identity.AccountId, CloudAccountState.Connected, _time.GetUtcNow(), sealedTokens);
+                id, provider.Id, scope, displayName, identity.AccountId, CloudAccountState.Connected, _time.GetUtcNow(), sealedTokens)
+            {
+                FeatureId = provider.FeatureId
+            };
             records.RemoveAll(record => record.Id == id);
             records.Add(saved);
             await _store.SaveAsync(principal, records, cancellationToken).ConfigureAwait(false);
@@ -201,6 +207,15 @@ public sealed partial class CloudAccountService : IDisposable, CloudDrives.IClou
         }
 
         CloudOAuthProvider provider = await FindProviderAsync(current.Provider, cancellationToken).ConfigureAwait(false);
+        if (!string.Equals(provider.FeatureId, current.FeatureId, StringComparison.Ordinal))
+        {
+            // ADR 0282 §3: the account belongs to the feature that served its type when it was
+            // added; another feature now serving the type never signs in to it.
+            throw new CloudAccountException(
+                CloudAccountError.ProviderNotConfigured,
+                $"'{current.DisplayName}' was added with another provider of '{current.Provider}' drives.");
+        }
+
         (OAuthTokenSet tokens, CloudIdentity identity) = await SignInAsync(provider, current.Scope, cancellationToken).ConfigureAwait(false);
         if (current.ProviderAccountId is { } expected && identity.AccountId is { } actual && expected != actual)
         {
@@ -288,12 +303,17 @@ public sealed partial class CloudAccountService : IDisposable, CloudDrives.IClou
     /// The provider the caller serves (a declared drive type, ADR 0282 §3), or <see langword="null"/>
     /// for any. An account of another provider reads as not found, checked in the same read as the token.
     /// </param>
+    /// <param name="expectedFeature">
+    /// The feature whose provider asks (ADR 0282 §3), or <see langword="null"/> for any; an account
+    /// another feature added reads as not found.
+    /// </param>
     /// <param name="cancellationToken">Cancels the renewal.</param>
     private async ValueTask<string> GetAccessTokenCoreAsync(
         string accountId,
         string? rejectedAccessToken,
         string? expectedProvider,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        string? expectedFeature = null)
     {
         AuthenticatedPrincipal principal = RequireKeyring();
         bool changed = false;
@@ -302,7 +322,9 @@ public sealed partial class CloudAccountService : IDisposable, CloudDrives.IClou
         {
             List<CloudAccountRecord> records = await _store.LoadAsync(principal, cancellationToken).ConfigureAwait(false);
             CloudAccountRecord account = records.FirstOrDefault(record =>
-                    record.Id == accountId && (expectedProvider is null || record.Provider == expectedProvider))
+                    record.Id == accountId
+                    && (expectedProvider is null || record.Provider == expectedProvider)
+                    && (expectedFeature is null || string.Equals(record.FeatureId, expectedFeature, StringComparison.Ordinal)))
                 ?? throw NotFound(accountId);
             if (account.HasKeys)
             {
@@ -383,7 +405,7 @@ public sealed partial class CloudAccountService : IDisposable, CloudDrives.IClou
         string providerAccountId,
         byte[] secret,
         CancellationToken cancellationToken = default) =>
-        SaveKeysAccountCoreAsync(providerId, displayName, providerAccountId, secret, options: null, cancellationToken);
+        SaveKeysAccountCoreAsync(providerId, displayName, providerAccountId, secret, options: null, featureId: null, cancellationToken);
 
     /// <summary>
     /// Adds or renews an account that holds sealed values instead of OAuth tokens: the keys of S3,
@@ -396,6 +418,7 @@ public sealed partial class CloudAccountService : IDisposable, CloudDrives.IClou
         string providerAccountId,
         byte[] secret,
         IReadOnlyDictionary<string, string>? options,
+        string? featureId,
         CancellationToken cancellationToken)
     {
         AuthenticatedPrincipal principal = RequireKeyring();
@@ -405,7 +428,10 @@ public sealed partial class CloudAccountService : IDisposable, CloudDrives.IClou
         {
             List<CloudAccountRecord> records = await _store.LoadAsync(principal, cancellationToken).ConfigureAwait(false);
             CloudAccountRecord? existing = records.FirstOrDefault(record =>
-                record.HasKeys && record.Provider == providerId && record.ProviderAccountId == providerAccountId);
+                record.HasKeys
+                && record.Provider == providerId
+                && record.ProviderAccountId == providerAccountId
+                && string.Equals(record.FeatureId, featureId, StringComparison.Ordinal));
             string id = existing?.Id ?? NewAccountId();
             SealedTokens sealedKeys = await _store
                 .SealBytesAsync(principal, id, $"{displayName} (cloud drive)", secret, cancellationToken)
@@ -414,7 +440,8 @@ public sealed partial class CloudAccountService : IDisposable, CloudDrives.IClou
                 id, providerId, CloudAccessScope.Full, displayName, providerAccountId, CloudAccountState.Connected, _time.GetUtcNow(), sealedKeys)
             {
                 Credential = CloudAccountRecord.KeysCredential,
-                Options = options
+                Options = options,
+                FeatureId = featureId
             };
             records.RemoveAll(record => record.Id == id);
             records.Add(saved);
@@ -436,6 +463,7 @@ public sealed partial class CloudAccountService : IDisposable, CloudDrives.IClou
     /// <param name="accountId">The account.</param>
     /// <param name="providerId">The provider the connector expects; another provider reads as not found.</param>
     /// <param name="cancellationToken">Cancels the read.</param>
+    /// <param name="featureId">The feature whose provider asks (ADR 0282 §3), or <see langword="null"/> for a shipped connector; an account another feature added reads as not found.</param>
     /// <returns>The account and its keys.</returns>
     /// <exception cref="CloudAccountException">
     /// <see cref="CloudAccountError.ReconnectRequired"/> when the keys cannot be opened any more (the
@@ -445,7 +473,8 @@ public sealed partial class CloudAccountService : IDisposable, CloudDrives.IClou
     internal async ValueTask<(CloudAccount Account, byte[] Secret)> GetKeysAsync(
         string accountId,
         string providerId,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        string? featureId = null)
     {
         AuthenticatedPrincipal principal = RequireKeyring();
         bool changed = false;
@@ -454,7 +483,10 @@ public sealed partial class CloudAccountService : IDisposable, CloudDrives.IClou
         {
             List<CloudAccountRecord> records = await _store.LoadAsync(principal, cancellationToken).ConfigureAwait(false);
             CloudAccountRecord account = records.FirstOrDefault(record =>
-                    record.Id == accountId && record.HasKeys && record.Provider == providerId)
+                    record.Id == accountId
+                    && record.HasKeys
+                    && record.Provider == providerId
+                    && (featureId is null || string.Equals(record.FeatureId, featureId, StringComparison.Ordinal)))
                 ?? throw NotFound(accountId);
             if (account.State == CloudAccountState.NeedsReconnect)
             {
