@@ -118,6 +118,9 @@ public sealed class FeatureRoleService
         _clock = clock ?? (static () => DateTimeOffset.UtcNow);
     }
 
+    /// <summary>Gets the tickets of the operations of the features (ADR 0247 §3), shared by every process of the session.</summary>
+    public FeatureOperationTickets Tickets { get; } = new();
+
     /// <summary>Gets the roles the features of the running catalog declare, by role id.</summary>
     public IReadOnlyList<DeclaredFeatureRole> DeclaredRoles =>
         [.. _catalog().Manifests.Values

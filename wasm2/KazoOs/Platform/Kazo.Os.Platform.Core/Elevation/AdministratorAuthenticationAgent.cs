@@ -26,6 +26,9 @@ public sealed class AdministratorAuthenticationAgent : IAdministratorAuthenticat
     /// <summary>Audit action of every entry this agent writes.</summary>
     public const string AuditAction = "admin.authenticate";
 
+    /// <summary>The audit action of an operation of a feature (ADR 0247 §4), with its <c>scope</c>.</summary>
+    public const string FeatureAuditAction = "feature.authenticate";
+
     private readonly IAdminElevationVerifier _verifier;
     private readonly IAuditLog _auditLog;
     private readonly IAdministratorAuthenticationPrompt? _prompt;
@@ -80,7 +83,7 @@ public sealed class AdministratorAuthenticationAgent : IAdministratorAuthenticat
         SemaphoreSlim attemptGate = new(1, 1);
 
         Task<AdministratorAuthenticationAttempt> AttemptAsync(string login, string password, CancellationToken ct) =>
-            AttemptCoreAsync(login, token => _verifier.VerifyAsync(login ?? string.Empty, password ?? string.Empty, token), ct);
+            AttemptCoreAsync(login, token => VerifyAsync(request, login ?? string.Empty, password ?? string.Empty, token), ct);
 
         async Task<AdministratorAuthenticationAttempt> PasskeyAttemptAsync(string login, CancellationToken ct)
         {
@@ -138,9 +141,10 @@ public sealed class AdministratorAuthenticationAgent : IAdministratorAuthenticat
             request.App,
             request.Operation,
             request.RequestedBy,
-            request.RequestedBy is { } principal && AppAuthorityPolicy.Satisfies(principal.Authority, AppAuthority.Administrator)
-                ? principal.LoginName.Value
-                : null,
+            request.RoleHolderLogin
+                ?? (request.RequestedBy is { } principal && AppAuthorityPolicy.Satisfies(principal.Authority, AppAuthority.Administrator)
+                    ? principal.LoginName.Value
+                    : null),
             AttemptAsync)
         {
             AuthenticateWithPasskeyAsync = PasskeyVerifier is null ? null : PasskeyAttemptAsync
@@ -172,6 +176,34 @@ public sealed class AdministratorAuthenticationAgent : IAdministratorAuthenticat
         return AdministratorAuthenticationResult.Failed(reason);
     }
 
+    /// <summary>
+    /// Gets or sets the check of a non-administrator's own password, for the <c>RoleHolder</c> scope of a
+    /// feature's operation (ADR 0247 §3); without it, only an administrator can authenticate.
+    /// </summary>
+    public Func<string, string, CancellationToken, Task<AdminElevationVerificationResult>>? UserVerifier { get; init; }
+
+    /// <summary>
+    /// The check of one attempt: any administrator, or, for <see cref="AdministratorAuthenticationRequest.RoleHolderLogin"/>,
+    /// that account only, administrator or not.
+    /// </summary>
+    private Task<AdminElevationVerificationResult> VerifyAsync(
+        AdministratorAuthenticationRequest request, string login, string password, CancellationToken cancellationToken)
+    {
+        if (request.RoleHolderLogin is not { } holder)
+        {
+            return _verifier.VerifyAsync(login, password, cancellationToken);
+        }
+
+        if (!string.Equals(login.Trim(), holder, StringComparison.OrdinalIgnoreCase))
+        {
+            return Task.FromResult(AdminElevationVerificationResult.Failed("not-the-session-user"));
+        }
+
+        return UserVerifier is { } verifyUser
+            ? verifyUser(login, password, cancellationToken)
+            : _verifier.VerifyAsync(login, password, cancellationToken);
+    }
+
     private void Record(AdministratorAuthenticationRequest request, string admin, string outcome, AuditOutcome auditOutcome, string? via = null)
     {
         Dictionary<string, string> properties = new()
@@ -187,11 +219,17 @@ public sealed class AdministratorAuthenticationAgent : IAdministratorAuthenticat
             properties["via"] = via;
         }
 
+        if (request.Scope is { } scope)
+        {
+            // ADR 0247 §4: an operation of a feature names who had to authenticate.
+            properties["scope"] = scope;
+        }
+
         _auditLog.Record(new AuditEntry(
             _clock(),
             Guid.NewGuid(),
             request.RequestedBy?.UserId.ToString() ?? "system",
-            AuditAction,
+            request.Scope is null ? AuditAction : FeatureAuditAction,
             request.App.Id,
             auditOutcome,
             properties));

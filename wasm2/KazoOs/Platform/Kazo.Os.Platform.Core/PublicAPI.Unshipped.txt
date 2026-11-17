@@ -233,3 +233,19 @@ Kazo.Os.Platform.Core.Roles.FeatureRoleService.RevokeAsync(string! role, Kazo.Os
 static Kazo.Os.Platform.Core.Roles.FeatureRolesDocument.Parse(string? content) -> System.Collections.Generic.IReadOnlyDictionary<string!, System.Collections.Generic.IReadOnlySet<string!>!>!
 Kazo.Os.Platform.Core.Roles.FeatureRoleService.RecordDenied(Kazo.Os.App.Abstractions.AppManifest! app, Kazo.Os.Simulation.Abstractions.Sessions.AuthenticatedPrincipal! principal) -> void
 static Kazo.Os.Platform.Core.Roles.FeatureRolesDocument.SetHolders(string? content, string! role, System.Collections.Generic.IEnumerable<string!>! holders) -> string!
+const Kazo.Os.Platform.Core.Elevation.AdministratorAuthenticationAgent.FeatureAuditAction = "feature.authenticate" -> string!
+Kazo.Os.Platform.Core.Roles.FeatureOperationTickets
+static readonly Kazo.Os.Platform.Core.Roles.FeatureOperationTickets.Lifetime -> System.TimeSpan
+Kazo.Os.Platform.Core.Elevation.AdministratorAuthenticationRequest.RoleHolderLogin.get -> string?
+Kazo.Os.Platform.Core.Elevation.AdministratorAuthenticationRequest.RoleHolderLogin.init -> void
+Kazo.Os.Platform.Core.Elevation.AdministratorAuthenticationRequest.Scope.get -> string?
+Kazo.Os.Platform.Core.Elevation.AdministratorAuthenticationRequest.Scope.init -> void
+Kazo.Os.Platform.Core.Elevation.AdministratorAuthenticationAgent.UserVerifier.get -> System.Func<string!, string!, System.Threading.CancellationToken, System.Threading.Tasks.Task<Kazo.Os.App.Abstractions.Policy.AdminElevationVerificationResult!>!>?
+Kazo.Os.Platform.Core.Elevation.AdministratorAuthenticationAgent.UserVerifier.init -> void
+Kazo.Os.Platform.Core.Elevation.AdminElevationVerifier.VerifyUserAsync(string! loginName, string! password, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Kazo.Os.App.Abstractions.Policy.AdminElevationVerificationResult!>!
+Kazo.Os.Platform.Core.Execution.AppCatalogGatewayServices.Roles.get -> System.Func<Kazo.Os.Platform.Core.Roles.FeatureRoleService?>?
+Kazo.Os.Platform.Core.Execution.AppCatalogGatewayServices.Roles.init -> void
+Kazo.Os.Platform.Core.Roles.FeatureRoleService.Tickets.get -> Kazo.Os.Platform.Core.Roles.FeatureOperationTickets!
+Kazo.Os.Platform.Core.Roles.FeatureOperationTickets.FeatureOperationTickets(System.Func<System.DateTimeOffset>? clock = null) -> void
+Kazo.Os.Platform.Core.Roles.FeatureOperationTickets.Issue(string! featureId, string! operation, Kazo.Os.AppSdk.Features.KazoAuthenticationScope scope, string! authenticatedBy) -> Kazo.Os.AppSdk.Features.KazoAuthenticationTicket!
+Kazo.Os.Platform.Core.Roles.FeatureOperationTickets.TryConsume(System.Guid token, string! featureId, string! operation) -> bool

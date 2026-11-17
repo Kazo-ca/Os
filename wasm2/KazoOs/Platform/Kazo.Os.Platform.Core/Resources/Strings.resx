@@ -801,4 +801,7 @@ Cancel: decide at the next launch.</value>
   <data name="Storage.Evicted.OpenSettings" xml:space="preserve">
     <value>Storage settings</value>
   </data>
+  <data name="Feature.Authenticate.Operation" xml:space="preserve">
+    <value>{0} asks: {1}</value>
+  </data>
 </root>

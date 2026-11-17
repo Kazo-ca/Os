@@ -102,11 +102,30 @@ public sealed class AdminElevationVerifier : IAdminElevationVerifier
             requirePasskey: true);
     }
 
+    /// <summary>
+    /// Verifies the password of any enabled account, administrator or not: the re-authentication of
+    /// the holder of a feature's role (ADR 0247 §3, <c>RoleHolder</c>), like <c>sudo</c> asks the user's
+    /// own password. The lone guest confirms without one (ADR 0187).
+    /// </summary>
+    /// <param name="loginName">The account.</param>
+    /// <param name="password">Its password.</param>
+    /// <param name="cancellationToken">Cancels the check.</param>
+    public Task<AdminElevationVerificationResult> VerifyUserAsync(
+        string loginName, string password, CancellationToken cancellationToken = default) =>
+        VerifyCoreAsync(
+            loginName,
+            async (user, token) => user.Credential is { } credential
+                ? await LocalPasswordHasher.VerifyAsync(password ?? string.Empty, credential, _asyncHasher, token).ConfigureAwait(false)
+                : string.IsNullOrEmpty(password) && await IsLoneGuestAsync(user, token).ConfigureAwait(false),
+            cancellationToken,
+            requireAdministrator: false);
+
     private async Task<AdminElevationVerificationResult> VerifyCoreAsync(
         string loginName,
         Func<LocalUser, CancellationToken, Task<bool>> proves,
         CancellationToken cancellationToken,
-        bool requirePasskey = false)
+        bool requirePasskey = false,
+        bool requireAdministrator = true)
     {
         ArgumentNullException.ThrowIfNull(loginName);
 
@@ -134,7 +153,7 @@ public sealed class AdminElevationVerifier : IAdminElevationVerifier
             return AdminElevationVerificationResult.Failed("user-disabled");
         }
 
-        if (!AppAuthorityPolicy.Satisfies(user.Authority, AppAuthority.Administrator))
+        if (requireAdministrator && !AppAuthorityPolicy.Satisfies(user.Authority, AppAuthority.Administrator))
         {
             RecordAudit(user.Id.ToString(), loginName, AuditOutcome.Denied);
             return AdminElevationVerificationResult.Failed("not-administrator");

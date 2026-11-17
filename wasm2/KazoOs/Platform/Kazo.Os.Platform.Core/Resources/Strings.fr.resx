@@ -801,4 +801,7 @@ Annuler : décider au prochain lancement.</value>
   <data name="Storage.Evicted.OpenSettings" xml:space="preserve">
     <value>Réglages du stockage</value>
   </data>
+  <data name="Feature.Authenticate.Operation" xml:space="preserve">
+    <value>{0} demande : {1}</value>
+  </data>
 </root>
