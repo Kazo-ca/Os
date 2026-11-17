@@ -179,14 +179,14 @@ if [[ $SKIP_BUILD -eq 0 ]]; then
     fi
     log "packing the test package of installed apps (ADR 0206)"
     rm -rf "$PACKAGES"
-    if ! dotnet build "$PACKAGE_PROJECT" -c Release -t:KazoOsPack -p:KazoOsPackageOutput="$PACKAGES" >"$LOGS/pack.log" 2>&1; then
+    if ! dotnet build "$PACKAGE_PROJECT" -c Release -t:KazoOsPack -p:KazoOsApiCheck=true -p:KazoOsPackageOutput="$PACKAGES" >"$LOGS/pack.log" 2>&1; then
         grep -E ' error ' "$LOGS/pack.log" | sort -u | head -20 | sed 's/^/    /'
         log "RESULT: FAIL (test package)"
         exit 1
     fi
     log "packing the Craft test package (ADR 0259)"
     rm -rf "$CRAFT_PACKAGES"
-    if ! dotnet build "$CRAFT_PACKAGE_PROJECT" -c Release -t:KazoOsPack -p:KazoOsPackageOutput="$CRAFT_PACKAGES" >"$LOGS/pack-craft.log" 2>&1; then
+    if ! dotnet build "$CRAFT_PACKAGE_PROJECT" -c Release -t:KazoOsPack -p:KazoOsApiCheck=true -p:KazoOsPackageOutput="$CRAFT_PACKAGES" >"$LOGS/pack-craft.log" 2>&1; then
         grep -E ' error ' "$LOGS/pack-craft.log" | sort -u | head -20 | sed 's/^/    /'
         log "RESULT: FAIL (Craft test package)"
         exit 1

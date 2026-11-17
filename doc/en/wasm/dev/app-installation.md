@@ -301,7 +301,9 @@ approval:
   for both.
 - **Checks before the administrator prompt**: SHA-256 of the package
   (`index.json`) and of each file, identifier, `sdkCompatibility`, APIs present
-  in the OS, app on the main thread.
+  in the OS, app on the main thread. `KazoOsPack` already runs the API check at
+  build time, against the surface published with the OS
+  ([ADR 0277](adr/0277-trimmed-api-check-before-publishing.md)); this one stays.
 - **Writing for everyone**: `/usr/lib/kazoos/apps/<appId>/<version>/` and a line
   `<appId>=github:owner/repo@version` in `[installed]` of
   `/etc/kazoos/apps.config`. The previous version's folder is kept for
@@ -331,7 +333,10 @@ approval:
   ([ADR 0261](adr/0261-app-libraries-and-shared-versions.md),
   [section below](#app-libraries-and-shared-versions-adr-0261)).
 - **`wwwroot/` resources** ([ADR 0206](adr/0206-serve-installed-app-assets.md)):
-  at the app's first launch in the session, the OS writes for each declared
+  at the app's first launch in the session (its icons,
+  `presentation.iconAssetPaths`, as soon as the OS starts and after its
+  install or update, so the launcher, the Start menu and the desktop show them
+  before that launch, issue #420), the OS writes for each declared
   resource a `servedFiles` row pointing at the content of the file in the
   app's folder, without reading or copying it: the file's `contentHash` must
   be the manifest's SHA-256, otherwise the address is not served and the app

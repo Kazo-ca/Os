@@ -103,17 +103,24 @@ public static partial class KazoOsBrowserHostExtensions
         });
         builder.Services.AddSingleton<Kazo.Os.Platform.Core.Apps.Packages.IInstalledLibraryState>(
             static provider => provider.GetRequiredService<InstalledAppLibraries>());
-        // ADR 0206: their wwwroot/ files, served by the service worker at _content/<assembly>/.
-        builder.Services.AddSingleton<IBuildKnownAssemblyTransport>(provider => new InstalledAppAssemblyTransport(
-            provider.GetRequiredService<WebAssemblyLazyAssemblyTransport>(),
-            installedApps,
-            OperatingSystem.IsBrowser()
+        // ADR 0206: their wwwroot/ files, served by the service worker at _content/<assembly>/. One
+        // publisher per page: the launch serves an app's files, the boot and each install serve its
+        // icons before that (issue #420).
+        if (OperatingSystem.IsBrowser())
+        {
+            builder.Services.AddSingleton(provider => OperatingSystem.IsBrowser()
                 ? new InstalledAppAssetPublisher(
                     installedApps,
                     new BrowserInstalledAppAssetCache(provider.GetRequiredService<Microsoft.JSInterop.IJSRuntime>()),
                     () => provider.GetRequiredService<AppAssetStore>(),
                     provider.GetService<Microsoft.Extensions.Logging.ILogger<InstalledAppAssetPublisher>>())
-                : null)
+                : throw new PlatformNotSupportedException("Installed apps' files are served by the browser's service worker."));
+        }
+
+        builder.Services.AddSingleton<IBuildKnownAssemblyTransport>(provider => new InstalledAppAssemblyTransport(
+            provider.GetRequiredService<WebAssemblyLazyAssemblyTransport>(),
+            installedApps,
+            provider.GetService<InstalledAppAssetPublisher>())
         {
             Satellites = installedSatellites,
             Libraries = provider.GetRequiredService<InstalledAppLibraries>(),
@@ -166,6 +173,7 @@ public static partial class KazoOsBrowserHostExtensions
             provider.GetService<Microsoft.Extensions.Logging.ILogger<InstalledAppsActivator>>())
         {
             Libraries = provider.GetRequiredService<InstalledAppLibraries>(),
+            Assets = provider.GetService<InstalledAppAssetPublisher>(),
         });
         builder.Services.AddSingleton(provider => new BuildKnownLazyAppDescriptorRegistry(
             installedApps.Live,

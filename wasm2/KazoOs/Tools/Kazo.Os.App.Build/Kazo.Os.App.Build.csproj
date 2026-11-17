@@ -49,6 +49,12 @@
   <ItemGroup>
     <None Include="buildTransitive\Kazo.Os.App.Build.targets" Pack="true" PackagePath="buildTransitive\" />
     <None Include="..\..\build\Kazo.Os.Apps.targets" Pack="true" PackagePath="kazoos-build/Kazo.Os.Apps.targets" Link="build\Kazo.Os.Apps.targets" />
+    <!--
+      ADR 0277 §2: the API surface of this OS version, written by the trimmed publish of the
+      Ecosystem (the release publishes it before packing). KazoOsApiSurfaceFile names another one.
+    -->
+    <None Include="$(KazoOsApiSurfaceFile)" Condition="'$(KazoOsApiSurfaceFile)' != '' and Exists('$(KazoOsApiSurfaceFile)')" Pack="true" PackagePath="kazoos-build/api-surface/kazoos-api-surface.json.gz" Visible="false" />
+    <None Include="..\..\OS\Kazo.Os.Ecosystem\obj\Release\net10.0\kazoos-api-surface.json.gz" Condition="'$(KazoOsApiSurfaceFile)' == '' and Exists('..\..\OS\Kazo.Os.Ecosystem\obj\Release\net10.0\kazoos-api-surface.json.gz')" Pack="true" PackagePath="kazoos-build/api-surface/kazoos-api-surface.json.gz" Visible="false" />
     <None Include="..\..\build\asp-kazo\**" Pack="true" PackagePath="kazoos-build/asp-kazo/%(RecursiveDir)%(Filename)%(Extension)" Link="build\asp-kazo\%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
 

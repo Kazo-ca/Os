@@ -398,7 +398,11 @@ public static class EcosystemServiceCollectionExtensions
             provider.GetRequiredService<IOsSettingsService>(),
             provider.GetRequiredService<IServerConnectionService>(),
             provider.GetRequiredService<IProxyClient>(),
-            provider.GetService<ILogger<RealNetworkGrantReconciler>>()));
+            provider.GetService<ILogger<RealNetworkGrantReconciler>>())
+        {
+            // ADR 0278 §1: a grant synchronized on the server changes what the apps see of the relay.
+            GrantsChanged = () => provider.GetService<AppExecutionContextFactory>()?.RelayPolicy?.Invalidate()
+        });
 
         // FileAssociations domain sync (ADR 0033): /etc/kazoos/file-associations.json under its own
         // domain string. The AppCatalog domain is retired by ADR 0048: uninstalls are apps.config
@@ -859,7 +863,7 @@ public static class EcosystemServiceCollectionExtensions
                 .Context,
             () => provider.GetService<IInstalledLibraryState>(),
             provider.GetService<ILogger<Kazo.Os.Platform.Core.Features.FeatureServiceResolver>>()));
-        services.AddScoped<AppExecutionContextFactory>(provider => new AppExecutionContextFactory(
+        services.AddScoped<AppExecutionContextFactory>(provider => WithRelayFollowingTheServer(provider, new AppExecutionContextFactory(
             provider.GetRequiredService<ICapabilityGrantRepository>(),
             provider.GetRequiredService<IFileSystemService>(),
             provider.GetRequiredService<IEventBus>(),
@@ -980,7 +984,7 @@ public static class EcosystemServiceCollectionExtensions
             BackgroundJobs = () => provider.GetRequiredService<BackgroundJobService>(),
             // ADR 0193: IAppExecutionContext.TimeZone follows Settings > Date and time.
             TimeZones = provider.GetRequiredService<Kazo.Os.Platform.Core.Globalization.SessionTimeZoneService>(),
-        });
+        }));
         services.AddScoped<BackgroundJobService>(provider => new BackgroundJobService(
             provider.GetRequiredService<IProcessManager>(),
             // Lazy: the orchestrator depends on the context factory, which carries this service.
@@ -1438,6 +1442,20 @@ public static class EcosystemServiceCollectionExtensions
     /// uninstalled for the machine. Runs after each change of the installed state; a failure is
     /// written to the system log and never blocks the uninstall.
     /// </summary>
+    /// <summary>
+    /// Reads the relay policy again when the server connects, disconnects or stops answering
+    /// (ADR 0278 §1), so the apps that follow the relay's state see the change.
+    /// </summary>
+    private static AppExecutionContextFactory WithRelayFollowingTheServer(IServiceProvider provider, AppExecutionContextFactory factory)
+    {
+        if (factory.RelayPolicy is { } relayPolicy && provider.GetService<ServerPresenceService>() is { } presence)
+        {
+            presence.Changed += relayPolicy.Invalidate;
+        }
+
+        return factory;
+    }
+
     private static async Task RemoveUninstalledComponentProvidersAsync(IServiceProvider provider, AppInstallationService installation)
     {
         try

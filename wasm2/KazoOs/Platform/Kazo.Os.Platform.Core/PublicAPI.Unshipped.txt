@@ -1,3 +1,18 @@
 #nullable enable
 Kazo.Os.Platform.Core.Storage.StorageSpaceMonitor.ReportWriteRefused() -> void
 static readonly Kazo.Os.Platform.Core.Storage.StorageSpaceMonitor.RefusalHoldTime -> System.TimeSpan
+Kazo.Os.Platform.Core.Execution.AppExecutionContextFactory.RelayPolicy.get -> Kazo.Os.Platform.Core.Network.RelayPolicyCache?
+Kazo.Os.Platform.Core.Network.AppNetworkGateway.GetRelayStateAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.Net.KazoRelayState!>
+Kazo.Os.Platform.Core.Network.AppNetworkGateway.Lifetime.get -> System.Threading.CancellationToken
+Kazo.Os.Platform.Core.Network.AppNetworkGateway.Lifetime.init -> void
+Kazo.Os.Platform.Core.Network.AppNetworkGateway.RelayPolicy.get -> Kazo.Os.Platform.Core.Network.RelayPolicyCache?
+Kazo.Os.Platform.Core.Network.AppNetworkGateway.RelayPolicy.init -> void
+Kazo.Os.Platform.Core.Network.AppNetworkGateway.RelayStateChanged -> System.EventHandler<Kazo.Os.AppSdk.Net.KazoRelayState!>?
+Kazo.Os.Platform.Core.Network.RelayPolicyCache
+Kazo.Os.Platform.Core.Network.RelayPolicyCache.Changed -> System.Action?
+Kazo.Os.Platform.Core.Network.RelayPolicyCache.GetAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.Server.Contracts.Proxy.ProxyPolicyResponse?>
+Kazo.Os.Platform.Core.Network.RelayPolicyCache.Invalidate() -> void
+Kazo.Os.Platform.Core.Network.RelayPolicyCache.RelayPolicyCache(Kazo.Os.Platform.Core.ServerConnection.IServerConnectionService! connection, Kazo.Os.Platform.Core.ServerConnection.IProxyClient! proxy, System.Func<System.DateTimeOffset>? now = null) -> void
+static readonly Kazo.Os.Platform.Core.Network.RelayPolicyCache.Lifetime -> System.TimeSpan
+Kazo.Os.Platform.Core.ServerConnection.RealNetworkGrantReconciler.GrantsChanged.get -> System.Action?
+Kazo.Os.Platform.Core.ServerConnection.RealNetworkGrantReconciler.GrantsChanged.init -> void

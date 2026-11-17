@@ -766,6 +766,11 @@ internal sealed class RemoteProcessSession
                 var listeners = await c.Network.GetTcpListenersAsync(cancellationToken).ConfigureAwait(false);
                 return writer => WireCodec.WriteListeners(writer, listeners);
             }
+            case RemoteOps.NetRelayState:
+            {
+                Kazo.Os.AppSdk.Net.KazoRelayState state = await c.Network.GetRelayStateAsync(cancellationToken).ConfigureAwait(false);
+                return writer => WireCodec.WriteRelayState(writer, state);
+            }
 
             case RemoteOps.CatalogInstalled:
             {

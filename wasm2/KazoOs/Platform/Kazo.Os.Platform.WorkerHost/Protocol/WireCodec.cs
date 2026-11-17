@@ -528,6 +528,36 @@ internal static class WireCodec
         writer.WriteEndArray();
     }
 
+    /// <summary>Writes the relay's state of one app (ADR 0278 §1).</summary>
+    public static void WriteRelayState(Utf8JsonWriter writer, KazoRelayState state)
+    {
+        writer.WriteNumber("rs", (int)state.Status);
+        WriteInts(writer, "tb", state.TcpBlockedPorts);
+        WriteInts(writer, "ub", state.UdpBlockedPorts);
+    }
+
+    /// <summary>Reads what <see cref="WriteRelayState"/> wrote.</summary>
+    public static KazoRelayState ReadRelayState(JsonElement element) =>
+        new((KazoRelayStatus)element.GetInt32("rs"))
+        {
+            TcpBlockedPorts = ReadInts(element, "tb"),
+            UdpBlockedPorts = ReadInts(element, "ub")
+        };
+
+    private static void WriteInts(Utf8JsonWriter writer, string name, IReadOnlyList<int> values)
+    {
+        writer.WriteStartArray(name);
+        foreach (int value in values)
+        {
+            writer.WriteNumberValue(value);
+        }
+
+        writer.WriteEndArray();
+    }
+
+    private static IReadOnlyList<int> ReadInts(JsonElement element, string name) =>
+        element.TryGetProperty(name, out JsonElement array) ? [.. array.EnumerateArray().Select(static item => item.GetInt32())] : [];
+
     public static IReadOnlyList<KazoTcpListenerInfo> ReadListeners(JsonElement element) =>
     [
         .. element.GetProperty("ls").EnumerateArray().Select(static item => new KazoTcpListenerInfo(

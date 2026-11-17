@@ -54,7 +54,7 @@ alice@kazoos:~$ watch -n 1 'ps | wc -l'
 | Commande | Options | Notes |
 |---|---|---|
 | `sort` | `-r -n -h -V -f -b -u -c`, `-k N[,M]`, `-t SEP`, `-o FICHIER` | Tri stable avec comparaison finale octet par octet, comme GNU sort ; options combinables (`-rn`). |
-| `head` | `-n N`, `-N`, `-n -N` (tout sauf les N dernières), `-c N`, `-q`, `-v` | Lit l'entrée standard au fil de l'eau : `yes \| head` se termine. |
+| `head` | `-n N`, `-N`, `-n -N` (tout sauf les N dernières), `-c N` (octets), `-q`, `-v` | Lit un fichier ou l'entrée standard au fil de l'eau et s'arrête après ce qu'il affiche : `yes \| head` et `head -c 16 /dev/urandom` se terminent (#542). La sortie du terminal est du texte : les octets lus sont décodés en UTF-8, donc `head -c N fichier > copie` ne copie pas fidèlement un fichier binaire (#573). |
 | `tail` | `-n N`, `-N`, `-n +N`, `-c N`, `-f`, `-q`, `-v` | `-f` suit le fichier (relu toutes les 500 ms) jusqu'à Ctrl+C ; signale `file truncated`. |
 | `cut` | `-f LISTE` avec `-d SEP`, `-s`, `--output-delimiter`, `-c`/`-b LISTE`, `--complement` | LISTE : `N`, `N-M`, `N-`, `-M`, séparés par des virgules. |
 | `tee` | `-a` | Copie l'entrée vers la sortie et chaque fichier ; un fichier inaccessible n'arrête pas les autres (code 1). |

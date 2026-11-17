@@ -36,6 +36,8 @@
     <!-- ADR 0070: the worker host serves a remote process through the same trusted context and
          reports a closed pipe exactly like a local writer (ShellBrokenPipeException). -->
     <InternalsVisibleTo Include="Kazo.Os.Platform.WorkerHost" />
+    <!-- RuntimeTypeNames: the API surface of a publish uses the same type names (ADR 0277). -->
+    <InternalsVisibleTo Include="Kazo.Os.Tools.ManifestGenerator" />
     <InternalsVisibleTo Include="Kazo.Os.Platform.WorkerHost.Tests" />
   </ItemGroup>
 
