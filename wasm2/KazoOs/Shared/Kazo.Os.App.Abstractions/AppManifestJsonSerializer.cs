@@ -76,7 +76,8 @@ public static class AppManifestJsonSerializer
             "capabilityPrefix",
             "providedCapabilities",
             "roles",
-            "requiresRole"
+            "requiresRole",
+            "settingsPage"
         });
 
         return JsonSerializer.Deserialize(document.RootElement.GetRawText(), AppManifestJsonSerializerContext.Default.AppManifest)
@@ -324,6 +325,10 @@ public static class AppManifestJsonSerializer
                     break;
                 case "window":
                     ValidateObject(property.Value, $"{path}.window", ["defaultWidth", "defaultHeight", "minWidth", "minHeight", "maxWidth", "maxHeight", "resizable", "rememberGeometry", "style", "showIcon", "maximizeBox", "minimizeBox", "showInTaskbar", "modal", "canChangeScreen"]);
+                    break;
+                case "settingsPage":
+                    // ADR 0249 §2: the options of a settings page entry point of a feature.
+                    ValidateObject(property.Value, $"{path}.settingsPage", ["order", "mobileSupported"]);
                     break;
                 case "web":
                     ValidateObject(property.Value, $"{path}.web", ["urls", "blazor"]);

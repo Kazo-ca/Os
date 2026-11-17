@@ -119,3 +119,24 @@ Kazo.Os.App.Abstractions.FeatureRole.Grants.get -> System.Collections.Generic.IR
 Kazo.Os.App.Abstractions.FeatureRole.Grants.init -> void
 ~Kazo.Os.App.Abstractions.AppManifestJsonSerializerContext.AppRoleManifest.get -> System.Text.Json.Serialization.Metadata.JsonTypeInfo<Kazo.Os.App.Abstractions.AppRoleManifest>
 ~Kazo.Os.App.Abstractions.AppManifestJsonSerializerContext.IReadOnlyListAppRoleManifest.get -> System.Text.Json.Serialization.Metadata.JsonTypeInfo<System.Collections.Generic.IReadOnlyList<Kazo.Os.App.Abstractions.AppRoleManifest>>
+Kazo.Os.App.Abstractions.AppKind.SettingsPage = 5 -> Kazo.Os.App.Abstractions.AppKind
+Kazo.Os.App.Abstractions.SettingsPageOptions
+override Kazo.Os.App.Abstractions.SettingsPageOptions.ToString() -> string!
+static Kazo.Os.App.Abstractions.SettingsPageOptions.operator !=(Kazo.Os.App.Abstractions.SettingsPageOptions? left, Kazo.Os.App.Abstractions.SettingsPageOptions? right) -> bool
+static Kazo.Os.App.Abstractions.SettingsPageOptions.operator ==(Kazo.Os.App.Abstractions.SettingsPageOptions? left, Kazo.Os.App.Abstractions.SettingsPageOptions? right) -> bool
+override Kazo.Os.App.Abstractions.SettingsPageOptions.GetHashCode() -> int
+override Kazo.Os.App.Abstractions.SettingsPageOptions.Equals(object? obj) -> bool
+Kazo.Os.App.Abstractions.SettingsPageOptions.Equals(Kazo.Os.App.Abstractions.SettingsPageOptions? other) -> bool
+Kazo.Os.App.Abstractions.SettingsPageOptions.<Clone>$() -> Kazo.Os.App.Abstractions.SettingsPageOptions!
+Kazo.Os.App.Abstractions.SettingsPageOptions.SettingsPageOptions() -> void
+Kazo.Os.App.Abstractions.AppManifest.SettingsPage.get -> Kazo.Os.App.Abstractions.SettingsPageOptions?
+Kazo.Os.App.Abstractions.AppManifest.SettingsPage.init -> void
+static Kazo.Os.App.Abstractions.SettingsPageOptions.Default.get -> Kazo.Os.App.Abstractions.SettingsPageOptions!
+Kazo.Os.App.Abstractions.SettingsPageOptions.Order.get -> int
+static Kazo.Os.App.Abstractions.SettingsPageOptions.Of(Kazo.Os.App.Abstractions.AppManifest! manifest) -> Kazo.Os.App.Abstractions.SettingsPageOptions!
+Kazo.Os.App.Abstractions.SettingsPageOptions.Order.init -> void
+Kazo.Os.App.Abstractions.SettingsPageOptions.MobileSupported.init -> void
+Kazo.Os.App.Abstractions.SettingsPageOptions.MobileSupported.get -> bool
+Kazo.Os.App.Abstractions.FeatureEntryPoint.SettingsPage.get -> Kazo.Os.App.Abstractions.SettingsPageOptions?
+Kazo.Os.App.Abstractions.FeatureEntryPoint.SettingsPage.init -> void
+~Kazo.Os.App.Abstractions.AppManifestJsonSerializerContext.SettingsPageOptions.get -> System.Text.Json.Serialization.Metadata.JsonTypeInfo<Kazo.Os.App.Abstractions.SettingsPageOptions>

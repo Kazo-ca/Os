@@ -117,8 +117,8 @@ public abstract class FeatureDefinition : AppDefinition
 /// </summary>
 /// <param name="Suffix">The last segment of the child's id (<c>cli</c> for <c>ca.kazo.x86.cli</c>): lowercase letters, digits and dashes.</param>
 /// <param name="Name">The child's display name, as the task manager and <c>ps</c> show it.</param>
-/// <param name="Kind">The child's kind: <see cref="AppKind.Window"/>, <see cref="AppKind.Terminal"/> or <see cref="AppKind.Service"/>.</param>
-/// <param name="EntryPoint">The child's entry-point type, in the feature's assembly: a window component, a command or a service.</param>
+/// <param name="Kind">The child's kind: <see cref="AppKind.Window"/>, <see cref="AppKind.Terminal"/>, <see cref="AppKind.Service"/> or <see cref="AppKind.SettingsPage"/> (ADR 0249).</param>
+/// <param name="EntryPoint">The child's entry-point type, in the feature's assembly: a window component, a command, a service or a settings page component.</param>
 public sealed record FeatureEntryPoint(string Suffix, string Name, AppKind Kind, Type EntryPoint)
 {
     /// <summary>Gets the child's description; defaults to <see cref="Name"/>.</summary>
@@ -142,6 +142,13 @@ public sealed record FeatureEntryPoint(string Suffix, string Name, AppKind Kind,
 
     /// <summary>Gets the window sizes of a <see cref="AppKind.Window"/> child, or <see langword="null"/> for the defaults.</summary>
     public WindowOptions? Window { get; init; }
+
+    /// <summary>
+    /// Gets the options of a <see cref="AppKind.SettingsPage"/> child (ADR 0249 §2): its order in the
+    /// Features group and whether it shows on a phone; <see langword="null"/> for the defaults (first,
+    /// shown on a phone). Its title is <c>Name</c> and its icon the first of <see cref="Icons"/>.
+    /// </summary>
+    public SettingsPageOptions? SettingsPage { get; init; }
 
     /// <summary>Gets the mobile entry-point type of a window child, or <see langword="null"/> for a desktop-only one.</summary>
     public Type? MobileEntryPoint { get; init; }

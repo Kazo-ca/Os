@@ -35,5 +35,14 @@ public enum AppKind
     /// manifests of another kind that name it in <see cref="AppManifest.Parent"/>.
     /// </summary>
     [JsonStringEnumMemberName("feature")]
-    Feature
+    Feature,
+
+    /// <summary>
+    /// A page of Settings ▸ Features (ADR 0249 §2), reserved to the children of a
+    /// <see cref="Feature"/>: a Blazor component deriving from <c>KazoSettingsPageBase</c>, drawn in
+    /// the Settings window but run in its own execution context (its identity, its capabilities, its
+    /// process in <c>ps</c>). It is never launched alone: Settings shows it in its menu.
+    /// </summary>
+    [JsonStringEnumMemberName("settingsPage")]
+    SettingsPage
 }

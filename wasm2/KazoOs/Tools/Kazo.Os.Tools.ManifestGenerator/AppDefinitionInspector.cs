@@ -244,6 +244,12 @@ public static class AppDefinitionInspector
             return null;
         }
 
+        if (feature is null && manifest!.Kind == AppKind.SettingsPage)
+        {
+            diagnostics.Add(new(GeneratorCodes.FeatureOnly, subject, "Only an entry point of a feature can be a settings page (Kind = SettingsPage, ADR 0249 §2)."));
+            return null;
+        }
+
         if (feature is not null)
         {
             if (type.GetProperty(nameof(AppDefinition.EntryPoint))?.DeclaringType != typeof(FeatureDefinition))
