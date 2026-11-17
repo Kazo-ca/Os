@@ -151,7 +151,7 @@ public sealed class BuildKnownLazyAppsTests
         string[] commands = [.. catalog.Manifests.Values
             .Where(manifest => manifest.Kind == AppKind.Terminal && manifest.Id != "org.kazoos.samples.terminal-app")
             .Select(manifest => manifest.Id)];
-        Assert.Equal(78, commands.Length);
+        Assert.Equal(79, commands.Length);
 
         Assert.Equal(
             systemWindows.Concat(commands).Order(StringComparer.Ordinal),
