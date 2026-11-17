@@ -163,6 +163,12 @@ public sealed class EcosystemBootCoordinator
     public Kazo.Os.Platform.Core.Diagnostics.KernelLog? KernelLog { get; set; }
 
     /// <summary>
+    /// Gets or sets the roles of the features (ADR 0247 §1): <c>/etc/kazoos/roles.config</c> is read
+    /// once storage is ready, before the system services and the login screen.
+    /// </summary>
+    public Kazo.Os.Platform.Core.Roles.FeatureRoleService? FeatureRoles { get; set; }
+
+    /// <summary>
     /// Raises the boot's end signal (ADR 0071, section 2): the session is open, the desktop shown and
     /// the startup apps launched. The worker pool then waits for the browser to be idle (at most 2 s)
     /// and warms up its ready worker and its cores. Idempotent; the host calls it once the desktop
@@ -259,6 +265,12 @@ public sealed class EcosystemBootCoordinator
             $"boot: storage ready, policy revision {policyRevision}, {catalog.Count} apps in catalog, {users.Count} local users");
 
         await RecordStorageBootAsync(cancellationToken).ConfigureAwait(false);
+
+        // ADR 0247 §1: who holds the roles of the features, before any entry point opens.
+        if (FeatureRoles is not null)
+        {
+            await FeatureRoles.RefreshAsync(cancellationToken).ConfigureAwait(false);
+        }
 
         // ADR 0097 section 4: the system services start before the login screen, as kazoos-svc.
         // A failure is logged and never blocks the boot.

@@ -12,3 +12,5 @@ Kazo.Os.Ecosystem.StorageEvictionNotice.Eviction.set -> void
 Kazo.Os.Ecosystem.InstalledAppAssetPublisher.PublishIconsAsync(System.Collections.Generic.IReadOnlyList<Kazo.Os.Platform.Core.Apps.Packages.InstalledApp!>! apps, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 Kazo.Os.Ecosystem.InstalledAppsActivator.Assets.get -> Kazo.Os.Ecosystem.InstalledAppAssetPublisher?
 Kazo.Os.Ecosystem.InstalledAppsActivator.Assets.init -> void
+Kazo.Os.Ecosystem.EcosystemBootCoordinator.FeatureRoles.get -> Kazo.Os.Platform.Core.Roles.FeatureRoleService?
+Kazo.Os.Ecosystem.EcosystemBootCoordinator.FeatureRoles.set -> void
