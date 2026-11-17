@@ -224,10 +224,13 @@ or a `requiresRole` no role of the feature declares.
   authorization for each operation. `KazoFeatureAuthentication.AuthenticateAsync(operation, scope)`
   opens the OS's window (never one of the feature):
   `KazoAuthenticationScope.RoleHolder` asks the session user's password again,
-  and they must hold the role; `Administrator` asks an administrator. The
-  ticket it returns (`KazoAuthenticationTicket`) is valid 30 s, once, for this
-  feature and this operation: `ConsumeAsync(ticket, operation)` refuses it for
-  another operation. Under `sudo`, no second window. An ordinary app is
+  and they must hold the role of the entry point (refused from an entry point
+  without `RequiresRole` or from a service); `Administrator` asks an
+  administrator. The ticket it returns (`KazoAuthenticationTicket`) is valid
+  30 s, once, for this feature, this operation and this user:
+  `ConsumeAsync(ticket, operation)` refuses it for another operation or another
+  user, and returns the ticket the OS issued, whose `Scope` the feature reads
+  (never the copy presented). Under `sudo`, no second window. An ordinary app is
   refused. Details:
   [`sensitive-settings.md`](../dev/sensitive-settings.md#5-roles-of-the-features-and-authentication-of-operations).
 

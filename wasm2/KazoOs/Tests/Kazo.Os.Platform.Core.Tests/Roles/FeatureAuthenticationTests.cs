@@ -1,3 +1,4 @@
+using Kazo.Os.App.Abstractions.Policy;
 using Kazo.Os.AppSdk.Features;
 using Kazo.Os.AppSdk.IO;
 using Kazo.Os.Platform.Core.Elevation;
@@ -45,8 +46,95 @@ public sealed class FeatureAuthenticationTests
         KazoAuthenticationTicket second = await gateway.AuthenticateAsync(FeatureRoleFixtures.DeleteShared, KazoAuthenticationScope.Administrator);
 
         await Assert.ThrowsAsync<KazoUnauthorizedAccessException>(async () => await gateway.ConsumeAsync(first, "vm.change-limit"));
-        await gateway.ConsumeAsync(second, FeatureRoleFixtures.DeleteShared);
+        KazoAuthenticationTicket issued = await gateway.ConsumeAsync(second, FeatureRoleFixtures.DeleteShared);
         await Assert.ThrowsAsync<KazoUnauthorizedAccessException>(async () => await gateway.ConsumeAsync(second, FeatureRoleFixtures.DeleteShared));
+        Assert.Equal((KazoAuthenticationScope.Administrator, "carol"), (issued.Scope, issued.AuthenticatedBy));
+    }
+
+    [Fact]
+    public async Task The_ticket_the_OS_issued_counts_not_a_forged_copy_of_it()
+    {
+        FeatureRoleHarness harness = await FeatureRoleHarness.CreateAsync();
+        AuthenticatedPrincipal bob = await harness.LoginAsync(harness.Files.Bob);
+        await harness.Roles.GrantAsync(FeatureRoleFixtures.Manager, harness.Files.Bob, "carol");
+        AppFeatureAuthenticationGateway gateway = harness.Gateway(harness.Agent(new TypedCredentials(("bob", SettingsFilesHarness.Password))), FeatureRoleFixtures.Admin(), bob);
+        KazoAuthenticationTicket ticket = await gateway.AuthenticateAsync(FeatureRoleFixtures.DeleteShared, KazoAuthenticationScope.RoleHolder);
+
+        KazoAuthenticationTicket issued = await gateway.ConsumeAsync(
+            ticket with { Scope = KazoAuthenticationScope.Administrator, AuthenticatedBy = "carol" }, FeatureRoleFixtures.DeleteShared);
+
+        Assert.Equal((KazoAuthenticationScope.RoleHolder, "bob"), (issued.Scope, issued.AuthenticatedBy));
+    }
+
+    [Fact]
+    public async Task A_ticket_of_another_user_is_refused()
+    {
+        FeatureRoleHarness harness = await FeatureRoleHarness.CreateAsync();
+        AuthenticatedPrincipal carol = await harness.LoginAsync(harness.Carol);
+        AuthenticatedPrincipal bob = await harness.LoginAsync(harness.Files.Bob);
+        KazoAuthenticationTicket carols = await harness.Gateway(harness.Agent(new TypedCredentials(("carol", SettingsFilesHarness.Password))), FeatureRoleFixtures.Admin(), carol)
+            .AuthenticateAsync(FeatureRoleFixtures.DeleteShared, KazoAuthenticationScope.Administrator);
+
+        await Assert.ThrowsAsync<KazoUnauthorizedAccessException>(async () =>
+            await harness.Gateway(harness.Agent(new TypedCredentials()), FeatureRoleFixtures.Admin(), bob).ConsumeAsync(carols, FeatureRoleFixtures.DeleteShared));
+    }
+
+    [Fact]
+    public async Task The_role_holder_scope_is_refused_from_an_entry_point_that_requires_no_role()
+    {
+        FeatureRoleHarness harness = await FeatureRoleHarness.CreateAsync();
+        AuthenticatedPrincipal alice = await harness.LoginAsync(harness.Files.Alice);
+        TypedCredentials window = new(("alice", SettingsFilesHarness.Password));
+
+        await Assert.ThrowsAsync<KazoUnauthorizedAccessException>(async () =>
+            await harness.Gateway(harness.Agent(window), FeatureRoleFixtures.Run(), alice)
+                .AuthenticateAsync(FeatureRoleFixtures.DeleteShared, KazoAuthenticationScope.RoleHolder));
+
+        Assert.Equal(0, window.Shown);
+        Assert.Single(harness.Audit.Entries, e => e.Action == FeatureRoleService.DeniedAction);
+    }
+
+    [Fact]
+    public async Task The_passkey_of_another_account_does_not_answer_for_the_role_holder()
+    {
+        FeatureRoleHarness harness = await FeatureRoleHarness.CreateAsync();
+        AuthenticatedPrincipal bob = await harness.LoginAsync(harness.Files.Bob);
+        await harness.Roles.GrantAsync(FeatureRoleFixtures.Manager, harness.Files.Bob, "carol");
+        AdminElevationVerifier verifier = new(harness.Files.Users, harness.Audit);
+        AdministratorAuthenticationAgent agent = new(verifier, harness.Audit, new CarolsPasskey())
+        {
+            UserVerifier = verifier.VerifyUserAsync,
+            // Carol's passkey would be accepted for an administrator's operation.
+            PasskeyVerifier = static (login, _) => Task.FromResult(login == "carol"
+                ? new AdminElevationVerificationResult(true, "uid-carol", "carol", null)
+                : AdminElevationVerificationResult.Failed("invalid-credentials")),
+        };
+
+        await Assert.ThrowsAsync<KazoUnauthorizedAccessException>(async () =>
+            await harness.Gateway(agent, FeatureRoleFixtures.Admin(), bob)
+                .AuthenticateAsync(FeatureRoleFixtures.DeleteShared, KazoAuthenticationScope.RoleHolder));
+    }
+
+    [Fact]
+    public async Task An_unknown_scope_is_refused()
+    {
+        FeatureRoleHarness harness = await FeatureRoleHarness.CreateAsync();
+        AuthenticatedPrincipal carol = await harness.LoginAsync(harness.Carol);
+
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(async () =>
+            await harness.Gateway(harness.Agent(new TypedCredentials()), FeatureRoleFixtures.Admin(), carol)
+                .AuthenticateAsync(FeatureRoleFixtures.DeleteShared, (KazoAuthenticationScope)7));
+    }
+
+    /// <summary>Answers the window with Carol's passkey, whatever account the window asks for.</summary>
+    private sealed class CarolsPasskey : IAdministratorAuthenticationPrompt
+    {
+        public async Task<AdministratorAuthenticationOutcome> RequestAsync(
+            AdministratorAuthenticationPromptRequest request, CancellationToken cancellationToken = default)
+        {
+            AdministratorAuthenticationAttempt attempt = await request.AuthenticateWithPasskeyAsync!("carol", cancellationToken);
+            return attempt.Succeeded ? AdministratorAuthenticationOutcome.Approved : AdministratorAuthenticationOutcome.Cancelled;
+        }
     }
 
     [Fact]
@@ -116,19 +204,19 @@ public sealed class FeatureAuthenticationTests
     {
         DateTimeOffset now = new(2026, 11, 16, 12, 0, 0, TimeSpan.Zero);
         FeatureOperationTickets tickets = new(() => now);
-        KazoAuthenticationTicket ticket = tickets.Issue(FeatureRoleFixtures.FeatureId, FeatureRoleFixtures.DeleteShared, KazoAuthenticationScope.RoleHolder, "bob");
+        KazoAuthenticationTicket ticket = tickets.Issue(FeatureRoleFixtures.FeatureId, FeatureRoleFixtures.DeleteShared, KazoAuthenticationScope.RoleHolder, "bob", "uid-bob");
 
         now += FeatureOperationTickets.Lifetime;
 
-        Assert.False(tickets.TryConsume(ticket.Token, FeatureRoleFixtures.FeatureId, FeatureRoleFixtures.DeleteShared));
+        Assert.Null(tickets.TryConsume(ticket.Token, FeatureRoleFixtures.FeatureId, FeatureRoleFixtures.DeleteShared, "uid-bob"));
     }
 
     [Fact]
     public void A_ticket_of_another_feature_is_refused()
     {
         FeatureOperationTickets tickets = new();
-        KazoAuthenticationTicket ticket = tickets.Issue(FeatureRoleFixtures.FeatureId, FeatureRoleFixtures.DeleteShared, KazoAuthenticationScope.RoleHolder, "bob");
+        KazoAuthenticationTicket ticket = tickets.Issue(FeatureRoleFixtures.FeatureId, FeatureRoleFixtures.DeleteShared, KazoAuthenticationScope.RoleHolder, "bob", "uid-bob");
 
-        Assert.False(tickets.TryConsume(ticket.Token, "org.test.other", FeatureRoleFixtures.DeleteShared));
+        Assert.Null(tickets.TryConsume(ticket.Token, "org.test.other", FeatureRoleFixtures.DeleteShared, "uid-bob"));
     }
 }

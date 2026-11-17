@@ -9,7 +9,9 @@ namespace Kazo.Os.Platform.Core.Roles;
 
 /// <summary>
 /// The tickets of the operations of the features (ADR 0247 §3): valid 30 seconds, once, for the
-/// feature and the operation they name, like the sudo tickets of <c>InMemoryElevationTicketStore</c>.
+/// feature, the operation and the user they name, like the sudo tickets of
+/// <c>InMemoryElevationTicketStore</c>. The OS keeps the ticket it issued: what a caller presents is
+/// only the token, and the stored ticket (its scope, who authenticated) is what counts.
 /// </summary>
 public sealed class FeatureOperationTickets
 {
@@ -18,44 +20,59 @@ public sealed class FeatureOperationTickets
 
     private readonly Func<DateTimeOffset> _clock;
     private readonly Lock _gate = new();
-    private readonly Dictionary<Guid, KazoAuthenticationTicket> _tickets = [];
+    private readonly Dictionary<Guid, (KazoAuthenticationTicket Ticket, string UserId)> _tickets = [];
 
     /// <summary>Creates the store.</summary>
     /// <param name="clock">The clock; the system clock by default.</param>
     public FeatureOperationTickets(Func<DateTimeOffset>? clock = null) => _clock = clock ?? (static () => DateTimeOffset.UtcNow);
 
-    /// <summary>Issues a ticket for one operation of one feature.</summary>
+    /// <summary>Issues a ticket for one operation of one feature, for the user whose process asked.</summary>
     /// <param name="featureId">The feature.</param>
     /// <param name="operation">The operation.</param>
     /// <param name="scope">Who authenticated.</param>
     /// <param name="authenticatedBy">The login that authenticated.</param>
-    public KazoAuthenticationTicket Issue(string featureId, string operation, KazoAuthenticationScope scope, string authenticatedBy)
+    /// <param name="userId">The user whose process asked; only a process of that user can use the ticket.</param>
+    public KazoAuthenticationTicket Issue(string featureId, string operation, KazoAuthenticationScope scope, string authenticatedBy, string userId)
     {
-        KazoAuthenticationTicket ticket = new(Guid.NewGuid(), featureId, operation, scope, authenticatedBy, _clock() + Lifetime);
+        DateTimeOffset now = _clock();
+        KazoAuthenticationTicket ticket = new(Guid.NewGuid(), featureId, operation, scope, authenticatedBy, now + Lifetime);
         lock (_gate)
         {
-            _tickets[ticket.Token] = ticket;
+            // Tickets nobody used are dropped once expired, so the store does not grow.
+            foreach (Guid expired in _tickets.Where(entry => entry.Value.Ticket.ExpiresAtUtc <= now).Select(static entry => entry.Key).ToArray())
+            {
+                _tickets.Remove(expired);
+            }
+
+            _tickets[ticket.Token] = (ticket, userId);
         }
 
         return ticket;
     }
 
-    /// <summary>Uses a ticket up: true once, for its feature and operation, before it expires.</summary>
-    /// <param name="token">The ticket.</param>
+    /// <summary>
+    /// Uses a ticket up: once, for its feature, operation and user, before it expires. Returns the
+    /// ticket the OS issued (never the caller's copy), or <see langword="null"/>.
+    /// </summary>
+    /// <param name="token">The ticket's token.</param>
     /// <param name="featureId">The feature presenting it.</param>
     /// <param name="operation">The operation about to run.</param>
-    public bool TryConsume(Guid token, string featureId, string operation)
+    /// <param name="userId">The user whose process presents it.</param>
+    public KazoAuthenticationTicket? TryConsume(Guid token, string featureId, string operation, string userId)
     {
         lock (_gate)
         {
-            if (!_tickets.Remove(token, out KazoAuthenticationTicket? ticket))
+            if (!_tickets.Remove(token, out (KazoAuthenticationTicket Ticket, string UserId) stored))
             {
-                return false;
+                return null;
             }
 
-            return ticket.ExpiresAtUtc > _clock()
-                && string.Equals(ticket.FeatureId, featureId, StringComparison.Ordinal)
-                && string.Equals(ticket.Operation, operation, StringComparison.Ordinal);
+            return stored.Ticket.ExpiresAtUtc > _clock()
+                && string.Equals(stored.Ticket.FeatureId, featureId, StringComparison.Ordinal)
+                && string.Equals(stored.Ticket.Operation, operation, StringComparison.Ordinal)
+                && string.Equals(stored.UserId, userId, StringComparison.Ordinal)
+                ? stored.Ticket
+                : null;
         }
     }
 }
@@ -111,14 +128,24 @@ internal sealed class AppFeatureAuthenticationGateway : IKazoFeatureAuthenticati
         string operation, KazoAuthenticationScope scope, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(operation);
+        if (!Enum.IsDefined(scope))
+        {
+            throw new ArgumentOutOfRangeException(nameof(scope), scope, "Unknown authentication scope.");
+        }
+
         string featureId = RequireFeature();
         FeatureRoleService roles = _roles();
-        if (scope == KazoAuthenticationScope.RoleHolder
-            && _caller.RequiresRole is { } role
-            && !roles.HasRole(_principal, role, _isRootElevated))
+        if (scope == KazoAuthenticationScope.RoleHolder)
         {
-            roles.RecordDenied(_caller, _principal);
-            throw new KazoUnauthorizedAccessException($"{_caller.Id}: the role '{role}' is required.");
+            // The scope proves the holder of the entry point's role: an entry point that requires no
+            // role has no holder to prove, so the scope fails closed there (use Administrator).
+            if (_caller.RequiresRole is not { } role || !roles.HasRole(_principal, role, _isRootElevated))
+            {
+                roles.RecordDenied(_caller, _principal);
+                throw new KazoUnauthorizedAccessException(_caller.RequiresRole is null
+                    ? $"{_caller.Id} requires no role: the RoleHolder scope is for an entry point marked RequiresRole."
+                    : $"{_caller.Id}: the role '{_caller.RequiresRole}' is required.");
+            }
         }
 
         IAdministratorAuthenticationAgent agent = _agent?.Invoke()
@@ -139,21 +166,18 @@ internal sealed class AppFeatureAuthenticationGateway : IKazoFeatureAuthenticati
             throw new KazoUnauthorizedAccessException($"{_featureName}: '{operation}' was not authenticated ({result.FailureReason}).");
         }
 
-        return roles.Tickets.Issue(featureId, operation, scope, result.AdministratorLogin ?? _principal.LoginName.Value);
+        return roles.Tickets.Issue(featureId, operation, scope, result.AdministratorLogin ?? _principal.LoginName.Value, _principal.UserId.ToString());
     }
 
     /// <inheritdoc />
-    public ValueTask ConsumeAsync(KazoAuthenticationTicket ticket, string operation, CancellationToken cancellationToken = default)
+    public ValueTask<KazoAuthenticationTicket> ConsumeAsync(KazoAuthenticationTicket ticket, string operation, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(ticket);
         ArgumentException.ThrowIfNullOrWhiteSpace(operation);
         string featureId = RequireFeature();
-        if (!_roles().Tickets.TryConsume(ticket.Token, featureId, operation))
-        {
-            throw new KazoUnauthorizedAccessException($"{_featureName}: the ticket does not authorize '{operation}' (expired, used, or for another operation).");
-        }
-
-        return ValueTask.CompletedTask;
+        return _roles().Tickets.TryConsume(ticket.Token, featureId, operation, _principal.UserId.ToString()) is { } stored
+            ? ValueTask.FromResult(stored)
+            : throw new KazoUnauthorizedAccessException($"{_featureName}: the ticket does not authorize '{operation}' (expired, used, of another user, or for another operation).");
     }
 
     private string RequireFeature() =>

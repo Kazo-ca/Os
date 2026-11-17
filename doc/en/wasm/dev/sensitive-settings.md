@@ -253,15 +253,15 @@ entry points; it gives no `Administrator` authority.
 | Grants | `/etc/kazoos/roles.config`, section `[roles]` | `role=<id>,<id>` (users' `N` ids); written by the system (`FeatureRoleService`) after an administrator; never a line for an administrator |
 | Reading | `FeatureRoleService.RolesOf` | at boot (`EcosystemBootCoordinator.FeatureRoles`), then at each grant; every declared role for an administrator or root |
 | Context | `IAppExecutionContext.Roles`, `FeatureAuthentication` | set by `AppExecutionContextFactory` |
-| Tickets | `FeatureOperationTickets` | 30 s, once, feature + operation |
+| Tickets | `FeatureOperationTickets` | 30 s, once, feature + operation + user; the OS keeps the ticket it issued and returns it on use; expired tickets are purged |
 
 **Authentication of an operation.** `AppFeatureAuthenticationGateway` (one per
 process) refuses a caller that is neither a feature nor one of its entry
-points. For `RoleHolder`, the user must hold the role of the entry point
-(otherwise `feature.role-denied` and a refusal before any window), then the
+points. For `RoleHolder`, the entry point must require a role and the user hold
+it (otherwise `feature.role-denied` and a refusal before any window), then the
 OS's agent (`AdministratorAuthenticationAgent`) opens its window with
-`RoleHolderLogin`: only that account is accepted (`not-the-session-user`
-otherwise), checked by `AdminElevationVerifier.VerifyUserAsync` (the user's own
+`RoleHolderLogin`: only that account is accepted, by password as by passkey
+(`not-the-session-user` otherwise), checked by `AdminElevationVerifier.VerifyUserAsync` (the user's own
 password, administrator or not; the lone guest confirms without one). For
 `Administrator`, any enabled administrator. Three failures cancel. Under
 `sudo`, the agent passes without a window and logs it (`via=sudo`).
@@ -271,6 +271,12 @@ password, administrator or not; the lone guest confirms without one). For
 for want of the role), `role.grant` and `role.revoke` (grant, with the
 administrator, the user and the role), and `users.role-grant` /
 `users.role-revoke` for the authentication of the administrator who makes them.
+
+**Reading again.** `FeatureRoleService` reads `roles.config` again when the
+file changes (`IOsSettingsService.DocumentChanged`), under the same lock as the
+grants: a revocation made elsewhere takes effect without a restart. An entry
+point that requires a role is checked before a running single instance gets
+the request, and before an elevation ticket is used up.
 
 **Known limit.** `roles.config` is not synchronized with the server yet (no
 list of synchronized system documents exists); the ADR plans it to be, like the

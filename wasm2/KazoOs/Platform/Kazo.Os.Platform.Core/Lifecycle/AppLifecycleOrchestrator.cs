@@ -468,12 +468,26 @@ public sealed class AppLifecycleOrchestrator
             return new AppLaunchResult(AppLaunchStatus.Disabled, ErrorCode: "lifecycle.app.disabled");
         }
 
+        // ADR 0247 §2: the role is checked before a running instance receives the request and before
+        // an elevation ticket is used up. A request that claims sudo is checked again once its ticket
+        // is consumed (root holds every role), but never reaches a running instance on that claim.
+        bool claimsRoot = request.ElevationToken is not null && request.ElevationScope == ElevationScope.SudoRoot;
+        if (!request.SystemScope && !claimsRoot && RefuseForRole(descriptor.Manifest, request.Principal, isRootElevated: false) is { } earlyRefusal)
+        {
+            return earlyRefusal;
+        }
+
         // A web site is one process, like a service (ADR 0073): a second activation finds it running.
         bool isImplicitlySingleton =
             (descriptor.Manifest.Kind == AppKind.Window && descriptor.Manifest.SingleInstancePerUser)
             || descriptor.Manifest.Kind is AppKind.Service or AppKind.Web;
         if (isImplicitlySingleton && _processManager.TryGetSingleton(request.AppId, out ProcessRecord existing))
         {
+            if (!request.SystemScope && RefuseForRole(descriptor.Manifest, request.Principal, isRootElevated: false) is { } singletonRefusal)
+            {
+                return singletonRefusal;
+            }
+
             DeliverToRunningInstance(existing, request);
             return new AppLaunchResult(AppLaunchStatus.FocusedExisting, existing);
         }

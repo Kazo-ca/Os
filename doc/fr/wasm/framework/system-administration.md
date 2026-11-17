@@ -226,10 +226,13 @@ un `requiresRole` qu'aucun rôle de la Feature ne déclare.
   autorisation pour chaque opération. `KazoFeatureAuthentication.AuthenticateAsync(opération, portée)`
   ouvre la fenêtre de l'OS (jamais une fenêtre de la Feature) :
   `KazoAuthenticationScope.RoleHolder` redemande le mot de passe de l'usager de
-  la session, qui doit détenir le rôle ; `Administrator` demande un
+  la session, qui doit détenir le rôle du point d'entrée (refusé depuis un point
+  d'entrée sans `RequiresRole` ou un service) ; `Administrator` demande un
   administrateur. Le billet rendu (`KazoAuthenticationTicket`) vaut 30 s, une
-  fois, pour cette Feature et cette opération : `ConsumeAsync(billet, opération)`
-  le refuse pour une autre opération. Sous `sudo`, aucune seconde fenêtre. Une
+  fois, pour cette Feature, cette opération et cet usager :
+  `ConsumeAsync(billet, opération)` le refuse pour une autre opération ou un
+  autre usager, et rend le billet émis par l'OS, dont la Feature lit `Scope`
+  (jamais la copie présentée). Sous `sudo`, aucune seconde fenêtre. Une
   app ordinaire est refusée. Détails :
   [`sensitive-settings.md`](../dev/sensitive-settings.md#5-rôles-des-features-et-authentification-des-opérations).
 

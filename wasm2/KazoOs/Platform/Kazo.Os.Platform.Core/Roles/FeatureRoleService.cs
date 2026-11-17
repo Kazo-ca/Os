@@ -116,6 +116,10 @@ public sealed class FeatureRoleService
         _settings = settings ?? throw new ArgumentNullException(nameof(settings));
         _audit = audit;
         _clock = clock ?? (static () => DateTimeOffset.UtcNow);
+
+        // A grant written elsewhere (root editing roles.config, another process) is read again, so a
+        // revocation takes effect without a restart.
+        _settings.DocumentChanged += OnDocumentChanged;
     }
 
     /// <summary>Gets the tickets of the operations of the features (ADR 0247 §3), shared by every process of the session.</summary>
@@ -128,10 +132,48 @@ public sealed class FeatureRoleService
             .SelectMany(static feature => (feature.Roles ?? []).Select(role => new DeclaredFeatureRole(feature.Id, feature.Name, role)))
             .OrderBy(static declared => declared.Role.Id, StringComparer.Ordinal)];
 
-    /// <summary>Reads <c>roles.config</c> again.</summary>
+    /// <summary>Reads <c>roles.config</c> again, after any grant in progress.</summary>
     /// <param name="cancellationToken">Cancels the read.</param>
-    public async ValueTask RefreshAsync(CancellationToken cancellationToken = default) =>
-        _grants = FeatureRolesDocument.Parse(await _settings.ReadFileAsync(FeatureRolesDocument.MachineFile, cancellationToken).ConfigureAwait(false));
+    public async ValueTask RefreshAsync(CancellationToken cancellationToken = default)
+    {
+        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            _grants = FeatureRolesDocument.Parse(await _settings.ReadFileAsync(FeatureRolesDocument.MachineFile, cancellationToken).ConfigureAwait(false));
+        }
+        finally
+        {
+            _gate.Release();
+        }
+    }
+
+    /// <summary>Gets the error of the last background read of <c>roles.config</c>, or <see langword="null"/>.</summary>
+    public Exception? LastRefreshError { get; private set; }
+
+    private void OnDocumentChanged(object? sender, OsSettingsChangedEventArgs args)
+    {
+        if (args.Concerns(FeatureRolesDocument.MachineFile.RelativePath))
+        {
+            _ = RefreshInBackgroundAsync();
+        }
+    }
+
+    /// <summary>
+    /// Reads the file again off the writer's stack (the event is raised while a write may hold the
+    /// gate). A failed read keeps the previous grants and is kept in <see cref="LastRefreshError"/>.
+    /// </summary>
+    private async Task RefreshInBackgroundAsync()
+    {
+        try
+        {
+            await RefreshAsync().ConfigureAwait(false);
+            LastRefreshError = null;
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            LastRefreshError = exception;
+        }
+    }
 
     /// <summary>
     /// Gets the roles <paramref name="principal"/> holds among those the installed features declare:

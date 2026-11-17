@@ -89,7 +89,10 @@ public sealed class AdministratorAuthenticationAgent : IAdministratorAuthenticat
         {
             try
             {
-                return await AttemptCoreAsync(login, token => PasskeyVerifier!(login ?? string.Empty, token), ct).ConfigureAwait(false);
+                // ADR 0247 §3: for the RoleHolder scope, only the session user may answer, with a passkey too.
+                return request.RoleHolderLogin is { } holder && !string.Equals((login ?? string.Empty).Trim(), holder, StringComparison.OrdinalIgnoreCase)
+                    ? await AttemptCoreAsync(login ?? string.Empty, static _ => Task.FromResult(AdminElevationVerificationResult.Failed("not-the-session-user")), ct).ConfigureAwait(false)
+                    : await AttemptCoreAsync(login ?? string.Empty, token => PasskeyVerifier!(login ?? string.Empty, token), ct).ConfigureAwait(false);
             }
             catch (OperationCanceledException) when (!ct.IsCancellationRequested)
             {

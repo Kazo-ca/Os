@@ -12,9 +12,10 @@ public enum KazoAuthenticationScope
 
 /// <summary>
 /// The proof that the OS authenticated a sensitive operation of a feature (ADR 0247 §3): valid
-/// 30 seconds, once, for the operation it names. The feature presents it with
+/// 30 seconds, once, for the operation and the user it names. The feature presents it with
 /// <see cref="KazoFeatureAuthentication.ConsumeAsync(KazoAuthenticationTicket, string, CancellationToken)"/>
-/// before it acts; a ticket of another operation is refused.
+/// before it acts; a ticket of another operation is refused. Only its <see cref="Token"/> counts: the
+/// OS answers with the ticket it issued, whose <see cref="Scope"/> the feature reads.
 /// </summary>
 /// <param name="Token">The ticket's identifier.</param>
 /// <param name="FeatureId">The feature it was issued to.</param>
@@ -35,18 +36,27 @@ public interface IKazoFeatureAuthentication
     /// <summary>Gets whether the host can authenticate an operation.</summary>
     bool IsSupported => true;
 
-    /// <summary>Asks the OS to authenticate <paramref name="operation"/>; three failures cancel.</summary>
+    /// <summary>
+    /// Asks the OS to authenticate <paramref name="operation"/>; three failures cancel. The
+    /// <see cref="KazoAuthenticationScope.RoleHolder"/> scope is for an entry point marked
+    /// <c>RequiresRole</c>, whose role the user must hold; elsewhere (an entry point without a role, a
+    /// service) it is refused, and <see cref="KazoAuthenticationScope.Administrator"/> applies.
+    /// </summary>
     /// <param name="operation">The operation, shown in the window and written to <c>/var/log/auth.log</c>.</param>
     /// <param name="scope">Who authenticates.</param>
     /// <param name="cancellationToken">Cancels the window.</param>
     /// <returns>The ticket of the operation.</returns>
     ValueTask<KazoAuthenticationTicket> AuthenticateAsync(string operation, KazoAuthenticationScope scope, CancellationToken cancellationToken = default);
 
-    /// <summary>Presents a ticket before the operation: it is used up, and refused when expired, used or for another operation.</summary>
+    /// <summary>
+    /// Presents a ticket before the operation: it is used up, and refused when expired, used, of
+    /// another user or for another operation.
+    /// </summary>
     /// <param name="ticket">The ticket <see cref="AuthenticateAsync"/> returned.</param>
     /// <param name="operation">The operation about to run.</param>
     /// <param name="cancellationToken">Cancels the check.</param>
-    ValueTask ConsumeAsync(KazoAuthenticationTicket ticket, string operation, CancellationToken cancellationToken = default);
+    /// <returns>The ticket the OS issued: read its <see cref="KazoAuthenticationTicket.Scope"/> from here, never from the copy presented.</returns>
+    ValueTask<KazoAuthenticationTicket> ConsumeAsync(KazoAuthenticationTicket ticket, string operation, CancellationToken cancellationToken = default);
 }
 
 /// <summary>The authentication of a host that has none: every call is refused.</summary>
@@ -67,7 +77,7 @@ public sealed class UnsupportedFeatureAuthentication : IKazoFeatureAuthenticatio
         throw new NotSupportedException("This host cannot authenticate an operation of a feature.");
 
     /// <inheritdoc />
-    public ValueTask ConsumeAsync(KazoAuthenticationTicket ticket, string operation, CancellationToken cancellationToken = default) =>
+    public ValueTask<KazoAuthenticationTicket> ConsumeAsync(KazoAuthenticationTicket ticket, string operation, CancellationToken cancellationToken = default) =>
         throw new NotSupportedException("This host cannot authenticate an operation of a feature.");
 }
 
@@ -78,7 +88,7 @@ public sealed class UnsupportedFeatureAuthentication : IKazoFeatureAuthenticatio
 /// <example>
 /// <code>
 /// KazoAuthenticationTicket ticket = await KazoFeatureAuthentication.AuthenticateAsync("x86.vm.delete-shared", KazoAuthenticationScope.RoleHolder);
-/// await KazoFeatureAuthentication.ConsumeAsync(ticket, "x86.vm.delete-shared");
+/// KazoAuthenticationTicket issued = await KazoFeatureAuthentication.ConsumeAsync(ticket, "x86.vm.delete-shared");
 /// // … delete the machine.
 /// </code>
 /// </example>
@@ -100,8 +110,9 @@ public static class KazoFeatureAuthentication
     /// <param name="ticket">The ticket <see cref="AuthenticateAsync"/> returned.</param>
     /// <param name="operation">The operation about to run.</param>
     /// <param name="cancellationToken">Cancels the check.</param>
-    /// <exception cref="IO.KazoUnauthorizedAccessException">The ticket is expired, used, of another feature or of another operation.</exception>
-    public static ValueTask ConsumeAsync(KazoAuthenticationTicket ticket, string operation, CancellationToken cancellationToken = default)
+    /// <returns>The ticket the OS issued, whose scope and login are authoritative.</returns>
+    /// <exception cref="IO.KazoUnauthorizedAccessException">The ticket is expired, used, of another user, of another feature or of another operation.</exception>
+    public static ValueTask<KazoAuthenticationTicket> ConsumeAsync(KazoAuthenticationTicket ticket, string operation, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(ticket);
         ArgumentException.ThrowIfNullOrWhiteSpace(operation);

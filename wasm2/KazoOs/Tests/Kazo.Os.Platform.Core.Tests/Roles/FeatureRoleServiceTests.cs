@@ -109,6 +109,26 @@ public sealed class FeatureRoleServiceTests
     }
 
     [Fact]
+    public async Task A_grant_written_by_another_service_is_read_without_a_restart()
+    {
+        FeatureRoleHarness harness = await FeatureRoleHarness.CreateAsync();
+        AuthenticatedPrincipal bob = await harness.LoginAsync(harness.Files.Bob);
+        FeatureRoleService other = new(() => harness.Catalog, harness.Files.Settings);
+
+        await other.GrantAsync(FeatureRoleFixtures.Manager, harness.Files.Bob, "carol");
+
+        // roles.config changed: the first service reads it again by itself (off the writer's stack).
+        DateTime deadline = DateTime.UtcNow.AddSeconds(5);
+        while (!harness.Roles.HasRole(bob, FeatureRoleFixtures.Manager) && DateTime.UtcNow < deadline)
+        {
+            await Task.Delay(10);
+        }
+
+        Assert.True(harness.Roles.HasRole(bob, FeatureRoleFixtures.Manager));
+        Assert.Null(harness.Roles.LastRefreshError);
+    }
+
+    [Fact]
     public async Task A_role_no_installed_feature_declares_cannot_be_granted()
     {
         FeatureRoleHarness harness = await FeatureRoleHarness.CreateAsync();

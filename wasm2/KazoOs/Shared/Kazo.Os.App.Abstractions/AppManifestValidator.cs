@@ -170,12 +170,6 @@ public static partial class AppManifestValidator
     }
 
     /// <summary>
-    /// ADR 0246 §1 and §2 on one manifest: only a feature declares permissions; it names one prefix,
-    /// not reserved by the built-in catalog; each permission is <c>&lt;prefix&gt;.&lt;name&gt;</c>,
-    /// declared once, a dangerous one with its risk statement; it covers only permissions of the same
-    /// feature, never one more dangerous than itself.
-    /// </summary>
-    /// <summary>
     /// ADR 0247 §1: only a feature declares roles, each under its permission prefix
     /// (<c>&lt;prefix&gt;.&lt;name&gt;</c>, a lowercase name after the dot), with a title; only an entry
     /// point of a feature names one in <c>requiresRole</c>.
@@ -223,6 +217,12 @@ public static partial class AppManifestValidator
         }
     }
 
+    /// <summary>
+    /// ADR 0246 §1 and §2 on one manifest: only a feature declares permissions; it names one prefix,
+    /// not reserved by the built-in catalog; each permission is <c>&lt;prefix&gt;.&lt;name&gt;</c>,
+    /// declared once, a dangerous one with its risk statement; it covers only permissions of the same
+    /// feature, never one more dangerous than itself.
+    /// </summary>
     private static void ValidateProvidedCapabilities(AppManifest manifest, List<ManifestValidationError> errors)
     {
         IReadOnlyList<AppProvidedCapabilityManifest> declared = manifest.ProvidedCapabilities ?? [];
