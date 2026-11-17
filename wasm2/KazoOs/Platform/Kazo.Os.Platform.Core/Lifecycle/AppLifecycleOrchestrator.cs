@@ -405,10 +405,7 @@ public sealed class AppLifecycleOrchestrator
         }
 
         Roles.FeatureRoleService? roles = this.Roles?.Invoke();
-        bool holds = roles is not null
-            ? roles.HasRole(principal, role, isRootElevated)
-            : isRootElevated || AppAuthorityPolicy.Satisfies(principal.Authority, AppAuthority.Administrator);
-        if (holds)
+        if (Kazo.Os.Platform.Core.Roles.FeatureRoleService.OpensTo(roles, manifest, principal, isRootElevated))
         {
             return null;
         }

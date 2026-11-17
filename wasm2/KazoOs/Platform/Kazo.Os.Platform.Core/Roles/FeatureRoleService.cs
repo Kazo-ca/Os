@@ -157,6 +157,29 @@ public sealed class FeatureRoleService
     public bool HasRole(AuthenticatedPrincipal principal, string role, bool isRootElevated = false) =>
         RolesOf(principal, isRootElevated).Contains(role);
 
+    /// <summary>
+    /// Gets whether <paramref name="entryPoint"/> opens to <paramref name="principal"/> (ADR 0247 §2): it
+    /// requires no role, or the user holds it. Without the service (a host with no roles), only an
+    /// administrator or root sees an entry point that requires a role: the check fails closed.
+    /// </summary>
+    /// <param name="roles">The roles of the features, or <see langword="null"/>.</param>
+    /// <param name="entryPoint">The entry point.</param>
+    /// <param name="principal">The user.</param>
+    /// <param name="isRootElevated">Whether the process runs as root under <c>sudo</c>.</param>
+    public static bool OpensTo(FeatureRoleService? roles, AppManifest entryPoint, AuthenticatedPrincipal principal, bool isRootElevated = false)
+    {
+        ArgumentNullException.ThrowIfNull(entryPoint);
+        ArgumentNullException.ThrowIfNull(principal);
+        if (entryPoint.RequiresRole is not { } role)
+        {
+            return true;
+        }
+
+        return roles is not null
+            ? roles.HasRole(principal, role, isRootElevated)
+            : isRootElevated || AppAuthorityPolicy.Satisfies(principal.Authority, AppAuthority.Administrator);
+    }
+
     /// <summary>Gets the ordinary users <c>roles.config</c> lists for <paramref name="role"/>.</summary>
     /// <param name="role">The role.</param>
     public IReadOnlySet<string> HoldersOf(string role) =>

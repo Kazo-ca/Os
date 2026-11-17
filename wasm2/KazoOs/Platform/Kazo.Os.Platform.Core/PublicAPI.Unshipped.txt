@@ -254,3 +254,4 @@ const Kazo.Os.Platform.Core.Lifecycle.AppLifecycleOrchestrator.RoleRequiredError
 Kazo.Os.Platform.Core.Shell.ShellFailure.RoleRequired = 7 -> Kazo.Os.Platform.Core.Shell.ShellFailure
 Kazo.Os.Platform.Core.Lifecycle.AppLifecycleOrchestrator.Roles.get -> System.Func<Kazo.Os.Platform.Core.Roles.FeatureRoleService?>?
 Kazo.Os.Platform.Core.Lifecycle.AppLifecycleOrchestrator.Roles.init -> void
+static Kazo.Os.Platform.Core.Roles.FeatureRoleService.OpensTo(Kazo.Os.Platform.Core.Roles.FeatureRoleService? roles, Kazo.Os.App.Abstractions.AppManifest! entryPoint, Kazo.Os.Simulation.Abstractions.Sessions.AuthenticatedPrincipal! principal, bool isRootElevated = false) -> bool
