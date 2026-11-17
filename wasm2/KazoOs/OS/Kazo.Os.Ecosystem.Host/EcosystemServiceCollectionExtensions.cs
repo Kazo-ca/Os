@@ -1589,6 +1589,7 @@ public static class EcosystemServiceCollectionExtensions
         IServiceProvider provider, string type, string featureId, string accountId, Action availabilityChanged, CancellationToken cancellationToken)
     {
         CloudAccountService accounts = provider.GetRequiredService<CloudAccountService>();
+        await GrantFeatureServiceCapabilitiesAsync(provider, featureId, cancellationToken).ConfigureAwait(false);
         try
         {
             Kazo.Os.AppSdk.Drives.IKazoDriveProviderContext context = await accounts
@@ -1601,6 +1602,30 @@ public static class EcosystemServiceCollectionExtensions
             throw new Kazo.Os.AppSdk.Drives.KazoDriveException(
                 Kazo.Os.AppSdk.Drives.KazoDriveErrorKind.SignInRequired, $"{type}: {exception.Message}", exception);
         }
+    }
+
+    /// <summary>
+    /// ADR 0282 §3: a drive provider runs in its feature's process, as <c>kazoos-svc</c>. Its
+    /// dangerous capabilities (<c>drives.provide</c>, which its network calls need) are the ones the
+    /// administrator approved for the machine when the feature was installed: they are granted to
+    /// that account here, before each connection, without asking anything. A capability still
+    /// pending or refused stays refused, and the provider's calls fail as for any app.
+    /// </summary>
+    private static async ValueTask GrantFeatureServiceCapabilitiesAsync(
+        IServiceProvider provider, string featureId, CancellationToken cancellationToken)
+    {
+        if (provider.GetService<IDangerousCapabilityGate>() is not { } gate
+            || !provider.GetRequiredService<AppCatalog>().Manifests.TryGetValue(featureId, out AppManifest? feature))
+        {
+            return;
+        }
+
+        await gate.EnsureDecidedAsync(
+            feature,
+            ServiceAccount.CreatePrincipal(InstallationId.FromGuid(Guid.NewGuid()), DeviceId.FromGuid(Guid.NewGuid()), DateTimeOffset.UtcNow),
+            prompt: null,
+            interactive: false,
+            cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>

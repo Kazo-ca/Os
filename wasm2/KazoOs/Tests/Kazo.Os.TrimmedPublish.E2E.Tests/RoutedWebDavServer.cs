@@ -44,6 +44,9 @@ internal sealed class RoutedWebDavServer
     /// <summary>Gets the methods received, in order (<c>PROPFIND</c>, <c>PUT</c>…), preflights excluded.</summary>
     public List<string> Methods { get; } = [];
 
+    /// <summary>Gets every request received, preflights included, with its answer (<c>PROPFIND /path 207</c>), to explain a failure.</summary>
+    public List<string> Requests { get; } = [];
+
     /// <summary>Starts answering the requests of <paramref name="context"/> to <see cref="Origin"/>.</summary>
     public Task RouteAsync(IBrowserContext context) => context.RouteAsync(Origin + "/**", AnswerAsync);
 
@@ -72,6 +75,11 @@ internal sealed class RoutedWebDavServer
         Dictionary<string, string> headers = await request.AllHeadersAsync();
         if (request.Method == "OPTIONS")
         {
+            lock (_gate)
+            {
+                Requests.Add($"OPTIONS {new Uri(request.Url).AbsolutePath} 204");
+            }
+
             // The CORS preflight of a PROPFIND, a PUT or a request with Authorization.
             await FulfillAsync(route, 204, [], [
                 new("Access-Control-Allow-Methods", "GET, PUT, DELETE, PROPFIND, MKCOL, MOVE, OPTIONS"),
@@ -81,6 +89,11 @@ internal sealed class RoutedWebDavServer
         }
 
         (int status, byte[] body, KeyValuePair<string, string>[] extra) = Handle(request, headers);
+        lock (_gate)
+        {
+            Requests.Add($"{request.Method} {new Uri(request.Url).AbsolutePath} {status}");
+        }
+
         await FulfillAsync(route, status, body, extra);
     }
 

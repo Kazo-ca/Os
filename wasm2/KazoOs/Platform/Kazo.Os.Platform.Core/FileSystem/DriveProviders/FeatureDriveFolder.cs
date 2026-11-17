@@ -252,6 +252,12 @@ internal sealed class FeatureDriveFolder : IHostFolder, IHostFolderQuota, ICondi
         return account.State == CloudAccountState.NeedsReconnect ? HostFolderPermission.Prompt : HostFolderPermission.Granted;
     }
 
+    /// <summary>
+    /// Opens the provider's folder now and waits for it (bounded by <see cref="FeatureDriveSource.OpenTimeout"/>),
+    /// for a drive the user is connecting; a failure is already written to the feature's log.
+    /// </summary>
+    internal Task OpenNowAsync() => StartOpening();
+
     /// <summary>Starts loading the provider and opening the folder, once.</summary>
     [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "The provider's assembly is checked by AppPackageApiCheck at install time.")]
     private Task<OpenedFolder?> StartOpening()

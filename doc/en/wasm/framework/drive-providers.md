@@ -324,12 +324,16 @@ Work item 4 wires the declared types into the file system
   is a new provider.
 - **Loaded at the first drive.** Nothing loads at install or at the user's
   login. At the first drive of the type that opens, the OS loads the assembly,
-  starts the feature's service process (account `kazoos-svc`, its permissions)
-  and creates **one instance per page**, with the `(IFeatureServiceContext)`
+  starts the feature's service process (account `kazoos-svc`, its permissions:
+  before each connection, the OS grants it, without asking, the dangerous
+  permissions the administrator approved for the machine, such as
+  `drives.provide`) and creates **one instance per page**, with the `(IFeatureServiceContext)`
   constructor, else `()`. Every call to the provider runs in the feature's
   context. A failure is never kept: the next drive tries again.
-- **Login never waits.** The drive is mounted **disconnected** until `OpenAsync`
-  answers, then reconnects by itself. Loading and opening get 20 s at most,
+- **Login never waits.** A drive mounted again at login is **disconnected**
+  until `OpenAsync` answers, then reconnects by itself. A drive the user has
+  just connected (form, `mount`) waits for `OpenAsync` before it is mounted,
+  so that Explorer opens it at once. Loading and opening get 20 s at most,
   `GetStateAsync` 10 s.
 - **A provider that fails** (assembly or class missing, constructor that
   throws, `OpenAsync` that throws or is too slow) leaves the drive

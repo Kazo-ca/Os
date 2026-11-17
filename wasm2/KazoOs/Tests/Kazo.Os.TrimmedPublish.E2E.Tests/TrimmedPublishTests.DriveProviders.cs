@@ -38,6 +38,9 @@ public sealed partial class TrimmedPublishTests
         RoutedWebDavServer server = new();
         server.PlaceFile("from-server.txt", "written by the server");
         await server.RouteAsync(session.Context);
+
+        // Writing a new file first asks the server whether it exists: its 404 is expected.
+        session.ExpectNotFoundFrom(RoutedWebDavServer.Origin);
         try
         {
             await NavigateWhenReadyAsync(page, settings.Url);
@@ -98,7 +101,7 @@ public sealed partial class TrimmedPublishTests
 
             // --- Connect: the File Explorer's dialog offers the type and shows its form ---
             await ConnectWebDavDriveAsync(page);
-            Log($"the WebDAV drive was connected by its form; the server received {string.Join(", ", server.Methods.Distinct())}.");
+            Log($"the WebDAV drive was connected by its form; the server received: {string.Join("; ", server.Requests)}.");
             await CloseAllWindowsAsync(page);
 
             // --- Use: read the server's file, write one the server receives, read it back ---
@@ -125,7 +128,7 @@ public sealed partial class TrimmedPublishTests
             }
 
             Assert.Contains("PUT", server.Methods);
-            Log("the file written in the drive reached the WebDAV server (PUT) and reads back.");
+            Log($"the file written in the drive reached the WebDAV server (PUT) and reads back; the server received: {string.Join("; ", server.Requests)}.");
 
             session.AssertNoErrors("drive provider feature");
             await CloseAllWindowsAsync(page);

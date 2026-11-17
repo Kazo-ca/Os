@@ -326,13 +326,18 @@ Le chantier 4 branche les types déclarés dans le système de fichiers
 - **Chargé au premier lecteur.** Rien ne se charge à l'installation ni à la
   connexion de l'utilisateur. Au premier lecteur du type ouvert, l'OS charge
   l'assemblage, démarre le processus de service de la fonctionnalité (compte
-  `kazoos-svc`, ses permissions) et crée **une instance par page**, avec le
+  `kazoos-svc`, ses permissions : avant chaque connexion, l'OS lui accorde sans
+  rien demander les permissions dangereuses que l'administrateur a approuvées
+  pour la machine, comme `drives.provide`) et crée **une instance par page**, avec le
   constructeur `(IFeatureServiceContext)` sinon `()`. Chaque appel au
   fournisseur s'exécute dans le contexte de la fonctionnalité. Un échec n'est
   jamais gardé : le lecteur suivant réessaie.
-- **La connexion n'attend jamais.** Le lecteur est monté **déconnecté** tant que
-  `OpenAsync` n'a pas répondu, puis se reconnecte seul. Charger et ouvrir ont
-  20 s au plus, `GetStateAsync` 10 s.
+- **L'ouverture de session n'attend jamais.** Un lecteur remonté à l'ouverture
+  de session est **déconnecté** tant que `OpenAsync` n'a pas répondu, puis se
+  reconnecte seul. Un lecteur que l'utilisateur vient de connecter (formulaire,
+  `mount`) attend en revanche `OpenAsync` avant d'être monté, pour que
+  l'Explorateur l'ouvre aussitôt. Charger et ouvrir ont 20 s au plus,
+  `GetStateAsync` 10 s.
 - **Un fournisseur qui échoue** (assemblage ou classe absent, constructeur qui
   lève, `OpenAsync` qui lève ou trop lent) laisse le lecteur déconnecté et écrit
   une ligne `drives: <type>: <raison>` dans `/var/log/apps/<fonctionnalité>.log`
