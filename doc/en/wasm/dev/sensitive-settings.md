@@ -257,8 +257,9 @@ entry points; it gives no `Administrator` authority.
 
 **Authentication of an operation.** `AppFeatureAuthenticationGateway` (one per
 process) refuses a caller that is neither a feature nor one of its entry
-points. For `RoleHolder`, the entry point must require a role and the user hold
-it (otherwise `feature.role-denied` and a refusal before any window), then the
+points. For `RoleHolder`, the user must hold the role of the entry point marked
+`RequiresRole`, or a role of the feature from another entry point
+([ADR 0283](adr/0283-feature-roles-isinrole-adjustments.md) §5) (otherwise `feature.role-denied` and a refusal before any window), then the
 OS's agent (`AdministratorAuthenticationAgent`) opens its window with
 `RoleHolderLogin`: only that account is accepted, by password as by passkey
 (`not-the-session-user` otherwise), checked by `AdminElevationVerifier.VerifyUserAsync` (the user's own
