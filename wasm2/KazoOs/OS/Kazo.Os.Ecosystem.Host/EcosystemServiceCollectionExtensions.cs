@@ -13,8 +13,6 @@ using Kazo.Os.Platform.Core.ServerConnection;
 using Kazo.Os.Ecosystem.Administration;
 using Kazo.Os.Platform.Core.Administration;
 using Kazo.Os.Platform.Core.CloudAccounts;
-using Kazo.Os.Platform.Core.CloudDrives.Dropbox;
-using Kazo.Os.Platform.Core.CloudDrives.OneDrive;
 using Kazo.Os.Platform.Core.Power;
 using Kazo.Os.Platform.Core.Backup;
 using Kazo.Os.Platform.Core.Storage;
@@ -560,7 +558,8 @@ public static class EcosystemServiceCollectionExtensions
         // the OS like Dropbox and OneDrive; the catalog is read at each call, so a feature installed
         // or removed is offered or withdrawn without a restart.
         services.TryAddScoped<ICloudProviderCatalog>(provider => new CloudProviderCatalog(
-            provider.GetService<CloudProviderSettings>() ?? CloudProviderSettings.None,
+            // ADR 0282 §5: a provider whose connector the build left out is never offered.
+            CloudDriveServiceCollectionExtensions.WithLeftOutTypes(provider.GetService<CloudProviderSettings>() ?? CloudProviderSettings.None),
             provider.GetRequiredService<IOsSettingsService>())
         {
             DeclaredProviders = () => provider.GetService<AppCatalog>() is { } catalog
@@ -579,27 +578,9 @@ public static class EcosystemServiceCollectionExtensions
             drives: () => provider.GetService<NetworkDriveService>(),
             provider.GetService<IEventBus>(),
             logger: provider.GetService<ILogger<CloudAccountService>>()));
-        // ADR 0267 §6: the Dropbox connector, a drive source of the network drive service. It is
-        // offered only when KazoOs:CloudDrives (or /etc/kazoos/cloud-drives.config) has a Dropbox app key.
-        services.AddScoped<INetworkDriveSource>(provider => new DropboxDriveSource(
-            provider.GetRequiredService<CloudAccountService>(),
-            provider.GetRequiredService<ICloudProviderCatalog>(),
-            new HttpClient(),
-            provider.GetService<IHostActivitySignal>()));
-        // ADR 0267 §6: OneDrive drives over Microsoft Graph, offered when OneDrive has an app id.
-        services.AddScoped<INetworkDriveSource>(provider => new OneDriveDriveSource(
-            provider.GetRequiredService<CloudAccountService>(),
-            provider.GetRequiredService<ICloudProviderCatalog>(),
-            new HttpClient(),
-            provider.GetService<IHostActivitySignal>()));
-        // ADR 0267 §6: buckets of S3 compatible services, signed with SigV4 in the OS; the service
-        // and the keys are an s3 cloud account above. Drives mount through NetworkDriveService.
-        services.AddScoped<INetworkDriveSource>(provider => new Kazo.Os.Platform.Core.CloudDrives.S3.S3DriveSource(
-            provider.GetRequiredService<CloudAccountService>(),
-            new HttpClient(),
-            provider.GetService<IEventBus>(),
-            provider.GetService<IHostActivitySignal>(),
-            logger: provider.GetService<ILogger<Kazo.Os.Platform.Core.CloudDrives.S3.S3DriveSource>>()));
+        // ADR 0267 §6: the shipped connectors (Dropbox, OneDrive, S3), drive sources of the network
+        // drive service, each as the build kept it (ADR 0282 §5, build/Kazo.Os.CloudDrives.targets).
+        services.AddKazoOsShippedCloudDrives();
 
         // passwd and the Settings "Users" tab (ADR 0120): new credentials hashed through Web Crypto
         // like at login, the login keyring re-sealed or set aside, every attempt in auth.log.

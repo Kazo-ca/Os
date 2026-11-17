@@ -103,6 +103,20 @@ public sealed class NetworkDriveService : IDisposable, Kazo.Os.Platform.Core.Clo
     private readonly SemaphoreSlim _gate = new(1, 1);
     private readonly Dictionary<string, MountedDrive> _mounted = new(StringComparer.Ordinal);
 
+    /// <summary>
+    /// Lines of the list kept without being mounted (ADR 0282 §5): drives of a shipped type this host
+    /// left out or switched off. They stay in the user's list and come back when the type is on
+    /// again; their mount point is never given to another drive. Keyed by mount point.
+    /// </summary>
+    private readonly Dictionary<string, (string Owner, DriveRecord Record)> _setAside = new(StringComparer.Ordinal);
+
+    /// <summary>
+    /// The drive types shipped with Kazo OS (ADR 0282 §5). A line of one of them is kept when this
+    /// host has no source for it (a build without that connector), instead of being dropped like
+    /// a type no build of Kazo OS knows.
+    /// </summary>
+    internal static readonly IReadOnlySet<string> ShippedCloudTypes = new HashSet<string>(["dropbox", "onedrive", "s3"], StringComparer.Ordinal);
+
     /// <summary>Initializes the service with the folders of the computer as its only source (ADR 0181).</summary>
     /// <param name="router">The mount table.</param>
     /// <param name="access">The browser's folder dialog and handle store.</param>
@@ -527,6 +541,12 @@ public sealed class NetworkDriveService : IDisposable, Kazo.Os.Platform.Core.Clo
             // Another user's drives do not outlive their session, even without a logout event.
             await UnmountWhereAsync(drive => drive.Provider.OwnerId != principal.LoginName.Value).ConfigureAwait(false);
             List<DriveRecord> records = await LoadTableAsync(principal, cancellationToken).ConfigureAwait(false);
+            lock (_mounted)
+            {
+                // Rebuilt from the list at each login; another user's lines never outlive their session.
+                _setAside.Clear();
+            }
+
             bool dropped = false;
             foreach (DriveRecord record in records)
             {
@@ -548,7 +568,22 @@ public sealed class NetworkDriveService : IDisposable, Kazo.Os.Platform.Core.Clo
                     continue;
                 }
 
-                if (!_sources.TryGetValue(record.SourceType, out INetworkDriveSource? source))
+                if (!_sources.TryGetValue(record.SourceType, out INetworkDriveSource? source)
+                    ? ShippedCloudTypes.Contains(record.SourceType)
+                    : source is SwitchableDriveSource switchable && !await switchable.IsEnabledAsync(cancellationToken).ConfigureAwait(false))
+                {
+                    // ADR 0282 §5: a shipped type this build left out or that is switched off. The line
+                    // stays in the list, unmounted, until the type is on again.
+                    _logger.LogInformation("Network drive {MountPoint} of the disabled type {Type} is kept without being mounted.", record.MountPoint, record.SourceType);
+                    lock (_mounted)
+                    {
+                        _setAside[path.Value] = (principal.LoginName.Value, record with { MountPoint = path.Value });
+                    }
+
+                    continue;
+                }
+
+                if (source is null)
                 {
                     // A source this host does not have (an older or a different build): dropped.
                     _logger.LogWarning("Network drive {MountPoint} has the unknown type {Type}; it is dropped.", record.MountPoint, record.SourceType);
@@ -770,6 +805,11 @@ public sealed class NetworkDriveService : IDisposable, Kazo.Os.Platform.Core.Clo
             throw new NetworkDriveException(NetworkDriveError.InvalidMountPoint, $"{path}: already mounted");
         }
 
+        if (IsSetAside(path))
+        {
+            throw new NetworkDriveException(NetworkDriveError.InvalidMountPoint, $"{path}: kept for a drive of a disabled type");
+        }
+
         FileSystemEntryMetadata metadata = existing.Value!.Metadata;
         bool owned = metadata.OwnerId == principal.LoginName.Value || principal.Authority >= AppAuthority.Administrator;
         FileSystemResult<FileSystemDirectorySnapshot> listing = metadata.Kind == FileSystemEntryKind.Directory
@@ -795,13 +835,22 @@ public sealed class NetworkDriveService : IDisposable, Kazo.Os.Platform.Core.Clo
         for (int attempt = 1; attempt < 100; attempt++)
         {
             VirtualPath candidate = VirtualPath.Parse($"{MountRoot.Value}/{(attempt == 1 ? name : $"{name}-{attempt}")}");
-            if (await TryCreateMountPointAsync(root, candidate, context, cancellationToken).ConfigureAwait(false))
+            if (!IsSetAside(candidate) && await TryCreateMountPointAsync(root, candidate, context, cancellationToken).ConfigureAwait(false))
             {
                 return candidate;
             }
         }
 
         throw new NetworkDriveException(NetworkDriveError.InvalidMountPoint, $"{MountRoot}: no free mount point for '{name}'");
+    }
+
+    /// <summary>Gets whether a line kept for a disabled type holds this mount point (ADR 0282 §5).</summary>
+    private bool IsSetAside(VirtualPath path)
+    {
+        lock (_mounted)
+        {
+            return _setAside.ContainsKey(path.Value);
+        }
     }
 
     private static async ValueTask<bool> TryCreateMountPointAsync(
@@ -888,8 +937,9 @@ public sealed class NetworkDriveService : IDisposable, Kazo.Os.Platform.Core.Clo
             [
                 .. _mounted.Values
                     .Where(drive => drive.Provider.OwnerId == principal.LoginName.Value)
-                    .OrderBy(static drive => drive.Record.MountPoint, StringComparer.Ordinal)
                     .Select(static drive => drive.Record)
+                    .Concat(_setAside.Values.Where(kept => kept.Owner == principal.LoginName.Value).Select(static kept => kept.Record))
+                    .OrderBy(static record => record.MountPoint, StringComparer.Ordinal)
             ];
         }
 

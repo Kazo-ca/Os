@@ -29,6 +29,31 @@ public sealed record CloudProviderSettings(
     public static CloudProviderSettings None { get; } = new();
 
     /// <summary>
+    /// Gets the drive types switched off on this host (ADR 0282 section 5): <c>dropbox</c>,
+    /// <c>onedrive</c>, <c>s3</c>. They come from <c>KazoOs:CloudDrives:Disabled</c> and from the
+    /// connectors the build left out; <see cref="OverriddenBy"/> adds the <c>disabled</c> key of
+    /// <c>/etc/kazoos/cloud-drives.config</c>. A disabled type is never offered, even with an app id.
+    /// </summary>
+    public IReadOnlyCollection<string> Disabled { get; init; } = [];
+
+    /// <summary>Gets whether <paramref name="type"/> is switched off on this host.</summary>
+    /// <param name="type">A drive type or provider id, e.g. <c>dropbox</c>.</param>
+    public bool IsDisabled(string type) => Disabled.Contains(type, StringComparer.Ordinal);
+
+    /// <summary>
+    /// Reads a list of drive types as an administrator writes it: separated by commas, semicolons or
+    /// spaces, case ignored (<c>"Dropbox, s3"</c>). Empty entries are ignored.
+    /// </summary>
+    /// <param name="value">The text of <c>KazoOs:CloudDrives:Disabled</c> or of the <c>disabled</c> key.</param>
+    /// <returns>The types in lower case, each once.</returns>
+    public static IReadOnlyList<string> ParseTypes(string? value) =>
+        string.IsNullOrWhiteSpace(value)
+            ? []
+            : [.. value.Split([',', ';', ' ', '\t'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .Select(static type => type.ToLowerInvariant())
+                .Distinct(StringComparer.Ordinal)];
+
+    /// <summary>
     /// Applies the machine's <c>/etc/kazoos/cloud-drives.config</c> over these settings: a key
     /// written there with a value wins, an absent or empty key keeps the host's value. This lets an
     /// administrator who hosts Kazo OS at another address use their own registrations.
@@ -43,10 +68,17 @@ public sealed record CloudProviderSettings(
             Pick(snapshot, CloudDrivesSettingsDocuments.OneDriveClientQualifiedKey, OneDriveClientId),
             Pick(snapshot, CloudDrivesSettingsDocuments.OneDriveTenantQualifiedKey, OneDriveTenant),
             Pick(snapshot, CloudDrivesSettingsDocuments.DropboxAppFolderPathQualifiedKey, DropboxAppFolderPath),
-            Pick(snapshot, CloudDrivesSettingsDocuments.OneDriveAppFolderPathQualifiedKey, OneDriveAppFolderPath));
+            Pick(snapshot, CloudDrivesSettingsDocuments.OneDriveAppFolderPathQualifiedKey, OneDriveAppFolderPath))
+        {
+            // Both lists switch a type off: the machine's file can add to the host's list, never
+            // turn back on what the host or the build left out.
+            Disabled = snapshot.Values.TryGetValue(CloudDrivesSettingsDocuments.DisabledKey, out string? disabled)
+                ? [.. Disabled.Union(ParseTypes(disabled), StringComparer.Ordinal)]
+                : Disabled
+        };
     }
 
-    /// <summary>Builds the providers these settings configure, Dropbox first; a provider without any app id is left out.</summary>
+    /// <summary>Builds the providers these settings configure, Dropbox first; a provider without any app id, or disabled, is left out.</summary>
     public IReadOnlyList<CloudOAuthProvider> BuildProviders() =>
     [
         .. new[]
@@ -57,7 +89,7 @@ public sealed record CloudProviderSettings(
             CloudOAuthProvider.OneDrive(OneDriveClientId, OneDriveTenant) is { } oneDrive
                 ? oneDrive with { AppFolderPath = Clean(OneDriveAppFolderPath) }
                 : null
-        }.OfType<CloudOAuthProvider>()
+        }.OfType<CloudOAuthProvider>().Where(provider => !IsDisabled(provider.Id))
     ];
 
     /// <summary>A folder path as the dialog shows it: trimmed, no slash at either end; empty is none.</summary>
@@ -84,6 +116,10 @@ public sealed record CloudProviderSettings(
 /// [onedrive]
 /// client-id = 00000000-0000-0000-0000-000000000000
 /// tenant = common
+/// </code>
+/// A <c>disabled</c> key at the top switches shipped drive types off (ADR 0282 section 5):
+/// <code>
+/// disabled = dropbox, s3
 /// </code>
 /// </example>
 public static class CloudDrivesSettingsDocuments
@@ -115,7 +151,10 @@ public static class CloudDrivesSettingsDocuments
     /// <summary>Gets the key of the OneDrive reserved folder as the user sees it (<c>Apps/Kazo OS</c>).</summary>
     public static string OneDriveAppFolderPathQualifiedKey => $"{OneDriveGroup}.app-folder-path";
 
-    /// <summary>Gets the declared schema: six public strings, empty by default (empty keeps the host's value).</summary>
+    /// <summary>Key of the drive types switched off on this machine (ADR 0282 section 5), outside any section.</summary>
+    public const string DisabledKey = "disabled";
+
+    /// <summary>Gets the declared schema: seven public strings, empty by default (empty keeps the host's value).</summary>
     public static SettingsSchema Schema { get; } = new(
         schemaVersion: 1,
         fields:
@@ -125,7 +164,8 @@ public static class CloudDrivesSettingsDocuments
             new SettingFieldDeclaration("client-id", SettingValueType.String, string.Empty, SettingSensitivity.Public, Group: OneDriveGroup),
             new SettingFieldDeclaration("tenant", SettingValueType.String, string.Empty, SettingSensitivity.Public, Group: OneDriveGroup),
             new SettingFieldDeclaration("app-folder-path", SettingValueType.String, string.Empty, SettingSensitivity.Public, Group: DropboxGroup),
-            new SettingFieldDeclaration("app-folder-path", SettingValueType.String, string.Empty, SettingSensitivity.Public, Group: OneDriveGroup)
+            new SettingFieldDeclaration("app-folder-path", SettingValueType.String, string.Empty, SettingSensitivity.Public, Group: OneDriveGroup),
+            new SettingFieldDeclaration(DisabledKey, SettingValueType.String, string.Empty, SettingSensitivity.Public)
         ]);
 
     /// <summary>Gets the system-only layered document.</summary>
@@ -166,18 +206,10 @@ public sealed class CloudProviderCatalog(CloudProviderSettings hostSettings, IOs
     public async ValueTask<IReadOnlyList<CloudOAuthProvider>> GetProvidersAsync(CancellationToken cancellationToken = default)
     {
         IReadOnlyList<AppDriveProviderRegistration> declared = DeclaredProviders?.Invoke() ?? [];
-        CloudProviderSettings effective = _hostSettings;
-        LayeredConfigSnapshot? snapshot = null;
-        if (settings is not null)
-        {
-            snapshot = await settings
-                .ReadAsync(
-                    DeclaredCloudProviders.SettingsDocument(CloudDrivesSettingsDocuments.Document, declared.Select(static item => item.Provider.Type)),
-                    cancellationToken)
-                .ConfigureAwait(false);
-            effective = effective.OverriddenBy(snapshot);
-        }
-
+        (CloudProviderSettings effective, LayeredConfigSnapshot? snapshot) = await ReadSettingsAsync(
+                declared.Select(static item => item.Provider.Type),
+                cancellationToken)
+            .ConfigureAwait(false);
         IReadOnlyList<CloudOAuthProvider> shipped = effective.BuildProviders();
         return
         [
@@ -187,5 +219,39 @@ public sealed class CloudProviderCatalog(CloudProviderSettings hostSettings, IOs
                 .OfType<CloudOAuthProvider>()
                 .Where(provider => !shipped.Any(item => string.Equals(item.Id, provider.Id, StringComparison.Ordinal)))
         ];
+    }
+
+    /// <summary>
+    /// Gets whether a shipped drive type may be offered now (ADR 0282 section 5): not left out by the
+    /// build, not in <c>KazoOs:CloudDrives:Disabled</c>, not in the <c>disabled</c> key of
+    /// <c>/etc/kazoos/cloud-drives.config</c>. The file is read on each call, so a change applies
+    /// without restarting the OS.
+    /// </summary>
+    /// <param name="type">The drive type, e.g. <c>s3</c>.</param>
+    /// <param name="cancellationToken">Cancels the read.</param>
+    public async ValueTask<bool> IsTypeEnabledAsync(string type, CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(type);
+        (CloudProviderSettings effective, _) = await ReadSettingsAsync([], cancellationToken).ConfigureAwait(false);
+        return !effective.IsDisabled(type);
+    }
+
+    /// <summary>
+    /// Reads <c>/etc/kazoos/cloud-drives.config</c> over the host settings, with one section per
+    /// declared type (ADR 0282 §3); the snapshot is <see langword="null"/> without a settings service.
+    /// </summary>
+    private async ValueTask<(CloudProviderSettings Effective, LayeredConfigSnapshot? Snapshot)> ReadSettingsAsync(
+        IEnumerable<string> declaredTypes,
+        CancellationToken cancellationToken)
+    {
+        if (settings is null)
+        {
+            return (_hostSettings, null);
+        }
+
+        LayeredConfigSnapshot snapshot = await settings
+            .ReadAsync(DeclaredCloudProviders.SettingsDocument(CloudDrivesSettingsDocuments.Document, declaredTypes), cancellationToken)
+            .ConfigureAwait(false);
+        return (_hostSettings.OverriddenBy(snapshot), snapshot);
     }
 }

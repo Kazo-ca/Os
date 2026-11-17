@@ -1,0 +1,8 @@
+#nullable enable
+const Kazo.Os.Platform.Core.CloudDrives.CloudDriveFeatures.DropboxSwitchName = "Kazo.Os.CloudDrives.Dropbox.IsSupported" -> string!
+const Kazo.Os.Platform.Core.CloudDrives.CloudDriveFeatures.OneDriveSwitchName = "Kazo.Os.CloudDrives.OneDrive.IsSupported" -> string!
+const Kazo.Os.Platform.Core.CloudDrives.CloudDriveFeatures.S3SwitchName = "Kazo.Os.CloudDrives.S3.IsSupported" -> string!
+Kazo.Os.Platform.Core.CloudDrives.CloudDriveFeatures
+static Kazo.Os.Platform.Core.CloudDrives.CloudDriveFeatures.IsDropboxSupported.get -> bool
+static Kazo.Os.Platform.Core.CloudDrives.CloudDriveFeatures.IsOneDriveSupported.get -> bool
+static Kazo.Os.Platform.Core.CloudDrives.CloudDriveFeatures.IsS3Supported.get -> bool
