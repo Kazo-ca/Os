@@ -6,6 +6,16 @@ Les changements de Kazo OS, par version. Ce fichier est généré à partir de `
 `wasm2/KazoOs/build/tools/collect-changes.sh` (ADR 0186) : ne pas le modifier à la main. Les changements
 déjà déployés mais pas encore publiés sont dans la page Paramètres ▸ Nouveautés de l'OS.
 
+## 3.5.1 (2026-11-17)
+
+### Nouveau
+
+- **La fenêtre de connexion nomme le serveur qu'un fournisseur joindra.** Quand un type de lecteur marque un champ comme adresse du serveur (ADR 0284), Connecter un lecteur réseau écrit « Ce fournisseur joindra <hôte>. » avant d'enregistrer, et refuse avec la raison une adresse que l'OS ne peut pas permettre (http, nom ou mot de passe dans l'URL, adresse IP, localhost). KazoNetworkDriveField.IsServerAddress dit aux apps de quel champ il s'agit. ([cloud-drives-ui.md](doc/fr/wasm/dev/cloud-drives-ui.md))
+
+### Corrigé
+
+- **Les commandes et les fenêtres d’une fonctionnalité démarrent de nouveau.** Dans Kazo OS 3.5.0, aucun point d’entrée d’une fonctionnalité ne pouvait démarrer : help listait sa commande, mais la lancer répondait command not found, et ses fenêtres ne s’ouvraient pas. L’OS trouve maintenant un point d’entrée avec sa fonctionnalité, sans charger les autres points d’entrée de la fonctionnalité. ([github.com/Kazo-ca/Os/issues/621](https://github.com/Kazo-ca/Os/issues/621))
+
 ## 3.5.0 (2026-11-17)
 
 ### Nouveau

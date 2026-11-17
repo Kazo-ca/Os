@@ -12,6 +12,11 @@ jour à la fin de chaque série ou quand une convention change.
 - **Code actif** : `wasm2/KazoOs/` (OS simulé en Blazor WebAssembly, .NET 10,
   solution `Kazo.Os.sln`). `src/` est l'ancienne version, gardée comme
   référence.
+- **Version 3.5.1** (branche `fix/621-feature-child-discovery`, 2026-11-17), correctif : les
+  points d'entrée d'une fonctionnalité démarrent de nouveau ; le registre de chargement différé
+  découvrait un enfant sans sa Feature (`catalog.feature.parent.missing`, Os#621). Contient aussi
+  la fenêtre de connexion qui nomme le serveur d'un fournisseur (ADR 0284 §2). Pas de changement
+  d'API du SDK. Os-x86 s'épingle ensuite sur 3.5.1 (décision 291 B).
 - **Version 3.5.0** (série `drive-providers/base`, chantier 9, 2026-11-17) : fournisseurs de
   lecteurs tiers (ADR 0282, ADR 0284). Les types des lecteurs cloud passent dans le paquet
   `Kazo.Os.Platform.CloudDrives` et `CloudOAuthProvider.Identity` devient nullable ; nouveaux paquets

@@ -6,6 +6,16 @@ The changes of Kazo OS, by version. This file is generated from `wasm2/KazoOs/ch
 `wasm2/KazoOs/build/tools/collect-changes.sh` (ADR 0186): do not edit it by hand. Changes already
 deployed but not released yet are in the Settings ▸ What's new page of the OS.
 
+## 3.5.1 (2026-11-17)
+
+### New
+
+- **The connect dialog names the server a provider will reach.** When a drive type marks a field as the server address (ADR 0284), Connect a network drive writes "This provider will reach <host>." before saving, and refuses an address the OS cannot allow (http, a user name or password in the URL, an IP address, localhost) with the reason. KazoNetworkDriveField.IsServerAddress tells apps which field it is. ([cloud-drives-ui.md](doc/en/wasm/dev/cloud-drives-ui.md))
+
+### Fixed
+
+- **The commands and windows of a feature start again.** In Kazo OS 3.5.0, no entry point of a feature could start: help listed its command, but running it answered command not found, and its windows did not open. The OS now finds an entry point together with its feature, without loading the other entry points of the feature. ([github.com/Kazo-ca/Os/issues/621](https://github.com/Kazo-ca/Os/issues/621))
+
 ## 3.5.0 (2026-11-17)
 
 ### New
