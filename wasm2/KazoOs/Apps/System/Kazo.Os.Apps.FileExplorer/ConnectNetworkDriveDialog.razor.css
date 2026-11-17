@@ -220,6 +220,25 @@
     font-size: 0.82rem;
 }
 
+.cnd-host {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    margin: 0;
+    padding: 0.45rem 0.65rem;
+    border: 1px solid color-mix(in srgb, var(--kos-accent, #42d392) 45%, transparent);
+    border-radius: var(--kos-radius-sm, 6px);
+    background: color-mix(in srgb, var(--kos-accent, #42d392) 10%, transparent);
+    color: var(--kos-text-primary, #f0f6fc);
+    font-size: 0.85rem;
+    overflow-wrap: anywhere;
+}
+
+.cnd-host.refused {
+    border-color: var(--kos-danger, #f85149);
+    background: color-mix(in srgb, var(--kos-danger, #f85149) 12%, transparent);
+}
+
 .cnd-error {
     margin: 0;
     padding: 0.55rem 0.7rem;

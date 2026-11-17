@@ -65,6 +65,13 @@ public sealed record KazoNetworkDriveField(string Name, string Label, KazoNetwor
     /// <summary>Gets the choices of a <see cref="KazoNetworkDriveFieldKind.Choice"/> field; empty otherwise.</summary>
     public IReadOnlyList<KazoNetworkDriveFieldChoice> Choices { get; init; } = [];
 
+    /// <summary>
+    /// Gets whether the field holds the address of the server the provider reaches (ADR 0284 §2): the
+    /// OS allows the host typed there to the providing feature while the drive is open, so the connect
+    /// dialog writes that host before saving. At most one field of a type, always an address.
+    /// </summary>
+    public bool IsServerAddress { get; init; }
+
     /// <summary>Gets whether the value goes in <see cref="KazoNetworkDriveRequest.Secrets"/> rather than in <see cref="KazoNetworkDriveRequest.Options"/>.</summary>
     public bool IsSecret => Kind == KazoNetworkDriveFieldKind.Secret;
 }

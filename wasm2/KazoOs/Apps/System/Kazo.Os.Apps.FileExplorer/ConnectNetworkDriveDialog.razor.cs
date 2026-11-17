@@ -1,3 +1,4 @@
+using Kazo.Os.App.Abstractions;
 using Kazo.Os.AppSdk.CloudAccounts;
 using Kazo.Os.AppSdk.Globalization;
 using Kazo.Os.AppSdk.Icons;
@@ -411,8 +412,30 @@ public partial class ConnectNetworkDriveDialog
         /// <summary>Sets the value of a field.</summary>
         public void Set(string name, string? value) => _values[name] = value ?? string.Empty;
 
-        /// <summary>Gets whether every required field is filled.</summary>
-        public bool IsComplete => fields.All(entry => !entry.Required || !string.IsNullOrWhiteSpace(Get(entry.Name)));
+        /// <summary>
+        /// Gets whether every required field is filled and a typed server address is one the OS can
+        /// allow (ADR 0284 §2): a drive on a refused address could never reach its server.
+        /// </summary>
+        public bool IsComplete =>
+            fields.All(entry => !entry.Required || !string.IsNullOrWhiteSpace(Get(entry.Name)))
+            && ServerHost() is not { Allowed: false };
+
+        /// <summary>
+        /// Reads the host of the field marked as the server address (ADR 0284 §2), checked with the
+        /// rules the OS applies when the drive opens (<see cref="AppDriveProviders.TryGetServerHost"/>).
+        /// </summary>
+        /// <returns><see langword="null"/> when the type has no such field or it is still empty; otherwise the
+        /// host (empty when refused) and whether the OS will allow it.</returns>
+        public (string Host, bool Allowed)? ServerHost()
+        {
+            if (fields.FirstOrDefault(static entry => entry.IsServerAddress) is not { } field
+                || Get(field.Name).Trim() is not { Length: > 0 } address)
+            {
+                return null;
+            }
+
+            return AppDriveProviders.TryGetServerHost(address, out string host) ? (host, true) : (string.Empty, false);
+        }
 
         /// <summary>The request of ADR 0270: plain values in <c>Options</c>, secrets in <c>Secrets</c>, empty ones left out.</summary>
         public KazoNetworkDriveRequest ToRequest(string type)
