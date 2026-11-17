@@ -162,6 +162,9 @@
   <data name="Project.LegacyMoved" xml:space="preserve"><value>La version d’origine a été déplacée vers</value></data>
   <data name="Project.Author" xml:space="preserve"><value>Auteur :</value></data>
   <data name="Project.GitHub" xml:space="preserve"><value>Projet GitHub :</value></data>
+  <data name="Project.Privacy" xml:space="preserve"><value>Politique de confidentialité</value></data>
+  <data name="Project.Terms" xml:space="preserve"><value>Conditions d’utilisation</value></data>
+  <data name="Project.LegalSection" xml:space="preserve"><value>fr</value></data>
   <data name="Login.UsePasskey" xml:space="preserve">
     <value>Se connecter avec une clé d'accès</value>
   </data>

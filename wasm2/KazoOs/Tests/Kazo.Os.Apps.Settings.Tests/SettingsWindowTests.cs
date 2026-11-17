@@ -160,4 +160,16 @@ public sealed class SettingsNavigationTests
         Assert.Equal(author, resources.GetString("About.Author", info));
         Assert.Equal(project, resources.GetString("About.Repository", info));
     }
+
+    [Theory]
+    [InlineData("en", "Legal:", "Privacy policy", "Terms of use")]
+    [InlineData("fr", "Mentions légales :", "Politique de confidentialité", "Conditions d’utilisation")]
+    public void About_legal_links_follow_the_session_language(string culture, string legal, string privacy, string terms)
+    {
+        System.Resources.ResourceManager resources = Kazo.Os.AppSdk.Globalization.KazoLocalization.GetResourceManager(typeof(Strings));
+        System.Globalization.CultureInfo info = System.Globalization.CultureInfo.GetCultureInfo(culture);
+        Assert.Equal(legal, resources.GetString("About.Legal", info));
+        Assert.Equal(privacy, resources.GetString("About.Privacy", info));
+        Assert.Equal(terms, resources.GetString("About.Terms", info));
+    }
 }

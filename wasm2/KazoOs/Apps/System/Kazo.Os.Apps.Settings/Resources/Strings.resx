@@ -1245,6 +1245,10 @@
 <data name="Mobile.HelpersError" xml:space="preserve"><value>Unable to update mobile mouse helpers.</value></data>
   <data name="About.Repository" xml:space="preserve"><value>GitHub project:</value></data>
   <data name="About.Author" xml:space="preserve"><value>Author:</value></data>
+  <data name="About.Legal" xml:space="preserve"><value>Legal:</value></data>
+  <data name="About.Privacy" xml:space="preserve"><value>Privacy policy</value></data>
+  <data name="About.Terms" xml:space="preserve"><value>Terms of use</value></data>
+  <data name="About.LegalSection" xml:space="preserve"><value>en</value></data>
   <data name="Users.Badge.Passkeys" xml:space="preserve">
     <value>{0} passkey(s)</value>
   </data>

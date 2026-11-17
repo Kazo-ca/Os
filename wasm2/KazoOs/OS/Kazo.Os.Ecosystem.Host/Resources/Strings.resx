@@ -162,6 +162,9 @@
   <data name="Project.LegacyMoved" xml:space="preserve"><value>The original version has moved to</value></data>
   <data name="Project.Author" xml:space="preserve"><value>Author:</value></data>
   <data name="Project.GitHub" xml:space="preserve"><value>GitHub project:</value></data>
+  <data name="Project.Privacy" xml:space="preserve"><value>Privacy policy</value></data>
+  <data name="Project.Terms" xml:space="preserve"><value>Terms of use</value></data>
+  <data name="Project.LegalSection" xml:space="preserve"><value>en</value></data>
   <data name="Login.UsePasskey" xml:space="preserve">
     <value>Sign in with a passkey</value>
   </data>

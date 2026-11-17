@@ -1,0 +1,18 @@
+{
+  "id": "62c9d96d-eca0-46ae-b51b-029eb008bb4d",
+  "category": "new",
+  "audience": [
+    "user"
+  ],
+  "title": {
+    "en": "Privacy policy and terms of use, linked from sign-in and About",
+    "fr": "Politique de confidentialité et conditions d'utilisation, liées depuis la connexion et À propos"
+  },
+  "description": {
+    "en": "The privacy policy and the terms of use say who publishes Kazo OS, what stays in the browser, what cloud providers, the Store, AI services and the site's hosts receive, and how to reach us. The sign-in screen and Settings ▸ About link to them in the language of the session.",
+    "fr": "La politique de confidentialité et les conditions d'utilisation disent qui publie Kazo OS, ce qui reste dans le navigateur, ce que reçoivent les fournisseurs cloud, le Store, les services d'IA et les hébergeurs du site, et comment nous joindre. L'écran de connexion et Paramètres ▸ À propos y renvoient dans la langue de la session."
+  },
+  "links": [
+    "doc/en/wasm/dev/legal-pages.md"
+  ]
+}

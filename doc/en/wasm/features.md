@@ -191,6 +191,11 @@ This section lists what is released in the `main` branch and online.
   [ADR 0269](dev/adr/0269-cloud-tokens-stay-on-the-device.md),
   [ADR 0270](dev/adr/0270-cloud-drives-in-the-app-sdk.md),
   [`cloud-drives.md`](dev/cloud-drives.md))
+- **Privacy and terms of use**: `os.kazo.ca/privacy.html` and `terms.html`,
+  in French and English, say what Kazo OS does with data (nothing on a
+  server of the publisher; third parties listed); linked from the sign-in
+  screen and Settings ▸ About.
+  ([`legal-pages.md`](dev/legal-pages.md))
 - **Faster and lighter files**: content is kept in binary instead of base64 (about 25%
   less space, saving 52.5 MiB from 3.4 s to 1.0 s in Chromium), each 256 KiB chunk checked
   by its fingerprint when read; old content is converted once at the first boot, behind a

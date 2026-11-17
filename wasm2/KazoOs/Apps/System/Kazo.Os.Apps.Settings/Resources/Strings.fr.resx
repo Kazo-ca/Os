@@ -1245,6 +1245,10 @@
 <data name="Mobile.HelpersError" xml:space="preserve"><value>Impossible de mettre à jour les aides souris mobiles.</value></data>
   <data name="About.Repository" xml:space="preserve"><value>Projet GitHub :</value></data>
   <data name="About.Author" xml:space="preserve"><value>Auteur :</value></data>
+  <data name="About.Legal" xml:space="preserve"><value>Mentions légales :</value></data>
+  <data name="About.Privacy" xml:space="preserve"><value>Politique de confidentialité</value></data>
+  <data name="About.Terms" xml:space="preserve"><value>Conditions d’utilisation</value></data>
+  <data name="About.LegalSection" xml:space="preserve"><value>fr</value></data>
   <data name="Users.Badge.Passkeys" xml:space="preserve">
     <value>{0} clé(s) d'accès</value>
   </data>
