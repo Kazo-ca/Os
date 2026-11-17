@@ -31,6 +31,7 @@ using Kazo.Os.Platform.Core.Execution;
 using Kazo.Os.Platform.Core.Isolation;
 using Kazo.Os.Platform.Core.Keyring;
 using Kazo.Os.Platform.Core.FileSystem;
+using Kazo.Os.Platform.Core.FileSystem.DriveProviders;
 using Kazo.Os.Platform.Core.FileSystem.HostFolders;
 using Kazo.Os.Platform.Core.FileSystem.Virtual;
 using Kazo.Os.Platform.Core.Intents;
@@ -283,6 +284,8 @@ public static class EcosystemServiceCollectionExtensions
                 new HostFolderDriveSource(provider.GetRequiredService<IHostFolderAccess>()),
                 .. provider.GetServices<INetworkDriveSource>()
             ],
+            // ADR 0282 §3: and the drive types the installed features provide, read at each use.
+            provider.GetService<FeatureDriveSources>(),
             () => provider.GetRequiredService<ISessionService>().CurrentPrincipal,
             provider.GetService<IEventBus>(),
             logger: provider.GetService<ILogger<NetworkDriveService>>()));
@@ -840,6 +843,25 @@ public static class EcosystemServiceCollectionExtensions
             new WebAppActivator(
                 () => provider.GetRequiredService<AppLifecycleOrchestrator>(),
                 provider.GetRequiredService<ListeningPortTable>())));
+        // ADR 0282 §3: the drive providers features declare, one instance per page and type, created
+        // at the first drive of the type in the feature's own process, like its services (ADR 0262).
+        services.TryAddScoped(provider => new FeatureDriveProviderLoader(
+            (assemblyFileName, cancellationToken) => LoadFeatureAssemblyAsync(provider, assemblyFileName, cancellationToken),
+            (runAs, implementation) => provider.GetRequiredService<AppLifecycleOrchestrator>()
+                .StartFeatureService(runAs, implementation, ServiceAccount.CreatePrincipal(
+                    InstallationId.FromGuid(Guid.NewGuid()), DeviceId.FromGuid(Guid.NewGuid()), DateTimeOffset.UtcNow))
+                .Context,
+            (featureId, message) => provider.GetService<LogFileWriter>()?.Write(
+                LogFileTarget.ForApp(featureId), Kazo.Os.Simulation.Abstractions.Diagnostics.DiagnosticSeverity.Error, "drives", message),
+            provider.GetService<ILogger<FeatureDriveProviderLoader>>()));
+        services.TryAddScoped(provider => new FeatureDriveSources(
+            provider.GetRequiredService<AppCatalog>(),
+            provider.GetRequiredService<IAppEnablementRegistry>(),
+            registration => new FeatureDriveSource(
+                registration,
+                provider.GetRequiredService<FeatureDriveProviderLoader>(),
+                provider.GetRequiredService<CloudAccountService>(),
+                (type, accountId, availabilityChanged, cancellationToken) => ConnectFeatureDriveAsync(provider, type, accountId, availabilityChanged, cancellationToken))));
         // ADR 0262: the services features provide, one instance per page, created on the first
         // request in the feature's own process (kazoos-svc, like a system daemon).
         services.TryAddScoped(provider => new Kazo.Os.Platform.Core.Features.FeatureServiceResolver(
@@ -1480,6 +1502,30 @@ public static class EcosystemServiceCollectionExtensions
                 DiagnosticSeverity.Warning,
                 "context-menu",
                 $"context-menus.d could not be updated after an install change: {exception.Message}");
+        }
+    }
+
+    /// <summary>
+    /// What the OS lends the provider of a declared drive type for one drive (ADR 0282 §3): the
+    /// context bound to the drive's account (work item 5) and the non-secret values of a form
+    /// account. An account that is gone or of another type is <c>SignInRequired</c>: the drive
+    /// stays disconnected.
+    /// </summary>
+    private static async ValueTask<FeatureDriveConnection> ConnectFeatureDriveAsync(
+        IServiceProvider provider, string type, string accountId, Action availabilityChanged, CancellationToken cancellationToken)
+    {
+        CloudAccountService accounts = provider.GetRequiredService<CloudAccountService>();
+        try
+        {
+            Kazo.Os.AppSdk.Drives.IKazoDriveProviderContext context = await accounts
+                .CreateDriveProviderContextAsync(type, accountId, availabilityChanged, cancellationToken).ConfigureAwait(false);
+            CloudAccount? account = await accounts.FindAccountAsync(accountId, cancellationToken).ConfigureAwait(false);
+            return new FeatureDriveConnection(context, account?.Options ?? new Dictionary<string, string>(StringComparer.Ordinal));
+        }
+        catch (CloudAccountException exception)
+        {
+            throw new Kazo.Os.AppSdk.Drives.KazoDriveException(
+                Kazo.Os.AppSdk.Drives.KazoDriveErrorKind.SignInRequired, $"{type}: {exception.Message}", exception);
         }
     }
 

@@ -66,6 +66,58 @@ Kazo.Os.Platform.Core.FileSystem.HostFolders.SwitchableDriveSource.Type.get -> s
 const Kazo.Os.Platform.Core.CloudAccounts.CloudDrivesSettingsDocuments.DisabledKey = "disabled" -> string!
 static Kazo.Os.Platform.Core.CloudAccounts.CloudProviderSettings.ParseTypes(string? value) -> System.Collections.Generic.IReadOnlyList<string!>!
 Kazo.Os.Platform.Core.FileSystem.HostFolders.SwitchableDriveSource.IsEnabledAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<bool>
+Kazo.Os.Platform.Core.FileSystem.DriveProviders.FeatureDriveConnection
+Kazo.Os.Platform.Core.FileSystem.DriveProviders.FeatureDriveConnection.<Clone>$() -> Kazo.Os.Platform.Core.FileSystem.DriveProviders.FeatureDriveConnection!
+Kazo.Os.Platform.Core.FileSystem.DriveProviders.FeatureDriveConnection.Context.get -> Kazo.Os.AppSdk.Drives.IKazoDriveProviderContext!
+Kazo.Os.Platform.Core.FileSystem.DriveProviders.FeatureDriveConnection.Context.init -> void
+Kazo.Os.Platform.Core.FileSystem.DriveProviders.FeatureDriveConnection.Deconstruct(out Kazo.Os.AppSdk.Drives.IKazoDriveProviderContext! Context, out System.Collections.Generic.IReadOnlyDictionary<string!, string!>! Options) -> void
+Kazo.Os.Platform.Core.FileSystem.DriveProviders.FeatureDriveConnection.Equals(Kazo.Os.Platform.Core.FileSystem.DriveProviders.FeatureDriveConnection? other) -> bool
+Kazo.Os.Platform.Core.FileSystem.DriveProviders.FeatureDriveConnection.FeatureDriveConnection(Kazo.Os.AppSdk.Drives.IKazoDriveProviderContext! Context, System.Collections.Generic.IReadOnlyDictionary<string!, string!>! Options) -> void
+Kazo.Os.Platform.Core.FileSystem.DriveProviders.FeatureDriveConnection.Options.get -> System.Collections.Generic.IReadOnlyDictionary<string!, string!>!
+Kazo.Os.Platform.Core.FileSystem.DriveProviders.FeatureDriveConnection.Options.init -> void
+Kazo.Os.Platform.Core.FileSystem.DriveProviders.FeatureDriveContextFactory
+Kazo.Os.Platform.Core.FileSystem.DriveProviders.FeatureDriveProviderLoader
+Kazo.Os.Platform.Core.FileSystem.DriveProviders.FeatureDriveProviderLoader.FeatureDriveProviderLoader(Kazo.Os.Platform.Core.Features.FeatureAssemblyLoader! load, Kazo.Os.Platform.Core.Features.FeatureServiceProcessStarter! start, Kazo.Os.Platform.Core.FileSystem.DriveProviders.FeatureLogWriter? featureLog = null, Microsoft.Extensions.Logging.ILogger<Kazo.Os.Platform.Core.FileSystem.DriveProviders.FeatureDriveProviderLoader!>? logger = null, System.Threading.CancellationToken pageStopping = default(System.Threading.CancellationToken)) -> void
+Kazo.Os.Platform.Core.FileSystem.DriveProviders.FeatureDriveSource
+Kazo.Os.Platform.Core.FileSystem.DriveProviders.FeatureDriveSource.AvailabilityChanged -> System.Action?
+Kazo.Os.Platform.Core.FileSystem.DriveProviders.FeatureDriveSource.CreateAsync(Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveRequest! request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveCreation?>
+Kazo.Os.Platform.Core.FileSystem.DriveProviders.FeatureDriveSource.Dispose() -> void
+Kazo.Os.Platform.Core.FileSystem.DriveProviders.FeatureDriveSource.FeatureDriveSource(Kazo.Os.Platform.Core.AppDriveProviderRegistration! registration, Kazo.Os.Platform.Core.FileSystem.DriveProviders.FeatureDriveProviderLoader! loader, Kazo.Os.Platform.Core.CloudDrives.ICloudAccountTokens! accounts, Kazo.Os.Platform.Core.FileSystem.DriveProviders.FeatureDriveContextFactory! contexts, System.TimeProvider? timeProvider = null) -> void
+Kazo.Os.Platform.Core.FileSystem.DriveProviders.FeatureDriveSource.FeatureId.get -> string!
+Kazo.Os.Platform.Core.FileSystem.DriveProviders.FeatureDriveSource.ForgetAsync(Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveReference! reference, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Kazo.Os.Platform.Core.FileSystem.DriveProviders.FeatureDriveSource.IsAvailableAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<bool>
+Kazo.Os.Platform.Core.FileSystem.DriveProviders.FeatureDriveSource.OpenAsync(Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveReference! reference, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.Simulation.Abstractions.FileSystem.IHostFolder?>
+Kazo.Os.Platform.Core.FileSystem.DriveProviders.FeatureDriveSource.OpenTimeout.get -> System.TimeSpan
+Kazo.Os.Platform.Core.FileSystem.DriveProviders.FeatureDriveSource.OpenTimeout.init -> void
+Kazo.Os.Platform.Core.FileSystem.DriveProviders.FeatureDriveSource.Registration.get -> Kazo.Os.Platform.Core.AppDriveProviderRegistration!
+Kazo.Os.Platform.Core.FileSystem.DriveProviders.FeatureDriveSource.StateTimeout.get -> System.TimeSpan
+Kazo.Os.Platform.Core.FileSystem.DriveProviders.FeatureDriveSource.StateTimeout.init -> void
+Kazo.Os.Platform.Core.FileSystem.DriveProviders.FeatureDriveSource.Type.get -> string!
+Kazo.Os.Platform.Core.FileSystem.DriveProviders.FeatureDriveSources
+Kazo.Os.Platform.Core.FileSystem.DriveProviders.FeatureDriveSources.Changed -> System.Action?
+Kazo.Os.Platform.Core.FileSystem.DriveProviders.FeatureDriveSources.Dispose() -> void
+Kazo.Os.Platform.Core.FileSystem.DriveProviders.FeatureDriveSources.FeatureDriveSources(Kazo.Os.Platform.Core.AppCatalog! catalog, Kazo.Os.Platform.Core.Lifecycle.IAppEnablementRegistry! enablement, System.Func<Kazo.Os.Platform.Core.AppDriveProviderRegistration!, Kazo.Os.Platform.Core.FileSystem.DriveProviders.FeatureDriveSource!>! create) -> void
+Kazo.Os.Platform.Core.FileSystem.DriveProviders.FeatureDriveSources.FindFeature(string! type) -> string?
+Kazo.Os.Platform.Core.FileSystem.DriveProviders.FeatureDriveSources.GetSources() -> System.Collections.Generic.IReadOnlyList<Kazo.Os.Simulation.Abstractions.FileSystem.INetworkDriveSource!>!
+Kazo.Os.Platform.Core.FileSystem.DriveProviders.FeatureLogWriter
+Kazo.Os.Platform.Core.FileSystem.DriveProviders.IDynamicDriveSources
+Kazo.Os.Platform.Core.FileSystem.DriveProviders.IDynamicDriveSources.Changed -> System.Action?
+Kazo.Os.Platform.Core.FileSystem.DriveProviders.IDynamicDriveSources.FindFeature(string! type) -> string?
+Kazo.Os.Platform.Core.FileSystem.DriveProviders.IDynamicDriveSources.GetSources() -> System.Collections.Generic.IReadOnlyList<Kazo.Os.Simulation.Abstractions.FileSystem.INetworkDriveSource!>!
+Kazo.Os.Platform.Core.FileSystem.HostFolders.NetworkDrive.IsProviderMissing.get -> bool
+Kazo.Os.Platform.Core.FileSystem.HostFolders.NetworkDrive.IsProviderMissing.init -> void
+Kazo.Os.Platform.Core.FileSystem.HostFolders.NetworkDriveService.GetProviderMissingDrives() -> System.Collections.Generic.IReadOnlyList<Kazo.Os.Platform.Core.FileSystem.HostFolders.NetworkDrive!>!
+Kazo.Os.Platform.Core.FileSystem.HostFolders.NetworkDriveService.NetworkDriveService(Kazo.Os.Simulation.Abstractions.FileSystem.IDynamicFileSystemMountRouter! router, System.Collections.Generic.IEnumerable<Kazo.Os.Simulation.Abstractions.FileSystem.INetworkDriveSource!>! sources, Kazo.Os.Platform.Core.FileSystem.DriveProviders.IDynamicDriveSources? dynamicSources, System.Func<Kazo.Os.Simulation.Abstractions.Sessions.AuthenticatedPrincipal?>! principal, Kazo.Os.Simulation.Abstractions.Events.IEventBus? eventBus = null, System.TimeProvider? timeProvider = null, Microsoft.Extensions.Logging.ILogger<Kazo.Os.Platform.Core.FileSystem.HostFolders.NetworkDriveService!>? logger = null) -> void
+Kazo.Os.Platform.Core.FileSystem.HostFolders.NetworkDriveService.RefreshProvidersAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+override Kazo.Os.Platform.Core.FileSystem.DriveProviders.FeatureDriveConnection.Equals(object? obj) -> bool
+override Kazo.Os.Platform.Core.FileSystem.DriveProviders.FeatureDriveConnection.GetHashCode() -> int
+override Kazo.Os.Platform.Core.FileSystem.DriveProviders.FeatureDriveConnection.ToString() -> string!
+static Kazo.Os.Platform.Core.FileSystem.DriveProviders.FeatureDriveConnection.operator !=(Kazo.Os.Platform.Core.FileSystem.DriveProviders.FeatureDriveConnection? left, Kazo.Os.Platform.Core.FileSystem.DriveProviders.FeatureDriveConnection? right) -> bool
+static Kazo.Os.Platform.Core.FileSystem.DriveProviders.FeatureDriveConnection.operator ==(Kazo.Os.Platform.Core.FileSystem.DriveProviders.FeatureDriveConnection? left, Kazo.Os.Platform.Core.FileSystem.DriveProviders.FeatureDriveConnection? right) -> bool
+static readonly Kazo.Os.Platform.Core.FileSystem.DriveProviders.FeatureDriveSource.DefaultOpenTimeout -> System.TimeSpan
+static readonly Kazo.Os.Platform.Core.FileSystem.DriveProviders.FeatureDriveSource.DefaultStateTimeout -> System.TimeSpan
+virtual Kazo.Os.Platform.Core.FileSystem.DriveProviders.FeatureDriveContextFactory.Invoke(string! type, string! accountId, System.Action! availabilityChanged, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Kazo.Os.Platform.Core.FileSystem.DriveProviders.FeatureDriveConnection!>
+virtual Kazo.Os.Platform.Core.FileSystem.DriveProviders.FeatureLogWriter.Invoke(string! featureId, string! message) -> void
 Kazo.Os.Platform.Core.Policy.AppPermissionDecisions.GetApprovedDirectNetworkHosts(string! appId) -> System.Collections.Generic.IReadOnlySet<string!>!
 Kazo.Os.Platform.Core.Policy.DirectNetworkHostText
 Kazo.Os.Platform.Core.Policy.IAppPermissionStore.WriteApprovedDirectNetworkHostsAsync(string! appId, System.Collections.Generic.IReadOnlyCollection<string!>? hosts, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask

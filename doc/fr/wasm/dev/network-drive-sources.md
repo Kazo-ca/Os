@@ -123,6 +123,49 @@ Une demande de montage porte aussi `Options` (réglages non secrets) et
 `Secrets` (que la source range dans le trousseau, jamais dans la liste des
 lecteurs) ; la source `s3` les lit.
 
+## Types fournis par une fonctionnalité
+
+Chantier `drive-providers/4-platform-adapter`,
+[ADR 0282](adr/0282-third-party-drive-providers.md) §1 à §3. Le contrat que
+voit l'auteur du fournisseur est dans
+[`drive-providers.md`](../framework/drive-providers.md).
+
+| Élément | Rôle |
+| --- | --- |
+| `AppCatalog.GetDriveProviders()`, `FindDriveProvider(type)`, `AppDriveProviderRegistration` | Les types déclarés par les fonctionnalités du catalogue, un par type. |
+| `IDynamicDriveSources`, `FeatureDriveSources` (`FileSystem/DriveProviders/`) | Les sources qui vont et viennent : une `FeatureDriveSource` par type d'une fonctionnalité installée et activée, gardée tant que la même version la fournit ; `Changed` à chaque installation, activation, désactivation, retrait ou mise à jour. |
+| `FeatureDriveSource` | La source d'un type fourni. `CreateAsync` exige un compte de ce type (jamais le fournisseur) ; `OpenAsync` n'appelle rien. |
+| `FeatureDriveFolder` (interne) | Le `IHostFolder` d'un lecteur, au-dessus de `KazoDriveFolder` : quota, écriture conditionnelle, traduction des erreurs et des états, renouvellement d'un jeton refusé une fois. |
+| `FeatureDriveProviderLoader` | Charge le fournisseur au premier lecteur du type, une instance par page, dans le processus et le contexte de la fonctionnalité ; un échec n'est jamais gardé. |
+| `FeatureDriveContextFactory`, `FeatureDriveConnection` | Ce que l'OS prête au fournisseur pour un lecteur : le contexte lié au compte et les valeurs non secrètes du formulaire. |
+| `InMemoryDriveProvider`, `InMemoryDriveService` (`Tests/Kazo.Os.Tests.Support`) | Fournisseur et service factices en mémoire, repris par les chantiers 6 et 7. |
+
+`NetworkDriveService` lit ces sources à chaque usage, à côté de celles de l'hôte
+(un type de l'hôte gagne toujours) : un type installé pendant que la page
+tourne est proposé tout de suite. `ReconnectAvailableAsync` attend la fin d'un
+montage ou d'une restauration en cours, pour qu'un fournisseur qui répond
+pendant le montage de son lecteur le reconnecte bien.
+
+**La connexion n'attend jamais un fournisseur.** Restaurer la liste ne charge
+rien : le lecteur est monté déconnecté, le fournisseur est chargé et ouvert en
+arrière-plan (20 s au plus), puis la source lève `AvailabilityChanged` et le
+lecteur se reconnecte seul. Un fournisseur qui échoue, lève ou est trop lent
+laisse le lecteur déconnecté et écrit `/var/log/apps/<fonctionnalité>.log`.
+
+L'hôte Ecosystem enregistre `FeatureDriveProviderLoader` et
+`FeatureDriveSources` et les donne à `NetworkDriveService`. Le contexte prêté au
+fournisseur vient du chantier 5 (`CloudAccountService.CreateDriveProviderContextAsync`),
+avec les valeurs non secrètes d'un compte à formulaire (`CloudAccount.Options`) ;
+un compte absent ou d'un autre type donne `SignInRequired` et le lecteur reste
+déconnecté.
+
+**Fournisseur absent** (fonctionnalité retirée ou désactivée) : le comportement
+attendu (lignes gardées, lecteurs grisés, remontage au retour du type) attend
+deux réponses du mainteneur sur la façon de reconnaître le fournisseur d'une
+ligne ; il n'est pas encore codé. Aujourd'hui, `NetworkDriveService` démonte
+les lecteurs d'un type parti et garde les lignes des types livrés de l'OS
+seulement (chantier 3).
+
 ## Tests
 
 - `Tests/Kazo.Os.Platform.Core.Tests/FileSystem/HostFolders/NetworkDriveSourceTests.cs` :
@@ -135,6 +178,15 @@ lecteurs) ; la source `s3` les lit.
   inchangé.
 - `Tests/Kazo.Os.Commands.Tests/MountCommandTests.cs` : `df -T` avec un lecteur
   cloud, un lecteur sans quota et un dossier de l'ordinateur.
+- `Tests/Kazo.Os.Platform.Core.Tests/FileSystem/DriveProviders/` : la suite de
+  contrat des connecteurs livrés sur `InMemoryDriveProvider` à travers
+  l'adaptateur (`FeatureDriveContractTests`), connexion qui n'attend pas un
+  fournisseur lent, délai dépassé, constructeur qui lève, assemblage absent,
+  processus qui ne démarre pas, une instance par page dans le contexte de la
+  fonctionnalité, compte d'un autre type refusé, types qui suivent le catalogue
+  à chaud (`FeatureDriveSourceTests`), montage d'un type installé à chaud et
+  restauration sans attente (`FeatureDriveMountTests`), refus d'un second
+  fournisseur du même type (`DriveTypeInstallTests`).
 - Les tests existants des lecteurs `hostfs` passent sans changement.
 
 ## Décisions
@@ -155,3 +207,5 @@ lecteurs) ; la source `s3` les lit.
 - [x] `/proc/mounts`, `df`, `KazoDriveInfo` avec le type et le quota.
 - [x] Lecteur indisponible monté déconnecté, reconnexion seule.
 - [x] Source distante factice et tests.
+- [x] Types fournis par une fonctionnalité : registre, adaptateur, chargement paresseux, connexion sans attente (ADR 0282, chantier 4).
+- [ ] Fournisseur absent : lignes gardées et remontage (ADR 0282, attend le mainteneur).

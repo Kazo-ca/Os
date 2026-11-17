@@ -16,10 +16,8 @@ le **fournisseur** ne fait que parler à son service.
 
 Ce document décrit le **contrat public** (chantier 2 de la série
 `drive-providers`) : les types du SDK `Kazo.Os.AppSdk.Drives` et la
-déclaration `FeatureDefinition.DriveProviders`. Le branchement dans l'OS
-(adaptateur vers le système de fichiers, dialogue de connexion, Paramètres)
-vient au chantier 4 ; d'ici là, un fournisseur déclaré est validé au build et
-au paquet, mais l'OS ne l'ouvre pas encore.
+déclaration `FeatureDefinition.DriveProviders`, puis ce que l'OS en fait
+(chantier 4). Le dialogue de connexion et Paramètres viennent au chantier 6.
 
 ## Écrire un fournisseur
 
@@ -165,6 +163,51 @@ depuis l'origine de l'OS. Un administrateur qui sert Kazo OS ailleurs inscrit
 sa propre app et remplace l'identifiant dans `/etc/kazoos/cloud-drives.config`,
 section au nom du type (`client-id`, `app-folder-client-id`).
 
+## Ce que fait l'OS d'un fournisseur (chantier 4)
+
+Le chantier 4 branche les types déclarés dans le système de fichiers
+([`network-drive-sources.md`](../dev/network-drive-sources.md#types-fournis-par-une-fonctionnalité)) :
+
+- **Un fournisseur par type.** `AppCatalog.GetDriveProviders()` et
+  `FindDriveProvider(type)` donnent la fonctionnalité qui fournit chaque type.
+  L'installeur refuse une seconde fonctionnalité qui déclare le même type
+  (`apps.package.drive-type-already-provided`). Un type de l'OS gagne toujours.
+- **À chaud.** Un type est proposé dès que sa fonctionnalité est installée et
+  activée, et disparaît quand elle est désactivée ou retirée, sans redémarrer.
+  Une nouvelle version est un nouveau fournisseur.
+- **Chargé au premier lecteur.** Rien ne se charge à l'installation ni à la
+  connexion de l'utilisateur. Au premier lecteur du type ouvert, l'OS charge
+  l'assemblage, démarre le processus de service de la fonctionnalité (compte
+  `kazoos-svc`, ses permissions) et crée **une instance par page**, avec le
+  constructeur `(IFeatureServiceContext)` sinon `()`. Chaque appel au
+  fournisseur s'exécute dans le contexte de la fonctionnalité. Un échec n'est
+  jamais gardé : le lecteur suivant réessaie.
+- **La connexion n'attend jamais.** Le lecteur est monté **déconnecté** tant que
+  `OpenAsync` n'a pas répondu, puis se reconnecte seul. Charger et ouvrir ont
+  20 s au plus, `GetStateAsync` 10 s.
+- **Un fournisseur qui échoue** (assemblage ou classe absent, constructeur qui
+  lève, `OpenAsync` qui lève ou trop lent) laisse le lecteur déconnecté et écrit
+  une ligne `drives: <type>: <raison>` dans `/var/log/apps/<fonctionnalité>.log`
+  et dans le journal du système. Une exception inattendue d'une opération
+  devient `HostFolderErrorKind.Failure` (`EIO`), jamais un plantage.
+- **Erreurs.** `KazoDriveException.Kind` devient le code du système de fichiers :
+  `NotFound`, `Exists` → `AlreadyExists`, `Unavailable`, `RevisionConflict`,
+  `FileTooLarge`, `QuotaExceeded` → `NoSpace`, `TypeMismatch`, `NotEmpty`,
+  `InvalidName`, `AccessDenied` → `NotAllowed`, `Other` → `Failure`.
+  `SignInRequired` après un jeton donné : l'OS renouvelle le jeton une fois et
+  refait l'opération ; sinon le lecteur est déconnecté (`NotAllowed` si le
+  compte a été retiré).
+- **Compte.** Un lecteur d'un type fourni appartient toujours à un compte de ce
+  type ; l'OS refuse un compte d'un autre type et ne prête au fournisseur que
+  le contexte de ce compte (`KazoDriveState` → `Granted`, `Prompt` pour
+  `SignInRequired`, sinon `Unavailable`). Un nom renvoyé par `ListAsync` qui
+  pourrait sortir du dossier n'est pas affiché ; un fichier de plus de
+  `KazoDriveLimits.MaxFileBytes` est refusé dans les deux sens.
+- **Tester un fournisseur** : `InMemoryDriveProvider` et `InMemoryDriveService`
+  (`Tests/Kazo.Os.Tests.Support`) sont un fournisseur et un service factices en
+  mémoire (arborescence, révisions, quota, jeton accepté, hors ligne, pannes,
+  ouverture lente ou en échec).
+
 ## Vérifications
 
 | Où | Code | Cas |
@@ -202,9 +245,9 @@ fond (aucune opération retirée, l'OS garde toujours les jetons) :
   pour les connecteurs livrés ;
 - les types de connexion du manifeste s'appellent `AppDrive*Manifest`
   (assemblage `Kazo.Os.App.Abstractions`, qui ne voit pas le SDK) ;
-- les hôtes sont validés par `AppDriveProviders.IsValidHost` ; quand le
-  chantier 1 (`network.direct.access`, `DirectNetworkHosts`) rejoint la base,
-  les deux règles seront unifiées.
+- les hôtes sont validés par `AppDriveProviders.IsValidHost`, qui applique
+  la règle de `DirectNetworkHosts` (chantier 1, `network.direct.access`) sous
+  sa forme canonique : une seule règle pour les deux.
 
 ## Liste des tâches (chantier 2)
 
@@ -215,4 +258,4 @@ fond (aucune opération retirée, l'OS garde toujours les jetons) :
 - [x] Générateur (`KOSAPP0033`, `KOSAPP0036`)
 - [x] Capacité dangereuse `drives.provide`
 - [x] Connexion menée par l'OS, comptes à formulaire, contexte du fournisseur (chantier 5)
-- [ ] Branchement dans l'OS (chantier 4)
+- [x] Branchement dans l'OS (chantier 4, voir ci-dessus)

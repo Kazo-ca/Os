@@ -120,6 +120,47 @@ A mount request also carries `Options` (settings that are not secret) and
 `Secrets` (which the source keeps in the keyring, never in the drive list); the
 `s3` source reads them.
 
+## Types features provide
+
+Work item `drive-providers/4-platform-adapter`,
+[ADR 0282](adr/0282-third-party-drive-providers.md) §1 to §3. The contract the
+provider's author sees is in
+[`drive-providers.md`](../framework/drive-providers.md).
+
+| Element | Role |
+| --- | --- |
+| `AppCatalog.GetDriveProviders()`, `FindDriveProvider(type)`, `AppDriveProviderRegistration` | The types the catalog's features declare, one per type. |
+| `IDynamicDriveSources`, `FeatureDriveSources` (`FileSystem/DriveProviders/`) | The sources that come and go: one `FeatureDriveSource` per type of an installed and enabled feature, kept while the same version provides it; `Changed` on every install, enable, disable, removal or update. |
+| `FeatureDriveSource` | The source of a provided type. `CreateAsync` requires an account of that type (never the provider); `OpenAsync` calls nothing. |
+| `FeatureDriveFolder` (internal) | The `IHostFolder` of one drive, over `KazoDriveFolder`: quota, conditional writes, translation of errors and states, one renewal of a refused token. |
+| `FeatureDriveProviderLoader` | Loads the provider at the first drive of the type, one instance per page, in the feature's process and context; a failure is never kept. |
+| `FeatureDriveContextFactory`, `FeatureDriveConnection` | What the OS lends the provider for one drive: the context bound to the account and the form's non-secret values. |
+| `InMemoryDriveProvider`, `InMemoryDriveService` (`Tests/Kazo.Os.Tests.Support`) | In-memory fake provider and service, reused by work items 6 and 7. |
+
+`NetworkDriveService` reads these sources at each use, next to the host's (a
+type of the host always wins): a type installed while the page runs is offered
+at once. `ReconnectAvailableAsync` waits for a mount or restore in progress, so
+a provider that answers while its drive is being mounted does reconnect it.
+
+**Login never waits for a provider.** Restoring the list loads nothing: the
+drive is mounted disconnected, the provider is loaded and opened in the
+background (20 s at most), then the source raises `AvailabilityChanged` and the
+drive reconnects by itself. A provider that fails, throws or is too slow leaves
+the drive disconnected and writes `/var/log/apps/<feature>.log`.
+
+The Ecosystem host registers `FeatureDriveProviderLoader` and
+`FeatureDriveSources` and gives them to `NetworkDriveService`. The context lent
+to the provider comes from work item 5
+(`CloudAccountService.CreateDriveProviderContextAsync`), with the non-secret
+values of a form account (`CloudAccount.Options`); an account that is gone or of
+another type gives `SignInRequired` and the drive stays disconnected.
+
+**Missing provider** (feature removed or disabled): the expected behaviour
+(lines kept, greyed drives, remount when the type comes back) waits for two
+answers of the maintainer on how to recognise a line's provider; it is not
+built yet. Today `NetworkDriveService` unmounts the drives of a type that left
+and keeps the lines of the OS's shipped types only (work item 3).
+
 ## Tests
 
 - `Tests/Kazo.Os.Platform.Core.Tests/FileSystem/HostFolders/NetworkDriveSourceTests.cs`:
@@ -131,6 +172,15 @@ A mount request also carries `Options` (settings that are not secret) and
   `KazoDriveInfo`, folder of the computer unchanged.
 - `Tests/Kazo.Os.Commands.Tests/MountCommandTests.cs`: `df -T` with a cloud
   drive, a drive without quota and a folder of the computer.
+- `Tests/Kazo.Os.Platform.Core.Tests/FileSystem/DriveProviders/`: the shipped
+  connectors' contract suite on `InMemoryDriveProvider` through the adapter
+  (`FeatureDriveContractTests`), login that does not wait for a slow provider,
+  timeout, constructor that throws, missing assembly, process that does not
+  start, one instance per page in the feature's context, account of another
+  type refused, types that follow the catalog hot (`FeatureDriveSourceTests`),
+  mount of a type installed hot and restore with no wait
+  (`FeatureDriveMountTests`), refusal of a second provider of the same type
+  (`DriveTypeInstallTests`).
 - The existing `hostfs` drive tests pass unchanged.
 
 ## Decisions
@@ -150,3 +200,5 @@ A mount request also carries `Options` (settings that are not secret) and
 - [x] `/proc/mounts`, `df`, `KazoDriveInfo` with the type and quota.
 - [x] Unavailable drive mounted disconnected, reconnects by itself.
 - [x] In-memory fake remote source and tests.
+- [x] Types features provide: registry, adapter, lazy load, login with no wait (ADR 0282, work item 4).
+- [ ] Missing provider: lines kept and remount (ADR 0282, waits for the maintainer).
