@@ -151,8 +151,9 @@ the drive disconnected and writes `/var/log/apps/<feature>.log`.
 The Ecosystem host registers `FeatureDriveProviderLoader` and
 `FeatureDriveSources` and gives them to `NetworkDriveService`. The context lent
 to the provider comes from work item 5
-(`CloudAccountService.CreateDriveProviderContextAsync`); until it is in the
-base, the host answers `SignInRequired` and the drive stays disconnected.
+(`CloudAccountService.CreateDriveProviderContextAsync`), with the non-secret
+values of a form account (`CloudAccount.Options`); an account that is gone or of
+another type gives `SignInRequired` and the drive stays disconnected.
 
 **Missing provider** (feature removed or disabled): the expected behaviour
 (lines kept, greyed drives, remount when the type comes back) waits for two

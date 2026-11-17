@@ -1,0 +1,14 @@
+{
+  "id": "5281dc1b-0c86-4095-9732-9d980046a44d",
+  "category": "developer",
+  "audience": ["developer"],
+  "title": {
+    "en": "The OS signs in to the drive types features declare",
+    "fr": "L'OS connecte les types de lecteurs déclarés par les fonctionnalités"
+  },
+  "description": {
+    "en": "An OAuth drive type an installed feature declares is now signed in by the OS like Dropbox and OneDrive, with the same callback page and tokens sealed on the device; an administrator can replace its app ids in /etc/kazoos/cloud-drives.config. Form accounts keep their plain values and seal their secret ones, and a provider's context only reaches the access token or secrets of the drive it opens. Platform.Core: AppCatalog.GetDriveProviders, CloudAccountService.SaveFormAccountAsync and CreateDriveProviderContextAsync; CloudOAuthProvider.Identity is now optional (breaking for code that builds a CloudOAuthProvider). The drives themselves arrive with a later version.",
+    "fr": "Un type de lecteur OAuth déclaré par une fonctionnalité installée est maintenant connecté par l'OS comme Dropbox et OneDrive, avec la même page de retour et des jetons scellés sur l'appareil ; un administrateur peut remplacer ses identifiants d'app dans /etc/kazoos/cloud-drives.config. Les comptes à formulaire gardent leurs valeurs en clair et scellent les valeurs secrètes, et le contexte d'un fournisseur n'atteint que le jeton d'accès ou les secrets du lecteur qu'il ouvre. Platform.Core : AppCatalog.GetDriveProviders, CloudAccountService.SaveFormAccountAsync et CreateDriveProviderContextAsync ; CloudOAuthProvider.Identity devient facultatif (rupture pour le code qui construit un CloudOAuthProvider). Les lecteurs eux-mêmes arrivent dans une version suivante."
+  },
+  "links": ["doc/en/wasm/framework/drive-providers.md", "doc/en/wasm/dev/cloud-accounts.md"]
+}

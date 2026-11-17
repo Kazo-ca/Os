@@ -154,9 +154,10 @@ laisse le lecteur déconnecté et écrit `/var/log/apps/<fonctionnalité>.log`.
 
 L'hôte Ecosystem enregistre `FeatureDriveProviderLoader` et
 `FeatureDriveSources` et les donne à `NetworkDriveService`. Le contexte prêté au
-fournisseur vient du chantier 5 (`CloudAccountService.CreateDriveProviderContextAsync`) ;
-tant qu'il n'est pas dans la base, l'hôte répond `SignInRequired` et le lecteur
-reste déconnecté.
+fournisseur vient du chantier 5 (`CloudAccountService.CreateDriveProviderContextAsync`),
+avec les valeurs non secrètes d'un compte à formulaire (`CloudAccount.Options`) ;
+un compte absent ou d'un autre type donne `SignInRequired` et le lecteur reste
+déconnecté.
 
 **Fournisseur absent** (fonctionnalité retirée ou désactivée) : le comportement
 attendu (lignes gardées, lecteurs grisés, remontage au retour du type) attend

@@ -16,6 +16,39 @@ Kazo.Os.Platform.Core.Network.RelayPolicyCache.RelayPolicyCache(Kazo.Os.Platform
 static readonly Kazo.Os.Platform.Core.Network.RelayPolicyCache.Lifetime -> System.TimeSpan
 Kazo.Os.Platform.Core.ServerConnection.RealNetworkGrantReconciler.GrantsChanged.get -> System.Action?
 Kazo.Os.Platform.Core.ServerConnection.RealNetworkGrantReconciler.GrantsChanged.init -> void
+Kazo.Os.Platform.Core.AppCatalog.FindDriveProvider(string! type) -> Kazo.Os.Platform.Core.AppDriveProviderRegistration?
+Kazo.Os.Platform.Core.AppCatalog.GetDriveProviders() -> System.Collections.Generic.IReadOnlyList<Kazo.Os.Platform.Core.AppDriveProviderRegistration!>!
+Kazo.Os.Platform.Core.AppDriveProviderRegistration
+Kazo.Os.Platform.Core.AppDriveProviderRegistration.<Clone>$() -> Kazo.Os.Platform.Core.AppDriveProviderRegistration!
+Kazo.Os.Platform.Core.AppDriveProviderRegistration.AppDriveProviderRegistration(Kazo.Os.App.Abstractions.AppManifest! Feature, Kazo.Os.App.Abstractions.AppDriveProviderManifest! Provider) -> void
+Kazo.Os.Platform.Core.AppDriveProviderRegistration.Deconstruct(out Kazo.Os.App.Abstractions.AppManifest! Feature, out Kazo.Os.App.Abstractions.AppDriveProviderManifest! Provider) -> void
+Kazo.Os.Platform.Core.AppDriveProviderRegistration.Equals(Kazo.Os.Platform.Core.AppDriveProviderRegistration? other) -> bool
+Kazo.Os.Platform.Core.AppDriveProviderRegistration.Feature.get -> Kazo.Os.App.Abstractions.AppManifest!
+Kazo.Os.Platform.Core.AppDriveProviderRegistration.Feature.init -> void
+Kazo.Os.Platform.Core.AppDriveProviderRegistration.Provider.get -> Kazo.Os.App.Abstractions.AppDriveProviderManifest!
+Kazo.Os.Platform.Core.AppDriveProviderRegistration.Provider.init -> void
+Kazo.Os.Platform.Core.CloudAccounts.CloudAccount.Options.get -> System.Collections.Generic.IReadOnlyDictionary<string!, string!>?
+Kazo.Os.Platform.Core.CloudAccounts.CloudAccount.Options.init -> void
+Kazo.Os.Platform.Core.CloudAccounts.CloudAccountService.CreateDriveProviderContextAsync(string! type, string! accountId, System.Action? availabilityChanged = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.Drives.IKazoDriveProviderContext!>
+Kazo.Os.Platform.Core.CloudAccounts.CloudAccountService.SaveFormAccountAsync(string! type, string! displayName, System.Collections.Generic.IReadOnlyDictionary<string!, string!>! options, System.Collections.Generic.IReadOnlyDictionary<string!, string!>! secrets, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.Platform.Core.CloudAccounts.CloudAccount!>
+Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthProvider.CloudOAuthProvider(string! Id, string! DisplayName, System.Uri! AuthorizationEndpoint, System.Uri! TokenEndpoint, System.Uri? RevocationEndpoint, System.Collections.Generic.IReadOnlyDictionary<Kazo.Os.Platform.Core.CloudAccounts.CloudAccessScope, Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthClient!>! Clients, System.Collections.Generic.IReadOnlyDictionary<string!, string!>! ExtraAuthorizationParameters, Kazo.Os.Platform.Core.CloudAccounts.CloudIdentityEndpoint? Identity) -> void
+Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthProvider.Deconstruct(out string! Id, out string! DisplayName, out System.Uri! AuthorizationEndpoint, out System.Uri! TokenEndpoint, out System.Uri? RevocationEndpoint, out System.Collections.Generic.IReadOnlyDictionary<Kazo.Os.Platform.Core.CloudAccounts.CloudAccessScope, Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthClient!>! Clients, out System.Collections.Generic.IReadOnlyDictionary<string!, string!>! ExtraAuthorizationParameters, out Kazo.Os.Platform.Core.CloudAccounts.CloudIdentityEndpoint? Identity) -> void
+Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthProvider.FeatureId.get -> string?
+Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthProvider.FeatureId.init -> void
+Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthProvider.Identity.get -> Kazo.Os.Platform.Core.CloudAccounts.CloudIdentityEndpoint?
+Kazo.Os.Platform.Core.CloudAccounts.CloudProviderCatalog.DeclaredProviders.get -> System.Func<System.Collections.Generic.IReadOnlyList<Kazo.Os.Platform.Core.AppDriveProviderRegistration!>!>?
+Kazo.Os.Platform.Core.CloudAccounts.CloudProviderCatalog.DeclaredProviders.init -> void
+Kazo.Os.Platform.Core.CloudAccounts.DeclaredCloudProviders
+const Kazo.Os.Platform.Core.CloudAccounts.DeclaredCloudProviders.AppFolderClientIdKey = "app-folder-client-id" -> string!
+const Kazo.Os.Platform.Core.CloudAccounts.DeclaredCloudProviders.ClientIdKey = "client-id" -> string!
+override Kazo.Os.Platform.Core.AppDriveProviderRegistration.Equals(object? obj) -> bool
+override Kazo.Os.Platform.Core.AppDriveProviderRegistration.GetHashCode() -> int
+override Kazo.Os.Platform.Core.AppDriveProviderRegistration.ToString() -> string!
+static Kazo.Os.Platform.Core.AppDriveProviderRegistration.operator !=(Kazo.Os.Platform.Core.AppDriveProviderRegistration? left, Kazo.Os.Platform.Core.AppDriveProviderRegistration? right) -> bool
+static Kazo.Os.Platform.Core.AppDriveProviderRegistration.operator ==(Kazo.Os.Platform.Core.AppDriveProviderRegistration? left, Kazo.Os.Platform.Core.AppDriveProviderRegistration? right) -> bool
+static Kazo.Os.Platform.Core.CloudAccounts.DeclaredCloudProviders.Build(Kazo.Os.Platform.Core.AppDriveProviderRegistration! registration, Kazo.Os.Simulation.Abstractions.Settings.LayeredConfigSnapshot? snapshot = null) -> Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthProvider?
+static Kazo.Os.Platform.Core.CloudAccounts.DeclaredCloudProviders.GetOAuthRegistrations(Kazo.Os.Platform.Core.AppCatalog! catalog, Kazo.Os.Platform.Core.Lifecycle.IAppEnablementRegistry? enablement) -> System.Collections.Generic.IReadOnlyList<Kazo.Os.Platform.Core.AppDriveProviderRegistration!>!
+static Kazo.Os.Platform.Core.CloudAccounts.DeclaredCloudProviders.SettingsDocument(Kazo.Os.Platform.Core.Settings.OsSettingsDocument! baseDocument, System.Collections.Generic.IEnumerable<string!>! types) -> Kazo.Os.Platform.Core.Settings.OsSettingsDocument!
 Kazo.Os.Platform.Core.CloudAccounts.CloudProviderCatalog.IsTypeEnabledAsync(string! type, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<bool>
 Kazo.Os.Platform.Core.CloudAccounts.CloudProviderSettings.Disabled.get -> System.Collections.Generic.IReadOnlyCollection<string!>!
 Kazo.Os.Platform.Core.CloudAccounts.CloudProviderSettings.Disabled.init -> void
@@ -33,17 +66,6 @@ Kazo.Os.Platform.Core.FileSystem.HostFolders.SwitchableDriveSource.Type.get -> s
 const Kazo.Os.Platform.Core.CloudAccounts.CloudDrivesSettingsDocuments.DisabledKey = "disabled" -> string!
 static Kazo.Os.Platform.Core.CloudAccounts.CloudProviderSettings.ParseTypes(string? value) -> System.Collections.Generic.IReadOnlyList<string!>!
 Kazo.Os.Platform.Core.FileSystem.HostFolders.SwitchableDriveSource.IsEnabledAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<bool>
-Kazo.Os.Platform.Core.AppCatalog.FindDriveProvider(string! type) -> Kazo.Os.Platform.Core.AppDriveProviderRegistration?
-Kazo.Os.Platform.Core.AppCatalog.GetDriveProviders() -> System.Collections.Generic.IReadOnlyList<Kazo.Os.Platform.Core.AppDriveProviderRegistration!>!
-Kazo.Os.Platform.Core.AppDriveProviderRegistration
-Kazo.Os.Platform.Core.AppDriveProviderRegistration.<Clone>$() -> Kazo.Os.Platform.Core.AppDriveProviderRegistration!
-Kazo.Os.Platform.Core.AppDriveProviderRegistration.AppDriveProviderRegistration(Kazo.Os.App.Abstractions.AppManifest! Feature, Kazo.Os.App.Abstractions.AppDriveProviderManifest! Provider) -> void
-Kazo.Os.Platform.Core.AppDriveProviderRegistration.Deconstruct(out Kazo.Os.App.Abstractions.AppManifest! Feature, out Kazo.Os.App.Abstractions.AppDriveProviderManifest! Provider) -> void
-Kazo.Os.Platform.Core.AppDriveProviderRegistration.Equals(Kazo.Os.Platform.Core.AppDriveProviderRegistration? other) -> bool
-Kazo.Os.Platform.Core.AppDriveProviderRegistration.Feature.get -> Kazo.Os.App.Abstractions.AppManifest!
-Kazo.Os.Platform.Core.AppDriveProviderRegistration.Feature.init -> void
-Kazo.Os.Platform.Core.AppDriveProviderRegistration.Provider.get -> Kazo.Os.App.Abstractions.AppDriveProviderManifest!
-Kazo.Os.Platform.Core.AppDriveProviderRegistration.Provider.init -> void
 Kazo.Os.Platform.Core.FileSystem.DriveProviders.FeatureDriveConnection
 Kazo.Os.Platform.Core.FileSystem.DriveProviders.FeatureDriveConnection.<Clone>$() -> Kazo.Os.Platform.Core.FileSystem.DriveProviders.FeatureDriveConnection!
 Kazo.Os.Platform.Core.FileSystem.DriveProviders.FeatureDriveConnection.Context.get -> Kazo.Os.AppSdk.Drives.IKazoDriveProviderContext!
@@ -87,14 +109,9 @@ Kazo.Os.Platform.Core.FileSystem.HostFolders.NetworkDrive.IsProviderMissing.init
 Kazo.Os.Platform.Core.FileSystem.HostFolders.NetworkDriveService.GetProviderMissingDrives() -> System.Collections.Generic.IReadOnlyList<Kazo.Os.Platform.Core.FileSystem.HostFolders.NetworkDrive!>!
 Kazo.Os.Platform.Core.FileSystem.HostFolders.NetworkDriveService.NetworkDriveService(Kazo.Os.Simulation.Abstractions.FileSystem.IDynamicFileSystemMountRouter! router, System.Collections.Generic.IEnumerable<Kazo.Os.Simulation.Abstractions.FileSystem.INetworkDriveSource!>! sources, Kazo.Os.Platform.Core.FileSystem.DriveProviders.IDynamicDriveSources? dynamicSources, System.Func<Kazo.Os.Simulation.Abstractions.Sessions.AuthenticatedPrincipal?>! principal, Kazo.Os.Simulation.Abstractions.Events.IEventBus? eventBus = null, System.TimeProvider? timeProvider = null, Microsoft.Extensions.Logging.ILogger<Kazo.Os.Platform.Core.FileSystem.HostFolders.NetworkDriveService!>? logger = null) -> void
 Kazo.Os.Platform.Core.FileSystem.HostFolders.NetworkDriveService.RefreshProvidersAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
-override Kazo.Os.Platform.Core.AppDriveProviderRegistration.Equals(object? obj) -> bool
-override Kazo.Os.Platform.Core.AppDriveProviderRegistration.GetHashCode() -> int
-override Kazo.Os.Platform.Core.AppDriveProviderRegistration.ToString() -> string!
 override Kazo.Os.Platform.Core.FileSystem.DriveProviders.FeatureDriveConnection.Equals(object? obj) -> bool
 override Kazo.Os.Platform.Core.FileSystem.DriveProviders.FeatureDriveConnection.GetHashCode() -> int
 override Kazo.Os.Platform.Core.FileSystem.DriveProviders.FeatureDriveConnection.ToString() -> string!
-static Kazo.Os.Platform.Core.AppDriveProviderRegistration.operator !=(Kazo.Os.Platform.Core.AppDriveProviderRegistration? left, Kazo.Os.Platform.Core.AppDriveProviderRegistration? right) -> bool
-static Kazo.Os.Platform.Core.AppDriveProviderRegistration.operator ==(Kazo.Os.Platform.Core.AppDriveProviderRegistration? left, Kazo.Os.Platform.Core.AppDriveProviderRegistration? right) -> bool
 static Kazo.Os.Platform.Core.FileSystem.DriveProviders.FeatureDriveConnection.operator !=(Kazo.Os.Platform.Core.FileSystem.DriveProviders.FeatureDriveConnection? left, Kazo.Os.Platform.Core.FileSystem.DriveProviders.FeatureDriveConnection? right) -> bool
 static Kazo.Os.Platform.Core.FileSystem.DriveProviders.FeatureDriveConnection.operator ==(Kazo.Os.Platform.Core.FileSystem.DriveProviders.FeatureDriveConnection? left, Kazo.Os.Platform.Core.FileSystem.DriveProviders.FeatureDriveConnection? right) -> bool
 static readonly Kazo.Os.Platform.Core.FileSystem.DriveProviders.FeatureDriveSource.DefaultOpenTimeout -> System.TimeSpan

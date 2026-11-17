@@ -126,6 +126,43 @@ Dans le manifeste (`driveProviders`, trié par type) :
 }]
 ```
 
+## Connexion menée par l'OS (chantier 5)
+
+L'OS mène la connexion d'un type déclaré
+([ADR 0282](../dev/adr/0282-third-party-drive-providers.md) §3, détail dans
+[`cloud-accounts.md`](../dev/cloud-accounts.md)) :
+
+- **OAuth** : l'OS lit la déclaration d'une fonctionnalité installée et
+  activée, ouvre la fenêtre de connexion, échange le code (PKCE, sans secret
+  de client), lit l'identité, scelle les jetons sur l'appareil et renouvelle
+  le jeton d'accès. Le fournisseur n'appelle que
+  `Context.GetAccessTokenAsync()` avant chaque requête.
+- **Formulaire** : l'OS garde les valeurs non secrètes en clair avec le compte
+  (elles arrivent dans `KazoDriveOpenRequest.Options`) et scelle les champs
+  `Secret` ; le fournisseur les lit par `Context.GetSecretAsync(nom)`.
+  `Context.Account` est `null` et `GetAccessTokenAsync` lève
+  `SignInRequired`.
+- **Ce qui est prêté** : le contexte d'un lecteur est lié à son compte et à son
+  type ; il ne rend jamais le jeton ou les secrets d'un autre compte, rien une
+  fois le compte retiré, et jamais le jeton de renouvellement.
+
+### Adresses à inscrire chez le service
+
+L'auteur inscrit chez son service une app **publique** (sans secret, PKCE
+`S256`) avec, comme adresse de retour, la page de retour de l'OS, la même pour
+tous les types :
+
+| Où Kazo OS est servi | Adresse de retour |
+| --- | --- |
+| os.kazo.ca | `https://os.kazo.ca/_content/Kazo.Os.Infrastructure.Browser/oauth-callback.html` |
+| Autre site | `<adresse de base>_content/Kazo.Os.Infrastructure.Browser/oauth-callback.html` |
+| Développement | `http://localhost:5000/_content/Kazo.Os.Infrastructure.Browser/oauth-callback.html` et la même en `https` |
+
+Le point de jeton (et l'adresse d'identité, la révocation) doit accepter CORS
+depuis l'origine de l'OS. Un administrateur qui sert Kazo OS ailleurs inscrit
+sa propre app et remplace l'identifiant dans `/etc/kazoos/cloud-drives.config`,
+section au nom du type (`client-id`, `app-folder-client-id`).
+
 ## Ce que fait l'OS d'un fournisseur (chantier 4)
 
 Le chantier 4 branche les types déclarés dans le système de fichiers
@@ -220,4 +257,5 @@ fond (aucune opération retirée, l'OS garde toujours les jetons) :
 - [x] Validateur (`manifest.feature.only`, `manifest.drive-provider.*`)
 - [x] Générateur (`KOSAPP0033`, `KOSAPP0036`)
 - [x] Capacité dangereuse `drives.provide`
+- [x] Connexion menée par l'OS, comptes à formulaire, contexte du fournisseur (chantier 5)
 - [x] Branchement dans l'OS (chantier 4, voir ci-dessus)

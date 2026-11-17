@@ -557,10 +557,18 @@ public static class EcosystemServiceCollectionExtensions
         services.TryAddScoped<IOAuthAuthorizationWindow>(provider => new BrowserOAuthAuthorizationWindow(
             provider.GetRequiredService<IJSRuntime>(),
             new Uri(provider.GetRequiredService<Microsoft.AspNetCore.Components.NavigationManager>().BaseUri)));
+        // ADR 0282 §3: an OAuth drive type an installed and enabled feature declares is signed in by
+        // the OS like Dropbox and OneDrive; the catalog is read at each call, so a feature installed
+        // or removed is offered or withdrawn without a restart.
         services.TryAddScoped<ICloudProviderCatalog>(provider => new CloudProviderCatalog(
             // ADR 0282 §5: a provider whose connector the build left out is never offered.
             CloudDriveServiceCollectionExtensions.WithLeftOutTypes(provider.GetService<CloudProviderSettings>() ?? CloudProviderSettings.None),
-            provider.GetRequiredService<IOsSettingsService>()));
+            provider.GetRequiredService<IOsSettingsService>())
+        {
+            DeclaredProviders = () => provider.GetService<AppCatalog>() is { } catalog
+                ? DeclaredCloudProviders.GetOAuthRegistrations(catalog, provider.GetService<IAppEnablementRegistry>())
+                : []
+        });
         services.AddScoped<CloudAccountService>(provider => new CloudAccountService(
             provider.GetRequiredService<IFileSystemService>(),
             provider.GetRequiredService<ISimulationClock>(),
@@ -1498,15 +1506,28 @@ public static class EcosystemServiceCollectionExtensions
     }
 
     /// <summary>
-    /// What the OS lends the provider of a declared drive type for one drive (ADR 0282 §3). The
-    /// context of the account is work item 5 of the series; until it joins, a provided drive has
-    /// no context and stays disconnected (SignInRequired).
+    /// What the OS lends the provider of a declared drive type for one drive (ADR 0282 §3): the
+    /// context bound to the drive's account (work item 5) and the non-secret values of a form
+    /// account. An account that is gone or of another type is <c>SignInRequired</c>: the drive
+    /// stays disconnected.
     /// </summary>
-    private static ValueTask<FeatureDriveConnection> ConnectFeatureDriveAsync(
-        IServiceProvider provider, string type, string accountId, Action availabilityChanged, CancellationToken cancellationToken) =>
-        throw new Kazo.Os.AppSdk.Drives.KazoDriveException(
-            Kazo.Os.AppSdk.Drives.KazoDriveErrorKind.SignInRequired,
-            $"{type}: the OS cannot lend an account to a provider yet.");
+    private static async ValueTask<FeatureDriveConnection> ConnectFeatureDriveAsync(
+        IServiceProvider provider, string type, string accountId, Action availabilityChanged, CancellationToken cancellationToken)
+    {
+        CloudAccountService accounts = provider.GetRequiredService<CloudAccountService>();
+        try
+        {
+            Kazo.Os.AppSdk.Drives.IKazoDriveProviderContext context = await accounts
+                .CreateDriveProviderContextAsync(type, accountId, availabilityChanged, cancellationToken).ConfigureAwait(false);
+            CloudAccount? account = await accounts.FindAccountAsync(accountId, cancellationToken).ConfigureAwait(false);
+            return new FeatureDriveConnection(context, account?.Options ?? new Dictionary<string, string>(StringComparer.Ordinal));
+        }
+        catch (CloudAccountException exception)
+        {
+            throw new Kazo.Os.AppSdk.Drives.KazoDriveException(
+                Kazo.Os.AppSdk.Drives.KazoDriveErrorKind.SignInRequired, $"{type}: {exception.Message}", exception);
+        }
+    }
 
     /// <summary>
     /// Loads the assembly of a feature's service (ADR 0262 §4) through the host's lazy loader, which
