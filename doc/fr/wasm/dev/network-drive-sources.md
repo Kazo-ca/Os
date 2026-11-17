@@ -60,8 +60,12 @@ de dépendances : un connecteur s'ajoute par une ligne
   quelle et n'est pas réécrite tant que rien ne change.
 - `account` est une **référence** dans la liste des comptes cloud (chantier 2),
   jamais un jeton. `root` absent : tout le stockage.
+- `provider` : l'id de la fonctionnalité qui fournit le type (ADR 0282 §3),
+  noté au montage ; absent pour un type livré de l'OS.
 - Une ligne dont le type n'a pas de source sur cet hôte est retirée de la liste
-  à la connexion, avec un avertissement dans le journal.
+  à la connexion, avec un avertissement dans le journal, sauf une ligne d'un
+  type livré ou une ligne qui a un `provider` : elle est gardée (« fournisseur
+  absent », plus bas).
 
 ## Comportement
 
@@ -159,12 +163,22 @@ avec les valeurs non secrètes d'un compte à formulaire (`CloudAccount.Options`
 un compte absent ou d'un autre type donne `SignInRequired` et le lecteur reste
 déconnecté.
 
-**Fournisseur absent** (fonctionnalité retirée ou désactivée) : le comportement
-attendu (lignes gardées, lecteurs grisés, remontage au retour du type) attend
-deux réponses du mainteneur sur la façon de reconnaître le fournisseur d'une
-ligne ; il n'est pas encore codé. Aujourd'hui, `NetworkDriveService` démonte
-les lecteurs d'un type parti et garde les lignes des types livrés de l'OS
-seulement (chantier 3).
+**Fournisseur absent** (fonctionnalité retirée ou désactivée, choix du
+mainteneur du 2026-11-17) :
+
+- Au montage, la ligne note la fonctionnalité qui fournit le type (`provider`).
+- Quand le catalogue change, `RefreshProvidersAsync` démonte les lecteurs dont
+  le fournisseur est parti ; leur ligne reste dans `network-drives.json` et
+  leur point de montage reste réservé. `GetProviderMissingDrives()` les rend
+  avec `IsProviderMissing` et `ProviderFeatureId` (l'id noté, `null` pour un
+  type livré) : l'Explorateur les montre grisés (chantier 6).
+- Le lecteur est remonté, sans redémarrage, quand **la même** fonctionnalité
+  fournit de nouveau le type (réactivée, réinstallée, mise à jour). Une autre
+  fonctionnalité qui fournit le même type ne le reprend pas, ni à chaud ni à
+  la connexion.
+- Une ligne sans `provider` d'un type que rien ne sert ici, et qui n'est pas un
+  type livré, est retirée à la connexion comme avant. Une ligne écrite avant ce
+  chantier pour un type fourni reçoit son `provider` au premier montage.
 
 ## Tests
 
@@ -185,7 +199,10 @@ seulement (chantier 3).
   processus qui ne démarre pas, une instance par page dans le contexte de la
   fonctionnalité, compte d'un autre type refusé, types qui suivent le catalogue
   à chaud (`FeatureDriveSourceTests`), montage d'un type installé à chaud et
-  restauration sans attente (`FeatureDriveMountTests`), refus d'un second
+  restauration sans attente, lecteur gardé quand la fonctionnalité est
+  désactivée ou retirée et remonté à son retour, autre fonctionnalité du même
+  type qui ne reprend pas le lecteur, ligne sans `provider` d'un type inconnu
+  retirée (`FeatureDriveMountTests`), refus d'un second
   fournisseur du même type (`DriveTypeInstallTests`).
 - Les tests existants des lecteurs `hostfs` passent sans changement.
 
@@ -208,4 +225,4 @@ seulement (chantier 3).
 - [x] Lecteur indisponible monté déconnecté, reconnexion seule.
 - [x] Source distante factice et tests.
 - [x] Types fournis par une fonctionnalité : registre, adaptateur, chargement paresseux, connexion sans attente (ADR 0282, chantier 4).
-- [ ] Fournisseur absent : lignes gardées et remontage (ADR 0282, attend le mainteneur).
+- [x] Fournisseur absent : lignes gardées avec `provider`, remontage par la même fonctionnalité seulement (ADR 0282).

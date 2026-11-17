@@ -106,6 +106,8 @@ Kazo.Os.Platform.Core.FileSystem.DriveProviders.IDynamicDriveSources.FindFeature
 Kazo.Os.Platform.Core.FileSystem.DriveProviders.IDynamicDriveSources.GetSources() -> System.Collections.Generic.IReadOnlyList<Kazo.Os.Simulation.Abstractions.FileSystem.INetworkDriveSource!>!
 Kazo.Os.Platform.Core.FileSystem.HostFolders.NetworkDrive.IsProviderMissing.get -> bool
 Kazo.Os.Platform.Core.FileSystem.HostFolders.NetworkDrive.IsProviderMissing.init -> void
+Kazo.Os.Platform.Core.FileSystem.HostFolders.NetworkDrive.ProviderFeatureId.get -> string?
+Kazo.Os.Platform.Core.FileSystem.HostFolders.NetworkDrive.ProviderFeatureId.init -> void
 Kazo.Os.Platform.Core.FileSystem.HostFolders.NetworkDriveService.GetProviderMissingDrives() -> System.Collections.Generic.IReadOnlyList<Kazo.Os.Platform.Core.FileSystem.HostFolders.NetworkDrive!>!
 Kazo.Os.Platform.Core.FileSystem.HostFolders.NetworkDriveService.NetworkDriveService(Kazo.Os.Simulation.Abstractions.FileSystem.IDynamicFileSystemMountRouter! router, System.Collections.Generic.IEnumerable<Kazo.Os.Simulation.Abstractions.FileSystem.INetworkDriveSource!>! sources, Kazo.Os.Platform.Core.FileSystem.DriveProviders.IDynamicDriveSources? dynamicSources, System.Func<Kazo.Os.Simulation.Abstractions.Sessions.AuthenticatedPrincipal?>! principal, Kazo.Os.Simulation.Abstractions.Events.IEventBus? eventBus = null, System.TimeProvider? timeProvider = null, Microsoft.Extensions.Logging.ILogger<Kazo.Os.Platform.Core.FileSystem.HostFolders.NetworkDriveService!>? logger = null) -> void
 Kazo.Os.Platform.Core.FileSystem.HostFolders.NetworkDriveService.RefreshProvidersAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask

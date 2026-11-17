@@ -32,6 +32,13 @@ public sealed record NetworkDrive(VirtualPath MountPoint, string Name, string Ow
     /// connector is switched off. Such a drive is never <see cref="IsConnected"/>.
     /// </summary>
     public bool IsProviderMissing { get; init; }
+
+    /// <summary>
+    /// Gets the id of the feature that provides the drive's type (ADR 0282 §3), as written in its
+    /// line; <see langword="null"/> for a shipped type. Only this feature mounts the drive again:
+    /// another one that provides the same type does not take it over.
+    /// </summary>
+    public string? ProviderFeatureId { get; init; }
 }
 
 /// <summary>Why a network drive operation was refused.</summary>
@@ -299,7 +306,8 @@ public sealed class NetworkDriveService : IDisposable, Kazo.Os.Platform.Core.Clo
                         Type = kept.Record.SourceType,
                         Account = kept.Record.Account,
                         Root = kept.Record.Root,
-                        IsProviderMissing = true
+                        IsProviderMissing = true,
+                        ProviderFeatureId = kept.Record.Provider
                     })
             ];
         }
@@ -845,14 +853,26 @@ public sealed class NetworkDriveService : IDisposable, Kazo.Os.Platform.Core.Clo
         }
     }
 
-    /// <summary>Gets whether a source may mount a line (ADR 0282 §3).</summary>
-    private static bool Serves(INetworkDriveSource source, DriveRecord record) => true;
+    /// <summary>
+    /// Gets whether a source may mount a line (ADR 0282 §3): a line written by a feature is mounted
+    /// only by that feature, never by another one that provides the same type now. A line with no
+    /// feature (a shipped type, or a line written before the feature was noted) takes any source.
+    /// </summary>
+    private static bool Serves(INetworkDriveSource source, DriveRecord record) =>
+        string.IsNullOrEmpty(record.Provider)
+        || (source is FeatureDriveSource feature && string.Equals(feature.FeatureId, record.Provider, StringComparison.Ordinal));
 
-    /// <summary>Gets whether a line whose type has no provider now is kept (ADR 0282 §3, §5) instead of dropped.</summary>
-    private static bool KeepsWhenMissing(DriveRecord record) => ShippedCloudTypes.Contains(record.SourceType);
+    /// <summary>
+    /// Gets whether a line whose type has no provider now is kept (ADR 0282 §3, §5) instead of
+    /// dropped: a shipped type, or a type a feature provided. A line of a type nothing ever served
+    /// here is dropped.
+    /// </summary>
+    private static bool KeepsWhenMissing(DriveRecord record) =>
+        ShippedCloudTypes.Contains(record.SourceType) || !string.IsNullOrEmpty(record.Provider);
 
-    /// <summary>Writes into a line what the source that mounts it needs to recognize it later.</summary>
-    private static DriveRecord Stamp(DriveRecord record, INetworkDriveSource source) => record;
+    /// <summary>Notes in a line the feature that provides its type, so only that feature mounts it again.</summary>
+    private static DriveRecord Stamp(DriveRecord record, INetworkDriveSource source) =>
+        source is FeatureDriveSource feature ? record with { Provider = feature.FeatureId } : record;
 
     /// <summary>Unmounts every drive (at logout); the list and the handles stay for the next login.</summary>
     public async ValueTask UnmountAllAsync()
@@ -1304,7 +1324,8 @@ public sealed class NetworkDriveService : IDisposable, Kazo.Os.Platform.Core.Clo
             {
                 Type = Provider.Type,
                 Account = Record.Account,
-                Root = Record.Root
+                Root = Record.Root,
+                ProviderFeatureId = Record.Provider
             };
     }
 
@@ -1350,6 +1371,9 @@ internal sealed record DriveRecord(string MountPoint, string Name, string? Key, 
 
     /// <summary>Gets the folder of the service the drive starts at.</summary>
     public string? Root { get; init; }
+
+    /// <summary>Gets the id of the feature that provides the type (ADR 0282 §3); absent for a shipped type.</summary>
+    public string? Provider { get; init; }
 
     /// <summary>Gets the source's type, <c>hostfs</c> when the line has none.</summary>
     [JsonIgnore]
