@@ -1,0 +1,18 @@
+{
+  "id": "b94efa01-4efc-4ea7-9981-9154f33d86bf",
+  "category": "developer",
+  "audience": [
+    "developer"
+  ],
+  "title": {
+    "en": "Test an app on the published trimmed OS",
+    "fr": "Tester une app sur l'OS rogné publié"
+  },
+  "description": {
+    "en": "build/app-e2e/ holds a shared harness and a short test (smoke.mjs) that serve the published trimmed OS, install the app with kazopkg as the Store does, launch it and fail on a missing member, a kazopkg refusal or the app's failure panel. App repositories reach it through their Kazo OS submodule (ADR 0281).",
+    "fr": "build/app-e2e/ contient un banc commun et un test court (smoke.mjs) qui servent l'OS rogné publié, installent l'app avec kazopkg comme le Store, la lancent et échouent sur un membre absent, un refus de kazopkg ou le panneau de panne de l'app. Les dépôts d'apps l'atteignent par leur sous-module Kazo OS (ADR 0281)."
+  },
+  "links": [
+    "doc/en/wasm/framework/app-repository.md"
+  ]
+}
