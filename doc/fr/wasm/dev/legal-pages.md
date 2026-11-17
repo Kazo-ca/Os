@@ -46,7 +46,7 @@ demande de mettre les pages à jour et leur date « En vigueur le ».
 | Identité lue : nom affiché et identifiant du compte (`users/get_current_account`, `/me`) | `CloudOAuthProvider.cs`, `CloudAccountStore.cs` (`DisplayName`, `ProviderAccountId`) |
 | Jetons scellés AES-256-GCM sur l'appareil, clé dans le trousseau, jamais synchronisés | [ADR 0269](adr/0269-cloud-tokens-stay-on-the-device.md), [`cloud-accounts.md`](cloud-accounts.md) |
 | Retrait : démontage, effacement, révocation Dropbox | `CloudAccountService.cs` (`RemoveAsync`) |
-| Police Roboto chargée depuis `fonts.googleapis.com` | `OS/Kazo.Os.Ecosystem/wwwroot/index.html` |
+| Police Roboto servie par le site (aucun appel à Google Fonts) | `OS/Kazo.Os.Ecosystem.Host/wwwroot/fonts/roboto/`, `OS/Kazo.Os.Ecosystem/wwwroot/index.html` |
 | Catalogue du Store et paquets sur `raw.githubusercontent.com` | `Platform.Core/Apps/Packages/AppPackageDefaults.cs`, `AppPackageSource.cs` |
 | Réseau réel seulement avec `network.real.access`, approuvée par un administrateur | [`dangerous-capability-approval.md`](dangerous-capability-approval.md) |
 | Kazo AI : clé envoyée seulement au service choisi ; modèle local depuis Hugging Face | dépôt `Kazo-ca/Os-App-AI`, `doc/fr/providers.md` |
@@ -60,9 +60,9 @@ demande de mettre les pages à jour et leur date « En vigueur le ».
 - Contact publié : `confidentialite@kazo.ca` (adresse dédiée).
 - Loi applicable : lois du Québec et lois fédérales du Canada, tribunaux du
   Québec, sous réserve des droits des consommateurs.
-- Google Fonts : déclaré dans la politique ; Roboto sera servie par le site
-  dans une PR à part, après quoi la ligne Google Fonts disparaît de la
-  politique.
+- Google Fonts : retiré ; Roboto (`@fontsource/roboto` 5.3.0, SIL OFL 1.1,
+  sous-ensembles latin et latin-ext, graisses 300 à 700) est servie par le
+  site depuis `_content/Kazo.Os.Ecosystem.Host/fonts/roboto/roboto.css`.
 - Une seule paire de pages bilingues pour tous les fournisseurs (choix du
   2026-11-15, [`cloud-accounts.md`](cloud-accounts.md#pages-publiques-pour-les-fournisseurs)).
 
@@ -93,4 +93,4 @@ demande de mettre les pages à jour et leur date « En vigueur le ».
 - [x] Lier les pages depuis le pied de page de connexion et À propos.
 - [x] Tests unitaires et E2E.
 - [x] Documentation FR + EN et index.
-- [ ] Héberger Roboto sur le site (PR à part), puis retirer Google Fonts de la politique.
+- [x] Héberger Roboto sur le site et retirer Google Fonts de la politique.
