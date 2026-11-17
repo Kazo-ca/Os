@@ -16,8 +16,8 @@ public sealed partial class TrimmedPublishTests
     /// <summary>
     /// Before the install, <c>mount -t webdav</c> does not know the type; <c>sudo kazopkg install</c>
     /// installs the feature for the machine and approves <c>drives.provide</c> with the
-    /// administrator's consent, on a window that names the server address field; then, without a restart, <c>mount</c> knows the type and only asks
-    /// for an account of it.
+    /// administrator's consent, on a window that names the server address field; then, without a
+    /// restart, <c>mount</c> knows the type and writes the syntax of its form.
     /// </summary>
     [TrimmedPublishFact]
     public async Task An_installed_drive_provider_feature_adds_its_type_to_mount()
@@ -82,10 +82,12 @@ public sealed partial class TrimmedPublishTests
             Log("the WebDAV sample was installed as a feature; drives.provide was approved by the administrator.");
             session.AssertNoErrors("kazopkg install of a drive provider");
 
-            // --- After, without a restart: the type is offered, mount only lacks an account ---
-            await RunCommandAsync(page, screen, "mount -t webdav -o account=nobody");
-            await WaitForTerminalTextAsync(rows, text => text.Contains("no webdav account named 'nobody'", StringComparison.Ordinal), "mount asking for a webdav account");
-            Log("after the install, mount knows the webdav type and asks for an account of it.");
+            // --- After, without a restart: mount knows the type and writes the syntax of its form ---
+            await RunCommandAsync(page, screen, "mount -t webdav");
+            await WaitForTerminalTextAsync(
+                rows, text => text.Contains("Usage: mount -t webdav -o", StringComparison.Ordinal) && text.Contains("server", StringComparison.Ordinal),
+                "mount writing the syntax of the webdav form");
+            Log("after the install, mount knows the webdav type and writes the syntax of its form.");
 
             session.AssertNoErrors("drive provider feature");
             await CloseAllWindowsAsync(page);
