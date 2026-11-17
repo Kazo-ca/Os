@@ -187,7 +187,7 @@ manifest's app id. The type `locked` cannot have a section (reserved name of
 the settings files, ADR 0044).
 
 ```ini
-[pcloud]
+[exemple]
 client-id = …
 app-folder-client-id = …
 ```

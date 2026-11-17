@@ -408,6 +408,9 @@
   <data name="Prompt.Dangerous.DirectNetworkHosts" xml:space="preserve">
     <value>Services web joints directement : {0}</value>
   </data>
+  <data name="Prompt.Dangerous.TypedServers" xml:space="preserve">
+    <value>Le serveur que chaque utilisateur tape dans : {0}</value>
+  </data>
   <data name="Prompt.Dangerous.AuditNotice" xml:space="preserve">
     <value>Cette décision sera inscrite dans /var/log/auth.log.</value>
   </data>

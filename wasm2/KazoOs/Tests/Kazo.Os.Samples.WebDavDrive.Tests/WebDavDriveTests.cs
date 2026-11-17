@@ -75,6 +75,19 @@ public sealed class WebDavDriveTests
     }
 
     [Fact]
+    public void The_manifest_is_valid_and_marks_the_server_field_as_the_server_address()
+    {
+        Kazo.Os.App.Abstractions.AppManifest feature = Kazo.Os.App.Abstractions.AppDefinitionMapper
+            .ToFeatureManifests(new WebDavFeature(), Kazo.Os.App.Abstractions.KazoOsSdk.Version.ToString()).Feature;
+        Kazo.Os.App.Abstractions.AppDriveProviderManifest provider = Assert.Single(feature.DriveProviders!);
+
+        Assert.Empty(Kazo.Os.App.Abstractions.AppManifestValidator.Validate(feature).Errors);
+        Assert.Equal(WebDavFields.Server, Kazo.Os.App.Abstractions.AppDriveProviders.ServerAddressField(provider.Connection)?.Name);
+        Assert.Empty(provider.Hosts);
+        Assert.Equal([Kazo.Os.App.Abstractions.AppCapabilities.DrivesProvide], feature.Capabilities);
+    }
+
+    [Fact]
     public async Task Opening_a_drive_sends_nothing_to_the_server()
     {
         LocalWebDavServer server = new() { Online = false };

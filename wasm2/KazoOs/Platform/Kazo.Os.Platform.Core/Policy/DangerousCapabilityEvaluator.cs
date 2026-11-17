@@ -115,13 +115,72 @@ public static class DangerousCapabilityEvaluator
     /// </summary>
     /// <param name="manifest">App manifest.</param>
     /// <param name="decisions">Parsed machine and user decisions.</param>
-    public static IReadOnlyList<string> UnapprovedDirectNetworkHosts(AppManifest manifest, AppPermissionDecisions decisions)
+    public static IReadOnlyList<string> UnapprovedDirectNetworkHosts(AppManifest manifest, AppPermissionDecisions decisions) =>
+        UnapprovedDirectNetworkHosts(manifest, decisions, AppCapabilities.NetworkDirectAccess);
+
+    /// <summary>
+    /// Gets the hosts <paramref name="capability"/> lets <paramref name="manifest"/> reach directly
+    /// that the machine file does not approve yet (ADR 0282 §4, ADR 0284 §1); empty when every one
+    /// was approved, or when the capability names no host.
+    /// </summary>
+    /// <param name="manifest">App manifest.</param>
+    /// <param name="decisions">Parsed machine and user decisions.</param>
+    /// <param name="capability"><c>network.direct.access</c> or <c>drives.provide</c>.</param>
+    public static IReadOnlyList<string> UnapprovedDirectNetworkHosts(AppManifest manifest, AppPermissionDecisions decisions, string capability)
     {
         ArgumentNullException.ThrowIfNull(manifest);
         ArgumentNullException.ThrowIfNull(decisions);
         IReadOnlySet<string> approved = decisions.GetApprovedDirectNetworkHosts(manifest.Id);
-        return [.. DirectNetworkHosts.ParseValid(manifest.DirectNetworkHosts).Where(host => !approved.Contains(host))];
+        return [.. DirectHostsFor(manifest, capability).Where(host => !approved.Contains(host))];
     }
+
+    /// <summary>
+    /// Gets the hosts a capability lets <paramref name="manifest"/> reach directly, canonical and
+    /// sorted: its <c>directNetworkHosts</c> for <c>network.direct.access</c> (ADR 0282 §4), the
+    /// hosts of its drive providers for <c>drives.provide</c> (ADR 0284 §1), none otherwise.
+    /// </summary>
+    /// <param name="manifest">App manifest.</param>
+    /// <param name="capability">The capability.</param>
+    public static IReadOnlyList<string> DirectHostsFor(AppManifest manifest, string capability)
+    {
+        ArgumentNullException.ThrowIfNull(manifest);
+        return capability switch
+        {
+            AppCapabilities.NetworkDirectAccess => DirectNetworkHosts.ParseValid(manifest.DirectNetworkHosts),
+            AppCapabilities.DrivesProvide => AppDriveProviders.HostsOf(manifest),
+            _ => [],
+        };
+    }
+
+    /// <summary>
+    /// Gets the hosts the machine file approves for <paramref name="manifest"/> after the
+    /// capabilities of <paramref name="allowed"/> were allowed and those of <paramref name="refused"/>
+    /// refused (ADR 0284 §1): the hosts of the allowed ones, plus the hosts approved before that
+    /// another capability still names, without the ones only a refused capability names.
+    /// </summary>
+    /// <param name="manifest">App manifest.</param>
+    /// <param name="approvedBefore">The hosts the machine file approved before the decision.</param>
+    /// <param name="allowed">The capabilities allowed now.</param>
+    /// <param name="refused">The capabilities refused or reset now.</param>
+    /// <returns>The hosts to write, or <see langword="null"/> to remove the line when none is left.</returns>
+    public static IReadOnlyCollection<string>? HostsToApprove(
+        AppManifest manifest, IReadOnlySet<string> approvedBefore, IReadOnlyCollection<string> allowed, IReadOnlyCollection<string> refused)
+    {
+        ArgumentNullException.ThrowIfNull(manifest);
+        ArgumentNullException.ThrowIfNull(approvedBefore);
+        ArgumentNullException.ThrowIfNull(allowed);
+        ArgumentNullException.ThrowIfNull(refused);
+        IReadOnlyList<string> declared = manifest.Capabilities ?? [];
+        string[] others = [.. HostCapabilities.Where(capability =>
+            declared.Contains(capability, StringComparer.Ordinal) && !allowed.Contains(capability) && !refused.Contains(capability))];
+        HashSet<string> stillNamed = new(others.SelectMany(capability => DirectHostsFor(manifest, capability)), StringComparer.Ordinal);
+        SortedSet<string> hosts = new(allowed.SelectMany(capability => DirectHostsFor(manifest, capability)), StringComparer.Ordinal);
+        hosts.UnionWith(approvedBefore.Where(stillNamed.Contains));
+        return hosts.Count == 0 && !allowed.Any(HostCapabilities.Contains) ? null : hosts;
+    }
+
+    /// <summary>The capabilities whose approval names hosts (ADR 0282 §4, ADR 0284 §1).</summary>
+    public static IReadOnlyList<string> HostCapabilities { get; } = [AppCapabilities.NetworkDirectAccess, AppCapabilities.DrivesProvide];
 
     private static DangerousCapabilityState EvaluateOne(
         AppManifest manifest, string capability, DangerousCapabilityPolicy policy, AppPermissionDecisions decisions)
@@ -155,9 +214,9 @@ public static class DangerousCapabilityEvaluator
             return DangerousCapabilityState.Pending;
         }
 
-        // ADR 0282 §4: the same for a new direct-network host.
-        return string.Equals(capability, AppCapabilities.NetworkDirectAccess, StringComparison.Ordinal)
-            && UnapprovedDirectNetworkHosts(manifest, decisions).Count > 0
+        // ADR 0282 §4 and ADR 0284 §1: the same for a new direct-network or drive-provider host.
+        return HostCapabilities.Contains(capability)
+            && UnapprovedDirectNetworkHosts(manifest, decisions, capability).Count > 0
                 ? DangerousCapabilityState.Pending
                 : DangerousCapabilityState.Allowed;
     }

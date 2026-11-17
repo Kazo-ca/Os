@@ -178,10 +178,10 @@ reset removes the line, and only the machine file approves.
 
 ```text
 [permissions]
-ca.example.pcloud:network.direct.access=allow
+ca.example.drive:network.direct.access=allow
 
 [direct-network-hosts]
-ca.example.pcloud=*.pcloud.com,api.pcloud.com
+ca.example.drive=*.example.com,api.example.com
 ```
 
 `DangerousCapabilityApprovalBroker` shows one request at a time. Without an

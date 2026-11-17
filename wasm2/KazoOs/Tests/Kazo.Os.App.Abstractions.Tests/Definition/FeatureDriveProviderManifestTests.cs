@@ -237,6 +237,65 @@ public sealed class FeatureDriveProviderManifestTests
         Assert.Equal(AppDriveProviders.ReservedTypes.Order(StringComparer.Ordinal), reserved.Order(StringComparer.Ordinal));
     }
 
+    [Theory]
+    [MemberData(nameof(InvalidServerAddresses))]
+    public void A_server_address_is_one_required_url_field_that_is_not_secret(AppDriveFormFieldManifest[] fields)
+    {
+        AppManifest feature = WithOAuthProvider(provider => provider with { Connection = AppDriveConnectionManifest.WithForm(fields) });
+
+        Assert.Contains("manifest.drive-provider.server-address", Codes(feature));
+    }
+
+    public static TheoryData<AppDriveFormFieldManifest[]> InvalidServerAddresses => new()
+    {
+        { [new("server", "Server", AppDriveFormFieldKind.Text) { ServerAddress = true }] },
+        { [new("server", "Server", AppDriveFormFieldKind.Url) { ServerAddress = true, Secret = true }] },
+        { [new("server", "Server", AppDriveFormFieldKind.Url) { ServerAddress = true, Required = false }] },
+        { [new("a", "A", AppDriveFormFieldKind.Url) { ServerAddress = true }, new("b", "B", AppDriveFormFieldKind.Url) { ServerAddress = true }] },
+    };
+
+    [Fact]
+    public void A_marked_server_address_is_valid_found_and_written_only_when_set()
+    {
+        AppManifest feature = WithOAuthProvider(static provider => provider with
+        {
+            Connection = AppDriveConnectionManifest.WithForm(
+                new AppDriveFormFieldManifest("server", "Server address", AppDriveFormFieldKind.Url) { ServerAddress = true },
+                new AppDriveFormFieldManifest("user", "User", AppDriveFormFieldKind.Text)),
+        });
+
+        AppDriveProviderManifest provider = feature.DriveProviders!.Single(static item => item.Type == "pcloud");
+        string json = AppManifestJsonSerializer.SerializeCanonical(feature);
+
+        Assert.Empty(Codes(feature));
+        Assert.Equal("server", AppDriveProviders.ServerAddressField(provider.Connection)?.Name);
+        Assert.Null(AppDriveProviders.ServerAddressField(Feature().DriveProviders!.Single(static item => item.Type == "webdav").Connection));
+        Assert.Equal(1, System.Text.RegularExpressions.Regex.Count(json, "\"serverAddress\""));
+        Assert.True(AppManifestJsonSerializer.DeserializeStrict(json).DriveProviders!.Single(static item => item.Type == "pcloud").Connection.Fields[0].ServerAddress);
+    }
+
+    [Fact]
+    public void The_hosts_of_every_provider_are_gathered_canonical_and_sorted()
+    {
+        Assert.Equal(["*.example.org", "api.pcloud.com", "eapi.pcloud.com"], AppDriveProviders.HostsOf(Feature()));
+    }
+
+    [Theory]
+    [InlineData("https://dav.example.org/remote.php/dav/files/ben/", true, "dav.example.org")]
+    [InlineData("https://DAV.Example.org:8443/", true, "dav.example.org")]
+    [InlineData("http://dav.example.org/", false, "")]
+    [InlineData("https://ben:secret@dav.example.org/", false, "")]
+    [InlineData("https://192.168.1.20/", false, "")]
+    [InlineData("https://localhost/", false, "")]
+    [InlineData("https://nas/", false, "")]
+    [InlineData("dav.example.org", false, "")]
+    [InlineData(null, false, "")]
+    public void A_typed_server_address_gives_its_host_only_when_the_os_may_allow_it(string? address, bool allowed, string host)
+    {
+        Assert.Equal(allowed, AppDriveProviders.TryGetServerHost(address, out string found));
+        Assert.Equal(host, found);
+    }
+
     [Fact]
     public void The_capability_is_dangerous_and_known()
     {

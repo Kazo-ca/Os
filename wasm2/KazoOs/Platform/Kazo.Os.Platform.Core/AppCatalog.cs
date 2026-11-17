@@ -232,7 +232,7 @@ public sealed class AppCatalog
                 .Select(provider => new AppDriveProviderRegistration(manifest, provider)))];
 
     /// <summary>Gets the provider of a network drive type (ADR 0282 §1), or <see langword="null"/> when no feature provides it.</summary>
-    /// <param name="type">The filesystem type, e.g. <c>pcloud</c> (ordinal comparison).</param>
+    /// <param name="type">The filesystem type, e.g. <c>exemple</c> (ordinal comparison).</param>
     public AppDriveProviderRegistration? FindDriveProvider(string type)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(type);

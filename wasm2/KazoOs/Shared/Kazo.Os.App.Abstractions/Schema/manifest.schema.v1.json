@@ -521,10 +521,12 @@
         "secret": { "type": "boolean" },
         "required": { "type": "boolean" },
         "default": { "type": "string" },
-        "choices": { "type": "array", "minItems": 1, "items": { "type": "string" } }
+        "choices": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "serverAddress": { "type": "boolean" }
       },
       "allOf": [
         { "if": { "properties": { "secret": { "const": true } }, "required": ["secret"] }, "then": { "not": { "required": ["default"] } } },
+        { "if": { "properties": { "serverAddress": { "const": true } }, "required": ["serverAddress"] }, "then": { "properties": { "kind": { "const": "url" }, "secret": { "const": false }, "required": { "const": true } } } },
         { "if": { "properties": { "kind": { "const": "choice" } } }, "then": { "required": ["choices"] }, "else": { "not": { "required": ["choices"] } } }
       ]
     },

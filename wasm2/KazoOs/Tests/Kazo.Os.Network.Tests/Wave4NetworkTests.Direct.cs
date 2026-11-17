@@ -34,6 +34,81 @@ public sealed partial class Wave4NetworkTests
             }));
     }
 
+    /// <summary>Enters a drive-providing feature (ADR 0284): no directNetworkHosts, provider hosts and typed servers.</summary>
+    private string EnterProviderApp(FakeBrowser browser, DriveServerHosts servers, params string[] deniedCapabilities)
+    {
+        AppManifest manifest = AppDefinitionMapper.ToManifest(new PingApp());
+        KazoExecutionContext.Enter(new StubAppExecutionContext(
+            manifest,
+            new AppNetworkGateway(_network, new GrantAllCapabilityChecker(deniedCapabilities), manifest.Id, _serverConnection, _proxy)
+            {
+                ProviderHosts = ["api.drive.example.com"],
+                ServerHosts = servers,
+                DirectHttp = new HttpMessageInvoker(browser)
+            }));
+        return manifest.Id;
+    }
+
+    [Fact]
+    public async Task A_provider_host_needs_drives_provide_and_not_network_direct_access()
+    {
+        FakeBrowser browser = new(_ => FakeBrowser.Text(HttpStatusCode.OK, "ok"));
+        EnterProviderApp(browser, new DriveServerHosts(), AppCapabilities.NetworkDirectAccess);
+        using KazoDirectHttpClient client = new();
+
+        string body = await client.GetStringAsync("https://api.drive.example.com/list");
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => client.GetAsync("https://dav.example.org/"));
+
+        Assert.Equal("ok", body);
+        Assert.Single(browser.Requests);
+    }
+
+    [Fact]
+    public async Task Without_drives_provide_a_provider_host_is_refused()
+    {
+        FakeBrowser browser = new(_ => FakeBrowser.Text(HttpStatusCode.OK, "never"));
+        EnterProviderApp(browser, new DriveServerHosts(), AppCapabilities.DrivesProvide, AppCapabilities.NetworkDirectAccess);
+        using KazoDirectHttpClient client = new();
+
+        UnauthorizedAccessException refused = await Assert.ThrowsAsync<UnauthorizedAccessException>(
+            () => client.GetAsync("https://api.drive.example.com/list"));
+
+        Assert.Contains(AppCapabilities.DrivesProvide, refused.Message);
+        Assert.Empty(browser.Requests);
+    }
+
+    [Fact]
+    public async Task A_typed_server_is_reached_only_while_one_of_the_feature_s_drives_holds_it()
+    {
+        FakeBrowser browser = new(_ => FakeBrowser.Text(HttpStatusCode.OK, "ok"));
+        DriveServerHosts servers = new();
+        string appId = EnterProviderApp(browser, servers, AppCapabilities.NetworkDirectAccess);
+        using KazoDirectHttpClient client = new();
+        IDisposable first = servers.Allow(appId, "dav.example.org");
+        IDisposable second = servers.Allow(appId, "DAV.example.org");
+        using IDisposable other = servers.Allow("org.example.other", "cloud.example.net");
+
+        await client.GetStringAsync("https://dav.example.org/remote.php/dav/");
+        first.Dispose();
+        first.Dispose();
+        await client.GetStringAsync("https://dav.example.org/remote.php/dav/");
+        second.Dispose();
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => client.GetAsync("https://dav.example.org/remote.php/dav/"));
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => client.GetAsync("https://cloud.example.net/"));
+
+        Assert.Equal(2, browser.Requests.Count);
+    }
+
+    [Theory]
+    [InlineData("localhost")]
+    [InlineData("192.168.1.20")]
+    [InlineData("*.example.org")]
+    [InlineData("nas")]
+    public void A_server_the_os_may_not_allow_takes_no_lease(string host)
+    {
+        Assert.Throws<ArgumentException>(() => new DriveServerHosts().Allow("org.example.drive", host));
+    }
+
     [Fact]
     public async Task A_declared_host_is_reached_and_answers_with_status_headers_and_body()
     {

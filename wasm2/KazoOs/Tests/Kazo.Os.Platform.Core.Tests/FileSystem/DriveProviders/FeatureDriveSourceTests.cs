@@ -181,6 +181,55 @@ public sealed class FeatureDriveSourceTests : IDisposable
         Assert.True(changes >= 4);
     }
 
+    [Fact]
+    public async Task An_open_drive_allows_the_typed_server_to_its_feature_until_it_closes()
+    {
+        using DriveProviderFixtures.Page page = Page(manifests: [DriveProviderFixtures.Feature(serverAddress: true)]);
+        page.ExtraOptions[DriveProviderFixtures.ServerOption] = "https://dav.example.org/remote.php/dav/files/bob/";
+        IHostFolder first = (await page.Source.OpenAsync(new NetworkDriveReference("Memory", Account: AccountId)))!;
+        IHostFolder second = (await page.Source.OpenAsync(new NetworkDriveReference("Memory 2", Account: AccountId)))!;
+        await first.ListAsync([]);
+        await second.ListAsync([]);
+
+        bool whileOpen = page.ServerHosts.IsAllowed(DriveProviderFixtures.FeatureId, "dav.example.org");
+        bool toAnother = page.ServerHosts.IsAllowed("org.test.other", "dav.example.org");
+        await first.DisposeAsync();
+        bool whileOneIsOpen = page.ServerHosts.IsAllowed(DriveProviderFixtures.FeatureId, "dav.example.org");
+        await second.DisposeAsync();
+
+        Assert.True(whileOpen);
+        Assert.False(toAnother);
+        Assert.True(whileOneIsOpen);
+        Assert.False(page.ServerHosts.IsAllowed(DriveProviderFixtures.FeatureId, "dav.example.org"));
+    }
+
+    [Theory]
+    [InlineData("http://dav.example.org/")]
+    [InlineData("https://192.168.1.20/")]
+    [InlineData("https://localhost/")]
+    public async Task A_server_the_os_may_not_allow_opens_the_drive_but_allows_nothing(string address)
+    {
+        using DriveProviderFixtures.Page page = Page(manifests: [DriveProviderFixtures.Feature(serverAddress: true)]);
+        page.ExtraOptions[DriveProviderFixtures.ServerOption] = address;
+        IHostFolder folder = (await page.Source.OpenAsync(new NetworkDriveReference("Memory", Account: AccountId)))!;
+
+        await folder.ListAsync([]);
+
+        Assert.False(page.ServerHosts.IsAllowed(DriveProviderFixtures.FeatureId, new Uri(address).Host));
+    }
+
+    [Fact]
+    public async Task Without_a_server_address_field_a_typed_value_allows_nothing()
+    {
+        using DriveProviderFixtures.Page page = Page();
+        page.ExtraOptions[DriveProviderFixtures.ServerOption] = "https://dav.example.org/";
+        IHostFolder folder = (await page.Source.OpenAsync(new NetworkDriveReference("Memory", Account: AccountId)))!;
+
+        await folder.ListAsync([]);
+
+        Assert.False(page.ServerHosts.IsAllowed(DriveProviderFixtures.FeatureId, "dav.example.org"));
+    }
+
     private DriveProviderFixtures.Page Page(TimeSpan? openTimeout = null, Kazo.Os.App.Abstractions.AppManifest[]? manifests = null) =>
         new(_tokens, _ => _service, openTimeout ?? FeatureDriveSource.DefaultOpenTimeout, manifests ?? [DriveProviderFixtures.Feature()]);
 }

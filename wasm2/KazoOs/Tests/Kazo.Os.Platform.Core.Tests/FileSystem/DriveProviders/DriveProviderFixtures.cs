@@ -11,7 +11,7 @@ using Kazo.Os.Tests.Support;
 namespace Kazo.Os.Platform.Core.Tests.FileSystem.DriveProviders;
 
 /// <summary>A feature that provides the <c>memdrive</c> type with <see cref="InMemoryDriveProvider"/> (ADR 0282 §1).</summary>
-public sealed class MemoryDrivesFeature(string id = DriveProviderFixtures.FeatureId, string version = "1.0.0", Type? provider = null) : FeatureDefinition
+public sealed class MemoryDrivesFeature(string id = DriveProviderFixtures.FeatureId, string version = "1.0.0", Type? provider = null, bool serverAddress = false) : FeatureDefinition
 {
     public override string Id => id;
 
@@ -28,7 +28,13 @@ public sealed class MemoryDrivesFeature(string id = DriveProviderFixtures.Featur
     public override IReadOnlyList<KazoDriveProviderDeclaration> DriveProviders =>
     [
         new(DriveProviderFixtures.Type, "Memory", provider ?? typeof(InMemoryDriveProvider), AppDriveConnectionManifest.WithForm(
-            new AppDriveFormFieldManifest(InMemoryDriveProvider.ServiceOption, "Service", AppDriveFormFieldKind.Text))),
+            serverAddress
+                ?
+                [
+                    new AppDriveFormFieldManifest(InMemoryDriveProvider.ServiceOption, "Service", AppDriveFormFieldKind.Text),
+                    new AppDriveFormFieldManifest(DriveProviderFixtures.ServerOption, "Server address", AppDriveFormFieldKind.Url) { ServerAddress = true },
+                ]
+                : [new AppDriveFormFieldManifest(InMemoryDriveProvider.ServiceOption, "Service", AppDriveFormFieldKind.Text)])),
     ];
 }
 
@@ -65,14 +71,18 @@ public static class DriveProviderFixtures
 
     public const string Type = "memdrive";
 
-    public static AppManifest Feature(string id = FeatureId, string version = "1.0.0", Type? provider = null) =>
-        AppDefinitionMapper.ToFeatureManifests(new MemoryDrivesFeature(id, version, provider), KazoOsSdk.Version.ToString()).Feature;
+    /// <summary>The form field marked as the server address when a test asks for one (ADR 0284 §2).</summary>
+    public const string ServerOption = "server";
+
+    public static AppManifest Feature(string id = FeatureId, string version = "1.0.0", Type? provider = null, bool serverAddress = false) =>
+        AppDefinitionMapper.ToFeatureManifests(new MemoryDrivesFeature(id, version, provider, serverAddress), KazoOsSdk.Version.ToString()).Feature;
 
     /// <summary>The context the OS lends a provider, over the test accounts (as work item 5 does over the real ones).</summary>
-    public static FeatureDriveContextFactory Contexts(FakeCloudAccountTokens tokens, Func<string, InMemoryDriveService?> serviceOf) =>
+    public static FeatureDriveContextFactory Contexts(
+        FakeCloudAccountTokens tokens, Func<string, InMemoryDriveService?> serviceOf, IReadOnlyDictionary<string, string>? extraOptions = null) =>
         (type, accountId, availabilityChanged, _) =>
         {
-            Dictionary<string, string> options = new(StringComparer.Ordinal);
+            Dictionary<string, string> options = new(extraOptions ?? new Dictionary<string, string>(), StringComparer.Ordinal);
             if (serviceOf(accountId) is { } service)
             {
                 options[InMemoryDriveProvider.ServiceOption] = service.Key;
@@ -114,13 +124,20 @@ public static class DriveProviderFixtures
                     }
                 });
             Sources = new FeatureDriveSources(Catalog, Enablement, registration => new FeatureDriveSource(
-                registration, Loader, tokens, Contexts(tokens, serviceOf))
+                registration, Loader, tokens, Contexts(tokens, serviceOf, ExtraOptions))
             {
-                OpenTimeout = openTimeout
+                OpenTimeout = openTimeout,
+                ServerHosts = ServerHosts
             });
         }
 
         public AppCatalog Catalog { get; }
+
+        /// <summary>Gets the values the form gives every drive besides the service (the typed server, say).</summary>
+        public Dictionary<string, string> ExtraOptions { get; } = new(StringComparer.Ordinal);
+
+        /// <summary>Gets the servers the page's open drives allow to their feature (ADR 0284 §2).</summary>
+        public Kazo.Os.Platform.Core.Network.DriveServerHosts ServerHosts { get; } = new();
 
         public AppEnablementRegistry Enablement { get; }
 

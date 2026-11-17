@@ -53,8 +53,8 @@ public static class AppDriveProviders
 
     /// <summary>
     /// Determines whether <paramref name="host"/> is a host a provider may declare (ADR 0282 §4): a
-    /// lowercase DNS name of at least two labels (<c>api.pcloud.com</c>), or a subdomain wildcard
-    /// <c>*.</c> followed by such a name (<c>*.pcloud.com</c>). No scheme, port, path or IP address:
+    /// lowercase DNS name of at least two labels (<c>api.example.com</c>), or a subdomain wildcard
+    /// <c>*.</c> followed by such a name (<c>*.example.com</c>). No scheme, port, path or IP address:
     /// the scheme is always <c>https</c>. A bare <c>*</c>, a wildcard on a single label
     /// (<c>*.com</c>) and a wildcard inside a name are refused.
     /// </summary>
@@ -78,6 +78,58 @@ public static class AppDriveProviders
         && string.Equals(uri.Scheme, Uri.UriSchemeHttps, StringComparison.Ordinal)
         && uri.UserInfo.Length == 0
         && uri.Host.Length > 0;
+
+    /// <summary>
+    /// Gets the hosts the drive providers of <paramref name="manifest"/> declare (ADR 0282 §4,
+    /// ADR 0284 §1), canonical, distinct and sorted; empty when it declares none. A feature that
+    /// holds <see cref="AppCapabilities.DrivesProvide"/> may send direct requests to them.
+    /// </summary>
+    /// <param name="manifest">The feature's manifest.</param>
+    /// <returns>The declared hosts; invalid entries are left out.</returns>
+    public static IReadOnlyList<string> HostsOf(AppManifest manifest)
+    {
+        ArgumentNullException.ThrowIfNull(manifest);
+        return DirectNetworkHosts.ParseValid(
+            [.. (manifest.DriveProviders ?? []).Where(static provider => provider is not null).SelectMany(static provider => provider.Hosts ?? [])]);
+    }
+
+    /// <summary>
+    /// Gets the field of <paramref name="connection"/> marked <see cref="AppDriveFormFieldManifest.ServerAddress"/>
+    /// (ADR 0284 §2), or <see langword="null"/> when the connection has none.
+    /// </summary>
+    /// <param name="connection">The provider's connection.</param>
+    /// <returns>The first field so marked, or <see langword="null"/>.</returns>
+    public static AppDriveFormFieldManifest? ServerAddressField(AppDriveConnectionManifest? connection) =>
+        connection is { Kind: AppDriveConnectionKind.Form }
+            ? (connection.Fields ?? []).FirstOrDefault(static field => field is { ServerAddress: true, Kind: AppDriveFormFieldKind.Url, Secret: false })
+            : null;
+
+    /// <summary>
+    /// Reads the host of the server address a user typed (ADR 0284 §2): an absolute <c>https</c>
+    /// address without user information, whose host the rules of <see cref="DirectNetworkHosts"/>
+    /// accept as an exact name (no IP address, no <c>localhost</c>, a name with a dot).
+    /// </summary>
+    /// <param name="address">The value of the field.</param>
+    /// <param name="host">The canonical host, or an empty string when refused.</param>
+    /// <returns><see langword="true"/> when the address names a host the OS may allow.</returns>
+    public static bool TryGetServerHost(string? address, out string host)
+    {
+        host = string.Empty;
+        if (!IsValidHttpsAddress(address) || !Uri.TryCreate(address, UriKind.Absolute, out Uri? uri))
+        {
+            return false;
+        }
+
+        string name = uri.IdnHost;
+        if (name.StartsWith(DirectNetworkHosts.WildcardPrefix, StringComparison.Ordinal)
+            || !DirectNetworkHosts.TryParse(name, out string canonical, out _))
+        {
+            return false;
+        }
+
+        host = canonical;
+        return true;
+    }
 
     /// <summary>Lowercase letters and digits in groups separated by one dash, with no dash at either end.</summary>
     private static bool IsDashedName(string value) =>

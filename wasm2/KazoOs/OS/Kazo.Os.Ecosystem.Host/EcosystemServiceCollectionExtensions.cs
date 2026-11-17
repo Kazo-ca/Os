@@ -854,6 +854,8 @@ public static class EcosystemServiceCollectionExtensions
             (featureId, message) => provider.GetService<LogFileWriter>()?.Write(
                 LogFileTarget.ForApp(featureId), Kazo.Os.Simulation.Abstractions.Diagnostics.DiagnosticSeverity.Error, "drives", message),
             provider.GetService<ILogger<FeatureDriveProviderLoader>>()));
+        // ADR 0284 §2: the servers users typed, allowed to their provider while the drive is open.
+        services.TryAddScoped<Kazo.Os.Platform.Core.Network.DriveServerHosts>();
         services.TryAddScoped(provider => new FeatureDriveSources(
             provider.GetRequiredService<AppCatalog>(),
             provider.GetRequiredService<IAppEnablementRegistry>(),
@@ -861,7 +863,10 @@ public static class EcosystemServiceCollectionExtensions
                 registration,
                 provider.GetRequiredService<FeatureDriveProviderLoader>(),
                 provider.GetRequiredService<CloudAccountService>(),
-                (type, accountId, availabilityChanged, cancellationToken) => ConnectFeatureDriveAsync(provider, type, accountId, availabilityChanged, cancellationToken))));
+                (type, accountId, availabilityChanged, cancellationToken) => ConnectFeatureDriveAsync(provider, type, accountId, availabilityChanged, cancellationToken))
+            {
+                ServerHosts = provider.GetRequiredService<Kazo.Os.Platform.Core.Network.DriveServerHosts>(),
+            }));
         // ADR 0262: the services features provide, one instance per page, created on the first
         // request in the feature's own process (kazoos-svc, like a system daemon).
         services.TryAddScoped(provider => new Kazo.Os.Platform.Core.Features.FeatureServiceResolver(
@@ -995,6 +1000,8 @@ public static class EcosystemServiceCollectionExtensions
             BackgroundJobs = () => provider.GetRequiredService<BackgroundJobService>(),
             // ADR 0193: IAppExecutionContext.TimeZone follows Settings > Date and time.
             TimeZones = provider.GetRequiredService<Kazo.Os.Platform.Core.Globalization.SessionTimeZoneService>(),
+            // ADR 0284 §2: the servers users typed for the open drives of a provider.
+            DriveServerHosts = provider.GetRequiredService<Kazo.Os.Platform.Core.Network.DriveServerHosts>(),
         }));
         services.AddScoped<BackgroundJobService>(provider => new BackgroundJobService(
             provider.GetRequiredService<IProcessManager>(),

@@ -8,6 +8,11 @@ namespace Kazo.Os.Samples.WebDavDrive;
 /// administrator installs it for the machine; each user then connects their own servers in
 /// "Connect a network drive…", Settings or <c>mount -t webdav</c>.
 /// </summary>
+/// <remarks>
+/// The declaration names no host: a WebDAV server is the user's own. The server field is marked
+/// <see cref="AppDriveFormFieldManifest.ServerAddress"/>, so the OS allows the host the user typed
+/// to this feature while the drive is open (ADR 0284 §2), and <c>drives.provide</c> alone is enough.
+/// </remarks>
 [AppManifest]
 public sealed class WebDavFeature : FeatureDefinition
 {
@@ -39,7 +44,7 @@ public sealed class WebDavFeature : FeatureDefinition
     public override IReadOnlyList<KazoDriveProviderDeclaration> DriveProviders =>
     [
         new(DriveType, "WebDAV", typeof(WebDavDriveProvider), AppDriveConnectionManifest.WithForm(
-            new AppDriveFormFieldManifest(WebDavFields.Server, "Server address", AppDriveFormFieldKind.Url),
+            new AppDriveFormFieldManifest(WebDavFields.Server, "Server address", AppDriveFormFieldKind.Url) { ServerAddress = true },
             new AppDriveFormFieldManifest(WebDavFields.UserName, "User name", AppDriveFormFieldKind.Text),
             new AppDriveFormFieldManifest(WebDavFields.Password, "Password", AppDriveFormFieldKind.Text) { Secret = true })),
     ];

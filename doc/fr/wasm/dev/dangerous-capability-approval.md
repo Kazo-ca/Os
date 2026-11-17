@@ -178,10 +178,10 @@ une remise à zéro retire la ligne, et seul le fichier machine approuve.
 
 ```text
 [permissions]
-ca.exemple.pcloud:network.direct.access=allow
+ca.exemple.drive:network.direct.access=allow
 
 [direct-network-hosts]
-ca.exemple.pcloud=*.pcloud.com,api.pcloud.com
+ca.exemple.drive=*.example.com,api.example.com
 ```
 
 `DangerousCapabilityApprovalBroker` montre une demande à la fois. Sans fenêtre
