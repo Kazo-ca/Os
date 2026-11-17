@@ -20,6 +20,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Platform\Kazo.Os.Platform.Core\Kazo.Os.Platform.Core.csproj" />
+    <!-- ADR 0282 §5: the shipped connectors moved to their own assembly; their tests stay here, next to the cloud account and host folder fixtures they share. -->
+    <ProjectReference Include="..\..\Platform\Kazo.Os.Platform.CloudDrives\Kazo.Os.Platform.CloudDrives.csproj" />
     <!-- ADR 0051: the shell tests run the catalog's real cd, export, help, sudo... end to end. -->
     <ProjectReference Include="..\..\Apps\Commands\Kazo.Os.Commands\Kazo.Os.Commands.csproj" />
     <ProjectReference Include="..\Kazo.Os.Tests.Support\Kazo.Os.Tests.Support.csproj" />

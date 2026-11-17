@@ -19,7 +19,8 @@ rule** on the bucket (see below).
 
 ## Architecture
 
-Everything is in `Platform/Kazo.Os.Platform.Core/CloudDrives/S3/`, with no
+Everything is in `Platform/Kazo.Os.Platform.CloudDrives/S3/` (an assembly of its own since
+ADR 0282 §5, left out by `-p:KazoOsS3Drives=false`), with no
 browser dependency: `HttpClient` becomes `fetch` on WebAssembly.
 
 | Piece | Role |

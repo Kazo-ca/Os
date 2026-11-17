@@ -133,7 +133,7 @@ public sealed class EcosystemServiceCollectionExtensionsTests
         Assert.False(provider.GetRequiredService<Kazo.Os.Platform.Core.Processes.ResourceLimitEnforcer>().IsEffective);
     }
 
-    private sealed class NonInvokedJsRuntime : IJSRuntime
+    internal sealed class NonInvokedJsRuntime : IJSRuntime
     {
         public ValueTask<TValue> InvokeAsync<TValue>(string identifier, object?[]? args) =>
             throw new InvalidOperationException("DI graph validation must not invoke browser storage.");
@@ -145,7 +145,7 @@ public sealed class EcosystemServiceCollectionExtensionsTests
             throw new InvalidOperationException("DI graph validation must not invoke browser storage.");
     }
 
-    private sealed class TestNavigationManager : NavigationManager
+    internal sealed class TestNavigationManager : NavigationManager
     {
         public TestNavigationManager()
         {
