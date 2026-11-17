@@ -222,6 +222,8 @@ WebAssembly and no script, styled by `legal.css`:
 The published service worker serves them as they are and keeps them offline,
 like the callback page. One pair of pages covers every provider, with a section
 per service (Benoit's choice, 2026-11-15).
+Their content, their links in the OS and the facts they rest on are in
+[`legal-pages.md`](legal-pages.md).
 
 ## Decisions
 

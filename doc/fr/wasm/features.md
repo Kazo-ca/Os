@@ -197,6 +197,11 @@ Cette section liste ce qui est publié dans la branche `main` et en ligne.
   [ADR 0269](dev/adr/0269-cloud-tokens-stay-on-the-device.md),
   [ADR 0270](dev/adr/0270-cloud-drives-in-the-app-sdk.md),
   [`cloud-drives.md`](dev/cloud-drives.md))
+- **Confidentialité et conditions d'utilisation** : `os.kazo.ca/privacy.html` et
+  `terms.html`, en français et en anglais, disent ce que Kazo OS fait des
+  données (rien sur un serveur de l'éditeur ; tiers listés) ; liées depuis
+  l'écran de connexion et Paramètres ▸ À propos.
+  ([`legal-pages.md`](dev/legal-pages.md))
 - **Fichiers plus rapides et moins lourds** : le contenu est gardé en binaire au lieu
   de base64 (environ 25 % d'espace en moins, enregistrement de 52,5 Mio de 3,4 s à 1,0 s
   dans Chromium), chaque bloc de 256 Kio vérifié par son empreinte à la lecture ; l'ancien

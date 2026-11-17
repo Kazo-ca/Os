@@ -27,6 +27,8 @@ public sealed class PublishedPagesTests
         await Assertions.Expect(page.Locator(".kos-version-name")).ToContainTextAsync(KazoOsVersion);
         await Assertions.Expect(page.Locator(".project-information a.project-repository")).ToHaveAttributeAsync("href", "https://github.com/Kazo-ca/Os");
         await Assertions.Expect(page.Locator(".project-information a.project-author")).ToHaveAttributeAsync("href", "https://kazo.ca");
+        await Assertions.Expect(page.Locator(".project-information a.project-privacy")).ToHaveAttributeAsync("href", "privacy.html#en");
+        await Assertions.Expect(page.Locator(".project-information a.project-terms")).ToHaveAttributeAsync("href", "terms.html#en");
         await Assertions.Expect(page.Locator(".legacy-notice")).ToHaveCountAsync(0);
 
         await PwaTestSupport.CreateLocalProfileAndReachDesktopAsync(page);
@@ -35,6 +37,8 @@ public sealed class PublishedPagesTests
         await Assertions.Expect(page.Locator(".system-info-box")).ToContainTextAsync($"Kazo OS {KazoOsVersion}");
         await Assertions.Expect(page.Locator(".system-info-box a.about-repository")).ToHaveAttributeAsync("href", "https://github.com/Kazo-ca/Os");
         await Assertions.Expect(page.Locator(".system-info-box a.about-author")).ToHaveAttributeAsync("href", "https://kazo.ca");
+        await Assertions.Expect(page.Locator(".system-info-box a.about-privacy")).ToHaveAttributeAsync("href", "privacy.html#en");
+        await Assertions.Expect(page.Locator(".system-info-box a.about-terms")).ToHaveAttributeAsync("href", "terms.html#en");
 
         await page.GotoAsync(host.Address + "/legacy/");
         await Assertions.Expect(page.Locator("#desktop")).ToBeVisibleAsync();

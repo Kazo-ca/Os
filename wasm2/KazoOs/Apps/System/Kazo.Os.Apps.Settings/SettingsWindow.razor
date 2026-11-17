@@ -517,6 +517,13 @@
                                 Kazo-ca/Os
                             </a>
                         </div>
+                        @* Static pages of the release, opened at the section in the UI language. *@
+                        <div class="info-line">
+                            <span>@L["About.Legal"]</span>
+                            <a class="about-privacy" href="@($"privacy.html#{LegalSection}")" target="_blank" rel="noopener noreferrer">@L["About.Privacy"]</a>
+                            <span aria-hidden="true">·</span>
+                            <a class="about-terms" href="@($"terms.html#{LegalSection}")" target="_blank" rel="noopener noreferrer">@L["About.Terms"]</a>
+                        </div>
                         <div class="info-line"><span>@L["About.Runtime"]</span> <strong>.NET 10.0 WebAssembly</strong></div>
                         <div class="info-line"><span>@L["About.Architecture"]</span> <strong>@L["About.ArchitectureValue"]</strong></div>
                         <div class="info-line"><span>@L["About.UserId"]</span> <strong>@(AppContext?.UserId ?? "guest")</strong></div>
