@@ -1197,8 +1197,6 @@ Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthProvider.AuthorizationEndpoint.ini
 Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthProvider.BuildAuthorizationUri(Kazo.Os.Platform.Core.CloudAccounts.CloudAccessScope scope, Kazo.Os.Platform.Core.CloudAccounts.OAuthPkce! pkce, System.Uri! redirectUri) -> System.Uri!
 Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthProvider.Clients.get -> System.Collections.Generic.IReadOnlyDictionary<Kazo.Os.Platform.Core.CloudAccounts.CloudAccessScope, Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthClient!>!
 Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthProvider.Clients.init -> void
-Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthProvider.CloudOAuthProvider(string! Id, string! DisplayName, System.Uri! AuthorizationEndpoint, System.Uri! TokenEndpoint, System.Uri? RevocationEndpoint, System.Collections.Generic.IReadOnlyDictionary<Kazo.Os.Platform.Core.CloudAccounts.CloudAccessScope, Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthClient!>! Clients, System.Collections.Generic.IReadOnlyDictionary<string!, string!>! ExtraAuthorizationParameters, Kazo.Os.Platform.Core.CloudAccounts.CloudIdentityEndpoint! Identity) -> void
-Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthProvider.Deconstruct(out string! Id, out string! DisplayName, out System.Uri! AuthorizationEndpoint, out System.Uri! TokenEndpoint, out System.Uri? RevocationEndpoint, out System.Collections.Generic.IReadOnlyDictionary<Kazo.Os.Platform.Core.CloudAccounts.CloudAccessScope, Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthClient!>! Clients, out System.Collections.Generic.IReadOnlyDictionary<string!, string!>! ExtraAuthorizationParameters, out Kazo.Os.Platform.Core.CloudAccounts.CloudIdentityEndpoint! Identity) -> void
 Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthProvider.DisplayName.get -> string!
 Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthProvider.DisplayName.init -> void
 Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthProvider.Equals(Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthProvider? other) -> bool
@@ -1207,7 +1205,6 @@ Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthProvider.ExtraAuthorizationParamet
 Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthProvider.GetClient(Kazo.Os.Platform.Core.CloudAccounts.CloudAccessScope scope) -> Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthClient!
 Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthProvider.Id.get -> string!
 Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthProvider.Id.init -> void
-Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthProvider.Identity.get -> Kazo.Os.Platform.Core.CloudAccounts.CloudIdentityEndpoint!
 Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthProvider.Identity.init -> void
 Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthProvider.RevocationEndpoint.get -> System.Uri?
 Kazo.Os.Platform.Core.CloudAccounts.CloudOAuthProvider.RevocationEndpoint.init -> void

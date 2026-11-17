@@ -554,10 +554,18 @@ public static class EcosystemServiceCollectionExtensions
         services.TryAddScoped<IOAuthAuthorizationWindow>(provider => new BrowserOAuthAuthorizationWindow(
             provider.GetRequiredService<IJSRuntime>(),
             new Uri(provider.GetRequiredService<Microsoft.AspNetCore.Components.NavigationManager>().BaseUri)));
+        // ADR 0282 §3: an OAuth drive type an installed and enabled feature declares is signed in by
+        // the OS like Dropbox and OneDrive; the catalog is read at each call, so a feature installed
+        // or removed is offered or withdrawn without a restart.
         services.TryAddScoped<ICloudProviderCatalog>(provider => new CloudProviderCatalog(
             // ADR 0282 §5: a provider whose connector the build left out is never offered.
             CloudDriveServiceCollectionExtensions.WithLeftOutTypes(provider.GetService<CloudProviderSettings>() ?? CloudProviderSettings.None),
-            provider.GetRequiredService<IOsSettingsService>()));
+            provider.GetRequiredService<IOsSettingsService>())
+        {
+            DeclaredProviders = () => provider.GetService<AppCatalog>() is { } catalog
+                ? DeclaredCloudProviders.GetOAuthRegistrations(catalog, provider.GetService<IAppEnablementRegistry>())
+                : []
+        });
         services.AddScoped<CloudAccountService>(provider => new CloudAccountService(
             provider.GetRequiredService<IFileSystemService>(),
             provider.GetRequiredService<ISimulationClock>(),

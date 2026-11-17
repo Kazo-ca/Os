@@ -190,9 +190,36 @@ public sealed class CloudProviderCatalog(CloudProviderSettings hostSettings, IOs
 {
     private readonly CloudProviderSettings _hostSettings = hostSettings ?? throw new ArgumentNullException(nameof(hostSettings));
 
+    /// <summary>
+    /// Gets the OAuth drive types the installed and enabled features declare (ADR 0282 §3), read at
+    /// each call so a feature installed or removed is offered or withdrawn without a restart;
+    /// <see langword="null"/> while the host has none.
+    /// <see cref="DeclaredCloudProviders.GetOAuthRegistrations"/> gives them from the app catalog.
+    /// </summary>
+    public Func<IReadOnlyList<AppDriveProviderRegistration>>? DeclaredProviders { get; init; }
+
     /// <inheritdoc />
-    public async ValueTask<IReadOnlyList<CloudOAuthProvider>> GetProvidersAsync(CancellationToken cancellationToken = default) =>
-        (await GetEffectiveSettingsAsync(cancellationToken).ConfigureAwait(false)).BuildProviders();
+    /// <remarks>
+    /// The shipped providers come first (Dropbox, OneDrive), then the declared ones by type. A
+    /// declared type never takes the place of a shipped one: the types of the OS are reserved.
+    /// </remarks>
+    public async ValueTask<IReadOnlyList<CloudOAuthProvider>> GetProvidersAsync(CancellationToken cancellationToken = default)
+    {
+        IReadOnlyList<AppDriveProviderRegistration> declared = DeclaredProviders?.Invoke() ?? [];
+        (CloudProviderSettings effective, LayeredConfigSnapshot? snapshot) = await ReadSettingsAsync(
+                declared.Select(static item => item.Provider.Type),
+                cancellationToken)
+            .ConfigureAwait(false);
+        IReadOnlyList<CloudOAuthProvider> shipped = effective.BuildProviders();
+        return
+        [
+            .. shipped,
+            .. declared
+                .Select(registration => DeclaredCloudProviders.Build(registration, snapshot))
+                .OfType<CloudOAuthProvider>()
+                .Where(provider => !shipped.Any(item => string.Equals(item.Id, provider.Id, StringComparison.Ordinal)))
+        ];
+    }
 
     /// <summary>
     /// Gets whether a shipped drive type may be offered now (ADR 0282 section 5): not left out by the
@@ -205,20 +232,26 @@ public sealed class CloudProviderCatalog(CloudProviderSettings hostSettings, IOs
     public async ValueTask<bool> IsTypeEnabledAsync(string type, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrEmpty(type);
-        return !(await GetEffectiveSettingsAsync(cancellationToken).ConfigureAwait(false)).IsDisabled(type);
+        (CloudProviderSettings effective, _) = await ReadSettingsAsync([], cancellationToken).ConfigureAwait(false);
+        return !effective.IsDisabled(type);
     }
 
-    private async ValueTask<CloudProviderSettings> GetEffectiveSettingsAsync(CancellationToken cancellationToken)
+    /// <summary>
+    /// Reads <c>/etc/kazoos/cloud-drives.config</c> over the host settings, with one section per
+    /// declared type (ADR 0282 §3); the snapshot is <see langword="null"/> without a settings service.
+    /// </summary>
+    private async ValueTask<(CloudProviderSettings Effective, LayeredConfigSnapshot? Snapshot)> ReadSettingsAsync(
+        IEnumerable<string> declaredTypes,
+        CancellationToken cancellationToken)
     {
-        CloudProviderSettings effective = _hostSettings;
-        if (settings is not null)
+        if (settings is null)
         {
-            LayeredConfigSnapshot snapshot = await settings
-                .ReadAsync(CloudDrivesSettingsDocuments.Document, cancellationToken)
-                .ConfigureAwait(false);
-            effective = effective.OverriddenBy(snapshot);
+            return (_hostSettings, null);
         }
 
-        return effective;
+        LayeredConfigSnapshot snapshot = await settings
+            .ReadAsync(DeclaredCloudProviders.SettingsDocument(CloudDrivesSettingsDocuments.Document, declaredTypes), cancellationToken)
+            .ConfigureAwait(false);
+        return (_hostSettings.OverriddenBy(snapshot), snapshot);
     }
 }
