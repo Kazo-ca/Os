@@ -89,6 +89,14 @@ public sealed record AppManifest
     public IReadOnlyList<AppProvidedServiceManifest>? ProvidedServices { get; init; }
 
     /// <summary>
+    /// Gets the types of network drive a <see cref="AppKind.Feature"/> provides (ADR 0282 §1), or
+    /// <see langword="null"/> (omitted from <c>manifest.json</c>) when it provides none, so existing
+    /// manifests keep their exact bytes. Only a feature provides; it also declares
+    /// <c>drives.provide</c>.
+    /// </summary>
+    public IReadOnlyList<AppDriveProviderManifest>? DriveProviders { get; init; }
+
+    /// <summary>
     /// Gets the custom topic permissions this app declares and exports, gating its own shared messaging
     /// channels. Purely optional per <c>doc/en/wasm/dev/adr/0040-declared-topic-permissions.md</c> — most apps
     /// declare none and rely on the default owner-only/open channel access instead. Every identifier must
