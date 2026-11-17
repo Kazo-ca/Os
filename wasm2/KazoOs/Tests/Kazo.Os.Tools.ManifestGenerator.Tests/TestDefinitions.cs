@@ -167,6 +167,14 @@ public sealed class PlainFeatureKindApp : ValidCommandApp
     public override TerminalCommand? Terminal => null;
 }
 
+/// <summary>An ordinary definition that claims the settings page kind, reserved to features (ADR 0249 §2).</summary>
+public sealed class PlainSettingsPageApp : ValidCommandApp
+{
+    public override string Id => "org.kazoos.tests.plain-settings-page";
+    public override AppKind Kind => AppKind.SettingsPage;
+    public override TerminalCommand? Terminal => null;
+}
+
 /// <summary>Marked definition, used to check attribute discovery by name.</summary>
 [AppManifest]
 public sealed class MarkedApp : ValidCommandApp

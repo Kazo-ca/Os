@@ -129,6 +129,18 @@ public sealed class FeatureRoleServiceTests
     }
 
     [Fact]
+    public async Task Reading_roles_config_again_raises_changed_for_the_surfaces_filtered_by_role()
+    {
+        FeatureRoleHarness harness = await FeatureRoleHarness.CreateAsync();
+        int changed = 0;
+        harness.Roles.Changed += (_, _) => changed++;
+
+        await harness.Roles.RefreshAsync();
+
+        Assert.Equal(1, changed);
+    }
+
+    [Fact]
     public async Task A_role_no_installed_feature_declares_cannot_be_granted()
     {
         FeatureRoleHarness harness = await FeatureRoleHarness.CreateAsync();

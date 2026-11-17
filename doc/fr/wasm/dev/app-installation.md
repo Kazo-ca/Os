@@ -459,7 +459,9 @@ manifestes enfants) est dans
   part, chacune avec ses points d'entrée (nom, genre, id) sans action propre ;
   désinstaller ou réinstaller se fait sur la fonctionnalité. La fiche d'une
   app (`KazoAppInfo.ParentId`) nomme sa fonctionnalité. La section
-  « Fonctionnalités » des Paramètres est l'ADR 0249, pas encore codée.
+  « Fonctionnalités » des Paramètres (ADR 0249, ajustée par l'ADR 0285) liste
+  les fonctionnalités installées et les pages qu'elles ajoutent
+  ([`feature-settings-pages.md`](../framework/feature-settings-pages.md)).
 - **Services fournis** ([ADR 0262](adr/0262-feature-service-registry-and-async-resolution.md),
   [`feature-services.md`](../framework/feature-services.md)) : le manifeste de
   la fonctionnalité liste `providedServices` ; leur code est un assemblage

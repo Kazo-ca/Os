@@ -44,11 +44,18 @@
                             aria-selected="@(page.Id == _activePage ? "true" : "false")"
                             aria-controls="settings-page-panel"
                             tabindex="@(page.Id == _activePage ? "0" : "-1")"
-                            title="@L[page.LabelKey]"
+                            title="@LabelOf(page)"
                             @ref="_navItemRefs[page.Id]"
                             @onclick="() => SelectPage(page.Id)">
-                        <MudIcon Icon="@(page.Icon)" Size="Size.Small" />
-                        <span class="settings-nav-label">@L[page.LabelKey]</span>
+                        @if (page.IconUrl is { } iconUrl)
+                        {
+                            <img class="settings-nav-image" src="@iconUrl" alt="" aria-hidden="true" />
+                        }
+                        else
+                        {
+                            <MudIcon Icon="@(page.Icon)" Size="Size.Small" />
+                        }
+                        <span class="settings-nav-label">@LabelOf(page)</span>
                     </button>
                 }
             </div>
@@ -479,7 +486,7 @@
                 break;
             case "storage":
                 <div class="settings-page">
-                    <StoragePanel />
+                    <StoragePanel OpenFeature="OpenFeaturePageOf" />
                 </div>
                 break;
 
@@ -555,6 +562,22 @@
                 <div class="settings-page">
                     <AppDetailsPanel AppId="@(_appPageId ?? string.Empty)" />
                 </div>
+                break;
+
+            @* ADR 0249 §1: the installed features, then the pages they add, each drawn by its own process. *@
+            case "features":
+                <div class="settings-page">
+                    <InstalledFeaturesPanel Notice="@_featuresNotice" ShowDetails="ShowFeatureDetails" />
+                </div>
+                break;
+
+            default:
+                @if (FeaturePageOf(_activePage) is { } featurePage)
+                {
+                    <div class="settings-page feature-settings-page">
+                        <FeatureSettingsPageView Page="@featurePage" />
+                    </div>
+                }
                 break;
             }
         </main>

@@ -209,6 +209,8 @@ public static class AppDefinitionMapper
                 ServiceStartup = entry.ServiceStartup,
                 SupportsBack = entry.SupportsBack,
                 Window = entry.Window,
+                // ADR 0249 §2: the order and the mobile switch of a settings page.
+                SettingsPage = entry.SettingsPage,
                 Execution = AppExecutionHosts.Resolve(entry.Kind, entry.Execution ?? AppExecutionHost.MainThread),
                 OomScoreAdj = definition.OomScoreAdjust
             });

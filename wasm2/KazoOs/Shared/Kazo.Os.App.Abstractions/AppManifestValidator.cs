@@ -513,9 +513,10 @@ public static partial class AppManifestValidator
         {
             AddError(errors, "manifest.execution.invalid", "execution", "Execution must be mainThread, pool, dedicated or web.");
         }
-        else if (manifest.Kind == AppKind.Window && execution != AppExecutionHost.MainThread)
+        else if (manifest.Kind is AppKind.Window or AppKind.SettingsPage && execution != AppExecutionHost.MainThread)
         {
-            AddError(errors, "manifest.execution.window", "execution", "Window apps run on the main thread: they need the DOM.");
+            // ADR 0249 §2: a settings page is drawn in the Settings window, so it needs the DOM too.
+            AddError(errors, "manifest.execution.window", "execution", "Window apps and settings pages run on the main thread: they need the DOM.");
         }
         else if (manifest.Kind == AppKind.Web && execution is not (AppExecutionHost.Web or AppExecutionHost.MainThread))
         {
@@ -613,6 +614,8 @@ public static partial class AppManifestValidator
         {
             AddError(errors, "manifest.fileHandlers.forbidden", "fileHandlers", "Only window apps can declare file handlers.");
         }
+
+        ValidateSettingsPage(manifest, errors);
 
         if (manifest.Kind != AppKind.Window && manifest.SupportsBack)
         {
@@ -1242,12 +1245,31 @@ public static partial class AppManifestValidator
         }
     }
 
+    /// <summary>
+    /// ADR 0249 §2 and ADR 0260 §5: a settings page is an entry point of a feature
+    /// (<c>manifest.feature.only</c> for an app without a parent), and only a settings page declares
+    /// the <c>settingsPage</c> options.
+    /// </summary>
+    private static void ValidateSettingsPage(AppManifest manifest, List<ManifestValidationError> errors)
+    {
+        if (manifest.Kind == AppKind.SettingsPage && string.IsNullOrEmpty(manifest.Parent))
+        {
+            AddError(errors, "manifest.feature.only", "kind", "Only an entry point of a feature can be a settings page (ADR 0249 §2).");
+        }
+
+        if (manifest.SettingsPage is not null && manifest.Kind != AppKind.SettingsPage)
+        {
+            AddError(errors, "manifest.settingsPage.forbidden", "settingsPage", "Only a settings page declares settingsPage options.");
+        }
+    }
+
     private static void ValidateCapabilityKindCompatibility(
         AppKind kind,
         IReadOnlyList<string> capabilities,
         List<ManifestValidationError> errors)
     {
-        if (kind == AppKind.Window)
+        // ADR 0249 §2: a settings page is drawn in the Settings window and may open the OS dialogs.
+        if (kind is AppKind.Window or AppKind.SettingsPage)
         {
             return;
         }

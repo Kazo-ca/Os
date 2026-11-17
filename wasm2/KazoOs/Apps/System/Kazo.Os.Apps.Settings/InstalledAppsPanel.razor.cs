@@ -84,6 +84,7 @@ public partial class InstalledAppsPanel : IDisposable
         AppKind.Service => L["Details.Kind.Service"],
         AppKind.Web => L["Details.Kind.Web"],
         AppKind.Feature => L["Details.Kind.Feature"],
+        AppKind.SettingsPage => L["Details.Kind.SettingsPage"],
         _ => kind.ToString()
     };
 

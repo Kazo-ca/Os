@@ -4,11 +4,13 @@ using Kazo.Os.AppSdk;
 using Kazo.Os.AppSdk.Administration;
 using Kazo.Os.AppSdk.Apps;
 using Kazo.Os.AppSdk.Blazor;
+using Kazo.Os.AppSdk.Blazor.Settings;
 using Kazo.Os.AppSdk.Globalization;
 using Kazo.Os.AppSdk.IO;
 using Kazo.Os.AppSdk.Settings;
 using Kazo.Os.Simulation.Abstractions.Settings;
 using Kazo.Os.Theming.Abstractions;
+using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.Localization;
 
 namespace Kazo.Os.Apps.Settings;
@@ -101,6 +103,14 @@ public partial class SettingsWindow : IAsyncDisposable
 
     private string? _appPageId;
 
+    /// <summary>Gets or sets the pages the features add (ADR 0249), provided by the OS.</summary>
+    [Inject]
+    private IFeatureSettingsPages FeaturePages { get; set; } = default!;
+
+    private IFeatureSettingsPages? _featurePagesSource;
+    private IReadOnlyList<FeatureSettingsPageInfo> _featurePages = [];
+    private string? _featuresNotice;
+
     private bool IsConfirmed => string.Equals(_confirmText, ResetConfirmPhrase, StringComparison.Ordinal);
 
     // A user theme takes the accent behavior of its base theme (ADR 0103).
@@ -118,6 +128,7 @@ public partial class SettingsWindow : IAsyncDisposable
     /// <inheritdoc />
     protected override async Task OnAppInitializedAsync()
     {
+        LoadFeaturePages();
         ShowAppPage(LaunchArguments);
         await OpenAppearanceAsync();
         await OpenMobilePreferencesAsync();
@@ -151,6 +162,82 @@ public partial class SettingsWindow : IAsyncDisposable
         {
             _activePage = page;
         }
+        else if (ReadFeaturePageArgument(arguments) is { } featurePage)
+        {
+            OpenFeaturePage(featurePage);
+        }
+    }
+
+    /// <summary>
+    /// Opens a page a feature adds (ADR 0249 §4), or "Installed features" with a message when the
+    /// user may not see it (role, disabled feature, unknown page).
+    /// </summary>
+    private void OpenFeaturePage(string pageId)
+    {
+        LoadFeaturePages();
+        if (FeaturePageOf(pageId) is not null)
+        {
+            _featuresNotice = null;
+            _activePage = pageId;
+            return;
+        }
+
+        _featuresNotice = L["Features.PageUnavailable"];
+        _activePage = FeaturesPageId;
+    }
+
+    /// <summary>The page a feature adds with this id, when the user sees it.</summary>
+    private FeatureSettingsPageInfo? FeaturePageOf(string pageId) =>
+        _featurePages.FirstOrDefault(page => string.Equals(page.Id, pageId, StringComparison.Ordinal));
+
+    /// <summary>Reads the pages the features add, live (ADR 0214 §1): installed, disabled, role granted or withdrawn.</summary>
+    private void LoadFeaturePages()
+    {
+        if (_featurePagesSource is null)
+        {
+            _featurePagesSource = FeaturePages;
+            FeaturePages.Changed += OnFeaturePagesChanged;
+        }
+
+        _featurePages = _featurePagesSource is { } pages && AppContext is { } context ? pages.GetPages(context) : [];
+    }
+
+    private void OnFeaturePagesChanged(object? sender, EventArgs e) => _ = InvokeAsync(() =>
+    {
+        bool showedFeaturePage = FeaturePageOf(_activePage) is not null;
+        LoadFeaturePages();
+        // The page shown went away (role withdrawn, feature disabled): back to "Installed features",
+        // which removes its view and so stops its process.
+        if (showedFeaturePage && FeaturePageOf(_activePage) is null)
+        {
+            _featuresNotice = L["Features.PageUnavailable"];
+            _activePage = FeaturesPageId;
+        }
+
+        StateHasChanged();
+    });
+
+    /// <summary>
+    /// A feature's button on the Storage page (ADR 0250 §3): its first page in Settings ▸ Features
+    /// when the user sees one, otherwise its details.
+    /// </summary>
+    private void OpenFeaturePageOf(string featureId)
+    {
+        if (_featurePages.FirstOrDefault(page => page.FeatureId == featureId) is { } page)
+        {
+            _featuresNotice = null;
+            SelectPage(page.Id);
+            return;
+        }
+
+        ShowFeatureDetails(featureId);
+    }
+
+    /// <summary>"Details" of a feature: its page in Settings, like <c>--app=&lt;id&gt;</c> (ADR 0096 §4).</summary>
+    private void ShowFeatureDetails(string appId)
+    {
+        _appPageId = appId;
+        SelectPage(ApplicationPageId);
     }
 
     /// <summary>Reads <c>--app=&lt;id&gt;</c> from Settings' command line; the last one wins, an empty id is ignored.</summary>
@@ -219,6 +306,11 @@ public partial class SettingsWindow : IAsyncDisposable
     /// <inheritdoc />
     public async ValueTask DisposeAsync()
     {
+        if (_featurePagesSource is not null)
+        {
+            _featurePagesSource.Changed -= OnFeaturePagesChanged;
+        }
+
         if (_mobilePreferences is not null)
         {
             _mobilePreferences.Changed -= MobilePreferencesChanged;

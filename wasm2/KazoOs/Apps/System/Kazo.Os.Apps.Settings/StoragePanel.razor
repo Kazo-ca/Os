@@ -77,6 +77,10 @@ else
                         <span class="storage-feature-name">@feature.Name</span>
                         <code class="storage-feature-id">/dev/feature/@feature.FeatureId</code>
                         <span class="storage-feature-size">@(feature.UsageBytes is { } bytes ? FormatSize(bytes) : L["Storage.Features.Unknown"].Value)</span>
+                        @if (OpenFeature.HasDelegate)
+                        {
+                            <button type="button" class="apps-btn storage-feature-open" @onclick="() => OpenFeature.InvokeAsync(feature.FeatureId)">@L["Storage.Features.Open"]</button>
+                        }
                     </li>
                 }
             </ul>

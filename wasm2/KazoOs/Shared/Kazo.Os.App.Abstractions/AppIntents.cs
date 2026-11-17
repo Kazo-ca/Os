@@ -147,6 +147,17 @@ public sealed record ShowAppSettingsIntent(string TargetAppId) : IAppIntent
 }
 
 /// <summary>
+/// Requests Settings on a page a feature adds to Settings ▸ Features (ADR 0249 §4): Settings opens
+/// with <c>--page=&lt;id&gt;</c>. It is delivered to Settings as <see cref="AppIntentIds.ShowAppSettings"/>.
+/// </summary>
+/// <param name="PageId">The id of the page's entry point, for example <c>ca.kazo.x86.admin</c>.</param>
+public sealed record ShowSettingsPageIntent(string PageId) : IAppIntent
+{
+    /// <inheritdoc />
+    public string IntentId => AppIntentIds.ShowAppSettings;
+}
+
+/// <summary>
 /// Requests that a virtual file be edited (ADR 0096, section 2): resolved among the handlers whose
 /// actions include <c>edit</c>, with the same precedence as <see cref="OpenFileIntent"/>. Without
 /// any <c>edit</c> handler it falls back to <c>open</c>, as <c>xdg-open</c> has no "edit" verb.

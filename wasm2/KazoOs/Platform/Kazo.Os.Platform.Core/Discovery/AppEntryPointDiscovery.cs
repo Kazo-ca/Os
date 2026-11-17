@@ -24,7 +24,9 @@ public static class AppEntryPointDiscovery
         [AppKind.Terminal] = "Kazo.Os.AppSdk.TerminalAppBase",
         [AppKind.Service] = "Kazo.Os.AppSdk.ServiceAppBase",
         // ADR 0073: a web site is a service-like process (WebServerAppBase derives from ServiceAppBase).
-        [AppKind.Web] = "Kazo.Os.AppSdk.ServiceAppBase"
+        [AppKind.Web] = "Kazo.Os.AppSdk.ServiceAppBase",
+        // ADR 0249 §2: a page of Settings ▸ Features, drawn in the Settings window.
+        [AppKind.SettingsPage] = "Kazo.Os.AppSdk.Blazor.KazoSettingsPageBase"
     };
 
     private const string AppBackHandlerInterfaceFullName = "Kazo.Os.AppSdk.Blazor.IAppBackHandler";

@@ -607,6 +607,9 @@ public sealed partial class ShellInterpreterTests
     {
         public const string HostAppId = "org.kazoos.terminal";
 
+        /// <summary>The settings page of the role fixture's feature (ADR 0249 §2).</summary>
+        public const string SettingsPageId = FeatureRoleFixtures.FeatureId + ".page";
+
         private static readonly string[] FileCapabilities =
         [
             AppCapabilities.FileSystemUserHomeRead, AppCapabilities.FileSystemUserHomeWrite,
@@ -674,7 +677,20 @@ public sealed partial class ShellInterpreterTests
                 .. CatalogCommands
             ];
             AppManifest host = HostManifest();
-            AppCatalogBuildResult built = AppCatalog.Build([host, .. commands]);
+            // ADR 0249 §2: a settings page of the same feature, which requires its role.
+            AppManifest page = Command<EchoCommand>("vmpage") with
+            {
+                Id = SettingsPageId,
+                Name = "VM page",
+                Kind = AppKind.SettingsPage,
+                Terminal = null,
+                Execution = AppExecutionHost.MainThread,
+                Parent = FeatureRoleFixtures.FeatureId,
+                RequiresRole = FeatureRoleFixtures.Manager,
+                PublisherId = FeatureRoleFixtures.Manifests().Feature.PublisherId,
+                Capabilities = [],
+            };
+            AppCatalogBuildResult built = AppCatalog.Build([host, .. commands, page]);
             Assert.True(built.IsSuccess, string.Join("; ", built.Errors));
             AppCatalog catalog = built.Catalog!;
             AppDiscoveryResult discovery = AppEntryPointDiscovery.Discover(
@@ -687,7 +703,8 @@ public sealed partial class ShellInterpreterTests
             Assert.True(discovery.IsSuccess, string.Join("; ", discovery.Errors.Select(e => e.ToString())));
             Dictionary<string, AppDescriptor> descriptors = new(discovery.Descriptors!, StringComparer.Ordinal)
             {
-                [HostAppId] = new AppDescriptor(host, typeof(object), typeof(object).Assembly)
+                [HostAppId] = new AppDescriptor(host, typeof(object), typeof(object).Assembly),
+                [SettingsPageId] = new AppDescriptor(page, typeof(object), typeof(object).Assembly)
             };
 
             AppEnablementRegistry enablement = new(catalog);

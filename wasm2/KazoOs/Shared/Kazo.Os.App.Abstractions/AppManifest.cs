@@ -204,6 +204,14 @@ public sealed record AppManifest
     public WindowOptions? Window { get; init; }
 
     /// <summary>
+    /// Gets the options of a <see cref="AppKind.SettingsPage"/> entry point (ADR 0249 §2): its place
+    /// in the Features group and whether it shows on a phone, or <see langword="null"/> (omitted) for
+    /// the defaults (<see cref="SettingsPageOptions.Of"/>). <see cref="AppManifestValidator"/> rejects
+    /// it for every other kind.
+    /// </summary>
+    public SettingsPageOptions? SettingsPage { get; init; }
+
+    /// <summary>
     /// Gets where the OS runs this app (ADR 0070, section 1): <c>mainThread</c>, <c>pool</c> or
     /// <c>dedicated</c>. The generator always writes the resolved value; <see langword="null"/> only for
     /// a manifest written before ADR 0070, read as the default of its <see cref="Kind"/>

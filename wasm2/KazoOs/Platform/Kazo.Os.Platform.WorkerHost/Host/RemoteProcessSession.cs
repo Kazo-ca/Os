@@ -914,6 +914,11 @@ internal sealed class RemoteProcessSession
                 AppIntentResult result = await c.Intents.ShowAppSettingsAsync(a.GetString("id"), cancellationToken).ConfigureAwait(false);
                 return writer => WireCodec.WriteIntentResult(writer, result);
             }
+            case RemoteOps.IntentShowSettingsPage:
+            {
+                AppIntentResult result = await c.Intents.ShowSettingsPageAsync(a.GetString("id"), cancellationToken).ConfigureAwait(false);
+                return writer => WireCodec.WriteIntentResult(writer, result);
+            }
             case RemoteOps.IntentSend:
             {
                 AppIntentResult result = await c.Intents.SendIntentAsync(

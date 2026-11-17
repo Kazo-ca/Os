@@ -1,3 +1,4 @@
+using Kazo.Os.AppSdk.Blazor.Settings;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using MudBlazor;
@@ -5,7 +6,17 @@ using MudBlazor;
 namespace Kazo.Os.Apps.Settings;
 
 /// <summary>One page of the side menu (ADR 0170): its id for <c>--page=</c>, its group, its label key and its icon.</summary>
-internal sealed record SettingsPage(string Id, string GroupKey, string LabelKey, string Icon);
+internal sealed record SettingsPage(string Id, string GroupKey, string LabelKey, string Icon)
+{
+    /// <summary>Gets the label of a page a feature adds (ADR 0249 §1), shown as is instead of <see cref="LabelKey"/>.</summary>
+    public string? Label { get; init; }
+
+    /// <summary>Gets the URL of the icon of a page a feature adds, or <see langword="null"/> for <see cref="Icon"/>.</summary>
+    public string? IconUrl { get; init; }
+
+    /// <summary>Gets whether a feature added the page (ADR 0249 §2): it is drawn by its own process.</summary>
+    public bool IsFeaturePage => Label is not null;
+}
 
 /// <summary>
 /// The side menu of Settings (ADR 0170): a vertical list of grouped pages that the user collapses to an icon
@@ -31,6 +42,12 @@ public partial class SettingsWindow
     /// <summary>Id of the "What's new" page (<c>--page=whats-new</c>, ADR 0186 §4.5), opened by the sign-in notification.</summary>
     internal const string WhatsNewPageId = "whats-new";
 
+    /// <summary>Id of the "Installed features" page (<c>--page=features</c>, ADR 0249 §1).</summary>
+    internal const string FeaturesPageId = "features";
+
+    /// <summary>The group of the Features section (ADR 0249 §1, answer 2 A): after Applications, before Network.</summary>
+    internal const string FeaturesGroupKey = "Nav.Group.Features";
+
     /// <summary>Every page in menu order; <see cref="PagesFor"/> drops the optional ones.</summary>
     internal static IReadOnlyList<SettingsPage> AllPages { get; } =
     [
@@ -50,6 +67,8 @@ public partial class SettingsWindow
         new("os-components", "Nav.Group.Applications", "Tab.OsComponents", Icons.Material.Filled.Widgets),
         new("file-menus", "Nav.Group.Applications", "Tab.FileMenus", Icons.Material.Filled.MenuOpen),
         new(ApplicationPageId, "Nav.Group.Applications", "Tab.Application", Icons.Material.Filled.Info),
+        // ADR 0249 §1: the pages features add follow "Installed features" (PagesFor).
+        new(FeaturesPageId, FeaturesGroupKey, "Tab.Features", Icons.Material.Filled.Category),
         new("server", "Nav.Group.Network", "Tab.ServerConnection", Icons.Material.Filled.Cloud),
         new("sync", "Nav.Group.Network", "Tab.Synchronization", Icons.Material.Filled.Sync),
         new(CloudAccountsPageId, "Nav.Group.Network", "Tab.CloudAccounts", Icons.Material.Filled.CloudQueue),
@@ -73,19 +92,63 @@ public partial class SettingsWindow
     private string? _pendingNavFocus;
     private readonly Dictionary<string, ElementReference> _navItemRefs = [];
 
-    /// <summary>The pages of the menu, without Backup when the host lacks it and without Application when no app is named.</summary>
+    /// <summary>
+    /// The pages of the menu, without Backup when the host lacks it and without Application when no app is named,
+    /// with the pages the installed features add (ADR 0249 §1).
+    /// </summary>
     private IReadOnlyList<SettingsPage> VisiblePages => PagesFor(
         Kazo.Os.AppSdk.Administration.KazoSystemBackup.IsSupportedFor(AppContext),
-        _appPageId is not null);
+        _appPageId is not null,
+        _featurePages);
 
-    /// <summary>The menu's pages for a host with or without backup, and with or without an app page.</summary>
-    internal static IReadOnlyList<SettingsPage> PagesFor(bool backupSupported, bool hasAppPage) =>
-        AllPages.Where(page => page.Id switch
+    /// <summary>
+    /// The menu's pages for a host with or without backup, with or without an app page, and with the
+    /// pages of the features after "Installed features", each labelled "&lt;Feature&gt; ▸ &lt;Title&gt;".
+    /// </summary>
+    internal static IReadOnlyList<SettingsPage> PagesFor(
+        bool backupSupported, bool hasAppPage, IReadOnlyList<FeatureSettingsPageInfo>? featurePages = null)
+    {
+        List<SettingsPage> pages = [];
+        foreach (SettingsPage page in AllPages)
         {
-            BackupPageId => backupSupported,
-            ApplicationPageId => hasAppPage,
-            _ => true
-        }).ToList();
+            bool visible = page.Id switch
+            {
+                BackupPageId => backupSupported,
+                ApplicationPageId => hasAppPage,
+                _ => true
+            };
+            if (!visible)
+            {
+                continue;
+            }
+
+            pages.Add(page);
+            if (page.Id == FeaturesPageId)
+            {
+                pages.AddRange((featurePages ?? []).Select(static featurePage =>
+                    new SettingsPage(featurePage.Id, FeaturesGroupKey, string.Empty, Icons.Material.Filled.Tune)
+                    {
+                        Label = $"{featurePage.FeatureName} ▸ {featurePage.Title}",
+                        IconUrl = featurePage.IconUrl,
+                    }));
+            }
+        }
+
+        return pages;
+    }
+
+    /// <summary>
+    /// Reads <c>--page=&lt;id&gt;</c> naming a page a feature adds (ADR 0249 §4): an entry point id
+    /// such as <c>ca.kazo.x86.admin</c>, never a page of Settings itself; the last one wins.
+    /// </summary>
+    internal static string? ReadFeaturePageArgument(IReadOnlyList<string> arguments) =>
+        arguments
+            .Where(static argument => argument.StartsWith(PageArgumentPrefix, StringComparison.Ordinal))
+            .Select(static argument => argument[PageArgumentPrefix.Length..].Trim())
+            .LastOrDefault(static id => id.Contains('.', StringComparison.Ordinal) && AllPages.All(page => page.Id != id));
+
+    /// <summary>The label of a menu entry: a feature's page shows its own, a page of Settings its translation.</summary>
+    private string LabelOf(SettingsPage page) => page.Label ?? L[page.LabelKey];
 
     /// <summary>
     /// Reads <c>--page=&lt;id&gt;</c> (any page id but <c>application</c>, which <c>--app=</c> opens);

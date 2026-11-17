@@ -122,6 +122,12 @@ public sealed class FeatureRoleService
         _settings.DocumentChanged += OnDocumentChanged;
     }
 
+    /// <summary>
+    /// Raised after <c>roles.config</c> was read again (a grant, a revocation, an edit by root), off
+    /// any lock, so the surfaces filtered by role (Settings ▸ Features, ADR 0249 §3) refresh.
+    /// </summary>
+    public event EventHandler? Changed;
+
     /// <summary>Gets the tickets of the operations of the features (ADR 0247 §3), shared by every process of the session.</summary>
     public FeatureOperationTickets Tickets { get; } = new();
 
@@ -145,6 +151,8 @@ public sealed class FeatureRoleService
         {
             _gate.Release();
         }
+
+        Changed?.Invoke(this, EventArgs.Empty);
     }
 
     /// <summary>Gets the error of the last background read of <c>roles.config</c>, or <see langword="null"/>.</summary>

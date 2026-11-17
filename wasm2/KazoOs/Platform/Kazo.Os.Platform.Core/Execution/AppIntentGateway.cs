@@ -117,6 +117,12 @@ internal sealed class AppIntentGateway(
         return ToIntentResult(await DispatchAsync(new ShowAppSettingsIntent(appId), cancellationToken));
     }
 
+    public async ValueTask<AppIntentResult> ShowSettingsPageAsync(string pageId, CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(pageId);
+        return ToIntentResult(await DispatchAsync(new ShowSettingsPageIntent(pageId), cancellationToken));
+    }
+
     public async ValueTask<AppIntentResult> SendIntentAsync(
         string intentId,
         string? payloadJson,

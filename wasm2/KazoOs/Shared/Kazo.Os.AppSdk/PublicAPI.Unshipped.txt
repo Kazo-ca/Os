@@ -313,3 +313,10 @@ const Kazo.Os.AppSdk.KazoRoles.FeatureSeparator = ':' -> char
 Kazo.Os.AppSdk.KazoRoles
 static Kazo.Os.AppSdk.KazoUser.IsInRole(string! role) -> bool
 Kazo.Os.AppSdk.KazoUserInfo.IsInRole(string! role) -> bool
+static Kazo.Os.AppSdk.Apps.KazoApps.ShowSettingsPageAsync(string! pageId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Kazo.Os.AppSdk.Apps.KazoAppInfo.RequiresRole.get -> string?
+Kazo.Os.AppSdk.Apps.KazoAppInfo.Roles.init -> void
+Kazo.Os.AppSdk.Apps.KazoAppInfo.Roles.get -> System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.Administration.KazoFeatureRole!>!
+Kazo.Os.AppSdk.Apps.KazoAppInfo.RequiresRole.init -> void
+Kazo.Os.AppSdk.Apps.KazoAppInfo.ProvidedCapabilities.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Kazo.Os.AppSdk.Apps.KazoAppInfo.ProvidedCapabilities.init -> void

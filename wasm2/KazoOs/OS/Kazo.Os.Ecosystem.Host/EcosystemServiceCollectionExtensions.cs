@@ -1368,6 +1368,21 @@ public static class EcosystemServiceCollectionExtensions
                 orchestrator.StartAuxiliaryAsync,
                 orchestrator.StopAsync);
         });
+        // ADR 0249: the pages features add to Settings ▸ Features, each run as a child of Settings.
+        services.AddScoped<Kazo.Os.AppSdk.Blazor.Settings.IFeatureSettingsPages>(provider =>
+        {
+            AppLifecycleOrchestrator orchestrator = provider.GetRequiredService<AppLifecycleOrchestrator>();
+            return new Kazo.Os.Platform.Blazor.Settings.FeatureSettingsPages(
+                provider.GetRequiredService<AppCatalog>(),
+                provider.GetRequiredService<IAppEnablementRegistry>(),
+                provider.GetRequiredService<ISessionService>(),
+                () => provider.GetService<Kazo.Os.Platform.Core.Roles.FeatureRoleService>(),
+                () => provider.GetRequiredService<Kazo.Os.Platform.Core.Globalization.SessionLocaleService>().Culture,
+                () => provider.GetService<UiPlatformPreferenceService>()?.Current.ActivePlatform == WellKnownAppPlatforms.Mobile,
+                orchestrator.EnsureDescriptorAsync,
+                orchestrator.StartAuxiliaryAsync,
+                orchestrator.StopAsync);
+        });
         services.AddSingleton<IWindowAppFrameworkLifecycle>(NullWindowAppFrameworkLifecycle.Instance);
         // Scoped, not Singleton: on the server host these back live desktop/window state for one
         // circuit. A Singleton here outlives circuit reconnects (e.g. a hard browser reload, which

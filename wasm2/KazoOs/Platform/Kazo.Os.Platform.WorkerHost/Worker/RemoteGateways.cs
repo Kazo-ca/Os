@@ -820,6 +820,10 @@ internal sealed class RemoteIntentGateway(RemoteProcessChannel channel) : IAppIn
         WireCodec.ReadIntentResult(await channel.CallAsync(
             RemoteOps.IntentShowSettings, writer => writer.WriteString("id", appId), cancellationToken).ConfigureAwait(false));
 
+    public async ValueTask<AppIntentResult> ShowSettingsPageAsync(string pageId, CancellationToken cancellationToken = default) =>
+        WireCodec.ReadIntentResult(await channel.CallAsync(
+            RemoteOps.IntentShowSettingsPage, writer => writer.WriteString("id", pageId), cancellationToken).ConfigureAwait(false));
+
     public async ValueTask<AppIntentResult> SendIntentAsync(
         string intentId, string? payloadJson, string? targetAppId = null, bool rememberChoice = false, CancellationToken cancellationToken = default) =>
         WireCodec.ReadIntentResult(await channel.CallAsync(RemoteOps.IntentSend, writer =>

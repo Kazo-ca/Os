@@ -449,7 +449,8 @@ SDK model (`FeatureDefinition`, `FeatureEntryPoint`, child manifests) is in
   each with its entry points (name, kind, id) without an action of their own;
   uninstalling or reinstalling is done on the feature. An app's page
   (`KazoAppInfo.ParentId`) names its feature. The "Features" section of
-  Settings is ADR 0249, not coded yet.
+  Settings (ADR 0249, adjusted by ADR 0285) lists the installed features and
+  the pages they add ([`feature-settings-pages.md`](../framework/feature-settings-pages.md)).
 - **Provided services** ([ADR 0262](adr/0262-feature-service-registry-and-async-resolution.md),
   [`feature-services.md`](../framework/feature-services.md)): the feature's
   manifest lists `providedServices`; their code is a declared assembly of the

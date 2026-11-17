@@ -1,0 +1,34 @@
+@inherits Kazo.Os.AppSdk.Blazor.KazoComponentBase
+
+@*
+    Settings ▸ Features ▸ <page> (ADR 0249 §2): the page a feature adds, drawn here but run by its own
+    process, in its own context. Settings lends it nothing; the OS error barrier keeps a failure of
+    the page in this area.
+*@
+<section class="feature-page-host" aria-labelledby="feature-page-title">
+    <header class="feature-page-header">
+        <span class="feature-page-feature">@Page.FeatureName</span>
+        <h4 id="feature-page-title">@Page.Title</h4>
+    </header>
+
+    @if (_session is { HasExited: false } session)
+    {
+        <div class="feature-page-body">
+            @session.Content
+        </div>
+    }
+    else if (_message is not null)
+    {
+        <div class="feature-page-message" role="status">
+            <p>@_message</p>
+            @if (_canReopen)
+            {
+                <button type="button" class="apps-btn" @onclick="ReopenAsync">@L["Features.Page.Reopen"]</button>
+            }
+        </div>
+    }
+    else
+    {
+        <p class="setting-desc">@L["Common.Loading"]</p>
+    }
+</section>

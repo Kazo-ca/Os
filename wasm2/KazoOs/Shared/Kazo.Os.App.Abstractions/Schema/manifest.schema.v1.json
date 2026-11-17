@@ -24,7 +24,7 @@
     "version": { "$ref": "#/$defs/semanticVersion" },
     "publisherId": { "type": "string", "pattern": "^[a-z][a-z0-9-]*(\\.[a-z][a-z0-9-]*)+$" },
     "description": { "type": "string", "minLength": 1 },
-    "kind": { "enum": ["window", "terminal", "service", "web", "feature"] },
+    "kind": { "enum": ["window", "terminal", "service", "web", "feature", "settingsPage"] },
     "parent": { "type": "string", "pattern": "^[a-z][a-z0-9-]*(\\.[a-z][a-z0-9-]*){2,}$" },
     "entryPoint": {
       "type": "object",
@@ -288,6 +288,15 @@
           "description": { "type": "string", "minLength": 1 },
           "grants": { "type": "array", "items": { "type": "string", "minLength": 1 } }
         }
+      }
+    },
+    "settingsPage": {
+      "description": "Options of a settings page entry point of a feature (ADR 0249 §2): its order in Settings ▸ Features and whether it shows on a phone.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "order": { "type": "integer" },
+        "mobileSupported": { "type": "boolean" }
       }
     },
     "requiresRole": {
