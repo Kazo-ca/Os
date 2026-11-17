@@ -86,6 +86,12 @@ public partial class SettingsWindow : IAsyncDisposable
     private CultureInfo Formats => AppContext.FormatCulture;
 
     /// <summary>The user's authority, translated.</summary>
+    /// <summary>
+    /// The section of the bilingual legal pages (privacy.html, terms.html) in the language of the
+    /// texts: <c>fr</c> or <c>en</c>, from the same resources as the labels.
+    /// </summary>
+    private string LegalSection => L["About.LegalSection"];
+
     private string AuthorityLabel => (AppContext?.UserAuthority ?? AppAuthority.User) switch
     {
         AppAuthority.Administrator => L["About.Authority.Administrator"],

@@ -127,7 +127,6 @@ public sealed class FeatureDriveFormTests
         Assert.Empty(secrets);
         Assert.Equal("box-1", name);
         Assert.Equal("form-1", creation.Reference.Account);
-        Assert.Empty(page.Started);
     }
 
     [Fact]

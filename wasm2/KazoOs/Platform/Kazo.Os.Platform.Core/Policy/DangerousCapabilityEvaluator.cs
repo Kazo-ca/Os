@@ -66,21 +66,40 @@ public static class DangerousCapabilityEvaluator
         AppManifest manifest,
         bool isSystemApp,
         DangerousCapabilityPolicy policy,
-        AppPermissionDecisions decisions)
+        AppPermissionDecisions decisions) =>
+        Evaluate(manifest, isSystemApp, policy, decisions, BuiltInCapabilityCatalog.Instance);
+
+    /// <summary>
+    /// Evaluates every dangerous capability <paramref name="manifest"/> declares, in manifest order,
+    /// as the catalog of the running OS classifies it (ADR 0246 §3): the built-in ones, the topic
+    /// permissions and the dangerous permissions of the installed features.
+    /// </summary>
+    /// <param name="manifest">App manifest.</param>
+    /// <param name="isSystemApp">Whether the app is a system app of the host.</param>
+    /// <param name="policy">Effective <c>dangerousCapabilities</c> policy.</param>
+    /// <param name="decisions">Parsed machine and user decisions.</param>
+    /// <param name="catalog">The catalog of capabilities of the running OS.</param>
+    public static IReadOnlyList<DangerousCapabilityStatus> Evaluate(
+        AppManifest manifest,
+        bool isSystemApp,
+        DangerousCapabilityPolicy policy,
+        AppPermissionDecisions decisions,
+        ICapabilityCatalog catalog)
     {
         ArgumentNullException.ThrowIfNull(manifest);
         ArgumentNullException.ThrowIfNull(decisions);
+        ArgumentNullException.ThrowIfNull(catalog);
 
         List<DangerousCapabilityStatus> statuses = [];
         foreach (string capability in manifest.Capabilities.Distinct(StringComparer.Ordinal))
         {
-            if (!AppCapabilities.IsDangerous(capability))
+            if (catalog.Find(capability) is not { Risk: CapabilityRisk.Dangerous } description)
             {
                 continue;
             }
 
             statuses.Add(new DangerousCapabilityStatus(
-                AppCapabilities.Describe(capability),
+                description,
                 isSystemApp ? DangerousCapabilityState.System : EvaluateOne(manifest, capability, policy, decisions)));
         }
 
@@ -89,10 +108,17 @@ public static class DangerousCapabilityEvaluator
 
     /// <summary>Gets whether <paramref name="manifest"/> declares at least one dangerous capability.</summary>
     /// <param name="manifest">App manifest.</param>
-    public static bool DeclaresDangerousCapabilities(AppManifest manifest)
+    public static bool DeclaresDangerousCapabilities(AppManifest manifest) =>
+        DeclaresDangerousCapabilities(manifest, BuiltInCapabilityCatalog.Instance);
+
+    /// <summary>Gets whether <paramref name="manifest"/> declares at least one capability the catalog classifies dangerous.</summary>
+    /// <param name="manifest">App manifest.</param>
+    /// <param name="catalog">The catalog of capabilities of the running OS.</param>
+    public static bool DeclaresDangerousCapabilities(AppManifest manifest, ICapabilityCatalog catalog)
     {
         ArgumentNullException.ThrowIfNull(manifest);
-        return manifest.Capabilities.Any(AppCapabilities.IsDangerous);
+        ArgumentNullException.ThrowIfNull(catalog);
+        return manifest.Capabilities.Any(catalog.IsDangerous);
     }
 
     /// <summary>

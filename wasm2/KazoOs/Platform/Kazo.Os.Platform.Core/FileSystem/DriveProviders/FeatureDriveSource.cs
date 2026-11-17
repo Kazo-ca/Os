@@ -194,7 +194,8 @@ public sealed class FeatureDriveSource : IDescribedNetworkDriveSource, IDisposab
     /// <inheritdoc />
     /// <remarks>
     /// The account must exist and be of this type. The form's values are not taken from the
-    /// request: the OS keeps them in the account (non-secret options) and sealed (secrets).
+    /// request: the OS keeps them in the account (non-secret options) and sealed (secrets). The
+    /// provider is opened before the creation returns (bounded by <see cref="OpenTimeout"/>).
     /// </remarks>
     public async ValueTask<NetworkDriveCreation?> CreateAsync(NetworkDriveRequest request, CancellationToken cancellationToken = default)
     {
@@ -212,7 +213,12 @@ public sealed class FeatureDriveSource : IDescribedNetworkDriveSource, IDisposab
         }
 
         NetworkDriveReference reference = new(account.DisplayName, Key: null, Account: account.Id, Root: request.Root);
-        return new NetworkDriveCreation(new FeatureDriveFolder(this, reference), reference, Registration.Provider.Name);
+        FeatureDriveFolder folder = new(this, reference);
+        // The user connects this drive now: unlike a login, which never waits, the provider is
+        // opened before the drive is mounted (bounded by OpenTimeout), so the drive mounts connected
+        // and the File Explorer opens it at once. A provider that fails leaves it disconnected.
+        await folder.OpenNowAsync().ConfigureAwait(false);
+        return new NetworkDriveCreation(folder, reference, Registration.Provider.Name);
     }
 
     /// <inheritdoc />

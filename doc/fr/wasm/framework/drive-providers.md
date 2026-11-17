@@ -326,13 +326,18 @@ Le chantier 4 branche les types déclarés dans le système de fichiers
 - **Chargé au premier lecteur.** Rien ne se charge à l'installation ni à la
   connexion de l'utilisateur. Au premier lecteur du type ouvert, l'OS charge
   l'assemblage, démarre le processus de service de la fonctionnalité (compte
-  `kazoos-svc`, ses permissions) et crée **une instance par page**, avec le
+  `kazoos-svc`, ses permissions : avant chaque connexion, l'OS lui accorde sans
+  rien demander les permissions dangereuses que l'administrateur a approuvées
+  pour la machine, comme `drives.provide`) et crée **une instance par page**, avec le
   constructeur `(IFeatureServiceContext)` sinon `()`. Chaque appel au
   fournisseur s'exécute dans le contexte de la fonctionnalité. Un échec n'est
   jamais gardé : le lecteur suivant réessaie.
-- **La connexion n'attend jamais.** Le lecteur est monté **déconnecté** tant que
-  `OpenAsync` n'a pas répondu, puis se reconnecte seul. Charger et ouvrir ont
-  20 s au plus, `GetStateAsync` 10 s.
+- **L'ouverture de session n'attend jamais.** Un lecteur remonté à l'ouverture
+  de session est **déconnecté** tant que `OpenAsync` n'a pas répondu, puis se
+  reconnecte seul. Un lecteur que l'utilisateur vient de connecter (formulaire,
+  `mount`) attend en revanche `OpenAsync` avant d'être monté, pour que
+  l'Explorateur l'ouvre aussitôt. Charger et ouvrir ont 20 s au plus,
+  `GetStateAsync` 10 s.
 - **Un fournisseur qui échoue** (assemblage ou classe absent, constructeur qui
   lève, `OpenAsync` qui lève ou trop lent) laisse le lecteur déconnecté et écrit
   une ligne `drives: <type>: <raison>` dans `/var/log/apps/<fonctionnalité>.log`
@@ -419,10 +424,15 @@ recopier, avec une **connexion par formulaire** : adresse du serveur
 scellé par l'OS). Il envoie du WebDAV (RFC 4918) par `KazoDirectHttpClient`,
 signe chaque requête en HTTP Basic avec le mot de passe demandé à l'OS à
 chaque fois, et prend l'`ETag` comme révision (`If-Match` pour une écriture
-conditionnelle, `If-None-Match: *` pour une création). Il ne déclare aucun hôte :
+conditionnelle, `If-None-Match: *` pour une création). Il lit les réponses
+`207 Multi-Status` avec son propre petit lecteur XML (`WebDavXml` : préfixes d'espace de noms,
+entités, CDATA, aucun `DOCTYPE`), car l'OS publié n'a pas `System.Xml`. Il ne déclare aucun hôte :
 le serveur tapé par l'utilisateur suffit. Ses tests
 (`Tests/Kazo.Os.Samples.WebDavDrive.Tests`) passent toute la suite contre un
-serveur WebDAV local en mémoire (`LocalWebDavServer`).
+serveur WebDAV local en mémoire (`LocalWebDavServer`). Sur l'OS publié et rogné,
+`build/publish-trimmed.sh` installe l'exemple comme Feature, le connecte par son
+formulaire à un serveur WebDAV de test que Playwright répond (`RoutedWebDavServer`,
+en-têtes CORS compris), puis lit et écrit un fichier depuis le terminal.
 
 ## Limites et revue du Store
 
@@ -437,6 +447,10 @@ serveur WebDAV local en mémoire (`LocalWebDavServer`).
   pas de joker nu) et la revue lit le code : les hôtes joints doivent être
   ceux déclarés, aucun jeton ni secret ne doit sortir vers un autre hôte, pas
   de JavaScript qui contourne le SDK.
+- **Pas de `System.Xml` dans l'OS publié** : l'OS rogné ne livre aucune assembly XML (environ
+  1 Mo de plus à chaque démarrage). `KazoOsPack` refuse un paquet qui l'appelle (`KOSAPP0100`,
+  ADR 0277). Un fournisseur lit le peu de XML qu'il reçoit lui-même, comme l'exemple WebDAV et le
+  connecteur S3 de l'OS. Le XML à la demande est la TODO [#618](https://github.com/Kazo-ca/Os/issues/618).
 - **CORS** : sans l'accord du service, rien ne passe ([plus haut](#cors--ce-que-le-service-doit-accepter)).
 - **Hameçonnage** : l'OS montre toujours le nom de la fonctionnalité à côté du
   nom du service dans le dialogue de connexion et Paramètres.
@@ -534,3 +548,9 @@ Chantier 7 (kit du développeur) :
 - [x] Exemple WebDAV avec connexion par formulaire
 - [x] ADR 0284 : `drives.provide` suffit pour les hôtes déclarés, adresse de serveur tapée
 - [x] Ce guide
+
+Chantier 9 (fin de série) :
+
+- [x] SDK 3.5.0 : API publiée, journal des changements
+- [x] Fixture de compatibilité `Contoso.Sdk35DriveProvider` : un fournisseur compilé contre 3.5.0 passe la suite courante
+- [x] Parcours complet sur l'OS rogné : connexion par formulaire, lecture et écriture contre un serveur WebDAV de test

@@ -74,7 +74,11 @@ public static class AppManifestJsonSerializer
             "realNetworkPorts",
             "directNetworkHosts",
             "providedServices",
-            "driveProviders"
+            "driveProviders",
+            "capabilityPrefix",
+            "providedCapabilities",
+            "roles",
+            "requiresRole"
         });
 
         return JsonSerializer.Deserialize(document.RootElement.GetRawText(), AppManifestJsonSerializerContext.Default.AppManifest)
@@ -197,6 +201,18 @@ public static class AppManifestJsonSerializer
                 ? null
                 : [.. manifest.DriveProviders.OrderBy(item => item.Type, StringComparer.Ordinal)
                     .Select(item => item with { Hosts = [.. (item.Hosts ?? []).OrderBy(host => host, StringComparer.Ordinal)] })],
+            // ADR 0246: likewise for the permissions a feature declares.
+            ProvidedCapabilities = manifest.ProvidedCapabilities is not { Count: > 0 }
+                ? null
+                : [.. manifest.ProvidedCapabilities
+                    .OrderBy(item => item.Id, StringComparer.Ordinal)
+                    .Select(item => item with { Covers = item.Covers is not { Count: > 0 } ? null : [.. item.Covers.Order(StringComparer.Ordinal)] })],
+            // ADR 0247: likewise for the roles a feature declares.
+            Roles = manifest.Roles is not { Count: > 0 }
+                ? null
+                : [.. manifest.Roles
+                    .OrderBy(item => item.Id, StringComparer.Ordinal)
+                    .Select(item => item with { Grants = item.Grants is not { Count: > 0 } ? null : [.. item.Grants.Order(StringComparer.Ordinal)] })],
             // The first URL is the site's primary address: the declared order is kept.
             Web = manifest.Web
         };
@@ -293,6 +309,12 @@ public static class AppManifestJsonSerializer
                 case "driveProviders":
                     ValidateArray(property.Value, $"{path}.driveProviders", ["type", "name", "provider", "connection", "icon", "hosts"]);
                     ValidateDriveProviderConnections(property.Value, $"{path}.driveProviders");
+                    break;
+                case "providedCapabilities":
+                    ValidateArray(property.Value, $"{path}.providedCapabilities", ["id", "risk", "title", "riskStatement", "covers"]);
+                    break;
+                case "roles":
+                    ValidateArray(property.Value, $"{path}.roles", ["id", "title", "description", "grants"]);
                     break;
                 case "contextMenus":
                     ValidateArray(property.Value, $"{path}.contextMenus", ["name", "title", "titles", "target", "intent", "icon", "scopes", "types", "selection", "first", "after", "afterGroup", "parent", "screens", "screen"]);

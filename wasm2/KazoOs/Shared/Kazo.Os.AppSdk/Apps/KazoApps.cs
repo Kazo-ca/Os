@@ -214,6 +214,45 @@ public static class KazoApps
     }
 
     /// <summary>
+    /// Asks the user to install a package this app can use, typically an optional dependency
+    /// (ADR 0248 §2): opens the Kazo OS Store on its page (<see cref="StoreAppId"/> with
+    /// <c>--app=&lt;appId&gt;</c>), where the user installs it with its own dependencies and one consent.
+    /// Without a Store, nothing opens and <see cref="KazoInstallRequestResult.Message"/> tells the user
+    /// to run <c>kazopkg install &lt;appId&gt;</c>. The app never installs anything itself.
+    /// </summary>
+    /// <param name="appId">The app or feature to propose, as its catalog lists it.</param>
+    /// <param name="cancellationToken">Cancels the launch.</param>
+    /// <exception cref="ArgumentException"><paramref name="appId"/> is empty.</exception>
+    /// <exception cref="KazoAppLaunchException">The Store is installed but failed to start.</exception>
+    /// <exception cref="KazoUnauthorizedAccessException">This app lacks <c>apps.launch</c>.</exception>
+    /// <exception cref="KazoExecutionContextMissingException">No app context is active.</exception>
+    public static async Task<KazoInstallRequestResult> RequestInstallAsync(string appId, CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(appId);
+        IAppIntentGateway intents = KazoExecutionContext.Current.Intents;
+        AppIntentLaunchResult result;
+        try
+        {
+            result = await intents.LaunchAsync(StoreAppId, [$"--app={appId}"], cancellationToken).ConfigureAwait(false);
+        }
+        catch (AppGatewayAccessDeniedException exception)
+        {
+            throw KazoGatewayErrors.ToUnauthorized(exception);
+        }
+
+        return result.Outcome switch
+        {
+            AppIntentLaunchOutcome.Launched => new KazoInstallRequestResult(appId, StoreOpened: true, Message: null),
+            // No Store on this OS, or the user uninstalled it (ADR 0048): the terminal remains.
+            AppIntentLaunchOutcome.NotFound or AppIntentLaunchOutcome.Disabled => new KazoInstallRequestResult(
+                appId,
+                StoreOpened: false,
+                Globalization.KazoLocalization.GetLocalizer<Strings>()["Apps.RequestInstall.NoStore", appId]),
+            _ => throw new KazoAppLaunchException($"The app '{StoreAppId}' could not be started ({result.ErrorCode}).", StoreAppId, result.ErrorCode),
+        };
+    }
+
+    /// <summary>
     /// The id of the Kazo OS Store. Launch it with <c>--app=&lt;appId&gt;</c> to show an app's page, and
     /// add <c>--open-after-install=&lt;path&gt;</c> to open a file once the user installed it (ADR 0257 §5).
     /// </summary>

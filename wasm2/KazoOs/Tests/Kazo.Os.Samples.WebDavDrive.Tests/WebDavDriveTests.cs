@@ -188,6 +188,47 @@ public sealed class WebDavDriveTests
         await Assert.ThrowsAsync<FormatException>(() => WebDavMultistatus.ParseAsync(new MemoryStream(body), CancellationToken.None));
     }
 
+    /// <summary>
+    /// The sample reads XML without System.Xml (absent from the published OS): servers write the
+    /// DAV: namespace with any prefix or as the default one, with entities, CDATA and comments.
+    /// </summary>
+    [Theory]
+    [InlineData("d")]
+    [InlineData("D")]
+    [InlineData("")]
+    public async Task A_multistatus_is_read_whatever_the_prefix_of_the_DAV_namespace(string prefix)
+    {
+        string p = prefix.Length == 0 ? string.Empty : prefix + ":";
+        string declaration = prefix.Length == 0 ? "xmlns=\"DAV:\"" : $"xmlns:{prefix}=\"DAV:\"";
+        byte[] body = Encoding.UTF8.GetBytes(
+            $"\uFEFF<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<!-- listing --><{p}multistatus {declaration} xmlns:oc=\"http://owncloud.org/ns\">" +
+            $"<{p}response><{p}href>/dav/a%20%26%20b.txt</{p}href><{p}propstat><{p}prop>" +
+            $"<{p}resourcetype/><{p}getcontentlength>12</{p}getcontentlength><{p}getetag>&quot;e1&quot;</{p}getetag>" +
+            $"<{p}getlastmodified><![CDATA[Tue, 17 Nov 2026 06:00:00 GMT]]></{p}getlastmodified><oc:id>1</oc:id>" +
+            $"</{p}prop><{p}status>HTTP/1.1 200 OK</{p}status></{p}propstat>" +
+            $"<{p}propstat><{p}prop><{p}quota-used-bytes/></{p}prop><{p}status>HTTP/1.1 404 Not Found</{p}status></{p}propstat></{p}response>" +
+            $"<{p}response><{p}href>/dav/Photos/</{p}href><{p}propstat><{p}prop><{p}resourcetype><{p}collection/></{p}resourcetype>" +
+            $"</{p}prop><{p}status>HTTP/1.1 200 OK</{p}status></{p}propstat></{p}response></{p}multistatus>");
+
+        IReadOnlyList<WebDavResource> resources = await WebDavMultistatus.ParseAsync(new MemoryStream(body), CancellationToken.None);
+
+        Assert.Equal(2, resources.Count);
+        Assert.Equal(new WebDavResource("/dav/a & b.txt", false, 12, new DateTimeOffset(2026, 11, 17, 6, 0, 0, TimeSpan.Zero), "\"e1\""), resources[0]);
+        Assert.Null(resources[0].QuotaUsed);
+        Assert.Equal(new WebDavResource("/dav/Photos", true, 0, null, null), resources[1]);
+    }
+
+    [Theory]
+    [InlineData("<d:multistatus xmlns:d=\"DAV:\"><d:response></d:multistatus>")]
+    [InlineData("<x:multistatus xmlns:d=\"DAV:\"></x:multistatus>")]
+    [InlineData("<d:multistatus xmlns:d=\"DAV:\">&unknown;</d:multistatus>")]
+    [InlineData("<multistatus xmlns=\"urn:other\"/>")]
+    [InlineData("not xml")]
+    public async Task A_malformed_or_foreign_answer_is_refused(string xml)
+    {
+        await Assert.ThrowsAsync<FormatException>(() => WebDavMultistatus.ParseAsync(new MemoryStream(Encoding.UTF8.GetBytes(xml)), CancellationToken.None));
+    }
+
     [Theory]
     [InlineData("/remote.php/dav/files/ben/a%20b%23c.txt", "/remote.php/dav/files/ben/a b#c.txt")]
     [InlineData("https://dav.test.example/dav/Photos/", "/dav/Photos")]

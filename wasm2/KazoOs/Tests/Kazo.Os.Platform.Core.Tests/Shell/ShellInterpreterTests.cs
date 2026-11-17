@@ -13,9 +13,11 @@ using Kazo.Os.Platform.Core.Lifecycle;
 using Kazo.Os.Platform.Core.Notifications;
 using Kazo.Os.Platform.Core.Policy;
 using Kazo.Os.Platform.Core.Processes;
+using Kazo.Os.Platform.Core.Roles;
 using Kazo.Os.Platform.Core.Sessions;
 using Kazo.Os.Platform.Core.Settings;
 using Kazo.Os.Platform.Core.Shell;
+using Kazo.Os.Platform.Core.Tests.Roles;
 using Kazo.Os.Platform.Core.Time;
 using Kazo.Os.Simulation.Abstractions;
 using Kazo.Os.Simulation.Abstractions.Diagnostics;
@@ -638,7 +640,7 @@ public sealed partial class ShellInterpreterTests
             InMemoryLocalGroupRepository groups = new();
             InMemoryEventBus eventBus = new();
             LocalGroup group = groups.CreateGroup(LocalLoginName.Parse("users"));
-            users.CreateUser(_alice, "Alice", AppAuthority.User, group.Id, credential: LocalPasswordHasher.Create("hunter2", iterations: 100));
+            AliceAccount = users.CreateUser(_alice, "Alice", AppAuthority.User, group.Id, credential: LocalPasswordHasher.Create("hunter2", iterations: 100));
             _sessions = new LocalSessionService(
                 users, seeder, eventBus, new BoundedAuditLog(maxEntries: 100),
                 InstallationId.FromGuid(Guid.NewGuid()), DeviceId.FromGuid(Guid.NewGuid()), () => _now);
@@ -659,10 +661,22 @@ public sealed partial class ShellInterpreterTests
                 Command<PrintEnvCommand>("printenv1"),
                 // ADR 0228 §2: a renamed command keeps its old name as an alias.
                 Command<EchoCommand>("kazopkg", ["hackpkg"]),
+                // ADR 0247 §2: a feature whose admin command requires its role.
+                FeatureRoleFixtures.Manifests().Feature,
+                Command<EchoCommand>("vmadmin") with
+                {
+                    Id = FeatureRoleFixtures.Admin().Id,
+                    Parent = FeatureRoleFixtures.FeatureId,
+                    RequiresRole = FeatureRoleFixtures.Manager,
+                    PublisherId = FeatureRoleFixtures.Manifests().Feature.PublisherId,
+                    Capabilities = [],
+                },
                 .. CatalogCommands
             ];
             AppManifest host = HostManifest();
-            AppCatalog catalog = AppCatalog.Build([host, .. commands]).Catalog!;
+            AppCatalogBuildResult built = AppCatalog.Build([host, .. commands]);
+            Assert.True(built.IsSuccess, string.Join("; ", built.Errors));
+            AppCatalog catalog = built.Catalog!;
             AppDiscoveryResult discovery = AppEntryPointDiscovery.Discover(
                 AppCatalog.Build(commands).Catalog!,
                 new Dictionary<string, System.Reflection.Assembly>(StringComparer.Ordinal)
@@ -678,13 +692,18 @@ public sealed partial class ShellInterpreterTests
 
             AppEnablementRegistry enablement = new(catalog);
             Enablement = enablement;
+            OsSettingsService settings = new(fileSystem, _sessions, clock);
+            Roles = new FeatureRoleService(() => catalog, settings, Audit);
             _orchestrator = new AppLifecycleOrchestrator(
-                catalog, descriptors, enablement, Manager, _grants, contextFactory, elevationTickets: Tickets);
+                catalog, descriptors, enablement, Manager, _grants, contextFactory, elevationTickets: Tickets)
+            {
+                Roles = () => Roles,
+            };
             Interpreter = new ShellInterpreter(_orchestrator, catalog, enablement);
             ShellHost = new ShellHostService(Interpreter, Manager, new FakeElevationService(Tickets));
             Dispatcher = new AppIntentDispatcher(
                 _orchestrator, catalog, enablement,
-                new FileAssociationResolver(catalog, enablement, new OsSettingsService(fileSystem, _sessions, clock), fileSystem),
+                new FileAssociationResolver(catalog, enablement, settings, fileSystem),
                 _grants, fileSystem);
         }
 
@@ -696,6 +715,15 @@ public sealed partial class ShellInterpreterTests
         public ShellInterpreter Interpreter { get; }
         public ShellHostService ShellHost { get; }
         public AppIntentDispatcher Dispatcher { get; }
+
+        /// <summary>Alice's account, to grant her the role of the fixture feature (ADR 0247).</summary>
+        public LocalUser AliceAccount { get; }
+
+        /// <summary>Where the refusals for want of a role are written (<c>auth.log</c>).</summary>
+        public BoundedAuditLog Audit { get; } = new(maxEntries: 100);
+
+        /// <summary>The roles of the features the orchestrator and the completion check.</summary>
+        public FeatureRoleService Roles { get; }
         public AuthenticatedPrincipal Principal { get; private set; } = default!;
         public IAppExecutionContext Host { get; private set; } = default!;
         public ShellSession Session { get; private set; } = default!;

@@ -14,7 +14,8 @@
 # release, a test package installed by kazopkg whose wwwroot/ files and worker scripts load, then
 # installed and launched by a direct link ?autolaunch=<appId> (ADR 0258), a Craft app window
 # built on the Kazo.Os.AppSdk.Craft module (ADR 0259), and the WebDAV sample drive provider
-# installed by kazopkg as a feature, whose drive type mount then knows (ADR 0282, ADR 0284).
+# installed by kazopkg as a feature, whose drive type mount then knows, then connected by its form
+# against a test WebDAV server answered by Playwright, read and written (ADR 0282, ADR 0284).
 # Exit code 0 only when the publish and every test (EXPECTED_TESTS) passed.
 #
 #   --skip-build      reuse the existing publish and test build
@@ -67,7 +68,7 @@ while [[ $# -gt 0 ]]; do
         --skip-build) SKIP_BUILD=1 ;;
         --compare) COMPARE=1 ;;
         --no-cloud-drives) CLOUD_DRIVES_ARGS=(-p:KazoOsDropboxDrives=false -p:KazoOsOneDriveDrives=false -p:KazoOsS3Drives=false) ;;
-        -h|--help) sed -n '2,26p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0 ;;
+        -h|--help) sed -n '2,28p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0 ;;
         *) echo "unknown option: $1 (see --help)" >&2; exit 2 ;;
     esac
     shift
@@ -271,7 +272,8 @@ grep -E '^\s*\[(trimmed|chromium)\]' "$LOGS/tests.log" | sed "s/^ */    /"
 # (ADR 0196, TrimmedPublishTests.Notifications.cs), the direct link with no account, with an
 # account, and for a missing app and a cancel (ADR 0258, TrimmedPublishTests.AppLaunchLink.cs), and
 # a Craft app window on the OS module, installed by kazopkg (ADR 0259, TrimmedPublishTests.CraftApps.cs),
-# and a drive provider installed by kazopkg as a feature (ADR 0282, TrimmedPublishTests.DriveProviders.cs).
+# and a drive provider installed by kazopkg as a feature, connected by its form, read and written
+# (ADR 0282, TrimmedPublishTests.DriveProviders.cs).
 EXPECTED_TESTS=16
 if [[ $code -eq 0 ]] && grep -qE "^\s*Passed: +$EXPECTED_TESTS\s*$" "$LOGS/tests.log" && ! grep -qE '^\s*Skipped: +[1-9]' "$LOGS/tests.log"; then
     [[ -z "$PWA_URL" ]] && log "note: the offline test did not run (no 127.0.0.2)"

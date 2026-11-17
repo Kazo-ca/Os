@@ -69,6 +69,14 @@ public sealed record AppCatalogVersion(
     public IReadOnlyList<FileHandlerManifest> FileHandlers { get; init; } = [];
 
     /// <summary>
+    /// Gets the dependencies this version declares, copied from the <c>dependencies</c> of its
+    /// manifest when the catalog is published (ADR 0248 §5): the Store shows them and builds the plan
+    /// from them. <see langword="null"/> when the catalog does not say (an older catalog): the
+    /// package's manifest then tells at installation.
+    /// </summary>
+    public IReadOnlyList<AppDependencyManifest>? Dependencies { get; init; }
+
+    /// <summary>
     /// Gets whether this version declares <paramref name="action"/> for a file: its extension
     /// (with the dot) first, else its media type, compared without case (ADR 0257 §2).
     /// </summary>
@@ -193,6 +201,9 @@ public static class AppCatalogDocument
 
     /// <summary>Most <c>fileHandlers</c> entries read from one version; the rest are ignored.</summary>
     public const int MaximumFileHandlers = 64;
+
+    /// <summary>Most <c>dependencies</c> entries read from one version; the rest are ignored.</summary>
+    public const int MaximumDependencies = 64;
 
     /// <summary>Most extensions or actions read from one <c>fileHandlers</c> entry; the rest are ignored.</summary>
     public const int MaximumFileHandlerValues = 64;
@@ -400,7 +411,40 @@ public static class AppCatalogDocument
                 .Where(static pair => AppPackage.IsSafeRelativePath(pair.Value))
                 .ToDictionary(static pair => pair.Key, static pair => pair.Value, StringComparer.OrdinalIgnoreCase),
             FileHandlers = ReadFileHandlers(item),
+            Dependencies = ReadDependencies(item),
         };
+    }
+
+    /// <summary>
+    /// Reads the optional <c>dependencies</c> of a version (ADR 0248 §5): <c>{ appId, minimumVersion,
+    /// maximumVersion, optional }</c> like the manifest. An entry without an id or with a version that
+    /// is not semantic is skipped; the count is capped, the catalog being downloaded data.
+    /// </summary>
+    private static IReadOnlyList<AppDependencyManifest>? ReadDependencies(JsonElement item)
+    {
+        if (!item.TryGetProperty("dependencies", out JsonElement array) || array.ValueKind != JsonValueKind.Array)
+        {
+            return null;
+        }
+
+        List<AppDependencyManifest> dependencies = [];
+        foreach (JsonElement dependency in array.EnumerateArray().Take(MaximumDependencies))
+        {
+            string appId = ReadString(dependency, "appId").Trim();
+            string minimum = ReadString(dependency, "minimumVersion").Trim();
+            string? maximum = NullIfEmpty(ReadString(dependency, "maximumVersion").Trim());
+            if (appId.Length == 0
+                || !SemanticVersion.TryParse(minimum, out _)
+                || (maximum is not null && !SemanticVersion.TryParse(maximum, out _)))
+            {
+                continue;
+            }
+
+            bool optional = dependency.TryGetProperty("optional", out JsonElement flag) && flag.ValueKind == JsonValueKind.True;
+            dependencies.Add(new AppDependencyManifest(appId, minimum, maximum, optional));
+        }
+
+        return dependencies;
     }
 
     /// <summary>

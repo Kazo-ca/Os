@@ -27,6 +27,19 @@ public sealed class DriveTypeInstallTests
         AppPackageInstaller.CheckProvidedDriveTypes(DriveProviderFixtures.Feature(version: "2.0.0"), catalog);
     }
 
+    /// <summary>
+    /// ADR 0282 §3: the provider's assembly is one of the feature's own assemblies, so the packer puts
+    /// it in <c>lib/</c> and the OS declares it to its lazy loader. Without it the package carried no
+    /// provider and the first drive of the type failed with "the assembly could not be loaded".
+    /// </summary>
+    [Fact]
+    public void The_provider_assembly_is_a_declared_assembly_of_the_feature()
+    {
+        AppManifest feature = DriveProviderFixtures.Feature();
+
+        Assert.Contains(typeof(Kazo.Os.Tests.Support.InMemoryDriveProvider).Assembly.GetName().Name + ".dll", AppPackage.GetDeclaredAssemblies(feature));
+    }
+
     [Fact]
     public void The_catalog_names_the_provider_of_a_type()
     {

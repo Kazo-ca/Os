@@ -6,10 +6,12 @@ Kazo.Os.Platform.Core.CloudDrives.CloudDriveConnection.QueryPermissionAsync(Syst
 Kazo.Os.Platform.Core.CloudDrives.CloudDriveConnection.RequestPermissionAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderPermission>
 Kazo.Os.Platform.Core.CloudDrives.CloudDriveConnection.SendAsync(System.Func<System.Net.Http.HttpRequestMessage!>! build, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<System.Net.Http.HttpResponseMessage!>
 Kazo.Os.Platform.Core.CloudDrives.CloudDriveConnection.Tokens.get -> Kazo.Os.Platform.Core.CloudDrives.ICloudAccountTokens!
+Kazo.Os.Platform.Core.CloudDrives.CloudDriveFeatures
 Kazo.Os.Platform.Core.CloudDrives.CloudDriveSource
 Kazo.Os.Platform.Core.CloudDrives.CloudDriveSource.AvailabilityChanged -> System.Action?
 Kazo.Os.Platform.Core.CloudDrives.CloudDriveSource.CloudDriveSource(Kazo.Os.Platform.Core.CloudDrives.ICloudAccountTokens! tokens, Kazo.Os.Platform.Core.CloudAccounts.ICloudProviderCatalog! catalog, System.Net.Http.HttpClient! http, Kazo.Os.Simulation.Abstractions.FileSystem.IHostActivitySignal? activity = null) -> void
 Kazo.Os.Platform.Core.CloudDrives.CloudDriveSource.CreateAsync(Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveRequest! request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveCreation?>
+Kazo.Os.Platform.Core.CloudDrives.CloudDriveSource.Describe(System.Globalization.CultureInfo! language) -> Kazo.Os.AppSdk.IO.KazoNetworkDriveTypeInfo!
 Kazo.Os.Platform.Core.CloudDrives.CloudDriveSource.Dispose() -> void
 Kazo.Os.Platform.Core.CloudDrives.CloudDriveSource.ForgetAsync(Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveReference! reference, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
 Kazo.Os.Platform.Core.CloudDrives.CloudDriveSource.Http.get -> System.Net.Http.HttpClient!
@@ -54,6 +56,7 @@ Kazo.Os.Platform.Core.CloudDrives.OneDrive.OneDriveFolder.WriteIfMatchAsync(Syst
 Kazo.Os.Platform.Core.CloudDrives.S3.S3DriveSource
 Kazo.Os.Platform.Core.CloudDrives.S3.S3DriveSource.AvailabilityChanged -> System.Action?
 Kazo.Os.Platform.Core.CloudDrives.S3.S3DriveSource.CreateAsync(Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveRequest! request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveCreation?>
+Kazo.Os.Platform.Core.CloudDrives.S3.S3DriveSource.Describe(System.Globalization.CultureInfo! language) -> Kazo.Os.AppSdk.IO.KazoNetworkDriveTypeInfo!
 Kazo.Os.Platform.Core.CloudDrives.S3.S3DriveSource.Dispose() -> void
 Kazo.Os.Platform.Core.CloudDrives.S3.S3DriveSource.ForgetAsync(Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveReference! reference, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
 Kazo.Os.Platform.Core.CloudDrives.S3.S3DriveSource.IsAvailableAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<bool>
@@ -64,18 +67,27 @@ abstract Kazo.Os.Platform.Core.CloudDrives.CloudDriveSource.CreateFolder(Kazo.Os
 abstract Kazo.Os.Platform.Core.CloudDrives.CloudDriveSource.DefaultMountName.get -> string!
 abstract Kazo.Os.Platform.Core.CloudDrives.CloudDriveSource.ProviderId.get -> string!
 abstract Kazo.Os.Platform.Core.CloudDrives.CloudDriveSource.Type.get -> string!
+const Kazo.Os.Platform.Core.CloudDrives.CloudDriveFeatures.DropboxSwitchName = "Kazo.Os.CloudDrives.Dropbox.IsSupported" -> string!
+const Kazo.Os.Platform.Core.CloudDrives.CloudDriveFeatures.OneDriveSwitchName = "Kazo.Os.CloudDrives.OneDrive.IsSupported" -> string!
+const Kazo.Os.Platform.Core.CloudDrives.CloudDriveFeatures.S3SwitchName = "Kazo.Os.CloudDrives.S3.IsSupported" -> string!
 const Kazo.Os.Platform.Core.CloudDrives.Dropbox.DropboxDriveSource.FileSystemType = "dropbox" -> string!
 const Kazo.Os.Platform.Core.CloudDrives.OneDrive.OneDriveDriveSource.FileSystemType = "onedrive" -> string!
 const Kazo.Os.Platform.Core.CloudDrives.OneDrive.OneDriveFolder.MaxFileBytes = 134217728 -> long
 const Kazo.Os.Platform.Core.CloudDrives.OneDrive.OneDriveFolder.SimpleUploadLimit = 4194304 -> int
 const Kazo.Os.Platform.Core.CloudDrives.OneDrive.OneDriveFolder.UploadChunkSize = 10485760 -> int
 override Kazo.Os.Platform.Core.CloudDrives.Dropbox.DropboxDriveSource.DefaultMountName.get -> string!
+override Kazo.Os.Platform.Core.CloudDrives.Dropbox.DropboxDriveSource.Icon.get -> string!
 override Kazo.Os.Platform.Core.CloudDrives.Dropbox.DropboxDriveSource.ProviderId.get -> string!
 override Kazo.Os.Platform.Core.CloudDrives.Dropbox.DropboxDriveSource.Type.get -> string!
 override Kazo.Os.Platform.Core.CloudDrives.OneDrive.OneDriveDriveSource.DefaultMountName.get -> string!
+override Kazo.Os.Platform.Core.CloudDrives.OneDrive.OneDriveDriveSource.Icon.get -> string!
 override Kazo.Os.Platform.Core.CloudDrives.OneDrive.OneDriveDriveSource.ProviderId.get -> string!
 override Kazo.Os.Platform.Core.CloudDrives.OneDrive.OneDriveDriveSource.Type.get -> string!
 static Kazo.Os.Platform.Core.CloudDrives.CloudDriveConnection.ToHostFolderException(Kazo.Os.Platform.Core.CloudAccounts.CloudAccountException! exception) -> Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderException!
+static Kazo.Os.Platform.Core.CloudDrives.CloudDriveFeatures.IsDropboxSupported.get -> bool
+static Kazo.Os.Platform.Core.CloudDrives.CloudDriveFeatures.IsOneDriveSupported.get -> bool
+static Kazo.Os.Platform.Core.CloudDrives.CloudDriveFeatures.IsS3Supported.get -> bool
 static readonly Kazo.Os.Platform.Core.CloudDrives.S3.S3DriveSource.RetryInterval -> System.TimeSpan
 virtual Kazo.Os.Platform.Core.CloudDrives.CloudDriveSource.Dispose(bool disposing) -> void
+virtual Kazo.Os.Platform.Core.CloudDrives.CloudDriveSource.Icon.get -> string!
 virtual Kazo.Os.Platform.Core.CloudDrives.CloudDriveSource.NormalizeRoot(string? root) -> string?

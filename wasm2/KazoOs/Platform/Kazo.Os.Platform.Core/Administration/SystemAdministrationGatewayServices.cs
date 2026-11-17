@@ -88,6 +88,12 @@ public sealed record SystemAdministrationGatewayServices(
     public Func<WhatsNew.WhatsNewService>? WhatsNew { get; init; }
 
     /// <summary>
+    /// Gets the browser storage of the page behind <c>KazoStorage</c> (ADR 0250); <see langword="null"/>
+    /// on a host without browser storage leaves the gateway unsupported.
+    /// </summary>
+    public Func<Storage.OriginStorageService>? OriginStorage { get; init; }
+
+    /// <summary>
     /// Gets the approval window of the dangerous capabilities (ADR 0049), which a third-party
     /// component provider goes through (ADR 0156 §3); <see langword="null"/> refuses such a choice.
     /// </summary>

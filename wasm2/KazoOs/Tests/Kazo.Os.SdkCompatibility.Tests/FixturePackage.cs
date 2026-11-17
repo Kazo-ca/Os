@@ -23,7 +23,7 @@ internal sealed class FixturePackage
     /// <summary>Gets the package file name, e.g. <c>Contoso.Sdk1Compat.1.0.0.nupkg</c>.</summary>
     public string FileName { get; }
 
-    /// <summary>Gets the manifests under <c>hackeros/manifests/</c>, parsed strictly by the current SDK.</summary>
+    /// <summary>Gets the manifests under <c>hackeros/manifests/</c> or <c>kazoos/manifests/</c>, parsed strictly by the current SDK.</summary>
     public IReadOnlyList<AppManifest> Manifests { get; }
 
     /// <summary>Gets the app assembly, loaded from the package.</summary>
@@ -45,7 +45,9 @@ internal sealed class FixturePackage
         byte[]? image = null;
         foreach (ZipArchiveEntry entry in zip.Entries)
         {
-            if (entry.FullName.StartsWith("hackeros/manifests/", StringComparison.Ordinal) && entry.FullName.EndsWith(".json", StringComparison.Ordinal))
+            // The manifests folder kept the old name up to SDK 3.4 (hackeros/), kazoos/ since the rename.
+            if ((entry.FullName.StartsWith("hackeros/manifests/", StringComparison.Ordinal) || entry.FullName.StartsWith("kazoos/manifests/", StringComparison.Ordinal))
+                && entry.FullName.EndsWith(".json", StringComparison.Ordinal))
             {
                 using StreamReader reader = new(entry.Open());
                 manifests.Add(AppManifestJsonSerializer.DeserializeStrict(reader.ReadToEnd()));

@@ -39,7 +39,8 @@ public sealed class MinimalAppExecutionContext(
     Kazo.Os.AppSdk.WhatsNew.IAppWhatsNewGateway? whatsNew = null,
     Kazo.Os.AppSdk.Administration.IAppUserAccountsGateway? userAccounts = null,
     Kazo.Os.AppSdk.Administration.IAppServerConnectionGateway? serverConnection = null,
-    Kazo.Os.AppSdk.CloudAccounts.IAppCloudAccountsGateway? cloudAccounts = null) : IAppExecutionContext
+    Kazo.Os.AppSdk.CloudAccounts.IAppCloudAccountsGateway? cloudAccounts = null,
+    Kazo.Os.AppSdk.Storage.IAppStorageGateway? storage = null) : IAppExecutionContext
 {
     public AppManifest Manifest { get; } = manifest;
     public Guid InstanceId { get; } = Guid.NewGuid();
@@ -89,6 +90,10 @@ public sealed class MinimalAppExecutionContext(
     // Without cloud accounts, the interface's own default applies (no provider, no account).
     Kazo.Os.AppSdk.CloudAccounts.IAppCloudAccountsGateway IAppExecutionContext.CloudAccounts =>
         cloudAccounts ?? Kazo.Os.AppSdk.CloudAccounts.UnsupportedAppCloudAccountsGateway.Instance;
+
+    // Without browser storage, the interface's own default applies (nothing to report).
+    Kazo.Os.AppSdk.Storage.IAppStorageGateway IAppExecutionContext.Storage =>
+        storage ?? Kazo.Os.AppSdk.Storage.UnsupportedAppStorageGateway.Instance;
 
     public Kazo.Os.AppSdk.IO.IAppDriveGateway Drives => drives ?? throw Unsupported(nameof(Drives));
 

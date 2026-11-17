@@ -71,7 +71,13 @@ public sealed class X86Service(IFeatureServiceContext context) : Ix86
   d'un bloc ; `Caller` continue de nommer l'appelant.
 - Une permission manquante de l'appelant est une **exception** de
   l'opération (`UnauthorizedAccessException`), jamais un `null` à la
-  résolution.
+  résolution. La fonctionnalité déclare ses permissions
+  ([ADR 0246](../dev/adr/0246-provider-declared-permissions.md),
+  [`capabilities.md`](capabilities.md#permissions-déclarées-par-une-feature-adr-0246))
+  et chaque opération les exige par `context.Caller.Require("x86.vm.use")`,
+  ou les teste par `context.Caller.Has(...)` : l'OS décide (octroi, approbation
+  d'un administrateur, permission couvrante), la fonctionnalité ne lit jamais
+  de fichier de décision.
 
 ## Consommer un service (l'app)
 

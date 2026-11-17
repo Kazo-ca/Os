@@ -133,7 +133,7 @@ public sealed class EcosystemBootCoordinatorTests
 
         await bootCoordinator.BootAsync();
 
-        Assert.Equal(99, _catalog.SelectedManifests.Count);
+        Assert.Equal(100, _catalog.SelectedManifests.Count);
         Assert.Contains(_catalog.SelectedManifests, manifest => manifest.Id == "org.kazoos.kazo-paint");
     }
 
@@ -198,6 +198,58 @@ public sealed class EcosystemBootCoordinatorTests
         cts.Cancel();
 
         await Assert.ThrowsAsync<OperationCanceledException>(() => bootCoordinator.BootAsync(cts.Token).AsTask());
+    }
+
+    [Fact]
+    public async Task BootAsync_logs_an_eviction_found_before_the_database_opened_and_writes_the_marker_of_this_boot()
+    {
+        // ADR 0250 §2: the marker of an earlier boot is there, the OS database is not.
+        EvictedOrigin origin = new()
+        {
+            Marker = Kazo.Os.Platform.Core.Storage.StorageEvictionDetector.Format(new DateTimeOffset(2026, 11, 1, 9, 0, 0, TimeSpan.Zero), persisted: false),
+        };
+        Kazo.Os.Platform.Core.Storage.StorageEvictionDetector detector = new(origin);
+        Assert.NotNull(await detector.DetectAsync());
+        Kazo.Os.Platform.Core.Diagnostics.KernelLog kernelLog = new(_clock);
+        EcosystemBootCoordinator bootCoordinator = new(
+            _fsBootstrapper, _settings, _grants, _catalog, _selectedCatalog, _enablement, _groups, _users)
+        {
+            EvictionDetector = detector,
+            KernelLog = kernelLog,
+        };
+        _grants.PolicyRevision = 1L;
+
+        await bootCoordinator.BootAsync();
+
+        Kazo.Os.Platform.Core.Diagnostics.KernelLogEntry line = Assert.Single(
+            kernelLog.ReadAll(), static entry => entry.Message.StartsWith("storage.evicted", StringComparison.Ordinal));
+        Assert.Contains("2026-11-01T09:00:00", line.Message, StringComparison.Ordinal);
+        Assert.Equal(Kazo.Os.Platform.Core.Diagnostics.KernelLogLevel.Warning, line.Level);
+        Assert.NotEqual(new DateTimeOffset(2026, 11, 1, 9, 0, 0, TimeSpan.Zero),
+            Kazo.Os.Platform.Core.Storage.StorageEvictionDetector.Read(origin.Marker).LastBootUtc);
+    }
+
+    /// <summary>The browser's storage after an eviction: the boot marker is there, the OS database is not.</summary>
+    private sealed class EvictedOrigin : Kazo.Os.Simulation.Abstractions.Metrics.IOriginStorage
+    {
+        public string? Marker { get; set; }
+
+        public ValueTask<Kazo.Os.Simulation.Abstractions.Metrics.OriginStorageStatus?> GetStatusAsync(CancellationToken cancellationToken = default) =>
+            ValueTask.FromResult<Kazo.Os.Simulation.Abstractions.Metrics.OriginStorageStatus?>(new(0, 0, false));
+
+        public ValueTask<bool> RequestPersistenceAsync(CancellationToken cancellationToken = default) => ValueTask.FromResult(false);
+
+        public ValueTask<string?> ReadBootMarkerAsync(CancellationToken cancellationToken = default) => ValueTask.FromResult(Marker);
+
+        public ValueTask WriteBootMarkerAsync(string marker, CancellationToken cancellationToken = default)
+        {
+            Marker = marker;
+            return ValueTask.CompletedTask;
+        }
+
+        public ValueTask<bool?> DatabaseExistsAsync(string name, CancellationToken cancellationToken = default) => ValueTask.FromResult<bool?>(false);
+
+        public ValueTask<bool?> FileExistsAsync(string path, CancellationToken cancellationToken = default) => ValueTask.FromResult<bool?>(null);
     }
 
     private async Task<string> ReadSystemFileAsync(string path)

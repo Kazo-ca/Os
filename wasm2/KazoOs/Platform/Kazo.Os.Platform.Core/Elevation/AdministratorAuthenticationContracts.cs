@@ -17,7 +17,17 @@ public sealed record AdministratorAuthenticationRequest(
     string Operation,
     string Action,
     AuthenticatedPrincipal? RequestedBy,
-    bool IsRootElevated = false);
+    bool IsRootElevated = false)
+{
+    /// <summary>
+    /// Gets the account that must authenticate itself (ADR 0247 §3, <c>RoleHolder</c>): the user in
+    /// session, administrator or not, with their own password; <see langword="null"/> for any administrator.
+    /// </summary>
+    public string? RoleHolderLogin { get; init; }
+
+    /// <summary>Gets the scope written to <c>auth.log</c> (<c>RoleHolder</c> or <c>Administrator</c>), or <see langword="null"/>.</summary>
+    public string? Scope { get; init; }
+}
 
 /// <summary>Result of <see cref="IAdministratorAuthenticationAgent.AuthenticateAsync"/>.</summary>
 /// <param name="Succeeded">Whether an enabled administrator authenticated (or the process was already root).</param>

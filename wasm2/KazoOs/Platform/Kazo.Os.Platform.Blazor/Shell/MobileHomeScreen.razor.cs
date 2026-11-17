@@ -27,6 +27,7 @@ public partial class MobileHomeScreen
     [Inject] private IOsSettingsService Settings { get; set; } = null!;
     [Inject] private IJSRuntime JS { get; set; } = null!;
     [Inject] private IStringLocalizer<Strings> L { get; set; } = null!;
+    [Inject] private IServiceProvider Services { get; set; } = null!;
     private MobileHomeLayoutStore _store = null!;
     private MobileHomeLayout Layout => _store.Current;
     private AppManifest[] _apps = [];
@@ -88,6 +89,7 @@ public partial class MobileHomeScreen
     {
         _apps = Catalog.Manifests.Values.Where(app => app.Kind == AppKind.Window
             && app.Presentation.LaunchVisibility == AppLaunchVisibility.Visible && Enablement.IsEnabled(app.Id)
+            && EntryPointRoleFilter.OpensToCurrentUser(Services, app)
             && AppManifestPlatformSupport.Resolve(app)?.SupportedPlatforms.Contains(WellKnownAppPlatforms.Mobile) == true)
             .OrderBy(Name, StringComparer.CurrentCultureIgnoreCase).ToArray();
         _appsById = _apps.ToDictionary(app => app.Id, StringComparer.Ordinal);

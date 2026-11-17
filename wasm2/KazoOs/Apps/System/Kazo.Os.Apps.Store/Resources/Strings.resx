@@ -630,4 +630,46 @@
   <data name="Capability.drives.provide.Risk" xml:space="preserve">
     <value>Read and write every file of the drives of that type, with an access token of their users' accounts.</value>
   </data>
+  <data name="Detail.Dependencies" xml:space="preserve">
+    <value>Needs</value>
+  </data>
+  <data name="Detail.Dependency.Installed" xml:space="preserve">
+    <value>Installed ({0})</value>
+  </data>
+  <data name="Detail.Dependency.WithThisApp" xml:space="preserve">
+    <value>To install (with this app), version {0}</value>
+  </data>
+  <data name="Detail.Dependency.OutOfRange" xml:space="preserve">
+    <value>Installed version {0} is outside {1}: installing this app updates it, or stops</value>
+  </data>
+  <data name="Detail.Dependency.OptionalOutOfRange" xml:space="preserve">
+    <value>Optional; installed version {0} is outside {1}: the app runs without it</value>
+  </data>
+  <data name="Detail.Dependency.Optional" xml:space="preserve">
+    <value>Optional: the app runs without it</value>
+  </data>
+  <data name="Detail.Dependency.FeatureNote" xml:space="preserve">
+    <value>Feature: installed for every user, by an administrator</value>
+  </data>
+  <data name="Detail.Dependency.FeaturePermissions" xml:space="preserve">
+    <value>Its permissions, approved with it: {0}</value>
+  </data>
+  <data name="Message.InstalledWith" xml:space="preserve">
+    <value>Installed with it: {0}.</value>
+  </data>
+  <data name="Error.DependencyUnresolved" xml:space="preserve">
+    <value>The installation is stopped: {0}</value>
+  </data>
+  <data name="Error.DependencyConflict" xml:space="preserve">
+    <value>The installation is stopped: {0}</value>
+  </data>
+  <data name="Remove.DependentsWarning" xml:space="preserve">
+    <value>{0} will no longer work and will be disabled. Their data stays; installing this app again reactivates them.</value>
+  </data>
+  <data name="Action.UninstallAnyway" xml:space="preserve">
+    <value>Uninstall anyway</value>
+  </data>
+  <data name="Action.Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
 </root>

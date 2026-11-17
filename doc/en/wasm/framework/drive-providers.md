@@ -324,12 +324,16 @@ Work item 4 wires the declared types into the file system
   is a new provider.
 - **Loaded at the first drive.** Nothing loads at install or at the user's
   login. At the first drive of the type that opens, the OS loads the assembly,
-  starts the feature's service process (account `kazoos-svc`, its permissions)
-  and creates **one instance per page**, with the `(IFeatureServiceContext)`
+  starts the feature's service process (account `kazoos-svc`, its permissions:
+  before each connection, the OS grants it, without asking, the dangerous
+  permissions the administrator approved for the machine, such as
+  `drives.provide`) and creates **one instance per page**, with the `(IFeatureServiceContext)`
   constructor, else `()`. Every call to the provider runs in the feature's
   context. A failure is never kept: the next drive tries again.
-- **Login never waits.** The drive is mounted **disconnected** until `OpenAsync`
-  answers, then reconnects by itself. Loading and opening get 20 s at most,
+- **Login never waits.** A drive mounted again at login is **disconnected**
+  until `OpenAsync` answers, then reconnects by itself. A drive the user has
+  just connected (form, `mount`) waits for `OpenAsync` before it is mounted,
+  so that Explorer opens it at once. Loading and opening get 20 s at most,
   `GetStateAsync` 10 s.
 - **A provider that fails** (assembly or class missing, constructor that
   throws, `OpenAsync` that throws or is too slow) leaves the drive
@@ -415,10 +419,15 @@ with a **form connection**: server address (`ServerAddress`), user name,
 app password (`Secret`, sealed by the OS). It sends WebDAV (RFC 4918) through
 `KazoDirectHttpClient`, signs each request with HTTP Basic using the password
 it asks the OS for each time, and takes the `ETag` as the revision (`If-Match`
-for a conditional write, `If-None-Match: *` for a create). It declares no host:
+for a conditional write, `If-None-Match: *` for a create). It reads the
+`207 Multi-Status` answers with its own small XML reader (`WebDavXml`: namespace prefixes,
+entities, CDATA, no `DOCTYPE`), since the published OS has no `System.Xml`. It declares no host:
 the server the user types is enough. Its tests
 (`Tests/Kazo.Os.Samples.WebDavDrive.Tests`) pass the whole suite against a
-local in-memory WebDAV server (`LocalWebDavServer`).
+local in-memory WebDAV server (`LocalWebDavServer`). On the published, trimmed OS,
+`build/publish-trimmed.sh` installs the sample as a Feature, connects it by its
+form to a test WebDAV server answered by Playwright (`RoutedWebDavServer`, CORS
+headers included), then reads and writes a file from the terminal.
 
 ## Limits and the Store review
 
@@ -432,6 +441,10 @@ local in-memory WebDAV server (`LocalWebDavServer`).
   no bare wildcard) and the review reads the code: the hosts reached must be
   the declared ones, no token or secret may leave to another host, no
   JavaScript that goes around the SDK.
+- **No `System.Xml` in the published OS**: the trimmed OS ships no XML assembly (about 1 MB more
+  at every start). `KazoOsPack` refuses a package that calls it (`KOSAPP0100`, ADR 0277). A
+  provider reads the little XML it receives itself, like the WebDAV sample and the OS's S3
+  connector. On-demand XML is TODO [#618](https://github.com/Kazo-ca/Os/issues/618).
 - **CORS**: without the service's consent, nothing gets through
   ([above](#cors-what-the-service-must-accept)).
 - **Phishing**: the OS always shows the feature's name next to the service's
@@ -527,3 +540,9 @@ Work item 7 (developer kit):
 - [x] WebDAV sample with a form connection
 - [x] ADR 0284: `drives.provide` is enough for declared hosts, a typed server address
 - [x] This guide
+
+Work item 9 (end of the series):
+
+- [x] SDK 3.5.0: shipped API, change list
+- [x] Compatibility fixture `Contoso.Sdk35DriveProvider`: a provider compiled against 3.5.0 passes the current suite
+- [x] Full journey on the trimmed OS: form connection, read and write against a test WebDAV server

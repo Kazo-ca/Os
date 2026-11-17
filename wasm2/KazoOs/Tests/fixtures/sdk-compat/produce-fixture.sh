@@ -4,7 +4,8 @@
 # writes its package to packages/. Run once per published SDK version that gets a fixture (1.0.0:
 # Contoso.Sdk1Compat; 1.1.0: Contoso.Sdk11Compat, packed from the v3.1/base tip; 2.0.0:
 # Contoso.Sdk2Compat, packed from the desk/6-sdk-2 tip; 3.0.0: Contoso.Sdk3Compat, packed from the
-# rename/3-namespaces tip, ADR 0228); the committed package is never rebuilt, so
+# rename/3-namespaces tip, ADR 0228; 3.5.0: Contoso.Sdk35DriveProvider, a drive provider feature, packed
+# from the drive-providers/9-final tip, ADR 0282); the committed package is never rebuilt, so
 # the tests keep loading an app compiled against the old SDK into the current OS (or, for an
 # earlier major, check that the OS refuses it).
 #

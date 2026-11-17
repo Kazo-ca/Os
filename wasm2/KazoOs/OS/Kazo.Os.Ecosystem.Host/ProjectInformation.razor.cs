@@ -23,6 +23,12 @@ public partial class ProjectInformation : IDisposable
     // Compare the actual host, never a substring: a query string or lookalike domain is insufficient.
     private bool IsPublicDomain => string.Equals(new Uri(Navigation.Uri).Host, "os.kazo.ca", StringComparison.OrdinalIgnoreCase);
 
+    /// <summary>
+    /// The section of the bilingual legal pages (privacy.html, terms.html) in the language of the
+    /// texts: <c>fr</c> or <c>en</c>, from the same resources as the labels.
+    /// </summary>
+    private string LegalSection => L["Project.LegalSection"];
+
     /// <summary>The running build: the monitor's, or the one written on the entry assembly without a monitor.</summary>
     private int? BuildNumber => _monitor?.RunningBuild ?? KazoOsSdk.BuildNumber;
 

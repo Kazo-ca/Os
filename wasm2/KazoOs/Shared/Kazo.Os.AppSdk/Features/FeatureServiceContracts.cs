@@ -67,7 +67,39 @@ public sealed class KazoFeatureServiceChangedEventArgs(string contract, KazoFeat
 /// <param name="AppId">The calling app.</param>
 /// <param name="ProcessId">Its process.</param>
 /// <param name="UserId">The user it runs for.</param>
-public sealed record KazoFeatureCaller(string AppId, long ProcessId, string UserId);
+public sealed record KazoFeatureCaller(string AppId, long ProcessId, string UserId)
+{
+    /// <summary>
+    /// Gets the caller's own capability checks (its grants as the OS decided them), or
+    /// <see langword="null"/> when none is known: every permission is then refused.
+    /// </summary>
+    public Kazo.Os.Simulation.Abstractions.Gateways.ICapabilityChecker? Permissions { get; init; }
+
+    /// <summary>
+    /// Gets whether the caller holds <paramref name="permission"/> (ADR 0246 §4): granted, or covered
+    /// by a granted permission; a dangerous one only after an administrator's approval.
+    /// </summary>
+    /// <param name="permission">A permission, such as <c>x86.vm.use</c>.</param>
+    public bool Has(string permission)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(permission);
+        return Permissions?.Evaluate(permission).Granted == true;
+    }
+
+    /// <summary>
+    /// Requires <paramref name="permission"/> of the caller (ADR 0246 §4): each operation of a
+    /// feature's service calls it; the feature never reads a decision file itself.
+    /// </summary>
+    /// <param name="permission">A permission, such as <c>x86.vm.use</c>.</param>
+    /// <exception cref="UnauthorizedAccessException">The caller does not hold it.</exception>
+    public void Require(string permission)
+    {
+        if (!Has(permission))
+        {
+            throw new UnauthorizedAccessException($"{AppId} lacks the permission '{permission}'.");
+        }
+    }
+}
 
 /// <summary>
 /// What the OS gives a feature's service when it creates it (ADR 0262 §1): the implementation's

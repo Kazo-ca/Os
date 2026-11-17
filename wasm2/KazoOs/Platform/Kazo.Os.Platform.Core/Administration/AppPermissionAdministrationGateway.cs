@@ -58,7 +58,11 @@ internal sealed class AppPermissionAdministrationGateway : IAppPermissionAdminis
                 status.Capability,
                 description.Title,
                 description.RiskDescription ?? string.Empty,
-                ToPublic(status.State));
+                ToPublic(status.State))
+            {
+                // ADR 0246: Settings names the feature that declares the permission.
+                ProviderId = description.ProviderId,
+            };
         }
     }
 
@@ -92,7 +96,7 @@ internal sealed class AppPermissionAdministrationGateway : IAppPermissionAdminis
             _ => "Admin.Decision.Ask"
         };
         string admin = await _gate.AuthenticateAsync(
-            _gate.Text[textKey, CapabilityText.Describe(capability, _gate.Language).Title, capability, appId],
+            _gate.Text[textKey, CapabilityText.Describe(capability, _gate.Language, _administration().Capabilities).Title, capability, appId],
             "permissions.machine-decision",
             AppPermissionsDocument.MachineFile.Resolve(null).Value,
             cancellationToken).ConfigureAwait(false);

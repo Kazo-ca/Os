@@ -385,13 +385,16 @@ public static class AppCapabilities
         new(capability, title, CapabilityRisk.Dangerous, riskDescription);
 }
 
-/// <summary>Risk class of a catalog capability (ADR 0049 section 1).</summary>
+/// <summary>Risk class of a catalog capability (ADR 0049 section 1), written <c>normal</c> or <c>dangerous</c> in a manifest (ADR 0246).</summary>
+[System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<CapabilityRisk>))]
 public enum CapabilityRisk
 {
     /// <summary>Granted by default to any app that declares it.</summary>
+    [System.Text.Json.Serialization.JsonStringEnumMemberName("normal")]
     Normal = 0,
 
     /// <summary>Granted to a non-system app only after an administrator approval.</summary>
+    [System.Text.Json.Serialization.JsonStringEnumMemberName("dangerous")]
     Dangerous = 1
 }
 
@@ -406,7 +409,17 @@ public sealed record CapabilityDescription(
     string Capability,
     string Title,
     CapabilityRisk Risk,
-    string? RiskDescription);
+    string? RiskDescription)
+{
+    /// <summary>
+    /// Gets the feature that declares this permission (ADR 0246 §1), or <see langword="null"/> for a
+    /// capability of the built-in catalog.
+    /// </summary>
+    public string? ProviderId { get; init; }
+
+    /// <summary>Gets the permissions this one covers directly (ADR 0246 §3); empty for none.</summary>
+    public IReadOnlyList<string> Covers { get; init; } = [];
+}
 
 /// <summary>
 /// Evaluates capability grants using the mandatory exact-match semantics.

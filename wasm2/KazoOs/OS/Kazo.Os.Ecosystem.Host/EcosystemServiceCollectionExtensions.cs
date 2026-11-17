@@ -450,9 +450,17 @@ public static class EcosystemServiceCollectionExtensions
         // Dangerous capabilities (ADR 0049): remembered decisions, the launch gate and its
         // secure-desktop overlay (the broker is the host's default approval prompt), and the
         // administration behind Settings > Permissions. Scoped: they read the session user's files.
+        // ADR 0246: the catalog of capabilities of the running OS, the built-in one plus the
+        // permissions of the installed, enabled features; everything that decides a grant reads it.
+        services.TryAddSingleton<ICapabilityCatalog>(provider => new Kazo.Os.Platform.Core.Features.InstalledCapabilityCatalog(
+            provider.GetRequiredService<AppCatalog>(),
+            provider.GetService<IAppEnablementRegistry>()));
         services.AddScoped<IAppPermissionStore>(provider => new AppPermissionStore(
             provider.GetRequiredService<IOsSettingsService>(),
-            provider.GetService<ILogger<AppPermissionStore>>()));
+            provider.GetService<ILogger<AppPermissionStore>>())
+        {
+            Capabilities = provider.GetService<ICapabilityCatalog>(),
+        });
         services.AddScoped<DangerousCapabilityApprovalBroker>();
         services.AddScoped<IDangerousCapabilityApprovalPrompt>(provider =>
             provider.GetRequiredService<DangerousCapabilityApprovalBroker>());
@@ -465,7 +473,8 @@ public static class EcosystemServiceCollectionExtensions
             provider.GetRequiredService<IAuditLog>(),
             provider.GetRequiredService<IDangerousCapabilityApprovalPrompt>())
         {
-            RealNetworkGrants = provider.GetRequiredService<IRealNetworkGrantReconciler>()
+            RealNetworkGrants = provider.GetRequiredService<IRealNetworkGrantReconciler>(),
+            Capabilities = provider.GetService<ICapabilityCatalog>() ?? BuiltInCapabilityCatalog.Instance,
         });
         // OS authentication agent (ADR 0055 section 5, polkit-like): gateways that need an
         // administrator ask it; its secure-desktop overlay is rendered by the shell.
@@ -483,8 +492,18 @@ public static class EcosystemServiceCollectionExtensions
             // ADR 0168 section 4: an administrator may confirm with a passkey instead of a password.
             PasskeyVerifier = provider.GetRequiredService<IAdminElevationVerifier>() is AdminElevationVerifier verifier
                 ? (login, ct) => verifier.VerifyWithPasskeyAsync(login, provider.GetRequiredService<PasskeyService>(), ct)
-                : null
+                : null,
+            // ADR 0247 §3: the holder of a feature's role authenticates with their own password.
+            UserVerifier = provider.GetRequiredService<IAdminElevationVerifier>() is AdminElevationVerifier userVerifier
+                ? userVerifier.VerifyUserAsync
+                : null,
         });
+        // ADR 0247: the roles the features declare and who holds them (/etc/kazoos/roles.config);
+        // grants and refusals go to /var/log/auth.log.
+        services.AddScoped<Kazo.Os.Platform.Core.Roles.FeatureRoleService>(provider => new Kazo.Os.Platform.Core.Roles.FeatureRoleService(
+            () => provider.GetRequiredService<AppCatalog>(),
+            provider.GetRequiredService<IOsSettingsService>(),
+            provider.GetRequiredService<IAuditLog>()));
         services.AddScoped<AppPermissionAdministration>(provider => new AppPermissionAdministration(
             provider.GetRequiredService<AppCatalog>(),
             provider.GetRequiredService<IAppPermissionStore>(),
@@ -492,7 +511,8 @@ public static class EcosystemServiceCollectionExtensions
             provider.GetRequiredService<IAdminElevationVerifier>(),
             provider.GetRequiredService<IAuditLog>())
         {
-            RealNetworkGrants = provider.GetRequiredService<IRealNetworkGrantReconciler>()
+            RealNetworkGrants = provider.GetRequiredService<IRealNetworkGrantReconciler>(),
+            Capabilities = provider.GetService<ICapabilityCatalog>() ?? BuiltInCapabilityCatalog.Instance,
         });
         // Reboot and factory reset (ADR 0056 section 11): the browser reloads the page and deletes
         // the OS database; KazoSystem reaches them only after the authentication agent agreed.
@@ -539,6 +559,20 @@ public static class EcosystemServiceCollectionExtensions
             Reclaimer = provider.GetRequiredService<IStorageReclaimer>(),
         });
         services.AddScoped<IStorageSpaceGuard>(provider => provider.GetRequiredService<StorageSpaceMonitor>());
+        // ADR 0250: the eviction check runs before anything opens the OS database (InstalledAppsBoot),
+        // so it lives in the root provider with its own access to the browser's storage.
+        services.AddSingleton<StorageEvictionDetector>(provider =>
+            new StorageEvictionDetector(new BrowserStorageManager(provider.GetRequiredService<Microsoft.JSInterop.IJSRuntime>())));
+        services.AddScoped<OriginStorageService>(provider =>
+            new OriginStorageService(
+                new BrowserStorageManager(provider.GetRequiredService<Microsoft.JSInterop.IJSRuntime>()),
+                provider.GetRequiredService<IFileSystemService>(),
+                provider.GetRequiredService<ISimulationClock>(),
+                provider.GetRequiredService<StorageEvictionDetector>(),
+                provider.GetRequiredService<INotificationQueue>(),
+                () => provider.GetRequiredService<ISessionService>().CurrentPrincipal,
+                provider.GetService<KernelLog>(),
+                language: () => provider.GetRequiredService<Kazo.Os.Platform.Core.Globalization.SessionLocaleService>().Culture));
 
         // User keyring (ADR 0100 section 2): ~/.local/share/keyrings/login.keyring, sealed with
         // AES-GCM through Web Crypto, unlocked by the session service at login.
@@ -649,7 +683,12 @@ public static class EcosystemServiceCollectionExtensions
                 grantRepository: provider.GetService<ICapabilityGrantRepository>(),
                 catalog: provider.GetService<AppCatalog>(),
                 profileInitializer: provider.GetRequiredService<SettingsStoreToFilesMigration>(),
-                keyring: provider.GetRequiredService<UserKeyringService>());
+                keyring: provider.GetRequiredService<UserKeyringService>())
+            {
+                // ADR 0246 §3: only what the catalog knows is granted at sign-in (issue #432).
+                Capabilities = provider.GetService<ICapabilityCatalog>(),
+                Logger = provider.GetService<ILogger<LocalSessionService>>(),
+            };
         });
         // Per-process arguments, working directory and environment (ADR 0050): filled and
         // emptied by the process manager, read by /proc and each app's Environment gateway.
@@ -768,7 +807,17 @@ public static class EcosystemServiceCollectionExtensions
         services.TryAddSingleton<SystemStartupSignal>();
         // ADR 0131: what the page found at boot; the browser host also registers the probe.
         services.TryAddSingleton<CrossOriginIsolationState>();
-        services.AddScoped<EcosystemBootCoordinator>();
+        services.AddScoped<EcosystemBootCoordinator>(provider =>
+        {
+            EcosystemBootCoordinator coordinator = ActivatorUtilities.CreateInstance<EcosystemBootCoordinator>(provider);
+            // ADR 0250: the eviction check, the features' markers and kern.log.
+            coordinator.EvictionDetector = provider.GetService<StorageEvictionDetector>();
+            coordinator.OriginStorage = provider.GetService<OriginStorageService>();
+            coordinator.KernelLog = provider.GetService<KernelLog>();
+            // ADR 0247 §1: roles.config read at boot.
+            coordinator.FeatureRoles = provider.GetService<Kazo.Os.Platform.Core.Roles.FeatureRoleService>();
+            return coordinator;
+        });
 
         services.AddSingleton(_ => catalog ?? CreateEmptyCatalog());
         // ADR 0098 §5: assets checked against their manifest hash at first read. The WebAssembly host
@@ -927,8 +976,12 @@ public static class EcosystemServiceCollectionExtensions
                 InstalledLibraries = () => provider.GetService<IInstalledLibraryState>(),
                 // ADR 0262 §2: each app's KazoFeatures, answered by the page's resolver.
                 FeatureServices = () => provider.GetService<Kazo.Os.Platform.Core.Features.FeatureServiceResolver>(),
+                // ADR 0246: each app's capability checks know the features' permissions and what they cover.
+                Capabilities = () => provider.GetService<ICapabilityCatalog>(),
                 // ADR 0260 §3: the consent to a feature's installation is written as machine allow lines.
                 PermissionStore = () => provider.GetService<IAppPermissionStore>(),
+                // ADR 0247: each app's roles and the OS's authentication of a feature's operations.
+                Roles = () => provider.GetService<Kazo.Os.Platform.Core.Roles.FeatureRoleService>(),
             },
             // Lazy for the same reason: ShellInterpreter depends on the orchestrator (ADR 0056 section 7).
             shellHostProvider: () => provider.GetRequiredService<ShellHostService>(),
@@ -1003,6 +1056,8 @@ public static class EcosystemServiceCollectionExtensions
                 Screens = OperatingSystem.IsBrowser() ? () => provider.GetRequiredService<ScreenControl>() : null,
                 // KazoWhatsNew (ADR 0186): the served change list, on a host that registers its source.
                 WhatsNew = provider.GetService<Kazo.Os.Platform.Core.WhatsNew.IWhatsNewSource>() is null ? null : () => provider.GetRequiredService<Kazo.Os.Platform.Core.WhatsNew.WhatsNewService>(),
+                // ADR 0250: the browser storage of the page behind KazoStorage.
+                OriginStorage = () => provider.GetRequiredService<OriginStorageService>(),
             })
         {
             // KazoBackground (ADR 0128): each task a child process, in a worker when the host has some.
@@ -1071,9 +1126,12 @@ public static class EcosystemServiceCollectionExtensions
         {
             // ADR 0125, section 3: a session's root process gets the limits of limits.conf.
             LoginResourceLimits = provider.GetRequiredService<LoginResourceLimitsProvider>(),
+            Capabilities = provider.GetService<ICapabilityCatalog>() ?? BuiltInCapabilityCatalog.Instance,
             // ADR 0214 §4.2: the data of an installed app is backed up when its version changes.
             DataGuard = new AppDataGuard(
                 () => provider.GetService<InstalledPackageCatalog>(), provider.GetService<ILogger<AppDataGuard>>()),
+            // ADR 0247 §2: an entry point that requires a role opens only for its holders.
+            Roles = () => provider.GetService<Kazo.Os.Platform.Core.Roles.FeatureRoleService>(),
         });
         // Uninstall/reinstall through /etc/kazoos/apps.config + ~/.config/kazoos/apps.config
         // (ADR 0048). Started by EcosystemBootCoordinator once storage is ready; feeds the
@@ -1531,6 +1589,7 @@ public static class EcosystemServiceCollectionExtensions
         IServiceProvider provider, string type, string featureId, string accountId, Action availabilityChanged, CancellationToken cancellationToken)
     {
         CloudAccountService accounts = provider.GetRequiredService<CloudAccountService>();
+        await GrantFeatureServiceCapabilitiesAsync(provider, featureId, cancellationToken).ConfigureAwait(false);
         try
         {
             Kazo.Os.AppSdk.Drives.IKazoDriveProviderContext context = await accounts
@@ -1543,6 +1602,30 @@ public static class EcosystemServiceCollectionExtensions
             throw new Kazo.Os.AppSdk.Drives.KazoDriveException(
                 Kazo.Os.AppSdk.Drives.KazoDriveErrorKind.SignInRequired, $"{type}: {exception.Message}", exception);
         }
+    }
+
+    /// <summary>
+    /// ADR 0282 §3: a drive provider runs in its feature's process, as <c>kazoos-svc</c>. Its
+    /// dangerous capabilities (<c>drives.provide</c>, which its network calls need) are the ones the
+    /// administrator approved for the machine when the feature was installed: they are granted to
+    /// that account here, before each connection, without asking anything. A capability still
+    /// pending or refused stays refused, and the provider's calls fail as for any app.
+    /// </summary>
+    private static async ValueTask GrantFeatureServiceCapabilitiesAsync(
+        IServiceProvider provider, string featureId, CancellationToken cancellationToken)
+    {
+        if (provider.GetService<IDangerousCapabilityGate>() is not { } gate
+            || !provider.GetRequiredService<AppCatalog>().Manifests.TryGetValue(featureId, out AppManifest? feature))
+        {
+            return;
+        }
+
+        await gate.EnsureDecidedAsync(
+            feature,
+            ServiceAccount.CreatePrincipal(InstallationId.FromGuid(Guid.NewGuid()), DeviceId.FromGuid(Guid.NewGuid()), DateTimeOffset.UtcNow),
+            prompt: null,
+            interactive: false,
+            cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>

@@ -126,16 +126,23 @@ public sealed class FeatureDriveSourceTests : IDisposable
         Assert.Equal(0, _service.Opened);
     }
 
+    /// <summary>
+    /// A drive the user connects now is opened before it is mounted, so it mounts connected and the
+    /// File Explorer lists it at once (found by the trimmed OS journey: the explorer showed
+    /// ProviderUnavailable because the new drive was mounted disconnected). A login still never waits.
+    /// </summary>
     [Fact]
-    public async Task Creating_a_drive_names_it_after_the_account_and_never_calls_the_provider()
+    public async Task Creating_a_drive_names_it_after_the_account_and_opens_the_provider_before_the_mount()
     {
+        _service.SeedFile("/Docs/a.txt", "a"u8.ToArray());
         using DriveProviderFixtures.Page page = Page();
 
         NetworkDriveCreation creation = (await page.Source.CreateAsync(new NetworkDriveRequest(AccountId, Root: "/Docs")))!;
 
         Assert.Equal(new NetworkDriveReference("bob@example.test", Key: null, Account: AccountId, Root: "/Docs"), creation.Reference);
         Assert.Equal("Memory", creation.DefaultMountName);
-        Assert.Empty(page.Started);
+        Assert.Single(page.Started);
+        Assert.Equal(HostFolderPermission.Granted, await creation.Folder.QueryPermissionAsync());
     }
 
     [Fact]

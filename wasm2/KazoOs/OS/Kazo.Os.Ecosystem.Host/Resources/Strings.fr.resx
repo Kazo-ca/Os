@@ -162,6 +162,9 @@
   <data name="Project.LegacyMoved" xml:space="preserve"><value>La version d’origine a été déplacée vers</value></data>
   <data name="Project.Author" xml:space="preserve"><value>Auteur :</value></data>
   <data name="Project.GitHub" xml:space="preserve"><value>Projet GitHub :</value></data>
+  <data name="Project.Privacy" xml:space="preserve"><value>Politique de confidentialité</value></data>
+  <data name="Project.Terms" xml:space="preserve"><value>Conditions d’utilisation</value></data>
+  <data name="Project.LegalSection" xml:space="preserve"><value>fr</value></data>
   <data name="Login.UsePasskey" xml:space="preserve">
     <value>Se connecter avec une clé d'accès</value>
   </data>
@@ -341,5 +344,26 @@
   </data>
   <data name="Welcome.Error" xml:space="preserve">
     <value>Ce choix n'a pas pu être enregistré : {0}</value>
+  </data>
+  <data name="StorageEvicted.Title" xml:space="preserve">
+    <value>Le navigateur a effacé les données de Kazo OS</value>
+  </data>
+  <data name="StorageEvicted.Explanation" xml:space="preserve">
+    <value>Kazo OS avait démarré dans ce navigateur, mais ses fichiers, ses comptes et ses réglages n'y sont plus : le navigateur les a effacés (manque d'espace, site pas visité depuis longtemps, ou données du site supprimées). Kazo OS repart comme une nouvelle installation.</value>
+  </data>
+  <data name="StorageEvicted.LastBoot" xml:space="preserve">
+    <value>Dernier démarrage</value>
+  </data>
+  <data name="StorageEvicted.LastBootUnknown" xml:space="preserve">
+    <value>inconnu</value>
+  </data>
+  <data name="StorageEvicted.Code" xml:space="preserve">
+    <value>Code</value>
+  </data>
+  <data name="StorageEvicted.Restore" xml:space="preserve">
+    <value>Pour retrouver vos données, créez votre compte, puis restaurez votre dernière sauvegarde (.kosbak) dans Paramètres ▸ Sauvegarde.</value>
+  </data>
+  <data name="StorageEvicted.Protect" xml:space="preserve">
+    <value>Paramètres ▸ Stockage peut ensuite demander au navigateur de protéger le stockage de Kazo OS contre l'effacement.</value>
   </data>
 </root>

@@ -299,11 +299,42 @@ public sealed class LocalSessionService : ISessionService, IDisposable
             return;
         }
 
+        // ADR 0246 §3: the catalog of the running OS (built-in + installed features); an identifier it
+        // does not know is never granted, and is written once to /var/log/syslog.
+        ICapabilityCatalog catalog = Capabilities ?? BuiltInCapabilityCatalog.Instance;
         foreach (AppManifest manifest in _catalog.Manifests.Values)
         {
             CleanProfileCapabilityGrantSeeder.SeedDeclaredCapabilities(
-                _grantRepository, manifest, userId, _catalog.IsSystemApp(manifest.Id));
+                _grantRepository, manifest, userId, _catalog.IsSystemApp(manifest.Id), catalog,
+                capability => ReportUnknownCapability(manifest.Id, capability));
         }
+    }
+
+    /// <summary>
+    /// Gets the catalog of capabilities the seeding reads (ADR 0246 §1); <see langword="null"/> for the
+    /// built-in catalog alone.
+    /// </summary>
+    public ICapabilityCatalog? Capabilities { get; init; }
+
+    /// <summary>Gets the logger of <c>/var/log/syslog</c>, where an unknown capability is reported.</summary>
+    public Microsoft.Extensions.Logging.ILogger? Logger { get; init; }
+
+    private readonly HashSet<string> _reportedUnknown = new(StringComparer.Ordinal);
+
+    private void ReportUnknownCapability(string appId, string capability)
+    {
+        lock (_reportedUnknown)
+        {
+            if (!_reportedUnknown.Add($"{appId}|{capability}"))
+            {
+                return;
+            }
+        }
+
+        Microsoft.Extensions.Logging.LoggerExtensions.LogWarning(
+            Logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance,
+            "capability.unknown-skipped: {AppId} declares {Capability}, which the catalog does not know; not granted",
+            appId, capability);
     }
 
     /// <summary>
