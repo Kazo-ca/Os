@@ -16,8 +16,8 @@ Accepté le 2026-11-17.
   passe par l'authentification de l'OS.
 - **Questions posées à Benoit** dans la PR #604 (série 22, questions 277 à 280).
   Réponses du 2026-11-17 : sa propre réponse à 277 (§1 à §3 ci-dessous), A à
-  278, 279 et 280 (§6). Les questions de suivi 281 et 282 sont posées dans la
-  même PR.
+  278, 279 et 280 (§6). Questions de suivi 281 et 282 (série 23), posées dans
+  la même PR : A aux deux le 2026-11-17 (§3 et §5).
 
 ## Contexte
 
@@ -75,7 +75,7 @@ Le préfixe d'un rôle est le `CapabilityPrefix` de la Feature (ADR 0246) :
 
 L'identifiant de la Feature (`ca.kazo.x86`) n'est pas retenu : il est long et
 contient des points. Aucun champ nouveau n'est ajouté. Question de suivi 281
-dans la PR #604.
+dans la PR #604 : réponse A.
 
 ### 4. Les administrateurs (233 B)
 
@@ -95,12 +95,14 @@ installées.
   d'entrée marqué `RequiresRole`, ce rôle. Depuis un autre point d'entrée de la
   Feature, elle demande **un rôle de la Feature** : la Feature vérifie le rôle
   exact par `IsInRole` avant de demander. Un usager sans aucun rôle de la
-  Feature n'obtient jamais cette portée. Question de suivi 282 dans la PR #604.
+  Feature n'obtient jamais cette portée. Question de suivi 282 dans la PR #604 :
+  réponse A.
 
 ### 6. Autres réponses (278, 279, 280 : A)
 
-- 278 : `roles.config` n'est pas synchronisé dans ce chantier ; une issue `TODO`
-  suivra pour une liste des documents système synchronisés.
+- 278 : `roles.config` n'est pas synchronisé dans ce chantier ; l'issue `TODO`
+  [#607](https://github.com/Kazo-ca/Os/issues/607) suit la liste des documents
+  système synchronisés.
 - 279 : Paramètres ▸ Utilisateurs montre un panneau « Rôles des Features », un
   tableau comptes × rôles avec cases à cocher.
 - 280 : `kazorole list` est ouvert à tout usager, sans `sudo`.

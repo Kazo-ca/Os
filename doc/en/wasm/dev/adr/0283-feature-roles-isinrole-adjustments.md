@@ -16,7 +16,8 @@ Accepted on 2026-11-17.
   the OS's authentication.
 - **Questions asked to Benoit** in PR #604 (series 22, questions 277 to 280).
   Answers of 2026-11-17: his own answer to 277 (§1 to §3 below), A to 278, 279
-  and 280 (§6). Follow-up questions 281 and 282 are asked in the same PR.
+  and 280 (§6). Follow-up questions 281 and 282 (series 23), asked in the same
+  PR: A to both on 2026-11-17 (§3 and §5).
 
 ## Context
 
@@ -72,7 +73,7 @@ The prefix of a role is the feature's `CapabilityPrefix` (ADR 0246):
 - it already is Os-x86's short name: `x86`, like its permissions `x86.vm.use`.
 
 The feature's id (`ca.kazo.x86`) is not kept: it is long and contains dots. No
-new field is added. Follow-up question 281 in PR #604.
+new field is added. Follow-up question 281 in PR #604: answer A.
 
 ### 4. The administrators (233 B)
 
@@ -92,12 +93,13 @@ features.
   marked `RequiresRole`, for that role. From another entry point of the
   feature, it asks for **a role of the feature**: the feature checks the exact
   role with `IsInRole` before asking. A user with no role of the feature never
-  gets that scope. Follow-up question 282 in PR #604.
+  gets that scope. Follow-up question 282 in PR #604: answer A.
 
 ### 6. Other answers (278, 279, 280: A)
 
-- 278: `roles.config` is not synchronized in this work item; a `TODO` issue
-  will follow for a list of synchronized system documents.
+- 278: `roles.config` is not synchronized in this work item; the `TODO` issue
+  [#607](https://github.com/Kazo-ca/Os/issues/607) follows the list of
+  synchronized system documents.
 - 279: Settings ▸ Users shows a "Roles of the features" panel, a table of
   accounts × roles with check boxes.
 - 280: `kazorole list` is open to every user, without `sudo`.
