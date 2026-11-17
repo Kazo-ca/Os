@@ -717,6 +717,77 @@ public sealed class AppIntentDispatcherTests
         Assert.Equal("intent.show-settings.no-settings-app", result.ErrorCode);
     }
 
+    // ---- ADR 0249 §4: ShowSettingsPageIntent ----
+
+    [Fact]
+    public async Task Show_settings_page_opens_settings_on_the_page_for_a_caller_with_apps_launch()
+    {
+        Fixture fixture = new([.. PageFeature().All, SettingsManifest()]);
+        AuthenticatedPrincipal principal = await fixture.LoginAsync();
+        fixture.Grant("org.kazoos.shell", principal, AppCapabilities.AppsLaunch);
+
+        AppIntentDispatchResult result = await fixture.DispatchAsync(principal, new ShowSettingsPageIntent(PageId));
+
+        Assert.Equal(AppIntentDispatchStatus.Dispatched, result.Status);
+        Assert.Equal(AppIntentDispatcher.SettingsAppId, result.Process!.AppId);
+        Assert.Equal(["--page=" + PageId], Arguments(result));
+    }
+
+    [Fact]
+    public async Task Show_settings_page_needs_apps_launch()
+    {
+        Fixture fixture = new([.. PageFeature().All, SettingsManifest()]);
+        AuthenticatedPrincipal principal = await fixture.LoginAsync();
+
+        AppIntentDispatchResult result = await fixture.DispatchAsync(principal, new ShowSettingsPageIntent(PageId));
+
+        Assert.Equal(AppIntentDispatchStatus.CapabilityDenied, result.Status);
+    }
+
+    [Fact]
+    public async Task Show_settings_page_of_an_app_that_is_not_a_settings_page_is_not_found()
+    {
+        Fixture fixture = new([.. PageFeature().All, NotepadManifest(), SettingsManifest()]);
+        AuthenticatedPrincipal principal = await fixture.LoginAsync();
+        fixture.Grant("org.kazoos.shell", principal, AppCapabilities.AppsLaunch);
+
+        AppIntentDispatchResult result = await fixture.DispatchAsync(principal, new ShowSettingsPageIntent("org.kazoos.notepad"));
+
+        Assert.Equal(AppIntentDispatchStatus.NotFound, result.Status);
+        Assert.Equal("intent.show-settings-page.not-found", result.ErrorCode);
+    }
+
+    [Fact]
+    public async Task Show_settings_page_of_a_disabled_feature_is_refused()
+    {
+        Fixture fixture = new([.. PageFeature().All, SettingsManifest()]);
+        fixture.Enablement.MarkDisabled([PageId]);
+        AuthenticatedPrincipal principal = await fixture.LoginAsync();
+        fixture.Grant("org.kazoos.shell", principal, AppCapabilities.AppsLaunch);
+
+        AppIntentDispatchResult result = await fixture.DispatchAsync(principal, new ShowSettingsPageIntent(PageId));
+
+        Assert.Equal(AppIntentDispatchStatus.Disabled, result.Status);
+        Assert.Equal("intent.show-settings-page.disabled", result.ErrorCode);
+    }
+
+    private const string PageId = "org.test.pages.admin";
+
+    /// <summary>A feature with one settings page (ADR 0249 §2).</summary>
+    private sealed class PagesFeature : FeatureDefinition
+    {
+        public override string Id => "org.test.pages";
+
+        public override string Name => "Pages";
+
+        public override string PublisherId => "org.kazoos";
+
+        public override IReadOnlyList<FeatureEntryPoint> EntryPoints =>
+            [new("admin", "Administration", AppKind.SettingsPage, typeof(PagesFeature))];
+    }
+
+    private static FeatureManifests PageFeature() => AppDefinitionMapper.ToFeatureManifests(new PagesFeature(), KazoOsSdk.Version);
+
     // ---- ADR 0096, section 5: app-defined intents ----
 
     private const string ShareIntent = "org.test.intent.share.v1";
@@ -1235,13 +1306,14 @@ public sealed class AppIntentDispatcherTests
             // here) -- discover only the non-Window manifests so an intentionally-unresolvable
             // Window entry never poisons AppDiscoveryResult.Descriptors (all-or-nothing per catalog)
             // for the manifests that ARE meant to resolve for real.
-            AppCatalogBuildResult discoveryCatalogResult = AppCatalog.Build(manifests.Where(m => m.Kind != AppKind.Window));
+            // A settings page (ADR 0249) is a Blazor component too: like a window, it is not discovered here.
+            AppCatalogBuildResult discoveryCatalogResult = AppCatalog.Build(manifests.Where(m => m.Kind is not (AppKind.Window or AppKind.SettingsPage)));
             AppDiscoveryResult discovery = AppEntryPointDiscovery.Discover(discoveryCatalogResult.Catalog!, hostAssemblies);
 
             Dictionary<string, AppDescriptor> descriptors = new(StringComparer.Ordinal);
-            foreach (AppManifest manifest in manifests)
+            foreach (AppManifest manifest in manifests.Where(static m => m.Kind != AppKind.Feature))
             {
-                descriptors[manifest.Id] = manifest.Kind == AppKind.Window
+                descriptors[manifest.Id] = manifest.Kind is AppKind.Window or AppKind.SettingsPage
                     ? new AppDescriptor(manifest, typeof(object), typeof(object).Assembly)
                     : discovery.Descriptors![manifest.Id];
             }
