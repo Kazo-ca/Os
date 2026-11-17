@@ -16,10 +16,8 @@ talks to its service.
 
 This document describes the **public contract** (work item 2 of the
 `drive-providers` series): the SDK types of `Kazo.Os.AppSdk.Drives` and the
-`FeatureDefinition.DriveProviders` declaration. The wiring into the OS
-(adapter to the file system, connect dialog, Settings) comes in work item 4;
-until then a declared provider is checked at build and package time, but the
-OS does not open it yet.
+`FeatureDefinition.DriveProviders` declaration, then what the OS does with
+it (work item 4). The connect dialog and Settings come in work item 6.
 
 ## Writing a provider
 
@@ -128,6 +126,50 @@ In the manifest (`driveProviders`, sorted by type):
 }]
 ```
 
+## What the OS does with a provider (work item 4)
+
+Work item 4 wires the declared types into the file system
+([`network-drive-sources.md`](../dev/network-drive-sources.md#types-features-provide)):
+
+- **One provider per type.** `AppCatalog.GetDriveProviders()` and
+  `FindDriveProvider(type)` give the feature that provides each type. The
+  installer refuses a second feature that declares the same type
+  (`apps.package.drive-type-already-provided`). A type of the OS always wins.
+- **Hot.** A type is offered as soon as its feature is installed and enabled,
+  and goes away when it is disabled or removed, with no restart. A new version
+  is a new provider.
+- **Loaded at the first drive.** Nothing loads at install or at the user's
+  login. At the first drive of the type that opens, the OS loads the assembly,
+  starts the feature's service process (account `kazoos-svc`, its permissions)
+  and creates **one instance per page**, with the `(IFeatureServiceContext)`
+  constructor, else `()`. Every call to the provider runs in the feature's
+  context. A failure is never kept: the next drive tries again.
+- **Login never waits.** The drive is mounted **disconnected** until `OpenAsync`
+  answers, then reconnects by itself. Loading and opening get 20 s at most,
+  `GetStateAsync` 10 s.
+- **A provider that fails** (assembly or class missing, constructor that
+  throws, `OpenAsync` that throws or is too slow) leaves the drive
+  disconnected and writes a line `drives: <type>: <reason>` to
+  `/var/log/apps/<feature>.log` and to the system log. An unexpected exception
+  of an operation becomes `HostFolderErrorKind.Failure` (`EIO`), never a crash.
+- **Errors.** `KazoDriveException.Kind` becomes the file system's code:
+  `NotFound`, `Exists` → `AlreadyExists`, `Unavailable`, `RevisionConflict`,
+  `FileTooLarge`, `QuotaExceeded` → `NoSpace`, `TypeMismatch`, `NotEmpty`,
+  `InvalidName`, `AccessDenied` → `NotAllowed`, `Other` → `Failure`.
+  `SignInRequired` after a token was given: the OS renews the token once and
+  repeats the operation; otherwise the drive is disconnected (`NotAllowed` if
+  the account was removed).
+- **Account.** A drive of a provided type always belongs to an account of that
+  type; the OS refuses an account of another type and lends the provider only
+  that account's context (`KazoDriveState` → `Granted`, `Prompt` for
+  `SignInRequired`, else `Unavailable`). A name returned by `ListAsync` that
+  could leave the folder is not shown; a file larger than
+  `KazoDriveLimits.MaxFileBytes` is refused both ways.
+- **Testing a provider**: `InMemoryDriveProvider` and `InMemoryDriveService`
+  (`Tests/Kazo.Os.Tests.Support`) are an in-memory fake provider and service
+  (tree, revisions, quota, accepted token, offline, failures, slow or failing
+  open).
+
 ## Checks
 
 | Where | Code | Case |
@@ -164,9 +206,9 @@ substance (no operation removed, the OS still keeps the tokens):
   shipped connectors;
 - the connection types of the manifest are named `AppDrive*Manifest`
   (assembly `Kazo.Os.App.Abstractions`, which does not see the SDK);
-- hosts are checked by `AppDriveProviders.IsValidHost`; when work item 1
-  (`network.direct.access`, `DirectNetworkHosts`) reaches the base, the two
-  rules will be unified.
+- hosts are checked by `AppDriveProviders.IsValidHost`, which applies the
+  rule of `DirectNetworkHosts` (work item 1, `network.direct.access`) in its
+  canonical form: one rule for both.
 
 ## Task list (work item 2)
 
@@ -176,4 +218,4 @@ substance (no operation removed, the OS still keeps the tokens):
 - [x] Validator (`manifest.feature.only`, `manifest.drive-provider.*`)
 - [x] Generator (`KOSAPP0033`, `KOSAPP0036`)
 - [x] Dangerous capability `drives.provide`
-- [ ] Wiring into the OS (work item 4)
+- [x] Wiring into the OS (work item 4, see above)
