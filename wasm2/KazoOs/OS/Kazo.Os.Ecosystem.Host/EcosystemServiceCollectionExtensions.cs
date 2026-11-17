@@ -862,7 +862,14 @@ public static class EcosystemServiceCollectionExtensions
                 provider.GetRequiredService<FeatureDriveProviderLoader>(),
                 provider.GetRequiredService<CloudAccountService>(),
                 (type, accountId, availabilityChanged, cancellationToken) => ConnectFeatureDriveAsync(
-                    provider, type, registration.Feature.Id, accountId, availabilityChanged, cancellationToken))));
+                    provider, type, registration.Feature.Id, accountId, availabilityChanged, cancellationToken))
+            {
+                // ADR 0282 §5: a new drive of a form type creates its account, checked against the
+                // declaration and owned by the feature that provides the type.
+                SaveFormAccount = (type, displayName, options, secrets, cancellationToken) =>
+                    provider.GetRequiredService<CloudAccountService>().SaveFormAccountAsync(
+                        type, registration.Feature.Id, displayName, options, secrets, cancellationToken)
+            }));
         // ADR 0262: the services features provide, one instance per page, created on the first
         // request in the feature's own process (kazoos-svc, like a system daemon).
         services.TryAddScoped(provider => new Kazo.Os.Platform.Core.Features.FeatureServiceResolver(
@@ -933,7 +940,10 @@ public static class EcosystemServiceCollectionExtensions
                 {
                     // ADR 0181: KazoDriveInfo.MountHostFolderAsync, ReconnectAsync and UnmountAsync.
                     // Resolved now, with the execution factory, so it sees the first login event.
-                    NetworkDrives = NetworkDrivesOf(provider)
+                    NetworkDrives = NetworkDrivesOf(provider),
+                    // ADR 0282 §5: the scopes of the OAuth types, and which feature a kept drive's type belongs to.
+                    CloudProviders = cancellationToken => provider.GetRequiredService<CloudAccountService>().GetProvidersAsync(cancellationToken),
+                    FeatureOfType = type => provider.GetRequiredService<AppCatalog>().FindDriveProvider(type)?.Feature.Id
                 },
                 // ADR 0068: write-stream buffers and sockets in flight, charged to each app's process.
                 provider.GetRequiredService<IKernelMemoryLedger>())

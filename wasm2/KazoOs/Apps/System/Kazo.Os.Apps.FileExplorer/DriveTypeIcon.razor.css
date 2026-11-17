@@ -1,0 +1,20 @@
+/* A provider's own image, sized like the glyphs next to it (ADR 0282 §5). */
+.drive-type-image {
+    flex: none;
+    object-fit: contain;
+}
+
+.drive-type-image.size-14 {
+    width: 14px;
+    height: 14px;
+}
+
+.drive-type-image.size-16 {
+    width: 16px;
+    height: 16px;
+}
+
+.drive-type-image.size-22 {
+    width: 22px;
+    height: 22px;
+}

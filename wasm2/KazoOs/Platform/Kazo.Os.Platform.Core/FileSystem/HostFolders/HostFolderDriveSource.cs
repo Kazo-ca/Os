@@ -1,3 +1,5 @@
+using System.Globalization;
+using Kazo.Os.AppSdk.IO;
 using Kazo.Os.Simulation.Abstractions.FileSystem;
 
 namespace Kazo.Os.Platform.Core.FileSystem.HostFolders;
@@ -11,7 +13,7 @@ namespace Kazo.Os.Platform.Core.FileSystem.HostFolders;
 /// It never raises <c>AvailabilityChanged</c>: the browser asks for its permission again only
 /// after a user gesture (<c>mount -o remount</c>, "Reconnect").
 /// </remarks>
-public sealed class HostFolderDriveSource : INetworkDriveSource
+public sealed class HostFolderDriveSource : IDescribedNetworkDriveSource
 {
     private readonly IHostFolderAccess _access;
 
@@ -31,6 +33,14 @@ public sealed class HostFolderDriveSource : INetworkDriveSource
         add { }
         remove { }
     }
+
+    /// <inheritdoc />
+    /// <remarks>A folder of the computer, named in <paramref name="language"/>.</remarks>
+    public KazoNetworkDriveTypeInfo Describe(CultureInfo language) =>
+        new(Type, Strings.For(language)["Drives.HostFolder"], KazoNetworkDriveConnection.HostFolder)
+        {
+            Icon = NetworkDriveTypeIcons.HostFolder
+        };
 
     /// <inheritdoc />
     public ValueTask<bool> IsAvailableAsync(CancellationToken cancellationToken = default) =>

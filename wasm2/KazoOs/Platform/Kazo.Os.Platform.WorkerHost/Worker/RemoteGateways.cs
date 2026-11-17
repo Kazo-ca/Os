@@ -731,6 +731,16 @@ internal sealed class RemoteDriveGateway(RemoteProcessChannel channel) : IAppDri
     public async ValueTask<IReadOnlyList<string>> GetNetworkDriveTypesAsync(CancellationToken cancellationToken = default) =>
         WireCodec.ReadStrings(await channel.CallAsync(RemoteOps.DriveTypes, null, cancellationToken).ConfigureAwait(false), "ts");
 
+    // ADR 0282 §5: the OS writes its own labels in the worker's language.
+    public async ValueTask<IReadOnlyList<KazoNetworkDriveTypeInfo>> DescribeNetworkDriveTypesAsync(
+        System.Globalization.CultureInfo language,
+        CancellationToken cancellationToken = default) =>
+        WireCodec.ReadDriveTypeInfos(await channel.CallAsync(RemoteOps.DriveDescribeTypes, writer => writer.WriteString("lg", language.Name), cancellationToken)
+            .ConfigureAwait(false));
+
+    public async ValueTask<IReadOnlyList<KazoDriveSnapshot>> GetProviderMissingDrivesAsync(CancellationToken cancellationToken = default) =>
+        WireCodec.ReadDrives(await channel.CallAsync(RemoteOps.DriveProviderMissing, null, cancellationToken).ConfigureAwait(false));
+
     // ADR 0270: the OS checks cloud-accounts.manage for a cloud type; a folder dialog opens on the page.
     public async ValueTask<KazoDriveSnapshot?> MountNetworkDriveAsync(
         KazoNetworkDriveRequest request,

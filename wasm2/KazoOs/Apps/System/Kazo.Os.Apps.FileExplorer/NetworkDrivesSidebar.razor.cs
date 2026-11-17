@@ -1,4 +1,5 @@
 using Kazo.Os.AppSdk;
+using Kazo.Os.AppSdk.Apps;
 using Kazo.Os.AppSdk.Globalization;
 using Kazo.Os.AppSdk.Icons;
 using Kazo.Os.AppSdk.IO;
@@ -16,6 +17,8 @@ namespace Kazo.Os.Apps.FileExplorer;
 public partial class NetworkDrivesSidebar
 {
     private IReadOnlyList<KazoDriveInfo> _drives = [];
+    private IReadOnlyList<KazoDriveInfo> _missing = [];
+    private IReadOnlyList<KazoNetworkDriveTypeInfo> _types = [];
     private bool _canConnect;
     private bool _busy;
     private bool _dialogOpen;
@@ -44,13 +47,16 @@ public partial class NetworkDrivesSidebar
     {
         try
         {
-            // ADR 0270: a folder of the computer, or a cloud service this OS is set up for.
-            _canConnect = (await KazoDriveInfo.GetNetworkDriveTypesAsync()).Count > 0;
+            // ADR 0270, ADR 0282 §5: a folder of the computer, or a cloud service this OS is set up
+            // for, with the name and icon its provider gives; the explorer names no service itself.
+            _types = await KazoDriveInfo.DescribeNetworkDriveTypesAsync();
         }
         catch (NotSupportedException)
         {
-            _canConnect = false;
+            _types = [];
         }
+
+        _canConnect = _types.Count > 0;
 
         await ReloadAsync();
     }
@@ -68,6 +74,15 @@ public partial class NetworkDrivesSidebar
         catch (NotSupportedException)
         {
             _drives = [];
+        }
+
+        try
+        {
+            _missing = await KazoDriveInfo.GetProviderMissingDrivesAsync();
+        }
+        catch (NotSupportedException)
+        {
+            _missing = [];
         }
     }
 
@@ -90,18 +105,19 @@ public partial class NetworkDrivesSidebar
     /// The icon of a drive: the mark of its service (Dropbox, OneDrive, S3), a disk for a folder of the
     /// computer, a plug when it is disconnected.
     /// </summary>
-    private static (IconLibrary Library, string Name) DriveIcon(KazoDriveInfo drive) =>
-        !drive.IsReady ? (IconLibrary.Lucide, "unplug")
+    private (IconLibrary Library, string Name) DriveIcon(KazoDriveInfo drive) =>
+        drive.ProviderMissing != KazoDriveProviderMissingReason.None ? (IconLibrary.Lucide, "cloud-off")
+        : !drive.IsReady ? (IconLibrary.Lucide, "unplug")
         : drive.Account is null ? (IconLibrary.Lucide, "hard-drive")
-        : NetworkDriveIcons.For(drive.DriveFormat);
+        : NetworkDriveIcons.For(drive.DriveFormat, _types);
 
     /// <summary>
     /// The second line of a cloud drive: its service and, when the drive starts in a folder of the
     /// storage, that folder. Two accounts often carry the same e-mail address: this line tells them apart.
     /// </summary>
-    private static string? Detail(KazoDriveInfo drive)
+    private string? Detail(KazoDriveInfo drive)
     {
-        string? service = drive.Account is null ? null : NetworkDriveIcons.ServiceName(drive.DriveFormat);
+        string? service = drive.Account is null ? null : NetworkDriveIcons.ServiceName(drive.DriveFormat, _types);
         string? root = string.IsNullOrWhiteSpace(drive.Root) ? null : "/" + drive.Root.Trim('/');
         return (service, root) switch
         {
@@ -113,12 +129,43 @@ public partial class NetworkDrivesSidebar
     }
 
     /// <summary>The name a screen reader reads: the label and its detail.</summary>
-    private static string AccessibleName(KazoDriveInfo drive) =>
+    private string AccessibleName(KazoDriveInfo drive) =>
         Detail(drive) is { } detail ? $"{drive.VolumeLabel}, {detail}" : drive.VolumeLabel;
 
     /// <summary>The tooltip: the mount point, or how to reconnect a disconnected drive.</summary>
     private string Tooltip(KazoDriveInfo drive) =>
         drive.IsReady ? drive.Name : L["Network.Reconnect", drive.VolumeLabel];
+
+    /// <summary>
+    /// Why a drive kept without its provider cannot open (ADR 0282 §5): the Feature is not installed,
+    /// it is disabled, or the administrator turned off a service shipped with the OS.
+    /// </summary>
+    private string MissingReason(KazoDriveInfo drive) => drive.ProviderMissing switch
+    {
+        KazoDriveProviderMissingReason.DisabledByAdministrator => L["Drives.ProviderMissing.Administrator"],
+        KazoDriveProviderMissingReason.Disabled => L["Drives.ProviderMissing.Disabled"],
+        _ => L["Drives.ProviderMissing.Removed"]
+    };
+
+    /// <summary>Gets whether the Store can bring the provider back: a Feature that is not installed now.</summary>
+    private static bool CanInstall(KazoDriveInfo drive) =>
+        drive.ProviderMissing == KazoDriveProviderMissingReason.Removed && !string.IsNullOrEmpty(drive.ProviderFeatureId);
+
+    /// <summary>The name a screen reader reads for a drive without its provider: the label, the reason and the action.</summary>
+    private string MissingName(KazoDriveInfo drive)
+    {
+        string name = L["Drives.ProviderMissing.Label", drive.VolumeLabel, MissingReason(drive)];
+        return CanInstall(drive) ? L["Drives.ProviderMissing.Label", name, L["Drives.ProviderMissing.Install"]] : name;
+    }
+
+    /// <summary>
+    /// Opens the Store on the Feature that provided the drive (ADR 0282 §5); the drive comes back by
+    /// itself once the Feature is installed. A drive whose provider is disabled does nothing: the
+    /// reason is its tooltip.
+    /// </summary>
+    private Task InstallProviderAsync(KazoDriveInfo drive) => !CanInstall(drive)
+        ? Task.CompletedTask
+        : RunAsync(() => KazoApps.LaunchAsync(KazoApps.StoreAppId, ["--app=" + drive.ProviderFeatureId]));
 
     private Task OpenAsync(KazoDriveInfo drive) => RunAsync(async () =>
     {

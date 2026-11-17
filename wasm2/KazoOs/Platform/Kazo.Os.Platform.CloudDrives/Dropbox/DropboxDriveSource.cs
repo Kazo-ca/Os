@@ -33,6 +33,9 @@ public sealed class DropboxDriveSource : CloudDriveSource
     public override string DefaultMountName => "Dropbox";
 
     /// <inheritdoc />
+    public override string Icon => "bootstrap:dropbox";
+
+    /// <inheritdoc />
     protected override IHostFolder CreateFolder(CloudDriveConnection connection, CloudAccount account, string? root) =>
         new DropboxFolder(connection, account.DisplayName, root);
 

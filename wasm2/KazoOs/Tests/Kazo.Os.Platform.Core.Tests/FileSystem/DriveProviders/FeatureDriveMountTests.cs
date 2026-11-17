@@ -1,12 +1,16 @@
 using System.Diagnostics;
+using System.Globalization;
 using System.Text;
 using System.Text.Json;
 using Kazo.Os.App.Abstractions;
+using Kazo.Os.AppSdk.IO;
+using Kazo.Os.Platform.Core.Execution;
 using Kazo.Os.Platform.Core.FileSystem.HostFolders;
 using Kazo.Os.Platform.Core.Tests.CloudDrives;
 using Kazo.Os.Platform.Core.Tests.FileSystem.HostFolders;
 using Kazo.Os.Platform.Core.Tests.FileSystem.Virtual;
 using Kazo.Os.Simulation.Abstractions.FileSystem;
+using Kazo.Os.Simulation.Abstractions.Processes;
 using Kazo.Os.Simulation.Abstractions.Sessions;
 using Kazo.Os.Tests.Support;
 using static Kazo.Os.Platform.Core.Tests.FileSystem.Virtual.VirtualFileSystemFixture;
@@ -164,6 +168,46 @@ public sealed class FeatureDriveMountTests : IDisposable
     {
         using JsonDocument document = JsonDocument.Parse(table);
         return document.RootElement.GetProperty("drives")[0].TryGetProperty("provider", out JsonElement provider) ? provider.GetString() : null;
+    }
+
+    [Fact]
+    public async Task Apps_read_the_type_with_its_feature_and_the_reason_a_drive_has_no_provider()
+    {
+        Harness harness = await Harness.CreateAsync(_tokens, _service, DriveProviderFixtures.Feature());
+        AppDriveGateway gateway = new(() => harness.Fixture.Router, VirtualHardwareProfile.Default)
+        {
+            NetworkDrives = () => harness.Drives,
+            FeatureOfType = harness.Page.Sources.FindFeature
+        };
+        NetworkDrive? drive = await harness.Drives.MountAsync(DriveProviderFixtures.Type, null, new NetworkDriveRequest(AccountId));
+        await harness.ConnectedAsync(drive!.MountPoint);
+
+        KazoNetworkDriveTypeInfo info = Assert.Single(
+            await gateway.DescribeNetworkDriveTypesAsync(CultureInfo.InvariantCulture),
+            static type => type.Type == DriveProviderFixtures.Type);
+        Assert.Equal((KazoNetworkDriveConnection.Form, DriveProviderFixtures.FeatureId), (info.Connection, info.ProviderFeatureId));
+        Assert.Empty(await gateway.GetProviderMissingDrivesAsync());
+
+        // Disabled: the feature is still installed, so the Explorer says so and offers nothing to install.
+        harness.Page.Enablement.MarkDisabled([DriveProviderFixtures.FeatureId]);
+        await harness.Drives.RefreshProvidersAsync();
+        KazoDriveSnapshot disabled = Assert.Single(await gateway.GetProviderMissingDrivesAsync());
+        Assert.Equal(
+            ("/mnt/Memory", KazoDriveProviderMissingReason.Disabled, DriveProviderFixtures.FeatureId, false),
+            (disabled.Name, disabled.ProviderMissing, disabled.ProviderFeatureId, disabled.IsReady));
+        Assert.DoesNotContain(await gateway.DescribeNetworkDriveTypesAsync(CultureInfo.InvariantCulture), static type => type.Type == DriveProviderFixtures.Type);
+
+        // Removed: the drive still names its feature, so the Store can bring that one back.
+        harness.Page.Install();
+        await harness.Drives.RefreshProvidersAsync();
+        KazoDriveSnapshot removed = Assert.Single(await gateway.GetProviderMissingDrivesAsync());
+        Assert.Equal((KazoDriveProviderMissingReason.Removed, DriveProviderFixtures.FeatureId), (removed.ProviderMissing, removed.ProviderFeatureId));
+
+        // Another feature declaring the same type does not take the drive: it is still the removed one's.
+        harness.Page.Install(DriveProviderFixtures.Feature(id: "org.test.other"));
+        await harness.Drives.RefreshProvidersAsync();
+        KazoDriveSnapshot other = Assert.Single(await gateway.GetProviderMissingDrivesAsync());
+        Assert.Equal((KazoDriveProviderMissingReason.Removed, DriveProviderFixtures.FeatureId), (other.ProviderMissing, other.ProviderFeatureId));
     }
 
     private sealed class Harness

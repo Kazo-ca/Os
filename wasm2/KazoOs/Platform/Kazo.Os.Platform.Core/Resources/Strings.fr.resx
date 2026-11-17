@@ -804,4 +804,40 @@ Annuler : décider au prochain lancement.</value>
   <data name="Capability.drives.provide.Risk" xml:space="preserve">
     <value>Lire et écrire tous les fichiers des lecteurs de ce type, avec un jeton d'accès des comptes de ses utilisateurs.</value>
   </data>
+  <data name="Drives.HostFolder" xml:space="preserve">
+    <value>Dossier de cet ordinateur</value>
+  </data>
+  <data name="Drives.S3.Name" xml:space="preserve">
+    <value>Stockage compatible S3</value>
+  </data>
+  <data name="Drives.S3.Endpoint" xml:space="preserve">
+    <value>Adresse du service</value>
+  </data>
+  <data name="Drives.S3.Bucket" xml:space="preserve">
+    <value>Compartiment</value>
+  </data>
+  <data name="Drives.S3.Region" xml:space="preserve">
+    <value>Région</value>
+  </data>
+  <data name="Drives.S3.Prefix" xml:space="preserve">
+    <value>Préfixe</value>
+  </data>
+  <data name="Drives.S3.Addressing" xml:space="preserve">
+    <value>Adressage</value>
+  </data>
+  <data name="Drives.S3.AddressingAuto" xml:space="preserve">
+    <value>Automatique</value>
+  </data>
+  <data name="Drives.S3.AddressingPath" xml:space="preserve">
+    <value>Chemin (service/compartiment)</value>
+  </data>
+  <data name="Drives.S3.AddressingVirtual" xml:space="preserve">
+    <value>Hôte virtuel (compartiment.service)</value>
+  </data>
+  <data name="Drives.S3.AccessKey" xml:space="preserve">
+    <value>Identifiant de clé d'accès</value>
+  </data>
+  <data name="Drives.S3.Secret" xml:space="preserve">
+    <value>Clé d'accès secrète</value>
+  </data>
 </root>

@@ -202,9 +202,9 @@ public sealed class MountCommandTests
     }
 
     [Fact]
-    public async Task Mount_t_s3_reads_the_keys_from_standard_input_and_never_echoes_them()
+    public async Task Mount_t_s3_asks_each_secret_field_with_the_echo_off_and_never_echoes_it()
     {
-        FakeAppDriveGateway drives = new() { NetworkTypes = { "s3" } };
+        FakeAppDriveGateway drives = new FakeAppDriveGateway().WithType(FakeAppDriveGateway.S3Info);
 
         Run run = await RunCloudAsync(
             drives, new FakeAppCloudAccountsGateway(), "AKIDEXAMPLE\nsecret-value\n",
@@ -217,6 +217,7 @@ public sealed class MountCommandTests
         Assert.Equal("AKIDEXAMPLE", request.Secrets!["access-key-id"]);
         Assert.Equal("secret-value", request.Secrets["secret-access-key"]);
         Assert.DoesNotContain("secret-value", run.Stdout, StringComparison.Ordinal);
+        Assert.DoesNotContain("AKIDEXAMPLE", run.Stdout, StringComparison.Ordinal);
         Assert.DoesNotContain("secret-value", request.ToString(), StringComparison.Ordinal);
         Assert.Contains("/mnt/photos", run.Stdout, StringComparison.Ordinal);
     }
@@ -225,37 +226,83 @@ public sealed class MountCommandTests
     [InlineData("endpoint=https://s3.example.com")]
     [InlineData("bucket=photos")]
     [InlineData("endpoint=https://s3.example.com,bucket=photos,password=x")]
-    public async Task Mount_t_s3_needs_an_endpoint_and_a_bucket_and_no_unknown_option(string options)
+    public async Task Mount_t_s3_needs_its_required_fields_and_no_unknown_option(string options)
     {
-        Run run = await RunCloudAsync(new FakeAppDriveGateway { NetworkTypes = { "s3" } }, new FakeAppCloudAccountsGateway(), string.Empty, "-t", "s3", "-o", options);
+        Run run = await RunCloudAsync(
+            new FakeAppDriveGateway().WithType(FakeAppDriveGateway.S3Info), new FakeAppCloudAccountsGateway(), string.Empty, "-t", "s3", "-o", options);
 
         Assert.Equal(1, run.ExitCode);
-        Assert.Contains("endpoint=", run.Stderr, StringComparison.Ordinal);
+        Assert.Contains("endpoint=…,bucket=…[,region=…,prefix=…,addressing=path|virtual,account=ID]", run.Stderr, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task A_secret_field_is_refused_on_the_command_line_because_the_history_keeps_it()
+    {
+        FakeAppDriveGateway drives = new FakeAppDriveGateway().WithType(FakeAppDriveGateway.S3Info);
+
+        Run run = await RunCloudAsync(
+            drives, new FakeAppCloudAccountsGateway(), string.Empty,
+            "-t", "s3", "-o", "endpoint=https://s3.example.com,bucket=photos,secret-access-key=oops");
+
+        Assert.Equal(1, run.ExitCode);
+        Assert.Contains("secret-access-key", run.Stderr, StringComparison.Ordinal);
+        Assert.DoesNotContain("oops", run.Stderr, StringComparison.Ordinal);
+        Assert.Null(drives.LastNetworkRequest);
     }
 
     [Fact]
     public async Task Mount_t_s3_without_keys_fails_with_32()
     {
         Run run = await RunCloudAsync(
-            new FakeAppDriveGateway { NetworkTypes = { "s3" } }, new FakeAppCloudAccountsGateway(), string.Empty,
+            new FakeAppDriveGateway().WithType(FakeAppDriveGateway.S3Info), new FakeAppCloudAccountsGateway(), string.Empty,
             "-t", "s3", "-o", "endpoint=https://s3.example.com,bucket=photos");
 
         Assert.Equal(32, run.ExitCode);
     }
 
     [Fact]
-    public async Task Mount_t_s3_with_an_account_reuses_its_keys()
+    public async Task Mount_t_s3_with_an_account_reuses_its_values_and_asks_nothing()
     {
-        FakeAppDriveGateway drives = new() { NetworkTypes = { "s3" } };
+        FakeAppDriveGateway drives = new FakeAppDriveGateway().WithType(FakeAppDriveGateway.S3Info);
 
-        Run run = await RunCloudAsync(
-            drives, new FakeAppCloudAccountsGateway(), string.Empty,
-            "-t", "s3", "-o", "endpoint=https://s3.example.com,bucket=photos,account=s3-1");
+        Run run = await RunCloudAsync(drives, new FakeAppCloudAccountsGateway(), string.Empty, "-t", "s3", "-o", "account=s3-1");
 
         Assert.Equal(0, run.ExitCode);
         Assert.Equal("s3-1", drives.LastNetworkRequest?.Account);
         Assert.Null(drives.LastNetworkRequest?.Secrets);
         Assert.False(drives.LastNetworkRequest!.Options!.ContainsKey("account"));
+    }
+
+    [Fact]
+    public async Task Mount_t_takes_a_type_a_feature_declares_with_its_own_fields()
+    {
+        KazoNetworkDriveTypeInfo webdav = new("webdav", "WebDAV", KazoNetworkDriveConnection.Form)
+        {
+            ProviderFeatureId = "org.example.webdav",
+            Fields =
+            [
+                new("url", "Server", KazoNetworkDriveFieldKind.Url),
+                new("user", "User name", KazoNetworkDriveFieldKind.Text),
+                new("password", "Password", KazoNetworkDriveFieldKind.Secret),
+                new("token", "One-time code", KazoNetworkDriveFieldKind.Secret) { Required = false }
+            ]
+        };
+        FakeAppDriveGateway drives = new FakeAppDriveGateway().WithType(webdav);
+
+        Run run = await RunCloudAsync(
+            drives, new FakeAppCloudAccountsGateway(), "hunter2\n\n",
+            "-t", "webdav", "-o", "url=https://dav.example.com,user=alice", "/mnt/dav");
+        Run usage = await RunCloudAsync(drives, new FakeAppCloudAccountsGateway(), string.Empty, "-t", "webdav", "-o", "url=https://dav.example.com");
+
+        Assert.Equal(0, run.ExitCode);
+        KazoNetworkDriveRequest request = Assert.IsType<KazoNetworkDriveRequest>(drives.LastNetworkRequest);
+        Assert.Equal("webdav", request.Type);
+        Assert.Equal("alice", request.Options!["user"]);
+        Assert.Equal("hunter2", request.Secrets!["password"]);
+        Assert.False(request.Secrets.ContainsKey("token"));
+        Assert.DoesNotContain("hunter2", run.Stdout, StringComparison.Ordinal);
+        Assert.Equal(1, usage.ExitCode);
+        Assert.Contains("mount -t webdav -o url=…,user=…", usage.Stderr, StringComparison.Ordinal);
     }
 
     [Fact]

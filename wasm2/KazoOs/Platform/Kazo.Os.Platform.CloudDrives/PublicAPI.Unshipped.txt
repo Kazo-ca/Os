@@ -6,3 +6,8 @@ Kazo.Os.Platform.Core.CloudDrives.CloudDriveFeatures
 static Kazo.Os.Platform.Core.CloudDrives.CloudDriveFeatures.IsDropboxSupported.get -> bool
 static Kazo.Os.Platform.Core.CloudDrives.CloudDriveFeatures.IsOneDriveSupported.get -> bool
 static Kazo.Os.Platform.Core.CloudDrives.CloudDriveFeatures.IsS3Supported.get -> bool
+Kazo.Os.Platform.Core.CloudDrives.CloudDriveSource.Describe(System.Globalization.CultureInfo! language) -> Kazo.Os.AppSdk.IO.KazoNetworkDriveTypeInfo!
+Kazo.Os.Platform.Core.CloudDrives.S3.S3DriveSource.Describe(System.Globalization.CultureInfo! language) -> Kazo.Os.AppSdk.IO.KazoNetworkDriveTypeInfo!
+override Kazo.Os.Platform.Core.CloudDrives.Dropbox.DropboxDriveSource.Icon.get -> string!
+override Kazo.Os.Platform.Core.CloudDrives.OneDrive.OneDriveDriveSource.Icon.get -> string!
+virtual Kazo.Os.Platform.Core.CloudDrives.CloudDriveSource.Icon.get -> string!

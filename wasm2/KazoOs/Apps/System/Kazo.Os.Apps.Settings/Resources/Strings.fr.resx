@@ -2172,4 +2172,7 @@
   <data name="Details.Kind.Feature" xml:space="preserve">
     <value>fonctionnalité</value>
   </data>
+  <data name="CloudAccounts.ProvidedBy" xml:space="preserve">
+    <value>Fourni par {0} ({1})</value>
+  </data>
 </root>

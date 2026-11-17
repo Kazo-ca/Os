@@ -31,10 +31,7 @@
     <value>mount : type de système de fichiers inconnu « {0} »</value>
   </data>
   <data name="Usage" xml:space="preserve">
-    <value>Usage : mount [-l] | mount -t hostfs [/mnt/nom] | mount -t dropbox|onedrive [-o account=NOM,scope=full|app,root=CHEMIN] [/mnt/nom] | mount -t s3 -o endpoint=URL,bucket=NOM[,region=R,prefix=P,addressing=path|virtual,account=ID] [/mnt/nom] | mount -o remount /mnt/nom</value>
-  </data>
-  <data name="S3Usage" xml:space="preserve">
-    <value>Usage : mount -t s3 -o endpoint=URL,bucket=NOM[,region=R,prefix=P,addressing=path|virtual,account=ID] [/mnt/nom]</value>
+    <value>Usage : mount [-l] | mount -t hostfs [/mnt/nom] | mount -t TYPE [-o account=NOM,scope=full|app,root=CHEMIN] [/mnt/nom] (un service où l'on se connecte) | mount -t TYPE -o CHAMP=VALEUR,…[,account=ID] [/mnt/nom] (un service à formulaire, comme s3 : les champs secrets sont demandés) | mount -o remount /mnt/nom</value>
   </data>
   <data name="BadScope" xml:space="preserve">
     <value>mount : étendue invalide « {0} » (full ou app)</value>
@@ -51,13 +48,16 @@
   <data name="SigningIn" xml:space="preserve">
     <value>Connexion à {0} dans une nouvelle fenêtre…</value>
   </data>
-  <data name="AccessKeyPrompt" xml:space="preserve">
-    <value>Identifiant de clé d'accès : </value>
+  <data name="FormUsage" xml:space="preserve">
+    <value>Usage : mount -t {0} -o {1} [/mnt/nom]</value>
   </data>
-  <data name="SecretKeyPrompt" xml:space="preserve">
-    <value>Clé d'accès secrète : </value>
+  <data name="SecretOnCommandLine" xml:space="preserve">
+    <value>mount : « {0} » est secret : il ne se tape jamais sur la ligne de commande, que l'historique garde ; mount le demande</value>
   </data>
-  <data name="KeysRequired" xml:space="preserve">
-    <value>mount : les deux clés d'accès sont nécessaires</value>
+  <data name="SecretPrompt" xml:space="preserve">
+    <value>{0} : </value>
+  </data>
+  <data name="SecretRequired" xml:space="preserve">
+    <value>mount : {0} est obligatoire</value>
   </data>
 </root>

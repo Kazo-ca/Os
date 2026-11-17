@@ -628,12 +628,6 @@
   <data name="CloudDrive.ProviderTitle" xml:space="preserve">
     <value>Connecter {0}</value>
   </data>
-  <data name="CloudDrive.S3" xml:space="preserve">
-    <value>Stockage compatible S3</value>
-  </data>
-  <data name="CloudDrive.S3Detail" xml:space="preserve">
-    <value>Amazon S3, Cloudflare R2, Backblaze B2, MinIO…</value>
-  </data>
   <data name="CloudDrive.AccountDetail" xml:space="preserve">
     <value>{0}, {1}</value>
   </data>
@@ -681,39 +675,6 @@
   </data>
   <data name="CloudDrive.Mount" xml:space="preserve">
     <value>Monter</value>
-  </data>
-  <data name="CloudDrive.S3.Endpoint" xml:space="preserve">
-    <value>Adresse du service</value>
-  </data>
-  <data name="CloudDrive.S3.Bucket" xml:space="preserve">
-    <value>Compartiment</value>
-  </data>
-  <data name="CloudDrive.S3.Region" xml:space="preserve">
-    <value>Région</value>
-  </data>
-  <data name="CloudDrive.S3.Prefix" xml:space="preserve">
-    <value>Préfixe (facultatif)</value>
-  </data>
-  <data name="CloudDrive.S3.Addressing" xml:space="preserve">
-    <value>Adressage</value>
-  </data>
-  <data name="CloudDrive.S3.AddressingAuto" xml:space="preserve">
-    <value>Automatique</value>
-  </data>
-  <data name="CloudDrive.S3.AddressingPath" xml:space="preserve">
-    <value>Chemin (service/compartiment)</value>
-  </data>
-  <data name="CloudDrive.S3.AddressingVirtual" xml:space="preserve">
-    <value>Hôte virtuel (compartiment.service)</value>
-  </data>
-  <data name="CloudDrive.S3.AccessKey" xml:space="preserve">
-    <value>Identifiant de clé d'accès</value>
-  </data>
-  <data name="CloudDrive.S3.Secret" xml:space="preserve">
-    <value>Clé d'accès secrète</value>
-  </data>
-  <data name="CloudDrive.S3.CorsNote" xml:space="preserve">
-    <value>Le compartiment doit autoriser cette adresse par une règle CORS. Les clés sont scellées sur cet appareil et ne sont plus jamais affichées.</value>
   </data>
   <data name="CloudDrive.Error.Refused" xml:space="preserve">
     <value>Le service a refusé : {0}</value>
@@ -801,5 +762,32 @@
   </data>
   <data name="Category.Utilities" xml:space="preserve">
     <value>Utilitaires</value>
+  </data>
+  <data name="CloudDrive.ProvidedBy" xml:space="preserve">
+    <value>Fourni par {0} ({1})</value>
+  </data>
+  <data name="CloudDrive.FormDetail" xml:space="preserve">
+    <value>Tapez l'adresse et les clés du service</value>
+  </data>
+  <data name="CloudDrive.FormCorsNote" xml:space="preserve">
+    <value>{0} doit autoriser cette adresse par une règle CORS. Les valeurs secrètes sont scellées sur cet appareil et ne sont plus jamais affichées.</value>
+  </data>
+  <data name="CloudDrive.Optional" xml:space="preserve">
+    <value>{0} (facultatif)</value>
+  </data>
+  <data name="Drives.ProviderMissing.Install" xml:space="preserve">
+    <value>Installer le fournisseur</value>
+  </data>
+  <data name="Drives.ProviderMissing.Removed" xml:space="preserve">
+    <value>Fournisseur non installé</value>
+  </data>
+  <data name="Drives.ProviderMissing.Disabled" xml:space="preserve">
+    <value>Fournisseur désactivé</value>
+  </data>
+  <data name="Drives.ProviderMissing.Administrator" xml:space="preserve">
+    <value>Désactivé par l'administrateur</value>
+  </data>
+  <data name="Drives.ProviderMissing.Label" xml:space="preserve">
+    <value>{0}, {1}</value>
   </data>
 </root>

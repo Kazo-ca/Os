@@ -136,3 +136,25 @@ Kazo.Os.Platform.Core.Network.AppNetworkGateway.DirectHosts.init -> void
 Kazo.Os.Platform.Core.Network.AppNetworkGateway.DirectHttp.get -> System.Net.Http.HttpMessageInvoker?
 Kazo.Os.Platform.Core.Network.AppNetworkGateway.DirectHttp.init -> void
 Kazo.Os.Platform.Core.Network.AppNetworkGateway.SendDirectAsync(Kazo.Os.AppSdk.Net.KazoDirectHttpRequest! request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.Net.KazoNetworkResult<Kazo.Os.AppSdk.Net.KazoDirectHttpResponse!>!>
+Kazo.Os.Platform.Core.Execution.AppDriveGateway.CloudProviders.get -> System.Func<System.Threading.CancellationToken, System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<Kazo.Os.Platform.Core.CloudAccounts.CloudProviderInfo!>!>>?
+Kazo.Os.Platform.Core.Execution.AppDriveGateway.CloudProviders.init -> void
+Kazo.Os.Platform.Core.Execution.AppDriveGateway.DescribeNetworkDriveTypesAsync(System.Globalization.CultureInfo! language, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.IO.KazoNetworkDriveTypeInfo!>!>
+Kazo.Os.Platform.Core.Execution.AppDriveGateway.FeatureOfType.get -> System.Func<string!, string?>?
+Kazo.Os.Platform.Core.Execution.AppDriveGateway.FeatureOfType.init -> void
+Kazo.Os.Platform.Core.Execution.AppDriveGateway.GetProviderMissingDrivesAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.IO.KazoDriveSnapshot!>!>
+Kazo.Os.Platform.Core.FileSystem.DriveProviders.FeatureDriveForm
+Kazo.Os.Platform.Core.FileSystem.DriveProviders.FeatureDriveSource.Describe(System.Globalization.CultureInfo! language) -> Kazo.Os.AppSdk.IO.KazoNetworkDriveTypeInfo!
+Kazo.Os.Platform.Core.FileSystem.DriveProviders.FeatureDriveSource.SaveFormAccount.get -> Kazo.Os.Platform.Core.FileSystem.DriveProviders.FeatureFormAccountWriter?
+Kazo.Os.Platform.Core.FileSystem.DriveProviders.FeatureDriveSource.SaveFormAccount.init -> void
+Kazo.Os.Platform.Core.FileSystem.DriveProviders.FeatureFormAccountWriter
+Kazo.Os.Platform.Core.FileSystem.HostFolders.HostFolderDriveSource.Describe(System.Globalization.CultureInfo! language) -> Kazo.Os.AppSdk.IO.KazoNetworkDriveTypeInfo!
+Kazo.Os.Platform.Core.FileSystem.HostFolders.IDescribedNetworkDriveSource
+Kazo.Os.Platform.Core.FileSystem.HostFolders.IDescribedNetworkDriveSource.Describe(System.Globalization.CultureInfo! language) -> Kazo.Os.AppSdk.IO.KazoNetworkDriveTypeInfo!
+Kazo.Os.Platform.Core.FileSystem.HostFolders.NetworkDriveService.FindSource(string! type) -> Kazo.Os.Simulation.Abstractions.FileSystem.INetworkDriveSource?
+Kazo.Os.Platform.Core.FileSystem.HostFolders.NetworkDriveTypeIcons
+const Kazo.Os.Platform.Core.FileSystem.DriveProviders.FeatureDriveForm.MaxValueLength = 2048 -> int
+const Kazo.Os.Platform.Core.FileSystem.HostFolders.NetworkDriveTypeIcons.Generic = "lucide:cloud" -> string!
+const Kazo.Os.Platform.Core.FileSystem.HostFolders.NetworkDriveTypeIcons.HostFolder = "lucide:hard-drive" -> string!
+static Kazo.Os.Platform.Core.FileSystem.DriveProviders.FeatureDriveForm.AccountName(System.Collections.Generic.IReadOnlyList<Kazo.Os.App.Abstractions.AppDriveFormFieldManifest!>! fields, System.Collections.Generic.IReadOnlyDictionary<string!, string!>! options, string! serviceName) -> string!
+static Kazo.Os.Platform.Core.FileSystem.DriveProviders.FeatureDriveForm.Check(string! type, System.Collections.Generic.IReadOnlyList<Kazo.Os.App.Abstractions.AppDriveFormFieldManifest!>! fields, System.Collections.Generic.IReadOnlyDictionary<string!, string!>? options, System.Collections.Generic.IReadOnlyDictionary<string!, string!>? secrets) -> (System.Collections.Generic.Dictionary<string!, string!>! Options, System.Collections.Generic.Dictionary<string!, string!>! Secrets)
+virtual Kazo.Os.Platform.Core.FileSystem.DriveProviders.FeatureFormAccountWriter.Invoke(string! type, string! displayName, System.Collections.Generic.IReadOnlyDictionary<string!, string!>! options, System.Collections.Generic.IReadOnlyDictionary<string!, string!>! secrets, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Kazo.Os.Platform.Core.CloudAccounts.CloudAccount!>

@@ -283,3 +283,17 @@
 .cnd-dialog:focus {
     outline: none;
 }
+
+/* "Provided by <Feature>": a third-party service always says which Feature talks to it (ADR 0282 §5). */
+.cnd-option-provider {
+    color: var(--kos-accent, #42d392);
+    font-size: 0.75rem;
+}
+
+.cnd-provider {
+    margin: 0;
+    padding: 0.4rem 0.6rem;
+    border-left: 2px solid var(--kos-accent, #42d392);
+    color: var(--kos-text-secondary, #8b949e);
+    font-size: 0.8rem;
+}
