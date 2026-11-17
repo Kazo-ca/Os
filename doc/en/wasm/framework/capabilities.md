@@ -40,6 +40,7 @@ classification.
 | `notifications.post`, `clipboard.read`, `clipboard.write` | normal |
 | `network.simulated.read`, `network.simulated.write` | normal |
 | `network.real.access` | **dangerous** (also checked by the optional server before relaying, ADR 0102 §4 and 0108 §1; also required by `KazoClientWebSocket`, without the server, ADR 0235 §1, [`sdk-network.md`](sdk-network.md#websocket-to-a-real-server-adr-0235-1)). The app declares in `RealNetworkPorts` the real ports it needs outside `AllowedPorts` (`tcp/6697`); the approval shows them and the relay opens them unless `BlockedPorts` (ADR 0235 §3, [network relay](../dev/server-network-relay.md)) |
+| `network.direct.access` | **dangerous** (ADR 0282 §4). Direct web requests through the browser's `fetch`, without the Kazo server, only to the hosts the app declares in `DirectNetworkHosts` (`api.example.com`, `*.example.org`, always over `https`); the OS refuses any other host, the approval shows the list, and a host added by an update asks for approval again ([approval](../dev/dangerous-capability-approval.md)) |
 | `network.listen` | normal (listen on a port that is not a URL of its manifest, [`listening-ports-and-dns.md`](listening-ports-and-dns.md)) |
 | `network.listen.privileged` | **dangerous** (listen on a port below 1024, like `CAP_NET_BIND_SERVICE`) |
 | `shell.control` | normal (ADR 0051: acts only on the shell of the user who typed the command, see [`shell-commands.md`](../dev/shell-commands.md)) |

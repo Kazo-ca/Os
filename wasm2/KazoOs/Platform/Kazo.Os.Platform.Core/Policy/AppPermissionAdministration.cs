@@ -304,6 +304,16 @@ public sealed class AppPermissionAdministration
             await _permissions.RemoveUserDenialAsync(appId, capability, cancellationToken).ConfigureAwait(false);
         }
 
+        if (string.Equals(capability, AppCapabilities.NetworkDirectAccess, StringComparison.Ordinal))
+        {
+            // ADR 0282 §4: an allow approves the hosts declared now; a later new host asks again.
+            IReadOnlyCollection<string>? hosts = decision == AppPermissionDecision.Allow
+                ? DirectNetworkHosts.Normalize(_catalog.Manifests[appId].DirectNetworkHosts) ?? []
+                : null;
+            await _permissions.WriteApprovedDirectNetworkHostsAsync(appId, hosts, cancellationToken).ConfigureAwait(false);
+            return;
+        }
+
         if (!string.Equals(capability, AppCapabilities.NetworkRealAccess, StringComparison.Ordinal))
         {
             return;

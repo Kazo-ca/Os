@@ -176,3 +176,14 @@ virtual Kazo.Os.App.Abstractions.FeatureDefinition.DriveProviders.get -> System.
 ~Kazo.Os.App.Abstractions.AppManifestJsonSerializerContext.IReadOnlyDictionaryStringString.get -> System.Text.Json.Serialization.Metadata.JsonTypeInfo<System.Collections.Generic.IReadOnlyDictionary<string, string>>
 ~Kazo.Os.App.Abstractions.AppManifestJsonSerializerContext.IReadOnlyListAppDriveFormFieldManifest.get -> System.Text.Json.Serialization.Metadata.JsonTypeInfo<System.Collections.Generic.IReadOnlyList<Kazo.Os.App.Abstractions.AppDriveFormFieldManifest>>
 ~Kazo.Os.App.Abstractions.AppManifestJsonSerializerContext.IReadOnlyListAppDriveProviderManifest.get -> System.Text.Json.Serialization.Metadata.JsonTypeInfo<System.Collections.Generic.IReadOnlyList<Kazo.Os.App.Abstractions.AppDriveProviderManifest>>
+Kazo.Os.App.Abstractions.AppManifest.DirectNetworkHosts.get -> System.Collections.Generic.IReadOnlyList<string!>?
+Kazo.Os.App.Abstractions.AppManifest.DirectNetworkHosts.init -> void
+Kazo.Os.App.Abstractions.DirectNetworkHosts
+const Kazo.Os.App.Abstractions.AppCapabilities.NetworkDirectAccess = "network.direct.access" -> string!
+const Kazo.Os.App.Abstractions.DirectNetworkHosts.WildcardPrefix = "*." -> string!
+static Kazo.Os.App.Abstractions.DirectNetworkHosts.IsAllowed(System.Collections.Generic.IEnumerable<string!>? declarations, string! host) -> bool
+static Kazo.Os.App.Abstractions.DirectNetworkHosts.Matches(string! declaration, string! host) -> bool
+static Kazo.Os.App.Abstractions.DirectNetworkHosts.Normalize(System.Collections.Generic.IEnumerable<string!>? values) -> System.Collections.Generic.IReadOnlyList<string!>?
+static Kazo.Os.App.Abstractions.DirectNetworkHosts.ParseValid(System.Collections.Generic.IEnumerable<string!>? values) -> System.Collections.Generic.IReadOnlyList<string!>!
+static Kazo.Os.App.Abstractions.DirectNetworkHosts.TryParse(string? value, out string! host, out string? error) -> bool
+virtual Kazo.Os.App.Abstractions.AppDefinition.DirectNetworkHosts.get -> System.Collections.Generic.IReadOnlyList<string!>!

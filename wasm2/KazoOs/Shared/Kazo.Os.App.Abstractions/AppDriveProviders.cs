@@ -60,32 +60,12 @@ public static class AppDriveProviders
     /// </summary>
     /// <param name="host">The host to inspect.</param>
     /// <returns><see langword="true"/> when the host may be declared.</returns>
-    public static bool IsValidHost(string? host)
-    {
-        if (host is null || host.Length is 0 or > 253)
-        {
-            return false;
-        }
-
-        string name = host.StartsWith("*.", StringComparison.Ordinal) ? host[2..] : host;
-        string[] labels = name.Split('.');
-        if (labels.Length < 2)
-        {
-            return false;
-        }
-
-        foreach (string label in labels)
-        {
-            if (label.Length is 0 or > 63 || label[0] == '-' || label[^1] == '-'
-                || !label.All(static c => c is (>= 'a' and <= 'z') or (>= '0' and <= '9') or '-'))
-            {
-                return false;
-            }
-        }
-
-        // The last label of a DNS name is never all digits: this refuses IPv4 addresses.
-        return !labels[^1].All(char.IsAsciiDigit);
-    }
+    /// <remarks>
+    /// The same rule as the hosts of an app's direct network access (<see cref="DirectNetworkHosts"/>,
+    /// ADR 0282 §4), written in its canonical form: lower case, ASCII, no trailing dot.
+    /// </remarks>
+    public static bool IsValidHost(string? host) =>
+        DirectNetworkHosts.TryParse(host, out string canonical, out _) && string.Equals(canonical, host, StringComparison.Ordinal);
 
     /// <summary>
     /// Determines whether <paramref name="address"/> is an absolute <c>https</c> address without

@@ -238,6 +238,13 @@ internal sealed partial class AppManagementGateway
                     .WriteApprovedRealNetworkPortsAsync(manifest.Id, RealNetworkPorts.Normalize(manifest.RealNetworkPorts) ?? [], cancellationToken)
                     .ConfigureAwait(false);
             }
+
+            if (dangerous.Contains(AppCapabilities.NetworkDirectAccess, StringComparer.Ordinal))
+            {
+                await permissions
+                    .WriteApprovedDirectNetworkHostsAsync(manifest.Id, DirectNetworkHosts.Normalize(manifest.DirectNetworkHosts) ?? [], cancellationToken)
+                    .ConfigureAwait(false);
+            }
         }
     }
 
@@ -261,6 +268,7 @@ internal sealed partial class AppManagementGateway
             {
                 await permissions.WriteMachineDecisionsAsync(appId, dangerous, null, cancellationToken).ConfigureAwait(false);
                 await permissions.WriteApprovedRealNetworkPortsAsync(appId, null, cancellationToken).ConfigureAwait(false);
+                await permissions.WriteApprovedDirectNetworkHostsAsync(appId, null, cancellationToken).ConfigureAwait(false);
             }
         }
     }

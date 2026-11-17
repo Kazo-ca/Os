@@ -64,6 +64,14 @@ public abstract class AppDefinition
     /// </summary>
     public virtual IReadOnlyList<string> RealNetworkPorts => [];
 
+    /// <summary>
+    /// Gets the web hosts the app reaches directly through the browser's <c>fetch</c> (ADR 0282 §4):
+    /// exact names (<c>api.pcloud.com</c>) or subdomain wildcards (<c>*.example.org</c>), always in
+    /// <c>https</c>. Requires <c>network.direct.access</c> in <see cref="Capabilities"/>; the approval
+    /// window lists them and the OS refuses every other host. Empty by default.
+    /// </summary>
+    public virtual IReadOnlyList<string> DirectNetworkHosts => [];
+
     /// <summary>Gets the file types a window app opens or edits.</summary>
     public virtual IReadOnlyList<FileHandler> FileHandlers => [];
 
