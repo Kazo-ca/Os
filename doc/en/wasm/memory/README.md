@@ -12,8 +12,15 @@ at the end of each series or when a convention changes.
 - **Active code**: `wasm2/KazoOs/` (simulated OS in Blazor WebAssembly, .NET 10,
   solution `Kazo.Os.sln`). `src/` is the old version, kept as a
   reference.
-- **Version**: Kazo OS and the SDK move to **3.4.2** (branch
-  `release/3.4.2`, 2026-11-17), a fix: the publish keeps `System.Linq`,
+- **Version**: Kazo OS and the SDK move to **3.4.3** (branch
+  `release/3.4.3`, 2026-11-17): it publishes the API surface of the trimmed OS
+  in `Kazo.Os.App.Build` and the `KazoOsPack` API check (ADR 0277, series
+  `todo-wins/base`, merged after 3.4.2 was released), so the Store's CI can
+  check submitted apps (Os-AppMarketPlace#58); with it the `todo-wins/base`
+  and `known-failures/base` series. A patch by Benoit's choice (2026-11-17),
+  although `PublicAPI.Unshipped.txt` is not empty (ADR 0278): apps are not
+  republished; the unshipped API is folded at the next minor version.
+- **Version 3.4.2** (branch `release/3.4.2`, 2026-11-17, published), a fix: the publish keeps `System.Linq`,
   `System.Text.RegularExpressions` and `System.Threading.Channels` whole
   (ADR 0280, Os#595), so Kazo AI installs from the Store; Kazo AI must then be
   rebuilt on 3.4.2 to declare 3.4.2 as its minimum version. No SDK API change.

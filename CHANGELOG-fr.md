@@ -6,6 +6,29 @@ Les changements de Kazo OS, par version. Ce fichier est généré à partir de `
 `wasm2/KazoOs/build/tools/collect-changes.sh` (ADR 0186) : ne pas le modifier à la main. Les changements
 déjà déployés mais pas encore publiés sont dans la page Paramètres ▸ Nouveautés de l'OS.
 
+## 3.4.3 (2026-11-17)
+
+### Nouveau
+
+- **Une app réseau sait si le relais du serveur Kazo marche.** KazoRealNetwork.GetRelayStateAsync dit à une app qui a network.real.access, sans essayer, si le relais du serveur Kazo peut porter ses connexions (aucun serveur, relais arrêté, autorisation pas encore reçue, prêt avec les ports bloqués), et RelayStateChanged dit quand cela change. Un échec de connexion dit maintenant pourquoi : KazoTcpClient et KazoUdpClient lèvent une KazoRelayException avec le même SocketError qu'avant, KazoHttp porte les codes ERR_KAZO_RELAY_*, et curl, wget, cat et le Navigateur les expliquent (ADR 0278). ([sdk-network.md](doc/fr/wasm/framework/sdk-network.md))
+
+### Corrigé
+
+- **Un avertissement quand le stockage du navigateur est plein.** Chromium ne dit plus aux pages web combien de place il reste vraiment : Kazo OS affiche donc la notification « Espace de stockage faible » dès que le navigateur refuse d'enregistrer quelque chose, et libère plus tôt les données des fichiers supprimés pour faire de la place. ([github.com/Kazo-ca/Os/issues/493](https://github.com/Kazo-ca/Os/issues/493))
+- **Une app qui n'a que filesystem.private.* peut créer son dossier ~/.config.** KazoDirectory.CreateDirectoryAsync n'échoue plus avec CapabilityDenied sur ~/.config quand l'app peut créer son ~/.config/<appId>/ sans pouvoir regarder ~/.config. ([capabilities.md](doc/fr/wasm/framework/capabilities.md))
+- **Une modification d'apps.config faite juste après la connexion n'est plus perdue.** Kazo OS surveille maintenant apps.config avant de le lire : une modification écrite pendant l'ouverture de la session est toujours appliquée. ([github.com/Kazo-ca/Os/issues/493](https://github.com/Kazo-ca/Os/issues/493))
+- **Les dialogues de fichiers n'arrêtent plus le bureau s'ils se ferment juste après être entrés dans un dossier.** Ouvrir un dossier dans un dialogue Ouvrir ou Enregistrer puis confirmer aussitôt pouvait afficher « An unhandled error has occurred » et laisser toutes les fenêtres sans réponse. Le dialogue se ferme maintenant proprement. ([github.com/Kazo-ca/Os/issues/519](https://github.com/Kazo-ca/Os/issues/519))
+- **Les apps installées montrent leur icône avant leur premier lancement.** L'OS sert maintenant les icônes des apps installées au démarrage et juste après une installation : le lanceur, le bureau et le Store n'affichent plus une image cassée tant que l'app n'a pas été ouverte une fois. ([app-installation.md](doc/fr/wasm/dev/app-installation.md))
+- **Plus d'erreurs réseau quand Kazo OS démarre hors ligne.** Sans connexion réseau, Kazo OS ne cherche plus de nouvelle version et ne rafraîchit plus les catalogues d'applications : la console du navigateur ne montre plus de requêtes en échec. ([github.com/Kazo-ca/Os/issues/493](https://github.com/Kazo-ca/Os/issues/493))
+- **Sur mobile, le haut d'une app répond de nouveau aux touchers.** La poignée du volet de notifications a maintenant sa propre bande, comme une barre d'état, au-dessus de l'app ouverte, au lieu de couvrir les boutons du haut de l'app. ([mobile-home-screen.md](doc/fr/wasm/dev/mobile-home-screen.md))
+- **Les lecteurs d'écran et la commande vocale nomment la barre des tâches, le menu Démarrer et la calculatrice d'après ce qu'ils affichent.** Le bouton du lanceur d'applications, l'horloge de la barre des tâches, les apps et les liens d'accès rapide du menu Démarrer, et les touches MC, MR, M+, M-, C, AC et x² de la calculatrice ont maintenant un nom accessible qui contient leur texte visible : il suffit de dire ce qu'on voit. ([github.com/Kazo-ca/Os/issues/493](https://github.com/Kazo-ca/Os/issues/493))
+- **head se termine sur /dev/urandom et compte des octets avec -c.** head ne lit plus un fichier au-delà de ce qu'il affiche : head -c 16 /dev/urandom se termine au lieu de remplir la mémoire de l'onglet. -c compte des octets, comme sous Linux. ([linux-commands.md](doc/fr/wasm/dev/linux-commands.md))
+
+### Pour les développeurs
+
+- **Une publication trimmée écrit la surface d'API qu'elle livre.** Une publication trimmée d'un hôte écrit maintenant kazoos-api-surface.json.gz à côté de wwwroot/ : chaque assemblage livré avec ses types, ses méthodes et ses champs, pour vérifier une app contre l'OS rogné avant de la publier (ADR 0277). ([trimmed-publish.md](doc/fr/wasm/dev/trimmed-publish.md))
+- **Le build d'une app refuse les API que l'OS rogné a retirées.** KazoOsPack vérifie maintenant le paquet contre la surface d'API du Kazo OS visé, que Kazo.Os.App.Build apporte : un appel à un membre que l'OS rogné n'a pas fait échouer le build avec KOSAPP0100 et un remplacement quand il en connaît un, au lieu d'être refusé à l'installation. KazoOsApiCheck=false le change en avertissement KOSAPP0101 (ADR 0277). ([app-repository.md](doc/fr/wasm/framework/app-repository.md))
+
 ## 3.4.2 (2026-11-17)
 
 ### Corrigé
