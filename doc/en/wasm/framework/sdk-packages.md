@@ -532,8 +532,9 @@ repository, against the packages of its version, and **never rebuilt**:
 | `Contoso.Sdk11Compat.1.1.0.nupkg` | 1.1.0, packages from the top of `v3.1/base` (`exec/10-final`, ADR 0132 §1) | window `com.contoso.sdk11-window` that names itself with `SetWindowTitleAsync` and `FormatWindowTitle` (`note.txt — SDK 1.1 Window`), `rememberGeometry: false`; command `sdk11-compat` that also calls `KazoUserAccounts.ValidateNewPassword` |
 | `Contoso.Sdk2Compat.2.0.0.nupkg` | 2.0.0, packages from the top of `desk/6-sdk-2` (ADR 0161 §3) | window `com.contoso.sdk2-window` that displays the OS file control (`KazoFileView`) and registers the entry "Inspect with SDK 2.0" in the file menu (`[RegisterFileContextMenu]`, intent `com.contoso.sdk2.inspect.v1`); command `sdk2-compat` that copies a file through `KazoFileOperations.CopyAsync` (`sdk2-compat (copy).txt`) |
 | `Contoso.Sdk3Compat.3.0.0.nupkg` | 3.0.0, `Kazo.Os.*` packages from the top of `rename/3-namespaces` (ADR 0228) | the same app as 2.0.0 under the new names: window `com.contoso.sdk3-window` (`KazoFileView`, entry "Inspect with SDK 3.0", intent `com.contoso.sdk3.inspect.v1`); command `sdk3-compat` (`KazoFileOperations.CopyAsync`) |
+| `Contoso.Sdk35DriveProvider.3.5.0.nupkg` | 3.5.0, `Kazo.Os.*` packages of the `drive-providers/9-final` work item (ADR 0282) | a feature `com.contoso.sdk35-drive-provider` that declares the `contoso-memory` drive type, connected by a form (space, passphrase), and provides it with `KazoDriveProvider` and `KazoDriveFolder` over a service kept in memory; the tests run the current public conformance suite (`KazoDriveProviderTests`) against it |
 
-The tests load the current major's app (3.0.0) into the OS; those of
+The tests load the current major's apps (3.0.0 and the 3.5.0 provider) into the OS; those of
 1.x and 2.x remain as proof of the **refusal** of an app from another major
 (ADR 0149 §5, ADR 0228).
 
@@ -545,6 +546,7 @@ release.
 ```bash
 build/pack-local.sh
 Tests/fixtures/sdk-compat/produce-fixture.sh --project Contoso.Sdk3Compat   # against the 3.0.0 feed
+Tests/fixtures/sdk-compat/produce-fixture.sh --project Contoso.Sdk35DriveProvider   # against the 3.5.0 feed
 ```
 
 ## Tests
@@ -553,7 +555,7 @@ Tests/fixtures/sdk-compat/produce-fixture.sh --project Contoso.Sdk3Compat   # ag
 |---|---|
 | `Tests/Kazo.Os.Templates.E2E.Tests` | packages everything (`pack-local`, or the `KAZOOS_LOCAL_FEED` feed), installs the templates in an isolated `DOTNET_CLI_HOME`, generates and compiles each app template outside the repository with an isolated NuGet cache (manifest, kind, minimum SDK version checked); then generates a host, adds a generated windowed app and a command to it, compiles it (aggregated catalog checked), launches it, creates the profile in Chromium, opens the app (`Clicked 0 times` then `1`) and runs `hello Morpheus` in the terminal (`Hello, Morpheus!`). |
 | `Tests/Kazo.Os.Templates.E2E.Tests` (`A_host_runs_SDK_2_app_packages_and_refuses_SDK_1_x_packages`) | a generated host with `PackageReference` to the 1.0.0 and 1.1.0 compatibility apps (source `kazoos-sdk-fixtures`) does not build (`KOSAPP0021` for each of the four apps); with the 2.0.0 app instead, it starts in Chromium, the 2.0 window displays the OS file control and `sdk2-compat still binds` runs in the terminal (ADR 0149 §5, ADR 0161 §3) |
-| `Tests/Kazo.Os.SdkCompatibility.Tests` | the 2.0.0 compatibility app: admitted by the current catalog, menu entry registered and `KazoFileView` referenced, every Kazo OS type and member it references exists, every method compiles against the current SDK (JIT), the command runs; the 1.0.0 and 1.1.0 apps: refused (`catalog.sdk.incompatible`) (ADR 0149 §5, ADR 0161 §3) |
+| `Tests/Kazo.Os.SdkCompatibility.Tests` | the 2.0.0 compatibility app: admitted by the current catalog, menu entry registered and `KazoFileView` referenced, every Kazo OS type and member it references exists, every method compiles against the current SDK (JIT), the command runs; the 1.0.0 and 1.1.0 apps: refused (`catalog.sdk.incompatible`); the 3.5.0 drive provider: its declared type, and every case of the current conformance suite (`DriveProviderCompatibilityTests`) (ADR 0149 §5, ADR 0161 §3, ADR 0282) |
 | `Tests/Kazo.Os.App.Abstractions.Tests` (`KazoOsSdkTests`) | version reading, range compatibility |
 | `Tests/Kazo.Os.Tools.ManifestGenerator.Tests` | SDK version read from the reference, fingerprints and `KOSAPP0023`, `KOSAPP0022`, app newer than the host's SDK (`KOSAPP0021`) |
 | `Tests/Kazo.Os.Platform.Core.Tests` | `AppCatalog` (refusal, dependency cascade, command owner), `AppAssetStore`, `ShellCommandResolver` |
