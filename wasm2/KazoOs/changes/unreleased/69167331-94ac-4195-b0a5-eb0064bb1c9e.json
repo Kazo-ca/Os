@@ -1,0 +1,14 @@
+{
+  "id": "69167331-94ac-4195-b0a5-eb0064bb1c9e",
+  "category": "developer",
+  "audience": ["developer"],
+  "title": {
+    "en": "Drives of a removed or disabled provider are kept",
+    "fr": "Les lecteurs d'un fournisseur retiré ou désactivé sont gardés"
+  },
+  "description": {
+    "en": "When the feature that provides a drive type is removed or disabled, its drives are unmounted but stay in the user's list with their mount point reserved, and come back by themselves when the same feature returns. Another feature that provides the same type does not take them over. Platform.Core: NetworkDrive.ProviderFeatureId; network-drives.json lines gain a provider field.",
+    "fr": "Quand la fonctionnalité qui fournit un type de lecteur est retirée ou désactivée, ses lecteurs sont démontés mais restent dans la liste de l'utilisateur avec leur point de montage réservé, et reviennent seuls quand la même fonctionnalité revient. Une autre fonctionnalité qui fournit le même type ne les reprend pas. Platform.Core : NetworkDrive.ProviderFeatureId ; les lignes de network-drives.json reçoivent un champ provider."
+  },
+  "links": ["doc/en/wasm/dev/network-drive-sources.md", "doc/en/wasm/framework/drive-providers.md"]
+}
