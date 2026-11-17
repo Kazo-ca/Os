@@ -80,7 +80,10 @@ public enum ShellFailure
     Fault,
 
     /// <summary>A redirection target could not be opened; the stage did not start (exit 1).</summary>
-    Redirection
+    Redirection,
+
+    /// <summary>The entry point requires a role of its feature the user does not hold (ADR 0247 §2, exit 126).</summary>
+    RoleRequired
 }
 
 /// <summary>Outcome of one line.</summary>

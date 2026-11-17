@@ -202,6 +202,10 @@ public sealed class CurlCommand : TerminalAppBase
             (int code, string message) = exception.NetworkError switch
             {
                 KazoNetworkError.HostNotFound => (6, text["ResolveFailed", uri.Host].Value),
+                // ADR 0278 §2: the relay's refusals say why, with curl's own codes.
+                KazoNetworkError.RelayNoServer => (6, $"{text["ResolveFailed", uri.Host].Value} ({text["Relay.NoServer"].Value})"),
+                KazoNetworkError.RelayDisabled => (7, text["ConnectFailed", uri.Host, uri.Port, text["Relay.Disabled"].Value].Value),
+                KazoNetworkError.RelayGrantPending => (7, text["ConnectFailed", uri.Host, uri.Port, text["Relay.GrantPending"].Value].Value),
                 KazoNetworkError.TooManyRedirects => (47, text["TooManyRedirects"].Value),
                 _ => (7, text["ConnectFailed", uri.Host, uri.Port, exception.Message].Value)
             };

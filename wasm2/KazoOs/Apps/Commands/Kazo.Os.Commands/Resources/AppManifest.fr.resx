@@ -480,4 +480,10 @@
   <data name="org.kazoos.commands.zip.Terminal.Usage" xml:space="preserve">
     <value>zip [-r] [-q] [-j] [-d] archive.zip fichier...</value>
   </data>
+  <data name="org.kazoos.commands.kazorole.Description" xml:space="preserve">
+    <value>Liste, attribue et retire les rôles des Features</value>
+  </data>
+  <data name="org.kazoos.commands.kazorole.Terminal.Usage" xml:space="preserve">
+    <value>kazorole list | grant &lt;usager&gt; &lt;rôle&gt; | revoke &lt;usager&gt; &lt;rôle&gt;</value>
+  </data>
 </root>

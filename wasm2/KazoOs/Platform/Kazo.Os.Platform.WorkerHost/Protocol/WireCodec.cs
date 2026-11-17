@@ -528,6 +528,80 @@ internal static class WireCodec
         writer.WriteEndArray();
     }
 
+    /// <summary>Writes the relay's state of one app (ADR 0278 §1).</summary>
+    public static void WriteRelayState(Utf8JsonWriter writer, KazoRelayState state)
+    {
+        writer.WriteNumber("rs", (int)state.Status);
+        WriteInts(writer, "tb", state.TcpBlockedPorts);
+        WriteInts(writer, "ub", state.UdpBlockedPorts);
+    }
+
+    /// <summary>Reads what <see cref="WriteRelayState"/> wrote.</summary>
+    public static KazoRelayState ReadRelayState(JsonElement element) =>
+        new((KazoRelayStatus)element.GetInt32("rs"))
+        {
+            TcpBlockedPorts = ReadInts(element, "tb"),
+            UdpBlockedPorts = ReadInts(element, "ub")
+        };
+
+    /// <summary>
+    /// Writes what the OS needs to allow a direct request from a worker (ADR 0282 §4): method, URI,
+    /// headers and the body's type and length. The body itself stays in the worker.
+    /// </summary>
+    public static void WriteDirectCheck(Utf8JsonWriter writer, KazoDirectHttpRequest request)
+    {
+        writer.WriteString("m", request.Method.Method);
+        writer.WriteString("u", request.RequestUri.AbsoluteUri);
+        WriteStrings(writer, "hk", request.Headers.Select(static header => header.Key));
+        WriteStrings(writer, "hv", request.Headers.Select(static header => header.Value));
+        if (request.Content is { } content)
+        {
+            writer.WriteString("ct", content.ContentType);
+            if (content.Length is { } length)
+            {
+                writer.WriteNumber("cl", length);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Reads what <see cref="WriteDirectCheck"/> wrote, as a request whose body is empty but keeps
+    /// its type and length (the OS only checks and counts it).
+    /// </summary>
+    public static KazoDirectHttpRequest ReadDirectCheck(JsonElement element)
+    {
+        KazoDirectHttpRequest request = new(
+            new System.Net.Http.HttpMethod(element.GetString("m")), new Uri(element.GetString("u"), UriKind.Absolute));
+        string[] keys = ReadStrings(element, "hk");
+        string[] values = ReadStrings(element, "hv");
+        for (int index = 0; index < Math.Min(keys.Length, values.Length); index++)
+        {
+            request.Headers.Add(new(keys[index], values[index]));
+        }
+
+        if (element.GetOptionalString("ct") is { } contentType)
+        {
+            long? length = element.TryGetProperty("cl", out JsonElement cl) ? cl.GetInt64() : null;
+            request.Content = KazoDirectHttpContent.FromStream(Stream.Null, contentType, length);
+        }
+
+        return request;
+    }
+
+    private static void WriteInts(Utf8JsonWriter writer, string name, IReadOnlyList<int> values)
+    {
+        writer.WriteStartArray(name);
+        foreach (int value in values)
+        {
+            writer.WriteNumberValue(value);
+        }
+
+        writer.WriteEndArray();
+    }
+
+    private static IReadOnlyList<int> ReadInts(JsonElement element, string name) =>
+        element.TryGetProperty(name, out JsonElement array) ? [.. array.EnumerateArray().Select(static item => item.GetInt32())] : [];
+
     public static IReadOnlyList<KazoTcpListenerInfo> ReadListeners(JsonElement element) =>
     [
         .. element.GetProperty("ls").EnumerateArray().Select(static item => new KazoTcpListenerInfo(
@@ -867,14 +941,248 @@ internal static class WireCodec
         // ADR 0181: network drives, which are not ready until the browser grants its permission.
         writer.WriteNumber("ty", (int)drive.DriveType);
         writer.WriteBoolean("rd", drive.IsReady);
+        // ADR 0270: the cloud account a drive belongs to.
+        if (drive.Account is { } account)
+        {
+            writer.WriteString("ac", account);
+        }
+
+        if (drive.Root is { } root)
+        {
+            writer.WriteString("rt", root);
+        }
+
+        // ADR 0282 §3, §5: a drive kept while its provider is missing.
+        if (drive.ProviderMissing != KazoDriveProviderMissingReason.None)
+        {
+            writer.WriteNumber("pm", (int)drive.ProviderMissing);
+        }
+
+        if (drive.ProviderFeatureId is { } feature)
+        {
+            writer.WriteString("pf", feature);
+        }
     }
 
     private static KazoDriveSnapshot ReadDriveFields(JsonElement drive) =>
         new(drive.GetString("n"), drive.GetString("f"), drive.GetString("l"), drive.GetInt64("t"), drive.GetInt64("a"))
         {
             DriveType = drive.GetOptional("ty") is { } type ? (KazoDriveType)type.GetInt32() : KazoDriveType.Fixed,
-            IsReady = drive.GetOptional("rd")?.GetBoolean() ?? true
+            IsReady = drive.GetOptional("rd")?.GetBoolean() ?? true,
+            Account = drive.GetOptionalString("ac"),
+            Root = drive.GetOptionalString("rt"),
+            ProviderMissing = drive.GetOptional("pm") is { } missing ? (KazoDriveProviderMissingReason)missing.GetInt32() : KazoDriveProviderMissingReason.None,
+            ProviderFeatureId = drive.GetOptionalString("pf")
         };
+
+    /// <summary>The descriptions of the network drive types (ADR 0282 §5); never a secret, only field names and labels.</summary>
+    public static void WriteDriveTypeInfos(Utf8JsonWriter writer, IReadOnlyList<KazoNetworkDriveTypeInfo> types)
+    {
+        writer.WriteStartArray("dt");
+        foreach (KazoNetworkDriveTypeInfo type in types)
+        {
+            writer.WriteStartObject();
+            writer.WriteString("ty", type.Type);
+            writer.WriteString("dn", type.DisplayName);
+            writer.WriteNumber("cn", (int)type.Connection);
+            WriteOptional(writer, "ic", type.Icon);
+            WriteOptional(writer, "iu", type.IconUrl);
+            WriteOptional(writer, "af", type.AppFolderPath);
+            WriteOptional(writer, "fi", type.ProviderFeatureId);
+            WriteOptional(writer, "fn", type.ProviderFeatureName);
+            writer.WriteStartArray("sc");
+            foreach (Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccessScope scope in type.Scopes)
+            {
+                writer.WriteNumberValue((int)scope);
+            }
+
+            writer.WriteEndArray();
+            writer.WriteStartArray("fd");
+            foreach (KazoNetworkDriveField field in type.Fields)
+            {
+                writer.WriteStartObject();
+                writer.WriteString("n", field.Name);
+                writer.WriteString("l", field.Label);
+                writer.WriteNumber("k", (int)field.Kind);
+                writer.WriteBoolean("r", field.Required);
+                writer.WriteBoolean("sa", field.IsServerAddress);
+                WriteOptional(writer, "d", field.Default);
+                WriteOptional(writer, "p", field.Placeholder);
+                writer.WriteStartArray("c");
+                foreach (KazoNetworkDriveFieldChoice choice in field.Choices)
+                {
+                    writer.WriteStartObject();
+                    writer.WriteString("v", choice.Value);
+                    writer.WriteString("l", choice.Label);
+                    writer.WriteEndObject();
+                }
+
+                writer.WriteEndArray();
+                writer.WriteEndObject();
+            }
+
+            writer.WriteEndArray();
+            writer.WriteEndObject();
+        }
+
+        writer.WriteEndArray();
+    }
+
+    public static IReadOnlyList<KazoNetworkDriveTypeInfo> ReadDriveTypeInfos(JsonElement element) =>
+    [
+        .. element.GetProperty("dt").EnumerateArray().Select(static type => new KazoNetworkDriveTypeInfo(
+            type.GetString("ty"),
+            type.GetString("dn"),
+            (KazoNetworkDriveConnection)type.GetProperty("cn").GetInt32())
+        {
+            Icon = type.GetOptionalString("ic"),
+            IconUrl = type.GetOptionalString("iu"),
+            AppFolderPath = type.GetOptionalString("af"),
+            ProviderFeatureId = type.GetOptionalString("fi"),
+            ProviderFeatureName = type.GetOptionalString("fn"),
+            Scopes = [.. type.GetProperty("sc").EnumerateArray().Select(static scope => (Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccessScope)scope.GetInt32())],
+            Fields =
+            [
+                .. type.GetProperty("fd").EnumerateArray().Select(static field => new KazoNetworkDriveField(
+                    field.GetString("n"),
+                    field.GetString("l"),
+                    (KazoNetworkDriveFieldKind)field.GetProperty("k").GetInt32())
+                {
+                    Required = field.GetProperty("r").GetBoolean(),
+                    IsServerAddress = field.TryGetProperty("sa", out JsonElement serverAddress) && serverAddress.GetBoolean(),
+                    Default = field.GetOptionalString("d"),
+                    Placeholder = field.GetOptionalString("p"),
+                    Choices = [.. field.GetProperty("c").EnumerateArray().Select(static choice => new KazoNetworkDriveFieldChoice(choice.GetString("v"), choice.GetString("l")))]
+                })
+            ]
+        })
+    ];
+
+    private static void WriteOptional(Utf8JsonWriter writer, string name, string? value)
+    {
+        if (value is not null)
+        {
+            writer.WriteString(name, value);
+        }
+    }
+
+    /// <summary>A network drive request (ADR 0270); the secrets cross the channel once, to the OS.</summary>
+    public static void WriteNetworkDriveRequest(Utf8JsonWriter writer, Kazo.Os.AppSdk.IO.KazoNetworkDriveRequest request)
+    {
+        writer.WriteString("ty", request.Type);
+        if (request.Account is { } account)
+        {
+            writer.WriteString("ac", account);
+        }
+
+        if (request.Root is { } root)
+        {
+            writer.WriteString("rt", root);
+        }
+
+        WriteMap(writer, "op", request.Options);
+        WriteMap(writer, "se", request.Secrets);
+    }
+
+    public static Kazo.Os.AppSdk.IO.KazoNetworkDriveRequest ReadNetworkDriveRequest(JsonElement element) =>
+        new(element.GetString("ty"), element.GetOptionalString("ac"), element.GetOptionalString("rt"))
+        {
+            Options = ReadMap(element, "op"),
+            Secrets = ReadMap(element, "se")
+        };
+
+    private static void WriteMap(Utf8JsonWriter writer, string name, IReadOnlyDictionary<string, string>? map)
+    {
+        if (map is null)
+        {
+            return;
+        }
+
+        writer.WriteStartObject(name);
+        foreach ((string key, string value) in map)
+        {
+            writer.WriteString(key, value);
+        }
+
+        writer.WriteEndObject();
+    }
+
+    private static IReadOnlyDictionary<string, string>? ReadMap(JsonElement element, string name) =>
+        element.GetOptional(name) is { } map
+            ? map.EnumerateObject().ToDictionary(static property => property.Name, static property => property.Value.GetString() ?? string.Empty, StringComparer.Ordinal)
+            : null;
+
+    public static void WriteCloudAccount(Utf8JsonWriter writer, Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccount account)
+    {
+        writer.WriteString("id", account.Id);
+        writer.WriteString("pv", account.ProviderId);
+        writer.WriteNumber("sc", (int)account.Scope);
+        writer.WriteString("dn", account.DisplayName);
+        writer.WriteNumber("st", (int)account.State);
+        writer.WriteString("at", account.ConnectedAtUtc.ToString("O", System.Globalization.CultureInfo.InvariantCulture));
+    }
+
+    public static Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccount ReadCloudAccount(JsonElement element) =>
+        new(
+            element.GetString("id"),
+            element.GetString("pv"),
+            (Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccessScope)element.GetInt32("sc"),
+            element.GetString("dn"),
+            (Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccountState)element.GetInt32("st"),
+            DateTimeOffset.Parse(element.GetString("at"), System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.RoundtripKind));
+
+    public static void WriteCloudAccounts(Utf8JsonWriter writer, IReadOnlyList<Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccount> accounts)
+    {
+        writer.WriteStartArray("ca");
+        foreach (Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccount account in accounts)
+        {
+            writer.WriteStartObject();
+            WriteCloudAccount(writer, account);
+            writer.WriteEndObject();
+        }
+
+        writer.WriteEndArray();
+    }
+
+    public static IReadOnlyList<Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccount> ReadCloudAccounts(JsonElement element) =>
+        [.. element.GetProperty("ca").EnumerateArray().Select(ReadCloudAccount)];
+
+    public static void WriteCloudProviders(Utf8JsonWriter writer, IReadOnlyList<Kazo.Os.AppSdk.CloudAccounts.KazoCloudProvider> providers)
+    {
+        writer.WriteStartArray("cp");
+        foreach (Kazo.Os.AppSdk.CloudAccounts.KazoCloudProvider provider in providers)
+        {
+            writer.WriteStartObject();
+            writer.WriteString("id", provider.Id);
+            writer.WriteString("dn", provider.DisplayName);
+            writer.WriteStartArray("sc");
+            foreach (Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccessScope scope in provider.Scopes)
+            {
+                writer.WriteNumberValue((int)scope);
+            }
+
+            writer.WriteEndArray();
+            if (provider.AppFolderPath is { } appFolder)
+            {
+                writer.WriteString("af", appFolder);
+            }
+
+            writer.WriteEndObject();
+        }
+
+        writer.WriteEndArray();
+    }
+
+    public static IReadOnlyList<Kazo.Os.AppSdk.CloudAccounts.KazoCloudProvider> ReadCloudProviders(JsonElement element) =>
+    [
+        .. element.GetProperty("cp").EnumerateArray().Select(static provider => new Kazo.Os.AppSdk.CloudAccounts.KazoCloudProvider(
+            provider.GetString("id"),
+            provider.GetString("dn"),
+            [.. provider.GetProperty("sc").EnumerateArray().Select(static scope => (Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccessScope)scope.GetInt32())])
+        {
+            AppFolderPath = provider.GetOptionalString("af")
+        })
+    ];
 
     public static void WriteCrossOriginIsolation(Utf8JsonWriter writer, KazoCrossOriginIsolationStatus status)
     {

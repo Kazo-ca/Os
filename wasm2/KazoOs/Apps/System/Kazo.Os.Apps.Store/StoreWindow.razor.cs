@@ -173,6 +173,7 @@ public partial class StoreWindow
             IReadOnlyList<KazoInstalledPackage> installed = await KazoAppPackages.GetInstalledAsync();
             IReadOnlyList<KazoPackageUpdate> updates = await KazoAppPackages.GetUpdatesAsync();
             _store = new StoreCatalog(catalogs, installed, updates, _removed);
+            _runningApps = await ReadRunningAppsAsync();
             _themePacks = new StoreThemePacks(catalogs, await ReadInstalledThemePacksAsync());
         }
         catch (NotSupportedException)
@@ -314,7 +315,7 @@ public partial class StoreWindow
             KazoPackageInstallReport report = await KazoAppPackages.InstallAsync(
                 app.Source, scope, Operations.ProgressFor(entry.AppId, app.Latest.SizeBytes));
             _removed.Remove(entry.AppId);
-            ShowInfo(L[report.SystemWide ? "Message.InstalledForEveryone" : "Message.InstalledForMe", report.Name, report.Version]);
+            ShowInfo(DescribeInstalled(report));
             await OpenFileAfterInstallAsync(report);
         }, firstStage: StoreOperationStage.Preparing);
 
@@ -542,6 +543,9 @@ public partial class StoreWindow
         "apps.package.reinstall-required" => L["Error.ReinstallRequired"],
         "apps.package.unsigned" => L["Error.Unsigned"],
         "apps.package.bad-signature" => L["Error.BadSignature"],
+        // ADR 0248 §1, §4: a required dependency missing or out of range stops everything.
+        "apps.package.dependency-unresolved" => L["Error.DependencyUnresolved", exception.Message],
+        "apps.package.dependency-conflict" => L["Error.DependencyConflict", exception.Message],
         { } code when code.StartsWith("themes.pack.", StringComparison.Ordinal) => L["Error.PackRefused", exception.Message],
         _ => L["Error.Generic", exception.Message]
     };

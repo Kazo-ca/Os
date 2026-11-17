@@ -1,5 +1,6 @@
 using Kazo.Os.App.Abstractions;
 using Kazo.Os.Apps.FileExplorer.FileControl.Events;
+using Kazo.Os.Simulation.Abstractions.Events;
 using Kazo.Os.Simulation.Abstractions.FileSystem;
 using Microsoft.AspNetCore.Components;
 using static Kazo.Os.Apps.FileExplorer.FileControl.Tests.TestComponentHelpers;
@@ -146,6 +147,29 @@ public sealed class FileViewTests
         Assert.Equal(2, view.Items.Count);
         Assert.NotNull(view.SelectedItem);
         Assert.Equal("notes.txt", view.SelectedItem!.FileName);
+    }
+
+    [Fact]
+    public async Task RefreshAsync_keeps_the_order_in_which_the_items_were_selected()
+    {
+        // "Open" on a multiple selection opens the files in the order they were picked: a refresh
+        // of the folder in between must not put them back in the listing's order.
+        FileViewTestFixture fixture = await FileViewTestFixture.CreateAsync();
+        await fixture.CreateFileAsync("/home/user/a.txt");
+        await fixture.CreateFileAsync("/home/user/b.txt");
+        TestComponentRenderer renderer = new(EmptyServices());
+        TestableFileView view = new() { FileSystem = fixture.FileSystem, InitialDirectory = VirtualPath.Parse("/home/user") };
+        await renderer.RenderAsync(view);
+        await OnDispatcherAsync(renderer, () =>
+        {
+            view.SelectByName("b.txt");
+            view.SelectItemInternal(view.Items.Single(item => item.FileName == "a.txt"), additive: true);
+        });
+
+        await fixture.CreateFileAsync("/home/user/c.txt");
+        await renderer.RunAsync(() => view.RefreshAsync());
+
+        Assert.Equal(["b.txt", "a.txt"], view.SelectedItems.Select(item => item.FileName));
     }
 
     [Fact]
@@ -635,6 +659,66 @@ public sealed class FileViewTests
         await renderer.RenderAsync(view);
 
         await view.DisposeAsync();
+    }
+
+    [Fact]
+    public async Task Disposing_the_view_while_a_navigation_waits_for_its_watch_does_not_throw()
+    {
+        // Issue #519: the file dialog closed right after entering a folder; DisposeAsync cancelled a
+        // CancellationTokenSource that AttachWatchAsync had already disposed, and Blazor stopped rendering.
+        FileViewTestFixture fixture = await FileViewTestFixture.CreateAsync();
+        await fixture.CreateDirectoryAsync("/home/user/Documents");
+        TestComponentRenderer renderer = new(EmptyServices());
+        GatedWatchGateway watch = new(fixture.Watch);
+        TestableFileView view = new()
+        {
+            FileSystem = fixture.FileSystem,
+            Watch = watch,
+            InitialDirectory = VirtualPath.Parse("/home/user")
+        };
+        await renderer.RenderAsync(view);
+
+        watch.HoldNextWatch();
+        Task navigation = renderer.RunAsync(() => view.NavigateAsync(VirtualPath.Parse("/home/user/Documents")));
+        await watch.Held.Task.WaitAsync(TimeSpan.FromSeconds(5));
+
+        await view.DisposeAsync();
+        watch.Release();
+        await navigation.WaitAsync(TimeSpan.FromSeconds(5));
+
+        // The subscription that arrived after disposal is closed instead of leaking a watch loop.
+        Assert.NotNull(watch.LastSubscription);
+        await watch.LastSubscription!.Reader.Completion.WaitAsync(TimeSpan.FromSeconds(5));
+    }
+
+    /// <summary>
+    /// Watch gateway that can hold one <c>WatchAsync</c> call open, to dispose the view while a navigation
+    /// is between "old watch released" and "new watch attached".
+    /// </summary>
+    private sealed class GatedWatchGateway(IAppFileSystemWatchGateway inner) : IAppFileSystemWatchGateway
+    {
+        private TaskCompletionSource? _gate;
+
+        public TaskCompletionSource Held { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public ITopicChannelSubscription<FileSystemChangeEvent>? LastSubscription { get; private set; }
+
+        public void HoldNextWatch() => _gate = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public void Release() => _gate?.TrySetResult();
+
+        public async ValueTask<ITopicChannelSubscription<FileSystemChangeEvent>> WatchAsync(
+            VirtualPath path, FileSystemWatchScope scope, CancellationToken cancellationToken = default)
+        {
+            if (_gate is { } gate)
+            {
+                Held.TrySetResult();
+                await gate.Task;
+            }
+
+            LastSubscription = await inner.WatchAsync(path, scope, cancellationToken);
+            return LastSubscription;
+        }
     }
 
     private static async Task<bool> WaitUntilAsync(Func<bool> condition, TimeSpan timeout)

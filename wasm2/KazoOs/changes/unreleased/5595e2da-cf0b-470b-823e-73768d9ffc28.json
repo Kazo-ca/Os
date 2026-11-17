@@ -1,0 +1,19 @@
+{
+  "id": "5595e2da-cf0b-470b-823e-73768d9ffc28",
+  "category": "new",
+  "audience": [
+    "user",
+    "developer"
+  ],
+  "title": {
+    "en": "The connect dialog names the server a provider will reach",
+    "fr": "La fenêtre de connexion nomme le serveur qu'un fournisseur joindra"
+  },
+  "description": {
+    "en": "When a drive type marks a field as the server address (ADR 0284), Connect a network drive writes \"This provider will reach <host>.\" before saving, and refuses an address the OS cannot allow (http, a user name or password in the URL, an IP address, localhost) with the reason. KazoNetworkDriveField.IsServerAddress tells apps which field it is.",
+    "fr": "Quand un type de lecteur marque un champ comme adresse du serveur (ADR 0284), Connecter un lecteur réseau écrit « Ce fournisseur joindra <hôte>. » avant d'enregistrer, et refuse avec la raison une adresse que l'OS ne peut pas permettre (http, nom ou mot de passe dans l'URL, adresse IP, localhost). KazoNetworkDriveField.IsServerAddress dit aux apps de quel champ il s'agit."
+  },
+  "links": [
+    "doc/en/wasm/dev/cloud-drives-ui.md"
+  ]
+}

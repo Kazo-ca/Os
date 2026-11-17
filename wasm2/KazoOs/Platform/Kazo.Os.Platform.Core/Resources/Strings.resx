@@ -246,6 +246,12 @@
   <data name="Capability.network.listen.privileged.Title" xml:space="preserve">
     <value>Listen on a privileged port</value>
   </data>
+  <data name="Capability.network.direct.access.Risk" xml:space="preserve">
+    <value>Send and receive data with the web services the app names, directly from the browser.</value>
+  </data>
+  <data name="Capability.network.direct.access.Title" xml:space="preserve">
+    <value>Reach web services directly</value>
+  </data>
   <data name="Capability.network.real.access.Risk" xml:space="preserve">
     <value>Reach real servers on the Internet through the relay server.</value>
   </data>
@@ -398,6 +404,12 @@
   </data>
   <data name="Prompt.Dangerous.RealNetworkPorts" xml:space="preserve">
     <value>Real servers on ports: {0}</value>
+  </data>
+  <data name="Prompt.Dangerous.DirectNetworkHosts" xml:space="preserve">
+    <value>Web services reached directly: {0}</value>
+  </data>
+  <data name="Prompt.Dangerous.TypedServers" xml:space="preserve">
+    <value>Each user's server, typed in: {0}</value>
   </data>
   <data name="Prompt.Dangerous.AuditNotice" xml:space="preserve">
     <value>This decision will be recorded in /var/log/auth.log.</value>
@@ -597,6 +609,9 @@ Cancel: decide at the next launch.</value>
   <data name="Shell.UnboundVariable" xml:space="preserve">
     <value>{0}: unbound variable</value>
   </data>
+  <data name="Storage.Full.Message" xml:space="preserve">
+    <value>The browser refused to save data: the storage is full. Delete files or empty the trash; open Diagnostic to see what uses the space.</value>
+  </data>
   <data name="Storage.LowSpace.Message" xml:space="preserve">
     <value>Only {0:0.#} MiB left of {1:0.#} MiB. Delete files or empty the trash; open Diagnostic to see what uses the space.</value>
   </data>
@@ -779,5 +794,77 @@ Cancel: decide at the next launch.</value>
   </data>
   <data name="AppLink.Error.Generic" xml:space="preserve">
     <value>The installation failed: {0}</value>
+  </data>
+  <data name="Capability.cloud-accounts.manage.Title" xml:space="preserve">
+    <value>Manage cloud accounts</value>
+  </data>
+  <data name="Capability.cloud-accounts.manage.Risk" xml:space="preserve">
+    <value>Connect or remove your Dropbox, OneDrive or S3 accounts and mount their storage as network drives.</value>
+  </data>
+  <data name="Capability.drives.provide.Title" xml:space="preserve">
+    <value>Provide a type of network drive</value>
+  </data>
+  <data name="Capability.drives.provide.Risk" xml:space="preserve">
+    <value>Read and write every file of the drives of that type, with an access token of their users' accounts.</value>
+  </data>
+  <data name="Drives.HostFolder" xml:space="preserve">
+    <value>Folder of this computer</value>
+  </data>
+  <data name="Drives.S3.Name" xml:space="preserve">
+    <value>S3 compatible storage</value>
+  </data>
+  <data name="Drives.S3.Endpoint" xml:space="preserve">
+    <value>Address of the service</value>
+  </data>
+  <data name="Drives.S3.Bucket" xml:space="preserve">
+    <value>Bucket</value>
+  </data>
+  <data name="Drives.S3.Region" xml:space="preserve">
+    <value>Region</value>
+  </data>
+  <data name="Drives.S3.Prefix" xml:space="preserve">
+    <value>Prefix</value>
+  </data>
+  <data name="Drives.S3.Addressing" xml:space="preserve">
+    <value>Addressing</value>
+  </data>
+  <data name="Drives.S3.AddressingAuto" xml:space="preserve">
+    <value>Automatic</value>
+  </data>
+  <data name="Drives.S3.AddressingPath" xml:space="preserve">
+    <value>Path (service/bucket)</value>
+  </data>
+  <data name="Drives.S3.AddressingVirtual" xml:space="preserve">
+    <value>Virtual host (bucket.service)</value>
+  </data>
+  <data name="Drives.S3.AccessKey" xml:space="preserve">
+    <value>Access key ID</value>
+  </data>
+  <data name="Drives.S3.Secret" xml:space="preserve">
+    <value>Secret access key</value>
+  </data>
+  <data name="Admin.App.InstallDependencies" xml:space="preserve">
+    <value>Install {0} {1} with what it needs for all users: {2}</value>
+  </data>
+  <data name="Storage.Evicted.Title" xml:space="preserve">
+    <value>Storage erased by the browser</value>
+  </data>
+  <data name="Storage.Evicted.Message" xml:space="preserve">
+    <value>The browser erased the data of {0} (for example a virtual machine's disks). Open it to export what is left, or Settings ▸ Storage to protect the storage.</value>
+  </data>
+  <data name="Storage.Evicted.OpenSettings" xml:space="preserve">
+    <value>Storage settings</value>
+  </data>
+  <data name="Feature.Authenticate.Operation" xml:space="preserve">
+    <value>{0} asks: {1}</value>
+  </data>
+  <data name="Shell.RoleRequired" xml:space="preserve">
+    <value>{0}: role required</value>
+  </data>
+  <data name="Admin.GrantRole" xml:space="preserve">
+    <value>Grant the role {0} to account {1}</value>
+  </data>
+  <data name="Admin.RevokeRole" xml:space="preserve">
+    <value>Take the role {0} back from account {1}</value>
   </data>
 </root>

@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using Microsoft.Playwright;
 using Xunit.Abstractions;
+using System.Text.RegularExpressions;
 
 namespace Kazo.Os.UI.E2E.Tests;
 
@@ -44,7 +45,7 @@ public sealed class StartMenuQuickAccessTests(ITestOutputHelper output)
             await Assertions.Expect(page.Locator(".pinned-section", new() { HasText = "Kazo OS Store" })).ToHaveCountAsync(0);
             output.WriteLine("[test] The Store is in Quick access, between File Explorer and Settings, and not pinned.");
 
-            ILocator storeLink = quickPanel.GetByRole(AriaRole.Button, new() { Name = "Open Kazo OS Store", Exact = true });
+            ILocator storeLink = quickPanel.GetByRole(AriaRole.Button, new() { NameRegex = new Regex("^Open Kazo OS Store(,|$)") });
             await Assertions.Expect(storeLink).ToBeEnabledAsync();
             await storeLink.ClickAsync();
             await Assertions.Expect(page.Locator(".store-title")).ToHaveTextAsync("Kazo OS Store", new() { Timeout = 20000 });

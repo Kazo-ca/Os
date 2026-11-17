@@ -221,6 +221,7 @@ public sealed class ProxyService : IProxyService
     {
         var current = _activeCounts.GetValueOrDefault(deviceId, 0);
         IReadOnlyList<ProxyAppGrant> appGrants = await _grants.ListGrantsWithPortsAsync(accountId, ct);
+        IReadOnlyList<string> grantedApps = await _grants.ListGrantedAppsAsync(accountId, ct);
         return new ProxyPolicyResponse(
             deviceId,
             _policy.MaxConcurrentPerDevice,
@@ -246,6 +247,7 @@ public sealed class ProxyService : IProxyService
         {
             TcpBlockedPorts = _policy.TcpBlockedPorts,
             UdpBlockedPorts = _policy.UdpBlockedPorts,
+            AccountGrantedApps = grantedApps,
             AppPorts = [.. appGrants.Select(static grant => new ProxyAppPorts(
                 grant.AppId,
                 [.. Kazo.Os.App.Abstractions.RealNetworkPorts.ParseValid(grant.ApprovedPorts.Select(static port => port.ToString()))

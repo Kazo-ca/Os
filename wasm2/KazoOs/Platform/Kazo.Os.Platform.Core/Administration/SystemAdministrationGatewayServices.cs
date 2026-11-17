@@ -58,6 +58,12 @@ public sealed record SystemAdministrationGatewayServices(
     public Func<GuestAccountRequests>? GuestRequests { get; init; }
 
     /// <summary>
+    /// Gets the cloud account service behind <c>KazoCloudAccounts</c> (ADR 0270); <see langword="null"/>
+    /// on a host without cloud accounts leaves the gateway unsupported.
+    /// </summary>
+    public Func<Kazo.Os.Platform.Core.CloudAccounts.CloudAccountService>? CloudAccounts { get; init; }
+
+    /// <summary>
     /// Gets the service behind <c>KazoComponentProviders</c> (ADR 0156); <see langword="null"/> leaves
     /// the gateway unsupported.
     /// </summary>
@@ -80,6 +86,12 @@ public sealed record SystemAdministrationGatewayServices(
     /// that serves none leaves the gateway with an empty list.
     /// </summary>
     public Func<WhatsNew.WhatsNewService>? WhatsNew { get; init; }
+
+    /// <summary>
+    /// Gets the browser storage of the page behind <c>KazoStorage</c> (ADR 0250); <see langword="null"/>
+    /// on a host without browser storage leaves the gateway unsupported.
+    /// </summary>
+    public Func<Storage.OriginStorageService>? OriginStorage { get; init; }
 
     /// <summary>
     /// Gets the approval window of the dangerous capabilities (ADR 0049), which a third-party

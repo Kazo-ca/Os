@@ -1,0 +1,481 @@
+{
+  "version": "3.4.0",
+  "date": "2026-11-15",
+  "entries": [
+    {
+      "id": "b0bc6228-a678-40f5-9d66-6c25237c6143",
+      "category": "new",
+      "audience": [
+        "user"
+      ],
+      "title": {
+        "en": "A beta of Kazo OS on os-beta.kazo.ca",
+        "fr": "Une bêta de Kazo OS sur os-beta.kazo.ca"
+      },
+      "description": {
+        "en": "Prereleases of Kazo OS run on their own site, os-beta.kazo.ca (os.kazo.ca/beta leads there), with their own data. A beta shows a \"Beta\" badge next to its version and, in Settings > About, a link back to the stable version; the stable site offers a \"Try the beta\" link.",
+        "fr": "Les préversions de Kazo OS tournent sur leur propre site, os-beta.kazo.ca (os.kazo.ca/beta y mène), avec leurs propres données. Une bêta affiche une pastille « Bêta » à côté de sa version et, dans Paramètres > À propos, un lien pour revenir à la version stable ; le site stable propose un lien « Essayer la bêta »."
+      },
+      "links": [
+        "doc/en/wasm/dev/beta-site.md",
+        "doc/en/wasm/dev/adr/0271-beta-channel-and-automatic-app-updates.md"
+      ]
+    },
+    {
+      "id": "a2a3cfcd-33ea-4e55-a35c-ee41e7d54b8e",
+      "category": "new",
+      "audience": [
+        "user"
+      ],
+      "title": {
+        "en": "A welcome wizard at your first sign-in",
+        "fr": "Un assistant de bienvenue à votre première connexion"
+      },
+      "description": {
+        "en": "The first time you sign in, Kazo OS lets you choose your language, your theme, your wallpaper and your time zone before the desktop opens. Each choice applies at once, you can skip the wizard, and everything stays changeable in Settings.",
+        "fr": "À votre première connexion, Kazo OS vous laisse choisir votre langue, votre thème, votre fond d'écran et votre fuseau horaire avant d'ouvrir le bureau. Chaque choix s'applique tout de suite, vous pouvez passer l'assistant, et tout reste modifiable dans les Paramètres."
+      },
+      "links": [
+        "doc/en/wasm/dev/welcome-wizard.md"
+      ]
+    },
+    {
+      "id": "f837e95d-5fe0-4d6f-9635-6cce63d3cbdf",
+      "category": "new",
+      "audience": [
+        "user",
+        "developer"
+      ],
+      "title": {
+        "en": "Apps can carry their own libraries, and a shared library is loaded once",
+        "fr": "Les apps embarquent leurs bibliothèques, et une bibliothèque partagée est chargée une seule fois"
+      },
+      "description": {
+        "en": "An app installed from a package can now have libraries of its own (another project, a NuGet package or a DLL): KazoOsPack puts them in the package and the OS loads them before the app, so such an app is no longer refused for a missing assembly. A library its author marks as shared (MSBuild property KazoOsSharedLibrary in the library's project) is loaded once for every app: the copy of an installed feature, otherwise the newest one of the same major version. When another copy is already loaded, the app keeps running with it and is shown as “Restart to finish”. An app whose shared library has another major version than an installed feature's copy is refused at installation, as is a library named like an assembly of the OS. For developers: nothing to declare in the app; kazoos-package.json lists the libraries.",
+        "fr": "Une app installée depuis un paquet peut maintenant avoir ses propres bibliothèques (un autre projet, un paquet NuGet ou une DLL) : KazoOsPack les met dans le paquet et l’OS les charge avant l’app ; une telle app n’est plus refusée pour un assemblage manquant. Une bibliothèque que son auteur marque partagée (propriété MSBuild KazoOsSharedLibrary dans le projet de la bibliothèque) est chargée une seule fois pour toutes les apps : la copie d’une fonctionnalité installée, sinon la plus récente de la même version majeure. Quand une autre copie est déjà chargée, l’app continue avec elle et est montrée « Redémarrer pour terminer ». Une app dont la bibliothèque partagée a une autre version majeure que la copie d’une fonctionnalité installée est refusée à l’installation, comme une bibliothèque qui porte le nom d’un assemblage de l’OS. Pour les développeurs : rien à déclarer dans l’app ; kazoos-package.json liste les bibliothèques."
+      },
+      "links": [
+        "doc/en/wasm/dev/adr/0261-app-libraries-and-shared-versions.md"
+      ]
+    },
+    {
+      "id": "dfed0671-a479-4f1c-a689-8ba6d5e4faca",
+      "category": "new",
+      "audience": [
+        "developer"
+      ],
+      "title": {
+        "en": "Apps can use the services of an optional feature of the OS",
+        "fr": "Les apps peuvent utiliser les services d’une fonctionnalité facultative de l’OS"
+      },
+      "description": {
+        "en": "A feature can now provide services to other apps: it declares ProvidedServices (an interface of a shared library and the class that implements it), and an app gets the instance with KazoFeatures.GetServiceAsync<T>(), or null when the feature is absent, disabled or outside the version range the app declares. The instance is created once per page, on the first request, in the feature’s own context and with its permissions. KazoFeatures.IsAvailable<T>(), GetStatusAsync<T>() and Changed tell why and when a service comes and goes. An app that declares the feature as an optional dependency stays in the catalog when the installed version is out of range. The build checks the declaration (KOSAPP0035) and that an app calling KazoFeatures declares a dependency (KOSAPP0034); a second feature that provides the same contract is refused at installation.",
+        "fr": "Une fonctionnalité peut maintenant fournir des services aux autres apps : elle déclare ProvidedServices (une interface d’une bibliothèque partagée et la classe qui l’implémente), et une app obtient l’instance par KazoFeatures.GetServiceAsync<T>(), ou null quand la fonctionnalité est absente, désactivée ou hors de la plage de versions que l’app déclare. L’instance est créée une fois par page, au premier besoin, dans le contexte de la fonctionnalité et avec ses permissions. KazoFeatures.IsAvailable<T>(), GetStatusAsync<T>() et Changed disent pourquoi et quand un service arrive ou part. Une app qui déclare la fonctionnalité en dépendance facultative reste au catalogue quand la version installée est hors plage. Le build vérifie la déclaration (KOSAPP0035) et qu’une app qui appelle KazoFeatures déclare une dépendance (KOSAPP0034) ; une seconde fonctionnalité qui fournit le même contrat est refusée à l’installation."
+      },
+      "links": [
+        "doc/en/wasm/dev/adr/0262-feature-service-registry-and-async-resolution.md"
+      ]
+    },
+    {
+      "id": "f25d0abe-127b-4321-9e96-4628b6bfbae5",
+      "category": "new",
+      "audience": [
+        "user",
+        "developer"
+      ],
+      "title": {
+        "en": "Connect a network drive from File Explorer, Settings or the terminal",
+        "fr": "Connecter un lecteur réseau depuis l'Explorateur, les Paramètres ou le terminal"
+      },
+      "description": {
+        "en": "File Explorer's \"Connect a network drive\" dialog offers a folder of the computer and, once their connectors arrive, Dropbox, OneDrive and S3 compatible storage, with the choice between the whole storage and a folder reserved for Kazo OS. Settings ▸ Cloud accounts lists the accounts, reconnects and removes them. In the terminal, mount -t dropbox, onedrive or s3 mounts the same drives. Apps holding the new cloud-accounts.manage capability reach all of it through KazoCloudAccounts and KazoDriveInfo.MountNetworkDriveAsync.",
+        "fr": "La fenêtre « Connecter un lecteur réseau » de l'Explorateur propose un dossier de l'ordinateur et, dès que leurs connecteurs arrivent, Dropbox, OneDrive et un stockage compatible S3, avec le choix entre tout le stockage et un dossier réservé à Kazo OS. Paramètres ▸ Comptes cloud liste les comptes, les reconnecte et les retire. Dans le terminal, mount -t dropbox, onedrive ou s3 monte les mêmes lecteurs. Les apps qui ont la nouvelle capacité cloud-accounts.manage y accèdent par KazoCloudAccounts et KazoDriveInfo.MountNetworkDriveAsync."
+      },
+      "links": [
+        "doc/en/wasm/dev/cloud-drives-ui.md",
+        "doc/en/wasm/dev/adr/0270-cloud-drives-in-the-app-sdk.md"
+      ]
+    },
+    {
+      "id": "e86e686d-4729-4552-8f4d-5d9105a89266",
+      "category": "new",
+      "audience": [
+        "user"
+      ],
+      "title": {
+        "en": "Links to Kazo OS show an image on Facebook",
+        "fr": "Les liens vers Kazo OS montrent une image sur Facebook"
+      },
+      "description": {
+        "en": "A link to os.kazo.ca shared on Facebook, LinkedIn or X now shows the Kazo OS image, its title and a short description.",
+        "fr": "Un lien vers os.kazo.ca partagé sur Facebook, LinkedIn ou X montre maintenant l'image de Kazo OS, son titre et une courte description."
+      },
+      "links": [
+        "doc/en/wasm/dev/github-pages-deployment.md"
+      ]
+    },
+    {
+      "id": "c3f1a9e2-5b7d-4e0a-9c21-7f3d2a6b8e14",
+      "category": "new",
+      "audience": [
+        "user",
+        "developer"
+      ],
+      "title": {
+        "en": "Optional features of the OS, installed for the whole machine",
+        "fr": "Fonctionnalités facultatives de l’OS, installées pour toute la machine"
+      },
+      "description": {
+        "en": "A package can now bring a feature (kind feature): one identity with its entry points (commands, windows, services), installed for every user by an administrator who approves its permissions once at installation; its entry points ask nothing at their first launch. The Store lists a feature its catalog marks kind: feature with the apps and offers “Install for everyone” only. Settings ▸ Applications lists each feature with its entry points. For developers: FeatureDefinition and FeatureEntryPoint in the SDK, one entrypoints/<suffix>.json per entry point in the package, diagnostics KOSAPP0032 and KOSAPP0033.",
+        "fr": "Un paquet peut maintenant apporter une fonctionnalité (genre feature) : une identité avec ses points d’entrée (commandes, fenêtres, services), installée pour tous les utilisateurs par un administrateur qui approuve ses permissions une fois, à l’installation ; ses points d’entrée ne demandent rien au premier lancement. Le Store liste une fonctionnalité que son catalogue marque kind: feature avec les apps et ne propose que « Installer pour tous ». Paramètres ▸ Applications liste chaque fonctionnalité avec ses points d’entrée. Pour les développeurs : FeatureDefinition et FeatureEntryPoint dans le SDK, un entrypoints/<suffixe>.json par point d’entrée dans le paquet, diagnostics KOSAPP0032 et KOSAPP0033."
+      },
+      "links": [
+        "doc/en/wasm/dev/adr/0260-feature-app-type.md"
+      ]
+    },
+    {
+      "id": "75c9c083-d3e6-4306-9c3a-7d07a51fcdeb",
+      "category": "new",
+      "audience": [
+        "user"
+      ],
+      "title": {
+        "en": "Privacy policy and terms of use pages",
+        "fr": "Pages de confidentialité et de conditions d'utilisation"
+      },
+      "description": {
+        "en": "os.kazo.ca/privacy.html and os.kazo.ca/terms.html explain, in French and English, that Kazo OS has no server receiving your files or cloud tokens. They are plain pages, available offline.",
+        "fr": "os.kazo.ca/privacy.html et os.kazo.ca/terms.html expliquent, en français et en anglais, que Kazo OS n'a aucun serveur qui reçoit vos fichiers ni vos jetons cloud. Ce sont des pages simples, disponibles hors ligne."
+      },
+      "links": [
+        "doc/en/wasm/dev/cloud-accounts.md"
+      ]
+    },
+    {
+      "id": "9b0c4e57-3f2a-4d8e-b6a1-5c7e2d9f8a13",
+      "category": "new",
+      "audience": [
+        "user",
+        "developer"
+      ],
+      "title": {
+        "en": "S3 buckets as network drives",
+        "fr": "Compartiments S3 en lecteurs réseau"
+      },
+      "description": {
+        "en": "A bucket of an S3 compatible service (Cloudflare R2, Backblaze B2, MinIO, AWS S3), or a prefix of it, mounts under /mnt as a network drive. Requests are signed in the OS with the user's keys, which stay sealed on the device in an s3 cloud account; folders are prefixes and writes are guarded by the ETag. The bucket needs a CORS rule for Kazo OS, described in the S3 guide.",
+        "fr": "Un compartiment d'un service compatible S3 (Cloudflare R2, Backblaze B2, MinIO, AWS S3), ou un préfixe de ce compartiment, se monte sous /mnt comme lecteur réseau. Les requêtes sont signées dans l'OS avec les clés de l'utilisateur, qui restent scellées sur l'appareil dans un compte cloud s3 ; les dossiers sont des préfixes et les écritures sont gardées par l'ETag. Le compartiment demande une règle CORS pour Kazo OS, décrite dans le guide S3."
+      },
+      "links": [
+        "doc/en/wasm/dev/s3-drives.md",
+        "doc/en/wasm/dev/adr/0267-cloud-drives-as-network-drives.md"
+      ]
+    },
+    {
+      "id": "0523a822-1a0d-402e-8ac8-f8b369d9edfa",
+      "category": "improved",
+      "audience": [
+        "user",
+        "developer"
+      ],
+      "title": {
+        "en": "Installed apps keep a single copy of their files",
+        "fr": "Les apps installées gardent une seule copie de leurs fichiers"
+      },
+      "description": {
+        "en": "The files of an installed app are no longer copied into a browser cache in every session: the service worker serves them straight from the app's folder in the file system, after checking they are the files its manifest declares. A 64 MiB app with its previous version kept now takes 128 MiB instead of 192 MiB (236 MiB before file content was stored as binary), and its first launch in a session copies nothing. The OS database moves to version 6; a backup keeps the same format.",
+        "fr": "Les fichiers d'une app installée ne sont plus recopiés dans un cache du navigateur à chaque session : le service worker les sert directement depuis le dossier de l'app dans le système de fichiers, après avoir vérifié que ce sont ceux de son manifeste. Une app de 64 Mio dont la version précédente est gardée prend 128 Mio au lieu de 192 Mio (236 Mio avant le contenu en binaire), et son premier lancement dans la session ne recopie plus rien. La base de l'OS passe en version 6 ; une sauvegarde garde le même format."
+      },
+      "links": [
+        "doc/en/wasm/dev/adr/0274-single-copy-of-app-files.md",
+        "doc/en/wasm/dev/app-installation.md"
+      ]
+    },
+    {
+      "id": "11da9d4f-344e-429f-b57f-9a855383c3b1",
+      "category": "improved",
+      "audience": [
+        "user",
+        "developer"
+      ],
+      "title": {
+        "en": "Large files are read as they are used",
+        "fr": "Les gros fichiers sont lus à mesure qu'on s'en sert"
+      },
+      "description": {
+        "en": "Opening a file over 16 MiB no longer loads it whole: only the part being read is in memory, 16 MiB at most, and jumping ahead in a file loads only the piece around the new position. Apps read such a file asynchronously; a synchronous read past what is loaded is refused.",
+        "fr": "Ouvrir un fichier de plus de 16 Mio ne le charge plus en entier : seule la partie lue est en mémoire, 16 Mio au plus, et avancer dans un fichier ne charge que le morceau autour de la nouvelle position. Les apps lisent un tel fichier de façon asynchrone ; une lecture synchrone au-delà de ce qui est chargé est refusée."
+      },
+      "links": [
+        "doc/en/wasm/framework/kazo-file-api.md",
+        "doc/en/wasm/dev/adr/0275-partial-read-and-file-address.md"
+      ]
+    },
+    {
+      "id": "829ae6b7-f51c-4b92-9f9a-c6afabe2a1c5",
+      "category": "improved",
+      "audience": [
+        "user"
+      ],
+      "title": {
+        "en": "Large files save and open much faster",
+        "fr": "Les gros fichiers s'enregistrent et s'ouvrent beaucoup plus vite"
+      },
+      "description": {
+        "en": "File content is now stored as bytes instead of text, and each 256 KiB piece is checked by its own fingerprint when it is read. The first start after the update converts the files already stored once, behind a waiting screen; it resumes where it stopped if the tab is closed.",
+        "fr": "Le contenu des fichiers est maintenant rangé en octets plutôt qu'en texte, et chaque morceau de 256 Kio est vérifié par sa propre empreinte à la lecture. Le premier démarrage après la mise à jour convertit une fois les fichiers déjà rangés, derrière un écran d'attente ; il reprend où il s'était arrêté si l'onglet est fermé."
+      },
+      "links": [
+        "doc/en/wasm/dev/browser-infrastructure.md",
+        "doc/en/wasm/dev/adr/0272-binary-file-content.md"
+      ]
+    },
+    {
+      "id": "55c3772a-1e3c-4c03-b4f0-b787941c3341",
+      "category": "improved",
+      "audience": [
+        "user",
+        "developer"
+      ],
+      "title": {
+        "en": "Network drives show their service and starting folder",
+        "fr": "Les lecteurs réseau montrent leur service et leur dossier de départ"
+      },
+      "description": {
+        "en": "In the File Explorer, each cloud drive carries the Dropbox or Microsoft mark and a second line with the service and the starting folder, so two accounts with the same e-mail address are told apart. With the folder reserved for Kazo OS, the sign-in dialog shows where that folder is (/Apps/Kazo OS Folder/) before the starting folder. Apps read KazoDriveInfo.Root and KazoCloudProvider.AppFolderPath.",
+        "fr": "Dans l'Explorateur de fichiers, chaque lecteur cloud porte la marque Dropbox ou Microsoft et une seconde ligne avec le service et le dossier de départ : deux comptes à la même adresse courriel se distinguent. Avec le dossier réservé à Kazo OS, la fenêtre de connexion montre où est ce dossier (/Apps/Kazo OS Folder/) devant le dossier de départ. Les apps lisent KazoDriveInfo.Root et KazoCloudProvider.AppFolderPath."
+      },
+      "links": [
+        "doc/en/wasm/dev/cloud-drives-ui.md"
+      ]
+    },
+    {
+      "id": "e456b102-d364-49e0-b3f9-3b9701949c61",
+      "category": "improved",
+      "audience": [
+        "user",
+        "developer"
+      ],
+      "title": {
+        "en": "Saving a large file takes less memory",
+        "fr": "Enregistrer un gros fichier prend moins de mémoire"
+      },
+      "description": {
+        "en": "A file larger than 16 MiB is now handed to the browser 16 MiB at a time while it is saved, instead of being copied whole in the OS memory, which WebAssembly never gives back. KazoFile.WriteAllBytesAsync no longer copies the array it receives: do not change it before the returned task completes.",
+        "fr": "Un fichier de plus de 16 Mio est maintenant passé au navigateur par lots de 16 Mio pendant l'enregistrement, au lieu d'être copié en entier dans la mémoire de l'OS, que WebAssembly ne rend jamais. KazoFile.WriteAllBytesAsync ne copie plus le tableau reçu : ne le modifiez pas avant la fin de la tâche rendue."
+      },
+      "links": [
+        "doc/en/wasm/dev/browser-infrastructure.md",
+        "doc/en/wasm/dev/adr/0275-partial-read-and-file-address.md"
+      ]
+    },
+    {
+      "id": "2a1d4c81-19f2-4e0f-8930-3ff263d02186",
+      "category": "improved",
+      "audience": [
+        "user"
+      ],
+      "title": {
+        "en": "Search and categories in the \"Open with\" box",
+        "fr": "Recherche et catégories dans la boîte « Ouvrir avec »"
+      },
+      "description": {
+        "en": "The File Explorer's \"Open with\" box now has a search box and a category selector to find an installed app quickly. Each app's id no longer spills below its row, on a computer as on a phone.",
+        "fr": "La boîte « Ouvrir avec » de l'Explorateur de fichiers a maintenant une boîte de recherche et un sélecteur de catégorie pour trouver vite une application installée. L'identifiant de chaque application ne déborde plus sous sa ligne, sur ordinateur comme sur téléphone."
+      },
+      "links": [
+        "doc/en/wasm/dev/file-explorer.md"
+      ]
+    },
+    {
+      "id": "165e61bc-ef82-4ef7-9763-db319f796a56",
+      "category": "improved",
+      "audience": [
+        "user"
+      ],
+      "title": {
+        "en": "The Kazo OS Store moves to the Start menu's Quick access",
+        "fr": "Le Kazo OS Store passe dans l'Accès rapide du menu Démarrer"
+      },
+      "description": {
+        "en": "The Start menu's Quick access panel now lists File Explorer, the Store, then Settings. The Store is no longer pinned by default: a profile where it was pinned by default loses that pin once, and a pin you add back stays.",
+        "fr": "Le panneau Accès rapide du menu Démarrer liste maintenant l'Explorateur de fichiers, le Store, puis les Paramètres. Le Store n'est plus épinglé par défaut : un profil où il avait été épinglé par défaut perd cette épingle une seule fois, et une épingle remise reste."
+      },
+      "links": [
+        "doc/en/wasm/dev/app-installation.md",
+        "doc/en/wasm/dev/adr/0268-store-in-start-menu-quick-access.md"
+      ]
+    },
+    {
+      "id": "5c8f01c3-bd35-4b9b-968b-4ed2a2546787",
+      "category": "improved",
+      "audience": [
+        "user",
+        "developer"
+      ],
+      "title": {
+        "en": "The Store offers the newest app version your Kazo OS runs, and a beta OS reads the beta catalog",
+        "fr": "Le Store propose la version d'app la plus récente que votre Kazo OS fait tourner, et un OS bêta lit le catalogue bêta"
+      },
+      "description": {
+        "en": "The Store, kazopkg and the update check no longer offer an app version built for a newer Kazo OS than yours: they pick the newest version that runs here, so an app rebuilt for a newer SDK does not block an older OS. A prerelease of Kazo OS reads the beta channel of the official catalog (catalog-beta.json) and offers the beta versions of the apps; a stable Kazo OS reads catalog.json and never sees them.",
+        "fr": "Le Store, kazopkg et la vérification des mises à jour ne proposent plus une version d'app compilée pour un Kazo OS plus récent que le vôtre : ils choisissent la version la plus récente qui tourne ici, pour qu'une app reconstruite sur un SDK plus récent ne bloque pas un OS plus ancien. Une préversion de Kazo OS lit le canal bêta du catalogue officiel (catalog-beta.json) et propose les versions bêta des apps ; un Kazo OS stable lit catalog.json et ne les voit jamais."
+      },
+      "links": [
+        "doc/en/wasm/dev/app-installation.md",
+        "doc/en/wasm/dev/adr/0271-beta-channel-and-automatic-app-updates.md"
+      ]
+    },
+    {
+      "id": "664ffc0c-18f7-4f03-acec-173905a572f0",
+      "category": "fixed",
+      "audience": [
+        "user"
+      ],
+      "title": {
+        "en": "Connect a network drive: leave a sign-in that failed",
+        "fr": "Connecter un lecteur réseau : quitter une connexion ratée"
+      },
+      "description": {
+        "en": "While the Dropbox or OneDrive sign-in window is open, the dialog says so, and Back, Close and Escape stay usable: they stop waiting for a window that shows an error or was closed, instead of leaving the dialog stuck.",
+        "fr": "Pendant que la fenêtre de connexion Dropbox ou OneDrive est ouverte, le dialogue l'indique, et Retour, Fermer et Échap restent utilisables : ils arrêtent d'attendre une fenêtre qui affiche une erreur ou qui a été fermée, au lieu de laisser le dialogue bloqué."
+      },
+      "links": [
+        "doc/en/wasm/dev/cloud-drives-ui.md"
+      ]
+    },
+    {
+      "id": "1c59db15-2889-4b62-8adf-a1717e1a9460",
+      "category": "fixed",
+      "audience": [
+        "user"
+      ],
+      "title": {
+        "en": "The space of rewritten and deleted files is given back",
+        "fr": "L'espace des fichiers réécrits et supprimés est rendu"
+      },
+      "description": {
+        "en": "The old content of a rewritten or deleted file no longer stays in the browser forever: it is erased after one day, or after five minutes when storage is low. The OS does it when the desktop shows, every hour, after the trash is emptied, and before warning about low storage.",
+        "fr": "L'ancien contenu d'un fichier réécrit ou supprimé ne reste plus pour toujours dans le navigateur : il est effacé après un jour, ou après cinq minutes quand l'espace est faible. L'OS le fait quand le bureau s'affiche, toutes les heures, après avoir vidé la corbeille, et avant d'avertir d'un espace faible."
+      },
+      "links": [
+        "doc/en/wasm/dev/browser-infrastructure.md",
+        "doc/en/wasm/dev/system-backup.md"
+      ]
+    },
+    {
+      "id": "ffc0d33e-897d-4013-b8ef-e4dfaba9ba95",
+      "category": "developer",
+      "audience": [
+        "developer"
+      ],
+      "title": {
+        "en": "App repositories call shared workflows and follow new Kazo OS versions by themselves",
+        "fr": "Les dépôts d'apps appellent des workflows partagés et suivent seuls les nouvelles versions de Kazo OS"
+      },
+      "description": {
+        "en": "The kazoos-solution template now generates short workflows that call the reusable workflows of Kazo-ca/Os-AppTemplate (@v1), plus a \"Kazo OS SDK update\" workflow: when Kazo OS releases a version, the app moves to it, runs its CI, and is published (beta branch and beta channel for a pre-release; merged and published for a minor or major release; checked only for a patch). A red CI opens a TODO issue. A beta version (1.2.1-beta.1) goes to the beta channel of the catalog, and .github/scripts/bump-app-version.sh changes the app's version.",
+        "fr": "Le modèle kazoos-solution génère maintenant des workflows courts qui appellent les workflows réutilisables de Kazo-ca/Os-AppTemplate (@v1), et un workflow « Kazo OS SDK update » : quand Kazo OS sort une version, l'app passe dessus, lance sa CI et se publie (branche beta et canal bêta pour une préversion ; fusionnée et publiée pour une mineure ou une majeure ; vérifiée seulement pour une corrective). Une CI rouge ouvre une issue TODO. Une version bêta (1.2.1-beta.1) va dans le canal bêta du catalogue, et .github/scripts/bump-app-version.sh change la version de l'app."
+      },
+      "links": [
+        "doc/en/wasm/framework/app-repository.md",
+        "doc/en/wasm/dev/adr/0271-beta-channel-and-automatic-app-updates.md"
+      ]
+    },
+    {
+      "id": "2f5d6abb-637a-47ac-971f-14dc331b6e39",
+      "category": "developer",
+      "audience": [
+        "developer"
+      ],
+      "title": {
+        "en": "Cloud accounts: sign-in without a server",
+        "fr": "Comptes cloud : connexion sans serveur"
+      },
+      "description": {
+        "en": "The OS can sign in to Dropbox and OneDrive with OAuth and PKCE, in a pop-up window that comes back to a static page of Kazo OS. Tokens stay on the device, sealed under a key of the user's keyring, and are renewed before they expire. The app ids of the Kazo OS registrations are set in KazoOs:CloudDrives, and /etc/kazoos/cloud-drives.config replaces them for an OS served at another address; the drives and the dialog come with the next steps of the series.",
+        "fr": "L'OS sait se connecter à Dropbox et à OneDrive par OAuth et PKCE, dans une fenêtre qui revient sur une page statique de Kazo OS. Les jetons restent sur l'appareil, scellés sous une clé du trousseau de l'utilisateur, et sont renouvelés avant d'expirer. Les identifiants des apps de Kazo OS sont inscrits dans KazoOs:CloudDrives, et /etc/kazoos/cloud-drives.config les remplace pour un OS servi à une autre adresse ; les lecteurs et le dialogue arrivent avec les chantiers suivants de la série."
+      },
+      "links": [
+        "doc/en/wasm/dev/cloud-accounts.md",
+        "doc/en/wasm/dev/adr/0267-cloud-drives-as-network-drives.md"
+      ]
+    },
+    {
+      "id": "1f1c6036-7bc8-481a-9300-65a1576cb43c",
+      "category": "developer",
+      "audience": [
+        "developer"
+      ],
+      "title": {
+        "en": "Cloud drives: OneDrive connector",
+        "fr": "Lecteurs cloud : connecteur OneDrive"
+      },
+      "description": {
+        "en": "A connected Microsoft account's OneDrive can be mounted in /mnt as a network drive, over Microsoft Graph from the browser: the whole OneDrive or the folder reserved for Kazo OS, service revisions with If-Match, large files sent in pieces, quota in df. After 24 hours the drive asks to reconnect. Nothing is offered until a OneDrive app id is set; the dialog comes with the next step of the series.",
+        "fr": "Le OneDrive d'un compte Microsoft connecté se monte dans /mnt comme un lecteur réseau, par Microsoft Graph depuis le navigateur : tout le OneDrive ou le dossier réservé à Kazo OS, révisions du service avec If-Match, gros fichiers envoyés en morceaux, quota dans df. Après 24 heures, le lecteur demande de se reconnecter. Rien n'est proposé tant qu'un identifiant d'app OneDrive n'est pas inscrit ; le dialogue arrive avec le chantier suivant de la série."
+      },
+      "links": [
+        "doc/en/wasm/dev/onedrive-drives.md",
+        "doc/en/wasm/dev/adr/0267-cloud-drives-as-network-drives.md"
+      ]
+    },
+    {
+      "id": "5e2a19df-f1e9-470e-9317-4ec0d6a5af88",
+      "category": "developer",
+      "audience": [
+        "developer"
+      ],
+      "title": {
+        "en": "Cloud drives: the Dropbox connector",
+        "fr": "Lecteurs cloud : le connecteur Dropbox"
+      },
+      "description": {
+        "en": "A connected Dropbox account can be mounted as a network drive under /mnt/Dropbox (the whole storage or the Apps/Kazo OS folder, as chosen when connecting), with Dropbox's own revisions for conditional writes and its quota in df. The drive disconnects offline and reconnects by itself when the network returns. The connectors share a base and a contract test suite. The connection dialog comes with the next step of the series.",
+        "fr": "Un compte Dropbox connecté se monte comme lecteur réseau sous /mnt/Dropbox (tout le stockage ou le dossier Apps/Kazo OS, selon le choix fait à la connexion), avec les révisions de Dropbox pour les écritures sous condition et son quota dans df. Le lecteur se déconnecte hors ligne et se reconnecte seul au retour du réseau. Les connecteurs partagent une base et une suite de tests de contrat. Le dialogue de connexion arrive avec le chantier suivant de la série."
+      },
+      "links": [
+        "doc/en/wasm/dev/cloud-drive-connectors.md",
+        "doc/en/wasm/dev/adr/0267-cloud-drives-as-network-drives.md"
+      ]
+    },
+    {
+      "id": "14b1b5ed-4a04-4119-95bb-04215b110580",
+      "category": "developer",
+      "audience": [
+        "developer"
+      ],
+      "title": {
+        "en": "Kazo OS prereleases are published from the beta branch",
+        "fr": "Les préversions de Kazo OS se publient depuis la branche beta"
+      },
+      "description": {
+        "en": "Changing the preview number in build/Versions.props on the beta branch publishes a prerelease: Kazo.Os.* packages on nuget.org, a v<version> tag and a GitHub pre-release. main only accepts a stable version and beta only a prerelease version.",
+        "fr": "Changer le numéro de préversion dans build/Versions.props sur la branche beta publie une préversion : paquets Kazo.Os.* sur nuget.org, tag v<version> et GitHub Release « pre-release ». main n'accepte qu'une version stable et beta qu'une version de préversion."
+      },
+      "links": [
+        "doc/en/wasm/dev/releases.md",
+        "doc/en/wasm/dev/adr/0271-beta-channel-and-automatic-app-updates.md"
+      ]
+    },
+    {
+      "id": "2ddd6652-9544-4025-b9ce-7d7e0caa96c7",
+      "category": "developer",
+      "audience": [
+        "developer"
+      ],
+      "title": {
+        "en": "Network drives come from drive sources",
+        "fr": "Les lecteurs réseau viennent de sources de lecteurs"
+      },
+      "description": {
+        "en": "The network drive service mounts what any INetworkDriveSource gives it: the folder of the computer (hostfs) today, cloud connectors next. A drive may report its service's quota and revisions, write on condition, and reconnects by itself when its service can be reached again. df, /proc/mounts and KazoDriveInfo show its type.",
+        "fr": "Le service des lecteurs réseau monte ce que lui donne une INetworkDriveSource : le dossier de l'ordinateur (hostfs) aujourd'hui, les connecteurs cloud ensuite. Un lecteur peut donner le quota et les révisions de son service, écrire sous condition, et se reconnecte seul quand son service redevient joignable. df, /proc/mounts et KazoDriveInfo montrent son type."
+      },
+      "links": [
+        "doc/en/wasm/dev/network-drive-sources.md",
+        "doc/en/wasm/dev/adr/0267-cloud-drives-as-network-drives.md"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Usage" xml:space="preserve">
+    <value>usage : kazorole list | grant &lt;usager&gt; &lt;rôle&gt; | revoke &lt;usager&gt; &lt;rôle&gt;</value>
+  </data>
+  <data name="NoRoles" xml:space="preserve">
+    <value>kazorole : aucune Feature installée ne déclare de rôle</value>
+  </data>
+  <data name="NoHolder" xml:space="preserve">
+    <value>-</value>
+  </data>
+  <data name="AdministratorsImplicit" xml:space="preserve">
+    <value>Les administrateurs détiennent implicitement tous les rôles.</value>
+  </data>
+  <data name="RootRequired" xml:space="preserve">
+    <value>kazorole : seul root attribue ou retire un rôle (utilisez sudo)</value>
+  </data>
+  <data name="UnknownUser" xml:space="preserve">
+    <value>kazorole : l'usager « {0} » n'existe pas</value>
+  </data>
+  <data name="AdministratorHoldsAll" xml:space="preserve">
+    <value>kazorole : {0} est administrateur et détient déjà tous les rôles, {1} compris ; rien n'a changé</value>
+  </data>
+  <data name="Granted" xml:space="preserve">
+    <value>kazorole : {0} détient maintenant le rôle {1}</value>
+  </data>
+  <data name="AlreadyHeld" xml:space="preserve">
+    <value>kazorole : {0} détient déjà le rôle {1}</value>
+  </data>
+  <data name="Revoked" xml:space="preserve">
+    <value>kazorole : {0} ne détient plus le rôle {1}</value>
+  </data>
+  <data name="NotHeld" xml:space="preserve">
+    <value>kazorole : {0} ne détenait pas le rôle {1}</value>
+  </data>
+  <data name="AuthenticationFailed" xml:space="preserve">
+    <value>kazorole : échec de l'authentification</value>
+  </data>
+</root>

@@ -52,6 +52,9 @@ Le manifeste (`FileExplorerApp.Components`) inscrit deux composants :
 | `kazoos.file-view` | `ExplorerFileView` | `FileView` (implémentation interne, ADR 0155 §1) liée au menu de l'OS, avec la corbeille, le presse-papiers, les transferts et leurs conflits, l'ouverture et « Ouvrir avec ». Contrôleur `IKazoFileView`. |
 | `kazoos.file-dialogs` | `ExplorerFileDialogs` | « Ouvrir avec » (« Toujours utiliser », recherche et filtre par catégorie), « Propriétés », conflit de noms, en markup natif. |
 
+« Ouvrir » sur une sélection multiple ouvre les fichiers un par un, dans l'ordre où
+ils ont été choisis ; un rafraîchissement du dossier garde cet ordre.
+
 ```text
 App hôte ──► KazoFileView (SDK) ──► registre ──► ExplorerFileView (explorateur)
                                                    ├─ FileView + FileViewMenuBinding ──► Menus.Attach (menu de l'OS)
@@ -240,6 +243,15 @@ l'app est traduit par `Resources/AppManifest.fr.resx`.
   `filesystem.user-home.read`, comme un fichier de son dossier personnel ;
   l'écrire demande `filesystem.user-home.write`. L'explorateur garde ses
   capacités ; le lecteur d'un autre utilisateur reste fermé (mode `0700`).
+
+- **Lecteurs réseau décrits par l'OS** ([ADR 0282](adr/0282-third-party-drive-providers.md) §5) :
+  « Connecter un lecteur réseau… » propose les types que décrit
+  `KazoDriveInfo.DescribeNetworkDriveTypesAsync` (icône, connexion OAuth ou
+  formulaire générique, « Fourni par <Feature> ») ; l'explorateur ne nomme
+  aucun service. Un lecteur dont le fournisseur manque
+  (`GetProviderMissingDrivesAsync`) reste grisé dans « Lecteurs réseau » avec
+  la raison, et **Installer le fournisseur** ouvre le Store sur la Feature
+  retirée (capacité `apps.launch`). Détail : [`cloud-drives-ui.md`](cloud-drives-ui.md).
 
 ## Tests
 

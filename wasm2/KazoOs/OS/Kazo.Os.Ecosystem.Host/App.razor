@@ -36,6 +36,7 @@
 @using Microsoft.Extensions.DependencyInjection
 @inject IServiceProvider Services
 @inject NavigationManager Navigation
+@inject Kazo.Os.Platform.Core.Storage.StorageEvictionDetector EvictionDetector
 
 <ThemeScope ThemeId="@ActiveTheme.BaseThemeId"
             Tokens="@ActiveTheme.UserTheme?.Tokens"
@@ -105,6 +106,11 @@
             <section class="auth-surface" aria-labelledby="setup-title">
                 <div class="boot-mark" aria-hidden="true">H_</div>
                 <h1 id="setup-title">@L["Setup.Title"]</h1>
+                @if (EvictionDetector.Eviction is { } eviction)
+                {
+                    @* ADR 0250 §2: the browser erased the data; the OS starts again as a new installation. *@
+                    <StorageEvictionNotice Eviction="eviction" />
+                }
                 <p>@L["Setup.Intro"]</p>
                 <form @onsubmit="CreateAdministratorAsync" @onsubmit:preventDefault>
                     <label for="setup-login">@L["Setup.LoginName"]</label>

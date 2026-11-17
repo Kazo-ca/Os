@@ -153,6 +153,9 @@ internal sealed class AppExecutionContext : IAppExecutionContext
     public IAppUserAccountsGateway UserAccounts { get => Guarded(field); internal set; } = UnsupportedAdministrationGateways.UserAccounts;
 
     /// <inheritdoc />
+    public Kazo.Os.AppSdk.CloudAccounts.IAppCloudAccountsGateway CloudAccounts { get => Guarded(field); internal set; } = Kazo.Os.AppSdk.CloudAccounts.UnsupportedAppCloudAccountsGateway.Instance;
+
+    /// <inheritdoc />
     public IAppComponentProviderAdministrationGateway ComponentProviderAdministration { get => Guarded(field); internal set; } = UnsupportedAdministrationGateways.ComponentProviders;
 
     /// <inheritdoc />
@@ -166,6 +169,9 @@ internal sealed class AppExecutionContext : IAppExecutionContext
 
     /// <inheritdoc />
     public Kazo.Os.AppSdk.WhatsNew.IAppWhatsNewGateway WhatsNew { get => Guarded(field); internal set; } = UnsupportedAdministrationGateways.WhatsNew;
+
+    /// <summary>Gets the browser storage of the page (ADR 0250), set after construction like <see cref="WhatsNew"/>.</summary>
+    public Kazo.Os.AppSdk.Storage.IAppStorageGateway Storage { get => Guarded(field); internal set; } = Kazo.Os.AppSdk.Storage.UnsupportedAppStorageGateway.Instance;
 
     /// <inheritdoc />
     public string UserLoginName { get; }
@@ -214,6 +220,13 @@ internal sealed class AppExecutionContext : IAppExecutionContext
 
     /// <inheritdoc />
     public IReadOnlySet<string> GrantedCapabilities { get; }
+
+    /// <summary>Gets the roles of the features the user holds (ADR 0247 §1), set after construction.</summary>
+    public IReadOnlySet<string> Roles { get; internal set; } = new HashSet<string>(StringComparer.Ordinal);
+
+    /// <summary>Gets the OS's authentication of the operations of a feature (ADR 0247 §3), set after construction.</summary>
+    public Kazo.Os.AppSdk.Features.IKazoFeatureAuthentication FeatureAuthentication { get; internal set; } =
+        Kazo.Os.AppSdk.Features.UnsupportedFeatureAuthentication.Instance;
 
     /// <inheritdoc />
     public SessionId SessionId { get; }

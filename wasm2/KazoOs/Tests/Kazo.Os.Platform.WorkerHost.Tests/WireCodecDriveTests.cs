@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Kazo.Os.AppSdk.CloudAccounts;
 using Kazo.Os.AppSdk.IO;
 using Kazo.Os.Platform.WorkerHost.Protocol;
 using Xunit;
@@ -32,6 +33,124 @@ public sealed class WireCodecDriveTests
 
         Assert.Equal(KazoDriveType.Fixed, drive.DriveType);
         Assert.True(drive.IsReady);
+    }
+
+    [Fact]
+    public void A_cloud_drive_keeps_its_account_and_its_start_folder()
+    {
+        KazoDriveSnapshot[] drives =
+        [
+            new("/mnt/Dropbox", "dropbox", "alice", 10, 4) { DriveType = KazoDriveType.Network, Account = "a1" },
+            new("/mnt/Photos", "onedrive", "alice", 10, 4) { DriveType = KazoDriveType.Network, Account = "a2", Root = "Pictures/2026" }
+        ];
+
+        Assert.Equal(drives, RoundTrip(writer => WireCodec.WriteDrives(writer, drives), WireCodec.ReadDrives));
+    }
+
+    [Fact]
+    public void A_network_drive_request_crosses_with_its_options_and_secrets()
+    {
+        KazoNetworkDriveRequest request = new("s3", null, "/photos")
+        {
+            Options = new Dictionary<string, string> { ["endpoint"] = "https://s3.example.com", ["bucket"] = "b" },
+            Secrets = new Dictionary<string, string> { ["access-key-id"] = "AK", ["secret-access-key"] = "SK" }
+        };
+
+        KazoNetworkDriveRequest copy = RoundTrip(writer => WireCodec.WriteNetworkDriveRequest(writer, request), WireCodec.ReadNetworkDriveRequest);
+        KazoNetworkDriveRequest bare = RoundTrip(
+            writer => WireCodec.WriteNetworkDriveRequest(writer, new KazoNetworkDriveRequest("dropbox", "a1")), WireCodec.ReadNetworkDriveRequest);
+
+        Assert.Equal(("s3", null, "/photos"), (copy.Type, copy.Account, copy.Root));
+        Assert.Equal(request.Options, copy.Options);
+        Assert.Equal(request.Secrets, copy.Secrets);
+        Assert.Equal(new KazoNetworkDriveRequest("dropbox", "a1"), bare);
+    }
+
+    [Fact]
+    public void Cloud_accounts_and_providers_cross_with_their_scopes_and_state()
+    {
+        KazoCloudAccount[] accounts =
+        [
+            new("a1", "dropbox", KazoCloudAccessScope.AppFolder, "alice", KazoCloudAccountState.NeedsReconnect, new DateTimeOffset(2026, 11, 13, 12, 0, 0, TimeSpan.Zero))
+        ];
+        KazoCloudProvider[] providers =
+        [
+            new("onedrive", "OneDrive", [KazoCloudAccessScope.Full, KazoCloudAccessScope.AppFolder]) { AppFolderPath = "Apps/Kazo OS" }
+        ];
+
+        IReadOnlyList<KazoCloudAccount> accountsCopy = RoundTrip(writer => WireCodec.WriteCloudAccounts(writer, accounts), WireCodec.ReadCloudAccounts);
+        KazoCloudProvider providerCopy = Assert.Single(RoundTrip(writer => WireCodec.WriteCloudProviders(writer, providers), WireCodec.ReadCloudProviders));
+
+        Assert.Equal(accounts, accountsCopy);
+        Assert.Equal(("onedrive", "OneDrive"), (providerCopy.Id, providerCopy.DisplayName));
+        Assert.Equal(providers[0].Scopes, providerCopy.Scopes);
+        Assert.Equal("Apps/Kazo OS", providerCopy.AppFolderPath);
+    }
+
+    [Fact]
+    public void Drive_type_descriptions_cross_with_their_fields_choices_scopes_and_feature()
+    {
+        KazoNetworkDriveTypeInfo[] types =
+        [
+            new("hostfs", "Folder of this computer", KazoNetworkDriveConnection.HostFolder) { Icon = "lucide:hard-drive" },
+            new("dropbox", "Dropbox", KazoNetworkDriveConnection.OAuth)
+            {
+                Icon = "bootstrap:dropbox",
+                Scopes = [KazoCloudAccessScope.Full, KazoCloudAccessScope.AppFolder],
+                AppFolderPath = "Apps/Kazo OS"
+            },
+            new("webdav", "WebDAV", KazoNetworkDriveConnection.Form)
+            {
+                IconUrl = "_apps/org.example.webdav/icon.svg",
+                ProviderFeatureId = "org.example.webdav",
+                ProviderFeatureName = "WebDAV drives",
+                Fields =
+                [
+                    new("url", "Server", KazoNetworkDriveFieldKind.Url) { Placeholder = "https://…", IsServerAddress = true },
+                    new("mode", "Mode", KazoNetworkDriveFieldKind.Choice) { Required = false, Default = "", Choices = [new("", "Auto"), new("safe", "Safe")] },
+                    new("password", "Password", KazoNetworkDriveFieldKind.Secret)
+                ]
+            }
+        ];
+
+        IReadOnlyList<KazoNetworkDriveTypeInfo> copy = RoundTrip(writer => WireCodec.WriteDriveTypeInfos(writer, types), WireCodec.ReadDriveTypeInfos);
+
+        Assert.Equal(types.Length, copy.Count);
+        for (int index = 0; index < types.Length; index++)
+        {
+            KazoNetworkDriveTypeInfo expected = types[index];
+            KazoNetworkDriveTypeInfo actual = copy[index];
+            Assert.Equal(
+                (expected.Type, expected.DisplayName, expected.Connection, expected.Icon, expected.IconUrl, expected.AppFolderPath, expected.ProviderFeatureId, expected.ProviderFeatureName),
+                (actual.Type, actual.DisplayName, actual.Connection, actual.Icon, actual.IconUrl, actual.AppFolderPath, actual.ProviderFeatureId, actual.ProviderFeatureName));
+            Assert.Equal(expected.Scopes, actual.Scopes);
+            Assert.Equal(expected.Fields.Count, actual.Fields.Count);
+            for (int field = 0; field < expected.Fields.Count; field++)
+            {
+                KazoNetworkDriveField want = expected.Fields[field];
+                KazoNetworkDriveField got = actual.Fields[field];
+                Assert.Equal((want.Name, want.Label, want.Kind, want.Required, want.Default, want.Placeholder, want.IsServerAddress), (got.Name, got.Label, got.Kind, got.Required, got.Default, got.Placeholder, got.IsServerAddress));
+                Assert.Equal(want.Choices, got.Choices);
+            }
+        }
+    }
+
+    [Fact]
+    public void A_drive_without_its_provider_crosses_with_its_reason_and_feature()
+    {
+        KazoDriveSnapshot[] drives =
+        [
+            new("/mnt/Dav", "webdav", "dav.example.com", 0, 0)
+            {
+                DriveType = KazoDriveType.Network,
+                IsReady = false,
+                Account = "a9",
+                ProviderMissing = KazoDriveProviderMissingReason.Removed,
+                ProviderFeatureId = "org.example.webdav"
+            }
+        ];
+
+        Assert.Equal(drives, RoundTrip(writer => WireCodec.WriteDrives(writer, drives), WireCodec.ReadDrives));
     }
 
     private static T RoundTrip<T>(Action<Utf8JsonWriter> write, Func<JsonElement, T> read)

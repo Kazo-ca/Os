@@ -4,7 +4,7 @@ namespace Kazo.Os.Tools.ManifestGenerator;
 /// One build-breaking manifest problem with a stable <c>KOSAPPnnnn</c> code (ADR 0047 §2). The
 /// <see cref="Subject"/> names the offending <c>[AppManifest]</c> class (full type name) or file.
 /// </summary>
-/// <param name="Code">Stable code, <c>KOSAPP0001</c> to <c>KOSAPP0099</c>.</param>
+/// <param name="Code">Stable code, <c>KOSAPP0001</c> to <c>KOSAPP0199</c>.</param>
 /// <param name="Subject">Full name of the class, or path of the file, the problem is about.</param>
 /// <param name="Message">Human-readable explanation.</param>
 public sealed record GeneratorDiagnostic(string Code, string Subject, string Message)
@@ -171,9 +171,28 @@ public static class GeneratorCodes
     /// </summary>
     public const string FeatureService = "KOSAPP0035";
 
+    /// <summary>
+    /// A drive provider a feature declares (ADR 0282 §2) is not one the OS can create: the class is
+    /// not a concrete class of the feature's assembly deriving from <c>KazoDriveProvider</c>, or it
+    /// has no public constructor taking an <c>IFeatureServiceContext</c> or none.
+    /// </summary>
+    public const string DriveProvider = "KOSAPP0036";
+
     /// <summary>The tool was called with invalid arguments.</summary>
     public const string InvalidArguments = "KOSAPP0090";
 
     /// <summary>The compiled app assembly could not be loaded or its types enumerated.</summary>
     public const string AssemblyLoadFailed = "KOSAPP0091";
+
+    /// <summary>
+    /// A packaged assembly calls a member the trimmed OS does not have (ADR 0277 §2): the OS would
+    /// refuse to install the package.
+    /// </summary>
+    public const string PackageApiMissing = "KOSAPP0100";
+
+    /// <summary>The same finding with <c>KazoOsApiCheck=false</c>: the package is written anyway.</summary>
+    public const string PackageApiMissingWarning = "KOSAPP0101";
+
+    /// <summary>No API surface of the target OS was found, so the package was not checked (ADR 0277 §2).</summary>
+    public const string PackageApiSurfaceMissing = "KOSAPP0102";
 }

@@ -1,4 +1,7 @@
+using System.Globalization;
+using Kazo.Os.AppSdk.CloudAccounts;
 using Kazo.Os.AppSdk.IO;
+using Kazo.Os.Platform.Core.CloudAccounts;
 using Kazo.Os.Platform.Core.FileSystem.HostFolders;
 using Kazo.Os.Platform.Core.FileSystem.Virtual;
 using Kazo.Os.Simulation.Abstractions.FileSystem;
@@ -19,7 +22,9 @@ namespace Kazo.Os.Platform.Core.Execution;
 /// </para>
 /// <para>
 /// <b>Network drives.</b> Listed from <see cref="NetworkDriveService.GetDrives"/>: the caller's own
-/// drives only. The browser gives neither the size nor the free space of a host folder: both are 0. Mounting, reconnecting and unmounting go to <see cref="NetworkDriveService"/>, which
+/// drives only, with the type of their source (ADR 0267 §3). The browser gives neither the size nor
+/// the free space of a host folder: both are 0; a cloud drive reports its service's quota when it
+/// has one and is connected (ADR 0267 §4). Mounting, reconnecting and unmounting go to <see cref="NetworkDriveService"/>, which
 /// opens the browser's folder dialog; without it (tests, hosts with no browser) they are not supported.
 /// </para>
 /// <para>
@@ -56,6 +61,19 @@ public sealed class AppDriveGateway : IAppDriveGateway
     /// <summary>Lazily resolves the network drive service (ADR 0181); <see langword="null"/> when the host has none.</summary>
     public Func<NetworkDriveService?>? NetworkDrives { get; init; }
 
+    /// <summary>
+    /// Reads the OAuth providers this OS has app ids for, with their scopes (ADR 0270, ADR 0282 §3);
+    /// <see langword="null"/> when the host has no cloud accounts. Fills the scopes of each OAuth type
+    /// <see cref="DescribeNetworkDriveTypesAsync"/> describes.
+    /// </summary>
+    public Func<CancellationToken, ValueTask<IReadOnlyList<CloudProviderInfo>>>? CloudProviders { get; init; }
+
+    /// <summary>
+    /// Finds the feature of the catalog that declares a drive type, enabled or not (ADR 0282 §1);
+    /// <see langword="null"/> when the host has no feature types. Tells a disabled provider from a removed one.
+    /// </summary>
+    public Func<string, string?>? FeatureOfType { get; init; }
+
     /// <inheritdoc />
     public async ValueTask<IReadOnlyList<KazoDriveSnapshot>> GetDrivesAsync(CancellationToken cancellationToken = default)
     {
@@ -68,13 +86,21 @@ public sealed class AppDriveGateway : IAppDriveGateway
             .. mounts.Where(static mount => mount.Provider is not (IVirtualFileSystemProvider or HostFolderFileSystemProvider))
         ];
         // ADR 0181: only the caller's own network drives (every drive for an administrator).
-        KazoDriveSnapshot[] network = NetworkDrives?.Invoke() is { } drives
-            ? [.. drives.GetDrives().Select(static drive => Describe(drive))]
-            : [];
+        List<KazoDriveSnapshot> network = [];
+        if (NetworkDrives?.Invoke() is { } drives)
+        {
+            foreach (NetworkDrive drive in drives.GetDrives())
+            {
+                HostFolderQuota? driveQuota = await drives.GetQuotaAsync(drive.MountPoint, cancellationToken).ConfigureAwait(false);
+                network.Add(Describe(drive, driveQuota));
+            }
+        }
+
         if (sized.Length == 0)
         {
             return network;
         }
+
 
         StorageUsage usage = _usage is null
             ? new StorageUsage(0, null)
@@ -107,7 +133,7 @@ public sealed class AppDriveGateway : IAppDriveGateway
         try
         {
             NetworkDrive? drive = await drives.MountAsync(mountPoint, cancellationToken).ConfigureAwait(false);
-            return drive is null ? null : Describe(drive);
+            return drive is null ? null : Describe(drive, null);
         }
         catch (NetworkDriveException exception)
         {
@@ -141,11 +167,158 @@ public sealed class AppDriveGateway : IAppDriveGateway
         }
     }
 
-    private static KazoDriveSnapshot Describe(NetworkDrive drive) =>
-        new(drive.MountPoint.Value, HostFolderFileSystemProvider.FileSystemType, drive.Name, 0, 0)
+    /// <inheritdoc />
+    /// <remarks>
+    /// Every source of the host that answers it can create a drive now (ADR 0270): <c>hostfs</c> when
+    /// the browser has the folder dialog, a cloud type when its provider is configured.
+    /// </remarks>
+    public async ValueTask<IReadOnlyList<string>> GetNetworkDriveTypesAsync(CancellationToken cancellationToken = default)
+    {
+        if (NetworkDrives?.Invoke() is not { } drives)
+        {
+            return [];
+        }
+
+        List<string> types = [];
+        foreach (string type in drives.SourceTypes)
+        {
+            if (await drives.IsAvailableAsync(type, cancellationToken).ConfigureAwait(false))
+            {
+                types.Add(type);
+            }
+        }
+
+        return types;
+    }
+
+    /// <inheritdoc />
+    /// <remarks>
+    /// The types of <see cref="GetNetworkDriveTypesAsync"/>, each described by its source
+    /// (<see cref="IDescribedNetworkDriveSource"/>); an OAuth type gets the scopes of its configured
+    /// provider, and is left out when it has none (no app id: nothing to sign in with).
+    /// </remarks>
+    public async ValueTask<IReadOnlyList<KazoNetworkDriveTypeInfo>> DescribeNetworkDriveTypesAsync(
+        CultureInfo language,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(language);
+        if (NetworkDrives?.Invoke() is not { } drives)
+        {
+            return [];
+        }
+
+        IReadOnlyList<string> types = await GetNetworkDriveTypesAsync(cancellationToken).ConfigureAwait(false);
+        List<KazoNetworkDriveTypeInfo> described = [];
+        IReadOnlyList<CloudProviderInfo>? providers = null;
+        foreach (string type in types)
+        {
+            INetworkDriveSource? source = drives.FindSource(type);
+            if (source is SwitchableDriveSource switchable)
+            {
+                source = switchable.Inner;
+            }
+
+            KazoNetworkDriveTypeInfo info = source is IDescribedNetworkDriveSource describing
+                ? describing.Describe(language)
+                : new KazoNetworkDriveTypeInfo(type, type, KazoNetworkDriveConnection.Form) { Icon = NetworkDriveTypeIcons.Generic };
+            if (info.Connection == KazoNetworkDriveConnection.OAuth)
+            {
+                providers ??= CloudProviders is null ? [] : await CloudProviders(cancellationToken).ConfigureAwait(false);
+                if (providers.FirstOrDefault(provider => provider.Id == type) is not { } provider)
+                {
+                    continue;
+                }
+
+                info = info with
+                {
+                    Scopes = [.. provider.Scopes.Select(static scope => scope == CloudAccessScope.AppFolder ? KazoCloudAccessScope.AppFolder : KazoCloudAccessScope.Full)],
+                    AppFolderPath = provider.AppFolderPath
+                };
+            }
+
+            described.Add(info);
+        }
+
+        return described;
+    }
+
+    /// <inheritdoc />
+    public ValueTask<IReadOnlyList<KazoDriveSnapshot>> GetProviderMissingDrivesAsync(CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        if (NetworkDrives?.Invoke() is not { } drives)
+        {
+            return ValueTask.FromResult<IReadOnlyList<KazoDriveSnapshot>>([]);
+        }
+
+        return ValueTask.FromResult<IReadOnlyList<KazoDriveSnapshot>>(
+        [
+            .. drives.GetProviderMissingDrives().Select(drive =>
+            {
+                (KazoDriveProviderMissingReason reason, string? feature) = WhyMissing(drive);
+                return Describe(drive, null) with { ProviderMissing = reason, ProviderFeatureId = feature };
+            })
+        ]);
+    }
+
+    /// <inheritdoc />
+    /// <remarks>
+    /// No capability is checked here: this gateway is shared by every context, and the per-app
+    /// <see cref="CapabilityCheckedDriveGateway"/> checks <c>cloud-accounts.manage</c> for a cloud type
+    /// before it calls this method (ADR 0270).
+    /// </remarks>
+    public async ValueTask<KazoDriveSnapshot?> MountNetworkDriveAsync(
+        KazoNetworkDriveRequest request,
+        string? mountPoint,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        NetworkDriveService drives = RequireNetworkDrives();
+        NetworkDriveRequest sourceRequest = new(request.Account, request.Root)
+        {
+            Options = request.Options,
+            Secrets = request.Secrets
+        };
+        try
+        {
+            NetworkDrive? drive = await drives.MountAsync(request.Type, mountPoint, sourceRequest, cancellationToken).ConfigureAwait(false);
+            return drive is null ? null : Describe(drive, await drives.GetQuotaAsync(drive.MountPoint, cancellationToken).ConfigureAwait(false));
+        }
+        catch (NetworkDriveException exception)
+        {
+            throw Translate(exception);
+        }
+    }
+
+    /// <summary>
+    /// Why a kept drive has no provider (ADR 0282 §3, §5): a shipped type is switched off by the
+    /// administrator; a feature type whose feature is still in the catalog has it disabled; otherwise
+    /// the feature was removed.
+    /// </summary>
+    private (KazoDriveProviderMissingReason Reason, string? FeatureId) WhyMissing(NetworkDrive drive)
+    {
+        if (NetworkDriveService.ShippedCloudTypes.Contains(drive.Type))
+        {
+            return (KazoDriveProviderMissingReason.DisabledByAdministrator, null);
+        }
+
+        // The drive remembers the Feature that provided it (ADR 0282 §3); only that Feature mounts it
+        // again. Installed but switched off: disabled. Not installed, or another Feature now declares
+        // the type: removed, and the Store can bring that Feature back.
+        string? installed = FeatureOfType?.Invoke(drive.Type);
+        string? feature = drive.ProviderFeatureId ?? installed;
+        return installed is not null && string.Equals(installed, feature, StringComparison.Ordinal)
+            ? (KazoDriveProviderMissingReason.Disabled, feature)
+            : (KazoDriveProviderMissingReason.Removed, feature);
+    }
+
+    private static KazoDriveSnapshot Describe(NetworkDrive drive, HostFolderQuota? quota) =>
+        new(drive.MountPoint.Value, drive.Type, drive.Name, quota?.TotalBytes ?? 0, quota?.FreeBytes ?? 0)
         {
             DriveType = KazoDriveType.Network,
-            IsReady = drive.IsConnected
+            IsReady = drive.IsConnected,
+            Account = drive.Account,
+            Root = drive.Root
         };
 
     private NetworkDriveService RequireNetworkDrives() =>
@@ -157,6 +330,8 @@ public sealed class AppDriveGateway : IAppDriveGateway
         NetworkDriveError.NotSupported => new NotSupportedException(exception.Message),
         NetworkDriveError.NotOwner or NetworkDriveError.PermissionDenied => new UnauthorizedAccessException(exception.Message),
         NetworkDriveError.InvalidMountPoint or NetworkDriveError.NotMounted => new IOException(exception.Message),
+        // ADR 0270: the source refused what the user typed (wrong keys, a missing bucket, an unknown account).
+        NetworkDriveError.InvalidRequest => new ArgumentException(exception.Message),
         _ => new InvalidOperationException(exception.Message)
     };
 }

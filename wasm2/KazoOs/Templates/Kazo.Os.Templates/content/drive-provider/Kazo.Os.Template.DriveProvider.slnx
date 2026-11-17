@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Kazo.Os.Template.DriveProvider/Kazo.Os.Template.DriveProvider.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Kazo.Os.Template.DriveProvider.Tests/Kazo.Os.Template.DriveProvider.Tests.csproj" />
+  </Folder>
+</Solution>

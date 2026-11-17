@@ -53,6 +53,9 @@ The manifest (`FileExplorerApp.Components`) registers two components:
 | `kazoos.file-view` | `ExplorerFileView` | `FileView` (internal implementation, ADR 0155 §1) bound to the OS menu, with the trash, the clipboard, transfers and their conflicts, opening and "Open with". Controller `IKazoFileView`. |
 | `kazoos.file-dialogs` | `ExplorerFileDialogs` | "Open with" ("Always use", search and category filter), "Properties", name conflict, in native markup. |
 
+"Open" on a multiple selection opens the files one at a time, in the order they
+were picked; a refresh of the folder keeps that order.
+
 ```text
 Host app ──► KazoFileView (SDK) ──► registry ──► ExplorerFileView (explorer)
                                                    ├─ FileView + FileViewMenuBinding ──► Menus.Attach (OS menu)
@@ -240,6 +243,15 @@ name is translated by `Resources/AppManifest.fr.resx`.
   like a file of their home folder; writing it needs
   `filesystem.user-home.write`. The explorer keeps its capabilities; another
   user's drive stays closed (mode `0700`).
+
+- **Network drives described by the OS** ([ADR 0282](adr/0282-third-party-drive-providers.md) §5):
+  "Connect a network drive…" offers the types that
+  `KazoDriveInfo.DescribeNetworkDriveTypesAsync` describes (icon, OAuth sign-in
+  or generic form, "Provided by <Feature>"); the explorer names no service. A
+  drive whose provider is missing (`GetProviderMissingDrivesAsync`) stays
+  greyed in "Network drives" with the reason, and **Install the provider**
+  opens the Store on the removed Feature (`apps.launch` capability). Details:
+  [`cloud-drives-ui.md`](cloud-drives-ui.md).
 
 ## Tests
 

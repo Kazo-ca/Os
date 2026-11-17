@@ -1,0 +1,15 @@
+@* ADR 0250 §2: the browser erased Kazo OS's data. Shown above the first-run form, in the style of the
+   error page of ADR 0240; the OS then starts as a new installation. *@
+
+<section class="storage-evicted" role="alert" aria-labelledby="storage-evicted-title">
+    <h2 id="storage-evicted-title">@L["StorageEvicted.Title"]</h2>
+    <p>@L["StorageEvicted.Explanation"]</p>
+    <dl class="storage-evicted-facts">
+        <dt>@L["StorageEvicted.LastBoot"]</dt>
+        <dd>@LastBootText</dd>
+        <dt>@L["StorageEvicted.Code"]</dt>
+        <dd><code>storage.evicted</code></dd>
+    </dl>
+    <p>@L["StorageEvicted.Restore"]</p>
+    <p class="storage-evicted-hint">@L["StorageEvicted.Protect"]</p>
+</section>

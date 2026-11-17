@@ -55,6 +55,7 @@ une cible locale est servie par la table des ports de l'OS, sur `lo`, et un nom
 | `POST` et toute autre méthode HTTP, socket TCP ou UDP (`ConnectAsync`) | `network.simulated.write` (normale) | idem |
 | Repli sur le réseau réel | `network.real.access` (dangereuse), vérifiée aussi par le serveur (ADR 0102 §4) | aucun repli : « hôte introuvable » |
 | WebSocket vers un vrai serveur (`KazoClientWebSocket`) | `network.real.access` (dangereuse), la même que pour le relais (ADR 0235 §1) | `UnauthorizedAccessException` |
+| Requête directe vers un service web (`KazoDirectHttpClient`) | `network.direct.access` (dangereuse) et un hôte déclaré dans `directNetworkHosts` (ADR 0282 §4) | `UnauthorizedAccessException` |
 | Écouter un port (`KazoHttpListener`) hors de ses `web.urls` | `network.listen` (normale), plus `network.listen.privileged` (dangereuse) sous 1024 | `UnauthorizedAccessException` |
 
 Les classements sont inchangés (ADR 0049). Une app système reçoit ses capacités
@@ -128,9 +129,46 @@ un port, une adresse ou une app que l'opérateur n'autorise pas, `TimedOut`
 `ConnectionFailed`. Le sondage TCP donne `ConnectionFailed` et un ping
 `TimedOut`. Un refus à l'ouverture d'un socket devient l'erreur
 d'une vraie pile (`SocketException` : `ConnectionRefused`, `HostUnreachable`
-ou `HostNotFound`, table dans `server-network-relay.md`). Sans serveur, rien
-ne signale son absence : le résultat est celui d'une machine sans passerelle
-par défaut.
+ou `HostNotFound`, table dans `server-network-relay.md`).
+
+### État du relais (ADR 0278)
+
+Une app qui a `network.real.access` sait, **sans essayer**, si le relais du
+serveur Kazo peut porter ses connexions, sans avoir besoin de
+`server.connection.manage` :
+
+```csharp
+KazoRelayState state = await KazoRealNetwork.GetRelayStateAsync();
+bool viaServer = state.Status == KazoRelayStatus.Ready;   // montrer l'option « par le serveur Kazo »
+KazoRealNetwork.RelayStateChanged += (_, changed) => Refresh(changed);
+```
+
+| `KazoRelayStatus` | Sens |
+|---|---|
+| `NoServer` | aucun serveur connecté, pas de jeton, ou le serveur ne répond pas |
+| `RelayDisabled` | l'opérateur a arrêté le relais (`KazoServerRelayPolicy.Enabled` faux) |
+| `GrantPending` | le serveur n'a pas encore reçu l'autorisation de l'app (ADR 0233) |
+| `Ready` | le relais marche ; `TcpBlockedPorts` et `UdpBlockedPorts` donnent les ports que l'opérateur bloque |
+
+- L'OS garde la politique du serveur 30 secondes pour tout l'appareil et la
+  relit quand la connexion au serveur change ou qu'un accord est synchronisé.
+  L'app ne voit rien d'autre de la politique.
+- `RelayStateChanged` part quand l'état change, jamais à chaque lecture. Il
+  n'est pas porté dans un Web Worker : une app là relit l'état.
+- Sans `network.real.access`, `GetRelayStateAsync` et l'abonnement lèvent
+  `UnauthorizedAccessException`.
+- L'état peut changer entre la lecture et l'appel : un échec dit quand même
+  pourquoi. `KazoTcpClient` et `KazoUdpClient` lèvent toujours une
+  `SocketException` avec le même `SocketError` qu'avant ; c'est maintenant une
+  `KazoRelayException` dont `Reason` vaut `RelayNoServer`, `RelayDisabled`,
+  `RelayGrantPending` ou `BlockedByAdministrator` (port bloqué).
+  `KazoHttpRequestException.NetworkError` porte les mêmes valeurs
+  (`ERR_KAZO_RELAY_NO_SERVER`, `ERR_KAZO_RELAY_DISABLED`,
+  `ERR_KAZO_RELAY_GRANT_PENDING`). Un nom du domaine simulé refusé par le
+  relais reste `HostNotFound`.
+- `curl`, `wget`, `cat` et les pages d'erreur du Navigateur disent ces raisons.
+- Une app qui s'en sert demande la version de l'OS qui apporte l'API
+  (`sdkCompatibility`).
 
 ### Vrais sites en HTTP : redirections, cookies, source (ADR 0210)
 
@@ -164,7 +202,8 @@ l'app lit et écrit du texte en clair, le certificat est vérifié par le serveu
 contre `TargetHost` (le `host` par défaut). Un certificat refusé lève
 `AuthenticationException`, comme `SslStream` ; `IsEncrypted`, `TlsProtocol`
 (`TLS 1.3`) et `RemoteCertificateSubject` disent ce qui a été négocié. Sans
-serveur, l'hôte n'est pas trouvé. Détails : [relais réseau](../dev/server-network-relay.md#tls-ouvert-par-le-relais-adr-0235-2).
+serveur, l'hôte n'est pas trouvé (`KazoRelayException`, `Reason` =
+`RelayNoServer`). Détails : [relais réseau](../dev/server-network-relay.md#tls-ouvert-par-le-relais-adr-0235-2).
 ### WebSocket vers un vrai serveur (ADR 0235 §1)
 
 `KazoClientWebSocket` suit `System.Net.WebSockets.ClientWebSocket` et hérite
@@ -212,6 +251,66 @@ await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "bye", CancellationT
 - **Compatibilité.** `IAppNetworkGateway.ConnectWebSocketAsync` a une
   implémentation par défaut qui lève `NotSupportedException` : une passerelle
   écrite pour le SDK 3.0 compile et se charge toujours.
+
+### Requêtes directes vers un service web (ADR 0282 §4)
+
+`KazoDirectHttpClient` joint un vrai service web **directement**, par le
+`fetch` du navigateur, sans le réseau simulé et sans le serveur Kazo : c'est
+ainsi qu'un fournisseur de fichiers parle à son service en ligne. Il suit
+`HttpClient` avec `HttpCompletionOption.ResponseHeadersRead` : l'appel rend la
+réponse dès que les en-têtes arrivent, et le corps se lit comme un flux.
+`KazoHttpClient` ne change pas et ne passe jamais en direct : une app choisit
+ce client explicitement.
+
+```csharp
+using KazoDirectHttpClient client = new() { BaseAddress = new Uri("https://api.example.com/v2/") };
+client.DefaultRequestHeaders["Authorization"] = $"Bearer {accessToken}";
+
+using KazoDirectHttpResponse response = await client.GetAsync("files/list", cancellationToken);
+response.EnsureSuccessStatusCode();                  // 404, 500 : une réponse, pas une exception
+await using Stream body = response.Content;          // lu à mesure qu'il arrive
+
+using KazoDirectHttpResponse created = await client.PostAsJsonAsync(
+    "files", new NewFile("rapport.txt"), MyJsonContext.Default.NewFile, cancellationToken);
+using KazoDirectHttpResponse uploaded = await client.PutAsync(
+    "upload", KazoDirectHttpContent.FromStream(file, "application/octet-stream", file.Length), cancellationToken);
+```
+
+- **Permission.** L'app déclare la capacité dangereuse `network.direct.access`
+  et chaque hôte qu'elle joint dans `directNetworkHosts` de son manifeste
+  (`api.example.com`, `*.example.org` pour les sous-domaines). L'administrateur
+  approuve la liste ([approbation](../dev/dangerous-capability-approval.md)).
+  Le client est offert à toute app (choix du mainteneur, 2026-11-17) ; c'est
+  la permission qui décide.
+  Une fonctionnalité qui fournit un lecteur réseau joint les hôtes de ses
+  déclarations `driveProviders`, et le serveur tapé dans un champ
+  `serverAddress`, avec `drives.provide` seule (ADR 0284,
+  [`drive-providers.md`](drive-providers.md#joindre-le-service)).
+- **Refus.** Sans la capacité : `UnauthorizedAccessException`. Hôte non
+  déclaré : `UnauthorizedAccessException` qui nomme l'hôte. Adresse `http`,
+  relative sans `BaseAddress`, ou en-tête réservé au navigateur (`Host`,
+  `Cookie`, `Origin`, `Referer`, `Sec-*`, `Proxy-*`…) : `ArgumentException`.
+  Dans tous ces cas, rien ne part.
+- **Erreurs.** Les mêmes que `KazoHttpClient` : une panne réseau, un refus
+  CORS ou une erreur TLS sont pour une page la même chose (« Failed to
+  fetch ») et donnent `KazoHttpRequestException` avec
+  `KazoNetworkError.ConnectionFailed`. `Timeout` (100 s par défaut) borne
+  l'attente des en-têtes et lève `TaskCanceledException` avec une
+  `TimeoutException` à l'intérieur ; le jeton d'annulation de l'appelant
+  interrompt le `fetch` et lève `TaskCanceledException`.
+- **Limites du navigateur.** Le service doit autoriser l'origine de l'OS en
+  CORS (avec une page isolée cross-origin, ADR 0131). Aucun cookie n'est
+  envoyé, et seuls les en-têtes de réponse que le service expose sont
+  visibles. Un corps de requête en flux est lu en entier par le navigateur
+  avant l'envoi : une app découpe un gros envoi selon les morceaux du service.
+- **Web Worker.** Dans un worker, `RemoteNetworkGateway` demande d'abord à l'OS
+  la permission (opération `net.direct` : capacité et hôte vérifiés par
+  `AppNetworkGateway.AuthorizeDirect`), puis envoie avec le `fetch` du worker :
+  le corps ne traverse pas l'OS.
+- **Trafic compté.** La requête et les en-têtes de la réponse comptent sur
+  `eth0`, comme pour les autres requêtes de l'app.
+- **Compatibilité.** `IAppNetworkGateway.SendDirectAsync` a une implémentation
+  par défaut qui lève `NotSupportedException`.
 
 ## Apps migrées
 
@@ -261,6 +360,15 @@ d'exemptions de la frontière du SDK.
   du processus de l'app (`NetworkTrafficMeter`) ; un appel refusé faute de
   capacité ne compte rien. Détails : [`system-metrics.md`](../dev/system-metrics.md).
 
+- **Un client séparé plutôt qu'un mode de `KazoHttpClient`** (chantier
+  `drive-providers/1-direct-http`, choix du mainteneur 2026-11-17).
+  L'ADR 0282 §4 disait « `KazoHttpClient` gagne un mode direct ». La décision
+  reste la même (fetch du navigateur, capacité dangereuse, hôtes déclarés),
+  seule la forme change. `KazoHttpResponse` met tout le corps en mémoire, alors
+  qu'un fournisseur de fichiers doit lire en flux de bout en bout ; et un
+  client explicite évite qu'une app passe en direct sans le vouloir. Le client
+  reste offert à toute app, derrière sa permission.
+
 - **`ClientWebSocket` de .NET plutôt qu'un module JavaScript** (chantier
   `real-network/1-websocket`) : l'ADR 0235 §1 prévoyait un module JavaScript
   de Browser Infrastructure. Sous WebAssembly, `ClientWebSocket` *est* le
@@ -269,6 +377,16 @@ d'exemptions de la frontière du SDK.
   §I.2), les tests xUnit parlent à un vrai serveur WebSocket (Kestrel), et la
   même classe servira dans un Web Worker. `AppNetworkGateway.WebSocketConnector`
   permet aux tests de viser leur serveur.
+
+## Liste des tâches du chantier `drive-providers/1-direct-http`
+
+- [x] Capacité dangereuse `network.direct.access` et `directNetworkHosts` du manifeste (validation, schéma, Features).
+- [x] Hôtes approuvés dans la configuration machine, nouvel hôte = nouvelle approbation, hôtes affichés à l'approbation.
+- [x] `KazoDirectHttpClient`, `KazoDirectHttpRequest`, `KazoDirectHttpContent`, `KazoDirectHttpResponse` (`Kazo.Os.AppSdk.Net`).
+- [x] `IAppNetworkGateway.SendDirectAsync` (implémentation par défaut), `AppNetworkGateway.SendDirectAsync` et `AuthorizeDirect`.
+- [x] Web Worker : opération `net.direct`, envoi par le `fetch` du worker.
+- [x] Tests : hôte déclaré, joker, hôte refusé, capacité absente, `http`, en-têtes réservés, JSON, flux montant et descendant, annulation, délai, refus du navigateur, `KazoHttpClient` inchangé, worker.
+- [x] Documentation : ce document, `capabilities.md`, `app-model.md`, `dangerous-capability-approval.md`, `sdk-reference.md`, entrée `changes/unreleased`.
 
 ## Liste des tâches du chantier `real-network/1-websocket`
 

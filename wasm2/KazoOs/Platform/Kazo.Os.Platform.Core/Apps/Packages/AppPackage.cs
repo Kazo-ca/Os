@@ -562,6 +562,9 @@ public sealed class AppPackage
             assemblies.UnionWith((manifest.Components ?? []).Select(static component => component.Assembly));
             // ADR 0262 §1: the code of a feature's services is the feature's.
             assemblies.UnionWith((manifest.ProvidedServices ?? []).Select(static service => service.ImplementationAssembly + ".dll"));
+            // ADR 0282 §3: the code of the drive providers a feature declares is the feature's too;
+            // without it the package would carry no provider and the OS would not load one.
+            assemblies.UnionWith((manifest.DriveProviders ?? []).Select(static provider => provider.ProviderAssembly + ".dll"));
         }
 
         return assemblies;

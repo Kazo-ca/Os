@@ -83,7 +83,7 @@ public sealed class DangerousCapabilityGate : IDangerousCapabilityGate
         ArgumentNullException.ThrowIfNull(principal);
 
         bool isSystemApp = _catalog.IsSystemApp(manifest.Id);
-        if (!DangerousCapabilityEvaluator.DeclaresDangerousCapabilities(manifest))
+        if (!DangerousCapabilityEvaluator.DeclaresDangerousCapabilities(manifest, Capabilities))
         {
             return DangerousCapabilityGateResult.NotApplicable(isSystemApp);
         }
@@ -95,12 +95,12 @@ public sealed class DangerousCapabilityGate : IDangerousCapabilityGate
         {
             // System apps get their dangerous capabilities from the login seeder (SystemPolicy).
             return new DangerousCapabilityGateResult(
-                DangerousCapabilityEvaluator.Evaluate(manifest, true, policy, AppPermissionDecisions.Empty), policy, true);
+                DangerousCapabilityEvaluator.Evaluate(manifest, true, policy, AppPermissionDecisions.Empty, Capabilities), policy, true);
         }
 
         AppPermissionDecisions decisions = await _permissions.ReadAsync(cancellationToken).ConfigureAwait(false);
         IReadOnlyList<DangerousCapabilityStatus> statuses =
-            DangerousCapabilityEvaluator.Evaluate(manifest, false, policy, decisions);
+            DangerousCapabilityEvaluator.Evaluate(manifest, false, policy, decisions, Capabilities);
         DangerousCapabilityApprovalOutcome? outcome = null;
 
         if (policy == DangerousCapabilityPolicy.Block)
@@ -128,12 +128,12 @@ public sealed class DangerousCapabilityGate : IDangerousCapabilityGate
                 .Select(status => status.Capability)];
             if (pending.Length > 0)
             {
-                outcome = await AskAsync(manifest, principal, pending, prompt ?? _defaultPrompt, interactive, cancellationToken)
+                outcome = await AskAsync(manifest, principal, pending, ChoosePrompt(pending, prompt), interactive, cancellationToken)
                     .ConfigureAwait(false);
                 if (outcome is DangerousCapabilityApprovalOutcome.Approved or DangerousCapabilityApprovalOutcome.Refused)
                 {
                     decisions = await _permissions.ReadAsync(cancellationToken).ConfigureAwait(false);
-                    statuses = DangerousCapabilityEvaluator.Evaluate(manifest, false, policy, decisions);
+                    statuses = DangerousCapabilityEvaluator.Evaluate(manifest, false, policy, decisions, Capabilities);
                 }
             }
         }
@@ -148,6 +148,23 @@ public sealed class DangerousCapabilityGate : IDangerousCapabilityGate
 
         return new DangerousCapabilityGateResult(statuses, policy, false, outcome);
     }
+
+    /// <summary>
+    /// Gets the catalog of capabilities of the running OS (ADR 0246 §1): the built-in catalog by
+    /// default, plus the permissions of the installed features when the host gives it.
+    /// </summary>
+    public ICapabilityCatalog Capabilities { get; init; } = BuiltInCapabilityCatalog.Instance;
+
+    /// <summary>
+    /// ADR 0246 §4 (answer 3 A): a pending permission of a feature is always asked in the OS's secure
+    /// window, even when the launch comes from a terminal command: the output of a guest program
+    /// relayed by that terminal (ADR 0252) could imitate the terminal's text prompt. The terminal's
+    /// text mode (ADR 0049 §5) stays for the built-in catalog.
+    /// </summary>
+    private IDangerousCapabilityApprovalPrompt? ChoosePrompt(IReadOnlyList<string> pending, IDangerousCapabilityApprovalPrompt? requested) =>
+        _defaultPrompt is not null && pending.Any(capability => Capabilities.Find(capability)?.ProviderId is not null)
+            ? _defaultPrompt
+            : requested ?? _defaultPrompt;
 
     private async Task<DangerousCapabilityApprovalOutcome> AskAsync(
         AppManifest manifest,
@@ -206,6 +223,20 @@ public sealed class DangerousCapabilityGate : IDangerousCapabilityGate
                         .WriteApprovedRealNetworkPortsAsync(manifest.Id, RealNetworkPorts.Normalize(manifest.RealNetworkPorts) ?? [], ct)
                         .ConfigureAwait(false);
                 }
+
+                if (pending.Any(DangerousCapabilityEvaluator.HostCapabilities.Contains))
+                {
+                    // ADR 0282 §4 and ADR 0284 §1: the hosts the window listed are the ones approved,
+                    // next to those another capability of the app had approved before.
+                    AppPermissionDecisions before = await _permissions.ReadAsync(ct).ConfigureAwait(false);
+                    await _permissions
+                        .WriteApprovedDirectNetworkHostsAsync(
+                            manifest.Id,
+                            DangerousCapabilityEvaluator.HostsToApprove(manifest, before.GetApprovedDirectNetworkHosts(manifest.Id), pending, []),
+                            ct)
+                        .ConfigureAwait(false);
+                }
+
                 approved = true;
                 RecordApprove(manifest.Id, capabilityList, principal, verification.LoginName ?? login ?? string.Empty, null, AuditOutcome.Success);
                 return new DangerousCapabilityApprovalAttempt(true, DangerousCapabilityApprovalRequest.MaxAttempts - failures);
@@ -218,7 +249,7 @@ public sealed class DangerousCapabilityGate : IDangerousCapabilityGate
 
         DangerousCapabilityApprovalRequest request = new(
             manifest,
-            [.. pending.Select(AppCapabilities.Describe)],
+            [.. pending.Select(capability => Capabilities.Find(capability) ?? AppCapabilities.Describe(capability))],
             principal,
             AppAuthorityPolicy.Satisfies(principal.Authority, AppAuthority.Administrator) ? principal.LoginName.Value : null,
             ApproveAsync);

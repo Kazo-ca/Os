@@ -1,0 +1,52 @@
+<Project>
+  <!--
+    ADR 0282 §5: the cloud drive connectors shipped with Kazo OS, chosen at build time on the model
+    of ADR 0066 (build/Kazo.Os.ResourceAccounting.targets). Imported explicitly at the end of each
+    host project (OS/Kazo.Os.Ecosystem, OS/Kazo.Os.Ecosystem.Host, test/test).
+
+      <KazoOsDropboxDrives>false</KazoOsDropboxDrives>    Dropbox (ADR 0267 §6)
+      <KazoOsOneDriveDrives>false</KazoOsOneDriveDrives>  OneDrive over Microsoft Graph
+      <KazoOsS3Drives>false</KazoOsS3Drives>              buckets of S3 compatible services
+
+    All three default to true. A connector set to false is not composed (#if KAZOOS_DROPBOX_DRIVES,
+    KAZOOS_ONEDRIVE_DRIVES, KAZOOS_S3_DRIVES), so it is never offered. With all three false, the host
+    does not reference Kazo.Os.Platform.CloudDrives: the connectors' code is not in the download.
+    Each property also becomes a RuntimeHostConfigurationOption read with AppContext.TryGetSwitch,
+    so a connector switched off at build is ignored even when the assembly stays for another one.
+
+    The composition lives in Kazo.Os.Ecosystem.Host, which the hosts reference: set the properties
+    in a Directory.Build.props or on the command line (-p:KazoOsDropboxDrives=false) to switch the
+    whole graph; a property set only in a host's .csproj only changes that host's runtime switch
+    (see doc/en/wasm/dev/cloud-drive-connectors.md). At run time, KazoOs:CloudDrives:Disabled in
+    appsettings.json and the "disabled" key of /etc/kazoos/cloud-drives.config turn a compiled-in
+    connector off without publishing again.
+  -->
+  <PropertyGroup>
+    <KazoOsDropboxDrives Condition="'$(KazoOsDropboxDrives)' == ''">true</KazoOsDropboxDrives>
+    <KazoOsOneDriveDrives Condition="'$(KazoOsOneDriveDrives)' == ''">true</KazoOsOneDriveDrives>
+    <KazoOsS3Drives Condition="'$(KazoOsS3Drives)' == ''">true</KazoOsS3Drives>
+    <KazoOsCloudDrivesIncluded>false</KazoOsCloudDrivesIncluded>
+    <KazoOsCloudDrivesIncluded Condition="'$(KazoOsDropboxDrives)' == 'true' or '$(KazoOsOneDriveDrives)' == 'true' or '$(KazoOsS3Drives)' == 'true'">true</KazoOsCloudDrivesIncluded>
+    <!-- Lets the composition code compile without the project, or without one connector. -->
+    <DefineConstants Condition="'$(KazoOsCloudDrivesIncluded)' == 'true'">$(DefineConstants);KAZOOS_CLOUD_DRIVES</DefineConstants>
+    <DefineConstants Condition="'$(KazoOsDropboxDrives)' == 'true'">$(DefineConstants);KAZOOS_DROPBOX_DRIVES</DefineConstants>
+    <DefineConstants Condition="'$(KazoOsOneDriveDrives)' == 'true'">$(DefineConstants);KAZOOS_ONEDRIVE_DRIVES</DefineConstants>
+    <DefineConstants Condition="'$(KazoOsS3Drives)' == 'true'">$(DefineConstants);KAZOOS_S3_DRIVES</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <RuntimeHostConfigurationOption Include="Kazo.Os.CloudDrives.Dropbox.IsSupported"
+                                    Value="$([System.String]::Copy('$(KazoOsDropboxDrives)').ToLowerInvariant())"
+                                    Trim="true" />
+    <RuntimeHostConfigurationOption Include="Kazo.Os.CloudDrives.OneDrive.IsSupported"
+                                    Value="$([System.String]::Copy('$(KazoOsOneDriveDrives)').ToLowerInvariant())"
+                                    Trim="true" />
+    <RuntimeHostConfigurationOption Include="Kazo.Os.CloudDrives.S3.IsSupported"
+                                    Value="$([System.String]::Copy('$(KazoOsS3Drives)').ToLowerInvariant())"
+                                    Trim="true" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(KazoOsCloudDrivesIncluded)' == 'true'">
+    <ProjectReference Include="$(MSBuildThisFileDirectory)../Platform/Kazo.Os.Platform.CloudDrives/Kazo.Os.Platform.CloudDrives.csproj" />
+  </ItemGroup>
+</Project>

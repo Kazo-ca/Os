@@ -27,7 +27,7 @@ public sealed class TaskbarLocalizationTests
         string html = await RenderAsync(localizer: null, new Status(CultureInfo.InvariantCulture));
 
         Assert.Contains("aria-label=\"Desktop taskbar\"", html, StringComparison.Ordinal);
-        Assert.Contains("aria-label=\"App launcher\"", html, StringComparison.Ordinal);
+        Assert.Contains("aria-label=\"Applications, app launcher\"", html, StringComparison.Ordinal);
         Assert.Contains("aria-label=\"Notes (focused)\"", html, StringComparison.Ordinal);
         Assert.Contains(">Applications</span>", html, StringComparison.Ordinal);
         Assert.Equal("09:00:00", ClockText(html));
@@ -39,7 +39,7 @@ public sealed class TaskbarLocalizationTests
         string html = await RenderAsync(typeof(FrenchStringLocalizer<>), new Status(CultureInfo.GetCultureInfo("fr-FR")));
 
         Assert.Contains("aria-label=\"Barre des tâches du bureau\"", html, StringComparison.Ordinal);
-        Assert.Contains("aria-label=\"Lanceur d'applications\"", html, StringComparison.Ordinal);
+        Assert.Contains("aria-label=\"Applications, lanceur d'applications\"", html, StringComparison.Ordinal);
         Assert.Contains("aria-label=\"Notes (au premier plan)\"", html, StringComparison.Ordinal);
         Assert.Contains("aria-label=\"Applications en cours d'exécution\"", html, StringComparison.Ordinal);
         Assert.Equal("09:00:00", ClockText(html));
@@ -73,6 +73,8 @@ public sealed class TaskbarLocalizationTests
             new TaskbarOptions { LauncherLabel = "Apps" });
 
         Assert.Contains(">Apps</span>", html, StringComparison.Ordinal);
+        // WCAG 2.5.3 "Label in Name": the accessible name starts with the label the host shows.
+        Assert.Contains("aria-label=\"Apps, lanceur d'applications\"", html, StringComparison.Ordinal);
     }
 
     private static string ClockText(string html) =>
@@ -87,8 +89,8 @@ public sealed class TaskbarLocalizationTests
 
         Assert.DoesNotContain("launcher-attention", plain, StringComparison.Ordinal);
         Assert.Contains("class=\"launcher-attention\" aria-hidden=\"true\"", english, StringComparison.Ordinal);
-        Assert.Contains("aria-label=\"App launcher, new changes to see\"", english, StringComparison.Ordinal);
-        Assert.Contains("aria-label=\"Lanceur d'applications, nouveautés à voir\"", french, StringComparison.Ordinal);
+        Assert.Contains("aria-label=\"Applications, app launcher, new changes to see\"", english, StringComparison.Ordinal);
+        Assert.Contains("aria-label=\"Applications, lanceur d'applications, nouveautés à voir\"", french, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -101,11 +103,11 @@ public sealed class TaskbarLocalizationTests
 
         Assert.DoesNotContain("clock-attention", none, StringComparison.Ordinal);
         Assert.Contains("title=\"System clock, notifications, and calendar\"", none, StringComparison.Ordinal);
-        Assert.Contains("aria-label=\"System clock, notifications, and calendar: 1 unread notification\"", one, StringComparison.Ordinal);
+        Assert.Contains("aria-label=\"09:00:00, System clock, notifications, and calendar: 1 unread notification\"", one, StringComparison.Ordinal);
         Assert.Contains("class=\"clock-attention\" aria-hidden=\"true\"", english, StringComparison.Ordinal);
-        Assert.Contains("aria-label=\"System clock, notifications, and calendar: 3 unread notifications\"", english, StringComparison.Ordinal);
+        Assert.Contains("aria-label=\"09:00:00, System clock, notifications, and calendar: 3 unread notifications\"", english, StringComparison.Ordinal);
         Assert.Contains("title=\"System clock, notifications, and calendar: 3 unread notifications\"", english, StringComparison.Ordinal);
-        Assert.Contains("aria-label=\"Horloge système, notifications et calendrier : 3 notifications non lues\"", french, StringComparison.Ordinal);
+        Assert.Contains("aria-label=\"09:00:00, Horloge système, notifications et calendrier : 3 notifications non lues\"", french, StringComparison.Ordinal);
     }
 
     private static async Task<string> RenderAsync(Type? localizer, ITaskbarStatusSource status, TaskbarOptions? options = null, Launcher? launcher = null, ClockPanel? clockPanel = null)

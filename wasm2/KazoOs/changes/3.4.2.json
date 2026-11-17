@@ -1,0 +1,26 @@
+{
+  "version": "3.4.2",
+  "date": "2026-11-17",
+  "entries": [
+    {
+      "id": "0d0606e5-7e54-4449-89be-ee18c04fe1dc",
+      "category": "fixed",
+      "audience": [
+        "user",
+        "developer"
+      ],
+      "title": {
+        "en": "Store apps can use LINQ, regular expressions and channels",
+        "fr": "Les apps du Store peuvent utiliser LINQ, les expressions régulières et les canaux"
+      },
+      "description": {
+        "en": "The published OS now keeps System.Linq, System.Text.RegularExpressions and System.Threading.Channels whole, so Kazo AI installs from the Store.",
+        "fr": "L'OS publié garde maintenant System.Linq, System.Text.RegularExpressions et System.Threading.Channels entières : Kazo AI s'installe depuis le Store."
+      },
+      "pr": 595,
+      "links": [
+        "doc/en/wasm/dev/adr/0280-keep-linq-regex-channels-whole.md"
+      ]
+    }
+  ]
+}

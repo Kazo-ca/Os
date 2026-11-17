@@ -33,6 +33,8 @@ Ecosystem.csproj            PublishTrimmed=true, TrimMode=partial
                                     │
                               ILLink (publish)
             System.Private.CoreLib: whole (ADR 0242)
+            System.Linq, System.Text.RegularExpressions,
+            System.Threading.Channels: whole (ADR 0280)
             rest of the framework and trimmable libraries: trimmed
             Kazo OS and app assemblies: whole
             non-trimmable packages (MudBlazor…): whole (partial)
@@ -56,7 +58,11 @@ Ecosystem.csproj            PublishTrimmed=true, TrimMode=partial
   GitHub is not a root: it finds the framework the OS kept. So
   `System.Private.CoreLib` stays whole (`TrimmerRootAssembly` in
   `_KazoOsRootKazoOsAssemblies`, +0.6 MiB in Brotli; `KazoOsKeepCoreLib=false`
-  trims it as before). For the rest of the framework, `kazopkg` compares the
+  trims it as before). `System.Linq`, `System.Text.RegularExpressions` and
+  `System.Threading.Channels` also stay whole (ADR 0280,
+  `KazoOsKeepAppFrameworkLibraries=false` trims them): Kazo AI 0.1.1 was
+  refused for `Regex.Replace` with a `MatchEvaluator`, `Enumerable.Sum` and
+  `ChannelWriter<T>.WriteAsync`. For the rest of the framework, `kazopkg` compares the
   full signature of every method the package references with the loaded
   runtime, and refuses the package with the missing overload
   (`apps.package.missing-api`). Before ADR 0242 only the parameter count was
@@ -74,10 +80,14 @@ Ecosystem.csproj            PublishTrimmed=true, TrimMode=partial
 wasm2/KazoOs/build/publish-trimmed.sh            # publie, mesure, sert, teste
 wasm2/KazoOs/build/publish-trimmed.sh --compare  # publie aussi sans trimming et compare
 wasm2/KazoOs/build/publish-trimmed.sh --skip-build
+wasm2/KazoOs/build/publish-trimmed.sh --no-cloud-drives  # without Dropbox, OneDrive and S3 (ADR 0282 §5)
 ```
 
 The script publishes to `artifacts/publish-trimmed/publish`, fails on any `IL…`
-warning, serves the publication on `127.0.0.1` and `127.0.0.2`, then runs
+warning, checks that `Kazo.Os.Platform.CloudDrives` is published (or absent
+with `--no-cloud-drives`, which passes `-p:KazoOsDropboxDrives=false
+-p:KazoOsOneDriveDrives=false -p:KazoOsS3Drives=false` and runs the same tests
+on that OS, [`cloud-drives.md`](cloud-drives.md#switchable-connectors-adr-0282-5)), serves the publication on `127.0.0.1` and `127.0.0.2`, then runs
 `Tests/Kazo.Os.TrimmedPublish.E2E.Tests`:
 
 | Test | What it checks |
@@ -86,7 +96,7 @@ warning, serves the publication on `127.0.0.1` and `127.0.0.2`, then runs
 | `Trimmed_publish_boots_offline_after_the_first_load` | on `127.0.0.2` (the service worker is not registered on `127.0.0.1`): version caching, reload without network, login, launch of a never-loaded app |
 | `The_calculator_rendered_in_a_worker_works_like_on_the_page` | ADR 0133 trial, setting enabled by rewriting `appsettings.json`: the Calculator in a worker computes with mouse and keyboard, keeps its CSS, `Tab`, axe, `Alt+F7`/`Alt+Q`, dedicated worker released on close ([`remote-window-rendering.md`](remote-window-rendering.md)) |
 | `Measures_the_calculator_on_the_page_and_in_a_worker` | ADR 0133 measurements (opening, latency, memory, batches), written to `remote-window-measurements.json` in the artifacts folder |
-| `An_installed_app_finds_its_wwwroot_files_and_its_worker_scripts` | ADR 0206: the test package `Tests/fixtures/installed-app` (packed by the script with `KazoOsPack`, answered by Playwright in place of `raw.githubusercontent.com`) is installed with `sudo kazopkg install`, the OS restarts, the app imports its module, starts its Web Worker (relative `importScripts`), shows its image and calls CoreLib overloads the OS does not use itself (ADR 0242); on `127.0.0.1`, through the `installed-apps` mode service worker |
+| `An_installed_app_finds_its_wwwroot_files_and_its_worker_scripts` | ADR 0206: the test package `Tests/fixtures/installed-app` (packed by the script with `KazoOsPack`, answered by Playwright in place of `raw.githubusercontent.com`) is installed with `sudo kazopkg install`, the OS restarts, the app imports its module, starts its Web Worker (relative `importScripts`), shows its image and calls CoreLib overloads the OS does not use itself (ADR 0242) and the Linq, Regex and Channels members Kazo AI calls (ADR 0280); on `127.0.0.1`, through the `installed-apps` mode service worker |
 | `The_published_service_worker_serves_installed_app_files_to_a_worker` | ADR 0206 on `127.0.0.2`: the published service worker answers files stored like an installed app's (a `servedFiles` row and an `fsContent` chunk, ADR 0274) to a Web Worker under cross-origin isolation, and answers `206` to a `Range` request |
 | `The_published_service_worker_serves_an_installed_app_page_to_an_iframe` | ADR 0243 on `127.0.0.2`: an HTML page served from the file system's content (ADR 0274) opens in an iframe with its query (`?author=kazo&webgl`), isolated like the OS, online then offline, instead of the OS's `index.html` |
 | `The_installed_apps_worker_serves_an_installed_app_page_to_an_iframe` | ADR 0243 on `127.0.0.1`: the same page, served by the worker of the `installed-apps` mode |
@@ -96,8 +106,9 @@ warning, serves the publication on `127.0.0.1` and `127.0.0.2`, then runs
 | `A_direct_link_with_an_account_opens_the_store_at_the_app_page` | ADR 0258: with an account, the sign-in notice, then the Store at the app's page; nothing downloaded |
 | `A_direct_link_reports_a_missing_app_and_can_be_cancelled` | ADR 0258: app missing from the official catalog → notification whose button opens the Store; **Cancel** during the download → no app and no notification |
 | `A_craft_app_on_the_os_module_opens_saves_and_follows_the_os` | ADR 0259: the test package `Tests/fixtures/craft-app` (a Craft window on the `Kazo.Os.AppSdk.Craft` module, around a fake Craft app; packed by the script into `kazoos-packages-craft`, without the module) is installed with `sudo kazopkg install`; `xdg-open seed.fake` opens the window on the file, typing puts `*` in the title, Ctrl+S rewrites the file and the app hears `saved`, F12 (a chord the window reserves) does Save As through the OS dialog, an error after `ready` becomes a notice, a light then dark theme is followed, Ctrl+O goes through the OS Open dialog, closing with changes asks, a second window reads back the setting the first one wrote ([`craft-apps.md`](../framework/craft-apps.md)) |
+| `An_installed_drive_provider_feature_mounts_a_server_by_its_form_and_reads_and_writes_it` | ADR 0282, ADR 0284: the sample `Apps/Samples/Kazo.Os.Samples.WebDavDrive` (packed by the script into `kazoos-packages-drive`); before the install, `mount -t webdav` does not know the type; `sudo kazopkg install` installs the Feature for the machine and the administrator approves `drives.provide`; the approval window names the "Server address" field; then, with no restart, `mount -t webdav` knows the type and writes the syntax of its form. Then the full journey (work item 9): in File Explorer, "Connect a network drive" offers WebDAV "provided by" the Feature, refuses an `http` address and writes "This provider will reach dav.kazoos-e2e.test." for the `https` one (screenshot `trimmed-webdav-server-host.png`), then connects a WebDAV drive by its form (address, user name, app password) to a test server answered by Playwright (`RoutedWebDavServer`, HTTP Basic, `ETag`, CORS); `mount` shows it, `cat` reads a file the server placed and `echo … >` writes one the server receives by `PUT` ([`drive-providers.md`](../framework/drive-providers.md)) |
 
-The script requires all fourteen tests to pass (`EXPECTED_TESTS`). For the three direct link tests, it
+The script requires all sixteen tests to pass (`EXPECTED_TESTS`). For the three direct link tests, it
 creates a P-256 key on every run (`openssl`, in `artifacts/publish-trimmed/test-catalog-signing/`) and
 publishes with `-p:KazoOsAppSigningKeys=catalog:official=<public key>`: the publish under test accepts
 that key for the official catalog, next to the real one.
@@ -115,6 +126,29 @@ The `kazoos-host` template publishes trimmed in the same way. The
 `Kazo.Os.App.Build` targets generate the roots and keep the `Kazo.Os.*`
 packages whole; app templates start with `IsTrimmable=true`, and the package
 enables the trimming analysis in an app project that does not set it.
+
+### API surface of the publish (ADR 0277)
+
+A trimmed publish of a host writes `kazoos-api-surface.json.gz` at the root of
+the publish folder, next to `wwwroot/`, so the site never serves it. The file
+lists every assembly ILLink wrote (`obj/Release/net10.0/linked/`, before
+Webcil), with its types, methods (name, arity, exact parameter types), fields
+and forwarded types. The `_KazoOsWriteApiSurface` target writes it with the
+generator's `api-surface` command; `KazoOsWriteApiSurface=false` skips it.
+
+The file answers the same questions as `LoadedRuntimeApiSurface` in the OS, so
+`AppPackageApiCheck` gives the same verdict at build time as at install time
+(`ApiSurfaceTests`). For Kazo OS 3.4.1: 115 assemblies, 1.7 MiB compressed.
+
+`Kazo.Os.App.Build` carries the file (`kazoos-build/api-surface/`), so the
+release publishes the site before packing the libraries. `KazoOsPack` checks
+every package against it (`KOSAPP0100`, the warning `KOSAPP0101` with
+`KazoOsApiCheck=false`, `KOSAPP0102` without a surface; see
+[`app-repository.md`](../framework/app-repository.md#apis-of-the-trimmed-os-checked-at-packaging)).
+In this repository, `KazoOsPack` takes the surface of the last publish of the
+Ecosystem, which can be older than the code: it only warns, unless
+`KazoOsApiCheck=true`, which `build/publish-trimmed.sh` passes to the test
+packages it builds right after the publish.
 
 ### Pitfall: successive publications
 
@@ -146,3 +180,4 @@ same `obj/` folder may pick up the trimmed assemblies. Before comparing, delete
 - [x] Sizes before and after measured (here and in `building-and-testing.md`).
 - [x] ADR 0113.
 - [x] ADR 0242: whole CoreLib, exact signature check, test package that calls CoreLib overloads.
+- [x] ADR 0280: whole Linq, Regex and Channels, test package that calls the members of Kazo AI 0.1.1.

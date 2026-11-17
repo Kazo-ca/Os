@@ -30,9 +30,13 @@ namespace Kazo.Os.TrimmedPublish.E2E.Tests;
 /// The <c>kazoos-packages</c> folder of the Craft test package of ADR 0259
 /// (<c>Tests/fixtures/craft-app</c>); <see langword="null"/> skips the Craft app journey.
 /// </param>
+/// <param name="DrivePackagesDirectory">
+/// The <c>kazoos-packages</c> folder of the WebDAV sample drive provider (ADR 0282,
+/// <c>Apps/Samples/Kazo.Os.Samples.WebDavDrive</c>); <see langword="null"/> skips the drive provider check.
+/// </param>
 public sealed record TrimmedPublishSettings(
     string Url, string? CatalogPath, string? ArtifactsDirectory, string? PwaUrl = null, string? PackagesDirectory = null, string? SigningKeyPath = null,
-    string? CraftPackagesDirectory = null)
+    string? CraftPackagesDirectory = null, string? DrivePackagesDirectory = null)
 {
     /// <summary>Base address of the served publish. Required.</summary>
     public const string UrlVariable = "KAZOOS_TRIMMED_URL";
@@ -55,6 +59,9 @@ public sealed record TrimmedPublishSettings(
     /// <summary>Folder of the Craft test package installed by kazopkg (ADR 0259).</summary>
     public const string CraftPackagesVariable = "KAZOOS_TRIMMED_CRAFT_PACKAGES";
 
+    /// <summary>Folder of the WebDAV sample drive provider installed by kazopkg as a feature (ADR 0282).</summary>
+    public const string DrivePackagesVariable = "KAZOOS_TRIMMED_DRIVE_PACKAGES";
+
     /// <summary>The window apps of the Ecosystem host, when no catalog is given.</summary>
     public static readonly IReadOnlyList<string> FallbackWindowApps =
     [
@@ -70,7 +77,7 @@ public sealed record TrimmedPublishSettings(
         return url is null
             ? null
             : new TrimmedPublishSettings(url.TrimEnd('/'), Read(CatalogVariable), Read(ArtifactsVariable), Read(PwaUrlVariable)?.TrimEnd('/'), Read(PackagesVariable), Read(SigningKeyVariable),
-                Read(CraftPackagesVariable));
+                Read(CraftPackagesVariable), Read(DrivePackagesVariable));
     }
 
     /// <summary>

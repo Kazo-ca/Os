@@ -17,6 +17,9 @@ export async function eraseEverything() {
         try { await action(); } catch (error) { failed.push(`${name}: ${error && error.message ? error.message : error}`); }
     };
 
+    // ADR 0250 §2: the boot marker goes first, alone, so a reset whose other steps fail is never
+    // read as an eviction (a marker without the database) at the next boot.
+    await step('storageMarker', () => localStorage.removeItem('kazoos.storage.marker'));
     await step('indexedDB', deleteAllDatabases);
     await step('caches', deleteAllCaches);
     await step('localStorage', () => localStorage.clear());

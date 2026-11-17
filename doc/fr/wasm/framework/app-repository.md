@@ -174,6 +174,32 @@ dépendance à Kazo OS) écrit la même ligne lui-même :
 
 Détail côté OS : [`app-installation.md`](../dev/app-installation.md#bibliothèques-dapp-et-versions-partagées-adr-0261).
 
+## API de l'OS rogné vérifiées au packaging
+
+[ADR 0277](../dev/adr/0277-trimmed-api-check-before-publishing.md). Kazo OS est
+publié trimmé : une méthode .NET que l'OS n'utilise pas peut manquer, et l'OS
+refuse d'installer une app qui l'appelle (`apps.package.missing-api`).
+`KazoOsPack` fait le même contrôle sur le paquet qu'il vient de construire,
+contre la surface d'API de la version de Kazo OS visée
+(`kazoos-api-surface.json.gz`, que `Kazo.Os.App.Build` apporte) :
+
+```text
+manifest.json : error KOSAPP0100: Mon.App.dll calls System.Linq.Enumerable.ToHashSet``1(...) in System.Linq, which Kazo OS 3.4.1 (trimmed) does not have: use new HashSet<T>(source) instead. The OS would refuse to install the package (ADR 0277).
+```
+
+- **`KOSAPP0100`** (erreur) : le paquet n'est pas écrit. Le message propose un
+  remplacement quand il en connaît un.
+- **`KazoOsApiCheck=false`** dans le projet de l'app change l'erreur en
+  avertissement **`KOSAPP0101`** : le paquet est écrit, mais l'OS peut le
+  refuser.
+- **`KazoOsApiSurfaceFile`** désigne une autre surface (par exemple celle d'une
+  préversion). Sans surface lisible, **`KOSAPP0102`** avertit que le paquet
+  n'a pas été vérifié.
+- Le Store refait le contrôle sur chaque demande, contre la dernière version
+  stable de l'OS : il lance la commande `check-api --package <fichier.kazoapp>
+  --api-surface <surface>` du générateur que `Kazo.Os.App.Build` de cette
+  version emporte.
+
 ## Publier dans le Kazo OS Store
 
 1. Remplir `store/` : icône PNG 256×256 (200 Ko au plus), description courte
@@ -219,6 +245,19 @@ Détail côté OS : [`app-installation.md`](../dev/app-installation.md#biblioth�
 
 Le catalogue ne prend jamais de binaire : après relecture et fusion, sa CI
 compile l'app au commit indiqué (ADR 0188 §4 à §6).
+
+### Dépendances de l'app (ADR 0248)
+
+Les `Dependencies` de la classe `[AppManifest]` (identifiant, plage,
+`Optional`) vont dans le `manifest.json` du paquet, que le workflow copie dans
+`apps/<appId>_<version>/` ; le catalogue en tire le champ `dependencies` de
+`catalog.json`. Le Store et `kazopkg` installent alors chaque dépendance
+**obligatoire** avec l'app, en un seul consentement (une Feature au niveau
+système, par un administrateur). Une dépendance **facultative** n'est jamais
+installée avec l'app : l'app la propose avec `KazoApps.RequestInstallAsync(appId)`,
+qui ouvre le Store sur elle, et `KazoFeatures.GetServiceAsync<T>()` rend
+`null` tant qu'elle manque. Une dépendance doit être publiée dans un catalogue
+configuré : `kazopkg install <dépôt GitHub>` ne devine pas un dépôt.
 
 ### Le secret `HACK_STORE_TOKEN`
 

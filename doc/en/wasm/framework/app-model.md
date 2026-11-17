@@ -41,6 +41,7 @@ Default values of the optional members:
 | `ServiceStartup` | `null` (= `Login`); `serviceStartup` is then omitted from the manifest. `Boot` only applies to a system app of kind `Service` (ADR 0097 §4, ADR 0107) |
 | `OomScoreAdjust` | `null` (inherits; `-500` for a system service); `oomScoreAdj` is then omitted from the manifest. Negative only for a system app (`KOSAPP0024`, ADR 0126 §4, ADR 0142, [`oom-killer.md`](../dev/oom-killer.md)) |
 | `RealNetworkPorts` | empty; `realNetworkPorts` is then omitted from the manifest. Real ports `tcp/N` or `udp/N` the app needs through the server relay, outside `AllowedPorts`; requires `network.real.access`, shown at approval, refused by the server when in `BlockedPorts` (ADR 0235 §3, [network relay](../dev/server-network-relay.md)) |
+| `DirectNetworkHosts` | empty; `directNetworkHosts` is then omitted from the manifest. Web hosts the app reaches directly through the browser's `fetch`, without the Kazo server: an exact name (`api.example.com`) or a subdomain wildcard (`*.example.org`, which does not cover `example.org` itself), always over `https`, any port. Refused: a bare wildcard, a wildcard right under a top-level domain (`*.com`), an IP address, `localhost`, a name without a dot, a scheme, port or path. Requires `network.direct.access`, shown at approval (ADR 0282 §4, `DirectNetworkHosts`) |
 | `Resources` | `AppResourceProfileManifest.None` |
 | `Window` | `null`: the window takes `WindowOptions.Default` (800×560, minimum 360×240); the `window` object is then omitted from the manifest (ADR 0095, [`window-model.md`](window-model.md)). Declared only by an app of kind `Window` (`manifest.window.*`). |
 
@@ -125,7 +126,8 @@ Conversion rules specific to a feature:
   feature's id), its kind, entry point, options and permission subset, and
   inherits the feature's version, publisher, SDK range, localizations and
   `assets`: one package holds them all. The real-network ports
-  (`realNetworkPorts`) go to the child that asks for `network.real.access`;
+  (`realNetworkPorts`) go to the child that asks for `network.real.access`, and
+  the direct hosts (`directNetworkHosts`) to the one that asks for `network.direct.access`;
 - `AppManifestValidator.Validate` applies to each child the rules of its kind,
   and to the feature those of the `Feature` kind:
   `manifest.feature.entryPoint.forbidden` (an entry point or platform
@@ -171,6 +173,15 @@ and the command of a `Terminal` child comes before that of an ordinary app of
 the same name (after system apps). See
 [`app-installation.md`](../dev/app-installation.md#features-adr-0260).
 
+#### Declared permissions: `ProvidedCapabilities` (ADR 0246)
+
+A feature declares its own permissions under a prefix of its own
+(`CapabilityPrefix => "x86"`, `ProvidedCapabilities`), normal or dangerous,
+with a title, a risk statement and what they cover; a client app asks for them
+in `Capabilities` with a dependency on the feature. They follow the rules of
+the OS catalog: see
+[`capabilities.md`](capabilities.md#permissions-declared-by-a-feature-adr-0246).
+
 #### Provided services: `ProvidedServices` (ADR 0262)
 
 A feature provides **services** to other apps: each pairs a contract (an
@@ -190,6 +201,17 @@ The manifest writes them in `providedServices`
 `"implementation": "OsX86.X86Service, OsX86"`). An app gets them with
 `KazoFeatures.GetServiceAsync<T>()`, which returns `null` when the feature is
 absent or disabled: see [`feature-services.md`](feature-services.md).
+
+#### Network drive types: `DriveProviders` (ADR 0282)
+
+A feature that asks for the dangerous `drives.provide` capability can provide
+**network drive types** (`mount -t exemple`): each
+`KazoDriveProviderDeclaration` gives the type, the displayed name, the class
+derived from `KazoDriveProvider`, the connection (OAuth or form), the icon and
+the hosts reached. The manifest writes them in `driveProviders`. An ordinary
+app that declares either is refused (`manifest.feature.only`, `KOSAPP0033`);
+a class the OS cannot create gives `KOSAPP0036`. See
+[`drive-providers.md`](drive-providers.md).
 
 ### Intents and URI schemes (ADR 0096)
 
@@ -354,7 +376,8 @@ with the full name of the class at fault: `App.csproj : error KOSAPP0005: [Ns.My
 | `KOSAPP0030` | SDK boundary: `ProjectReference` forbidden in an app project (ADR 0055 §2, number fixed by ADR 0059). Emitted by the target `ValidateKazoOsSdkBoundary`. See [`app-sdk.md`](app-sdk.md). |
 | `KOSAPP0031` | SDK boundary: injected service that is neither an SDK type, nor MudBlazor, nor `IJSRuntime` (ADR 0055 §3, ADR 0059). See [`app-sdk.md`](app-sdk.md). |
 | `KOSAPP0032` | Feature (ADR 0260 §1): a `FeatureDefinition` overrides `EntryPoint`; a feature has no entry point of its own, only its `EntryPoints` run. |
-| `KOSAPP0033` | Feature (ADR 0260 §5): an ordinary app declares what only a feature can (the `Feature` kind outside a `FeatureDefinition`), or a feature is declared next to other apps in one project. |
+| `KOSAPP0033` | Feature (ADR 0260 §5): an ordinary app declares what only a feature can (the `Feature` kind outside a `FeatureDefinition`, or the `drives.provide` capability, ADR 0282), or a feature is declared next to other apps in one project. |
+| `KOSAPP0036` | Drive provider (ADR 0282 §1): the class of a `DriveProviders` entry does not derive from `KazoDriveProvider`, is abstract, is not in the feature's assembly or has no public `()` or `(IFeatureServiceContext)` constructor; a reserved or malformed type also fails the build ([`drive-providers.md`](drive-providers.md)). |
 | `KOSAPP0040` | Manifest translations (ADR 0104 §4): unreadable `Resources/AppManifest.<culture>.resx`, invalid culture name, key other than `Name`, `Description`, `Terminal.Usage` (prefixed with the id in a multi-app project), `Terminal.Usage` for an app that is not a command, or a referenced `localization/` file that is unreadable at aggregation. See [`localization.md`](localization.md). |
 | `KOSAPP0090` | Invalid tool arguments. |
 | `KOSAPP0091` | App assembly cannot be loaded. |

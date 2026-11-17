@@ -302,7 +302,9 @@ validation en deux étapes :
   différentes de la même app, la plus récente est chargée pour les deux.
 - **Vérifications avant la demande d'administrateur** : SHA-256 du paquet
   (`index.json`) et de chaque fichier, identifiant, `sdkCompatibility`, API
-  présentes dans l'OS, app sur le fil principal.
+  présentes dans l'OS, app sur le fil principal. `KazoOsPack` fait déjà le
+  contrôle des API au build, contre la surface publiée avec l'OS
+  ([ADR 0277](adr/0277-trimmed-api-check-before-publishing.md)) ; celui-ci reste.
 - **Écriture pour tous** : `/usr/lib/kazoos/apps/<appId>/<version>/` et une ligne
   `<appId>=github:owner/repo@version` dans `[installed]` de
   `/etc/kazoos/apps.config`. Le dossier de la version précédente est gardé pour
@@ -333,7 +335,10 @@ validation en deux étapes :
   ([ADR 0261](adr/0261-app-libraries-and-shared-versions.md),
   [section plus bas](#bibliothèques-dapp-et-versions-partagées-adr-0261)).
 - **Ressources `wwwroot/`** ([ADR 0206](adr/0206-serve-installed-app-assets.md)) :
-  au premier lancement de l'app dans la session, l'OS écrit pour chaque
+  au premier lancement de l'app dans la session (ses icônes,
+  `presentation.iconAssetPaths`, dès le démarrage de l'OS et après son
+  installation ou sa mise à jour, pour que le lanceur, le menu Démarrer et le
+  bureau les montrent avant ce lancement, issue #420), l'OS écrit pour chaque
   ressource déclarée une ligne de `servedFiles` qui pointe vers le contenu du
   fichier dans le dossier de l'app, sans le relire ni le copier : le
   `contentHash` du fichier doit être le SHA-256 du manifeste, sinon l'adresse
@@ -462,6 +467,11 @@ manifestes enfants) est dans
   une bibliothèque partagée du paquet (`apps.package.service-contract-not-shared`),
   et l'installeur une fonctionnalité qui fournit un contrat qu'une autre
   fonctionnalité du catalogue fournit déjà (`apps.package.service-already-provided`).
+- **Types de lecteurs fournis** ([ADR 0282](adr/0282-third-party-drive-providers.md) §1,
+  [`drive-providers.md`](../framework/drive-providers.md)) : l'installeur refuse
+  une fonctionnalité qui déclare un type de lecteur qu'une autre fonctionnalité
+  du catalogue fournit déjà (`apps.package.drive-type-already-provided`) ; une
+  mise à jour de la même fonctionnalité n'est pas comparée à elle-même.
   `AppCatalog` ne retire plus une app pour une dépendance **facultative** hors
   plage : `KazoFeatures` lui répond `VersionMismatch`.
 
@@ -881,6 +891,83 @@ Tests : `AppPackageGatewayTests.Transactions.cs`, `AppDataGuardTests`,
 `AppPackageSignatureTests`, `AppCatalogTests` (Platform.Core),
 `InstalledAppsBootTests` (Ecosystem), `KazopkgCommandTests` (Commands.Wave5).
 
+## Dépendances entre paquets (ADR 0248)
+
+L'[ADR 0248](adr/0248-store-and-kazopkg-dependency-resolution.md) fait
+installer par le Store et `kazopkg` les dépendances qu'un manifeste déclare
+(cas visé : une app qui dépend d'une Feature, ADR 0260).
+
+- **Plan** : `AppPackageInstaller.BuildPlanAsync` prépare le paquet demandé
+  (`PrepareAsync`), puis chaque dépendance **obligatoire** absente ou hors
+  plage, de façon transitive, dépendances d'abord (`AppPackageInstallPlan` :
+  `Root`, `Dependencies`, `Reactivations`). Une dépendance absente est cherchée
+  dans les catalogues configurés (`FindInCatalogsAsync`) ; une dépendance
+  installée hors plage est reprise dans le dépôt d'où elle vient. La version
+  choisie est la plus récente qui satisfait toutes les plages (paquets du plan
+  et apps installées qui en dépendent) et qui tourne sur cet OS
+  (`AppDependencyRange`, bornes comprises). Une dépendance qu'aucun catalogue
+  ne publie arrête tout avec son identifiant et sa plage
+  (`apps.package.dependency-unresolved`, réponse 1 A) ; plus de 16 paquets
+  aussi.
+- **Portée** : une Feature va toujours au niveau système ; une dépendance d'une
+  app système aussi ; sinon une installation personnelle reste personnelle
+  (réponse 2 A : l'app pour soi, sa Feature pour tous).
+- **Dépendance désinstallée** (ADR 0048) : installée et dans la plage mais
+  listée dans `[uninstalled]`, elle est réactivée (`AppPackageReactivation`),
+  pas téléchargée ; dans le fichier machine, il faut l'administrateur.
+- **Un consentement** : `AppPackageInstallPlan.RequiresAdministrator` est vrai
+  si un paquet du plan l'exige (système, source non sûre) ou si une
+  réactivation touche le fichier machine. La passerelle authentifie alors
+  l'administrateur **une fois** et montre la fenêtre de validation
+  (`AppInstallApprovalRequest.Dependencies`, `Reactivated`,
+  `PlannedFeatures`) : chaque paquet du plan avec sa version, sa taille, sa
+  source, sa portée et ses permissions dangereuses (pour une Feature, son
+  ensemble, ADR 0260 §3). La fenêtre décrit les permissions qu'une Feature du
+  plan déclare (ADR 0246) avant son installation (réponse 268 A). Un plan sans
+  administrateur (apps personnelles d'une source sûre) ne montre pas de
+  fenêtre, comme avant.
+- **Transaction** : `CommitPlanAsync` écrit les paquets dans l'ordre, chacun
+  avec son journal `.transaction` (ADR 0214 §3). Si une écriture échoue, les
+  paquets déjà écrits sont défaits dans l'ordre inverse (retrait d'un nouveau,
+  retour à la version gardée d'une mise à jour) ; un refus de
+  l'administrateur ou un paquet refusé arrêtent tout avant la moindre écriture.
+- **Retrait** : `GetPackageDependentsAsync` liste les apps installées qui
+  déclarent le paquet en dépendance **obligatoire** (chaîne comprise, apps
+  système et points d'entrée exclus). Le retrait les désactive dans le
+  `apps.config` de sa portée (`[uninstalled]`) et note pourquoi dans
+  `[disabled-by-dependency]` (`<app> = <paquet>`) ; leur paquet et leurs
+  données restent (`KazoInstalledPackage.DisabledDependents`). Réinstaller le
+  paquet réactive exactement ces apps
+  (`KazoPackageInstallReport.ReactivatedDependents`) ; une app que l'usager
+  avait désinstallée lui-même n'est pas touchée.
+- **Mise à jour** : mettre à jour un paquet passe par le même plan. Une
+  version hors de la plage d'une app installée qui en dépend est refusée avec
+  la liste des apps et de leurs plages (`apps.package.dependency-conflict`),
+  sans `--force`.
+- **`kazopkg`** : `install` et `update` écrivent le plan quand l'app tire des
+  dépendances, puis demandent `Continuer ? [o/N]` ; `remove` nomme les apps
+  qui seront désactivées et demande aussi. `--yes` répond oui. Un refus ou une
+  dépendance introuvable écrit « l'installation de <app> est arrêtée :
+  <raison> ».
+- **Store** : la fiche d'une app liste ses dépendances (carte « A besoin
+  de ») avec « Installée », « À installer (avec cette app) », « Facultative »
+  ou l'avertissement d'une version installée hors plage, et, pour une Feature
+  à installer, les permissions approuvées avec elle (réponse 268 A).
+  Désinstaller un paquet dont d'autres apps ont besoin les nomme et demande un
+  second clic (« Désinstaller quand même »).
+- **Dépendance facultative** : jamais dans le plan. L'app la propose avec
+  `KazoApps.RequestInstallAsync(appId)` (`apps.launch`), qui ouvre le Store sur
+  le paquet (`--app=<appId>`) ou, sans Store, rend le message « Installe
+  <app> avec : kazopkg install <app> » (`KazoInstallRequestResult`).
+- **SDK** : `KazoAppPackages.PlanInstallAsync`, `GetDependentsAsync`,
+  `KazoPackageInstallPlan`, `KazoPlannedPackage`, `KazoPackageDependent`,
+  `KazoPackageDependency`, `KazoCatalogAppVersion.Dependencies`.
+
+Tests : `AppPackageGatewayTests.Dependencies.cs`,
+`AppPackageDependenciesTests` (Platform.Core), `KazoAppsRequestInstallTests`
+(AppSdk), `StoreDependenciesTests` (Store), `KazopkgCommandTests`
+(Commands.Wave5).
+
 ## Tâches
 
 - [x] `IAppInstallationService`, `AppInstallationService`, `AppsConfigDocument`.
@@ -895,5 +982,6 @@ Tests : `AppPackageGatewayTests.Transactions.cs`, `AppDataGuardTests`,
 - [x] Tests de contrat et documentation.
 - [x] Kazo OS Store : catalogues, `kazopkg install <appId>`, mises à jour par notification, épinglage par défaut (ADR 0212, ADR 0215).
 - [x] Ajout sans redémarrage, signature, installation transactionnelle, `kazopkg rollback` et `repair`, sauvegarde des données (ADR 0214).
+- [x] Dépendances : plan, un consentement, transaction sur le plan, retrait qui désactive les dépendants, mise à jour hors plage refusée, `--yes`, fiche du Store, `KazoApps.RequestInstallAsync` (ADR 0248).
 - [x] Progression d'installation dans le Store : `IProgress<KazoPackageInstallProgress>`, étapes, file d'attente, boutons de l'app seule (ADR 0266 §7).
 - [x] Accueil du Store : app à la une, grille de la plus récente avec pastilles de catégorie, bouton de carte avec le menu de l'administrateur, cartes vides au chargement, fenêtre 1100 × 720, onglet Thèmes masqué sans pack (ADR 0266 §2, §3, §5).

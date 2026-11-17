@@ -85,6 +85,45 @@ public sealed class AppInstallApprovalOverlayTests
     }
 
     [Fact]
+    public async Task A_feature_install_names_the_provider_hosts_and_the_typed_server()
+    {
+        AppInstallApprovalBroker broker = new();
+        using IDisposable host = broker.Attach();
+        AppManifest feature = new()
+        {
+            Id = "org.example.webdav",
+            Name = "WebDAV drives",
+            Version = "1.0.0",
+            PublisherId = "org.example",
+            Description = "Overlay fixture.",
+            Kind = AppKind.Feature,
+            SdkCompatibility = new AppSdkCompatibilityManifest(KazoOsSdk.Version),
+            Presentation = new PresentationManifest("system", AppLaunchVisibility.Hidden, []),
+            Resources = AppResourceProfileManifest.None,
+            Capabilities = [AppCapabilities.DrivesProvide],
+            DriveProviders =
+            [
+                new AppDriveProviderManifest("webdav", "WebDAV", "Example.Provider", AppDriveConnectionManifest.WithForm(
+                    new AppDriveFormFieldManifest("server", "Server address", AppDriveFormFieldKind.Url) { ServerAddress = true }))
+                {
+                    Hosts = ["api.example.com"],
+                },
+            ],
+        };
+        _ = broker.RequestAsync(CreateRequest(AppSourceTrust.Trusted) with
+        {
+            Capabilities = [AppCapabilities.DrivesProvide],
+            IsFeature = true,
+            Manifest = feature,
+        });
+
+        string text = System.Net.WebUtility.HtmlDecode(await RenderAsync(broker));
+
+        Assert.Contains("Web services reached directly: api.example.com", text, StringComparison.Ordinal);
+        Assert.Contains("Server address", text, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task The_window_speaks_French()
     {
         AppInstallApprovalBroker broker = new();

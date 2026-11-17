@@ -31,7 +31,8 @@ public sealed class PlatformLocalizationTests
         string text = await RenderTaskbarAsync(locale);
 
         Assert.Contains("aria-label=\"Desktop taskbar\"", text, StringComparison.Ordinal);
-        Assert.Contains("aria-label=\"System clock, notifications, and calendar\"", text, StringComparison.Ordinal);
+        // The clock's name starts with the time it shows (WCAG 2.5.3 "Label in Name").
+        Assert.Matches(@"aria-label=""9:00:00\sAM, System clock, notifications, and calendar""", text);
         Assert.Contains("aria-label=\"Notes (focused)\"", text, StringComparison.Ordinal);
         Assert.Contains(">Applications</span>", text, StringComparison.Ordinal);
         // en-US long time: 12-hour clock (ICU may put a narrow no-break space before AM).
@@ -46,7 +47,7 @@ public sealed class PlatformLocalizationTests
         string text = await RenderTaskbarAsync(locale);
 
         Assert.Contains("aria-label=\"Barre des tâches du bureau\"", text, StringComparison.Ordinal);
-        Assert.Contains("aria-label=\"Horloge système, notifications et calendrier\"", text, StringComparison.Ordinal);
+        Assert.Contains("aria-label=\"09:00:00, Horloge système, notifications et calendrier\"", text, StringComparison.Ordinal);
         Assert.Contains("aria-label=\"Notes (au premier plan)\"", text, StringComparison.Ordinal);
         Assert.Contains("aria-label=\"Session utilisateur et déconnexion\"", text, StringComparison.Ordinal);
         Assert.Equal("09:00:00", ClockText(text));

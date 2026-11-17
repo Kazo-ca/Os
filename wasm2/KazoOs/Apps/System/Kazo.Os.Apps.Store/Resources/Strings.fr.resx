@@ -531,6 +531,12 @@
   <data name="Capability.network.listen.privileged.Title" xml:space="preserve">
     <value>Écouter un port privilégié</value>
   </data>
+  <data name="Capability.network.direct.access.Risk" xml:space="preserve">
+    <value>Envoyer et recevoir des données auprès des services web nommés par l'application, directement depuis le navigateur.</value>
+  </data>
+  <data name="Capability.network.direct.access.Title" xml:space="preserve">
+    <value>Joindre des services web directement</value>
+  </data>
   <data name="Capability.network.real.access.Risk" xml:space="preserve">
     <value>Joindre de vrais serveurs sur Internet par le serveur relais.</value>
   </data>
@@ -611,5 +617,59 @@
   </data>
   <data name="Capability.windows.manage.Title" xml:space="preserve">
     <value>Gérer les fenêtres</value>
+  </data>
+  <data name="Capability.cloud-accounts.manage.Title" xml:space="preserve">
+    <value>Gérer les comptes cloud</value>
+  </data>
+  <data name="Capability.cloud-accounts.manage.Risk" xml:space="preserve">
+    <value>Connecter ou retirer vos comptes Dropbox, OneDrive ou S3 et monter leur stockage comme lecteurs réseau.</value>
+  </data>
+  <data name="Capability.drives.provide.Title" xml:space="preserve">
+    <value>Fournir un type de lecteur réseau</value>
+  </data>
+  <data name="Capability.drives.provide.Risk" xml:space="preserve">
+    <value>Lire et écrire tous les fichiers des lecteurs de ce type, avec un jeton d'accès des comptes de ses utilisateurs.</value>
+  </data>
+  <data name="Detail.Dependencies" xml:space="preserve">
+    <value>A besoin de</value>
+  </data>
+  <data name="Detail.Dependency.Installed" xml:space="preserve">
+    <value>Installée ({0})</value>
+  </data>
+  <data name="Detail.Dependency.WithThisApp" xml:space="preserve">
+    <value>À installer (avec cette app), version {0}</value>
+  </data>
+  <data name="Detail.Dependency.OutOfRange" xml:space="preserve">
+    <value>La version installée {0} est hors de {1} : installer cette app la met à jour, ou s'arrête</value>
+  </data>
+  <data name="Detail.Dependency.OptionalOutOfRange" xml:space="preserve">
+    <value>Facultative ; la version installée {0} est hors de {1} : l'app fonctionne sans elle</value>
+  </data>
+  <data name="Detail.Dependency.Optional" xml:space="preserve">
+    <value>Facultative : l'app fonctionne sans elle</value>
+  </data>
+  <data name="Detail.Dependency.FeatureNote" xml:space="preserve">
+    <value>Feature : installée pour tous les utilisateurs, par un administrateur</value>
+  </data>
+  <data name="Detail.Dependency.FeaturePermissions" xml:space="preserve">
+    <value>Ses permissions, approuvées avec elle : {0}</value>
+  </data>
+  <data name="Message.InstalledWith" xml:space="preserve">
+    <value>Installé avec elle : {0}.</value>
+  </data>
+  <data name="Error.DependencyUnresolved" xml:space="preserve">
+    <value>L'installation est arrêtée : {0}</value>
+  </data>
+  <data name="Error.DependencyConflict" xml:space="preserve">
+    <value>L'installation est arrêtée : {0}</value>
+  </data>
+  <data name="Remove.DependentsWarning" xml:space="preserve">
+    <value>{0} ne fonctionneront plus et seront désactivées. Leurs données restent ; réinstaller cette app les réactive.</value>
+  </data>
+  <data name="Action.UninstallAnyway" xml:space="preserve">
+    <value>Désinstaller quand même</value>
+  </data>
+  <data name="Action.Cancel" xml:space="preserve">
+    <value>Annuler</value>
   </data>
 </root>

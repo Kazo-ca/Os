@@ -1,0 +1,40 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <Import Project="../Packaging.props" />
+
+  <PropertyGroup>
+    <PackageId>Kazo.Os.Platform.CloudDrives</PackageId>
+    <Description>The cloud drive connectors shipped with Kazo OS (Dropbox, OneDrive, S3), mounted as network drives (ADR 0267). Referenced by a host only when one of them is compiled in (ADR 0282).</Description>
+    <PackageTags>kazoos;platform;cloud;drives</PackageTags>
+  </PropertyGroup>
+
+  <!--
+    ADR 0282 §5: the shipped connectors live in their own assembly so a host can leave them out of
+    the download. It depends on Platform Core (cloud accounts, ICloudAccountTokens, drive sources),
+    never the reverse. A host references it only through build/Kazo.Os.CloudDrives.targets, and only
+    when KazoOsDropboxDrives, KazoOsOneDriveDrives or KazoOsS3Drives is true.
+  -->
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Kazo.Os.Platform.Core\Kazo.Os.Platform.Core.csproj" />
+    <ProjectReference Include="..\..\Shared\Kazo.Os.Simulation.Abstractions\Kazo.Os.Simulation.Abstractions.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.14" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- The connector tests stay next to the cloud account and host folder fixtures they share
+         (Tests/Kazo.Os.Platform.Core.Tests/CloudDrives) and check internal helpers (S3 signing,
+         Dropbox and Graph error mapping). -->
+    <InternalsVisibleTo Include="Kazo.Os.Platform.Core.Tests" />
+  </ItemGroup>
+
+</Project>

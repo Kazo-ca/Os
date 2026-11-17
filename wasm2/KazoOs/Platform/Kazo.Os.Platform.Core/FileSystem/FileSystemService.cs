@@ -859,11 +859,23 @@ public sealed class FileSystemService : IFileSystemService, IExternalFileSystemC
     private static bool IsInTrash(VirtualPath path) =>
         path.Value.Contains("/" + ServerConnection.SyncFileOperations.TrashRelativePath + "/", StringComparison.Ordinal);
 
-    /// <summary>A persistent mutation changed the used space, or hit the real limit: ask for a new measure.</summary>
+    /// <summary>
+    /// A persistent mutation changed the used space: ask for a new measure. When the provider itself
+    /// answered <c>ENOSPC</c>, the browser refused the write (its real limit, ADR 0279): report it, since
+    /// a rounded estimate may never show the space going down.
+    /// </summary>
     private void NoteSpaceUse(FileSystemMutationResult result, IFileSystemProvider target)
     {
-        if (_spaceGuard is not null && target is not IVirtualFileSystemProvider
-            && (result.Succeeded || result.Transaction.Error?.Code == FileSystemErrorCode.NoSpace))
+        if (_spaceGuard is null || target is IVirtualFileSystemProvider)
+        {
+            return;
+        }
+
+        if (result.Transaction.Error?.Code == FileSystemErrorCode.NoSpace)
+        {
+            _spaceGuard.ReportWriteRefused();
+        }
+        else if (result.Succeeded)
         {
             _spaceGuard.RequestRefresh();
         }

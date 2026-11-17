@@ -157,6 +157,9 @@ string? other = await KazoKeyring.GetAsync(AppContext, "org.example.mail", "imap
 
 - An app sees only its own entries. Reading those of another app or listing
   everything requires `keyring.read-all`; without it, `UnauthorizedAccessException`.
+- Entries of owner `org.kazoos.cloud-accounts` (keys of the cloud accounts'
+  tokens, [`cloud-accounts.md`](cloud-accounts.md)) are reserved to the OS: no
+  app reads them, even with `keyring.read-all`.
 - A locked keyring throws `KazoKeyringLockedException`.
 - An identifier is at most 256 characters, with no control character.
 - Each method also exists without a context (ambient context of ADR 0043).
@@ -240,6 +243,46 @@ Decision: [ADR 0120](adr/0120-passwd-and-administrator-password-reset.md).
   and deleting accounts (ADR 0169, [`settings-app.md`](settings-app.md)).
   The session's passkeys are in `PasskeysPanel` (ADR 0168).
 
+## 5. Roles of the features and authentication of operations
+
+[ADR 0247](adr/0247-feature-declared-roles.md). A role of a feature opens
+entry points; it gives no `Administrator` authority.
+
+| Item | Where | Detail |
+|---|---|---|
+| Grants | `/etc/kazoos/roles.config`, section `[roles]` | `role=<id>,<id>` (users' `N` ids); written by the system (`FeatureRoleService`) after an administrator; never a line for an administrator |
+| Reading | `FeatureRoleService.RolesOf` | at boot (`EcosystemBootCoordinator.FeatureRoles`), then at each grant; every declared role for an administrator or root |
+| Context | `IAppExecutionContext.Roles`, `FeatureAuthentication` | set by `AppExecutionContextFactory` |
+| Tickets | `FeatureOperationTickets` | 30 s, once, feature + operation + user; the OS keeps the ticket it issued and returns it on use; expired tickets are purged |
+
+**Authentication of an operation.** `AppFeatureAuthenticationGateway` (one per
+process) refuses a caller that is neither a feature nor one of its entry
+points. For `RoleHolder`, the user must hold the role of the entry point marked
+`RequiresRole`, or a role of the feature from another entry point
+([ADR 0283](adr/0283-feature-roles-isinrole-adjustments.md) §5) (otherwise `feature.role-denied` and a refusal before any window), then the
+OS's agent (`AdministratorAuthenticationAgent`) opens its window with
+`RoleHolderLogin`: only that account is accepted, by password as by passkey
+(`not-the-session-user` otherwise), checked by `AdminElevationVerifier.VerifyUserAsync` (the user's own
+password, administrator or not; the lone guest confirms without one). For
+`Administrator`, any enabled administrator. Three failures cancel. Under
+`sudo`, the agent passes without a window and logs it (`via=sudo`).
+
+**`auth.log`.** `feature.authenticate` (each attempt, with `scope` and
+`operation`, never the password), `feature.role-denied` (entry point refused
+for want of the role), `role.grant` and `role.revoke` (grant, with the
+administrator, the user and the role), and `users.role-grant` /
+`users.role-revoke` for the authentication of the administrator who makes them.
+
+**Reading again.** `FeatureRoleService` reads `roles.config` again when the
+file changes (`IOsSettingsService.DocumentChanged`), under the same lock as the
+grants: a revocation made elsewhere takes effect without a restart. An entry
+point that requires a role is checked before a running single instance gets
+the request, and before an elevation ticket is used up.
+
+**Known limit.** `roles.config` is not synchronized with the server yet (no
+list of synchronized system documents exists); the ADR plans it to be, like the
+other system documents.
+
 ## Known limits
 
 - OS documents (`OsSettingsDocument`) accept only public
@@ -290,3 +333,4 @@ Decision: [ADR 0120](adr/0120-passwd-and-administrator-password-reset.md).
 - [x] `ausearch` command and reading of the audit log by the Error Log Viewer
 - [x] Tests
 - [x] `passwd` command and reset by an administrator (ADR 0120: `LocalPasswordService`, `KazoUserAccounts`, "Users" tab)
+- [x] Roles of the features and authentication of their operations (ADR 0247: `roles.config`, `FeatureRoleService`, tickets, `kazorole`)

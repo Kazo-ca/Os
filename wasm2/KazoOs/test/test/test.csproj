@@ -68,5 +68,7 @@
 
   <!-- ADR 0066: optional CPU/memory accounting (KazoOsCpuAccounting, KazoOsMemoryAccounting). -->
   <Import Project="..\..\build\Kazo.Os.ResourceAccounting.targets" />
+  <!-- ADR 0282 §5: the shipped cloud drive connectors (KazoOsDropboxDrives, KazoOsOneDriveDrives, KazoOsS3Drives). -->
+  <Import Project="..\..\build\Kazo.Os.CloudDrives.targets" />
 
 </Project>
