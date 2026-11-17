@@ -1,2 +1,31 @@
 #nullable enable
+Kazo.Os.Simulation.Abstractions.Metrics.OriginStorageStatus.QuotaBytes.get -> long
+Kazo.Os.Simulation.Abstractions.Metrics.OriginStorageStatus.UsageBytes.get -> long
+Kazo.Os.Simulation.Abstractions.Metrics.OriginStorageStatus.QuotaBytes.init -> void
+Kazo.Os.Simulation.Abstractions.Metrics.OriginStorageStatus.UsageBytes.init -> void
+Kazo.Os.Simulation.Abstractions.Metrics.OriginStorageStatus
+Kazo.Os.Simulation.Abstractions.Metrics.OriginStorageStatus.IsPersisted.get -> bool
+override Kazo.Os.Simulation.Abstractions.Metrics.OriginStorageStatus.ToString() -> string!
+static Kazo.Os.Simulation.Abstractions.Metrics.OriginStorageStatus.operator !=(Kazo.Os.Simulation.Abstractions.Metrics.OriginStorageStatus? left, Kazo.Os.Simulation.Abstractions.Metrics.OriginStorageStatus? right) -> bool
+Kazo.Os.Simulation.Abstractions.Metrics.OriginStorageStatus.IsPersisted.init -> void
+static Kazo.Os.Simulation.Abstractions.Metrics.OriginStorageStatus.operator ==(Kazo.Os.Simulation.Abstractions.Metrics.OriginStorageStatus? left, Kazo.Os.Simulation.Abstractions.Metrics.OriginStorageStatus? right) -> bool
+override Kazo.Os.Simulation.Abstractions.Metrics.OriginStorageStatus.GetHashCode() -> int
+override Kazo.Os.Simulation.Abstractions.Metrics.OriginStorageStatus.Equals(object? obj) -> bool
+Kazo.Os.Simulation.Abstractions.Metrics.OriginStorageStatus.Equals(Kazo.Os.Simulation.Abstractions.Metrics.OriginStorageStatus? other) -> bool
+Kazo.Os.Simulation.Abstractions.Metrics.OriginStorageStatus.<Clone>$() -> Kazo.Os.Simulation.Abstractions.Metrics.OriginStorageStatus!
+Kazo.Os.Simulation.Abstractions.Metrics.OriginStorageStatus.Deconstruct(out long UsageBytes, out long QuotaBytes, out bool IsPersisted) -> void
+Kazo.Os.Simulation.Abstractions.Metrics.IOriginStorage
+Kazo.Os.Simulation.Abstractions.Metrics.OriginStorageStatus.FileSystemBytes.init -> void
+Kazo.Os.Simulation.Abstractions.Metrics.OriginStorageStatus.FileSystemBytes.get -> long?
+Kazo.Os.Simulation.Abstractions.Metrics.OriginStorageStatus.CacheBytes.init -> void
+Kazo.Os.Simulation.Abstractions.Metrics.OriginStorageStatus.CacheBytes.get -> long?
+Kazo.Os.Simulation.Abstractions.Metrics.OriginStorageStatus.IndexedDbBytes.init -> void
+Kazo.Os.Simulation.Abstractions.Metrics.OriginStorageStatus.IndexedDbBytes.get -> long?
+Kazo.Os.Simulation.Abstractions.Metrics.OriginStorageStatus.OriginStorageStatus(long UsageBytes, long QuotaBytes, bool IsPersisted) -> void
+Kazo.Os.Simulation.Abstractions.Metrics.IOriginStorage.GetStatusAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.Simulation.Abstractions.Metrics.OriginStorageStatus?>
+Kazo.Os.Simulation.Abstractions.Metrics.IOriginStorage.RequestPersistenceAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<bool>
+Kazo.Os.Simulation.Abstractions.Metrics.IOriginStorage.ReadBootMarkerAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<string?>
+Kazo.Os.Simulation.Abstractions.Metrics.IOriginStorage.WriteBootMarkerAsync(string! marker, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Kazo.Os.Simulation.Abstractions.Metrics.IOriginStorage.DatabaseExistsAsync(string! name, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<bool?>
+Kazo.Os.Simulation.Abstractions.Metrics.IOriginStorage.FileExistsAsync(string! path, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<bool?>
 Kazo.Os.Simulation.Abstractions.Metrics.IStorageSpaceGuard.ReportWriteRefused() -> void

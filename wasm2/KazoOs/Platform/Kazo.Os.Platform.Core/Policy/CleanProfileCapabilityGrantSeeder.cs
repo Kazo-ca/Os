@@ -38,16 +38,46 @@ public static class CleanProfileCapabilityGrantSeeder
         ICapabilityGrantRepository repository,
         AppManifest manifest,
         string userId,
-        bool isSystemApp)
+        bool isSystemApp) =>
+        SeedDeclaredCapabilities(repository, manifest, userId, isSystemApp, BuiltInCapabilityCatalog.Instance);
+
+    /// <summary>
+    /// Grants one user the capabilities one validated manifest declares that the catalog knows
+    /// (ADR 0246 §3): the normal ones, and the dangerous ones of a system app. An identifier the
+    /// catalog does not know (a permission of a feature that is not installed or enabled, or any
+    /// unknown text) is never granted: it is skipped and reported.
+    /// </summary>
+    /// <param name="repository">Target capability grant repository.</param>
+    /// <param name="manifest">Validated app manifest whose declared capabilities become default grants.</param>
+    /// <param name="userId">Exact user ID receiving the default grants.</param>
+    /// <param name="isSystemApp">Whether the app is a system app of the host, which receives its dangerous capabilities without approval.</param>
+    /// <param name="catalog">The catalog of the running OS: built-in capabilities and the permissions of its features.</param>
+    /// <param name="skipped">Receives each identifier the catalog does not know (<c>capability.unknown-skipped</c>).</param>
+    /// <returns>The mutation result recorded for each granted capability, in manifest order.</returns>
+    public static IReadOnlyList<CapabilityGrantMutationResult> SeedDeclaredCapabilities(
+        ICapabilityGrantRepository repository,
+        AppManifest manifest,
+        string userId,
+        bool isSystemApp,
+        ICapabilityCatalog catalog,
+        Action<string>? skipped = null)
     {
         ArgumentNullException.ThrowIfNull(repository);
         ArgumentNullException.ThrowIfNull(manifest);
         ArgumentException.ThrowIfNullOrWhiteSpace(userId);
+        ArgumentNullException.ThrowIfNull(catalog);
 
         List<CapabilityGrantMutationResult> results = [];
         foreach (string capability in manifest.Capabilities)
         {
-            bool dangerous = AppCapabilities.IsDangerous(capability);
+            // ADR 0246 §3: no « not dangerous by default »; only what the catalog describes (issue #432).
+            if (catalog.Find(capability) is not { } description)
+            {
+                skipped?.Invoke(capability);
+                continue;
+            }
+
+            bool dangerous = description.Risk == CapabilityRisk.Dangerous;
             if (dangerous && !isSystemApp)
             {
                 // Pending administrator approval (ADR 0049 section 4); never granted silently.

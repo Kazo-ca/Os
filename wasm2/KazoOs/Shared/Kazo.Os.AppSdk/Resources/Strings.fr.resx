@@ -120,4 +120,7 @@
   <data name="Transfer.Verb.Upload" xml:space="preserve">
     <value>importer</value>
   </data>
+  <data name="Apps.RequestInstall.NoStore" xml:space="preserve">
+    <value>Installe {0} avec : kazopkg install {0}</value>
+  </data>
 </root>

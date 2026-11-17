@@ -1,0 +1,5 @@
+{
+  "name": "kazorole",
+  "description": "Liste, attribue et retire les rôles des Features",
+  "terminalUsage": "kazorole list | grant <usager> <rôle> | revoke <usager> <rôle>"
+}

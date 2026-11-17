@@ -110,81 +110,73 @@ internal sealed partial class AppManagementGateway
     public async ValueTask<KazoPackageInstallReport> InstallPackageAsync(
         string source, KazoPackageScope scope, IProgress<KazoPackageInstallProgress>? progress, CancellationToken cancellationToken = default)
     {
-        AppPackageInstaller packages = RequirePackages();
-        IAppFileSystemGateway system = CreateSystemWriter();
-        IAppFileSystemGateway user = CreateUserWriter();
-        AppSourcesConfig sources = await packages.ReadSourcesAsync(system, cancellationToken).ConfigureAwait(false);
-        AppPackageSource parsed = await ResolveSourceAsync(packages, source, sources, cancellationToken).ConfigureAwait(false);
-        InstalledAppsReadResult systemInstalled = await packages.ReadInstalledAsync(system, cancellationToken).ConfigureAwait(false);
-        AppPackageInstallContext context = new(
-            sources,
-            await packages.ReadPolicyAsync(system, cancellationToken).ConfigureAwait(false),
-            (AppPackageScope)scope,
-            _principal.HomePath,
-            _catalog,
-            systemInstalled,
-            await packages.ReadPersonalInstalledAsync(user, _principal.HomePath, cancellationToken).ConfigureAwait(false))
-        {
-            PackagedAppIds = (_installedPackages?.Invoke()?.Apps.Keys ?? []).Concat(systemInstalled.Sources.Keys).ToHashSet(StringComparer.Ordinal),
-            // ADR 0261 §1, §2: the libraries the installed apps carry, and those already in the page.
-            InstalledApps = [.. (_installedPackages?.Invoke()?.Apps.Values ?? []).Distinct()],
-            LoadedPackageLibraries = InstalledLibraries?.Invoke()?.LoadedFromPackages ?? new HashSet<string>(StringComparer.OrdinalIgnoreCase),
-        };
-        // Download and every check first: no administrator is asked for a package that would be refused.
-        AppPackagePlan plan = await Translate(() => packages.PrepareAsync(parsed, context, progress, cancellationToken)).ConfigureAwait(false);
-        AppManifest manifest = plan.Package.Manifest;
+        PackageInstallSession session = await OpenInstallSessionAsync(source, scope, cancellationToken).ConfigureAwait(false);
+        // ADR 0248 §1: the whole plan is downloaded and checked first, so no administrator is asked
+        // for a package that would be refused, and nothing is written when a dependency is missing.
+        AppPackageInstallPlan plan = await Translate(
+                () => session.Packages.BuildPlanAsync(session.Source, session.Context, progress, cancellationToken))
+            .ConfigureAwait(false);
+        AppPackagePlan root = plan.Root;
+        AppManifest manifest = root.Package.Manifest;
         string by = _principal.LoginName.Value;
         if (plan.RequiresAdministrator)
         {
             progress?.Report(new KazoPackageInstallProgress(KazoPackageInstallStage.AwaitingApproval));
-            string operation = Strings.For(_language())[
-                plan.SystemWide
-                    ? plan.Trust == AppSourceTrust.Untrusted ? "Admin.App.InstallUntrustedPackage" : "Admin.App.InstallPackage"
-                    : "Admin.App.InstallUntrustedPackageForUser",
-                manifest.Name,
-                plan.Package.Version.ToString(),
-                plan.Source.Name,
-                _principal.LoginName.Value];
-            by = await ApproveTwoStepAsync(
-                operation,
-                "apps.package.install",
-                new AppInstallApprovalRequest(
-                    manifest.Id,
-                    manifest.Name,
-                    plan.Package.Version.ToString(),
-                    plan.PreviousVersion?.ToString(),
-                    plan.SizeBytes,
-                    plan.Source.ToString(),
-                    plan.Trust,
-                    manifest.Capabilities,
-                    plan.PreviousVersion is null ? AppInstallApprovalOperation.Install : AppInstallApprovalOperation.Update,
-                    plan.SystemWide,
-                    string.Empty,
-                    _principal,
-                    _caller)
-                {
-                    BlockReason = plan.BlockReason,
-                    Signed = plan.Signed,
-                    // ADR 0260 §3: the window shows the feature's set once, with what it brings.
-                    IsFeature = plan.Package.IsFeature,
-                    FeatureEntryPoints = DescribeEntryPoints(plan.Package),
-                },
-                cancellationToken).ConfigureAwait(false);
+            // One consent for the plan: the window lists every package, the administrator signs in once.
+            by = await ApproveTwoStepAsync(DescribeInstallOperation(plan), "apps.package.install", ToApprovalRequest(plan), cancellationToken)
+                .ConfigureAwait(false);
         }
 
         progress?.Report(new KazoPackageInstallProgress(KazoPackageInstallStage.Installing));
-        IReadOnlyList<string> personalCopies = plan.SystemWide
-            ? await packages.FindPersonalCopiesAsync(system, manifest.Id, cancellationToken).ConfigureAwait(false)
-            : [];
-        await packages
-            .CommitAsync(plan.SystemWide ? system : user, plan, by, cancellationToken, personalCopies)
-            .ConfigureAwait(false);
-        if (plan.Package.IsFeature)
+        Dictionary<string, IReadOnlyList<string>> personalCopies = new(StringComparer.Ordinal);
+        foreach (AppPackagePlan package in plan.Packages.Where(static package => package.SystemWide))
         {
-            await ApproveFeatureAsync(plan.Package, cancellationToken).ConfigureAwait(false);
+            personalCopies[package.Package.AppId] = await session.Packages
+                .FindPersonalCopiesAsync(session.System, package.Package.AppId, cancellationToken)
+                .ConfigureAwait(false);
         }
 
-        await ActivateInstalledAppsAsync(CancellationToken.None).ConfigureAwait(false);
+        await session.Packages
+            .CommitPlanAsync(
+                plan,
+                package => package.SystemWide ? session.System : session.User,
+                by,
+                package => personalCopies.TryGetValue(package.Package.AppId, out IReadOnlyList<string>? homes) ? homes : [],
+                cancellationToken)
+            .ConfigureAwait(false);
+        IReadOnlyList<string> reactivatedDependents;
+        try
+        {
+            foreach (AppPackagePlan package in plan.Packages.Where(static package => package.Package.IsFeature))
+            {
+                await ApproveFeatureAsync(package.Package, cancellationToken).ConfigureAwait(false);
+            }
+
+            // Before the catalog reloads: the reactivated apps join it enabled (ADR 0048, ADR 0248 §1, §3).
+            await ReactivateDependenciesAsync(plan, session, cancellationToken).ConfigureAwait(false);
+            reactivatedDependents = await ReactivateDependentsAsync(plan, session, cancellationToken).ConfigureAwait(false);
+        }
+        finally
+        {
+            // The packages are written, each with its dependencies: whatever failed after them, the
+            // catalog takes them, so the OS never shows a state older than its files.
+            await ActivateInstalledAppsAsync(CancellationToken.None).ConfigureAwait(false);
+        }
+
+        ICapabilityCatalog capabilities = PlanCapabilities(plan);
+        return ToReport(root, personalCopies.TryGetValue(manifest.Id, out IReadOnlyList<string>? replaced) ? replaced.Count : 0, capabilities) with
+        {
+            Dependencies = [.. plan.Dependencies.Select(package => ToReport(
+                package, personalCopies.TryGetValue(package.Package.AppId, out IReadOnlyList<string>? homes) ? homes.Count : 0, capabilities))],
+            Reactivated = [.. plan.Reactivations.Select(static app => app.Name)],
+            ReactivatedDependents = reactivatedDependents,
+        };
+    }
+
+    /// <summary>The report of one package of a committed plan.</summary>
+    private KazoPackageInstallReport ToReport(AppPackagePlan plan, int replacedPersonalCopies, ICapabilityCatalog capabilities)
+    {
+        AppManifest manifest = plan.Package.Manifest;
         return new KazoPackageInstallReport(
             manifest.Id,
             manifest.Name,
@@ -197,11 +189,13 @@ internal sealed partial class AppManagementGateway
             Trust = ToPublic(plan.Trust),
             SystemWide = plan.SystemWide,
             BlockedBy = plan.BlockReason?.ToString(),
-            ReplacedPersonalCopies = personalCopies.Count,
+            ReplacedPersonalCopies = replacedPersonalCopies,
             RestartRequired = !RunsVersion(manifest.Id, plan.Package.Version),
             Signed = plan.Signed,
             IsFeature = plan.Package.IsFeature,
             EntryPoints = DescribeEntryPoints(plan.Package),
+            // ADR 0246: dangerous as the catalog of the running OS says, features' permissions included.
+            DangerousCapabilities = [.. manifest.Capabilities.Where(capabilities.IsDangerous)],
         };
     }
 
@@ -274,16 +268,28 @@ internal sealed partial class AppManagementGateway
         IAppFileSystemGateway user = CreateUserWriter();
         InstalledAppsReadResult personal = await packages.ReadPersonalInstalledAsync(user, _principal.HomePath, cancellationToken).ConfigureAwait(false);
         bool forUser = scope == KazoPackageScope.User || (scope == KazoPackageScope.Auto && personal.Sources.ContainsKey(appId));
+        IAppFileSystemGateway system = CreateSystemWriter();
         if (forUser)
         {
+            if (!personal.Sources.ContainsKey(appId))
+            {
+                throw new KazoPackageException("apps.package.not-installed", $"{appId} was not installed for you from a package.");
+            }
+
             AppPackageSource removedForUser = await Translate(
                     () => packages.RemoveAsync(user, appId, _principal.LoginName.Value, cancellationToken, _principal.HomePath))
                 .ConfigureAwait(false);
+            // ADR 0248 §3: once it is gone, the apps that need it are disabled, never left broken;
+            // before the catalog reloads, so they leave it disabled. A copy installed for the system
+            // still provides it: then nothing is disabled.
+            bool stillForSystem = (await packages.ReadInstalledAsync(system, cancellationToken).ConfigureAwait(false)).Sources.ContainsKey(appId);
+            IReadOnlyList<string> disabledForUser = stillForSystem
+                ? []
+                : await DisableDependentsAsync(appId, systemWide: false, system, user, cancellationToken).ConfigureAwait(false);
             await ActivateInstalledAppsAsync(CancellationToken.None).ConfigureAwait(false);
-            return ToPublic(appId, removedForUser, systemWide: false, removed: true);
+            return ToPublic(appId, removedForUser, systemWide: false, removed: true) with { DisabledDependents = disabledForUser };
         }
 
-        IAppFileSystemGateway system = CreateSystemWriter();
         InstalledAppsReadResult installed = await packages.ReadInstalledAsync(system, cancellationToken).ConfigureAwait(false);
         if (!installed.Sources.TryGetValue(appId, out AppPackageSource? source))
         {
@@ -313,6 +319,8 @@ internal sealed partial class AppManagementGateway
                 _caller)
             {
                 IsFeature = manifest?.Kind == AppKind.Feature,
+                // ADR 0248 §3: the window says which apps stop working and are disabled.
+                DisabledDependents = [.. FindDependents(appId).Select(id => _catalog.Manifests[id].Name)],
             },
             cancellationToken).ConfigureAwait(false);
         bool feature = manifest?.Kind == AppKind.Feature;
@@ -323,8 +331,9 @@ internal sealed partial class AppManagementGateway
         }
 
         AppPackageSource removed = await Translate(() => packages.RemoveAsync(system, appId, by, cancellationToken)).ConfigureAwait(false);
+        IReadOnlyList<string> disabled = await DisableDependentsAsync(appId, systemWide: true, system, user, cancellationToken).ConfigureAwait(false);
         await ActivateInstalledAppsAsync(CancellationToken.None).ConfigureAwait(false);
-        return ToPublic(appId, removed, systemWide: true, removed: true);
+        return ToPublic(appId, removed, systemWide: true, removed: true) with { DisabledDependents = disabled };
     }
 
     /// <inheritdoc />

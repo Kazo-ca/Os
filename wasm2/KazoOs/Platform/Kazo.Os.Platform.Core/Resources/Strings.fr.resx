@@ -789,4 +789,28 @@ Annuler : décider au prochain lancement.</value>
   <data name="Capability.cloud-accounts.manage.Risk" xml:space="preserve">
     <value>Connecter ou retirer vos comptes Dropbox, OneDrive ou S3 et monter leur stockage comme lecteurs réseau.</value>
   </data>
+  <data name="Admin.App.InstallDependencies" xml:space="preserve">
+    <value>Installer {0} {1} avec ce qu'il lui faut pour tous les utilisateurs : {2}</value>
+  </data>
+  <data name="Storage.Evicted.Title" xml:space="preserve">
+    <value>Stockage effacé par le navigateur</value>
+  </data>
+  <data name="Storage.Evicted.Message" xml:space="preserve">
+    <value>Le navigateur a effacé les données de {0} (par exemple les disques d'une machine virtuelle). Ouvrez-la pour exporter ce qui reste, ou Paramètres ▸ Stockage pour protéger le stockage.</value>
+  </data>
+  <data name="Storage.Evicted.OpenSettings" xml:space="preserve">
+    <value>Réglages du stockage</value>
+  </data>
+  <data name="Feature.Authenticate.Operation" xml:space="preserve">
+    <value>{0} demande : {1}</value>
+  </data>
+  <data name="Shell.RoleRequired" xml:space="preserve">
+    <value>{0} : rôle requis</value>
+  </data>
+  <data name="Admin.GrantRole" xml:space="preserve">
+    <value>Attribuer le rôle {0} au compte {1}</value>
+  </data>
+  <data name="Admin.RevokeRole" xml:space="preserve">
+    <value>Retirer le rôle {0} au compte {1}</value>
+  </data>
 </root>

@@ -395,6 +395,13 @@ public static class InstalledAppsBootExtensions
     public static async Task LoadInstalledAppsAsync(this WebAssemblyHost host)
     {
         ArgumentNullException.ThrowIfNull(host);
+        if (OperatingSystem.IsBrowser()
+            && host.Services.GetService<Kazo.Os.Platform.Core.Storage.StorageEvictionDetector>() is { } eviction)
+        {
+            // ADR 0250 §2: before anything opens (and so creates) the OS database.
+            await eviction.DetectAsync().ConfigureAwait(true);
+        }
+
         await MigrateRenamedStorageAsync(host).ConfigureAwait(true);
         if (OperatingSystem.IsBrowser())
         {

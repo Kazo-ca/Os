@@ -110,6 +110,43 @@ version, stores, record count, estimated size) and
 (ADR 0088 §4, [`asp-kazo-site-data.md`](asp-kazo-site-data.md)). Diagnostics shows them
 under *Website databases*.
 
+### Browser storage (`KazoStorage`, ADR 0250)
+
+`KazoStorage` (`Shared/Kazo.Os.AppSdk/Storage/`) tells about the storage of
+the page's origin, which Kazo's Files (IndexedDB), the OS caches and the
+features' OPFS share:
+
+- `GetEstimateAsync`: usage, quota, `IsPersisted`, `IsLowSpace` (thresholds
+  of ADR 0099), the part of each kind of storage when the browser gives it
+  (`IndexedDbBytes`, `CacheBytes`, `FileSystemBytes`, Chromium only), the
+  space the calling feature declared and `PersistenceLost`. No capability.
+- `RequestPersistenceAsync`: `navigator.storage.persist()`, **once per
+  origin** (`OriginStorageService` does not ask again when `persisted()` is
+  true). For features, their entry points and system apps only; an ordinary
+  app gets `KazoUnauthorizedAccessException` (`manifest.feature.only`). Call
+  it right after a gesture of the user.
+- `RegisterMarkerAsync(path)` and `ReportUsageAsync(bytes)`: a feature
+  registers a marker file of its OPFS and the space it uses, kept by the OS in
+  `/var/lib/kazoos/storage/features.json`.
+- `GetFeatureUsageAsync`: the features and their declared space (Settings,
+  `df`).
+- `Changed`: `Evicted` when the marker is gone from the OPFS, delivered to
+  the feature as soon as it subscribes at its next launch.
+
+At boot, `StorageEvictionDetector` compares, **before** the databases are
+opened, the `kazoos.storage.marker` marker of `localStorage` with the
+existence of the `kazoos` database: a marker without the database is an
+eviction. The first-run screen says so (date of the last boot, restoring a
+backup), `kern.log` and `syslog` get `storage.evicted`, then the successful
+boot writes the marker again. The features' markers are checked next; a
+marker gone gives the user a notification and the feature `Changed(Evicted)`.
+
+Settings ▸ System ▸ Storage (`StoragePanel`) shows usage, quota, the parts,
+the "protected" state and the "Protect the storage against erasure" button,
+and each feature's space. `df` adds a `/dev/feature/<id>` line per feature
+that declared its space. The 5 % reserve still counts the whole origin: the
+features' disks count in the space of the Files.
+
 ### Backup (`system.backup`)
 
 `KazoSystemBackup.CreateAsync` downloads a `.kosbak` archive of the whole
@@ -155,6 +192,57 @@ Session passkeys (ADR 0168), without a capability: `ListPasskeysAsync`,
 without WebAuthn) and `RemovePasskeyAsync(id)`. `KazoPasskey.UnlocksKeyring` says whether
 the key opens the keyring. Details: [`passkeys.md`](../dev/passkeys.md).
 
+### Roles of the features (ADR 0247, adjusted by ADR 0283)
+
+A feature declares roles (`FeatureDefinition.Roles`, `FeatureRole(id, title)`
+with `Description` and `Grants`), each `<prefix>:<name>`, the prefix being the
+feature's `CapabilityPrefix`, its unique short name (`x86:vm-manager`,
+[ADR 0283](../dev/adr/0283-feature-roles-isinrole-adjustments.md)); an entry point marked `RequiresRole` opens only to a user
+who holds the role. The manifest carries them (`roles`, `requiresRole`); the
+validator refuses a role outside a feature, under another prefix than its own,
+without a title,
+or a `requiresRole` no role of the feature declares.
+
+- **Granting**: `KazoUserAccounts.ListRolesAsync()` lists the declared roles
+  (`KazoFeatureRole`); `GrantRoleAsync(login, role)` and
+  `RevokeRoleAsync(login, role)` need `users.manage` and an administrator
+  (actions `users.role-grant` and `users.role-revoke`). `KazoUserAccount.Roles`
+  gives the roles of an account. The grant is written to
+  `/etc/kazoos/roles.config` (`[roles]`, `x86:vm-admin=<id>,<id>`, stable ids,
+  never names). Settings ▸ Users shows one column per role (panel
+  `FeatureRolesPanel`); `sudo kazorole grant|revoke <user> <role>` does the
+  same, `kazorole list` lists the roles and their holders.
+- **Administrator** (answer 233 B): holds every role implicitly, with no line
+  in `roles.config`; the screen says "implicit (administrator)" and
+  `kazorole grant` on one changes nothing (exit 0). An account demoted to
+  `User` loses these implicit roles; root under `sudo` holds them all.
+- **Reading**: `KazoUser.Current.IsInRole(role)` (or `KazoUser.IsInRole(role)`)
+  and `IAppExecutionContext.Roles`. A role of the OS has a simple name: `admin`
+  (`KazoRoles.Administrator`), true for an administrator and root; a role of a
+  feature is `<Feature>:<role>`, true for its holder and for every
+  administrator. A subcommand of a command open to all (`x86 admin`) checks its
+  role with `IsInRole`.
+  An entry point without its role is absent from the launcher, the mobile home
+  screen and the shell's completion; launching it answers
+  `AppLaunchStatus.RoleRequired` (`lifecycle.role.required`), the shell writes
+  "role required" and exits with 126, and `feature.role-denied` is written to
+  `auth.log`.
+- **Sensitive operations**: the role opens the entry point; it is not an
+  authorization for each operation. `KazoFeatureAuthentication.AuthenticateAsync(operation, scope)`
+  opens the OS's window (never one of the feature):
+  `KazoAuthenticationScope.RoleHolder` asks the session user's password again,
+  and they must hold the role of the entry point marked `RequiresRole`, or, from
+  another entry point of the feature, a role of the feature (the feature checks
+  the exact role with `IsInRole`; refused to a service or to a user with no role
+  of the feature); `Administrator` asks an
+  administrator. The ticket it returns (`KazoAuthenticationTicket`) is valid
+  30 s, once, for this feature, this operation and this user:
+  `ConsumeAsync(ticket, operation)` refuses it for another operation or another
+  user, and returns the ticket the OS issued, whose `Scope` the feature reads
+  (never the copy presented). Under `sudo`, no second window. An ordinary app is
+  refused. Details:
+  [`sensitive-settings.md`](../dev/sensitive-settings.md#5-roles-of-the-features-and-authentication-of-operations).
+
 ## Decisions
 
 - See ADR 0060: `SystemPower` property (not `System`),
@@ -185,6 +273,12 @@ administrator), session passkeys without capability or administrator.
 `Tests/Kazo.Os.Platform.Core.Tests/Sessions/LocalAccountServiceTests.cs`:
 groups, reserved or taken names, deletion with or without home folder, refusal for
 oneself and for the last administrator.
+
+`Tests/Kazo.Os.Platform.Core.Tests/Roles/`: roles granted, refused, implicit
+for an administrator, lost by a demoted account, read back from
+`roles.config`; authentication of operations (ticket bound to the operation,
+single use, ordinary app refused, `sudo` without a window).
+`Tests/Kazo.Os.Commands.Wave5.Tests/KazoroleCommandTests.cs`: `kazorole`.
 
 ## Task list
 

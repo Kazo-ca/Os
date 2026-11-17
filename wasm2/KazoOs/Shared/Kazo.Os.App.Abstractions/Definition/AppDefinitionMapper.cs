@@ -144,7 +144,24 @@ public static class AppDefinitionMapper
             Execution = AppExecutionHost.MainThread,
             OomScoreAdj = definition.OomScoreAdjust,
             // ADR 0262 §1: the services the feature provides, in its own assemblies.
-            ProvidedServices = ToProvidedServices(definition)
+            ProvidedServices = ToProvidedServices(definition),
+            // ADR 0246 §1: the permissions it declares, under its prefix.
+            CapabilityPrefix = definition.CapabilityPrefix,
+            ProvidedCapabilities = definition.ProvidedCapabilities is not { Count: > 0 } declared
+                ? null
+                : [.. declared.Select(static capability => new AppProvidedCapabilityManifest(capability.Id, capability.Risk, capability.Title)
+                {
+                    RiskStatement = capability.RiskStatement,
+                    Covers = capability.Covers.Count == 0 ? null : [.. capability.Covers],
+                })],
+            // ADR 0247 §1: the roles it declares, under the same prefix.
+            Roles = definition.Roles is not { Count: > 0 } roles
+                ? null
+                : [.. roles.Select(static role => new AppRoleManifest(role.Id, role.Title)
+                {
+                    Description = role.Description,
+                    Grants = role.Grants.Count == 0 ? null : [.. role.Grants],
+                })]
         };
 
         IReadOnlyList<FeatureEntryPoint> entryPoints = definition.EntryPoints
@@ -172,6 +189,8 @@ public static class AppDefinitionMapper
                 Presentation = new PresentationManifest(entry.Category ?? definition.Category, entry.LaunchVisibility, [.. entry.Icons]),
                 Localizations = [.. definition.Localizations],
                 Capabilities = [.. entry.Capabilities],
+                // ADR 0247 §2: the role that opens this entry point, if any.
+                RequiresRole = entry.RequiresRole,
                 // ADR 0235 §3: the ports go with the capability that needs them.
                 RealNetworkPorts = carriesRealNetwork && definition.RealNetworkPorts.Count > 0 ? [.. definition.RealNetworkPorts] : null,
                 DeclaredTopicPermissions = [],

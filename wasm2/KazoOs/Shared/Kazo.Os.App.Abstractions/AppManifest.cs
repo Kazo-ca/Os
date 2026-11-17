@@ -89,6 +89,32 @@ public sealed record AppManifest
     public IReadOnlyList<AppProvidedServiceManifest>? ProvidedServices { get; init; }
 
     /// <summary>
+    /// Gets the prefix of the permissions a <see cref="AppKind.Feature"/> declares (ADR 0246 §2),
+    /// <c>x86</c>, or <see langword="null"/> (omitted) when it declares none.
+    /// </summary>
+    public string? CapabilityPrefix { get; init; }
+
+    /// <summary>
+    /// Gets the permissions a <see cref="AppKind.Feature"/> declares (ADR 0246 §1), or
+    /// <see langword="null"/> (omitted from <c>manifest.json</c>) when it declares none, so existing
+    /// manifests keep their exact bytes. The OS catalog of capabilities is the built-in catalog plus
+    /// these declarations of the installed features.
+    /// </summary>
+    public IReadOnlyList<AppProvidedCapabilityManifest>? ProvidedCapabilities { get; init; }
+
+    /// <summary>
+    /// Gets the roles a <see cref="AppKind.Feature"/> declares (ADR 0247 §1), or <see langword="null"/>
+    /// (omitted) when it declares none, so existing manifests keep their exact bytes.
+    /// </summary>
+    public IReadOnlyList<AppRoleManifest>? Roles { get; init; }
+
+    /// <summary>
+    /// Gets the role of its feature a user must hold to see and launch this entry point (ADR 0247 §2),
+    /// or <see langword="null"/> (omitted) for every user.
+    /// </summary>
+    public string? RequiresRole { get; init; }
+
+    /// <summary>
     /// Gets the custom topic permissions this app declares and exports, gating its own shared messaging
     /// channels. Purely optional per <c>doc/en/wasm/dev/adr/0040-declared-topic-permissions.md</c> — most apps
     /// declare none and rely on the default owner-only/open channel access instead. Every identifier must
@@ -354,4 +380,29 @@ public sealed record AppProvidedServiceManifest(string Contract, string Implemen
 
     private static (string TypeName, string AssemblyName) Split(string value) =>
         TryParseName(value, out string typeName, out string assemblyName) ? (typeName, assemblyName) : (value, string.Empty);
+}
+
+/// <summary>One role a feature declares, as its manifest writes it (ADR 0247 §1).</summary>
+/// <param name="Id">The identifier, <c>&lt;prefix&gt;:&lt;name&gt;</c> (ADR 0283).</param>
+/// <param name="Title">The short title shown in Settings ▸ Users.</param>
+public sealed record AppRoleManifest(string Id, string Title)
+{
+    /// <summary>Gets what the role lets its holder do, or <see langword="null"/>.</summary>
+    public string? Description { get; init; }
+
+    /// <summary>Gets the entry points and permissions the role opens, or <see langword="null"/> for none.</summary>
+    public IReadOnlyList<string>? Grants { get; init; }
+}
+
+/// <summary>One permission a feature declares, as its manifest writes it (ADR 0246 §1).</summary>
+/// <param name="Id">The identifier, <c>&lt;prefix&gt;.&lt;name&gt;</c>.</param>
+/// <param name="Risk">Normal or dangerous.</param>
+/// <param name="Title">The short title shown in the approval window and Settings.</param>
+public sealed record AppProvidedCapabilityManifest(string Id, CapabilityRisk Risk, string Title)
+{
+    /// <summary>Gets the risk sentence of a dangerous permission, or <see langword="null"/>.</summary>
+    public string? RiskStatement { get; init; }
+
+    /// <summary>Gets the permissions of the same feature this one covers, or <see langword="null"/> for none.</summary>
+    public IReadOnlyList<string>? Covers { get; init; }
 }

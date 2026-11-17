@@ -789,4 +789,28 @@ Cancel: decide at the next launch.</value>
   <data name="Capability.cloud-accounts.manage.Risk" xml:space="preserve">
     <value>Connect or remove your Dropbox, OneDrive or S3 accounts and mount their storage as network drives.</value>
   </data>
+  <data name="Admin.App.InstallDependencies" xml:space="preserve">
+    <value>Install {0} {1} with what it needs for all users: {2}</value>
+  </data>
+  <data name="Storage.Evicted.Title" xml:space="preserve">
+    <value>Storage erased by the browser</value>
+  </data>
+  <data name="Storage.Evicted.Message" xml:space="preserve">
+    <value>The browser erased the data of {0} (for example a virtual machine's disks). Open it to export what is left, or Settings ▸ Storage to protect the storage.</value>
+  </data>
+  <data name="Storage.Evicted.OpenSettings" xml:space="preserve">
+    <value>Storage settings</value>
+  </data>
+  <data name="Feature.Authenticate.Operation" xml:space="preserve">
+    <value>{0} asks: {1}</value>
+  </data>
+  <data name="Shell.RoleRequired" xml:space="preserve">
+    <value>{0}: role required</value>
+  </data>
+  <data name="Admin.GrantRole" xml:space="preserve">
+    <value>Grant the role {0} to account {1}</value>
+  </data>
+  <data name="Admin.RevokeRole" xml:space="preserve">
+    <value>Take the role {0} back from account {1}</value>
+  </data>
 </root>

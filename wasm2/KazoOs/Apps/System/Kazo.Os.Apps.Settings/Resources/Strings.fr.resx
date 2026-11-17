@@ -564,6 +564,9 @@
   <data name="Permissions.AskAgain" xml:space="preserve">
     <value>Redemander au lancement</value>
   </data>
+  <data name="Permissions.Provider" xml:space="preserve">
+    <value>Déclarée par la fonctionnalité {0}</value>
+  </data>
   <data name="Permissions.Empty" xml:space="preserve">
     <value>Aucune application installée ne déclare de capacité dangereuse.</value>
   </data>
@@ -2175,5 +2178,110 @@
   </data>
   <data name="Details.Kind.Feature" xml:space="preserve">
     <value>fonctionnalité</value>
+  </data>
+  <data name="Tab.Storage" xml:space="preserve">
+    <value>Stockage</value>
+  </data>
+  <data name="Storage.Loading" xml:space="preserve">
+    <value>Lecture du stockage du navigateur…</value>
+  </data>
+  <data name="Storage.Unknown" xml:space="preserve">
+    <value>Ce navigateur ne dit pas combien de stockage Kazo OS utilise.</value>
+  </data>
+  <data name="Storage.Title" xml:space="preserve">
+    <value>Stockage du navigateur</value>
+  </data>
+  <data name="Storage.Description" xml:space="preserve">
+    <value>Kazo OS garde tout dans votre navigateur : ses fichiers, ses caches et les disques des fonctionnalités (une machine virtuelle, par exemple). Ils partagent un seul quota, et les disques des fonctionnalités comptent dans l'espace de vos fichiers : quand il manque, seul un administrateur peut encore écrire.</value>
+  </data>
+  <data name="Storage.UsageLabel" xml:space="preserve">
+    <value>Stockage utilisé</value>
+  </data>
+  <data name="Storage.Usage" xml:space="preserve">
+    <value>{0} utilisés sur {1} ({2} %)</value>
+  </data>
+  <data name="Storage.LowSpace" xml:space="preserve">
+    <value>L'espace manque : libérez-en, ou protégez le stockage pour que le navigateur le garde.</value>
+  </data>
+  <data name="Storage.Part.Files" xml:space="preserve">
+    <value>Fichiers de Kazo OS (IndexedDB)</value>
+  </data>
+  <data name="Storage.Part.Caches" xml:space="preserve">
+    <value>Caches de l'OS</value>
+  </data>
+  <data name="Storage.Part.Features" xml:space="preserve">
+    <value>Disques des fonctionnalités</value>
+  </data>
+  <data name="Storage.NoDetail" xml:space="preserve">
+    <value>Ce navigateur ne donne que le total, pas la part de chaque sorte de stockage.</value>
+  </data>
+  <data name="Storage.NotDetailed" xml:space="preserve">
+    <value>non détaillé</value>
+  </data>
+  <data name="Storage.Protection.Title" xml:space="preserve">
+    <value>Protection contre l'effacement</value>
+  </data>
+  <data name="Storage.Protection.On" xml:space="preserve">
+    <value>Protégé : le navigateur n'effacera pas le stockage de Kazo OS pour faire de la place.</value>
+  </data>
+  <data name="Storage.Protection.Lost" xml:space="preserve">
+    <value>Le navigateur ne protège plus le stockage qu'il protégeait avant.</value>
+  </data>
+  <data name="Storage.Protection.Description" xml:space="preserve">
+    <value>Sans protection, le navigateur peut effacer les données de Kazo OS quand le disque est plein, ou après un temps sans visite (Safari : 7 jours). Certains navigateurs vous le demandent ; d'autres décident seuls (une app installée ou un site en favori est protégé plus facilement).</value>
+  </data>
+  <data name="Storage.Protection.Request" xml:space="preserve">
+    <value>Protéger le stockage contre l'effacement</value>
+  </data>
+  <data name="Storage.Protection.Refused" xml:space="preserve">
+    <value>Le navigateur a refusé. Installez Kazo OS comme une app, ou ajoutez-le à vos favoris, puis réessayez.</value>
+  </data>
+  <data name="Storage.Features.Title" xml:space="preserve">
+    <value>Fonctionnalités</value>
+  </data>
+  <data name="Storage.Features.Description" xml:space="preserve">
+    <value>L'espace que chaque fonctionnalité a déclaré pour son propre stockage. Kazo OS ne le mesure pas lui-même.</value>
+  </data>
+  <data name="Storage.Features.None" xml:space="preserve">
+    <value>Aucune fonctionnalité ne garde de stockage à elle.</value>
+  </data>
+  <data name="Storage.Features.Unknown" xml:space="preserve">
+    <value>inconnu</value>
+  </data>
+  <data name="Storage.Error" xml:space="preserve">
+    <value>Le stockage n'a pas pu être lu : {0}</value>
+  </data>
+  <data name="Storage.MiB" xml:space="preserve">
+    <value>{0} Mio</value>
+  </data>
+  <data name="Storage.GiB" xml:space="preserve">
+    <value>{0} Gio</value>
+  </data>
+  <data name="Roles.Title" xml:space="preserve">
+    <value>Rôles des Features</value>
+  </data>
+  <data name="Roles.Description" xml:space="preserve">
+    <value>Une Feature peut déclarer des rôles, comme le gestionnaire de ses machines virtuelles. Un administrateur en attribue un à un compte ordinaire ici ou avec {0} ; il faut {1}, et le système demande un administrateur dans sa propre fenêtre. Chaque administrateur détient implicitement tous les rôles.</value>
+  </data>
+  <data name="Roles.Account" xml:space="preserve">
+    <value>Compte</value>
+  </data>
+  <data name="Roles.Implicit" xml:space="preserve">
+    <value>implicites (administrateur)</value>
+  </data>
+  <data name="Roles.Toggle" xml:space="preserve">
+    <value>{0} pour {1}</value>
+  </data>
+  <data name="Roles.Granted" xml:space="preserve">
+    <value>{1} détient maintenant le rôle {0}.</value>
+  </data>
+  <data name="Roles.Revoked" xml:space="preserve">
+    <value>{1} ne détient plus le rôle {0}.</value>
+  </data>
+  <data name="Roles.Unchanged" xml:space="preserve">
+    <value>Rien n'a changé pour {1} et le rôle {0}.</value>
+  </data>
+  <data name="Roles.Error" xml:space="preserve">
+    <value>Rôle inchangé : {0}</value>
   </data>
 </root>

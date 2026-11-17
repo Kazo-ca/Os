@@ -25,7 +25,9 @@ public sealed class ManifestSchemaConformanceTests
         "window-sized.valid.json",
         "feature.valid.json",
         "feature-child-terminal.valid.json",
-        "feature-provides-service.valid.json"
+        "feature-provides-service.valid.json",
+        "feature-declares-permissions.valid.json",
+        "feature-declares-roles.valid.json"
     };
 
     public static TheoryData<string> InvalidFixtureNames => new()
@@ -44,7 +46,8 @@ public sealed class ManifestSchemaConformanceTests
         "invalid-web-on-service.json",
         "invalid-window-on-service.json",
         "invalid-feature-with-entrypoint.json",
-        "invalid-services-on-service.json"
+        "invalid-services-on-service.json",
+        "invalid-permissions-on-service.json"
     };
 
     [Theory]

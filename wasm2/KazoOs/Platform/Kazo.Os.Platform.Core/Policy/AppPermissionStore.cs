@@ -1,3 +1,4 @@
+using Kazo.Os.App.Abstractions;
 using Kazo.Os.Platform.Core.Settings;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -77,6 +78,12 @@ public sealed class AppPermissionStore : IAppPermissionStore
         _logger = (ILogger?)logger ?? NullLogger.Instance;
     }
 
+    /// <summary>
+    /// Gets the catalog of capabilities the decisions are read against (ADR 0246 §3);
+    /// <see langword="null"/> for the built-in catalog alone.
+    /// </summary>
+    public ICapabilityCatalog? Capabilities { get; init; }
+
     /// <inheritdoc />
     public async ValueTask<AppPermissionDecisions> ReadAsync(CancellationToken cancellationToken = default)
     {
@@ -87,7 +94,8 @@ public sealed class AppPermissionStore : IAppPermissionStore
             machine,
             user,
             AppPermissionsDocument.MachineFile.Resolve(null).Value,
-            home is null ? "~/.config/kazoos/" + AppPermissionsDocument.FileName : AppPermissionsDocument.UserFile.Resolve(home).Value);
+            home is null ? "~/.config/kazoos/" + AppPermissionsDocument.FileName : AppPermissionsDocument.UserFile.Resolve(home).Value,
+            Capabilities ?? BuiltInCapabilityCatalog.Instance);
 
         foreach (string warning in decisions.Warnings)
         {

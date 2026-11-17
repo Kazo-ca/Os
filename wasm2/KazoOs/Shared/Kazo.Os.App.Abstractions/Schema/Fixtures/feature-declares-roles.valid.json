@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 1,
+  "id": "ca.kazo.x86",
+  "name": "Os-x86",
+  "version": "1.0.0",
+  "publisherId": "ca.kazo",
+  "description": "Runs x86 virtual machines in the browser (ADR 0260); it declares the permissions of ADR 0246.",
+  "kind": "feature",
+  "sdkCompatibility": {
+    "minimumVersion": "3.2.0"
+  },
+  "presentation": {
+    "category": "system",
+    "launchVisibility": "hidden",
+    "iconAssetPaths": []
+  },
+  "capabilities": [
+    "filesystem.user-home.read",
+    "network.real.access"
+  ],
+  "capabilityPrefix": "x86",
+  "providedCapabilities": [
+    {
+      "id": "x86.programs.launch",
+      "risk": "normal",
+      "title": "Launch programs"
+    },
+    {
+      "id": "x86.vm.use",
+      "risk": "normal",
+      "title": "Use virtual machines"
+    },
+    {
+      "id": "x86.vm.destroy",
+      "risk": "dangerous",
+      "title": "Delete virtual machines",
+      "riskStatement": "Deletes a machine and its disk."
+    },
+    {
+      "id": "x86.vm",
+      "risk": "dangerous",
+      "title": "Manage virtual machines",
+      "riskStatement": "Uses, deletes and exports every machine.",
+      "covers": [
+        "x86.vm.use",
+        "x86.vm.destroy"
+      ]
+    }
+  ],
+  "resources": {
+    "baselineCpuWeight": 0.0,
+    "burstCpuWeight": 0.0,
+    "baselineMemoryWeight": 0.0,
+    "burstMemoryWeight": 0.0,
+    "baselineStorageIoWeight": 0.0,
+    "burstStorageIoWeight": 0.0,
+    "baselineNetworkIoWeight": 0.0,
+    "burstNetworkIoWeight": 0.0
+  },
+  "execution": "mainThread",
+  "roles": [
+    {
+      "id": "x86:vm-admin",
+      "title": "VM manager",
+      "description": "Opens the VM administration pages and commands.",
+      "grants": [
+        "admin"
+      ]
+    }
+  ]
+}

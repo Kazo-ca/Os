@@ -263,6 +263,7 @@ public sealed class AppExecutionContextFactory
                 RestartForPackages = _appCatalog.RestartForPackages,
                 InstalledAppsActivator = _appCatalog.InstalledAppsActivator,
                 InstalledLibraries = _appCatalog.InstalledLibraries,
+                Capabilities = _appCatalog.Capabilities,
                 PermissionStore = _appCatalog.PermissionStore,
             };
 
@@ -316,7 +317,11 @@ public sealed class AppExecutionContextFactory
         };
 
         ICapabilityChecker capabilities = new AppCapabilityChecker(
-            _grantRepository, manifest.Id, userId, principal.Authority);
+            _grantRepository, manifest.Id, userId, principal.Authority)
+        {
+            // ADR 0246: the permissions of the installed features, and what they cover.
+            Capabilities = _appCatalog?.Capabilities?.Invoke(),
+        };
 
         CancellationToken cancellationToken = _processManager.GetCancellationToken(process.Pid);
 
@@ -442,6 +447,18 @@ public sealed class AppExecutionContextFactory
             context.Features = features;
         }
 
+        if (_appCatalog?.Roles?.Invoke() is { } roleService)
+        {
+            // ADR 0247: the roles the user holds (all of them for an administrator), and the OS's
+            // authentication of a feature's operations for a feature and its entry points.
+            context.Roles = roleService.RolesOf(principal, isRootElevated);
+            string? ownerName = manifest.Parent is { } owner && _appCatalog.Catalog.Manifests.TryGetValue(owner, out AppManifest? ownerManifest)
+                ? ownerManifest.Name
+                : null;
+            context.FeatureAuthentication = new Roles.AppFeatureAuthenticationGateway(
+                _appCatalog.AuthenticationAgent, () => roleService, manifest, principal, isRootElevated, ownerName, language);
+        }
+
         administration.SystemSettings?.BindAmbientContext(context);
         if (administration.SystemBackup is not null)
         {
@@ -499,6 +516,19 @@ public sealed class AppExecutionContextFactory
             context.WhatsNew = whatsNewGateway;
         }
 
+        if (_administration?.OriginStorage is { } originStorage)
+        {
+            // ADR 0250: the origin's storage, no capability to read, set like the backup gateway. An
+            // entry point of a feature acts for its feature, whose name the catalog gives.
+            string? featureName = manifest.Parent is { } parent && _appCatalog?.Catalog.Manifests.TryGetValue(parent, out AppManifest? feature) == true
+                ? feature!.Name
+                : null;
+            Storage.AppStorageGateway storageGateway = new(
+                originStorage, manifest, _appCatalog?.Catalog.IsSystemApp(manifest.Id) == true, featureName);
+            storageGateway.BindAmbientContext(context);
+            context.Storage = storageGateway;
+        }
+
         if (_shellHostProvider is not null)
         {
             // ADR 0056 section 7: the shell is a child process of this one, with this instance's
@@ -554,7 +584,9 @@ public sealed class AppExecutionContextFactory
             {
                 Accounts = _administration.Accounts,
                 Passkeys = _administration.Passkeys,
-                GuestRequests = _administration.GuestRequests
+                GuestRequests = _administration.GuestRequests,
+                // ADR 0247 §1: Settings ▸ Users and kazorole grant and revoke the roles of the features.
+                Roles = _appCatalog?.Roles,
             },
             new AppComponentProviderAdministrationGateway(_administration.ComponentProviders, _administration.ApprovalPrompt, capabilities, gate),
             new AppFileMenuEntryAdministrationGateway(_administration.FileMenuEntries, capabilities, language));
@@ -671,6 +703,18 @@ public sealed record AppCatalogGatewayServices(
     /// without them, where every contract is « not installed ».
     /// </summary>
     public Func<Features.FeatureServiceResolver?>? FeatureServices { get; init; }
+
+    /// <summary>
+    /// Gets the catalog of capabilities of the running OS (ADR 0246): the built-in catalog and the
+    /// permissions of the installed features; <see langword="null"/> checks the grants alone.
+    /// </summary>
+    public Func<ICapabilityCatalog?>? Capabilities { get; init; }
+
+    /// <summary>
+    /// Gets the roles of the features (ADR 0247): the roles of each context, and the OS's authentication
+    /// of a feature's operations; <see langword="null"/> gives no role and no authentication.
+    /// </summary>
+    public Func<Roles.FeatureRoleService?>? Roles { get; init; }
 
     /// <summary>
     /// Gets the machine permission decisions (ADR 0049 §4) a feature's installation writes

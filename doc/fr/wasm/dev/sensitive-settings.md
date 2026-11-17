@@ -244,6 +244,47 @@ Décision : [ADR 0120](adr/0120-passwd-and-administrator-password-reset.md).
   et la suppression de comptes (ADR 0169, [`settings-app.md`](settings-app.md)).
   Les clés d'accès de la session sont dans `PasskeysPanel` (ADR 0168).
 
+## 5. Rôles des Features et authentification des opérations
+
+[ADR 0247](adr/0247-feature-declared-roles.md). Un rôle de Feature ouvre des
+points d'entrée ; il ne donne aucune autorité `Administrator`.
+
+| Élément | Où | Détail |
+|---|---|---|
+| Attributions | `/etc/kazoos/roles.config`, section `[roles]` | `rôle=<id>,<id>` (identifiants `N` des usagers) ; écrit par le système (`FeatureRoleService`) après un administrateur ; jamais une ligne pour un administrateur |
+| Lecture | `FeatureRoleService.RolesOf` | au démarrage (`EcosystemBootCoordinator.FeatureRoles`), puis à chaque attribution ; tous les rôles déclarés pour un administrateur ou root |
+| Contexte | `IAppExecutionContext.Roles`, `FeatureAuthentication` | posés par `AppExecutionContextFactory` |
+| Billets | `FeatureOperationTickets` | 30 s, une fois, Feature + opération + usager ; l'OS garde le billet émis et le rend à la consommation ; les billets expirés sont purgés |
+
+**Authentification d'une opération.** `AppFeatureAuthenticationGateway` (une
+par processus) refuse un appelant qui n'est ni une Feature ni un de ses points
+d'entrée. Pour `RoleHolder`, l'usager doit détenir le rôle du point d'entrée
+marqué `RequiresRole`, ou un rôle de la Feature depuis un autre point d'entrée
+([ADR 0283](adr/0283-feature-roles-isinrole-adjustments.md) §5) (sinon `feature.role-denied` et refus avant toute fenêtre), puis l'agent de
+l'OS (`AdministratorAuthenticationAgent`) ouvre sa fenêtre avec
+`RoleHolderLogin` : seul ce compte est accepté, par mot de passe comme par clé
+d'accès (`not-the-session-user` sinon), vérifié par `AdminElevationVerifier.VerifyUserAsync` (le mot de passe
+de l'usager, administrateur ou non ; l'invité seul confirme sans mot de passe).
+Pour `Administrator`, tout administrateur actif. Trois échecs annulent. Sous
+`sudo`, l'agent passe sans fenêtre et l'écrit (`via=sudo`).
+
+**`auth.log`.** `feature.authenticate` (chaque tentative, avec `scope` et
+`operation`, jamais le mot de passe), `feature.role-denied` (point d'entrée
+refusé faute du rôle), `role.grant` et `role.revoke` (attribution, avec
+l'administrateur, l'usager et le rôle), et `users.role-grant` /
+`users.role-revoke` pour l'authentification de l'administrateur qui les fait.
+
+**Relecture.** `FeatureRoleService` relit `roles.config` quand le fichier change
+(`IOsSettingsService.DocumentChanged`), sous le même verrou que les
+attributions : un retrait fait ailleurs prend effet sans redémarrage. Un
+point d'entrée qui exige un rôle est vérifié avant qu'une instance unique déjà
+lancée ne reçoive la demande, et avant qu'un billet d'élévation ne soit
+consommé.
+
+**Limite connue.** `roles.config` n'est pas encore synchronisé avec le serveur
+(aucune liste de documents système synchronisés n'existe) ; l'ADR prévoit qu'il
+le soit comme les autres documents système.
+
 ## Limites connues
 
 - Les documents de l'OS (`OsSettingsDocument`) n'acceptent que des clés
@@ -294,3 +335,4 @@ Décision : [ADR 0120](adr/0120-passwd-and-administrator-password-reset.md).
 - [x] Commande `ausearch` et lecture du journal d'audit par l'Error Log Viewer
 - [x] Tests
 - [x] Commande `passwd` et réinitialisation par un administrateur (ADR 0120 : `LocalPasswordService`, `KazoUserAccounts`, onglet « Utilisateurs »)
+- [x] Rôles des Features et authentification de leurs opérations (ADR 0247 : `roles.config`, `FeatureRoleService`, billets, `kazorole`)

@@ -856,6 +856,79 @@ Tests: `AppPackageGatewayTests.Transactions.cs`, `AppDataGuardTests`,
 `AppPackageSignatureTests`, `AppCatalogTests` (Platform.Core),
 `InstalledAppsBootTests` (Ecosystem), `KazopkgCommandTests` (Commands.Wave5).
 
+## Dependencies between packages (ADR 0248)
+
+[ADR 0248](adr/0248-store-and-kazopkg-dependency-resolution.md) makes the
+Store and `kazopkg` install the dependencies a manifest declares (the case
+aimed at: an app that needs a Feature, ADR 0260).
+
+- **Plan**: `AppPackageInstaller.BuildPlanAsync` prepares the requested
+  package (`PrepareAsync`), then each **required** dependency that is absent
+  or out of range, transitively, dependencies first (`AppPackageInstallPlan`:
+  `Root`, `Dependencies`, `Reactivations`). An absent dependency is looked up
+  in the configured catalogs (`FindInCatalogsAsync`); an installed one out of
+  range is taken again from the repository it came from. The version chosen is
+  the newest that satisfies every range (packages of the plan and installed
+  apps that need it) and runs on this OS (`AppDependencyRange`, both bounds
+  included). A dependency no catalog publishes stops everything with its id and
+  range (`apps.package.dependency-unresolved`, answer 1 A); so do more than 16
+  packages.
+- **Scope**: a Feature always goes to the system; so does a dependency of a
+  system-wide app; otherwise a personal install stays personal (answer 2 A:
+  the app for oneself, its Feature for everyone).
+- **Uninstalled dependency** (ADR 0048): installed and in range but listed in
+  `[uninstalled]`, it is reactivated (`AppPackageReactivation`), not
+  downloaded; in the machine file, that takes the administrator.
+- **One consent**: `AppPackageInstallPlan.RequiresAdministrator` is true when a
+  package of the plan needs it (system, untrusted source) or a reactivation
+  touches the machine file. The gateway then authenticates the administrator
+  **once** and shows the approval window (`AppInstallApprovalRequest.Dependencies`,
+  `Reactivated`, `PlannedFeatures`): each package of the plan with its version,
+  size, source, scope and dangerous permissions (for a Feature, its set,
+  ADR 0260 §3). The window describes the permissions a Feature of the plan
+  declares (ADR 0246) before it is installed (answer 268 A). A plan with no
+  administrator (personal apps from a trusted source) shows no window, as
+  before.
+- **Transaction**: `CommitPlanAsync` writes the packages in order, each with
+  its `.transaction` journal (ADR 0214 §3). When a write fails, the packages
+  already written are undone in reverse order (a new one removed, an update
+  rolled back to the version it kept); an administrator's refusal or a refused
+  package stop everything before any write.
+- **Removal**: `GetPackageDependentsAsync` lists the installed apps that
+  declare the package as a **required** dependency (through a chain, system
+  apps and entry points excepted). The removal disables them in the
+  `apps.config` of its scope (`[uninstalled]`) and records why in
+  `[disabled-by-dependency]` (`<app> = <package>`); their package and data
+  stay (`KazoInstalledPackage.DisabledDependents`). Installing the package
+  again reactivates exactly those apps
+  (`KazoPackageInstallReport.ReactivatedDependents`); an app the user
+  uninstalled by choice is left alone.
+- **Update**: updating a package goes through the same plan. A version out of
+  the range of an installed app that needs it is refused with the list of
+  those apps and their ranges (`apps.package.dependency-conflict`), with no
+  `--force`.
+- **`kazopkg`**: `install` and `update` print the plan when the app pulls in
+  dependencies, then ask `Continue? [y/N]`; `remove` names the apps that will
+  be disabled and asks too. `--yes` answers yes. A refusal or a missing
+  dependency prints "the installation of <app> is stopped: <reason>".
+- **Store**: an app's page lists its dependencies (the "Needs" card) with
+  "Installed", "To install (with this app)", "Optional" or the warning of an
+  installed version out of range, and, for a Feature to install, the
+  permissions approved with it (answer 268 A). Uninstalling a package other
+  apps need names them and waits for a second click ("Uninstall anyway").
+- **Optional dependency**: never in the plan. The app proposes it with
+  `KazoApps.RequestInstallAsync(appId)` (`apps.launch`), which opens the Store
+  on the package (`--app=<appId>`) or, without a Store, returns the message
+  "Install <app> with: kazopkg install <app>" (`KazoInstallRequestResult`).
+- **SDK**: `KazoAppPackages.PlanInstallAsync`, `GetDependentsAsync`,
+  `KazoPackageInstallPlan`, `KazoPlannedPackage`, `KazoPackageDependent`,
+  `KazoPackageDependency`, `KazoCatalogAppVersion.Dependencies`.
+
+Tests: `AppPackageGatewayTests.Dependencies.cs`,
+`AppPackageDependenciesTests` (Platform.Core), `KazoAppsRequestInstallTests`
+(AppSdk), `StoreDependenciesTests` (Store), `KazopkgCommandTests`
+(Commands.Wave5).
+
 ## Tasks
 
 - [x] `IAppInstallationService`, `AppInstallationService`, `AppsConfigDocument`.
@@ -870,5 +943,6 @@ Tests: `AppPackageGatewayTests.Transactions.cs`, `AppDataGuardTests`,
 - [x] Contract tests and documentation.
 - [x] Kazo OS Store: catalogs, `kazopkg install <appId>`, updates by notification, default pin (ADR 0212, ADR 0215).
 - [x] Adding without a restart, signing, transactional install, `kazopkg rollback` and `repair`, data backup (ADR 0214).
+- [x] Dependencies: plan, one consent, transaction over the plan, removal that disables the dependents, update out of range refused, `--yes`, Store page, `KazoApps.RequestInstallAsync` (ADR 0248).
 - [x] Install progress in the Store: `IProgress<KazoPackageInstallProgress>`, steps, queue, only the app's own buttons (ADR 0266 §7).
 - [x] Store home page: featured app, grid newest first with category chips, card button with the administrator's menu, empty cards while loading, 1100 × 720 window, Themes tab hidden without a pack (ADR 0266 §2, §3, §5).

@@ -172,19 +172,39 @@ public sealed class AppPermissionDecisions
         string? machineContent,
         string? userContent,
         string machinePath = "/etc/kazoos/app-permissions.config",
-        string userPath = "~/.config/kazoos/app-permissions.config")
+        string userPath = "~/.config/kazoos/app-permissions.config") =>
+        Parse(machineContent, userContent, machinePath, userPath, BuiltInCapabilityCatalog.Instance);
+
+    /// <summary>
+    /// Parses the two files against the catalog of the running OS (ADR 0246 §3): a line about a
+    /// dangerous permission of an installed feature, or a topic permission, is a decision; a line
+    /// about a capability the catalog does not know is ignored with a warning, and stays in the file
+    /// (it applies again once the feature is reinstalled).
+    /// </summary>
+    /// <param name="machineContent">Content of the machine file, or <see langword="null"/> when absent.</param>
+    /// <param name="userContent">Content of the session user's file, or <see langword="null"/> when absent or no session.</param>
+    /// <param name="machinePath">Machine file path used in warnings.</param>
+    /// <param name="userPath">User file path used in warnings.</param>
+    /// <param name="catalog">The catalog of capabilities of the running OS.</param>
+    public static AppPermissionDecisions Parse(
+        string? machineContent,
+        string? userContent,
+        string machinePath,
+        string userPath,
+        ICapabilityCatalog catalog)
     {
+        ArgumentNullException.ThrowIfNull(catalog);
         Dictionary<(string, string), AppPermissionDecision> machine = [];
         HashSet<(string, string)> userDenials = [];
         Dictionary<string, IReadOnlySet<RealNetworkPort>> approvedPorts = new(StringComparer.Ordinal);
         List<string> warnings = [];
 
-        foreach (((string appId, string capability), AppPermissionDecision decision) in ParseFile(machineContent, machinePath, warnings, approvedPorts))
+        foreach (((string appId, string capability), AppPermissionDecision decision) in ParseFile(machineContent, machinePath, warnings, approvedPorts, catalog))
         {
             machine[(appId, capability)] = decision;
         }
 
-        foreach (((string appId, string capability), AppPermissionDecision decision) in ParseFile(userContent, userPath, warnings, approvedPorts: null))
+        foreach (((string appId, string capability), AppPermissionDecision decision) in ParseFile(userContent, userPath, warnings, approvedPorts: null, catalog))
         {
             if (decision == AppPermissionDecision.Allow)
             {
@@ -222,7 +242,7 @@ public sealed class AppPermissionDecisions
     private static readonly IReadOnlySet<RealNetworkPort> NoPorts = new HashSet<RealNetworkPort>();
 
     private static IEnumerable<KeyValuePair<(string AppId, string Capability), AppPermissionDecision>> ParseFile(
-        string? content, string path, List<string> warnings, Dictionary<string, IReadOnlySet<RealNetworkPort>>? approvedPorts)
+        string? content, string path, List<string> warnings, Dictionary<string, IReadOnlySet<RealNetworkPort>>? approvedPorts, ICapabilityCatalog catalog)
     {
         if (string.IsNullOrEmpty(content))
         {
@@ -256,7 +276,8 @@ public sealed class AppPermissionDecisions
             }
 
             string key = qualifiedKey[prefix.Length..];
-            int separator = key.LastIndexOf(':');
+            // An app id never holds ':'; a topic permission does (topic-publish:...), so the first one separates.
+            int separator = key.IndexOf(':');
             if (separator <= 0 || separator == key.Length - 1)
             {
                 warnings.Add($"settings: {path}: '{key}' is not <appId>:<capability>, line ignored");
@@ -265,13 +286,13 @@ public sealed class AppPermissionDecisions
 
             string appId = key[..separator];
             string capability = key[(separator + 1)..];
-            if (!AppCapabilities.IsKnown(capability))
+            if (!catalog.IsKnown(capability))
             {
                 warnings.Add($"settings: {path}: unknown capability '{capability}', line ignored");
                 continue;
             }
 
-            if (!AppCapabilities.IsDangerous(capability))
+            if (!catalog.IsDangerous(capability))
             {
                 // A normal capability needs no decision: ignored without effect.
                 continue;
