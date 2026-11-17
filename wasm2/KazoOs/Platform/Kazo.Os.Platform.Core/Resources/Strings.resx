@@ -807,4 +807,10 @@ Cancel: decide at the next launch.</value>
   <data name="Shell.RoleRequired" xml:space="preserve">
     <value>{0}: role required</value>
   </data>
+  <data name="Admin.GrantRole" xml:space="preserve">
+    <value>Grant the role {0} to account {1}</value>
+  </data>
+  <data name="Admin.RevokeRole" xml:space="preserve">
+    <value>Take the role {0} back from account {1}</value>
+  </data>
 </root>

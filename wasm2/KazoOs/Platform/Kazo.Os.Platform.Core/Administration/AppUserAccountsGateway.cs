@@ -40,6 +40,76 @@ internal sealed class AppUserAccountsGateway : IAppUserAccountsGateway
     /// <summary>Gets the lazily resolved "Create my account" requests of ADR 0187; <see langword="null"/> on a host without them.</summary>
     public Func<GuestAccountRequests>? GuestRequests { get; init; }
 
+    /// <summary>Gets the lazily resolved roles of the features of ADR 0247; <see langword="null"/> on a host without them.</summary>
+    public Func<Roles.FeatureRoleService?>? Roles { get; init; }
+
+    /// <inheritdoc />
+    public ValueTask<IReadOnlyList<KazoFeatureRole>> ListRolesAsync(CancellationToken cancellationToken = default) =>
+        ValueTask.FromResult<IReadOnlyList<KazoFeatureRole>>(Roles?.Invoke() is { } roles
+            ? [.. roles.DeclaredRoles.Select(static declared => new KazoFeatureRole(
+                declared.Role.Id, declared.Role.Title, declared.FeatureId, declared.FeatureName)
+            {
+                Description = declared.Role.Description,
+            })]
+            : []);
+
+    /// <inheritdoc />
+    public ValueTask<bool> GrantRoleAsync(string loginName, string role, CancellationToken cancellationToken = default) =>
+        ChangeRoleAsync(loginName, role, grant: true, cancellationToken);
+
+    /// <inheritdoc />
+    public ValueTask<bool> RevokeRoleAsync(string loginName, string role, CancellationToken cancellationToken = default) =>
+        ChangeRoleAsync(loginName, role, grant: false, cancellationToken);
+
+    /// <summary>
+    /// ADR 0247 §1: <c>users.manage</c>, then an administrator in the OS's window, then the line of
+    /// <c>roles.config</c>. An administrator holds every role implicitly: a grant changes nothing and
+    /// asks no one, like <c>kazorole grant</c> on an administrator.
+    /// </summary>
+    private async ValueTask<bool> ChangeRoleAsync(string loginName, string role, bool grant, CancellationToken cancellationToken)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(loginName);
+        ArgumentException.ThrowIfNullOrWhiteSpace(role);
+        Roles.FeatureRoleService roles = Roles?.Invoke() ?? throw new NotSupportedException("This Kazo OS host has no roles of features.");
+        _capabilities.Require(AppCapabilities.UsersManage);
+        if (!roles.DeclaredRoles.Any(declared => string.Equals(declared.Role.Id, role, StringComparison.Ordinal)))
+        {
+            throw new ArgumentException($"No installed feature declares the role '{role}'.", nameof(role));
+        }
+
+        IReadOnlyList<LocalUser> users = await Service().ListAsync(cancellationToken).ConfigureAwait(false);
+        LocalUser user = users.FirstOrDefault(candidate => string.Equals(candidate.LoginName.Value, loginName.Trim(), StringComparison.OrdinalIgnoreCase))
+            ?? throw new ArgumentException($"No account is named '{loginName}'.", nameof(loginName));
+        if (grant && AppAuthorityPolicy.Satisfies(user.Authority, AppAuthority.Administrator))
+        {
+            return false;
+        }
+
+        string admin = await _gate.AuthenticateAsync(
+            _gate.Text[grant ? "Admin.GrantRole" : "Admin.RevokeRole", role, user.LoginName.Value],
+            grant ? "users.role-grant" : "users.role-revoke",
+            user.LoginName.Value,
+            cancellationToken).ConfigureAwait(false);
+        return grant
+            ? await roles.GrantAsync(role, user, admin, cancellationToken).ConfigureAwait(false)
+            : await roles.RevokeAsync(role, user, admin, cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>The roles <paramref name="user"/> holds: every declared one for an administrator, its grants otherwise.</summary>
+    private IReadOnlyList<string> RolesOf(LocalUser user)
+    {
+        if (Roles?.Invoke() is not { } roles)
+        {
+            return [];
+        }
+
+        bool administrator = AppAuthorityPolicy.Satisfies(user.Authority, AppAuthority.Administrator);
+        string userId = user.Id.ToString();
+        return [.. roles.DeclaredRoles
+            .Select(static declared => declared.Role.Id)
+            .Where(role => administrator || roles.HoldersOf(role).Contains(userId))];
+    }
+
     /// <inheritdoc />
     public async ValueTask<bool> RequestGuestAccountCreationAsync(CancellationToken cancellationToken = default)
     {
@@ -124,7 +194,8 @@ internal sealed class AppUserAccountsGateway : IAppUserAccountsGateway
         user.Id == _gate.Principal.UserId)
     {
         PasskeyCount = user.Passkeys.Count,
-        IsGuest = user.IsGuest
+        IsGuest = user.IsGuest,
+        Roles = RolesOf(user),
     };
 
     private static KazoPasskey ToPasskey(LocalPasskeyCredential passkey, IReadOnlySet<string> unlocking) =>

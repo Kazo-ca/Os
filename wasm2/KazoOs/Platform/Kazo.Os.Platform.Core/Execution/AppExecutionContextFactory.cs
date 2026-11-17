@@ -584,7 +584,9 @@ public sealed class AppExecutionContextFactory
             {
                 Accounts = _administration.Accounts,
                 Passkeys = _administration.Passkeys,
-                GuestRequests = _administration.GuestRequests
+                GuestRequests = _administration.GuestRequests,
+                // ADR 0247 §1: Settings ▸ Users and kazorole grant and revoke the roles of the features.
+                Roles = _appCatalog?.Roles,
             },
             new AppComponentProviderAdministrationGateway(_administration.ComponentProviders, _administration.ApprovalPrompt, capabilities, gate),
             new AppFileMenuEntryAdministrationGateway(_administration.FileMenuEntries, capabilities, language));

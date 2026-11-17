@@ -807,4 +807,10 @@ Annuler : décider au prochain lancement.</value>
   <data name="Shell.RoleRequired" xml:space="preserve">
     <value>{0} : rôle requis</value>
   </data>
+  <data name="Admin.GrantRole" xml:space="preserve">
+    <value>Attribuer le rôle {0} au compte {1}</value>
+  </data>
+  <data name="Admin.RevokeRole" xml:space="preserve">
+    <value>Retirer le rôle {0} au compte {1}</value>
+  </data>
 </root>
