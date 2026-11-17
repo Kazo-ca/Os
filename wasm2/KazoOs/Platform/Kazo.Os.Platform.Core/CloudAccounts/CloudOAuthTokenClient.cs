@@ -102,9 +102,16 @@ public sealed class CloudOAuthTokenClient(HttpClient http, TimeProvider? timePro
     {
         ArgumentNullException.ThrowIfNull(provider);
         ArgumentException.ThrowIfNullOrEmpty(accessToken);
+        if (provider.Identity is not { } identity)
+        {
+            // A declared provider may have no identity address (ADR 0282 §3): the account is then
+            // named after the service and a reconnection cannot check it is the same account.
+            return new CloudIdentity(null, null);
+        }
+
         try
         {
-            using HttpRequestMessage request = new(provider.Identity.UsePost ? HttpMethod.Post : HttpMethod.Get, provider.Identity.Address);
+            using HttpRequestMessage request = new(identity.UsePost ? HttpMethod.Post : HttpMethod.Get, identity.Address);
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
             using HttpResponseMessage response = await _http.SendAsync(request, cancellationToken).ConfigureAwait(false);
             if (!response.IsSuccessStatusCode)
@@ -113,10 +120,10 @@ public sealed class CloudOAuthTokenClient(HttpClient http, TimeProvider? timePro
             }
 
             using JsonDocument document = await ReadJsonAsync(response, cancellationToken).ConfigureAwait(false);
-            string? name = provider.Identity.NamePaths
+            string? name = identity.NamePaths
                 .Select(path => ReadPath(document.RootElement, path))
                 .FirstOrDefault(static value => !string.IsNullOrWhiteSpace(value));
-            return new CloudIdentity(ReadPath(document.RootElement, provider.Identity.IdPath), name);
+            return new CloudIdentity(ReadPath(document.RootElement, identity.IdPath), name);
         }
         catch (Exception exception) when (exception is HttpRequestException or JsonException or TaskCanceledException && !cancellationToken.IsCancellationRequested)
         {

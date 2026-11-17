@@ -173,6 +173,19 @@ tenant = common
 app-folder-path = Apps/…
 ```
 
+A feature that declares an OAuth type (ADR 0282 §3) has its own section,
+named after the type: `client-id` replaces the app id of the full access, or
+of the only access declared; `app-folder-client-id` that of the reserved
+folder when the type declares both. An absent or empty key keeps the
+manifest's app id. The type `locked` cannot have a section (reserved name of
+the settings files, ADR 0044).
+
+```ini
+[pcloud]
+client-id = …
+app-folder-client-id = …
+```
+
 | Provider | `Full` scope | `AppFolder` scope | Other parameters |
 | --- | --- | --- | --- |
 | Dropbox | "Full Dropbox" app | "App folder" app | `token_access_type=offline`; revocation `2/auth/token/revoke`; identity `2/users/get_current_account` |
@@ -207,6 +220,43 @@ unreadable keys put the account in `NeedsReconnect`. A keys account refuses
 `GetAccessTokenAsync` and `ReconnectAsync` (`ProviderNotConfigured`): it is
 reconnected by typing its keys again. Removal is the same as for the other
 accounts.
+
+## Types a feature declares (ADR 0282 §3)
+
+A Store feature that provides a drive type
+([`../framework/drive-providers.md`](../framework/drive-providers.md)) never
+runs the sign-in: the OS runs it from its declaration.
+
+- **OAuth**: `CloudProviderCatalog.DeclaredProviders` reads, at each call, the
+  `oauth` types of the installed and enabled features
+  (`AppCatalog.GetDriveProviders`, `IAppEnablementRegistry`), and
+  `DeclaredCloudProviders.Build` turns each into a `CloudOAuthProvider`
+  (addresses of the manifest, `https` only; `FeatureId` tells which feature
+  declares it). They come after Dropbox and OneDrive; a type of the OS cannot
+  be declared. From then on everything is as for Dropbox: the same window, the
+  same callback page, PKCE, tokens sealed on the device, renewal by the OS.
+  Without an identity address, the account takes the service's name and a
+  reconnection cannot check it is the same account.
+- **Form**: `CloudAccountService.SaveFormAccountAsync(type, name, options,
+  secrets)` keeps a keys account (`"credential": "keys"`): the non-secret
+  values are readable in the list (`options`, given back by
+  `CloudAccount.Options`), the secret fields are sealed like tokens. The same
+  type with the same non-secret values finds the same account again (its
+  service account id is `form:` followed by the SHA-256 of those values, never
+  a secret): typing a new password replaces the old one.
+- **What the provider is lent**:
+  `CloudAccountService.CreateDriveProviderContextAsync(type, account)` returns
+  an `IKazoDriveProviderContext` bound to **one** account and **one** type. An
+  account of another type is refused (`AccountNotFound`). At each call the
+  context reads the list again: `GetAccessTokenAsync` returns this account's
+  access token (renewed by the OS), `GetSecretAsync` a secret field of this
+  account, and nothing once the account is removed. The context keeps no token
+  or secret, and the refresh token never leaves the OS. Refusals become
+  `KazoDriveException`: `SignInRequired` (reconnection, locked keyring,
+  removed account) or `Unavailable` (service unreachable).
+
+Wiring this to drives (creating the context when a drive opens) is work item
+4; the interface that offers these types, work item 6.
 
 ## Public pages for the providers
 
@@ -244,6 +294,11 @@ per service (Benoit's choice, 2026-11-15).
   device-local `0600` list, renewal and rotation, refusal → `NeedsReconnect`,
   offline, wrong account, removal, blocked or denied window, guest refused,
   lost key, other user, apps excluded.
+- `Tests/Kazo.Os.Platform.Core.Tests/CloudAccounts/DeclaredDriveProviderTests.cs`:
+  declared types offered then withdrawn with their feature, app ids replaced
+  by `cloud-drives.config`, OAuth sign-in of a declared type, form account
+  (plain values, sealed secrets), context limited to the account and type of
+  the open drive, refresh token never given.
 - `Tests/Kazo.Os.Infrastructure.Browser.Tests/CloudAccounts/`: redirect URI from
   the base address, module answers.
 - `Tests/Kazo.Os.Pwa.E2E.Tests/CloudSignInWindowTests.cs`: on the published,
@@ -268,3 +323,5 @@ per service (Benoit's choice, 2026-11-15).
 - [x] Wire `ICloudAccountDrives` to `NetworkDriveService` (`ReleaseAsync`).
 - [x] UI (work item 5): [`cloud-drives-ui.md`](cloud-drives-ui.md).
 - [ ] Connectors (work items 3 and 4).
+- [x] Types declared by a feature: OAuth, form, provider context
+  (`drive-providers` series, work item 5).

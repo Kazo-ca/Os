@@ -128,6 +128,41 @@ In the manifest (`driveProviders`, sorted by type):
 }]
 ```
 
+## Sign-in run by the OS (work item 5)
+
+The OS runs the connection of a declared type
+([ADR 0282](../dev/adr/0282-third-party-drive-providers.md) §3, details in
+[`cloud-accounts.md`](../dev/cloud-accounts.md)):
+
+- **OAuth**: the OS reads the declaration of an installed and enabled feature,
+  opens the sign-in window, exchanges the code (PKCE, no client secret), reads
+  the identity, seals the tokens on the device and renews the access token.
+  The provider only calls `Context.GetAccessTokenAsync()` before each request.
+- **Form**: the OS keeps the non-secret values in clear with the account (they
+  arrive in `KazoDriveOpenRequest.Options`) and seals the `Secret` fields; the
+  provider reads them with `Context.GetSecretAsync(name)`. `Context.Account` is
+  `null` and `GetAccessTokenAsync` throws `SignInRequired`.
+- **What is lent**: a drive's context is bound to its account and its type; it
+  never returns another account's token or secrets, nothing once the account
+  is removed, and never the refresh token.
+
+### Addresses to register with the service
+
+The author registers a **public** app with their service (no secret, PKCE
+`S256`) whose redirect URI is the OS's callback page, the same for every type:
+
+| Where Kazo OS is served | Redirect URI |
+| --- | --- |
+| os.kazo.ca | `https://os.kazo.ca/_content/Kazo.Os.Infrastructure.Browser/oauth-callback.html` |
+| Another site | `<base address>_content/Kazo.Os.Infrastructure.Browser/oauth-callback.html` |
+| Development | `http://localhost:5000/_content/Kazo.Os.Infrastructure.Browser/oauth-callback.html` and the same over `https` |
+
+The token endpoint (and the identity and revocation addresses) must accept
+CORS from the OS's origin. An administrator serving Kazo OS elsewhere
+registers their own app and replaces the app id in
+`/etc/kazoos/cloud-drives.config`, in a section named after the type
+(`client-id`, `app-folder-client-id`).
+
 ## Checks
 
 | Where | Code | Case |
@@ -176,4 +211,5 @@ substance (no operation removed, the OS still keeps the tokens):
 - [x] Validator (`manifest.feature.only`, `manifest.drive-provider.*`)
 - [x] Generator (`KOSAPP0033`, `KOSAPP0036`)
 - [x] Dangerous capability `drives.provide`
+- [x] Sign-in run by the OS, form accounts, provider context (work item 5)
 - [ ] Wiring into the OS (work item 4)

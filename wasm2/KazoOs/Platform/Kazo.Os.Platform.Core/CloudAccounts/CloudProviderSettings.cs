@@ -150,18 +150,42 @@ public sealed class CloudProviderCatalog(CloudProviderSettings hostSettings, IOs
 {
     private readonly CloudProviderSettings _hostSettings = hostSettings ?? throw new ArgumentNullException(nameof(hostSettings));
 
+    /// <summary>
+    /// Gets the OAuth drive types the installed and enabled features declare (ADR 0282 §3), read at
+    /// each call so a feature installed or removed is offered or withdrawn without a restart;
+    /// <see langword="null"/> while the host has none.
+    /// <see cref="DeclaredCloudProviders.GetOAuthRegistrations"/> gives them from the app catalog.
+    /// </summary>
+    public Func<IReadOnlyList<AppDriveProviderRegistration>>? DeclaredProviders { get; init; }
+
     /// <inheritdoc />
+    /// <remarks>
+    /// The shipped providers come first (Dropbox, OneDrive), then the declared ones by type. A
+    /// declared type never takes the place of a shipped one: the types of the OS are reserved.
+    /// </remarks>
     public async ValueTask<IReadOnlyList<CloudOAuthProvider>> GetProvidersAsync(CancellationToken cancellationToken = default)
     {
+        IReadOnlyList<AppDriveProviderRegistration> declared = DeclaredProviders?.Invoke() ?? [];
         CloudProviderSettings effective = _hostSettings;
+        LayeredConfigSnapshot? snapshot = null;
         if (settings is not null)
         {
-            LayeredConfigSnapshot snapshot = await settings
-                .ReadAsync(CloudDrivesSettingsDocuments.Document, cancellationToken)
+            snapshot = await settings
+                .ReadAsync(
+                    DeclaredCloudProviders.SettingsDocument(CloudDrivesSettingsDocuments.Document, declared.Select(static item => item.Provider.Type)),
+                    cancellationToken)
                 .ConfigureAwait(false);
             effective = effective.OverriddenBy(snapshot);
         }
 
-        return effective.BuildProviders();
+        IReadOnlyList<CloudOAuthProvider> shipped = effective.BuildProviders();
+        return
+        [
+            .. shipped,
+            .. declared
+                .Select(registration => DeclaredCloudProviders.Build(registration, snapshot))
+                .OfType<CloudOAuthProvider>()
+                .Where(provider => !shipped.Any(item => string.Equals(item.Id, provider.Id, StringComparison.Ordinal)))
+        ];
     }
 }
