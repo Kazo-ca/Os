@@ -298,11 +298,17 @@ internal sealed record CloudAccountRecord(
     /// </summary>
     public IReadOnlyDictionary<string, string>? Options { get; init; }
 
+    /// <summary>
+    /// Gets the id of the feature whose declared drive type the account belongs to (ADR 0282 §3), or
+    /// <see langword="null"/> for an account of a type the OS ships (Dropbox, OneDrive, S3).
+    /// </summary>
+    public string? FeatureId { get; init; }
+
     /// <summary>Gets whether the account holds keys rather than OAuth tokens.</summary>
     [JsonIgnore]
     public bool HasKeys => string.Equals(Credential, KeysCredential, StringComparison.Ordinal);
 
-    public CloudAccount Describe() => new(Id, Provider, Scope, DisplayName, ProviderAccountId, State, ConnectedAtUtc) { Options = Options };
+    public CloudAccount Describe() => new(Id, Provider, Scope, DisplayName, ProviderAccountId, State, ConnectedAtUtc) { Options = Options, FeatureId = FeatureId };
 }
 
 /// <summary>On-disk shape of <c>cloud-accounts.json</c>.</summary>
