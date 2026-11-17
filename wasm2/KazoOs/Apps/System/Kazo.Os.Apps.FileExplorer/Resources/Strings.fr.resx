@@ -790,4 +790,10 @@
   <data name="Drives.ProviderMissing.Label" xml:space="preserve">
     <value>{0}, {1}</value>
   </data>
+  <data name="CloudDrive.ServerHost" xml:space="preserve">
+    <value>Ce fournisseur joindra {0}.</value>
+  </data>
+  <data name="CloudDrive.ServerHostRefused" xml:space="preserve">
+    <value>Cette adresse de serveur n'est pas acceptée : donnez une adresse https avec un nom de serveur, sans nom d'utilisateur, mot de passe, adresse IP ni localhost.</value>
+  </data>
 </root>

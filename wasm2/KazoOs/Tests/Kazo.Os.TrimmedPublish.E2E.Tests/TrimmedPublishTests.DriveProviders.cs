@@ -8,7 +8,8 @@ namespace Kazo.Os.TrimmedPublish.E2E.Tests;
 /// packed from <c>Apps/Samples/Kazo.Os.Samples.WebDavDrive</c> as a Store package would be, installed
 /// by <c>kazopkg</c> as a feature for the machine in the trimmed OS, then used: a drive connected by
 /// the form of "Connect a network drive", a file written and one read back against a test WebDAV
-/// server (<see cref="RoutedWebDavServer"/>, work item 9; Benoit, 2026-11-17: answer 2 A).
+/// server (<see cref="RoutedWebDavServer"/>, work item 9; Benoit, 2026-11-17: answer 2 A). The connect
+/// dialog of work item 6 is checked on the way: it refuses an http server and writes the host it will reach.
 /// </summary>
 public sealed partial class TrimmedPublishTests
 {
@@ -100,7 +101,7 @@ public sealed partial class TrimmedPublishTests
             await CloseAllWindowsAsync(page);
 
             // --- Connect: the File Explorer's dialog offers the type and shows its form ---
-            await ConnectWebDavDriveAsync(page);
+            await ConnectWebDavDriveAsync(page, settings);
             Log($"the WebDAV drive was connected by its form; the server received: {string.Join("; ", server.Requests)}.");
             await CloseAllWindowsAsync(page);
 
@@ -144,7 +145,7 @@ public sealed partial class TrimmedPublishTests
     /// Opens the File Explorer's "Connect a network drive" dialog, chooses the WebDAV type the feature
     /// provides (named "Provided by"), fills its form (server address, user name, password) and mounts.
     /// </summary>
-    private async Task ConnectWebDavDriveAsync(IPage page)
+    private async Task ConnectWebDavDriveAsync(IPage page, TrimmedPublishSettings settings)
     {
         await OpenAppAsync(page, "File Explorer");
         await page.Locator(".sidebar-entry.network-connect").First.ClickAsync(new() { Timeout = StepTimeoutMs });
@@ -154,10 +155,27 @@ public sealed partial class TrimmedPublishTests
         await Assertions.Expect(option.Locator(".cnd-option-provider")).ToContainTextAsync("WebDAV drives", new() { Timeout = StepTimeoutMs });
         await option.ClickAsync();
 
-        await dialog.Locator("input[data-field=server]").FillAsync(RoutedWebDavServer.ServerAddress);
         await dialog.Locator("input[data-field=username]").FillAsync(RoutedWebDavServer.UserName);
         await dialog.Locator("input[data-field=password]").FillAsync(RoutedWebDavServer.Password);
-        await dialog.Locator(".cnd-actions .cnd-btn.primary").ClickAsync();
+
+        // ADR 0282 §5, ADR 0284 §2: the dialog refuses an http server and writes the host it will reach.
+        ILocator server = dialog.Locator("input[data-field=server]");
+        ILocator mount = dialog.Locator(".cnd-actions .cnd-btn.primary");
+        await server.FillAsync("http://dav.kazoos-e2e.test" + RoutedWebDavServer.BasePath);
+        await Assertions.Expect(dialog.Locator(".cnd-host.refused")).ToContainTextAsync("https", new() { Timeout = StepTimeoutMs });
+        await Assertions.Expect(mount).ToBeDisabledAsync();
+        await server.FillAsync(RoutedWebDavServer.ServerAddress);
+        await Assertions.Expect(dialog.Locator(".cnd-host")).ToHaveTextAsync(
+            $"This provider will reach {new Uri(RoutedWebDavServer.Origin).Host}.", new() { Timeout = StepTimeoutMs });
+        await Assertions.Expect(mount).ToBeEnabledAsync();
+        if (settings.ArtifactsDirectory is { } artifacts)
+        {
+            Directory.CreateDirectory(artifacts);
+            await dialog.ScreenshotAsync(new LocatorScreenshotOptions { Path = Path.Combine(artifacts, "trimmed-webdav-server-host.png") });
+        }
+
+        Log("the connect dialog offered WebDAV, refused an http server and wrote the host of an https one.");
+        await mount.ClickAsync();
         try
         {
             await dialog.WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Hidden, Timeout = StepTimeoutMs });

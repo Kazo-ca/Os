@@ -106,7 +106,7 @@ public sealed class WireCodecDriveTests
                 ProviderFeatureName = "WebDAV drives",
                 Fields =
                 [
-                    new("url", "Server", KazoNetworkDriveFieldKind.Url) { Placeholder = "https://…" },
+                    new("url", "Server", KazoNetworkDriveFieldKind.Url) { Placeholder = "https://…", IsServerAddress = true },
                     new("mode", "Mode", KazoNetworkDriveFieldKind.Choice) { Required = false, Default = "", Choices = [new("", "Auto"), new("safe", "Safe")] },
                     new("password", "Password", KazoNetworkDriveFieldKind.Secret)
                 ]
@@ -129,7 +129,7 @@ public sealed class WireCodecDriveTests
             {
                 KazoNetworkDriveField want = expected.Fields[field];
                 KazoNetworkDriveField got = actual.Fields[field];
-                Assert.Equal((want.Name, want.Label, want.Kind, want.Required, want.Default, want.Placeholder), (got.Name, got.Label, got.Kind, got.Required, got.Default, got.Placeholder));
+                Assert.Equal((want.Name, want.Label, want.Kind, want.Required, want.Default, want.Placeholder, want.IsServerAddress), (got.Name, got.Label, got.Kind, got.Required, got.Default, got.Placeholder, got.IsServerAddress));
                 Assert.Equal(want.Choices, got.Choices);
             }
         }

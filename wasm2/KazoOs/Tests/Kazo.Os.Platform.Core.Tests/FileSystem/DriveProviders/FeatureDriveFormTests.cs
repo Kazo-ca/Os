@@ -99,6 +99,19 @@ public sealed class FeatureDriveFormTests
     }
 
     [Fact]
+    public void The_server_address_field_is_described_as_such()
+    {
+        using DriveProviderFixtures.Page page = new(new FakeCloudAccountTokens(), static _ => null, DriveProviderFixtures.Feature(serverAddress: true));
+
+        KazoNetworkDriveTypeInfo info = ((IDescribedNetworkDriveSource)page.Source).Describe(CultureInfo.InvariantCulture);
+
+        // ADR 0284 §2: the dialog writes the host of this field, the one the OS allows while the drive is open.
+        Assert.Equal(
+            [(InMemoryDriveProvider.ServiceOption, false), (DriveProviderFixtures.ServerOption, true)],
+            info.Fields.Select(static field => (field.Name, field.IsServerAddress)));
+    }
+
+    [Fact]
     public async Task Mounting_a_form_saves_the_account_first_and_the_drive_carries_only_its_id()
     {
         using DriveProviderFixtures.Page page = new(new FakeCloudAccountTokens(), static _ => null, DriveProviderFixtures.Feature());
