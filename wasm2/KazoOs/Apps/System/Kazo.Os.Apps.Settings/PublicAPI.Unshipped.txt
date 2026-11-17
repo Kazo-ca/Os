@@ -29,3 +29,5 @@ Kazo.Os.Apps.Settings.InstalledFeaturesPanel.ShowDetails.set -> void
 override Kazo.Os.Apps.Settings.InstalledFeaturesPanel.OnInitializedAsync() -> System.Threading.Tasks.Task!
 Kazo.Os.Apps.Settings.InstalledFeaturesPanel.Dispose() -> void
 ~override Kazo.Os.Apps.Settings.InstalledFeaturesPanel.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
+Kazo.Os.Apps.Settings.StoragePanel.OpenFeature.get -> Microsoft.AspNetCore.Components.EventCallback<string!>
+Kazo.Os.Apps.Settings.StoragePanel.OpenFeature.set -> void

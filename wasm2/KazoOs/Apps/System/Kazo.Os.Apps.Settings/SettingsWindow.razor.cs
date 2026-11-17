@@ -215,6 +215,22 @@ public partial class SettingsWindow : IAsyncDisposable
         StateHasChanged();
     });
 
+    /// <summary>
+    /// A feature's button on the Storage page (ADR 0250 §3): its first page in Settings ▸ Features
+    /// when the user sees one, otherwise its details.
+    /// </summary>
+    private void OpenFeaturePageOf(string featureId)
+    {
+        if (_featurePages.FirstOrDefault(page => page.FeatureId == featureId) is { } page)
+        {
+            _featuresNotice = null;
+            SelectPage(page.Id);
+            return;
+        }
+
+        ShowFeatureDetails(featureId);
+    }
+
     /// <summary>"Details" of a feature: its page in Settings, like <c>--app=&lt;id&gt;</c> (ADR 0096 §4).</summary>
     private void ShowFeatureDetails(string appId)
     {

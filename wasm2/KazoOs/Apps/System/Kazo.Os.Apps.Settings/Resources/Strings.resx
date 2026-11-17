@@ -2343,4 +2343,7 @@
   <data name="Features.Page.Failed" xml:space="preserve">
     <value>The page could not start: {0}</value>
   </data>
+  <data name="Storage.Features.Open" xml:space="preserve">
+    <value>Open its page</value>
+  </data>
 </root>

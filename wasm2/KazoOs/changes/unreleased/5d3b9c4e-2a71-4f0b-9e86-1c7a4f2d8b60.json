@@ -1,0 +1,21 @@
+{
+  "id": "5d3b9c4e-2a71-4f0b-9e86-1c7a4f2d8b60",
+  "category": "new",
+  "audience": [
+    "user",
+    "developer"
+  ],
+  "title": {
+    "en": "Settings has a Features section, with the pages the features add",
+    "fr": "Paramètres a une section Fonctionnalités, avec les pages qu’ajoutent les fonctionnalités"
+  },
+  "description": {
+    "en": "Settings now has a Features group after Applications. Installed features lists each feature with its entry points, the permissions and roles it declares and the apps that depend on it; an administrator enables or disables it for every user, opens it in the Store, or sees how to remove it. Each page a feature adds follows, named <feature> ▸ <page>, and shows only to the users who hold the role it requires and to administrators. A page is drawn in the Settings window but runs in its own process, under Settings in ps, with its own permissions; if it fails, only its area shows the problem. For developers: AppKind.SettingsPage, SettingsPageOptions (order, mobile), KazoSettingsPageBase, KazoApps.ShowSettingsPageAsync and Settings --page=<entry point>.",
+    "fr": "Paramètres a maintenant un groupe Fonctionnalités après Applications. Fonctionnalités installées montre chaque fonctionnalité avec ses points d’entrée, les permissions et les rôles qu’elle déclare et les apps qui en dépendent ; un administrateur l’active ou la désactive pour tous, l’ouvre dans le Store ou voit comment la retirer. Chaque page qu’ajoute une fonctionnalité suit, nommée <fonctionnalité> ▸ <page>, et n’apparaît qu’aux usagers qui détiennent le rôle qu’elle exige et aux administrateurs. Une page s’affiche dans la fenêtre de Paramètres mais tourne dans son propre processus, sous Paramètres dans ps, avec ses propres permissions ; si elle échoue, seule sa zone montre le problème. Pour les développeurs : AppKind.SettingsPage, SettingsPageOptions (ordre, mobile), KazoSettingsPageBase, KazoApps.ShowSettingsPageAsync et Paramètres --page=<point d’entrée>."
+  },
+  "links": [
+    "doc/en/wasm/dev/adr/0249-settings-features-section.md",
+    "doc/en/wasm/dev/adr/0285-settings-features-section-adjustments.md",
+    "doc/en/wasm/framework/feature-settings-pages.md"
+  ]
+}

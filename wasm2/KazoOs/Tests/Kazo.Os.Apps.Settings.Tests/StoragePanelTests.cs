@@ -65,6 +65,18 @@ public sealed class StoragePanelTests
     }
 
     [Fact]
+    public async Task Each_feature_has_a_button_that_opens_its_page_in_settings()
+    {
+        FakeStorage storage = new(Estimate, [new KazoFeatureStorageUsage("org.kazo.machines", "Machines", 3 * GiB, DateTimeOffset.UtcNow)]);
+        List<string> opened = [];
+        await using PanelHarness withButton = await PanelHarness.RenderAsync(storage, openFeature: opened.Add);
+        await using PanelHarness withoutButton = await PanelHarness.RenderAsync(storage);
+
+        Assert.Contains("Open its page", withButton.Html(), StringComparison.Ordinal);
+        Assert.DoesNotContain("Open its page", withoutButton.Html(), StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task The_page_speaks_French_and_warns_when_the_protection_was_lost()
     {
         FakeStorage storage = new(Estimate with { PersistenceLost = true }, []);
@@ -115,7 +127,7 @@ public sealed class StoragePanelTests
             _renderer = renderer;
         }
 
-        public static async Task<PanelHarness> RenderAsync(IAppStorageGateway storage, string lang = "en_US.UTF-8")
+        public static async Task<PanelHarness> RenderAsync(IAppStorageGateway storage, string lang = "en_US.UTF-8", Action<string>? openFeature = null)
         {
             FakeAppEnvironmentGateway environment = new("/home/alice", "alice");
             environment.SetVariable("LANG", lang);
@@ -128,7 +140,7 @@ public sealed class StoragePanelTests
             ServiceProvider services = new ServiceCollection().BuildServiceProvider();
             PanelHarness harness = new(services, new HtmlRenderer(services, NullLoggerFactory.Instance));
             harness._root = await harness._renderer.Dispatcher.InvokeAsync(() => harness._renderer.RenderComponentAsync<PanelHost>(
-                ParameterView.FromDictionary(new Dictionary<string, object?> { [nameof(PanelHost.Context)] = context })));
+                ParameterView.FromDictionary(new Dictionary<string, object?> { [nameof(PanelHost.Context)] = context, [nameof(PanelHost.OpenFeature)] = openFeature })));
             await harness._root.QuiescenceTask;
             return harness;
         }
@@ -147,6 +159,9 @@ public sealed class StoragePanelTests
         [Parameter]
         public IAppExecutionContext Context { get; set; } = default!;
 
+        [Parameter]
+        public Action<string>? OpenFeature { get; set; }
+
         protected override void BuildRenderTree(RenderTreeBuilder builder)
         {
             builder.OpenComponent<CascadingValue<IAppExecutionContext>>(0);
@@ -154,6 +169,11 @@ public sealed class StoragePanelTests
             builder.AddComponentParameter(2, nameof(CascadingValue<IAppExecutionContext>.ChildContent), (RenderFragment)(child =>
             {
                 child.OpenComponent<StoragePanel>(0);
+                if (OpenFeature is { } open)
+                {
+                    child.AddComponentParameter(1, nameof(StoragePanel.OpenFeature), EventCallback.Factory.Create(this, open));
+                }
+
                 child.CloseComponent();
             }));
             builder.CloseComponent();

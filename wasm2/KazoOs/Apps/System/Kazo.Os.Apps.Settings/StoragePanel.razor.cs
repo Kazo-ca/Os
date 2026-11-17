@@ -2,6 +2,7 @@ using System.Globalization;
 using Kazo.Os.AppSdk;
 using Kazo.Os.AppSdk.Globalization;
 using Kazo.Os.AppSdk.Storage;
+using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.Localization;
 
 namespace Kazo.Os.Apps.Settings;
@@ -18,6 +19,13 @@ namespace Kazo.Os.Apps.Settings;
 /// </remarks>
 public partial class StoragePanel
 {
+    /// <summary>
+    /// Gets or sets what a feature's button does (ADR 0250 §3, ADR 0249): Settings opens the feature's
+    /// own page, where the user frees space. Without it, no button is shown.
+    /// </summary>
+    [Parameter]
+    public EventCallback<string> OpenFeature { get; set; }
+
     private const double Mebibyte = 1024d * 1024d;
     private const double Gibibyte = Mebibyte * 1024d;
 
