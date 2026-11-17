@@ -89,11 +89,14 @@
     in a frame (ADR 0243), and windows keep their place in the page so a window coming to the front
     no longer reloads its frames (ADR 0244). No SDK change: only Windowing.Core's
     WindowDocumentOrder moves in the API files.
+    3.6.0-preview.1 (2026-11-17, beta channel, ADR 0271): the next prerelease after 3.5.0, from
+    beta once main is merged into it. Unshipped API stays in PublicAPI.Unshipped.txt and entries in
+    changes/unreleased/ until 3.6.0.
 
     The App SDK version an app is compiled against comes from this number (KazoOsSdk.Version), and
     the manifest generator writes it as the app's sdkCompatibility.minimumVersion (ADR 0098 §3).
   -->
   <PropertyGroup>
-    <KazoOsVersion>3.5.0</KazoOsVersion>
+    <KazoOsVersion>3.6.0-preview.1</KazoOsVersion>
   </PropertyGroup>
 </Project>
