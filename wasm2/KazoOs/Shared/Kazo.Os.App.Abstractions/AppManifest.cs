@@ -80,6 +80,15 @@ public sealed record AppManifest
     public IReadOnlyList<string>? RealNetworkPorts { get; init; }
 
     /// <summary>
+    /// Gets the web hosts the app reaches directly through the browser's <c>fetch</c>, without the
+    /// Kazo server (ADR 0282 §4): exact names (<c>api.pcloud.com</c>) or subdomain wildcards
+    /// (<c>*.example.org</c>), always in <c>https</c> (<see cref="Abstractions.DirectNetworkHosts"/>).
+    /// <see langword="null"/> (omitted from <c>manifest.json</c>) when the app makes no direct
+    /// request. Declaring any requires <c>network.direct.access</c>; the OS refuses every other host.
+    /// </summary>
+    public IReadOnlyList<string>? DirectNetworkHosts { get; init; }
+
+    /// <summary>
     /// Gets the services a <see cref="AppKind.Feature"/> provides to other apps (ADR 0262 §1), each a
     /// contract (an interface of a shared library) and the type that implements it, or
     /// <see langword="null"/> (omitted from <c>manifest.json</c>) when it provides none, so existing

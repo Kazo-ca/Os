@@ -16,3 +16,16 @@ Kazo.Os.Platform.Core.Network.RelayPolicyCache.RelayPolicyCache(Kazo.Os.Platform
 static readonly Kazo.Os.Platform.Core.Network.RelayPolicyCache.Lifetime -> System.TimeSpan
 Kazo.Os.Platform.Core.ServerConnection.RealNetworkGrantReconciler.GrantsChanged.get -> System.Action?
 Kazo.Os.Platform.Core.ServerConnection.RealNetworkGrantReconciler.GrantsChanged.init -> void
+Kazo.Os.Platform.Core.Policy.AppPermissionDecisions.GetApprovedDirectNetworkHosts(string! appId) -> System.Collections.Generic.IReadOnlySet<string!>!
+Kazo.Os.Platform.Core.Policy.DirectNetworkHostText
+Kazo.Os.Platform.Core.Policy.IAppPermissionStore.WriteApprovedDirectNetworkHostsAsync(string! appId, System.Collections.Generic.IReadOnlyCollection<string!>? hosts, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Kazo.Os.Platform.Core.Policy.AppPermissionStore.WriteApprovedDirectNetworkHostsAsync(string! appId, System.Collections.Generic.IReadOnlyCollection<string!>? hosts, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+const Kazo.Os.Platform.Core.Policy.AppPermissionsDocument.DirectNetworkHostsSection = "direct-network-hosts" -> string!
+static Kazo.Os.Platform.Core.Policy.AppPermissionsDocument.RemoveDirectNetworkHosts(string? content, string! appId) -> string!
+static Kazo.Os.Platform.Core.Policy.AppPermissionsDocument.SetDirectNetworkHosts(string? content, string! appId, System.Collections.Generic.IEnumerable<string!>? hosts) -> string!
+static Kazo.Os.Platform.Core.Policy.DangerousCapabilityEvaluator.UnapprovedDirectNetworkHosts(Kazo.Os.App.Abstractions.AppManifest! manifest, Kazo.Os.Platform.Core.Policy.AppPermissionDecisions! decisions) -> System.Collections.Generic.IReadOnlyList<string!>!
+static Kazo.Os.Platform.Core.Policy.DirectNetworkHostText.For(Kazo.Os.App.Abstractions.AppManifest! manifest, string! capability) -> string?
+Kazo.Os.Platform.Core.Network.AppNetworkGateway.DirectHosts.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Kazo.Os.Platform.Core.Network.AppNetworkGateway.DirectHosts.init -> void
+Kazo.Os.Platform.Core.Network.AppNetworkGateway.DirectHttp.get -> System.Net.Http.HttpMessageInvoker!
+Kazo.Os.Platform.Core.Network.AppNetworkGateway.DirectHttp.init -> void

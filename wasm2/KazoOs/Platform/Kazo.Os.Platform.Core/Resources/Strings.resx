@@ -399,6 +399,9 @@
   <data name="Prompt.Dangerous.RealNetworkPorts" xml:space="preserve">
     <value>Real servers on ports: {0}</value>
   </data>
+  <data name="Prompt.Dangerous.DirectNetworkHosts" xml:space="preserve">
+    <value>Web services reached directly: {0}</value>
+  </data>
   <data name="Prompt.Dangerous.AuditNotice" xml:space="preserve">
     <value>This decision will be recorded in /var/log/auth.log.</value>
   </data>

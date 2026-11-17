@@ -149,7 +149,25 @@ public sealed class DangerousCapabilityApprovalOverlayTests
         Assert.DoesNotContain("dca-capability-ports", await RenderAsync(broker), StringComparison.Ordinal);
     }
 
-    private static DangerousCapabilityApprovalRequest CreateRequest(string? suggestedLogin, IReadOnlyList<string>? realNetworkPorts = null)
+    [Fact]
+    public async Task Overlay_lists_the_direct_network_hosts_the_app_declares_under_network_direct_access()
+    {
+        DangerousCapabilityApprovalBroker broker = new();
+        using IDisposable host = broker.Attach();
+        _ = broker.RequestAsync(CreateRequest(suggestedLogin: "root", directNetworkHosts: ["api.example.com", "*.example.org"]));
+
+        string english = System.Net.WebUtility.HtmlDecode(await RenderAsync(broker));
+        string french = System.Net.WebUtility.HtmlDecode(
+            await RenderAsync(broker, TestLocalization.CreateSessionLocale("fr_FR.UTF-8")));
+
+        // ADR 0282 section 4: every declared host, once, under the capability.
+        Assert.Contains("Web services reached directly: *.example.org, api.example.com", english, StringComparison.Ordinal);
+        Assert.Contains("Services web joints directement : *.example.org, api.example.com", french, StringComparison.Ordinal);
+        Assert.Single(System.Text.RegularExpressions.Regex.Matches(english, "dca-capability-hosts"));
+    }
+
+    private static DangerousCapabilityApprovalRequest CreateRequest(
+        string? suggestedLogin, IReadOnlyList<string>? realNetworkPorts = null, IReadOnlyList<string>? directNetworkHosts = null)
     {
         AppManifest manifest = new()
         {
@@ -163,8 +181,11 @@ public sealed class DangerousCapabilityApprovalOverlayTests
             SdkCompatibility = new AppSdkCompatibilityManifest(KazoOsSdk.Version),
             Presentation = new PresentationManifest("test", AppLaunchVisibility.Visible, []),
             Resources = AppResourceProfileManifest.None,
-            Capabilities = [AppCapabilities.NetworkRealAccess, AppCapabilities.ProcessManage],
-            RealNetworkPorts = realNetworkPorts
+            Capabilities = directNetworkHosts is null
+                ? [AppCapabilities.NetworkRealAccess, AppCapabilities.ProcessManage]
+                : [AppCapabilities.NetworkRealAccess, AppCapabilities.NetworkDirectAccess, AppCapabilities.ProcessManage],
+            RealNetworkPorts = realNetworkPorts,
+            DirectNetworkHosts = directNetworkHosts
         };
         LocalGroupId group = LocalGroupId.FromGuid(Guid.NewGuid());
         AuthenticatedPrincipal principal = new(

@@ -72,6 +72,7 @@ public static class AppManifestJsonSerializer
             "web",
             "oomScoreAdj",
             "realNetworkPorts",
+            "directNetworkHosts",
             "providedServices"
         });
 
@@ -156,6 +157,9 @@ public static class AppManifestJsonSerializer
             RealNetworkPorts = manifest.RealNetworkPorts is null
                 ? null
                 : [.. manifest.RealNetworkPorts.OrderBy(value => value, StringComparer.Ordinal)],
+            DirectNetworkHosts = manifest.DirectNetworkHosts is null
+                ? null
+                : [.. manifest.DirectNetworkHosts.OrderBy(value => value, StringComparer.Ordinal)],
             Dependencies = [.. manifest.Dependencies.OrderBy(item => item.AppId, StringComparer.Ordinal)
                 .ThenBy(item => item.MinimumVersion, StringComparer.Ordinal)
                 .ThenBy(item => item.MaximumVersion ?? string.Empty, StringComparer.Ordinal)

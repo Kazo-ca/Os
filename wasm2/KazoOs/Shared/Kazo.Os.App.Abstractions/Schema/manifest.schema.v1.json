@@ -103,6 +103,13 @@
       "uniqueItems": true,
       "items": { "type": "string", "pattern": "^(?:[tT][cC][pP]|[uU][dD][pP])/[1-9][0-9]{0,4}$" }
     },
+    "directNetworkHosts": {
+      "description": "Web hosts the app reaches directly through the browser's fetch, without the Kazo server (ADR 0282): an exact host name ('api.example.com') or a subdomain wildcard ('*.example.com'), always over https. Requires the network.direct.access capability. Omitted: no direct request.",
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "pattern": "^(?:\\*\\.)?[^*/:@?#\\s\\[\\]]+\\.[^*/:@?#\\s\\[\\]]+$" }
+    },
     "declaredTopicPermissions": {
       "type": "array",
       "items": {

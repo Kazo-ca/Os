@@ -41,6 +41,7 @@ Valeurs par défaut des membres facultatifs :
 | `ServiceStartup` | `null` (= `Login`) ; `serviceStartup` est alors omis du manifeste. `Boot` ne vaut que pour une app système de genre `Service` (ADR 0097 §4, ADR 0107) |
 | `OomScoreAdjust` | `null` (hérite ; `-500` pour un service système) ; `oomScoreAdj` est alors omis du manifeste. Négatif seulement pour une app système (`KOSAPP0024`, ADR 0126 §4, ADR 0142, [`oom-killer.md`](../dev/oom-killer.md)) |
 | `RealNetworkPorts` | vide ; `realNetworkPorts` est alors omis du manifeste. Ports réels `tcp/N` ou `udp/N` dont l'app a besoin par le relais du serveur, hors `AllowedPorts` ; exige `network.real.access`, affichés à l'approbation, refusés par le serveur s'ils sont dans `BlockedPorts` (ADR 0235 §3, [relais réseau](../dev/server-network-relay.md)) |
+| `DirectNetworkHosts` | vide ; `directNetworkHosts` est alors omis du manifeste. Hôtes web que l'app joint directement par le `fetch` du navigateur, sans serveur Kazo : un nom exact (`api.example.com`) ou un joker de sous-domaine (`*.example.org`, qui ne couvre pas `example.org` lui-même), toujours en `https`, tout port. Refusés : joker nu, joker sous un domaine de premier niveau (`*.com`), adresse IP, `localhost`, nom sans point, schéma, port ou chemin. Exige `network.direct.access`, affichés à l'approbation (ADR 0282 §4, `DirectNetworkHosts`) |
 | `Resources` | `AppResourceProfileManifest.None` |
 | `Window` | `null` : la fenêtre prend `WindowOptions.Default` (800×560, minimum 360×240) ; l'objet `window` est alors omis du manifeste (ADR 0095, [`window-model.md`](window-model.md)). Déclaré seulement par une app de genre `Window` (`manifest.window.*`). |
 
@@ -126,7 +127,8 @@ Règles de conversion propres à une fonctionnalité :
   son sous-ensemble de permissions, et hérite de la version, de l'éditeur, de
   la plage de SDK, des traductions et des ressources (`assets`) de la
   fonctionnalité : un seul paquet les porte. Les ports réels
-  (`realNetworkPorts`) vont à l'enfant qui demande `network.real.access` ;
+  (`realNetworkPorts`) vont à l'enfant qui demande `network.real.access`, et les
+  hôtes directs (`directNetworkHosts`) à celui qui demande `network.direct.access` ;
 - `AppManifestValidator.Validate` applique à chaque enfant les règles de son
   genre, et à la fonctionnalité celles du genre `Feature` :
   `manifest.feature.entryPoint.forbidden` (point d'entrée ou plateforme

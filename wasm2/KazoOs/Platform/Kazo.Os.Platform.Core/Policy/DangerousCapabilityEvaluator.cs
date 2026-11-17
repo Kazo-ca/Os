@@ -109,6 +109,20 @@ public static class DangerousCapabilityEvaluator
         return [.. RealNetworkPorts.ParseValid(manifest.RealNetworkPorts).Where(port => !approved.Contains(port))];
     }
 
+    /// <summary>
+    /// Gets the direct-network hosts <paramref name="manifest"/> declares that the machine file does
+    /// not approve yet (ADR 0282 §4); empty when every declared host was approved.
+    /// </summary>
+    /// <param name="manifest">App manifest.</param>
+    /// <param name="decisions">Parsed machine and user decisions.</param>
+    public static IReadOnlyList<string> UnapprovedDirectNetworkHosts(AppManifest manifest, AppPermissionDecisions decisions)
+    {
+        ArgumentNullException.ThrowIfNull(manifest);
+        ArgumentNullException.ThrowIfNull(decisions);
+        IReadOnlySet<string> approved = decisions.GetApprovedDirectNetworkHosts(manifest.Id);
+        return [.. DirectNetworkHosts.ParseValid(manifest.DirectNetworkHosts).Where(host => !approved.Contains(host))];
+    }
+
     private static DangerousCapabilityState EvaluateOne(
         AppManifest manifest, string capability, DangerousCapabilityPolicy policy, AppPermissionDecisions decisions)
     {
@@ -135,8 +149,15 @@ public static class DangerousCapabilityEvaluator
         }
 
         // ADR 0233 §4: an update that declares a new port asks again, like a widened permission.
-        return string.Equals(capability, AppCapabilities.NetworkRealAccess, StringComparison.Ordinal)
-            && UnapprovedRealNetworkPorts(manifest, decisions).Count > 0
+        if (string.Equals(capability, AppCapabilities.NetworkRealAccess, StringComparison.Ordinal)
+            && UnapprovedRealNetworkPorts(manifest, decisions).Count > 0)
+        {
+            return DangerousCapabilityState.Pending;
+        }
+
+        // ADR 0282 §4: the same for a new direct-network host.
+        return string.Equals(capability, AppCapabilities.NetworkDirectAccess, StringComparison.Ordinal)
+            && UnapprovedDirectNetworkHosts(manifest, decisions).Count > 0
                 ? DangerousCapabilityState.Pending
                 : DangerousCapabilityState.Allowed;
     }
