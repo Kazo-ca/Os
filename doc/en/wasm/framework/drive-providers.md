@@ -200,6 +200,10 @@ Work item 4 wires the declared types into the file system
   `SignInRequired`, else `Unavailable`). A name returned by `ListAsync` that
   could leave the folder is not shown; a file larger than
   `KazoDriveLimits.MaxFileBytes` is refused both ways.
+- **Feature removed or disabled.** The drives of its type are unmounted but
+  kept in the user's list, greyed in the Explorer; they come back by
+  themselves when **the same** feature is enabled again or reinstalled. Another
+  feature that declares the same type does not take these drives over.
 - **Testing a provider**: `InMemoryDriveProvider` and `InMemoryDriveService`
   (`Tests/Kazo.Os.Tests.Support`) are an in-memory fake provider and service
   (tree, revisions, quota, accepted token, offline, failures, slow or failing

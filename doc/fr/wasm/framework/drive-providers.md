@@ -203,6 +203,11 @@ Le chantier 4 branche les types déclarés dans le système de fichiers
   `SignInRequired`, sinon `Unavailable`). Un nom renvoyé par `ListAsync` qui
   pourrait sortir du dossier n'est pas affiché ; un fichier de plus de
   `KazoDriveLimits.MaxFileBytes` est refusé dans les deux sens.
+- **Fonctionnalité retirée ou désactivée.** Les lecteurs de son type sont
+  démontés mais gardés dans la liste de l'utilisateur, grisés dans
+  l'Explorateur ; ils reviennent seuls quand la **même** fonctionnalité est
+  réactivée ou réinstallée. Une autre fonctionnalité qui déclare le même type
+  ne reprend pas ces lecteurs.
 - **Tester un fournisseur** : `InMemoryDriveProvider` et `InMemoryDriveService`
   (`Tests/Kazo.Os.Tests.Support`) sont un fournisseur et un service factices en
   mémoire (arborescence, révisions, quota, jeton accepté, hors ligne, pannes,

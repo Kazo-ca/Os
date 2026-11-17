@@ -59,8 +59,11 @@ dependency injection: a connector is added with one
   and not rewritten until something changes.
 - `account` is a **reference** into the cloud account list (work item 2), never
   a token. No `root`: the whole storage.
+- `provider`: the id of the feature that provides the type (ADR 0282 §3),
+  written at mount; absent for a shipped type of the OS.
 - A line whose type has no source on this host is dropped from the list at
-  login, with a warning in the log.
+  login, with a warning in the log, except a line of a shipped type or a line
+  that has a `provider`: it is kept ("missing provider", below).
 
 ## Behaviour
 
@@ -155,11 +158,22 @@ to the provider comes from work item 5
 values of a form account (`CloudAccount.Options`); an account that is gone or of
 another type gives `SignInRequired` and the drive stays disconnected.
 
-**Missing provider** (feature removed or disabled): the expected behaviour
-(lines kept, greyed drives, remount when the type comes back) waits for two
-answers of the maintainer on how to recognise a line's provider; it is not
-built yet. Today `NetworkDriveService` unmounts the drives of a type that left
-and keeps the lines of the OS's shipped types only (work item 3).
+**Missing provider** (feature removed or disabled, maintainer's choice of
+2026-11-17):
+
+- At mount, the line notes the feature that provides the type (`provider`).
+- When the catalog changes, `RefreshProvidersAsync` unmounts the drives whose
+  provider left; their line stays in `network-drives.json` and their mount
+  point stays reserved. `GetProviderMissingDrives()` returns them with
+  `IsProviderMissing` and `ProviderFeatureId` (the noted id, `null` for a
+  shipped type): the Explorer shows them greyed (work item 6).
+- The drive is mounted again, without a restart, when **the same** feature
+  provides the type again (enabled again, reinstalled, updated). Another
+  feature that provides the same type does not take it over, neither live nor
+  at login.
+- A line without `provider` of a type nothing serves here, and that is not a
+  shipped type, is dropped at login as before. A line written before this work
+  item for a provided type gets its `provider` at its first mount.
 
 ## Tests
 
@@ -178,8 +192,10 @@ and keeps the lines of the OS's shipped types only (work item 3).
   timeout, constructor that throws, missing assembly, process that does not
   start, one instance per page in the feature's context, account of another
   type refused, types that follow the catalog hot (`FeatureDriveSourceTests`),
-  mount of a type installed hot and restore with no wait
-  (`FeatureDriveMountTests`), refusal of a second provider of the same type
+  mount of a type installed hot and restore with no wait, drive kept when the
+  feature is disabled or removed and mounted again when it returns, another
+  feature of the same type that does not take the drive over, line without
+  `provider` of an unknown type dropped (`FeatureDriveMountTests`), refusal of a second provider of the same type
   (`DriveTypeInstallTests`).
 - The existing `hostfs` drive tests pass unchanged.
 
@@ -201,4 +217,4 @@ and keeps the lines of the OS's shipped types only (work item 3).
 - [x] Unavailable drive mounted disconnected, reconnects by itself.
 - [x] In-memory fake remote source and tests.
 - [x] Types features provide: registry, adapter, lazy load, login with no wait (ADR 0282, work item 4).
-- [ ] Missing provider: lines kept and remount (ADR 0282, waits for the maintainer).
+- [x] Missing provider: lines kept with `provider`, remounted by the same feature only (ADR 0282).
