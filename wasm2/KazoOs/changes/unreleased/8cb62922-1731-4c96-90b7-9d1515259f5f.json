@@ -1,0 +1,19 @@
+{
+  "id": "8cb62922-1731-4c96-90b7-9d1515259f5f",
+  "category": "new",
+  "audience": [
+    "user",
+    "developer"
+  ],
+  "title": {
+    "en": "Features can declare roles that an administrator grants",
+    "fr": "Les fonctionnalités peuvent déclarer des rôles qu’un administrateur attribue"
+  },
+  "description": {
+    "en": "A feature can now declare roles, such as the manager of its virtual machines, and reserve some of its commands and windows for them. An administrator grants a role to an ordinary account in the new Roles of the features panel of Settings ▸ Users, or with sudo kazorole grant <user> <role>; kazorole list shows who holds what. Every administrator holds every role, implicitly. A command that requires a role you do not hold is absent from the launcher and the completion, and the shell answers role required (exit 126). Each sensitive operation still asks the system’s own window for your password, never the feature’s, and auth.log records feature.authenticate, feature.role-denied, role.grant and role.revoke. For developers: FeatureDefinition.Roles, FeatureEntryPoint.RequiresRole, KazoUser.Current.HasRole, KazoFeatureAuthentication (AuthenticateAsync, ConsumeAsync), KazoUserAccounts.ListRolesAsync, GrantRoleAsync and RevokeRoleAsync.",
+    "fr": "Une fonctionnalité peut maintenant déclarer des rôles, comme le gestionnaire de ses machines virtuelles, et leur réserver certaines de ses commandes et fenêtres. Un administrateur attribue un rôle à un compte ordinaire dans le nouveau panneau Rôles des Features de Paramètres ▸ Utilisateurs, ou avec sudo kazorole grant <usager> <rôle> ; kazorole list montre qui détient quoi. Chaque administrateur détient implicitement tous les rôles. Une commande qui exige un rôle que vous n’avez pas est absente du lanceur et de la complétion, et le shell répond rôle requis (code 126). Chaque opération sensible demande encore votre mot de passe dans la fenêtre du système, jamais dans celle de la fonctionnalité, et auth.log note feature.authenticate, feature.role-denied, role.grant et role.revoke. Pour les développeurs : FeatureDefinition.Roles, FeatureEntryPoint.RequiresRole, KazoUser.Current.HasRole, KazoFeatureAuthentication (AuthenticateAsync, ConsumeAsync), KazoUserAccounts.ListRolesAsync, GrantRoleAsync et RevokeRoleAsync."
+  },
+  "links": [
+    "doc/en/wasm/dev/adr/0247-feature-declared-roles.md"
+  ]
+}

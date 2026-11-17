@@ -192,6 +192,45 @@ Session passkeys (ADR 0168), without a capability: `ListPasskeysAsync`,
 without WebAuthn) and `RemovePasskeyAsync(id)`. `KazoPasskey.UnlocksKeyring` says whether
 the key opens the keyring. Details: [`passkeys.md`](../dev/passkeys.md).
 
+### Roles of the features (ADR 0247)
+
+A feature declares roles (`FeatureDefinition.Roles`, `FeatureRole(id, title)`
+with `Description` and `Grants`), each `<prefix>.<name>` under its
+`CapabilityPrefix`; an entry point marked `RequiresRole` opens only to a user
+who holds the role. The manifest carries them (`roles`, `requiresRole`); the
+validator refuses a role outside a feature, outside the prefix, without a title,
+or a `requiresRole` no role of the feature declares.
+
+- **Granting**: `KazoUserAccounts.ListRolesAsync()` lists the declared roles
+  (`KazoFeatureRole`); `GrantRoleAsync(login, role)` and
+  `RevokeRoleAsync(login, role)` need `users.manage` and an administrator
+  (actions `users.role-grant` and `users.role-revoke`). `KazoUserAccount.Roles`
+  gives the roles of an account. The grant is written to
+  `/etc/kazoos/roles.config` (`[roles]`, `x86.vm-admin=<id>,<id>`, stable ids,
+  never names). Settings ▸ Users shows one column per role (panel
+  `FeatureRolesPanel`); `sudo kazorole grant|revoke <user> <role>` does the
+  same, `kazorole list` lists the roles and their holders.
+- **Administrator** (answer 233 B): holds every role implicitly, with no line
+  in `roles.config`; the screen says "implicit (administrator)" and
+  `kazorole grant` on one changes nothing (exit 0). An account demoted to
+  `User` loses these implicit roles; root under `sudo` holds them all.
+- **Reading**: `IAppExecutionContext.Roles` and `KazoUser.Current.HasRole(role)`.
+  An entry point without its role is absent from the launcher, the mobile home
+  screen and the shell's completion; launching it answers
+  `AppLaunchStatus.RoleRequired` (`lifecycle.role.required`), the shell writes
+  "role required" and exits with 126, and `feature.role-denied` is written to
+  `auth.log`.
+- **Sensitive operations**: the role opens the entry point; it is not an
+  authorization for each operation. `KazoFeatureAuthentication.AuthenticateAsync(operation, scope)`
+  opens the OS's window (never one of the feature):
+  `KazoAuthenticationScope.RoleHolder` asks the session user's password again,
+  and they must hold the role; `Administrator` asks an administrator. The
+  ticket it returns (`KazoAuthenticationTicket`) is valid 30 s, once, for this
+  feature and this operation: `ConsumeAsync(ticket, operation)` refuses it for
+  another operation. Under `sudo`, no second window. An ordinary app is
+  refused. Details:
+  [`sensitive-settings.md`](../dev/sensitive-settings.md#5-roles-of-the-features-and-authentication-of-operations).
+
 ## Decisions
 
 - See ADR 0060: `SystemPower` property (not `System`),
@@ -222,6 +261,12 @@ administrator), session passkeys without capability or administrator.
 `Tests/Kazo.Os.Platform.Core.Tests/Sessions/LocalAccountServiceTests.cs`:
 groups, reserved or taken names, deletion with or without home folder, refusal for
 oneself and for the last administrator.
+
+`Tests/Kazo.Os.Platform.Core.Tests/Roles/`: roles granted, refused, implicit
+for an administrator, lost by a demoted account, read back from
+`roles.config`; authentication of operations (ticket bound to the operation,
+single use, ordinary app refused, `sudo` without a window).
+`Tests/Kazo.Os.Commands.Wave5.Tests/KazoroleCommandTests.cs`: `kazorole`.
 
 ## Task list
 
