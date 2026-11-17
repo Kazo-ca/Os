@@ -215,3 +215,98 @@ static Kazo.Os.AppSdk.Net.KazoDirectHttpContent.FromBytes(System.ReadOnlyMemory<
 static Kazo.Os.AppSdk.Net.KazoDirectHttpContent.FromJson<T>(T value, System.Text.Json.Serialization.Metadata.JsonTypeInfo<T>! jsonTypeInfo) -> Kazo.Os.AppSdk.Net.KazoDirectHttpContent!
 static Kazo.Os.AppSdk.Net.KazoDirectHttpContent.FromStream(System.IO.Stream! content, string! contentType = "application/octet-stream", long? length = null) -> Kazo.Os.AppSdk.Net.KazoDirectHttpContent!
 static Kazo.Os.AppSdk.Net.KazoDirectHttpContent.FromString(string! content, string! mediaType = "text/plain") -> Kazo.Os.AppSdk.Net.KazoDirectHttpContent!
+Kazo.Os.AppSdk.IO.IAppDriveGateway.DescribeNetworkDriveTypesAsync(System.Globalization.CultureInfo! language, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.IO.KazoNetworkDriveTypeInfo!>!>
+Kazo.Os.AppSdk.IO.IAppDriveGateway.GetProviderMissingDrivesAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.IO.KazoDriveSnapshot!>!>
+Kazo.Os.AppSdk.IO.KazoDriveInfo.ProviderFeatureId.get -> string?
+Kazo.Os.AppSdk.IO.KazoDriveInfo.ProviderMissing.get -> Kazo.Os.AppSdk.IO.KazoDriveProviderMissingReason
+Kazo.Os.AppSdk.IO.KazoDriveProviderMissingReason
+Kazo.Os.AppSdk.IO.KazoDriveProviderMissingReason.Disabled = 2 -> Kazo.Os.AppSdk.IO.KazoDriveProviderMissingReason
+Kazo.Os.AppSdk.IO.KazoDriveProviderMissingReason.DisabledByAdministrator = 3 -> Kazo.Os.AppSdk.IO.KazoDriveProviderMissingReason
+Kazo.Os.AppSdk.IO.KazoDriveProviderMissingReason.None = 0 -> Kazo.Os.AppSdk.IO.KazoDriveProviderMissingReason
+Kazo.Os.AppSdk.IO.KazoDriveProviderMissingReason.Removed = 1 -> Kazo.Os.AppSdk.IO.KazoDriveProviderMissingReason
+Kazo.Os.AppSdk.IO.KazoDriveSnapshot.ProviderFeatureId.get -> string?
+Kazo.Os.AppSdk.IO.KazoDriveSnapshot.ProviderFeatureId.init -> void
+Kazo.Os.AppSdk.IO.KazoDriveSnapshot.ProviderMissing.get -> Kazo.Os.AppSdk.IO.KazoDriveProviderMissingReason
+Kazo.Os.AppSdk.IO.KazoDriveSnapshot.ProviderMissing.init -> void
+Kazo.Os.AppSdk.IO.KazoNetworkDriveConnection
+Kazo.Os.AppSdk.IO.KazoNetworkDriveConnection.Form = 2 -> Kazo.Os.AppSdk.IO.KazoNetworkDriveConnection
+Kazo.Os.AppSdk.IO.KazoNetworkDriveConnection.HostFolder = 0 -> Kazo.Os.AppSdk.IO.KazoNetworkDriveConnection
+Kazo.Os.AppSdk.IO.KazoNetworkDriveConnection.OAuth = 1 -> Kazo.Os.AppSdk.IO.KazoNetworkDriveConnection
+Kazo.Os.AppSdk.IO.KazoNetworkDriveField
+Kazo.Os.AppSdk.IO.KazoNetworkDriveField.<Clone>$() -> Kazo.Os.AppSdk.IO.KazoNetworkDriveField!
+Kazo.Os.AppSdk.IO.KazoNetworkDriveField.Choices.get -> System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.IO.KazoNetworkDriveFieldChoice!>!
+Kazo.Os.AppSdk.IO.KazoNetworkDriveField.Choices.init -> void
+Kazo.Os.AppSdk.IO.KazoNetworkDriveField.Deconstruct(out string! Name, out string! Label, out Kazo.Os.AppSdk.IO.KazoNetworkDriveFieldKind Kind) -> void
+Kazo.Os.AppSdk.IO.KazoNetworkDriveField.Default.get -> string?
+Kazo.Os.AppSdk.IO.KazoNetworkDriveField.Default.init -> void
+Kazo.Os.AppSdk.IO.KazoNetworkDriveField.Equals(Kazo.Os.AppSdk.IO.KazoNetworkDriveField? other) -> bool
+Kazo.Os.AppSdk.IO.KazoNetworkDriveField.IsSecret.get -> bool
+Kazo.Os.AppSdk.IO.KazoNetworkDriveField.KazoNetworkDriveField(string! Name, string! Label, Kazo.Os.AppSdk.IO.KazoNetworkDriveFieldKind Kind) -> void
+Kazo.Os.AppSdk.IO.KazoNetworkDriveField.Kind.get -> Kazo.Os.AppSdk.IO.KazoNetworkDriveFieldKind
+Kazo.Os.AppSdk.IO.KazoNetworkDriveField.Kind.init -> void
+Kazo.Os.AppSdk.IO.KazoNetworkDriveField.Label.get -> string!
+Kazo.Os.AppSdk.IO.KazoNetworkDriveField.Label.init -> void
+Kazo.Os.AppSdk.IO.KazoNetworkDriveField.Name.get -> string!
+Kazo.Os.AppSdk.IO.KazoNetworkDriveField.Name.init -> void
+Kazo.Os.AppSdk.IO.KazoNetworkDriveField.Placeholder.get -> string?
+Kazo.Os.AppSdk.IO.KazoNetworkDriveField.Placeholder.init -> void
+Kazo.Os.AppSdk.IO.KazoNetworkDriveField.Required.get -> bool
+Kazo.Os.AppSdk.IO.KazoNetworkDriveField.Required.init -> void
+Kazo.Os.AppSdk.IO.KazoNetworkDriveFieldChoice
+Kazo.Os.AppSdk.IO.KazoNetworkDriveFieldChoice.<Clone>$() -> Kazo.Os.AppSdk.IO.KazoNetworkDriveFieldChoice!
+Kazo.Os.AppSdk.IO.KazoNetworkDriveFieldChoice.Deconstruct(out string! Value, out string! Label) -> void
+Kazo.Os.AppSdk.IO.KazoNetworkDriveFieldChoice.Equals(Kazo.Os.AppSdk.IO.KazoNetworkDriveFieldChoice? other) -> bool
+Kazo.Os.AppSdk.IO.KazoNetworkDriveFieldChoice.KazoNetworkDriveFieldChoice(string! Value, string! Label) -> void
+Kazo.Os.AppSdk.IO.KazoNetworkDriveFieldChoice.Label.get -> string!
+Kazo.Os.AppSdk.IO.KazoNetworkDriveFieldChoice.Label.init -> void
+Kazo.Os.AppSdk.IO.KazoNetworkDriveFieldChoice.Value.get -> string!
+Kazo.Os.AppSdk.IO.KazoNetworkDriveFieldChoice.Value.init -> void
+Kazo.Os.AppSdk.IO.KazoNetworkDriveFieldKind
+Kazo.Os.AppSdk.IO.KazoNetworkDriveFieldKind.Choice = 3 -> Kazo.Os.AppSdk.IO.KazoNetworkDriveFieldKind
+Kazo.Os.AppSdk.IO.KazoNetworkDriveFieldKind.Number = 2 -> Kazo.Os.AppSdk.IO.KazoNetworkDriveFieldKind
+Kazo.Os.AppSdk.IO.KazoNetworkDriveFieldKind.Secret = 4 -> Kazo.Os.AppSdk.IO.KazoNetworkDriveFieldKind
+Kazo.Os.AppSdk.IO.KazoNetworkDriveFieldKind.Text = 0 -> Kazo.Os.AppSdk.IO.KazoNetworkDriveFieldKind
+Kazo.Os.AppSdk.IO.KazoNetworkDriveFieldKind.Url = 1 -> Kazo.Os.AppSdk.IO.KazoNetworkDriveFieldKind
+Kazo.Os.AppSdk.IO.KazoNetworkDriveTypeInfo
+Kazo.Os.AppSdk.IO.KazoNetworkDriveTypeInfo.<Clone>$() -> Kazo.Os.AppSdk.IO.KazoNetworkDriveTypeInfo!
+Kazo.Os.AppSdk.IO.KazoNetworkDriveTypeInfo.AppFolderPath.get -> string?
+Kazo.Os.AppSdk.IO.KazoNetworkDriveTypeInfo.AppFolderPath.init -> void
+Kazo.Os.AppSdk.IO.KazoNetworkDriveTypeInfo.Connection.get -> Kazo.Os.AppSdk.IO.KazoNetworkDriveConnection
+Kazo.Os.AppSdk.IO.KazoNetworkDriveTypeInfo.Connection.init -> void
+Kazo.Os.AppSdk.IO.KazoNetworkDriveTypeInfo.Deconstruct(out string! Type, out string! DisplayName, out Kazo.Os.AppSdk.IO.KazoNetworkDriveConnection Connection) -> void
+Kazo.Os.AppSdk.IO.KazoNetworkDriveTypeInfo.DisplayName.get -> string!
+Kazo.Os.AppSdk.IO.KazoNetworkDriveTypeInfo.DisplayName.init -> void
+Kazo.Os.AppSdk.IO.KazoNetworkDriveTypeInfo.Equals(Kazo.Os.AppSdk.IO.KazoNetworkDriveTypeInfo? other) -> bool
+Kazo.Os.AppSdk.IO.KazoNetworkDriveTypeInfo.Fields.get -> System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.IO.KazoNetworkDriveField!>!
+Kazo.Os.AppSdk.IO.KazoNetworkDriveTypeInfo.Fields.init -> void
+Kazo.Os.AppSdk.IO.KazoNetworkDriveTypeInfo.Icon.get -> string?
+Kazo.Os.AppSdk.IO.KazoNetworkDriveTypeInfo.Icon.init -> void
+Kazo.Os.AppSdk.IO.KazoNetworkDriveTypeInfo.IconUrl.get -> string?
+Kazo.Os.AppSdk.IO.KazoNetworkDriveTypeInfo.IconUrl.init -> void
+Kazo.Os.AppSdk.IO.KazoNetworkDriveTypeInfo.IsThirdParty.get -> bool
+Kazo.Os.AppSdk.IO.KazoNetworkDriveTypeInfo.KazoNetworkDriveTypeInfo(string! Type, string! DisplayName, Kazo.Os.AppSdk.IO.KazoNetworkDriveConnection Connection) -> void
+Kazo.Os.AppSdk.IO.KazoNetworkDriveTypeInfo.ProviderFeatureId.get -> string?
+Kazo.Os.AppSdk.IO.KazoNetworkDriveTypeInfo.ProviderFeatureId.init -> void
+Kazo.Os.AppSdk.IO.KazoNetworkDriveTypeInfo.ProviderFeatureName.get -> string?
+Kazo.Os.AppSdk.IO.KazoNetworkDriveTypeInfo.ProviderFeatureName.init -> void
+Kazo.Os.AppSdk.IO.KazoNetworkDriveTypeInfo.Scopes.get -> System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccessScope>!
+Kazo.Os.AppSdk.IO.KazoNetworkDriveTypeInfo.Scopes.init -> void
+Kazo.Os.AppSdk.IO.KazoNetworkDriveTypeInfo.Type.get -> string!
+Kazo.Os.AppSdk.IO.KazoNetworkDriveTypeInfo.Type.init -> void
+override Kazo.Os.AppSdk.IO.KazoNetworkDriveField.Equals(object? obj) -> bool
+override Kazo.Os.AppSdk.IO.KazoNetworkDriveField.GetHashCode() -> int
+override Kazo.Os.AppSdk.IO.KazoNetworkDriveField.ToString() -> string!
+override Kazo.Os.AppSdk.IO.KazoNetworkDriveFieldChoice.Equals(object? obj) -> bool
+override Kazo.Os.AppSdk.IO.KazoNetworkDriveFieldChoice.GetHashCode() -> int
+override Kazo.Os.AppSdk.IO.KazoNetworkDriveFieldChoice.ToString() -> string!
+override Kazo.Os.AppSdk.IO.KazoNetworkDriveTypeInfo.Equals(object? obj) -> bool
+override Kazo.Os.AppSdk.IO.KazoNetworkDriveTypeInfo.GetHashCode() -> int
+override Kazo.Os.AppSdk.IO.KazoNetworkDriveTypeInfo.ToString() -> string!
+static Kazo.Os.AppSdk.IO.KazoDriveInfo.DescribeNetworkDriveTypesAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.IO.KazoNetworkDriveTypeInfo!>!>!
+static Kazo.Os.AppSdk.IO.KazoDriveInfo.GetProviderMissingDrivesAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Kazo.Os.AppSdk.IO.KazoDriveInfo![]!>!
+static Kazo.Os.AppSdk.IO.KazoNetworkDriveField.operator !=(Kazo.Os.AppSdk.IO.KazoNetworkDriveField? left, Kazo.Os.AppSdk.IO.KazoNetworkDriveField? right) -> bool
+static Kazo.Os.AppSdk.IO.KazoNetworkDriveField.operator ==(Kazo.Os.AppSdk.IO.KazoNetworkDriveField? left, Kazo.Os.AppSdk.IO.KazoNetworkDriveField? right) -> bool
+static Kazo.Os.AppSdk.IO.KazoNetworkDriveFieldChoice.operator !=(Kazo.Os.AppSdk.IO.KazoNetworkDriveFieldChoice? left, Kazo.Os.AppSdk.IO.KazoNetworkDriveFieldChoice? right) -> bool
+static Kazo.Os.AppSdk.IO.KazoNetworkDriveFieldChoice.operator ==(Kazo.Os.AppSdk.IO.KazoNetworkDriveFieldChoice? left, Kazo.Os.AppSdk.IO.KazoNetworkDriveFieldChoice? right) -> bool
+static Kazo.Os.AppSdk.IO.KazoNetworkDriveTypeInfo.operator !=(Kazo.Os.AppSdk.IO.KazoNetworkDriveTypeInfo? left, Kazo.Os.AppSdk.IO.KazoNetworkDriveTypeInfo? right) -> bool
+static Kazo.Os.AppSdk.IO.KazoNetworkDriveTypeInfo.operator ==(Kazo.Os.AppSdk.IO.KazoNetworkDriveTypeInfo? left, Kazo.Os.AppSdk.IO.KazoNetworkDriveTypeInfo? right) -> bool

@@ -1,3 +1,6 @@
+using System.Globalization;
+using Kazo.Os.AppSdk.IO;
+using Kazo.Os.Platform.Core.FileSystem.HostFolders;
 using Kazo.Os.Platform.Core.CloudAccounts;
 using Kazo.Os.Simulation.Abstractions.Events;
 using Kazo.Os.Simulation.Abstractions.FileSystem;
@@ -28,7 +31,7 @@ namespace Kazo.Os.Platform.Core.CloudDrives.S3;
 /// (<c>doc/en/wasm/dev/s3-cors.md</c>).
 /// </para>
 /// </remarks>
-public sealed class S3DriveSource : INetworkDriveSource, IDisposable
+public sealed class S3DriveSource : IDescribedNetworkDriveSource, IDisposable
 {
     /// <summary>How often a drive that lost the network asks the service again.</summary>
     public static readonly TimeSpan RetryInterval = TimeSpan.FromSeconds(30);
@@ -80,6 +83,40 @@ public sealed class S3DriveSource : INetworkDriveSource, IDisposable
 
     /// <inheritdoc />
     public event Action? AvailabilityChanged;
+
+    /// <inheritdoc />
+    /// <remarks>
+    /// The S3 form, the same generic form as a type a feature declares (ADR 0282 §5): the settings go to
+    /// <see cref="NetworkDriveRequest.Options"/>, the two keys to <see cref="NetworkDriveRequest.Secrets"/>.
+    /// </remarks>
+    public KazoNetworkDriveTypeInfo Describe(CultureInfo language)
+    {
+        Microsoft.Extensions.Localization.IStringLocalizer text = Kazo.Os.Platform.Core.Strings.For(language);
+        return new(Type, text["Drives.S3.Name"], KazoNetworkDriveConnection.Form)
+        {
+            Icon = "lucide:database",
+            Fields =
+            [
+                new("endpoint", text["Drives.S3.Endpoint"], KazoNetworkDriveFieldKind.Url) { Placeholder = "https://…" },
+                new("bucket", text["Drives.S3.Bucket"], KazoNetworkDriveFieldKind.Text),
+                new("region", text["Drives.S3.Region"], KazoNetworkDriveFieldKind.Text) { Required = false, Placeholder = "auto" },
+                new("prefix", text["Drives.S3.Prefix"], KazoNetworkDriveFieldKind.Text) { Required = false },
+                new("addressing", text["Drives.S3.Addressing"], KazoNetworkDriveFieldKind.Choice)
+                {
+                    Required = false,
+                    Default = string.Empty,
+                    Choices =
+                    [
+                        new(string.Empty, text["Drives.S3.AddressingAuto"]),
+                        new("path", text["Drives.S3.AddressingPath"]),
+                        new("virtual", text["Drives.S3.AddressingVirtual"])
+                    ]
+                },
+                new("access-key-id", text["Drives.S3.AccessKey"], KazoNetworkDriveFieldKind.Secret),
+                new("secret-access-key", text["Drives.S3.Secret"], KazoNetworkDriveFieldKind.Secret)
+            ]
+        };
+    }
 
     /// <summary>S3 needs nothing from the browser but <c>fetch</c>: always available.</summary>
     public ValueTask<bool> IsAvailableAsync(CancellationToken cancellationToken = default) => ValueTask.FromResult(true);

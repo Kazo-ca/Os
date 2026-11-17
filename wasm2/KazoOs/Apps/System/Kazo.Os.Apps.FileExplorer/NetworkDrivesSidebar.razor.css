@@ -156,3 +156,20 @@
     color: inherit;
     opacity: 0.8;
 }
+
+/* A drive whose provider is missing (ADR 0282 §5): greyed, with the reason and, when the Store has it, the install action. */
+.sidebar-entry.missing,
+.network-chip.missing {
+    opacity: 0.7;
+}
+
+.sidebar-entry.missing[aria-disabled="true"],
+.network-chip.missing[aria-disabled="true"] {
+    cursor: default;
+}
+
+.network-drive-action {
+    font-size: 0.7rem;
+    color: var(--kos-accent, #42d392);
+    text-decoration: underline;
+}

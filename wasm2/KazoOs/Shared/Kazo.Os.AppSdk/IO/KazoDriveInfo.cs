@@ -44,6 +44,18 @@ public sealed record KazoDriveSnapshot(
     /// relative to what its account reaches; <see langword="null"/> for the whole storage and for the other drives.
     /// </summary>
     public string? Root { get; init; }
+
+    /// <summary>
+    /// Gets why a network drive is kept without being mounted (ADR 0282 §3, §5);
+    /// <see cref="KazoDriveProviderMissingReason.None"/> for a mounted drive.
+    /// </summary>
+    public KazoDriveProviderMissingReason ProviderMissing { get; init; }
+
+    /// <summary>
+    /// Gets the id of the feature that provided the drive's type, for a drive kept while that feature is
+    /// removed or disabled; <see langword="null"/> otherwise.
+    /// </summary>
+    public string? ProviderFeatureId { get; init; }
 }
 
 /// <summary>
@@ -124,6 +136,26 @@ public interface IAppDriveGateway
         ValueTask.FromResult<IReadOnlyList<string>>([]);
 
     /// <summary>
+    /// Describes the types of network drive a user can mount here (ADR 0282 §5): the same types as
+    /// <see cref="GetNetworkDriveTypesAsync"/>, each with its name, icon, connection and provider.
+    /// By default, each type of <see cref="GetNetworkDriveTypesAsync"/> with its name only.
+    /// </summary>
+    /// <param name="language">The language of the texts the OS writes (labels of its own forms).</param>
+    /// <param name="cancellationToken">Cancels the read.</param>
+    async ValueTask<IReadOnlyList<KazoNetworkDriveTypeInfo>> DescribeNetworkDriveTypesAsync(
+        System.Globalization.CultureInfo language,
+        CancellationToken cancellationToken = default) =>
+        [.. (await GetNetworkDriveTypesAsync(cancellationToken).ConfigureAwait(false))
+            .Select(static type => new KazoNetworkDriveTypeInfo(type, type, type == "hostfs" ? KazoNetworkDriveConnection.HostFolder : KazoNetworkDriveConnection.OAuth))];
+
+    /// <summary>
+    /// Gets the caller's network drives kept without being mounted because their type has no provider
+    /// now (ADR 0282 §3, §5), each with its <see cref="KazoDriveSnapshot.ProviderMissing"/> reason. None by default.
+    /// </summary>
+    ValueTask<IReadOnlyList<KazoDriveSnapshot>> GetProviderMissingDrivesAsync(CancellationToken cancellationToken = default) =>
+        ValueTask.FromResult<IReadOnlyList<KazoDriveSnapshot>>([]);
+
+    /// <summary>
     /// Mounts a network drive of any type (ADR 0270); <see langword="null"/> when the user closed
     /// the source's dialog. A cloud type needs the capability <c>cloud-accounts.manage</c>.
     /// </summary>
@@ -165,7 +197,18 @@ public sealed class KazoDriveInfo
         IsReady = snapshot.IsReady;
         Account = snapshot.Account;
         Root = snapshot.Root;
+        ProviderMissing = snapshot.ProviderMissing;
+        ProviderFeatureId = snapshot.ProviderFeatureId;
     }
+
+    /// <summary>
+    /// Gets why the drive is kept without being mounted (ADR 0282 §3, §5): its provider was removed or
+    /// disabled. <see cref="KazoDriveProviderMissingReason.None"/> for a mounted drive.
+    /// </summary>
+    public KazoDriveProviderMissingReason ProviderMissing { get; }
+
+    /// <summary>Gets the id of the feature that provided a drive kept without its provider; <see langword="null"/> otherwise.</summary>
+    public string? ProviderFeatureId { get; }
 
     /// <summary>
     /// Gets the folder of the service the drive starts at, relative to what its account reaches;
@@ -257,6 +300,33 @@ public sealed class KazoDriveInfo
     /// <exception cref="KazoExecutionContextMissingException">Called outside an app's execution context.</exception>
     public static async Task<IReadOnlyList<string>> GetNetworkDriveTypesAsync(CancellationToken cancellationToken = default) =>
         await KazoExecutionContext.Current.Drives.GetNetworkDriveTypesAsync(cancellationToken).ConfigureAwait(false);
+
+    /// <summary>
+    /// Describes the types of network drive the user can mount here (ADR 0282 §5): for each, its name,
+    /// its icon, how the user connects it (a folder of the computer, a sign-in with its scopes, a form
+    /// with its fields), and the feature that provides it when it is not one of the OS's own. The OS
+    /// writes its own labels in the language of the calling instance.
+    /// </summary>
+    /// <exception cref="KazoExecutionContextMissingException">Called outside an app's execution context.</exception>
+    public static async Task<IReadOnlyList<KazoNetworkDriveTypeInfo>> DescribeNetworkDriveTypesAsync(CancellationToken cancellationToken = default)
+    {
+        IAppExecutionContext context = KazoExecutionContext.Current;
+        return await context.Drives.DescribeNetworkDriveTypesAsync(context.Culture, cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Gets the user's network drives kept without being mounted because their type has no provider now
+    /// (ADR 0282 §3, §5): the feature that provided it was removed or disabled, or the administrator
+    /// switched off one of the OS's own types. They mount again by themselves when the provider is back.
+    /// </summary>
+    /// <exception cref="KazoExecutionContextMissingException">Called outside an app's execution context.</exception>
+    public static async Task<KazoDriveInfo[]> GetProviderMissingDrivesAsync(CancellationToken cancellationToken = default)
+    {
+        IReadOnlyList<KazoDriveSnapshot> drives = await KazoExecutionContext.Current.Drives
+            .GetProviderMissingDrivesAsync(cancellationToken)
+            .ConfigureAwait(false);
+        return [.. drives.Select(static drive => new KazoDriveInfo(drive))];
+    }
 
     /// <summary>
     /// Mounts a network drive of any type (ADR 0270): a folder of the computer, or a cloud storage

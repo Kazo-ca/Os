@@ -3,8 +3,8 @@
 @using Kazo.Os.AppSdk.IO
 
 @*
-    Settings > Network > Cloud accounts (ADR 0267 §11, ADR 0270): the session user's Dropbox, OneDrive
-    and S3 accounts, their scope, their drives, "Reconnect" when the sign-in expired and "Remove", which
+    Settings > Network > Cloud accounts (ADR 0267 §11, ADR 0270): the session user's cloud accounts,
+    named as their provider declares them (ADR 0282 §5, with "Provided by" for a Feature), their scope, their drives, "Reconnect" when the sign-in expired and "Remove", which
     unmounts the account's drives first. Accounts are added from the explorer's "Connect a network drive".
 *@
 <div class="setting-group cloud-accounts-panel">
@@ -38,14 +38,18 @@
                     IReadOnlyList<KazoDriveInfo> drives = DrivesOf(account);
                     <li class="cloud-account @(account.State == KazoCloudAccountState.NeedsReconnect ? "needs-reconnect" : null)">
                         <div class="cloud-account-head">
-                            <span class="cloud-provider">@ProviderName(account.ProviderId)</span>
+                            <span class="cloud-provider">@ProviderName(account)</span>
                             <span class="cloud-name">@account.DisplayName</span>
                             <span class="cloud-state" role="status">
                                 @(account.State == KazoCloudAccountState.NeedsReconnect ? L["CloudAccounts.State.NeedsReconnect"] : L["CloudAccounts.State.Connected"])
                             </span>
                         </div>
+                        @if (ProvidedBy(account) is { } provider)
+                        {
+                            <p class="cloud-provided-by">@provider</p>
+                        }
                         <dl class="cloud-details">
-                            @if (account.ProviderId != S3Type)
+                            @if (SignsIn(account))
                             {
                                 <dt>@L["CloudAccounts.Scope"]</dt>
                                 <dd>@(account.Scope == KazoCloudAccessScope.AppFolder ? L["CloudAccounts.Scope.AppFolder"] : L["CloudAccounts.Scope.Full"])</dd>
@@ -80,7 +84,7 @@
                         else
                         {
                             <div class="cloud-actions">
-                                @if (account.State == KazoCloudAccountState.NeedsReconnect && account.ProviderId != S3Type)
+                                @if (account.State == KazoCloudAccountState.NeedsReconnect && SignsIn(account))
                                 {
                                     <button type="button" class="btn-secondary" disabled="@(_busy || !_canConnect)" @onclick="() => ReconnectAsync(account)">
                                         @L["CloudAccounts.Reconnect"]

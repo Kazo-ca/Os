@@ -231,6 +231,11 @@ public sealed class NetworkDriveService : IDisposable, Kazo.Os.Platform.Core.Clo
     public ValueTask<bool> IsAvailableAsync(string type, CancellationToken cancellationToken = default) =>
         TryGetSource(type, out INetworkDriveSource? source) ? source.IsAvailableAsync(cancellationToken) : ValueTask.FromResult(false);
 
+    /// <summary>Gets the source of <paramref name="type"/> now, to describe it (ADR 0282 §5); <see langword="null"/> for an unknown type.</summary>
+    /// <param name="type">The filesystem type.</param>
+    public INetworkDriveSource? FindSource(string type) =>
+        TryGetSource(type, out INetworkDriveSource? source) ? source : null;
+
     /// <summary>
     /// Asks the service of a drive for its size and free space (ADR 0267 §4); <see langword="null"/>
     /// when nothing is mounted there, the folder does not know (a folder of the computer), or the

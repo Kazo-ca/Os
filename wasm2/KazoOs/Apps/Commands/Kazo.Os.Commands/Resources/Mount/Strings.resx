@@ -31,10 +31,7 @@
     <value>mount: unknown filesystem type '{0}'</value>
   </data>
   <data name="Usage" xml:space="preserve">
-    <value>Usage: mount [-l] | mount -t hostfs [/mnt/name] | mount -t dropbox|onedrive [-o account=NAME,scope=full|app,root=PATH] [/mnt/name] | mount -t s3 -o endpoint=URL,bucket=NAME[,region=R,prefix=P,addressing=path|virtual,account=ID] [/mnt/name] | mount -o remount /mnt/name</value>
-  </data>
-  <data name="S3Usage" xml:space="preserve">
-    <value>Usage: mount -t s3 -o endpoint=URL,bucket=NAME[,region=R,prefix=P,addressing=path|virtual,account=ID] [/mnt/name]</value>
+    <value>Usage: mount [-l] | mount -t hostfs [/mnt/name] | mount -t TYPE [-o account=NAME,scope=full|app,root=PATH] [/mnt/name] (a service you sign in to) | mount -t TYPE -o FIELD=VALUE,…[,account=ID] [/mnt/name] (a service of a form, such as s3: the secret fields are asked) | mount -o remount /mnt/name</value>
   </data>
   <data name="BadScope" xml:space="preserve">
     <value>mount: invalid scope '{0}' (full or app)</value>
@@ -51,13 +48,16 @@
   <data name="SigningIn" xml:space="preserve">
     <value>Signing in to {0} in a new window…</value>
   </data>
-  <data name="AccessKeyPrompt" xml:space="preserve">
-    <value>Access key ID: </value>
+  <data name="FormUsage" xml:space="preserve">
+    <value>Usage: mount -t {0} -o {1} [/mnt/name]</value>
   </data>
-  <data name="SecretKeyPrompt" xml:space="preserve">
-    <value>Secret access key: </value>
+  <data name="SecretOnCommandLine" xml:space="preserve">
+    <value>mount: '{0}' is secret: it is never typed on the command line, which the history keeps; mount asks for it</value>
   </data>
-  <data name="KeysRequired" xml:space="preserve">
-    <value>mount: both access keys are required</value>
+  <data name="SecretPrompt" xml:space="preserve">
+    <value>{0}: </value>
+  </data>
+  <data name="SecretRequired" xml:space="preserve">
+    <value>mount: {0} is required</value>
   </data>
 </root>
