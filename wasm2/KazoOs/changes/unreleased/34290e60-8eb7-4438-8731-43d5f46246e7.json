@@ -1,0 +1,14 @@
+{
+  "id": "34290e60-8eb7-4438-8731-43d5f46246e7",
+  "category": "new",
+  "audience": ["user", "developer"],
+  "title": {
+    "en": "Features declare their own permissions, and no permission is granted silently any more",
+    "fr": "Les fonctionnalités déclarent leurs propres permissions, et plus aucune permission n’est accordée en silence"
+  },
+  "description": {
+    "en": "An optional feature of the OS can now declare permissions of its own under a reserved prefix (for example x86.vm.use or x86.vm.destroy), normal or dangerous, with a title and a risk statement. An app that uses the feature asks for them in its manifest; a normal one is granted while the feature is installed and enabled, a dangerous one only after an administrator approves it, always in the OS’s secure window, even from a terminal command. A permission can cover others. At sign-in the OS now grants only the capabilities it knows: an unknown identifier is never granted and is written to /var/log/syslog, and the bus topic permissions need an approval (issue #432). Settings ▸ Permissions, the installation approval window and kazopkg show the feature that declares a permission. For developers: FeatureDefinition.CapabilityPrefix and ProvidedCapabilities, IFeatureServiceContext.Caller.Require and Has, ICapabilityCatalog.",
+    "fr": "Une fonctionnalité facultative de l’OS peut maintenant déclarer ses propres permissions sous un préfixe réservé (par exemple x86.vm.use ou x86.vm.destroy), normales ou dangereuses, avec un titre et une phrase de risque. Une app qui utilise la fonctionnalité les demande dans son manifeste ; une normale est accordée tant que la fonctionnalité est installée et activée, une dangereuse seulement après l’approbation d’un administrateur, toujours dans la fenêtre sécurisée de l’OS, même depuis une commande du terminal. Une permission peut en couvrir d’autres. À la connexion, l’OS n’accorde plus que les capacités qu’il connaît : un identifiant inconnu n’est jamais accordé et il est écrit dans /var/log/syslog, et les permissions de sujet du bus demandent une approbation (issue #432). Paramètres ▸ Permissions, la fenêtre d’approbation de l’installation et kazopkg montrent la fonctionnalité qui déclare une permission. Pour les développeurs : FeatureDefinition.CapabilityPrefix et ProvidedCapabilities, IFeatureServiceContext.Caller.Require et Has, ICapabilityCatalog."
+  },
+  "links": ["doc/en/wasm/dev/adr/0246-provider-declared-permissions.md"]
+}

@@ -1,0 +1,19 @@
+{
+  "id": "de25ccd2-6926-47ed-8fe4-3b2f8d471535",
+  "category": "new",
+  "audience": [
+    "user",
+    "developer"
+  ],
+  "title": {
+    "en": "Kazo OS tells you when the browser erased its data, and can ask it not to",
+    "fr": "Kazo OS vous dit quand le navigateur a effacé ses données, et peut lui demander de ne pas le faire"
+  },
+  "description": {
+    "en": "Browsers may erase a site's data when the disk is full or after a while without a visit. Kazo OS now notices it at startup: the first-run screen says the browser erased its data, with the date of the last start and how to restore a backup, and kern.log gets storage.evicted. The new Settings ▸ System ▸ Storage page shows how much the browser lets Kazo OS use, how much each kind of storage takes when the browser tells, whether the storage is protected, with a button to ask the browser to protect it, and the space each feature declared. A feature that keeps disks in the browser (a virtual machine, for example) is told when they were erased, and you get a notification. df shows a /dev/feature/<id> line for each such feature. For developers: KazoStorage (GetEstimateAsync, RequestPersistenceAsync, RegisterMarkerAsync, ReportUsageAsync, GetFeatureUsageAsync, Changed).",
+    "fr": "Les navigateurs peuvent effacer les données d’un site quand le disque est plein ou après un temps sans visite. Kazo OS le remarque maintenant au démarrage : l’écran de première installation dit que le navigateur a effacé ses données, avec la date du dernier démarrage et la façon de restaurer une sauvegarde, et kern.log reçoit storage.evicted. La nouvelle page Paramètres ▸ Système ▸ Stockage montre combien le navigateur laisse Kazo OS utiliser, la part de chaque sorte de stockage quand le navigateur la donne, si le stockage est protégé, avec un bouton pour demander au navigateur de le protéger, et l’espace déclaré par chaque fonctionnalité. Une fonctionnalité qui garde des disques dans le navigateur (une machine virtuelle, par exemple) apprend qu’ils ont été effacés, et vous recevez une notification. df montre une ligne /dev/feature/<id> pour chacune. Pour les développeurs : KazoStorage (GetEstimateAsync, RequestPersistenceAsync, RegisterMarkerAsync, ReportUsageAsync, GetFeatureUsageAsync, Changed)."
+  },
+  "links": [
+    "doc/en/wasm/dev/adr/0250-storage-persistence-and-eviction.md"
+  ]
+}

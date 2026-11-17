@@ -219,6 +219,16 @@ terminal : `TerminalCredentialPrompt` pour `TerminalPanel`), jusqu'à trois essa
 réessayez. »). Les commandes de l'hôte sont système : seules des commandes
 tierces voient ce mode.
 
+**Permission d'une fonctionnalité** ([ADR 0246](adr/0246-provider-declared-permissions.md) §4,
+réponse 3 A) : quand une permission en attente a été déclarée par une
+fonctionnalité, la porte (`DangerousCapabilityGate`) l'envoie toujours à la
+**fenêtre spéciale**, même si le lancement vient d'une commande du terminal :
+la sortie d'un programme invité relayée par ce terminal (ADR 0252) pourrait
+imiter le bandeau et les questions du mode texte. Le mode texte reste pour le
+catalogue intégré. La fenêtre montre le titre et la phrase de risque de la
+fonctionnalité ; une permission sujet (ADR 0040) est maintenant dangereuse et
+passe par la même approbation.
+
 ### Approbation ponctuelle (ADR 0042) et `block`
 
 Avec `dangerousCapabilities=block`, pour une app non système :

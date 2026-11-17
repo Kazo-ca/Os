@@ -16,7 +16,7 @@ read them with ordinary file permissions.
 |---|---|---|
 | `/var/log/syslog` | Platform `ILogger<T>`, startup (`kernel`), host failures (`ecosystem-host`), lost lines (`logging`) | `system:system 0644` |
 | `/var/log/kern.log` | Kernel log (`KernelLog`): OOM killer, browser memory guard; also copied to `syslog` and read by `dmesg` from `/dev/kmsg` (ADR 0126 §3, [`oom-killer.md`](oom-killer.md)) | `system:system 0644` |
-| `/var/log/auth.log` | `IAuditLog` (`session.login`, `session.elevate`, `capability.*` from ADR 0049…) | `system:system 0600` |
+| `/var/log/auth.log` | `IAuditLog` (`session.login`, `session.elevate`, `capability.*` from ADR 0049, `feature.authenticate`, `feature.role-denied`, `role.grant` and `role.revoke` from ADR 0247…) | `system:system 0600` |
 | `/var/log/audit.log` | Audit of creations, writes, renames, copies, deletions and `chmod` under `/etc`, `/bin` and `/var` (except `/var/log`), in `auditd` format (ADR 0100 §3, [`sensitive-settings.md`](sensitive-settings.md)); `ausearch` filters it | `system:system 0600` |
 
 ## Architecture

@@ -19,111 +19,288 @@
 
     <section class="language" id="fr" lang="fr">
         <h1>Politique de confidentialité</h1>
-        <p class="updated">Mise à jour : 2026-11-15</p>
+        <p class="updated">En vigueur le 2026-11-17</p>
 
         <h2>En bref</h2>
-        <p>Kazo OS est un système d'exploitation simulé qui tourne entièrement dans votre navigateur.
-            os.kazo.ca est un site statique : Kazo OS n'a aucun serveur qui reçoit vos fichiers, vos
-            mots de passe ou les jetons de vos comptes cloud. Il n'y a ni publicité, ni mesure
-            d'audience, ni cookie de suivi.</p>
+        <ul>
+            <li>Kazo OS est un système d'exploitation simulé qui tourne entièrement dans votre navigateur.
+                os.kazo.ca est un site statique : l'éditeur de Kazo OS n'a aucun serveur qui reçoit vos
+                fichiers, vos mots de passe, vos clés ou les jetons de vos comptes cloud.</li>
+            <li>Kazo OS ne vous demande pas de compte chez nous. Vos comptes Kazo OS existent seulement
+                dans votre navigateur.</li>
+            <li>Il n'y a ni publicité, ni mesure d'audience, ni cookie de suivi. Nous ne vendons et ne
+                partageons aucune donnée.</li>
+            <li>Les seuls tiers qui reçoivent quelque chose sont ceux qui servent le site et ceux que vous
+                choisissez d'utiliser (Dropbox, Microsoft, un service d'IA…) ; le chargement de Kazo OS
+                n'appelle aucun autre service. La liste complète est
+                plus bas.</li>
+        </ul>
+
+        <h2>Qui est responsable</h2>
+        <p>Kazo OS est publié par <strong>Benoit Robin</strong>, au Québec (Canada), qui est aussi la
+            personne responsable de la protection des renseignements personnels. Pour toute question
+            ou demande : <a href="mailto:confidentialite@kazo.ca">confidentialite@kazo.ca</a>.</p>
 
         <h2>Ce qui reste dans votre navigateur</h2>
         <ul>
-            <li>Vos comptes d'utilisateur Kazo OS, vos fichiers et vos réglages sont enregistrés dans le
-                stockage de votre navigateur (IndexedDB), sur votre appareil.</li>
-            <li>Les mots de passe sont conservés sous forme de hachage ; les secrets (trousseau) sont
-                chiffrés avec une clé qui ne s'ouvre qu'avec votre mot de passe ou votre clé d'accès.</li>
-            <li>Effacer les données du site dans votre navigateur supprime tout cela.</li>
+            <li>Vos comptes d'utilisateur Kazo OS, vos fichiers, vos réglages et les apps installées sont
+                enregistrés dans le stockage de votre navigateur (IndexedDB et cache du site), sur votre
+                appareil. Nous n'y avons pas accès.</li>
+            <li>Les mots de passe sont conservés sous forme de hachage. Les secrets (le trousseau : clés
+                d'API, clés de stockage, clés des comptes cloud) sont chiffrés avec une clé qui ne s'ouvre
+                qu'avec votre mot de passe ou votre clé d'accès.</li>
+            <li>Kazo OS ne pose aucun cookie. Les pages web que vous ouvrez dans le navigateur simulé
+                gardent leurs cookies dans Kazo OS, sur votre appareil.</li>
+            <li>Effacer les données du site dans votre navigateur, ou la réinitialisation proposée à
+                l'écran de connexion, supprime tout cela. Gardez des copies de ce qui compte.</li>
         </ul>
 
-        <h2>Comptes cloud (Dropbox, OneDrive, S3)</h2>
-        <p>Si vous connectez un compte Dropbox ou OneDrive, ou un compartiment compatible S3 :</p>
+        <h2>Comptes cloud : Dropbox, OneDrive, stockage compatible S3</h2>
+        <p>Vous pouvez monter votre propre stockage cloud comme un lecteur réseau. Dans ce cas :</p>
         <ul>
-            <li>La connexion se fait directement chez le fournisseur (Dropbox ou Microsoft), dans une
-                fenêtre de celui-ci. Kazo OS ne voit jamais votre mot de passe de fournisseur.</li>
-            <li>Kazo OS demande seulement l'accès que vous choisissez : tout votre stockage, ou un seul
-                dossier réservé à Kazo OS. Il lit votre identité (adresse de courriel ou nom, identifiant
-                du compte) pour nommer le compte dans Kazo OS.</li>
-            <li>Les jetons d'accès restent sur votre appareil, chiffrés (AES-256-GCM), avec une clé gardée
-                dans votre trousseau Kazo OS. Ils ne sont jamais synchronisés ni envoyés à un serveur de
-                Kazo OS.</li>
-            <li>Vos fichiers circulent directement entre votre navigateur et le fournisseur. Kazo OS ne les
-                copie nulle part ailleurs, sauf si vous les copiez vous-même dans un autre dossier.</li>
-            <li>Retirer le compte dans Kazo OS démonte ses lecteurs, efface ses jetons et, chez Dropbox,
-                révoque l'accès. Vous pouvez aussi retirer l'accès à tout moment depuis les réglages de
-                votre compte Dropbox ou Microsoft.</li>
+            <li><strong>Connexion chez le fournisseur.</strong> Vous vous connectez directement chez
+                Dropbox ou Microsoft, dans une fenêtre de leur site (OAuth 2.0 avec PKCE). Kazo OS ne voit
+                jamais votre mot de passe de fournisseur et n'utilise aucun secret d'application.</li>
+            <li><strong>Accès demandé.</strong> Seulement l'accès que vous choisissez : tout votre
+                stockage, ou un seul dossier réservé à Kazo OS (« Apps/Kazo OS Folder » chez Dropbox,
+                « Apps/Kazo OS » chez OneDrive). Chez Microsoft, les permissions demandées sont
+                <code>Files.ReadWrite</code> ou <code>Files.ReadWrite.AppFolder</code>, plus
+                <code>User.Read</code> et <code>offline_access</code>.</li>
+            <li><strong>Identité.</strong> Kazo OS lit votre nom ou votre adresse de courriel et
+                l'identifiant du compte, uniquement pour afficher le compte dans Kazo OS et vous
+                reconnecter au même compte.</li>
+            <li><strong>Jetons.</strong> Les jetons d'accès restent sur votre appareil, chiffrés
+                (AES-256-GCM) avec une clé gardée dans votre trousseau Kazo OS. Ils ne sont jamais
+                synchronisés, exportés, ni envoyés à un serveur de Kazo OS, et les apps n'y ont jamais
+                accès.</li>
+            <li><strong>Fichiers.</strong> Vos fichiers circulent directement entre votre navigateur et le
+                fournisseur. Kazo OS ne les copie nulle part ailleurs, sauf si vous les copiez vous-même
+                dans un autre dossier.</li>
+            <li><strong>Stockage S3.</strong> Les clés que vous saisissez sont chiffrées de la même façon
+                et servent seulement à signer, dans votre navigateur, les requêtes vers le service que
+                vous avez indiqué.</li>
+            <li><strong>Usage limité.</strong> Les données de vos comptes cloud servent uniquement à
+                afficher et à modifier vos fichiers à votre demande. Elles ne sont ni vendues, ni
+                partagées, ni utilisées pour de la publicité, du profilage ou l'entraînement d'un modèle
+                d'intelligence artificielle.</li>
+            <li><strong>Retrait.</strong> Retirer le compte dans Kazo OS (Paramètres ▸ Réseau ▸ Comptes
+                cloud) démonte ses lecteurs, efface ses jetons et, chez Dropbox, révoque l'accès. Vous
+                pouvez aussi retirer l'accès à tout moment dans les réglages de votre compte Dropbox
+                (Apps connectées) ou Microsoft (Applications et services).</li>
             <li>L'usage de vos données chez le fournisseur relève de sa propre politique de
                 confidentialité.</li>
         </ul>
 
         <h2>Ce que d'autres reçoivent</h2>
+        <p>Comme tout site web, chaque service ci-dessous reçoit votre adresse IP et les informations
+            techniques de la requête (navigateur, heure) quand Kazo OS l'appelle, et peut les garder dans
+            ses journaux selon sa propre politique.</p>
         <ul>
-            <li><strong>L'hébergeur du site</strong> reçoit, comme pour tout site web, votre adresse IP et
-                les fichiers demandés, et peut les garder dans des journaux techniques.</li>
-            <li><strong>Les fournisseurs cloud</strong> reçoivent les requêtes que vous faites vers votre
-                propre stockage.</li>
-            <li><strong>Le Kazo OS Store</strong> télécharge les apps que vous installez depuis GitHub.</li>
-            <li><strong>Un serveur Kazo OS facultatif</strong> : si vous ou votre administrateur reliez
-                Kazo OS à un serveur que vous hébergez, votre dossier personnel s'y synchronise. Les
-                jetons des comptes cloud et les lecteurs cloud n'y sont jamais envoyés.</li>
+            <li><strong>L'hébergeur du site</strong> : GitHub Pages (GitHub, Inc.) sert os.kazo.ca ;
+                Cloudflare, Inc. sert la version bêta os-beta.kazo.ca et la redirection de l'ancienne
+                adresse.</li>
+            <li><strong>GitHub</strong> : le Kazo OS Store lit son catalogue et télécharge les apps que
+                vous installez depuis GitHub (<code>raw.githubusercontent.com</code>).</li>
+            <li><strong>Vos fournisseurs cloud</strong> (Dropbox, Microsoft, le service S3 que vous
+                indiquez) reçoivent les requêtes que vous faites vers votre propre stockage.</li>
+            <li><strong>Les services que vous choisissez dans une app</strong> : une app ne peut joindre
+                Internet qu'avec la permission d'accès au réseau réel, qu'un administrateur de votre
+                Kazo OS approuve. Par exemple :
+                <ul>
+                    <li>Kazo AI envoie vos messages et votre clé d'API seulement au service d'IA que vous
+                        avez choisi (OpenRouter, OpenAI, ou un serveur que vous indiquez), directement
+                        depuis votre navigateur. Le modèle local est téléchargé depuis Hugging Face ; ce
+                        que vous lui écrivez ne quitte pas votre appareil.</li>
+                    <li>Le client IRC se connecte aux serveurs IRC que vous choisissez.</li>
+                </ul>
+            </li>
         </ul>
 
+        <h2>Apps du Store et apps de tiers</h2>
+        <p>Certaines apps du Kazo OS Store sont écrites par d'autres auteurs. Elles tournent dans votre
+            navigateur, sous les permissions que vous leur accordez. Ce qu'une app fait avec les
+            services qu'elle joint relève de son auteur ; sa page dans le Store renvoie à son code
+            source.</p>
+
+        <h2>Serveur Kazo OS facultatif</h2>
+        <p>Si vous ou votre administrateur reliez Kazo OS à un serveur Kazo OS que vous hébergez, votre
+            dossier personnel (y compris le trousseau, qui reste chiffré) se synchronise avec ce serveur,
+            et ce serveur peut relayer des connexions réseau. Ce serveur n'est pas exploité par nous :
+            son administrateur est responsable des données qu'il garde. Les jetons des comptes cloud et
+            le contenu des lecteurs cloud n'y sont jamais envoyés.</p>
+
+        <h2>Conservation et suppression</h2>
+        <p>Vos données restent dans votre navigateur tant que vous ne les effacez pas. Nous ne gardons
+            aucune copie. Les jetons cloud sont effacés quand vous retirez le compte.</p>
+
+        <h2>Sécurité</h2>
+        <p>Le site est servi en HTTPS, les secrets sont chiffrés sur votre appareil et le code est
+            public. Aucun système n'est parfait : protégez l'accès à votre appareil et à votre session.
+            Pour signaler une faille, écrivez-nous à l'adresse ci-dessus.</p>
+
+        <h2>Vos droits</h2>
+        <p>Comme vos données sont sur votre appareil, vous pouvez les consulter, les corriger, les
+            exporter et les supprimer vous-même. Vous pouvez nous écrire pour toute question sur vos
+            renseignements personnels ; si notre réponse ne vous satisfait pas, vous pouvez vous adresser
+            à la Commission d'accès à l'information du Québec ou à l'autorité de votre pays.</p>
+
+        <h2>Données traitées hors du Québec</h2>
+        <p>Les services tiers listés plus haut (hébergeurs, GitHub, Dropbox, Microsoft, services
+            d'IA) peuvent traiter vos requêtes hors du Québec et du Canada, notamment aux États-Unis.</p>
+
+        <h2>Enfants</h2>
+        <p>Kazo OS ne recueille sciemment aucun renseignement sur des enfants. Un enfant de moins de
+            14 ans devrait connecter un compte cloud ou un service d'IA seulement avec l'accord d'un
+            parent.</p>
+
+        <h2>Changements</h2>
+        <p>Cette politique peut changer ; la date en haut de la page indique la version en vigueur, et
+            l'historique est public dans le dépôt
+            <a href="https://github.com/Kazo-ca/Os">github.com/Kazo-ca/Os</a>.</p>
+
         <h2>Contact</h2>
-        <p>Pour toute question, ouvrez une issue sur
-            <a href="https://github.com/Kazo-ca/Os/issues">github.com/Kazo-ca/Os</a>.</p>
+        <p>Courriel : <a href="mailto:confidentialite@kazo.ca">confidentialite@kazo.ca</a>. Vous pouvez
+            aussi ouvrir une issue sur
+            <a href="https://github.com/Kazo-ca/Os/issues">github.com/Kazo-ca/Os</a> (elle est
+            publique : n'y mettez aucun renseignement personnel).</p>
     </section>
 
     <section class="language" id="en" lang="en">
         <h1>Privacy policy</h1>
-        <p class="updated">Updated: 2026-11-15</p>
+        <p class="updated">Effective 2026-11-17</p>
 
         <h2>In short</h2>
-        <p>Kazo OS is a simulated operating system that runs entirely in your browser. os.kazo.ca is a
-            static site: Kazo OS has no server that receives your files, your passwords or the tokens of
-            your cloud accounts. There is no advertising, no audience measurement and no tracking
-            cookie.</p>
+        <ul>
+            <li>Kazo OS is a simulated operating system that runs entirely in your browser. os.kazo.ca is
+                a static site: the publisher of Kazo OS has no server that receives your files, your
+                passwords, your keys or the tokens of your cloud accounts.</li>
+            <li>Kazo OS does not ask you for an account with us. Your Kazo OS accounts exist only in your
+                browser.</li>
+            <li>There is no advertising, no audience measurement and no tracking cookie. We sell and share
+                no data.</li>
+            <li>The only third parties that receive anything are the ones that serve the site and the
+                ones you choose to use (Dropbox, Microsoft, an AI service…); loading Kazo OS calls no
+                other service. The full list is
+                below.</li>
+        </ul>
+
+        <h2>Who is responsible</h2>
+        <p>Kazo OS is published by <strong>Benoit Robin</strong>, in Québec (Canada), who is also the
+            person in charge of the protection of personal information. For any question or request:
+            <a href="mailto:confidentialite@kazo.ca">confidentialite@kazo.ca</a>.</p>
 
         <h2>What stays in your browser</h2>
         <ul>
-            <li>Your Kazo OS user accounts, files and settings are stored in your browser's storage
-                (IndexedDB), on your device.</li>
-            <li>Passwords are kept as hashes; secrets (keyring) are encrypted with a key that opens only
-                with your password or passkey.</li>
-            <li>Clearing the site's data in your browser deletes all of it.</li>
+            <li>Your Kazo OS user accounts, files, settings and installed apps are stored in your
+                browser's storage (IndexedDB and the site's cache), on your device. We have no access to
+                them.</li>
+            <li>Passwords are kept as hashes. Secrets (the keyring: API keys, storage keys, cloud account
+                keys) are encrypted with a key that opens only with your password or passkey.</li>
+            <li>Kazo OS sets no cookie. Web pages you open in the simulated browser keep their cookies
+                inside Kazo OS, on your device.</li>
+            <li>Clearing the site's data in your browser, or the reset offered on the sign-in screen,
+                deletes all of it. Keep copies of what matters.</li>
         </ul>
 
-        <h2>Cloud accounts (Dropbox, OneDrive, S3)</h2>
-        <p>If you connect a Dropbox or OneDrive account, or an S3-compatible bucket:</p>
+        <h2>Cloud accounts: Dropbox, OneDrive, S3-compatible storage</h2>
+        <p>You can mount your own cloud storage as a network drive. In that case:</p>
         <ul>
-            <li>You sign in directly at the provider (Dropbox or Microsoft), in a window of theirs. Kazo OS
-                never sees your provider password.</li>
-            <li>Kazo OS asks only for the access you choose: your whole storage, or a single folder
-                reserved to Kazo OS. It reads your identity (e-mail address or name, account id) to name
-                the account in Kazo OS.</li>
-            <li>Access tokens stay on your device, encrypted (AES-256-GCM), with a key kept in your
-                Kazo OS keyring. They are never synchronized nor sent to a Kazo OS server.</li>
-            <li>Your files travel directly between your browser and the provider. Kazo OS copies them
-                nowhere else, unless you copy them yourself to another folder.</li>
-            <li>Removing the account in Kazo OS unmounts its drives, erases its tokens and, at Dropbox,
-                revokes the access. You can also remove the access at any time from your Dropbox or
-                Microsoft account settings.</li>
+            <li><strong>Sign-in at the provider.</strong> You sign in directly at Dropbox or Microsoft, in
+                a window of their site (OAuth 2.0 with PKCE). Kazo OS never sees your provider password
+                and uses no application secret.</li>
+            <li><strong>Access requested.</strong> Only the access you choose: your whole storage, or a
+                single folder reserved to Kazo OS ("Apps/Kazo OS Folder" at Dropbox, "Apps/Kazo OS" at
+                OneDrive). At Microsoft, the permissions requested are <code>Files.ReadWrite</code> or
+                <code>Files.ReadWrite.AppFolder</code>, plus <code>User.Read</code> and
+                <code>offline_access</code>.</li>
+            <li><strong>Identity.</strong> Kazo OS reads your name or e-mail address and the account id,
+                only to show the account in Kazo OS and to reconnect you to the same account.</li>
+            <li><strong>Tokens.</strong> Access tokens stay on your device, encrypted (AES-256-GCM) with a
+                key kept in your Kazo OS keyring. They are never synchronized, exported or sent to a
+                Kazo OS server, and apps never get them.</li>
+            <li><strong>Files.</strong> Your files travel directly between your browser and the provider.
+                Kazo OS copies them nowhere else, unless you copy them yourself to another folder.</li>
+            <li><strong>S3 storage.</strong> The keys you type are encrypted the same way and are used only
+                to sign, in your browser, the requests to the service you entered.</li>
+            <li><strong>Limited use.</strong> Data from your cloud accounts is used only to show and change
+                your files at your request. It is not sold, shared, or used for advertising, profiling
+                or training an artificial intelligence model.</li>
+            <li><strong>Removal.</strong> Removing the account in Kazo OS (Settings ▸ Network ▸ Cloud
+                accounts) unmounts its drives, erases its tokens and, at Dropbox, revokes the access. You
+                can also remove the access at any time in your Dropbox (Connected apps) or Microsoft (Apps
+                and services) account settings.</li>
             <li>How the provider uses your data is governed by its own privacy policy.</li>
         </ul>
 
         <h2>What others receive</h2>
+        <p>As with any website, each service below receives your IP address and the technical details of
+            the request (browser, time) when Kazo OS calls it, and may keep them in its logs under its own
+            policy.</p>
         <ul>
-            <li><strong>The site's host</strong> receives, as for any website, your IP address and the
-                files requested, and may keep them in technical logs.</li>
-            <li><strong>Cloud providers</strong> receive the requests you make to your own storage.</li>
-            <li><strong>The Kazo OS Store</strong> downloads the apps you install from GitHub.</li>
-            <li><strong>An optional Kazo OS server</strong>: if you or your administrator connect Kazo OS
-                to a server you host, your home folder synchronizes there. Cloud account tokens and cloud
-                drives are never sent to it.</li>
+            <li><strong>The site's host</strong>: GitHub Pages (GitHub, Inc.) serves os.kazo.ca;
+                Cloudflare, Inc. serves the beta os-beta.kazo.ca and the redirect of the old
+                address.</li>
+            <li><strong>GitHub</strong>: the Kazo OS Store reads its catalog and downloads the apps you
+                install from GitHub (<code>raw.githubusercontent.com</code>).</li>
+            <li><strong>Your cloud providers</strong> (Dropbox, Microsoft, the S3 service you enter)
+                receive the requests you make to your own storage.</li>
+            <li><strong>The services you choose in an app</strong>: an app can reach the Internet only with
+                the real-network permission, which an administrator of your Kazo OS approves. For
+                example:
+                <ul>
+                    <li>Kazo AI sends your messages and your API key only to the AI service you chose
+                        (OpenRouter, OpenAI, or a server you enter), straight from your browser. The local
+                        model is downloaded from Hugging Face; what you write to it does not leave your
+                        device.</li>
+                    <li>The IRC client connects to the IRC servers you choose.</li>
+                </ul>
+            </li>
         </ul>
 
+        <h2>Store apps and third-party apps</h2>
+        <p>Some apps in the Kazo OS Store are written by other authors. They run in your browser, under
+            the permissions you grant them. What an app does with the services it reaches is up to its
+            author; its Store page links to its source code.</p>
+
+        <h2>Optional Kazo OS server</h2>
+        <p>If you or your administrator connect Kazo OS to a Kazo OS server you host, your home folder
+            (including the keyring, which stays encrypted) synchronizes with that server, and that server
+            may relay network connections. We do not run that server: its administrator is responsible
+            for the data it keeps. Cloud account tokens and the content of cloud drives are never sent to
+            it.</p>
+
+        <h2>Retention and deletion</h2>
+        <p>Your data stays in your browser until you erase it. We keep no copy. Cloud tokens are erased
+            when you remove the account.</p>
+
+        <h2>Security</h2>
+        <p>The site is served over HTTPS, secrets are encrypted on your device and the code is public. No
+            system is perfect: protect access to your device and your session. To report a vulnerability,
+            write to the address above.</p>
+
+        <h2>Your rights</h2>
+        <p>Because your data is on your device, you can view, correct, export and delete it yourself. You
+            can write to us with any question about your personal information; if our answer does not
+            satisfy you, you can contact the Commission d'accès à l'information du Québec or the authority
+            of your country.</p>
+
+        <h2>Data processed outside Québec</h2>
+        <p>The third-party services listed above (hosts, GitHub, Dropbox, Microsoft, AI services)
+            may process your requests outside Québec and Canada, including in the United States.</p>
+
+        <h2>Children</h2>
+        <p>Kazo OS does not knowingly collect any information about children. A child under 14 should
+            connect a cloud account or an AI service only with a parent's agreement.</p>
+
+        <h2>Changes</h2>
+        <p>This policy may change; the date at the top of the page shows the version in force, and the
+            history is public in the repository
+            <a href="https://github.com/Kazo-ca/Os">github.com/Kazo-ca/Os</a>.</p>
+
         <h2>Contact</h2>
-        <p>For any question, open an issue on
-            <a href="https://github.com/Kazo-ca/Os/issues">github.com/Kazo-ca/Os</a>.</p>
+        <p>E-mail: <a href="mailto:confidentialite@kazo.ca">confidentialite@kazo.ca</a>. You can also open
+            an issue on <a href="https://github.com/Kazo-ca/Os/issues">github.com/Kazo-ca/Os</a> (it is
+            public: put no personal information in it).</p>
     </section>
 </main>
 </body>

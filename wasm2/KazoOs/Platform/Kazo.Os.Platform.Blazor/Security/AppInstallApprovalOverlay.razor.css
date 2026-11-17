@@ -294,3 +294,35 @@
         flex-direction: column-reverse;
     }
 }
+
+/* ADR 0248 §1: the packages a plan installs with the app, one approval for all. */
+.iap-plan {
+    list-style: none;
+    margin: 0 0 12px;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.iap-plan-package {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 8px 10px;
+    border: 1px solid #2a353c;
+    border-left: 3px solid #9fd3ff;
+    border-radius: 0.4rem;
+    background: #151c22;
+}
+
+.iap-plan-facts {
+    font-size: 0.85em;
+    opacity: 0.85;
+}
+
+.iap-plan-source {
+    font-size: 0.8em;
+    opacity: 0.7;
+    word-break: break-all;
+}

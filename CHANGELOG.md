@@ -6,6 +6,29 @@ The changes of Kazo OS, by version. This file is generated from `wasm2/KazoOs/ch
 `wasm2/KazoOs/build/tools/collect-changes.sh` (ADR 0186): do not edit it by hand. Changes already
 deployed but not released yet are in the Settings ▸ What's new page of the OS.
 
+## 3.4.3 (2026-11-17)
+
+### New
+
+- **A network app knows whether the Kazo server's relay works.** KazoRealNetwork.GetRelayStateAsync tells an app holding network.real.access, without trying, whether the Kazo server's relay can carry its connections (no server, relay turned off, permission not received yet, ready with the blocked ports), and RelayStateChanged says when it changes. A failed connection now says why: KazoTcpClient and KazoUdpClient throw a KazoRelayException with the same SocketError as before, KazoHttp carries ERR_KAZO_RELAY_* codes, and curl, wget, cat and the Browser explain them (ADR 0278). ([sdk-network.md](doc/en/wasm/framework/sdk-network.md))
+
+### Fixed
+
+- **A warning when the browser storage is full.** Chromium no longer tells web pages how much space is really left, so Kazo OS now shows the "Low storage space" notification as soon as the browser refuses to save something, and frees the data of deleted files sooner to make room. ([github.com/Kazo-ca/Os/issues/493](https://github.com/Kazo-ca/Os/issues/493))
+- **An app with only filesystem.private.* can create its ~/.config folder.** KazoDirectory.CreateDirectoryAsync no longer fails with CapabilityDenied on ~/.config when the app may create its own ~/.config/<appId>/ but not look at ~/.config. ([capabilities.md](doc/en/wasm/framework/capabilities.md))
+- **An edit of apps.config made right after logging in is no longer missed.** Kazo OS now starts watching apps.config before reading it, so a change written while the session opens is always applied. ([github.com/Kazo-ca/Os/issues/493](https://github.com/Kazo-ca/Os/issues/493))
+- **File dialogs no longer stop the desktop when closed right after entering a folder.** Opening a folder in an Open or Save dialog and confirming at once could show "An unhandled error has occurred" and leave every window unresponsive. The dialog now closes cleanly. ([github.com/Kazo-ca/Os/issues/519](https://github.com/Kazo-ca/Os/issues/519))
+- **Installed apps show their icon before their first launch.** The OS now serves the icons of installed apps at boot and right after an install, so the launcher, the desktop and the Store no longer show a broken image until the app is opened once. ([app-installation.md](doc/en/wasm/dev/app-installation.md))
+- **No network errors when Kazo OS starts offline.** With no network connection, Kazo OS no longer tries to check for a new version or refresh the app catalogs, so the browser console stays free of failed requests. ([github.com/Kazo-ca/Os/issues/493](https://github.com/Kazo-ca/Os/issues/493))
+- **On mobile, the top of an app answers touches again.** The notification shade's handle now has a status-bar strip of its own above the open app, instead of covering the app's top buttons. ([mobile-home-screen.md](doc/en/wasm/dev/mobile-home-screen.md))
+- **Screen readers and voice control name the taskbar, Start menu and Calculator keys by what they show.** The app launcher button, the taskbar clock, the Start menu apps and Quick access links, and the Calculator keys MC, MR, M+, M-, C, AC and x² now have accessible names that contain their visible text, so you can say what you see. ([github.com/Kazo-ca/Os/issues/493](https://github.com/Kazo-ca/Os/issues/493))
+- **head ends on /dev/urandom and counts bytes with -c.** head now reads a file only as far as what it prints, so head -c 16 /dev/urandom ends instead of filling the tab's memory. -c counts bytes, as in Linux. ([linux-commands.md](doc/en/wasm/dev/linux-commands.md))
+
+### For developers
+
+- **A trimmed publish writes the API surface it ships.** A trimmed publish of a host now writes kazoos-api-surface.json.gz next to wwwroot/: every assembly it ships with its types, methods and fields, so an app can be checked against the trimmed OS before it is published (ADR 0277). ([trimmed-publish.md](doc/en/wasm/dev/trimmed-publish.md))
+- **An app's build refuses APIs the trimmed OS removed.** KazoOsPack now checks the package against the API surface of the targeted Kazo OS, which Kazo.Os.App.Build brings: a call to a member the trimmed OS does not have fails the build with KOSAPP0100 and a replacement when one is known, instead of being refused at installation. KazoOsApiCheck=false turns it into the warning KOSAPP0101 (ADR 0277). ([app-repository.md](doc/en/wasm/framework/app-repository.md))
+
 ## 3.4.2 (2026-11-17)
 
 ### Fixed

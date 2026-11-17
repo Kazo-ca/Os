@@ -236,6 +236,19 @@ manifest.json : error KOSAPP0100: My.App.dll calls System.Linq.Enumerable.ToHash
 The catalog never takes a binary: after review and merge, its CI compiles the
 app at the given commit (ADR 0188 §4 to §6).
 
+### The app's dependencies (ADR 0248)
+
+The `Dependencies` of the `[AppManifest]` class (id, range, `Optional`) go in
+the package's `manifest.json`, which the workflow copies into
+`apps/<appId>_<version>/`; the catalog takes the `dependencies` field of
+`catalog.json` from it. The Store and `kazopkg` then install each **required**
+dependency with the app, in one consent (a Feature for the whole machine, by
+an administrator). An **optional** dependency is never installed with the app:
+the app proposes it with `KazoApps.RequestInstallAsync(appId)`, which opens
+the Store on it, and `KazoFeatures.GetServiceAsync<T>()` returns `null` while
+it is missing. A dependency must be published in a configured catalog:
+`kazopkg install <GitHub repository>` does not guess a repository.
+
 ### The `HACK_STORE_TOKEN` secret
 
 It is a GitHub personal access token of **the app's author**: neither Kazo OS

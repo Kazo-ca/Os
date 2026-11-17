@@ -290,6 +290,8 @@ anglais, sans WebAssembly ni script, stylées par `legal.css` :
 Le service worker publié les sert telles quelles et les garde hors ligne, comme
 la page de retour. Une seule paire de pages couvre tous les fournisseurs, avec
 une section par service (choix de Benoit, 2026-11-15).
+Leur contenu, leurs liens dans l'OS et les faits sur lesquels elles reposent
+sont dans [`legal-pages.md`](legal-pages.md).
 
 ## Décisions
 

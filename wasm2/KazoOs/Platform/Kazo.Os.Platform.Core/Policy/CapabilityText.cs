@@ -24,6 +24,21 @@ public static class CapabilityText
     public static CapabilityDescription Describe(string capability, CultureInfo? language) =>
         Localize(AppCapabilities.Describe(capability), language);
 
+    /// <summary>
+    /// Gets the translated title and risk of a capability the catalog of the running OS knows
+    /// (ADR 0246): a built-in one, a topic permission or a feature's permission, whose texts are the
+    /// feature's own.
+    /// </summary>
+    /// <param name="capability">Capability identifier.</param>
+    /// <param name="language">Language of the reader; English when <see langword="null"/>.</param>
+    /// <param name="catalog">The catalog of the running OS.</param>
+    /// <exception cref="ArgumentException">The catalog does not know the identifier.</exception>
+    public static CapabilityDescription Describe(string capability, CultureInfo? language, ICapabilityCatalog catalog)
+    {
+        ArgumentNullException.ThrowIfNull(catalog);
+        return Localize(catalog.Find(capability) ?? throw new ArgumentException($"Unknown capability '{capability}'.", nameof(capability)), language);
+    }
+
     /// <summary>Translates the texts of a description built by <see cref="AppCapabilities.Describe"/>.</summary>
     /// <param name="description">The catalog description.</param>
     /// <param name="language">Language of the reader; English when <see langword="null"/>.</param>

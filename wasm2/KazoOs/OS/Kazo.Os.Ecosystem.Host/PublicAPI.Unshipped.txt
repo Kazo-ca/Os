@@ -1,4 +1,16 @@
 #nullable enable
+Kazo.Os.Ecosystem.EcosystemBootCoordinator.EvictionDetector.get -> Kazo.Os.Platform.Core.Storage.StorageEvictionDetector?
+Kazo.Os.Ecosystem.EcosystemBootCoordinator.EvictionDetector.set -> void
+Kazo.Os.Ecosystem.EcosystemBootCoordinator.OriginStorage.get -> Kazo.Os.Platform.Core.Storage.OriginStorageService?
+Kazo.Os.Ecosystem.EcosystemBootCoordinator.OriginStorage.set -> void
+Kazo.Os.Ecosystem.EcosystemBootCoordinator.KernelLog.get -> Kazo.Os.Platform.Core.Diagnostics.KernelLog?
+Kazo.Os.Ecosystem.EcosystemBootCoordinator.KernelLog.set -> void
+Kazo.Os.Ecosystem.StorageEvictionNotice
+Kazo.Os.Ecosystem.StorageEvictionNotice.StorageEvictionNotice() -> void
+Kazo.Os.Ecosystem.StorageEvictionNotice.Eviction.get -> Kazo.Os.Platform.Core.Storage.StorageEviction!
+Kazo.Os.Ecosystem.StorageEvictionNotice.Eviction.set -> void
 Kazo.Os.Ecosystem.InstalledAppAssetPublisher.PublishIconsAsync(System.Collections.Generic.IReadOnlyList<Kazo.Os.Platform.Core.Apps.Packages.InstalledApp!>! apps, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 Kazo.Os.Ecosystem.InstalledAppsActivator.Assets.get -> Kazo.Os.Ecosystem.InstalledAppAssetPublisher?
 Kazo.Os.Ecosystem.InstalledAppsActivator.Assets.init -> void
+Kazo.Os.Ecosystem.EcosystemBootCoordinator.FeatureRoles.get -> Kazo.Os.Platform.Core.Roles.FeatureRoleService?
+Kazo.Os.Ecosystem.EcosystemBootCoordinator.FeatureRoles.set -> void

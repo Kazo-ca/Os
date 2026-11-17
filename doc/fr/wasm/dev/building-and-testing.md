@@ -461,6 +461,25 @@ du dernier commit de cette version, et l'ajoute au test E2E.
 dotnet test Tests/Kazo.Os.UI.E2E.Tests -c Release --no-build --filter "FullyQualifiedName~IndexedDbUpgradeFixtureTests"
 ```
 
+### Stockage du navigateur sous Firefox et Safari (ADR 0250)
+
+Les tests unitaires du stockage (`OriginStorageTests`, `StoragePanelTests`,
+`EcosystemBootCoordinatorTests`) remplacent le navigateur par un double
+d'`IOriginStorage`. Les navigateurs diffèrent là où ces doubles ne voient rien :
+
+- Firefox limite l'origine au plus petit de 10 % du disque ou 10 Gio sans
+  `persist()`, et demande à l'usager avant d'accorder la persistance ; avant
+  126, `indexedDB.databases()` manque et l'éviction n'est pas détectée.
+- Safari peut effacer après 7 jours sans interaction ; sans
+  `usageDetails`, la page Stockage ne montre que le total.
+- Chromium accorde `persist()` selon l'engagement (PWA installée, favori),
+  sans invite.
+
+Pour essayer une éviction à la main : démarrer Kazo OS, se connecter, puis,
+dans les outils du navigateur, supprimer la base IndexedDB `kazoos` sans
+toucher à `localStorage`, et recharger : l'écran de première installation
+annonce l'éviction et `kern.log` a `storage.evicted`.
+
 ### Accessibilité (ADR 0105)
 
 Deux classes de `Kazo.Os.UI.E2E.Tests` lancent axe-core (Deque.AxeCore.Playwright) ; une

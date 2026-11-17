@@ -27,7 +27,9 @@ public sealed class ManifestSchemaConformanceTests
         "feature-child-terminal.valid.json",
         "feature-provides-service.valid.json",
         "feature-provides-drive-oauth.valid.json",
-        "feature-provides-drive-form.valid.json"
+        "feature-provides-drive-form.valid.json",
+        "feature-declares-permissions.valid.json",
+        "feature-declares-roles.valid.json"
     };
 
     public static TheoryData<string> InvalidFixtureNames => new()
@@ -51,7 +53,8 @@ public sealed class ManifestSchemaConformanceTests
         "invalid-drive-provider-reserved-type.json",
         "invalid-drive-provider-bare-wildcard.json",
         "invalid-drive-provider-http-endpoint.json",
-        "invalid-drive-provider-secret-server-address.json"
+        "invalid-drive-provider-secret-server-address.json",
+        "invalid-permissions-on-service.json"
     };
 
     [Theory]

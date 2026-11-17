@@ -458,7 +458,7 @@
                             <KazoIcon Library="IconLibrary.Lucide" Name="undo-2" Size="14" Title="" /> @L["Action.Rollback", previous]
                         </button>
                     }
-                    <button type="button" class="store-button is-danger" disabled="@busy" @onclick="() => RemoveAsync(entry)">@L["Action.Uninstall"]</button>
+                    <button type="button" class="store-button is-danger" disabled="@busy" @onclick="() => RequestRemoveAsync(entry)">@L["Action.Uninstall"]</button>
                     break;
                 case StoreAppState.Installed:
                     <button type="button" class="store-button is-primary" disabled="@busy" @onclick="() => OpenAsync(entry)">
@@ -470,13 +470,13 @@
                             <KazoIcon Library="IconLibrary.Lucide" Name="undo-2" Size="14" Title="" /> @L["Action.Rollback", kept]
                         </button>
                     }
-                    <button type="button" class="store-button is-danger" disabled="@busy" @onclick="() => RemoveAsync(entry)">@L["Action.Uninstall"]</button>
+                    <button type="button" class="store-button is-danger" disabled="@busy" @onclick="() => RequestRemoveAsync(entry)">@L["Action.Uninstall"]</button>
                     break;
                 case StoreAppState.PendingRestart:
                     <span class="store-state">@L["State.PendingRestart"]</span>
                     @if (entry.Installed is not null && !entry.Removed)
                     {
-                        <button type="button" class="store-button is-danger" disabled="@busy" @onclick="() => RemoveAsync(entry)">@L["Action.Uninstall"]</button>
+                        <button type="button" class="store-button is-danger" disabled="@busy" @onclick="() => RequestRemoveAsync(entry)">@L["Action.Uninstall"]</button>
                     }
                     else if (entry.Removed && entry.App is not null && !entry.CanInstallForUser)
                     {
@@ -487,6 +487,15 @@
                         <button type="button" class="store-button" disabled="@busy" @onclick="() => InstallAsync(entry, KazoPackageScope.User)">@L["Action.InstallForMe"]</button>
                     }
                     break;
+            }
+            @if (PendingRemovalOf(entry) is { } pending)
+            {
+                @* ADR 0248 §3: the apps that need it stop working; they are disabled, not removed. *@
+                <div class="store-removal-warning" role="alert">
+                    <p>@L["Remove.DependentsWarning", string.Join(", ", pending.Dependents)]</p>
+                    <button type="button" class="store-button is-danger" disabled="@busy" @onclick="() => ConfirmRemoveAsync(entry)">@L["Action.UninstallAnyway"]</button>
+                    <button type="button" class="store-button" @onclick="CancelRemove">@L["Action.Cancel"]</button>
+                </div>
             }
             @RenderOperation(entry.AppId)
         </div>

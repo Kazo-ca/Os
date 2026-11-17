@@ -84,6 +84,27 @@ Each line is a work item, with its branch and PR.
    packs, event sounds, cursor themes. The Store accepts each part of a pack
    once its system exists. **Done** (ADRs 0202 to 0205).
 
+### Dependencies (ADR 0248)
+
+`catalog.json` gains, for each version, `dependencies`: the manifest's list,
+copied from the `manifest.json` of the `apps/<appId>_<version>/` folder when
+the catalog publishes.
+
+```json
+"dependencies": [
+  { "appId": "org.example.feature", "minimumVersion": "1.0.0", "maximumVersion": "1.9.9", "optional": false }
+]
+```
+
+`maximumVersion` and `optional` are optional (no upper bound, required). The
+OS reads at most 64 entries and skips an entry without `appId` or with a
+version that is not semantic (`AppCatalogDocument`,
+`AppCatalogVersion.Dependencies`). Without this field (an older catalog), the
+Store's page shows no dependency and the installation reads them in the
+package. The catalog CI that copies the field lives in
+`Kazo-ca/Os-AppMarketPlace` (same mechanism as `fileHandlers`, issue
+AppMarketPlace #4).
+
 ## Rules
 
 - This repository holds the code of no catalog app: each app lives in its own

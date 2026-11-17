@@ -217,6 +217,15 @@ No (deny) / Cancel, then asks for the name and password with the same box as
 try again."). Host commands are system: only third-party commands see this
 mode.
 
+**A feature's permission** ([ADR 0246](adr/0246-provider-declared-permissions.md) §4,
+answer 3 A): when a pending permission was declared by a feature, the gate
+(`DangerousCapabilityGate`) always sends it to the **special window**, even
+when the launch comes from a terminal command: the output of a guest program
+relayed by that terminal (ADR 0252) could imitate the banner and questions of
+the text mode. The text mode stays for the built-in catalog. The window shows
+the feature's title and risk statement; a topic permission (ADR 0040) is now
+dangerous and goes through the same approval.
+
 ### One-time approval (ADR 0042) and `block`
 
 With `dangerousCapabilities=block`, for a non-system app:
