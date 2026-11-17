@@ -4,11 +4,10 @@
 
 ## Statut
 
-**Proposée** le 2026-11-17, **non décidée**. Évaluation, **aucun code**. Les
-questions de la fin sont posées à Benoit dans le fil ; rien n'est construit
-avant ses réponses. La section « Décision » décrit l'option **recommandée**
-pour chaque question, pour qu'il puisse la juger ; elle sera réécrite selon ses
-choix, et le plan de la série (`drive-providers/base`) ne sera écrit qu'après.
+**Acceptée** le 2026-11-17 : Benoit a choisi l'option recommandée des cinq
+questions (1 A, 2 A, 3 A, 4 A, 5 A, consignées à la fin). Évaluation et
+décision, **aucun code** ici. Série : `drive-providers/base`, plan
+[`drive-providers-plan.md`](../plans/drive-providers-plan.md).
 
 - **Complète :** l'[ADR 0267](0267-cloud-drives-as-network-drives.md) (lecteurs
   cloud montés comme lecteurs réseau, sources par type),
@@ -361,3 +360,6 @@ public abstract class KazoDriveFolder : IAsyncDisposable
      retire.
    - B) Ils sont retirés de la liste (règle actuelle pour un type inconnu) :
      plus simple, mais une mise à jour ratée fait tout reconnecter.
+
+Réponses du mainteneur (2026-11-17) : 1 A, 2 A, 3 A, 4 A, 5 A (« je suis
+d'accord avec tes recommandations »).

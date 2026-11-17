@@ -4,11 +4,10 @@
 
 ## Status
 
-**Proposed** on 2026-11-17, **not decided**. Evaluation, **no code**. The
-questions at the end are asked to Benoit in the thread; nothing is built before
-his answers. The "Decision" section describes the **recommended** option for
-each question, so he can judge it; it will be rewritten to his choices, and the
-plan of the series (`drive-providers/base`) will be written only afterwards.
+**Accepted** on 2026-11-17: Benoit chose the recommended option of the five
+questions (1 A, 2 A, 3 A, 4 A, 5 A, recorded at the end). Evaluation and
+decision, **no code** here. Series: `drive-providers/base`, plan
+[`drive-providers-plan.md`](../plans/drive-providers-plan.md).
 
 - **Completes:** [ADR 0267](0267-cloud-drives-as-network-drives.md) (cloud
   drives mounted as network drives, one source per type),
@@ -356,3 +355,6 @@ public abstract class KazoDriveFolder : IAsyncDisposable
      after reinstallation; accounts stay until the user removes them.
    - B) They are removed from the list (today's rule for an unknown type):
      simpler, but a failed update makes the user reconnect everything.
+
+Maintainer's answers (2026-11-17): 1 A, 2 A, 3 A, 4 A, 5 A ("I agree with your
+recommendations").
