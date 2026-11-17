@@ -81,10 +81,14 @@ Ecosystem.csproj            PublishTrimmed=true, TrimMode=partial
 wasm2/KazoOs/build/publish-trimmed.sh            # publie, mesure, sert, teste
 wasm2/KazoOs/build/publish-trimmed.sh --compare  # publie aussi sans trimming et compare
 wasm2/KazoOs/build/publish-trimmed.sh --skip-build
+wasm2/KazoOs/build/publish-trimmed.sh --no-cloud-drives  # sans Dropbox, OneDrive ni S3 (ADR 0282 §5)
 ```
 
 Le script publie dans `artifacts/publish-trimmed/publish`, échoue sur toute
-alerte `IL…`, sert la publication sur `127.0.0.1` et `127.0.0.2`, puis lance
+alerte `IL…`, vérifie que `Kazo.Os.Platform.CloudDrives` est publié (ou absent
+avec `--no-cloud-drives`, qui passe `-p:KazoOsDropboxDrives=false
+-p:KazoOsOneDriveDrives=false -p:KazoOsS3Drives=false` et lance les mêmes tests
+sur cet OS, [`cloud-drives.md`](cloud-drives.md#connecteurs-désactivables-adr-0282-5)), sert la publication sur `127.0.0.1` et `127.0.0.2`, puis lance
 `Tests/Kazo.Os.TrimmedPublish.E2E.Tests` :
 
 | Test | Ce qu'il vérifie |

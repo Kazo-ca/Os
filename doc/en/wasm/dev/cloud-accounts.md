@@ -173,6 +173,12 @@ tenant = common
 app-folder-path = Apps/…
 ```
 
+A `disabled` key outside any section (`disabled = dropbox, s3`) hides shipped
+drive types on this machine; it adds to the host's `KazoOs:CloudDrives:Disabled`
+and never turns a disabled type back on (ADR 0282 §5,
+[`cloud-drives.md`](cloud-drives.md#switchable-connectors-adr-0282-5)). A
+disabled provider is no longer returned by `CloudProviderCatalog`.
+
 | Provider | `Full` scope | `AppFolder` scope | Other parameters |
 | --- | --- | --- | --- |
 | Dropbox | "Full Dropbox" app | "App folder" app | `token_access_type=offline`; revocation `2/auth/token/revoke`; identity `2/users/get_current_account` |

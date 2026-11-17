@@ -174,6 +174,12 @@ tenant = common
 app-folder-path = Apps/…
 ```
 
+Une clé `disabled` hors section (`disabled = dropbox, s3`) cache des types de
+lecteurs livrés sur cette machine ; elle s'ajoute à `KazoOs:CloudDrives:Disabled`
+de l'hôte et ne rallume jamais un type éteint (ADR 0282 §5,
+[`cloud-drives.md`](cloud-drives.md#connecteurs-désactivables-adr-0282-5)). Un
+fournisseur désactivé n'est plus rendu par `CloudProviderCatalog`.
+
 | Fournisseur | Étendue `Full` | Étendue `AppFolder` | Autres paramètres |
 | --- | --- | --- | --- |
 | Dropbox | App « Full Dropbox » | App « App folder » | `token_access_type=offline` ; révocation `2/auth/token/revoke` ; identité `2/users/get_current_account` |

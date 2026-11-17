@@ -18,6 +18,12 @@
 #
 #   --skip-build      reuse the existing publish and test build
 #   --compare         also publish untrimmed (-p:PublishTrimmed=false) and print both sizes
+#   --no-cloud-drives publish without the shipped cloud drive connectors (ADR 0282 §5:
+#                     -p:KazoOsDropboxDrives=false -p:KazoOsOneDriveDrives=false -p:KazoOsS3Drives=false)
+#                     and run the same tests on that OS
+#
+# Every publish checks Kazo.Os.Platform.CloudDrives: present in _framework by default, absent with
+# --no-cloud-drives.
 #
 # The direct link tests serve the official catalog locally, with the test package signed by a P-256
 # key created for the run (openssl): the publish trusts its public half for catalog:official, next to
@@ -51,11 +57,13 @@ CRAFT_PACKAGES="$OUT/kazoos-packages-craft"
 
 SKIP_BUILD=0
 COMPARE=0
+CLOUD_DRIVES_ARGS=()
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --skip-build) SKIP_BUILD=1 ;;
         --compare) COMPARE=1 ;;
-        -h|--help) sed -n '2,25p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0 ;;
+        --no-cloud-drives) CLOUD_DRIVES_ARGS=(-p:KazoOsDropboxDrives=false -p:KazoOsOneDriveDrives=false -p:KazoOsS3Drives=false) ;;
+        -h|--help) sed -n '2,26p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0 ;;
         *) echo "unknown option: $1 (see --help)" >&2; exit 2 ;;
     esac
     shift
@@ -165,7 +173,7 @@ if [[ $SKIP_BUILD -eq 0 ]]; then
     log "publishing OS/Kazo.Os.Ecosystem (Release, trimmed)"
     rm -rf "$OUT/publish"
     clean_link_state
-    if ! dotnet publish "$HOST_PROJECT" -c Release -o "$OUT/publish" \
+    if ! dotnet publish "$HOST_PROJECT" -c Release -o "$OUT/publish" "${CLOUD_DRIVES_ARGS[@]}" \
         "-p:KazoOsAppSigningKeys=catalog:official=$(cat "$SIGNING_PUBLIC")" >"$LOGS/publish.log" 2>&1; then
         grep -E ' error |error [A-Z]+[0-9]+' "$LOGS/publish.log" | sort -u | head -20 | sed 's/^/    /'
         log "RESULT: FAIL (publish, log: ${LOGS#"$ROOT/"}/publish.log)"
@@ -177,6 +185,17 @@ if [[ $SKIP_BUILD -eq 0 ]]; then
         log "RESULT: FAIL (trim warnings in the publish)"
         exit 1
     fi
+    # ADR 0282 §5: the connectors' assembly ships exactly when one connector is kept.
+    cloud_drives_published=0
+    compgen -G "$OUT/publish/wwwroot/_framework/Kazo.Os.Platform.CloudDrives*.wasm" >/dev/null && cloud_drives_published=1
+    if [[ ${#CLOUD_DRIVES_ARGS[@]} -gt 0 && $cloud_drives_published -eq 1 ]]; then
+        log "RESULT: FAIL (Kazo.Os.Platform.CloudDrives is published although the three connectors are off)"
+        exit 1
+    elif [[ ${#CLOUD_DRIVES_ARGS[@]} -eq 0 && $cloud_drives_published -eq 0 ]]; then
+        log "RESULT: FAIL (Kazo.Os.Platform.CloudDrives is missing from the publish)"
+        exit 1
+    fi
+    log "cloud drive connectors: $([[ $cloud_drives_published -eq 1 ]] && echo "published" || echo "left out (--no-cloud-drives)")"
     log "packing the test package of installed apps (ADR 0206)"
     rm -rf "$PACKAGES"
     if ! dotnet build "$PACKAGE_PROJECT" -c Release -t:KazoOsPack -p:KazoOsApiCheck=true -p:KazoOsPackageOutput="$PACKAGES" >"$LOGS/pack.log" 2>&1; then

@@ -16,3 +16,20 @@ Kazo.Os.Platform.Core.Network.RelayPolicyCache.RelayPolicyCache(Kazo.Os.Platform
 static readonly Kazo.Os.Platform.Core.Network.RelayPolicyCache.Lifetime -> System.TimeSpan
 Kazo.Os.Platform.Core.ServerConnection.RealNetworkGrantReconciler.GrantsChanged.get -> System.Action?
 Kazo.Os.Platform.Core.ServerConnection.RealNetworkGrantReconciler.GrantsChanged.init -> void
+Kazo.Os.Platform.Core.CloudAccounts.CloudProviderCatalog.IsTypeEnabledAsync(string! type, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<bool>
+Kazo.Os.Platform.Core.CloudAccounts.CloudProviderSettings.Disabled.get -> System.Collections.Generic.IReadOnlyCollection<string!>!
+Kazo.Os.Platform.Core.CloudAccounts.CloudProviderSettings.Disabled.init -> void
+Kazo.Os.Platform.Core.CloudAccounts.CloudProviderSettings.IsDisabled(string! type) -> bool
+Kazo.Os.Platform.Core.FileSystem.HostFolders.SwitchableDriveSource
+Kazo.Os.Platform.Core.FileSystem.HostFolders.SwitchableDriveSource.AvailabilityChanged -> System.Action?
+Kazo.Os.Platform.Core.FileSystem.HostFolders.SwitchableDriveSource.CreateAsync(Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveRequest! request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveCreation?>
+Kazo.Os.Platform.Core.FileSystem.HostFolders.SwitchableDriveSource.Dispose() -> void
+Kazo.Os.Platform.Core.FileSystem.HostFolders.SwitchableDriveSource.ForgetAsync(Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveReference! reference, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Kazo.Os.Platform.Core.FileSystem.HostFolders.SwitchableDriveSource.Inner.get -> Kazo.Os.Simulation.Abstractions.FileSystem.INetworkDriveSource!
+Kazo.Os.Platform.Core.FileSystem.HostFolders.SwitchableDriveSource.IsAvailableAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<bool>
+Kazo.Os.Platform.Core.FileSystem.HostFolders.SwitchableDriveSource.OpenAsync(Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveReference! reference, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.Simulation.Abstractions.FileSystem.IHostFolder?>
+Kazo.Os.Platform.Core.FileSystem.HostFolders.SwitchableDriveSource.SwitchableDriveSource(Kazo.Os.Simulation.Abstractions.FileSystem.INetworkDriveSource! inner, System.Func<System.Threading.CancellationToken, System.Threading.Tasks.ValueTask<bool>>! isEnabled) -> void
+Kazo.Os.Platform.Core.FileSystem.HostFolders.SwitchableDriveSource.Type.get -> string!
+const Kazo.Os.Platform.Core.CloudAccounts.CloudDrivesSettingsDocuments.DisabledKey = "disabled" -> string!
+static Kazo.Os.Platform.Core.CloudAccounts.CloudProviderSettings.ParseTypes(string? value) -> System.Collections.Generic.IReadOnlyList<string!>!
+Kazo.Os.Platform.Core.FileSystem.HostFolders.SwitchableDriveSource.IsEnabledAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<bool>

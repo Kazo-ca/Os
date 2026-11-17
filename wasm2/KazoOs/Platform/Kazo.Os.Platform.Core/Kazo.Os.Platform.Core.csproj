@@ -36,6 +36,9 @@
     <!-- ADR 0070: the worker host serves a remote process through the same trusted context and
          reports a closed pipe exactly like a local writer (ShellBrokenPipeException). -->
     <InternalsVisibleTo Include="Kazo.Os.Platform.WorkerHost" />
+    <!-- ADR 0282 §5: the shipped connectors left Platform Core but S3 still seals and reads its keys
+         through CloudAccountService.SaveKeysAccountAsync/GetKeysAsync, which no app may call. -->
+    <InternalsVisibleTo Include="Kazo.Os.Platform.CloudDrives" />
     <!-- RuntimeTypeNames: the API surface of a publish uses the same type names (ADR 0277). -->
     <InternalsVisibleTo Include="Kazo.Os.Tools.ManifestGenerator" />
     <InternalsVisibleTo Include="Kazo.Os.Platform.WorkerHost.Tests" />

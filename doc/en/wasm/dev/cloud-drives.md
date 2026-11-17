@@ -33,6 +33,76 @@ trials still to do before the series is merged into `main`.
 - A guest account, or a session opened by a passkey without PRF, has no
   keyring: the window explains it and only offers the computer's folder.
 
+## Switchable connectors (ADR 0282 §5)
+
+The three shipped connectors live in their own assembly,
+`Platform/Kazo.Os.Platform.CloudDrives` (package `Kazo.Os.Platform.CloudDrives`),
+on the model of resource accounting (ADR 0066). One can be left out at build
+time or hidden at run time.
+
+**At build time.** `build/Kazo.Os.CloudDrives.targets`, imported by the three
+hosts, reads three MSBuild properties, all `true` by default:
+
+```bash
+dotnet publish OS/Kazo.Os.Ecosystem -c Release -p:KazoOsDropboxDrives=false
+dotnet publish OS/Kazo.Os.Ecosystem -c Release \
+  -p:KazoOsDropboxDrives=false -p:KazoOsOneDriveDrives=false -p:KazoOsS3Drives=false
+```
+
+| Property | Constant | Runtime switch |
+| --- | --- | --- |
+| `KazoOsDropboxDrives` | `KAZOOS_DROPBOX_DRIVES` | `Kazo.Os.CloudDrives.Dropbox.IsSupported` |
+| `KazoOsOneDriveDrives` | `KAZOOS_ONEDRIVE_DRIVES` | `Kazo.Os.CloudDrives.OneDrive.IsSupported` |
+| `KazoOsS3Drives` | `KAZOOS_S3_DRIVES` | `Kazo.Os.CloudDrives.S3.IsSupported` |
+
+- A connector set to `false` is not composed (`CloudDriveServiceCollectionExtensions`
+  in `Kazo.Os.Ecosystem.Host`): it is never offered, and neither is its OAuth
+  provider, even when `appsettings.json` has its app id.
+- All three `false`: the host no longer references `Kazo.Os.Platform.CloudDrives`
+  and the assembly leaves the download (`KAZOOS_CLOUD_DRIVES` undefined).
+  `build/publish-trimmed.sh --no-cloud-drives` checks it.
+- Each property also becomes a `RuntimeHostConfigurationOption`
+  (`CloudDriveFeatures`), read at startup: a connector switched off is ignored
+  even when the assembly stays for another one.
+- As in ADR 0066, the composition lives in `Kazo.Os.Ecosystem.Host`: set the
+  properties in a `Directory.Build.props` or on the command line for the whole
+  graph. The `Kazo.Os.Ecosystem.Host` NuGet package is built with the three
+  connectors; a host from another repository hides them with the runtime
+  setting below.
+
+**At run time**, without publishing again, two lists that add up (the system
+file never turns back on a type the host or the build switched off):
+
+```json
+"KazoOs": { "CloudDrives": { "Disabled": "dropbox, s3" } }
+```
+
+```ini
+# /etc/kazoos/cloud-drives.config (system layer)
+disabled = onedrive
+```
+
+`Disabled` also takes a JSON array (`["dropbox", "s3"]`); types are separated
+by commas, semicolons or spaces, case ignored. The file is read again on each
+question: a change applies at once. A disabled type is offered nowhere:
+`GetNetworkDriveTypesAsync` (Explorer ▸ Connect a network drive…, `mount -t`)
+leaves it out, `NetworkDriveService` refuses to mount a new one, and Settings ▸
+Cloud accounts no longer lists its provider (`CloudProviderCatalog`). Each
+connector is registered behind a `SwitchableDriveSource` (Platform.Core) that
+asks.
+
+### Existing drives of a disabled type
+
+A drive mounted before its type was disabled (by the runtime setting, the system file or a publish that leaves the connector out) is not lost:
+
+- at the next login, `NetworkDriveService.RestoreAsync` keeps its line in `~/.local/state/kazoos/network-drives.json` but does not mount it; it shows neither in the Explorer nor in `mount`;
+- the line survives rewrites of the table (another drive mounted or unmounted);
+- its mount point stays reserved: neither a default name nor an explicit `mount` takes it (`InvalidMountPoint`);
+- once the type is enabled again, the drive comes back at the next login, with its keys;
+- disabling a type during a session does not unmount drives already mounted: they stay until logout.
+
+Only the three shipped types (`dropbox`, `onedrive`, `s3`) are kept this way; a line of a type no version ever shipped is still dropped, as before. Showing these drives greyed out ("provider missing", ADR 0282 §3) comes with work item 4.
+
 ## Map of the documents
 
 | Piece | Work item | Document |
