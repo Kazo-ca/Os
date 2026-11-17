@@ -1,1 +1,5 @@
 #nullable enable
+Kazo.Os.Apps.Settings.StoragePanel
+Kazo.Os.Apps.Settings.StoragePanel.StoragePanel() -> void
+override Kazo.Os.Apps.Settings.StoragePanel.OnInitializedAsync() -> System.Threading.Tasks.Task!
+~override Kazo.Os.Apps.Settings.StoragePanel.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void

@@ -170,6 +170,9 @@ internal sealed class AppExecutionContext : IAppExecutionContext
     /// <inheritdoc />
     public Kazo.Os.AppSdk.WhatsNew.IAppWhatsNewGateway WhatsNew { get => Guarded(field); internal set; } = UnsupportedAdministrationGateways.WhatsNew;
 
+    /// <summary>Gets the browser storage of the page (ADR 0250), set after construction like <see cref="WhatsNew"/>.</summary>
+    public Kazo.Os.AppSdk.Storage.IAppStorageGateway Storage { get => Guarded(field); internal set; } = Kazo.Os.AppSdk.Storage.UnsupportedAppStorageGateway.Instance;
+
     /// <inheritdoc />
     public string UserLoginName { get; }
 

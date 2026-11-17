@@ -119,3 +119,87 @@ Kazo.Os.AppSdk.Apps.KazoInstallRequestResult.KazoInstallRequestResult(string! Ap
 Kazo.Os.AppSdk.Apps.KazoPackageInstallReport.ReactivatedDependents.get -> System.Collections.Generic.IReadOnlyList<string!>!
 static Kazo.Os.AppSdk.Apps.KazoAppPackages.PlanInstallAsync(string! source, Kazo.Os.AppSdk.Apps.KazoPackageScope scope = Kazo.Os.AppSdk.Apps.KazoPackageScope.Auto, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Kazo.Os.AppSdk.Apps.KazoPackageInstallPlan!>!
 static Kazo.Os.AppSdk.Apps.KazoAppPackages.GetDependentsAsync(string! appId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.Apps.KazoPackageDependent!>!>!
+Kazo.Os.AppSdk.Storage.KazoStorage
+static Kazo.Os.AppSdk.Storage.KazoStorage.Changed -> System.EventHandler<Kazo.Os.AppSdk.Storage.KazoStorageChangedEventArgs!>?
+Kazo.Os.AppSdk.Storage.KazoStorageEstimate
+Kazo.Os.AppSdk.Storage.KazoStorageEstimate.UsageBytes.get -> long
+Kazo.Os.AppSdk.Storage.KazoStorageEstimate.IsPersisted.get -> bool
+Kazo.Os.AppSdk.Storage.KazoStorageEstimate.IsLowSpace.get -> bool
+override Kazo.Os.AppSdk.Storage.KazoStorageEstimate.ToString() -> string!
+Kazo.Os.AppSdk.Storage.KazoStorageEstimate.QuotaBytes.get -> long
+Kazo.Os.AppSdk.Storage.KazoStorageEstimate.IsPersisted.init -> void
+Kazo.Os.AppSdk.Storage.KazoStorageEstimate.UsageBytes.init -> void
+Kazo.Os.AppSdk.Storage.KazoStorageEstimate.IsLowSpace.init -> void
+Kazo.Os.AppSdk.Storage.KazoStorageEstimate.QuotaBytes.init -> void
+Kazo.Os.AppSdk.Storage.KazoStorageChangeKind
+Kazo.Os.AppSdk.Storage.KazoStorageChangeKind.Evicted = 0 -> Kazo.Os.AppSdk.Storage.KazoStorageChangeKind
+Kazo.Os.AppSdk.Storage.KazoStorageChangeKind.PersistenceLost = 1 -> Kazo.Os.AppSdk.Storage.KazoStorageChangeKind
+Kazo.Os.AppSdk.Storage.KazoStorageChangedEventArgs
+Kazo.Os.AppSdk.Storage.KazoFeatureStorageUsage.FeatureId.get -> string!
+Kazo.Os.AppSdk.Storage.KazoFeatureStorageUsage
+Kazo.Os.AppSdk.Storage.KazoFeatureStorageUsage.Name.get -> string!
+Kazo.Os.AppSdk.Storage.KazoFeatureStorageUsage.UsageBytes.get -> long?
+Kazo.Os.AppSdk.Storage.KazoFeatureStorageUsage.FeatureId.init -> void
+Kazo.Os.AppSdk.Storage.KazoFeatureStorageUsage.ReportedAtUtc.get -> System.DateTimeOffset?
+Kazo.Os.AppSdk.Storage.KazoFeatureStorageUsage.Name.init -> void
+override Kazo.Os.AppSdk.Storage.KazoFeatureStorageUsage.ToString() -> string!
+Kazo.Os.AppSdk.Storage.KazoFeatureStorageUsage.UsageBytes.init -> void
+Kazo.Os.AppSdk.Storage.KazoFeatureStorageUsage.ReportedAtUtc.init -> void
+static Kazo.Os.AppSdk.Storage.KazoFeatureStorageUsage.operator !=(Kazo.Os.AppSdk.Storage.KazoFeatureStorageUsage? left, Kazo.Os.AppSdk.Storage.KazoFeatureStorageUsage? right) -> bool
+static Kazo.Os.AppSdk.Storage.KazoFeatureStorageUsage.operator ==(Kazo.Os.AppSdk.Storage.KazoFeatureStorageUsage? left, Kazo.Os.AppSdk.Storage.KazoFeatureStorageUsage? right) -> bool
+override Kazo.Os.AppSdk.Storage.KazoFeatureStorageUsage.GetHashCode() -> int
+static Kazo.Os.AppSdk.Storage.KazoStorageEstimate.operator !=(Kazo.Os.AppSdk.Storage.KazoStorageEstimate? left, Kazo.Os.AppSdk.Storage.KazoStorageEstimate? right) -> bool
+override Kazo.Os.AppSdk.Storage.KazoFeatureStorageUsage.Equals(object? obj) -> bool
+static Kazo.Os.AppSdk.Storage.KazoStorageEstimate.operator ==(Kazo.Os.AppSdk.Storage.KazoStorageEstimate? left, Kazo.Os.AppSdk.Storage.KazoStorageEstimate? right) -> bool
+Kazo.Os.AppSdk.Storage.KazoFeatureStorageUsage.Equals(Kazo.Os.AppSdk.Storage.KazoFeatureStorageUsage? other) -> bool
+override Kazo.Os.AppSdk.Storage.KazoStorageEstimate.GetHashCode() -> int
+Kazo.Os.AppSdk.Storage.KazoFeatureStorageUsage.<Clone>$() -> Kazo.Os.AppSdk.Storage.KazoFeatureStorageUsage!
+override Kazo.Os.AppSdk.Storage.KazoStorageEstimate.Equals(object? obj) -> bool
+Kazo.Os.AppSdk.Storage.KazoFeatureStorageUsage.Deconstruct(out string! FeatureId, out string! Name, out long? UsageBytes, out System.DateTimeOffset? ReportedAtUtc) -> void
+Kazo.Os.AppSdk.Storage.KazoStorageEstimate.Equals(Kazo.Os.AppSdk.Storage.KazoStorageEstimate? other) -> bool
+Kazo.Os.AppSdk.Storage.KazoStorageEstimate.<Clone>$() -> Kazo.Os.AppSdk.Storage.KazoStorageEstimate!
+Kazo.Os.AppSdk.Storage.KazoStorageEstimate.Deconstruct(out long UsageBytes, out long QuotaBytes, out bool IsPersisted, out bool IsLowSpace) -> void
+Kazo.Os.AppSdk.Storage.IAppStorageGateway
+Kazo.Os.AppSdk.Storage.IAppStorageGateway.Changed -> System.EventHandler<Kazo.Os.AppSdk.Storage.KazoStorageChangedEventArgs!>?
+Kazo.Os.AppSdk.Storage.UnsupportedAppStorageGateway
+Kazo.Os.AppSdk.Storage.UnsupportedAppStorageGateway.Changed -> System.EventHandler<Kazo.Os.AppSdk.Storage.KazoStorageChangedEventArgs!>?
+Kazo.Os.AppSdk.IAppExecutionContext.Storage.get -> Kazo.Os.AppSdk.Storage.IAppStorageGateway!
+static Kazo.Os.AppSdk.Storage.UnsupportedAppStorageGateway.Instance.get -> Kazo.Os.AppSdk.Storage.UnsupportedAppStorageGateway!
+Kazo.Os.AppSdk.Storage.UnsupportedAppStorageGateway.IsSupported.get -> bool
+Kazo.Os.AppSdk.Storage.UnsupportedAppStorageGateway.GetEstimateAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.Storage.KazoStorageEstimate!>
+Kazo.Os.AppSdk.Storage.UnsupportedAppStorageGateway.RequestPersistenceAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<bool>
+Kazo.Os.AppSdk.Storage.UnsupportedAppStorageGateway.ReportUsageAsync(long bytes, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Kazo.Os.AppSdk.Storage.UnsupportedAppStorageGateway.GetFeatureUsageAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.Storage.KazoFeatureStorageUsage!>!>
+Kazo.Os.AppSdk.Storage.IAppStorageGateway.IsSupported.get -> bool
+Kazo.Os.AppSdk.Storage.IAppStorageGateway.GetEstimateAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.Storage.KazoStorageEstimate!>
+Kazo.Os.AppSdk.Storage.IAppStorageGateway.RequestPersistenceAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<bool>
+Kazo.Os.AppSdk.Storage.IAppStorageGateway.ReportUsageAsync(long bytes, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Kazo.Os.AppSdk.Storage.IAppStorageGateway.RegisterMarkerAsync(string! path, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Kazo.Os.AppSdk.Storage.IAppStorageGateway.GetFeatureUsageAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.Storage.KazoFeatureStorageUsage!>!>
+Kazo.Os.AppSdk.Storage.KazoFeatureStorageUsage.KazoFeatureStorageUsage(string! FeatureId, string! Name, long? UsageBytes, System.DateTimeOffset? ReportedAtUtc) -> void
+Kazo.Os.AppSdk.Storage.KazoStorageChangedEventArgs.KazoStorageChangedEventArgs(Kazo.Os.AppSdk.Storage.KazoStorageChangeKind kind, string! featureId, string? markerPath, System.DateTimeOffset detectedAtUtc) -> void
+Kazo.Os.AppSdk.Storage.KazoStorageChangedEventArgs.Kind.get -> Kazo.Os.AppSdk.Storage.KazoStorageChangeKind
+Kazo.Os.AppSdk.Storage.KazoStorageChangedEventArgs.FeatureId.get -> string!
+Kazo.Os.AppSdk.Storage.KazoStorageChangedEventArgs.MarkerPath.get -> string?
+Kazo.Os.AppSdk.Storage.KazoStorageChangedEventArgs.DetectedAtUtc.get -> System.DateTimeOffset
+Kazo.Os.AppSdk.Storage.UnsupportedAppStorageGateway.RegisterMarkerAsync(string! path, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Kazo.Os.AppSdk.Storage.KazoStorageEstimate.KazoStorageEstimate(long UsageBytes, long QuotaBytes, bool IsPersisted, bool IsLowSpace) -> void
+Kazo.Os.AppSdk.Storage.KazoStorageEstimate.IsKnown.get -> bool
+Kazo.Os.AppSdk.Storage.KazoStorageEstimate.IsKnown.init -> void
+Kazo.Os.AppSdk.Storage.KazoStorageEstimate.IndexedDbBytes.get -> long?
+Kazo.Os.AppSdk.Storage.KazoStorageEstimate.IndexedDbBytes.init -> void
+Kazo.Os.AppSdk.Storage.KazoStorageEstimate.CacheBytes.get -> long?
+Kazo.Os.AppSdk.Storage.KazoStorageEstimate.CacheBytes.init -> void
+Kazo.Os.AppSdk.Storage.KazoStorageEstimate.FileSystemBytes.get -> long?
+Kazo.Os.AppSdk.Storage.KazoStorageEstimate.FileSystemBytes.init -> void
+Kazo.Os.AppSdk.Storage.KazoStorageEstimate.DeclaredUsageBytes.get -> long?
+Kazo.Os.AppSdk.Storage.KazoStorageEstimate.DeclaredUsageBytes.init -> void
+Kazo.Os.AppSdk.Storage.KazoStorageEstimate.PersistenceLost.get -> bool
+static Kazo.Os.AppSdk.Storage.KazoStorageEstimate.Unknown.get -> Kazo.Os.AppSdk.Storage.KazoStorageEstimate!
+Kazo.Os.AppSdk.Storage.KazoStorageEstimate.PersistenceLost.init -> void
+static Kazo.Os.AppSdk.Storage.KazoStorage.IsSupported.get -> bool
+static Kazo.Os.AppSdk.Storage.KazoStorage.GetEstimateAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.Storage.KazoStorageEstimate!>
+static Kazo.Os.AppSdk.Storage.KazoStorage.RequestPersistenceAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<bool>
+static Kazo.Os.AppSdk.Storage.KazoStorage.RegisterMarkerAsync(string! path, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+static Kazo.Os.AppSdk.Storage.KazoStorage.ReportUsageAsync(long bytes, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+static Kazo.Os.AppSdk.Storage.KazoStorage.GetFeatureUsageAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.Storage.KazoFeatureStorageUsage!>!>

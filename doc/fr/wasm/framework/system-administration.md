@@ -110,6 +110,46 @@ version, magasins, nombre d'enregistrements, taille estimée) et
 (ADR 0088 §4, [`asp-kazo-site-data.md`](asp-kazo-site-data.md)). Diagnostic les
 montre sous *Website databases*.
 
+### Stockage du navigateur (`KazoStorage`, ADR 0250)
+
+`KazoStorage` (`Shared/Kazo.Os.AppSdk/Storage/`) parle du stockage de
+l'origine de la page, que partagent les Fichiers de Kazo (IndexedDB), les
+caches de l'OS et l'OPFS des fonctionnalités :
+
+- `GetEstimateAsync` : usage, quota, `IsPersisted`, `IsLowSpace` (seuils de
+  l'ADR 0099), la part de chaque sorte de stockage quand le navigateur la donne
+  (`IndexedDbBytes`, `CacheBytes`, `FileSystemBytes`, Chromium seulement),
+  l'espace que la fonctionnalité appelante a déclaré et `PersistenceLost`.
+  Aucune capacité.
+- `RequestPersistenceAsync` : `navigator.storage.persist()`, **une fois par
+  origine** (`OriginStorageService` ne redemande pas quand `persisted()` est
+  vrai). Réservé aux fonctionnalités, à leurs points d'entrée et aux apps
+  système ; une app ordinaire reçoit `KazoUnauthorizedAccessException`
+  (`manifest.feature.only`). À appeler juste après un geste de l'usager.
+- `RegisterMarkerAsync(path)` et `ReportUsageAsync(bytes)` : une
+  fonctionnalité enregistre un fichier témoin de son OPFS et l'espace qu'elle
+  occupe, gardés par l'OS dans `/var/lib/kazoos/storage/features.json`.
+- `GetFeatureUsageAsync` : les fonctionnalités et l'espace déclaré (Paramètres,
+  `df`).
+- `Changed` : `Evicted` quand le témoin a disparu de l'OPFS, remis à la
+  fonctionnalité dès qu'elle s'abonne à son lancement suivant.
+
+Au démarrage, `StorageEvictionDetector` compare, **avant** l'ouverture des
+bases, le marqueur `kazoos.storage.marker` de `localStorage` à l'existence de
+la base `kazoos` : marqueur sans base = éviction. L'écran de première
+installation l'annonce (date du dernier démarrage, restauration d'une
+sauvegarde), `kern.log` et `syslog` reçoivent `storage.evicted`, puis le
+démarrage réussi réécrit le marqueur. Les témoins des fonctionnalités sont
+vérifiés ensuite ; un témoin disparu donne une notification à l'usager et
+`Changed(Evicted)` à la fonctionnalité.
+
+Paramètres ▸ Système ▸ Stockage (`StoragePanel`) montre usage, quota,
+répartition, état « protégé » et le bouton « Protéger le stockage contre
+l'effacement », et l'espace de chaque fonctionnalité. `df` ajoute une ligne
+`/dev/feature/<id>` par fonctionnalité qui a déclaré son espace. La réserve de
+5 % compte toujours l'origine entière : les disques des fonctionnalités
+comptent dans l'espace des Fichiers.
+
 ### Sauvegarde (`system.backup`)
 
 `KazoSystemBackup.CreateAsync` télécharge une archive `.kosbak` de toute la

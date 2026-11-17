@@ -116,3 +116,67 @@ Kazo.Os.Platform.Core.Elevation.AppInstallApprovalRequest.PlannedFeatures.init -
 Kazo.Os.Platform.Core.Elevation.AppInstallApprovalRequest.DisabledDependents.get -> System.Collections.Generic.IReadOnlyList<string!>!
 Kazo.Os.Platform.Core.Elevation.AppInstallApprovalRequest.DisabledDependents.init -> void
 Kazo.Os.Platform.Core.Elevation.AppInstallApprovalDependency.AppInstallApprovalDependency(string! AppId, string! Name, string! Version, string? PreviousVersion, long SizeBytes, string! Source, Kazo.Os.Platform.Core.Apps.Packages.AppSourceTrust Trust, bool SystemWide, bool IsFeature, System.Collections.Generic.IReadOnlyList<string!>! DangerousCapabilities) -> void
+Kazo.Os.Platform.Core.Storage.FeatureStorageRecord.FeatureId.get -> string!
+Kazo.Os.Platform.Core.Storage.FeatureStorageRecord.MarkerPath.get -> string?
+Kazo.Os.Platform.Core.Storage.FeatureStorageRecord
+Kazo.Os.Platform.Core.Storage.FeatureStorageRecord.Name.get -> string!
+Kazo.Os.Platform.Core.Storage.FeatureStorageRecord.UsageBytes.get -> long?
+Kazo.Os.Platform.Core.Storage.FeatureStorageRecord.FeatureId.init -> void
+Kazo.Os.Platform.Core.Storage.FeatureStorageRecord.MarkerPath.init -> void
+Kazo.Os.Platform.Core.Storage.FeatureStorageRecord.Name.init -> void
+Kazo.Os.Platform.Core.Storage.FeatureStorageRecord.UsageBytes.init -> void
+Kazo.Os.Platform.Core.Storage.FeatureStorageRecord.ReportedAtUtc.get -> System.DateTimeOffset?
+override Kazo.Os.Platform.Core.Storage.FeatureStorageRecord.ToString() -> string!
+Kazo.Os.Platform.Core.Storage.FeatureStorageRecord.ReportedAtUtc.init -> void
+static Kazo.Os.Platform.Core.Storage.FeatureStorageRecord.operator !=(Kazo.Os.Platform.Core.Storage.FeatureStorageRecord? left, Kazo.Os.Platform.Core.Storage.FeatureStorageRecord? right) -> bool
+static Kazo.Os.Platform.Core.Storage.FeatureStorageRecord.operator ==(Kazo.Os.Platform.Core.Storage.FeatureStorageRecord? left, Kazo.Os.Platform.Core.Storage.FeatureStorageRecord? right) -> bool
+override Kazo.Os.Platform.Core.Storage.FeatureStorageRecord.GetHashCode() -> int
+override Kazo.Os.Platform.Core.Storage.FeatureStorageRecord.Equals(object? obj) -> bool
+Kazo.Os.Platform.Core.Storage.FeatureStorageRecord.Equals(Kazo.Os.Platform.Core.Storage.FeatureStorageRecord? other) -> bool
+Kazo.Os.Platform.Core.Storage.FeatureStorageRecord.<Clone>$() -> Kazo.Os.Platform.Core.Storage.FeatureStorageRecord!
+Kazo.Os.Platform.Core.Storage.FeatureStorageRecord.Deconstruct(out string! FeatureId, out string! Name, out string? MarkerPath, out long? UsageBytes, out System.DateTimeOffset? ReportedAtUtc) -> void
+Kazo.Os.Platform.Core.Storage.OriginStorageService
+const Kazo.Os.Platform.Core.Storage.OriginStorageService.NotificationSourceAppId = "org.kazoos.storage" -> string!
+const Kazo.Os.Platform.Core.Storage.OriginStorageService.SettingsAppId = "org.kazoos.settings" -> string!
+const Kazo.Os.Platform.Core.Storage.OriginStorageService.MaximumMarkerPathLength = 512 -> int
+Kazo.Os.Platform.Core.Storage.StorageEviction
+override Kazo.Os.Platform.Core.Storage.StorageEviction.ToString() -> string!
+static Kazo.Os.Platform.Core.Storage.StorageEviction.operator !=(Kazo.Os.Platform.Core.Storage.StorageEviction? left, Kazo.Os.Platform.Core.Storage.StorageEviction? right) -> bool
+Kazo.Os.Platform.Core.Storage.StorageEviction.LastBootUtc.get -> System.DateTimeOffset?
+Kazo.Os.Platform.Core.Storage.StorageEviction.DetectedAtUtc.get -> System.DateTimeOffset
+static Kazo.Os.Platform.Core.Storage.StorageEviction.operator ==(Kazo.Os.Platform.Core.Storage.StorageEviction? left, Kazo.Os.Platform.Core.Storage.StorageEviction? right) -> bool
+Kazo.Os.Platform.Core.Storage.StorageEviction.LastBootUtc.init -> void
+Kazo.Os.Platform.Core.Storage.StorageEviction.DetectedAtUtc.init -> void
+override Kazo.Os.Platform.Core.Storage.StorageEviction.GetHashCode() -> int
+override Kazo.Os.Platform.Core.Storage.StorageEviction.Equals(object? obj) -> bool
+Kazo.Os.Platform.Core.Storage.StorageEviction.Equals(Kazo.Os.Platform.Core.Storage.StorageEviction? other) -> bool
+Kazo.Os.Platform.Core.Storage.StorageEviction.<Clone>$() -> Kazo.Os.Platform.Core.Storage.StorageEviction!
+Kazo.Os.Platform.Core.Storage.StorageEviction.Deconstruct(out System.DateTimeOffset? LastBootUtc, out System.DateTimeOffset DetectedAtUtc) -> void
+Kazo.Os.Platform.Core.Storage.StorageEvictionDetector
+const Kazo.Os.Platform.Core.Storage.StorageEvictionDetector.OsDatabaseName = "kazoos" -> string!
+Kazo.Os.Platform.Core.Administration.SystemAdministrationGatewayServices.OriginStorage.get -> System.Func<Kazo.Os.Platform.Core.Storage.OriginStorageService!>?
+Kazo.Os.Platform.Core.Administration.SystemAdministrationGatewayServices.OriginStorage.init -> void
+Kazo.Os.Platform.Core.Storage.StorageEvictionDetector.StorageEvictionDetector(Kazo.Os.Simulation.Abstractions.Metrics.IOriginStorage! storage, System.TimeProvider? time = null, string! databaseName = "kazoos") -> void
+Kazo.Os.Platform.Core.Storage.StorageEvictionDetector.Eviction.get -> Kazo.Os.Platform.Core.Storage.StorageEviction?
+Kazo.Os.Platform.Core.Storage.StorageEvictionDetector.PersistenceLost.get -> bool
+Kazo.Os.Platform.Core.Storage.StorageEvictionDetector.DetectAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.Platform.Core.Storage.StorageEviction?>
+Kazo.Os.Platform.Core.Storage.StorageEvictionDetector.RecordBootAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+static Kazo.Os.Platform.Core.Storage.StorageEvictionDetector.Format(System.DateTimeOffset lastBootUtc, bool persisted) -> string!
+static Kazo.Os.Platform.Core.Storage.StorageEvictionDetector.Read(string? marker) -> (System.DateTimeOffset? LastBootUtc, bool Persisted)
+Kazo.Os.Platform.Core.Storage.StorageEviction.StorageEviction(System.DateTimeOffset? LastBootUtc, System.DateTimeOffset DetectedAtUtc) -> void
+static Kazo.Os.Platform.Core.Storage.OriginStorageService.StatePath.get -> Kazo.Os.App.Abstractions.VirtualPath
+static Kazo.Os.Platform.Core.Storage.OriginStorageService.StateDirectory.get -> Kazo.Os.App.Abstractions.VirtualPath
+Kazo.Os.Platform.Core.Storage.OriginStorageService.PersistenceRequests.get -> int
+Kazo.Os.Platform.Core.Storage.OriginStorageService.OriginStorageService(Kazo.Os.Simulation.Abstractions.Metrics.IOriginStorage! storage, Kazo.Os.Simulation.Abstractions.FileSystem.IFileSystemService! fileSystem, Kazo.Os.Simulation.Abstractions.Time.ISimulationClock! clock, Kazo.Os.Platform.Core.Storage.StorageEvictionDetector? detector = null, Kazo.Os.Simulation.Abstractions.Notifications.INotificationQueue? notifications = null, System.Func<Kazo.Os.Simulation.Abstractions.Sessions.AuthenticatedPrincipal?>? currentUser = null, Kazo.Os.Platform.Core.Diagnostics.KernelLog? kernelLog = null, System.TimeProvider? time = null, System.Func<System.Globalization.CultureInfo!>? language = null) -> void
+Kazo.Os.Platform.Core.Storage.OriginStorageService.GetEstimateAsync(string? featureId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.Storage.KazoStorageEstimate!>
+Kazo.Os.Platform.Core.Storage.OriginStorageService.RequestPersistenceAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<bool>
+Kazo.Os.Platform.Core.Storage.OriginStorageService.RegisterMarkerAsync(string! featureId, string! name, string! path, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Kazo.Os.Platform.Core.Storage.OriginStorageService.ReportUsageAsync(string! featureId, string! name, long bytes, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Kazo.Os.Platform.Core.Storage.OriginStorageService.GetFeaturesAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<Kazo.Os.Platform.Core.Storage.FeatureStorageRecord!>!>
+Kazo.Os.Platform.Core.Storage.OriginStorageService.CheckMarkersAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<string!>!>
+Kazo.Os.Platform.Core.Storage.OriginStorageService.NotifyEvictions() -> void
+Kazo.Os.Platform.Core.Storage.OriginStorageService.TakePendingChange(string! featureId) -> Kazo.Os.AppSdk.Storage.KazoStorageChangedEventArgs?
+static Kazo.Os.Platform.Core.Storage.OriginStorageService.NormalizeMarkerPath(string! path) -> string!
+static Kazo.Os.Platform.Core.Storage.OriginStorageService.Parse(string? content) -> System.Collections.Generic.IReadOnlyList<Kazo.Os.Platform.Core.Storage.FeatureStorageRecord!>!
+static Kazo.Os.Platform.Core.Storage.OriginStorageService.Format(System.Collections.Generic.IEnumerable<Kazo.Os.Platform.Core.Storage.FeatureStorageRecord!>! records) -> string!
+Kazo.Os.Platform.Core.Storage.FeatureStorageRecord.FeatureStorageRecord(string! FeatureId, string! Name, string? MarkerPath, long? UsageBytes, System.DateTimeOffset? ReportedAtUtc) -> void

@@ -346,6 +346,13 @@ public interface IAppExecutionContext
     WhatsNew.IAppWhatsNewGateway WhatsNew => UnsupportedAdministrationGateways.WhatsNew;
 
     /// <summary>
+    /// Gets this instance's gateway to the browser storage of the page, behind
+    /// <see cref="Storage.KazoStorage"/> (ADR 0250; no capability to read). Defaults to a gateway with
+    /// nothing to report; the trusted platform factory overrides it on a browser host.
+    /// </summary>
+    Storage.IAppStorageGateway Storage => Kazo.Os.AppSdk.Storage.UnsupportedAppStorageGateway.Instance;
+
+    /// <summary>
     /// Gets this instance's ability to host interactive shells (<c>shell.host</c>, ADR 0056
     /// section 7), read by <see cref="Shell.KazoShell"/>. Defaults to an unsupported gateway so
     /// existing <see cref="IAppExecutionContext"/> implementations that predate this member keep
