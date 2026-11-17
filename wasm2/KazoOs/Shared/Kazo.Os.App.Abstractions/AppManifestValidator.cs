@@ -59,6 +59,7 @@ public static partial class AppManifestValidator
 
         ValidateRealNetworkPorts(manifest, errors);
         ValidateProvidedServices(manifest, errors);
+        ValidateDriveProviders(manifest, errors);
         ValidateDeclaredTopicPermissions(manifest.Id, manifest.DeclaredTopicPermissions, errors);
         ValidateDependencies(manifest.Dependencies, errors);
         ValidateAssets(manifest.Assets, errors);

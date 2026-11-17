@@ -144,7 +144,9 @@ public static class AppDefinitionMapper
             Execution = AppExecutionHost.MainThread,
             OomScoreAdj = definition.OomScoreAdjust,
             // ADR 0262 §1: the services the feature provides, in its own assemblies.
-            ProvidedServices = ToProvidedServices(definition)
+            ProvidedServices = ToProvidedServices(definition),
+            // ADR 0282 §1: the types of network drive the feature provides.
+            DriveProviders = ToDriveProviders(definition)
         };
 
         IReadOnlyList<FeatureEntryPoint> entryPoints = definition.EntryPoints
@@ -216,6 +218,30 @@ public static class AppDefinitionMapper
             return new AppProvidedServiceManifest(AppProvidedServiceManifest.NameOf(contract), AppProvidedServiceManifest.NameOf(implementation))
             {
                 EntryPoint = entryPoint,
+            };
+        })];
+    }
+
+    private static IReadOnlyList<AppDriveProviderManifest>? ToDriveProviders(FeatureDefinition definition)
+    {
+        IReadOnlyList<KazoDriveProviderDeclaration> providers = definition.DriveProviders
+            ?? throw new InvalidOperationException($"'{definition.GetType().FullName}' returned null DriveProviders.");
+        if (providers.Count == 0)
+        {
+            return null;
+        }
+
+        return [.. providers.Select(declaration =>
+        {
+            ArgumentNullException.ThrowIfNull(declaration);
+            Type provider = declaration.Provider
+                ?? throw new InvalidOperationException($"The drive provider '{declaration.Type}' of '{definition.Id}' has a null Provider.");
+            AppDriveConnectionManifest connection = declaration.Connection
+                ?? throw new InvalidOperationException($"The drive provider '{declaration.Type}' of '{definition.Id}' has a null Connection.");
+            return new AppDriveProviderManifest(declaration.Type, declaration.Name, AppProvidedServiceManifest.NameOf(provider), connection)
+            {
+                Icon = declaration.Icon,
+                Hosts = [.. declaration.Hosts ?? []],
             };
         })];
     }

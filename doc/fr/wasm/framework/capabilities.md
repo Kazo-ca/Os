@@ -46,6 +46,7 @@ classement.
 | `screens.manage` | normale (ADR 0184 : lister, ouvrir, restaurer, fermer et identifier les écrans par `KazoScreens`, comme Paramètres ▸ Écrans ; chaque appel part d'un clic de l'utilisateur) |
 | `shell.context-menu` | normale (ADR 0151 §6 : ajouter des entrées aux menus des fichiers ; sans elle, le générateur produit `KOSAPP0027` et l'OS ignore les entrées, voir [`context-menu.md`](context-menu.md#entrées-des-apps-dans-les-menus-des-fichiers-chantier-4)) |
 | `cloud-accounts.manage` | **dangereuse** (`KazoCloudAccounts` et le montage d'un lecteur cloud par `KazoDriveInfo.MountNetworkDriveAsync`, ADR 0270 ; déclarée par l'Explorateur de fichiers, Paramètres et `mount`) |
+| `drives.provide` | **dangereuse** (ADR 0282 : fournir un type de lecteur réseau par `FeatureDefinition.DriveProviders` ; déclarable par une fonctionnalité seulement, `manifest.feature.only` et `KOSAPP0033` sinon ; voir [`drive-providers.md`](drive-providers.md)) |
 | `permissions.manage` | **dangereuse** (`KazoPermissionAdministration`, ADR 0056 §9 ; déclarée par Paramètres) |
 | `server.connection.manage` | **dangereuse** (`KazoServerConnection`, ADR 0056 §10 ; déclarée par Paramètres) |
 | `system.power` | **dangereuse** (`KazoSystem` : redémarrage, réinitialisation, ADR 0056 §11 ; déclarée par Paramètres) |
