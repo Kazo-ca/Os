@@ -22,16 +22,21 @@ document décrit le code livré ; l'ADR reste la référence des décisions.
 | Pièce | Projet | Rôle |
 | --- | --- | --- |
 | `ICloudAccountTokens` | Platform.Core (`CloudDrives/`) | Ce qu'un connecteur voit des comptes : le compte, un jeton d'accès, son renouvellement après un refus, la fenêtre de reconnexion. `CloudAccountService` l'implémente. |
-| `CloudDriveConnection` | Platform.Core (`CloudDrives/`) | Lien d'un lecteur à son compte : ajoute le jeton, le renouvelle une fois après un 401, traduit réseau, délai, 502/503/504 et 429 ; état de la permission. |
-| `CloudDriveSource` | Platform.Core (`CloudDrives/`) | Base des sources cloud (`INetworkDriveSource`) : lecteur d'un compte déjà connecté, aucune fenêtre, réouverture sans réseau. |
-| `DropboxDriveSource`, `DropboxFolder` | Platform.Core (`CloudDrives/Dropbox/`) | Le connecteur Dropbox (API v2, `HttpClient`). |
-| `DropboxApi`, `DropboxPaths` | Platform.Core (`CloudDrives/Dropbox/`) | Requêtes, métadonnées, erreurs et chemins Dropbox (internes). |
+| `CloudDriveConnection` | Platform.CloudDrives | Lien d'un lecteur à son compte : ajoute le jeton, le renouvelle une fois après un 401, traduit réseau, délai, 502/503/504 et 429 ; état de la permission. |
+| `CloudDriveSource` | Platform.CloudDrives | Base des sources cloud (`INetworkDriveSource`) : lecteur d'un compte déjà connecté, aucune fenêtre, réouverture sans réseau. |
+| `DropboxDriveSource`, `DropboxFolder` | Platform.CloudDrives (`Dropbox/`) | Le connecteur Dropbox (API v2, `HttpClient`). |
+| `DropboxApi`, `DropboxPaths` | Platform.CloudDrives (`Dropbox/`) | Requêtes, métadonnées, erreurs et chemins Dropbox (internes). |
 | `CloudHostFolderContractTests` | Tests Platform.Core (`CloudDrives/`) | Suite de contrat commune, abstraite. |
 | `FakeCloudAccountTokens`, `FakeDropboxServer` | Tests Platform.Core (`CloudDrives/`) | Comptes factices ; faux Dropbox derrière un `HttpMessageHandler`. |
 
-La source Dropbox est inscrite comme `INetworkDriveSource` dans
-`EcosystemServiceCollectionExtensions` ; `NetworkDriveService` la reçoit avec
-les autres sources.
+Depuis l'ADR 0282 §5, les connecteurs sont dans leur propre assemblage,
+`Platform/Kazo.Os.Platform.CloudDrives` (espaces de noms inchangés,
+`Kazo.Os.Platform.Core.CloudDrives.*`) ; `ICloudAccountTokens` reste dans
+Platform.Core, qui l'implémente. La source Dropbox est inscrite comme
+`INetworkDriveSource` par `AddKazoOsShippedCloudDrives`
+(`CloudDriveServiceCollectionExtensions`, derrière un `SwitchableDriveSource`)
+quand le build la garde ; `NetworkDriveService` la reçoit avec les autres
+sources. Voir [`cloud-drives.md`](cloud-drives.md#connecteurs-désactivables-adr-0282-5).
 
 ## Base commune
 

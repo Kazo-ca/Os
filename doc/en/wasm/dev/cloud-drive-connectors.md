@@ -23,16 +23,21 @@ decisions.
 | Piece | Project | Role |
 | --- | --- | --- |
 | `ICloudAccountTokens` | Platform.Core (`CloudDrives/`) | What a connector sees of the accounts: the account, an access token, its renewal after a refusal, the reconnection window. `CloudAccountService` implements it. |
-| `CloudDriveConnection` | Platform.Core (`CloudDrives/`) | A drive's link to its account: adds the token, renews it once after a 401, translates network, timeout, 502/503/504 and 429; permission state. |
-| `CloudDriveSource` | Platform.Core (`CloudDrives/`) | Base of the cloud sources (`INetworkDriveSource`): a drive of an account already connected, no window, reopened without network. |
-| `DropboxDriveSource`, `DropboxFolder` | Platform.Core (`CloudDrives/Dropbox/`) | The Dropbox connector (API v2, `HttpClient`). |
-| `DropboxApi`, `DropboxPaths` | Platform.Core (`CloudDrives/Dropbox/`) | Dropbox requests, metadata, errors and paths (internal). |
+| `CloudDriveConnection` | Platform.CloudDrives | A drive's link to its account: adds the token, renews it once after a 401, translates network, timeout, 502/503/504 and 429; permission state. |
+| `CloudDriveSource` | Platform.CloudDrives | Base of the cloud sources (`INetworkDriveSource`): a drive of an account already connected, no window, reopened without network. |
+| `DropboxDriveSource`, `DropboxFolder` | Platform.CloudDrives (`Dropbox/`) | The Dropbox connector (API v2, `HttpClient`). |
+| `DropboxApi`, `DropboxPaths` | Platform.CloudDrives (`Dropbox/`) | Dropbox requests, metadata, errors and paths (internal). |
 | `CloudHostFolderContractTests` | Platform.Core tests (`CloudDrives/`) | Shared contract suite, abstract. |
 | `FakeCloudAccountTokens`, `FakeDropboxServer` | Platform.Core tests (`CloudDrives/`) | Fake accounts; fake Dropbox behind an `HttpMessageHandler`. |
 
-The Dropbox source is registered as an `INetworkDriveSource` in
-`EcosystemServiceCollectionExtensions`; `NetworkDriveService` receives it with
-the other sources.
+Since ADR 0282 §5, the connectors live in their own assembly,
+`Platform/Kazo.Os.Platform.CloudDrives` (namespaces unchanged,
+`Kazo.Os.Platform.Core.CloudDrives.*`); `ICloudAccountTokens` stays in
+Platform.Core, which implements it. The Dropbox source is registered as an
+`INetworkDriveSource` by `AddKazoOsShippedCloudDrives`
+(`CloudDriveServiceCollectionExtensions`, behind a `SwitchableDriveSource`)
+when the build keeps it; `NetworkDriveService` receives it with the other
+sources. See [`cloud-drives.md`](cloud-drives.md#switchable-connectors-adr-0282-5).
 
 ## Shared base
 

@@ -34,6 +34,77 @@ réels qui restent à faire avant la fusion dans `main`.
   pas de trousseau : la fenêtre l'explique et ne propose que le dossier de
   l'ordinateur.
 
+## Connecteurs désactivables (ADR 0282 §5)
+
+Les trois connecteurs livrés sont dans leur propre assemblage,
+`Platform/Kazo.Os.Platform.CloudDrives` (paquet `Kazo.Os.Platform.CloudDrives`),
+sur le modèle de la mesure des ressources (ADR 0066). On peut en retirer un au
+build ou le cacher à l'exécution.
+
+**Au build.** `build/Kazo.Os.CloudDrives.targets`, importé par les trois hôtes,
+lit trois propriétés MSBuild, toutes à `true` par défaut :
+
+```bash
+dotnet publish OS/Kazo.Os.Ecosystem -c Release -p:KazoOsDropboxDrives=false
+dotnet publish OS/Kazo.Os.Ecosystem -c Release \
+  -p:KazoOsDropboxDrives=false -p:KazoOsOneDriveDrives=false -p:KazoOsS3Drives=false
+```
+
+| Propriété | Constante | Interrupteur d'exécution |
+| --- | --- | --- |
+| `KazoOsDropboxDrives` | `KAZOOS_DROPBOX_DRIVES` | `Kazo.Os.CloudDrives.Dropbox.IsSupported` |
+| `KazoOsOneDriveDrives` | `KAZOOS_ONEDRIVE_DRIVES` | `Kazo.Os.CloudDrives.OneDrive.IsSupported` |
+| `KazoOsS3Drives` | `KAZOOS_S3_DRIVES` | `Kazo.Os.CloudDrives.S3.IsSupported` |
+
+- Un connecteur à `false` n'est pas composé (`CloudDriveServiceCollectionExtensions`
+  dans `Kazo.Os.Ecosystem.Host`) : il n'est jamais proposé, et son fournisseur
+  OAuth non plus, même si `appsettings.json` a son identifiant d'app.
+- Les trois à `false` : l'hôte ne référence plus `Kazo.Os.Platform.CloudDrives`
+  et l'assemblage quitte le téléchargement (`KAZOOS_CLOUD_DRIVES` absent).
+  `build/publish-trimmed.sh --no-cloud-drives` le vérifie.
+- Chaque propriété devient aussi un `RuntimeHostConfigurationOption`
+  (`CloudDriveFeatures`), lu au démarrage : un connecteur éteint est ignoré même
+  quand l'assemblage reste pour un autre.
+- Comme pour l'ADR 0066, la composition vit dans `Kazo.Os.Ecosystem.Host` :
+  poser les propriétés dans un `Directory.Build.props` ou en ligne de commande
+  pour tout le graphe. Le paquet NuGet `Kazo.Os.Ecosystem.Host` est construit
+  avec les trois connecteurs ; un hôte d'un autre dépôt les cache par le réglage
+  d'exécution ci-dessous.
+
+**À l'exécution**, sans republier, deux listes qui s'additionnent (le fichier
+système ne rallume jamais un type éteint par l'hôte ou le build) :
+
+```json
+"KazoOs": { "CloudDrives": { "Disabled": "dropbox, s3" } }
+```
+
+```ini
+# /etc/kazoos/cloud-drives.config (couche système)
+disabled = onedrive
+```
+
+`Disabled` accepte aussi un tableau JSON (`["dropbox", "s3"]`) ; les types sont
+séparés par des virgules, des points-virgules ou des espaces, sans égard à la
+casse. Le fichier est relu à chaque question : un changement vaut tout de
+suite. Un type désactivé n'est plus proposé nulle part : `GetNetworkDriveTypesAsync`
+(Explorateur ▸ Connecter un lecteur réseau…, `mount -t`) ne le rend plus,
+`NetworkDriveService` refuse d'en monter un nouveau, et Paramètres ▸ Comptes
+cloud ne liste plus son fournisseur (`CloudProviderCatalog`). Chaque connecteur
+est inscrit derrière un `SwitchableDriveSource` (Platform.Core) qui pose cette
+question.
+
+### Lecteurs existants d'un type désactivé
+
+Un lecteur monté avant que son type soit désactivé (par le réglage d'exécution, le fichier système ou une publication qui laisse le connecteur de côté) n'est pas perdu :
+
+- à l'ouverture de session suivante, `NetworkDriveService.RestoreAsync` garde sa ligne dans `~/.local/state/kazoos/network-drives.json` mais ne le monte pas ; il n'apparaît ni dans l'Explorateur ni dans `mount` ;
+- la ligne survit aux réécritures de la table (un autre lecteur monté ou démonté) ;
+- son point de montage reste réservé : ni un nom par défaut ni un `mount` explicite ne le reprennent (`InvalidMountPoint`) ;
+- le type réactivé, le lecteur revient à l'ouverture de session suivante, avec ses clés ;
+- une désactivation en cours de session ne démonte pas les lecteurs déjà montés : ils restent jusqu'à la fermeture de session.
+
+Seuls les trois types livrés (`dropbox`, `onedrive`, `s3`) sont gardés ainsi ; une ligne d'un type qu'aucune version n'a livré est toujours abandonnée, comme avant. L'affichage grisé de ces lecteurs (« fournisseur absent », ADR 0282 §3) vient avec le chantier 4.
+
 ## Carte des documents
 
 | Pièce | Chantier | Document |

@@ -54,7 +54,7 @@ bibliothèque liste sa surface dans `PublicAPI.Shipped.txt` (la 1.0, gelée) et
 |---|---|
 | `Kazo.Os.App.Abstractions`, `Kazo.Os.Simulation.Abstractions`, `Kazo.Os.Theming.Abstractions`, `Kazo.Os.AppSdk`, `.Blazor`, `.Terminal`, `.Web`, `.Web.Blazor`, `.Craft`, `.Icons`, `.VirtualKeyboard` | le SDK public, ce qu'une app référence (`.Craft` : module des apps Craft, livré avec l'OS, ADR 0259) (`.FileView` n'en fait plus partie depuis la 2.0 : son code est dans l'explorateur de fichiers) ; `Kazo.Os.AppSdk` porte aussi l'analyseur `KOSBG` de `KazoBackground` dans `analyzers/dotnet/cs/` (ADR 0140, [`background-jobs.md`](background-jobs.md)) |
 | `Kazo.Os.App.Build` | l'intégration de build (voir plus bas) |
-| `Kazo.Os.Platform.Core`, `.Blazor`, `.ResourceAccounting`, `.WorkerHost`, `Kazo.Os.Infrastructure.Browser`, `Kazo.Os.Windowing.Abstractions`, `.Core`, `.Blazor`, `Kazo.Os.Taskbar.Blazor`, `Kazo.Os.Theming.Blazor`, `Kazo.Os.MobileShell.Blazor`, `Kazo.Os.Server.Contracts` | la plateforme, ce qu'un hôte compose (`Server.Contracts` est une dépendance de `Platform.Core`) |
+| `Kazo.Os.Platform.Core`, `.Blazor`, `.ResourceAccounting`, `.CloudDrives`, `.WorkerHost`, `Kazo.Os.Infrastructure.Browser`, `Kazo.Os.Windowing.Abstractions`, `.Core`, `.Blazor`, `Kazo.Os.Taskbar.Blazor`, `Kazo.Os.Theming.Blazor`, `Kazo.Os.MobileShell.Blazor`, `Kazo.Os.Server.Contracts` | la plateforme, ce qu'un hôte compose (`Server.Contracts` est une dépendance de `Platform.Core` ; `.CloudDrives` : connecteurs Dropbox, OneDrive et S3, référencé par l'hôte selon `build/Kazo.Os.CloudDrives.targets` (ADR 0282 §5)) |
 | `Kazo.Os.Ecosystem.Host` | l'OS lui-même : bureau, démarrage, services, adaptateurs du navigateur, jetons de design |
 | `Kazo.Os.Apps.*` (13 apps), `Kazo.Os.Commands` | les apps de base, chacune avec ses manifestes |
 | `Kazo.Os.Templates` | les modèles `dotnet new` |
@@ -250,6 +250,7 @@ app n'est touchée : ces types ne font pas partie du SDK.
 | 2.0.0 | `Kazo.Os.Ecosystem.Host` | n'enregistre plus `IShellIconProvider` (ADR 0161 §1) | rien : le contrôle de fichiers garde ses icônes par défaut |
 | 2.0.0 | `Kazo.Os.Apps.FileExplorer` | les types de l'ancienne `FileView` sont dans `Kazo.Os.Apps.FileExplorer.FileControl` et dérivent de `KazoComponentBase` ; `FileConflictDialog`, `FilePropertiesDialog`, `OpenWithDialog`, `FileExplorerDialogBase`, `PublishSiteContextMenuProvider`, `ZipFileContextMenuProvider` et `FileExplorerState.ViewMode` sont retirés (desk/3 à desk/5) | passer par les contrats `kazoos.file-view` et `kazoos.file-dialogs` |
 | 2.0.0 | `Kazo.Os.Apps.CodeEditor` | `CodeEditorExplorer` perd `OnDeleteRequested`, `OwnerAppId`, `Watch` et `Dispose` ; le constructeur public de `CodeEditorWorkspace` est retiré (desk/3) | utiliser `KazoFileView` |
+| 3.5.0 | `Kazo.Os.Platform.Core` | les connecteurs `Kazo.Os.Platform.Core.CloudDrives.*` (`CloudDriveConnection`, `CloudDriveSource`, Dropbox, OneDrive, S3) passent dans le paquet `Kazo.Os.Platform.CloudDrives`, même espace de noms ; `ICloudAccountTokens` reste (ADR 0282 §5) : rupture binaire pour un hôte qui les compose lui-même, aucune pour une app | référencer `Kazo.Os.Platform.CloudDrives`, ou laisser `AddKazoOsEcosystem` les composer |
 
 ## SDK 1.1
 
