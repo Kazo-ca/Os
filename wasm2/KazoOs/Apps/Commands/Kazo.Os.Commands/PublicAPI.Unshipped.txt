@@ -1,1 +1,16 @@
 #nullable enable
+Kazo.Os.Commands.Kazorole.KazoroleApp
+Kazo.Os.Commands.Kazorole.KazoroleApp.KazoroleApp() -> void
+Kazo.Os.Commands.Kazorole.KazoroleCommand
+override Kazo.Os.Commands.Kazorole.KazoroleApp.Id.get -> string!
+Kazo.Os.Commands.Kazorole.KazoroleCommand.KazoroleCommand(Kazo.Os.App.Abstractions.AppManifest! manifest) -> void
+override Kazo.Os.Commands.Kazorole.KazoroleApp.Name.get -> string!
+override Kazo.Os.Commands.Kazorole.KazoroleApp.Kind.get -> Kazo.Os.App.Abstractions.AppKind
+override Kazo.Os.Commands.Kazorole.KazoroleApp.EntryPoint.get -> System.Type!
+override Kazo.Os.Commands.Kazorole.KazoroleApp.PublisherId.get -> string!
+override Kazo.Os.Commands.Kazorole.KazoroleApp.Description.get -> string!
+override Kazo.Os.Commands.Kazorole.KazoroleApp.LaunchVisibility.get -> Kazo.Os.App.Abstractions.AppLaunchVisibility
+override Kazo.Os.Commands.Kazorole.KazoroleApp.Capabilities.get -> System.Collections.Generic.IReadOnlyList<string!>!
+override Kazo.Os.Commands.Kazorole.KazoroleApp.Terminal.get -> Kazo.Os.App.Abstractions.TerminalCommand?
+override Kazo.Os.Commands.Kazorole.KazoroleApp.Resources.get -> Kazo.Os.App.Abstractions.AppResourceProfileManifest!
+override Kazo.Os.Commands.Kazorole.KazoroleCommand.ExecuteAsync(Kazo.Os.AppSdk.TerminalExecutionContext! context, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<int>

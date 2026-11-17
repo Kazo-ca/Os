@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Usage" xml:space="preserve">
+    <value>usage: kazorole list | grant &lt;user&gt; &lt;role&gt; | revoke &lt;user&gt; &lt;role&gt;</value>
+  </data>
+  <data name="NoRoles" xml:space="preserve">
+    <value>kazorole: no installed feature declares a role</value>
+  </data>
+  <data name="NoHolder" xml:space="preserve">
+    <value>-</value>
+  </data>
+  <data name="AdministratorsImplicit" xml:space="preserve">
+    <value>Administrators hold every role, implicitly.</value>
+  </data>
+  <data name="RootRequired" xml:space="preserve">
+    <value>kazorole: only root may grant or take back a role (use sudo)</value>
+  </data>
+  <data name="UnknownUser" xml:space="preserve">
+    <value>kazorole: user '{0}' does not exist</value>
+  </data>
+  <data name="AdministratorHoldsAll" xml:space="preserve">
+    <value>kazorole: {0} is an administrator and already holds every role, {1} included; nothing changed</value>
+  </data>
+  <data name="Granted" xml:space="preserve">
+    <value>kazorole: {0} now holds the role {1}</value>
+  </data>
+  <data name="AlreadyHeld" xml:space="preserve">
+    <value>kazorole: {0} already holds the role {1}</value>
+  </data>
+  <data name="Revoked" xml:space="preserve">
+    <value>kazorole: {0} no longer holds the role {1}</value>
+  </data>
+  <data name="NotHeld" xml:space="preserve">
+    <value>kazorole: {0} did not hold the role {1}</value>
+  </data>
+  <data name="AuthenticationFailed" xml:space="preserve">
+    <value>kazorole: authentication failure</value>
+  </data>
+</root>
