@@ -221,8 +221,22 @@ public static class KazoDirectory
         Stack<VirtualPath> missing = new();
         for (VirtualPath? current = target; current is { } candidate; current = KazoFileSystemCore.ParentOf(candidate))
         {
-            FileSystemEntrySnapshot? snapshot = await KazoFileSystemCore.TryStatAsync(
-                gateway, candidate, FileSystemLinkBehavior.Follow, KazoEntryTarget.Directory, cancellationToken).ConfigureAwait(false);
+            FileSystemEntrySnapshot? snapshot;
+            try
+            {
+                snapshot = await KazoFileSystemCore.TryStatAsync(
+                    gateway, candidate, FileSystemLinkBehavior.Follow, KazoEntryTarget.Directory, cancellationToken).ConfigureAwait(false);
+            }
+            catch (KazoUnauthorizedAccessException) when (candidate != target)
+            {
+                // The app may create below a parent it may not look at: an app with only
+                // filesystem.private.* creating ~/.config/<appId>/ cannot stat ~/.config (issue #407).
+                // Like mkdir, which needs search permission on the parents but not read, start
+                // creating from here; the filesystem still checks each creation, so a parent that is
+                // really missing or not writable fails there with its own error.
+                break;
+            }
+
             if (snapshot is null)
             {
                 missing.Push(candidate);

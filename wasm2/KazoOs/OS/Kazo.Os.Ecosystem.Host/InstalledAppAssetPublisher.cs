@@ -148,7 +148,7 @@ public sealed class InstalledAppAssetPublisher
 
             if (_served)
             {
-                await ServeAsync(app, cancellationToken).ConfigureAwait(false);
+                await ServeAsync(app, static _ => true, linkStyles: true, cancellationToken).ConfigureAwait(false);
             }
             else
             {
@@ -157,6 +157,50 @@ public sealed class InstalledAppAssetPublisher
             }
 
             _published.Add(app.AppId);
+        }
+        finally
+        {
+            _gate.Release();
+        }
+    }
+
+    /// <summary>
+    /// Serves only the icons (<c>presentation.iconAssetPaths</c>) of <paramref name="apps"/>, so the
+    /// launcher, the Start menu and the desktop show them before the app's first launch in the
+    /// session (issue #420). It loads no assembly, links no style sheet and does not count as the
+    /// app's publication: its first launch still serves all its files. Called at boot for every
+    /// installed app and after an install or update for the apps it brought. Never throws for a file
+    /// or table failure (it is logged); only <paramref name="cancellationToken"/> stops it.
+    /// </summary>
+    /// <param name="apps">The installed apps whose icons are served.</param>
+    /// <param name="cancellationToken">Cancels the publication.</param>
+    public async Task PublishIconsAsync(IReadOnlyList<InstalledApp> apps, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(apps);
+        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            foreach (InstalledApp app in apps)
+            {
+                HashSet<string> icons = new(app.Manifest.Presentation.IconAssetPaths, StringComparer.Ordinal);
+                if (icons.Count == 0 || _published.Contains(app.AppId))
+                {
+                    continue;
+                }
+
+                if (!_served)
+                {
+                    // Same rule as a launch (ADR 0225): without a worker, a later call asks again.
+                    _served = await PrepareAsync(cancellationToken).ConfigureAwait(false);
+                    if (!_served)
+                    {
+                        _logger?.LogInformation("apps: no service worker serves this page yet, installed apps' icons wait for their launch");
+                        return;
+                    }
+                }
+
+                await ServeAsync(app, asset => icons.Contains(asset.Path), linkStyles: false, cancellationToken).ConfigureAwait(false);
+            }
         }
         finally
         {
@@ -201,12 +245,12 @@ public sealed class InstalledAppAssetPublisher
         await _cache.RemoveAsync(stale, cancellationToken).ConfigureAwait(false);
     }
 
-    private async Task ServeAsync(InstalledApp app, CancellationToken cancellationToken)
+    private async Task ServeAsync(InstalledApp app, Func<AssetManifest, bool> include, bool linkStyles, CancellationToken cancellationToken)
     {
         string styles = GetScopedCssBundlePath(app);
         List<string> assetPaths = [];
         List<ServedFileRequest> requests = [];
-        foreach (AssetManifest asset in app.Manifest.Assets)
+        foreach (AssetManifest asset in app.Manifest.Assets.Where(include))
         {
             if (!AppPackage.IsSafeRelativePath(asset.Path))
             {
@@ -255,7 +299,7 @@ public sealed class InstalledAppAssetPublisher
         }
 
         _logger?.LogInformation("apps: {Count} wwwroot/ file(s) of {AppId} {Version} served", served, app.AppId, app.Version);
-        if (stylesServed)
+        if (stylesServed && linkStyles)
         {
             await LinkStylesAsync(app, stylesUrl, cancellationToken).ConfigureAwait(false);
         }

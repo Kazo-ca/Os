@@ -1,1 +1,3 @@
 #nullable enable
+Kazo.Os.Server.Contracts.Proxy.ProxyPolicyResponse.AccountGrantedApps.get -> System.Collections.Generic.IReadOnlyList<string!>?
+Kazo.Os.Server.Contracts.Proxy.ProxyPolicyResponse.AccountGrantedApps.init -> void

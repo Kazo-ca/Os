@@ -378,7 +378,25 @@
     <ItemGroup>
       <FileWrites Include="$(_KazoOsPackLibraries)" />
     </ItemGroup>
-    <Exec Command="&quot;$(_KazoOsDotnetHost)&quot; &quot;$(_KazoOsManifestGeneratorPath)&quot; pack --manifest &quot;%(_KazoOsPackManifest.Identity)&quot; --bin &quot;$(_KazoOsPackBin)&quot; --webroot &quot;$(MSBuildProjectDirectory)/wwwroot&quot; --output &quot;$(_KazoOsPackOutput)&quot;$(_KazoOsPackWebAssetsArgument) --libraries &quot;$(_KazoOsPackLibraries)&quot;" />
+    <!--
+      ADR 0277 §2: the package is checked against the API surface of the trimmed OS, the same check
+      kazopkg runs at install time. The surface is KazoOsApiSurfaceFile when set, else the one
+      Kazo.Os.App.Build carries (its own OS version), else, in this repository, the one the last
+      trimmed publish of the Ecosystem wrote. KazoOsApiCheck=false turns KOSAPP0100 into the warning
+      KOSAPP0101; with no surface at all, KOSAPP0102 says the package was not checked. That last
+      surface can be older than the code being packed, so in this repository it only warns unless
+      KazoOsApiCheck=true (build/publish-trimmed.sh packs its fixtures right after publishing, with it).
+    -->
+    <PropertyGroup>
+      <_KazoOsPackApiCheck>$(KazoOsApiCheck)</_KazoOsPackApiCheck>
+      <_KazoOsPackApiSurface>$(KazoOsApiSurfaceFile)</_KazoOsPackApiSurface>
+      <_KazoOsPackApiSurface Condition="'$(_KazoOsPackApiSurface)' == '' and '$(KazoOsBuildFromPackage)' == 'true'">$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', 'api-surface', 'kazoos-api-surface.json.gz'))</_KazoOsPackApiSurface>
+      <_KazoOsPackApiCheck Condition="'$(_KazoOsPackApiSurface)' == '' and '$(_KazoOsPackApiCheck)' == ''">false</_KazoOsPackApiCheck>
+      <_KazoOsPackApiSurface Condition="'$(_KazoOsPackApiSurface)' == ''">$(_KazoOsRepoRoot)OS/Kazo.Os.Ecosystem/obj/Release/net10.0/kazoos-api-surface.json.gz</_KazoOsPackApiSurface>
+      <_KazoOsPackApiArgument> --api-surface &quot;$(_KazoOsPackApiSurface)&quot;</_KazoOsPackApiArgument>
+      <_KazoOsPackApiArgument Condition="'$(_KazoOsPackApiCheck)' == 'false'">$(_KazoOsPackApiArgument) --api-check warning</_KazoOsPackApiArgument>
+    </PropertyGroup>
+    <Exec Command="&quot;$(_KazoOsDotnetHost)&quot; &quot;$(_KazoOsManifestGeneratorPath)&quot; pack --manifest &quot;%(_KazoOsPackManifest.Identity)&quot; --bin &quot;$(_KazoOsPackBin)&quot; --webroot &quot;$(MSBuildProjectDirectory)/wwwroot&quot; --output &quot;$(_KazoOsPackOutput)&quot;$(_KazoOsPackWebAssetsArgument) --libraries &quot;$(_KazoOsPackLibraries)&quot;$(_KazoOsPackApiArgument)" />
   </Target>
 
   <!-- ===================================================================================== -->
@@ -616,6 +634,29 @@
       -->
       <TrimmerRootAssembly Include="System.Linq;System.Text.RegularExpressions;System.Threading.Channels"
                            Condition="'$(KazoOsKeepAppFrameworkLibraries)' != 'false'" />
+    </ItemGroup>
+  </Target>
+
+  <!--
+    ADR 0277 §1: a trimmed publish of a host writes the API surface it ships (kazoos-api-surface.json.gz:
+    every assembly ILLink wrote, with its types, methods and fields), read from the linked assemblies
+    before Webcil wraps them. It lands next to wwwroot/ in the publish folder, so the site never serves
+    it; KazoOsPack checks an app against it (ADR 0277 §2). KazoOsWriteApiSurface=false skips it.
+  -->
+  <Target Name="_KazoOsWriteApiSurface"
+          AfterTargets="ILLink"
+          DependsOnTargets="_KazoOsResolveManifestGeneratorPath"
+          Condition="'$(KazoOsAppHost)' == 'true' and '$(PublishTrimmed)' == 'true' and '$(KazoOsWriteApiSurface)' != 'false'">
+    <PropertyGroup>
+      <_KazoOsApiSurfaceVersion>$(KazoOsVersion)</_KazoOsApiSurfaceVersion>
+      <_KazoOsApiSurfaceVersion Condition="'$(_KazoOsApiSurfaceVersion)' == ''">$(Version)</_KazoOsApiSurfaceVersion>
+      <_KazoOsApiSurfaceFile>$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(IntermediateOutputPath)', 'kazoos-api-surface.json.gz'))</_KazoOsApiSurfaceFile>
+      <_KazoOsLinkedDir>$([MSBuild]::NormalizeDirectory('$(MSBuildProjectDirectory)', '$(IntermediateLinkDir)'))</_KazoOsLinkedDir>
+    </PropertyGroup>
+    <Exec Command="&quot;$(_KazoOsDotnetHost)&quot; &quot;$(_KazoOsManifestGeneratorPath)&quot; api-surface --linked &quot;$(_KazoOsLinkedDir.TrimEnd('/').TrimEnd('\'))&quot; --version &quot;$(_KazoOsApiSurfaceVersion)&quot; --output &quot;$(_KazoOsApiSurfaceFile)&quot;" />
+    <ItemGroup>
+      <FileWrites Include="$(_KazoOsApiSurfaceFile)" />
+      <ResolvedFileToPublish Include="$(_KazoOsApiSurfaceFile)" RelativePath="kazoos-api-surface.json.gz" CopyToPublishDirectory="PreserveNewest" />
     </ItemGroup>
   </Target>
 

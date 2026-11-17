@@ -1,1 +1,34 @@
 #nullable enable
+Kazo.Os.AppSdk.Net.IAppNetworkGateway.GetRelayStateAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.Net.KazoRelayState!>
+Kazo.Os.AppSdk.Net.IAppNetworkGateway.RelayStateChanged -> System.EventHandler<Kazo.Os.AppSdk.Net.KazoRelayState!>?
+Kazo.Os.AppSdk.Net.KazoNetworkError.RelayDisabled = 11 -> Kazo.Os.AppSdk.Net.KazoNetworkError
+Kazo.Os.AppSdk.Net.KazoNetworkError.RelayGrantPending = 12 -> Kazo.Os.AppSdk.Net.KazoNetworkError
+Kazo.Os.AppSdk.Net.KazoNetworkError.RelayNoServer = 10 -> Kazo.Os.AppSdk.Net.KazoNetworkError
+Kazo.Os.AppSdk.Net.KazoRealNetwork
+Kazo.Os.AppSdk.Net.KazoRelayException
+Kazo.Os.AppSdk.Net.KazoRelayException.Code.get -> string!
+Kazo.Os.AppSdk.Net.KazoRelayException.KazoRelayException(Kazo.Os.AppSdk.Net.KazoNetworkError reason, System.Net.Sockets.SocketError socketError, string? message = null) -> void
+Kazo.Os.AppSdk.Net.KazoRelayException.Reason.get -> Kazo.Os.AppSdk.Net.KazoNetworkError
+Kazo.Os.AppSdk.Net.KazoRelayState
+Kazo.Os.AppSdk.Net.KazoRelayState.<Clone>$() -> Kazo.Os.AppSdk.Net.KazoRelayState!
+Kazo.Os.AppSdk.Net.KazoRelayState.Deconstruct(out Kazo.Os.AppSdk.Net.KazoRelayStatus Status) -> void
+Kazo.Os.AppSdk.Net.KazoRelayState.Equals(Kazo.Os.AppSdk.Net.KazoRelayState? other) -> bool
+Kazo.Os.AppSdk.Net.KazoRelayState.KazoRelayState(Kazo.Os.AppSdk.Net.KazoRelayStatus Status) -> void
+Kazo.Os.AppSdk.Net.KazoRelayState.Status.get -> Kazo.Os.AppSdk.Net.KazoRelayStatus
+Kazo.Os.AppSdk.Net.KazoRelayState.Status.init -> void
+Kazo.Os.AppSdk.Net.KazoRelayState.TcpBlockedPorts.get -> System.Collections.Generic.IReadOnlyList<int>!
+Kazo.Os.AppSdk.Net.KazoRelayState.TcpBlockedPorts.init -> void
+Kazo.Os.AppSdk.Net.KazoRelayState.UdpBlockedPorts.get -> System.Collections.Generic.IReadOnlyList<int>!
+Kazo.Os.AppSdk.Net.KazoRelayState.UdpBlockedPorts.init -> void
+Kazo.Os.AppSdk.Net.KazoRelayStatus
+Kazo.Os.AppSdk.Net.KazoRelayStatus.GrantPending = 2 -> Kazo.Os.AppSdk.Net.KazoRelayStatus
+Kazo.Os.AppSdk.Net.KazoRelayStatus.NoServer = 0 -> Kazo.Os.AppSdk.Net.KazoRelayStatus
+Kazo.Os.AppSdk.Net.KazoRelayStatus.Ready = 3 -> Kazo.Os.AppSdk.Net.KazoRelayStatus
+Kazo.Os.AppSdk.Net.KazoRelayStatus.RelayDisabled = 1 -> Kazo.Os.AppSdk.Net.KazoRelayStatus
+override Kazo.Os.AppSdk.Net.KazoRelayState.Equals(object? obj) -> bool
+override Kazo.Os.AppSdk.Net.KazoRelayState.GetHashCode() -> int
+override Kazo.Os.AppSdk.Net.KazoRelayState.ToString() -> string!
+static Kazo.Os.AppSdk.Net.KazoRealNetwork.GetRelayStateAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.Net.KazoRelayState!>
+static Kazo.Os.AppSdk.Net.KazoRealNetwork.RelayStateChanged -> System.EventHandler<Kazo.Os.AppSdk.Net.KazoRelayState!>?
+static Kazo.Os.AppSdk.Net.KazoRelayState.operator !=(Kazo.Os.AppSdk.Net.KazoRelayState? left, Kazo.Os.AppSdk.Net.KazoRelayState? right) -> bool
+static Kazo.Os.AppSdk.Net.KazoRelayState.operator ==(Kazo.Os.AppSdk.Net.KazoRelayState? left, Kazo.Os.AppSdk.Net.KazoRelayState? right) -> bool

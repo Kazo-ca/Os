@@ -57,4 +57,13 @@
   <data name="Usage" xml:space="preserve">
     <value>Usage: wget [OPTION]... [URL]...</value>
   </data>
+  <data name="Relay.NoServer" xml:space="preserve">
+    <value>no Kazo server is connected to relay it</value>
+  </data>
+  <data name="Relay.Disabled" xml:space="preserve">
+    <value>the Kazo server's relay is turned off</value>
+  </data>
+  <data name="Relay.GrantPending" xml:space="preserve">
+    <value>the Kazo server has not received this command's permission yet</value>
+  </data>
 </root>

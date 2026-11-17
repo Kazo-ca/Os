@@ -28,8 +28,10 @@ namespace Kazo.Os.Platform.Core.Network;
 /// on its own, whether to relay the call to the real Internet: the app must hold
 /// <c>network.real.access</c> and the optional server must be connected and hand out an access
 /// token (ADR 0023, 0028, 0035). The token, the server URL and even whether a server exists never
-/// reach the app: a missing route is just "host not found", like a machine without a default
-/// gateway.
+/// reach the app: a missing route is "no server" (<see cref="KazoNetworkError.RelayNoServer"/>,
+/// ADR 0278) for an app holding <c>network.real.access</c>, and "host not found" for the others,
+/// like a machine without a default gateway. <see cref="GetRelayStateAsync"/> tells the app
+/// beforehand whether the relay works.
 /// </para>
 /// <para>
 /// What the relay carries (ADR 0102): any HTTP method with its headers and body, a single-port TCP
@@ -55,7 +57,7 @@ namespace Kazo.Os.Platform.Core.Network;
 /// is never relayed to the real Internet.
 /// </para>
 /// </remarks>
-public sealed class AppNetworkGateway : IAppNetworkGateway
+public sealed partial class AppNetworkGateway : IAppNetworkGateway
 {
     // ADR 0210 §5: a real page can be slow; 30 s is the most the server allows for one relay call.
     private const int ProxyTimeoutSeconds = 30;
@@ -336,7 +338,7 @@ public sealed class AppNetworkGateway : IAppNetworkGateway
 
         if (!CanRelay(hostNameOrAddress) || await TryOpenRealRouteAsync(cancellationToken).ConfigureAwait(false) is not { } real)
         {
-            return KazoNetworkResult<IKazoSocket>.Failure(KazoNetworkError.HostNotFound);
+            return KazoNetworkResult<IKazoSocket>.Failure(CanRelay(hostNameOrAddress) ? NoRealRouteError() : KazoNetworkError.HostNotFound);
         }
 
         // The socket's buffers are charged to the process for as long as it stays open.
@@ -454,14 +456,20 @@ public sealed class AppNetworkGateway : IAppNetworkGateway
     }
 
     /// <summary>
-    /// What an app sees of a relay refusal: a policy refusal (port, address range) is a firewall
-    /// REJECT, a missing server grant or a disabled relay is no route at all.
+    /// What an app sees of a relay refusal of a socket (ADR 0278 §2): a rule of the operator (port,
+    /// address range) is "blocked by the administrator", which the SDK still throws as a REJECT
+    /// (<c>ConnectionRefused</c>); a disabled relay or a grant the server has not received says so,
+    /// and the SDK still throws them as "host not found". A simulated domain refused by the relay is
+    /// "host not found": that name does not exist on the Internet.
     /// </summary>
-    private static KazoNetworkError ToNetworkError(string errorCode) => errorCode switch
+    internal static KazoNetworkError ToNetworkError(string errorCode) => errorCode switch
     {
-        ProxyErrorCode.ConnectionRefused or ProxyErrorCode.BlockedPort or ProxyErrorCode.BlockedAddress => KazoNetworkError.ConnectionRefused,
+        ProxyErrorCode.ConnectionRefused => KazoNetworkError.ConnectionRefused,
+        ProxyErrorCode.BlockedPort or ProxyErrorCode.BlockedAddress => KazoNetworkError.BlockedByAdministrator,
         ProxyErrorCode.HostUnreachable => KazoNetworkError.HostUnreachable,
-        ProxyErrorCode.GrantMissing or ProxyErrorCode.RelayDisabled or ProxyErrorCode.SimulatedDomainBlocked => KazoNetworkError.HostNotFound,
+        ProxyErrorCode.GrantMissing => KazoNetworkError.RelayGrantPending,
+        ProxyErrorCode.RelayDisabled => KazoNetworkError.RelayDisabled,
+        ProxyErrorCode.SimulatedDomainBlocked => KazoNetworkError.HostNotFound,
         ProxyErrorCode.TlsFailed => KazoNetworkError.TlsFailed,
         _ => KazoNetworkError.ConnectionFailed
     };
@@ -645,7 +653,8 @@ public sealed class AppNetworkGateway : IAppNetworkGateway
                 if (!CanRelay(currentUri.Host)
                     || (realRoute ??= await TryOpenRealRouteAsync(cancellationToken).ConfigureAwait(false)) is not { } real)
                 {
-                    return (KazoNetworkResult<KazoHttpResponse>.Failure(KazoNetworkError.HostNotFound), first.IsLocal);
+                    return (KazoNetworkResult<KazoHttpResponse>.Failure(
+                        CanRelay(currentUri.Host) ? NoRealRouteError() : KazoNetworkError.HostNotFound), first.IsLocal);
                 }
 
                 (SimulatedHttpResponse? relayed, KazoNetworkError? relayError, string? relayMessage, untyped) = await SendRealHopAsync(
@@ -1240,8 +1249,10 @@ public sealed class AppNetworkGateway : IAppNetworkGateway
     internal static KazoNetworkError MapRelayError(string? proxyErrorCode) => proxyErrorCode switch
     {
         ProxyErrorCode.BlockedAddress or ProxyErrorCode.BlockedPort or ProxyErrorCode.DnsRebindingBlocked
-            or ProxyErrorCode.GrantMissing or ProxyErrorCode.RelayDisabled or ProxyErrorCode.CapabilityDenied
-            or ProxyErrorCode.SimulatedDomainBlocked => KazoNetworkError.BlockedByAdministrator,
+            or ProxyErrorCode.CapabilityDenied or ProxyErrorCode.SimulatedDomainBlocked => KazoNetworkError.BlockedByAdministrator,
+        // ADR 0278 §2: the two refusals an app can explain to its user say so.
+        ProxyErrorCode.GrantMissing => KazoNetworkError.RelayGrantPending,
+        ProxyErrorCode.RelayDisabled => KazoNetworkError.RelayDisabled,
         ProxyErrorCode.Timeout => KazoNetworkError.TimedOut,
         ProxyErrorCode.TooManyRedirects => KazoNetworkError.TooManyRedirects,
         ProxyErrorCode.ConnectionRefused => KazoNetworkError.ConnectionRefused,

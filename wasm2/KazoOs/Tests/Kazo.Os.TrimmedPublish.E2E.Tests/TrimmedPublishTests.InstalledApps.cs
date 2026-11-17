@@ -100,6 +100,8 @@ public sealed partial class TrimmedPublishTests
             await WaitForTerminalTextAsync(rows, text => text.Contains("available now", StringComparison.Ordinal), "the end of the installation");
             Log("the test package was installed.");
             session.AssertNoErrors("kazopkg install");
+            await WaitForProbeIconAsync(page);
+            Log("its icon is served before its first launch (issue #420).");
 
             // --- Without a restart (ADR 0214 §1): an app never loaded opens at once ---
             await OpenAppAsync(page, ProbeAppName);
@@ -119,6 +121,8 @@ public sealed partial class TrimmedPublishTests
             // --- Restart (ADR 0182, Q5 C): the app joins the catalog at boot ---
             await page.ReloadAsync(new PageReloadOptions { WaitUntil = WaitUntilState.DOMContentLoaded });
             await SignInAsync(page);
+            await WaitForProbeIconAsync(page);
+            Log("after the restart, its icon is served before the app is opened (issue #420).");
             await OpenAppAsync(page, ProbeAppName);
 
             ILocator status = page.Locator("[data-probe-status]");
@@ -158,6 +162,16 @@ public sealed partial class TrimmedPublishTests
             throw;
         }
     }
+
+    /// <summary>
+    /// Issue #420: the icon the launcher, the Start menu and the desktop ask for answers 200 before
+    /// the app is opened in the session.
+    /// </summary>
+    private static async Task WaitForProbeIconAsync(IPage page) =>
+        await page.WaitForFunctionAsync(
+            $"async () => (await fetch('{ProbeContent}images/dot.svg', {{ cache: 'no-store' }})).status === 200",
+            null,
+            new PageWaitForFunctionOptions { Timeout = StepTimeoutMs, PollingInterval = 500 });
 
     /// <summary>
     /// The published service worker (on the address where index.html registers it) answers a file the

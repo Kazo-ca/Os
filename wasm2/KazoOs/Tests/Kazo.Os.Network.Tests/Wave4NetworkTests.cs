@@ -311,6 +311,8 @@ public sealed partial class Wave4NetworkTests
 
         Assert.Equal(6, exitCode);
         Assert.Contains("Could not resolve host", stderrWriter.ToString());
+        // ADR 0278 §2: curl holds network.real.access, so it says why it cannot reach the host.
+        Assert.Contains("no Kazo server is connected to relay it", stderrWriter.ToString());
     }
 
     [Fact]

@@ -23,6 +23,20 @@
 
 .mobile-home-layer, .mobile-app-layer { position: absolute; inset: 0; }
 
+/* Issue #408: like a phone's status bar, the shade handle has a strip of its own above the active
+   app (the notch's safe area plus the handle), so the buttons at the top of an app get its touches.
+   The home screen keeps the full height: it already leaves this room (MobileHomeScreen.razor.css). */
+.mobile-shell {
+    --kos-mobile-top-inset: calc(1.75rem + env(safe-area-inset-top));
+}
+
+.mobile-app-layer { top: var(--kos-mobile-top-inset); }
+
+.mobile-app-layer:not([hidden]) ~ .mobile-shade-handle {
+    background: var(--kos-mobile-status-bar-background, var(--kos-bg-surface, #151c20));
+    border-bottom: 1px solid var(--kos-border, #315249);
+}
+
 /* ADR 0217 §2: with a wallpaper, the home screen lets it show and keeps its texts readable on it. */
 .mobile-shell-workspace:has(> .desktop-wallpaper) ::deep .mobile-home-screen {
     background: transparent;
@@ -36,14 +50,15 @@
 
 .mobile-shade-handle {
     position: absolute;
-    top: env(safe-area-inset-top);
+    top: 0;
     left: 0;
     right: 0;
     display: flex;
     align-items: flex-start;
     justify-content: center;
-    height: 1.75rem;
-    padding: 0;
+    box-sizing: border-box;
+    height: var(--kos-mobile-top-inset);
+    padding: env(safe-area-inset-top) 0 0;
     border: none;
     background: transparent;
     cursor: pointer;
