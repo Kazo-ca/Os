@@ -99,7 +99,7 @@ public sealed class SettingsNavigationTests
         Assert.Contains(full, static page => page.Id == SettingsWindow.BackupPageId);
         Assert.Contains(full, static page => page.Id == SettingsWindow.ApplicationPageId);
         // ADR 0250: Storage is listed on every host; it says « unknown » where the browser tells nothing.
-        Assert.Equal(23, minimal.Count);
+        Assert.Equal(24, minimal.Count);
         Assert.Equal(SettingsWindow.AllPages.Count, full.Count);
     }
 

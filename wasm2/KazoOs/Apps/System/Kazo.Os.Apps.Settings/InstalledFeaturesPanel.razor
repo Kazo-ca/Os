@@ -1,0 +1,119 @@
+@inherits Kazo.Os.AppSdk.Blazor.KazoComponentBase
+@using Kazo.Os.AppSdk.Administration
+@using Kazo.Os.AppSdk.Apps
+
+@*
+    Settings ▸ Features ▸ Installed features (ADR 0249 §1): each feature with its entry points, the
+    permissions and roles it declares, the apps that depend on it, and its actions. Enabling and
+    disabling reuse the install row of InstalledAppsPanel; "Details" opens the app page (AppDetailsPanel).
+*@
+<div class="setting-group features-panel">
+    <h4>@L["Features.Title"]</h4>
+    <p class="setting-desc">@L["Features.Description"]</p>
+
+    @if (!string.IsNullOrEmpty(Notice))
+    {
+        <p class="features-notice" role="status">@Notice</p>
+    }
+
+    @if (_features is null)
+    {
+        <p class="setting-desc">@L["Common.Loading"]</p>
+    }
+    else if (_features.Count == 0)
+    {
+        <div class="features-empty">
+            <p>@L["Features.Empty"]</p>
+            <button type="button" class="apps-btn" @onclick="() => OpenInStoreAsync(null)">@L["Features.OpenStore"]</button>
+        </div>
+    }
+    else
+    {
+        @foreach (KazoAppInstallInfo feature in _features)
+        {
+            <article class="feature-card" aria-labelledby="@TitleId(feature)">
+                <header class="feature-card-header">
+                    <span class="feature-card-mark" aria-hidden="true">◈</span>
+                    <div>
+                        <h5 id="@TitleId(feature)">@feature.App.Name</h5>
+                        <p class="feature-card-meta"><code>@feature.App.Id</code> · v@(feature.App.Version) · @feature.App.PublisherId</p>
+                    </div>
+                </header>
+
+                @if (!string.IsNullOrWhiteSpace(feature.App.Description))
+                {
+                    <p class="setting-desc">@feature.App.Description</p>
+                }
+
+                <section class="feature-facts">
+                    <h6>@L["Features.EntryPoints"]</h6>
+                    <ul class="feature-list">
+                        @foreach (KazoAppInstallInfo entryPoint in EntryPointsOf(feature.App.Id))
+                        {
+                            <li>
+                                <span class="feature-item-name">@entryPoint.App.Name</span>
+                                <span class="feature-badge">@KindLabel(entryPoint.App.Kind)</span>
+                                @if (entryPoint.App.RequiresRole is { } role)
+                                {
+                                    <span class="feature-badge is-role">@L["Features.RequiresRole", role]</span>
+                                }
+                            </li>
+                        }
+                    </ul>
+
+                    @if (feature.App.ProvidedCapabilities.Count > 0)
+                    {
+                        <h6>@L["Features.Permissions"]</h6>
+                        <ul class="feature-list">
+                            @foreach (string capability in feature.App.ProvidedCapabilities)
+                            {
+                                <li><code>@capability</code></li>
+                            }
+                        </ul>
+                    }
+
+                    @if (feature.App.Roles.Count > 0)
+                    {
+                        <h6>@L["Features.Roles"]</h6>
+                        <ul class="feature-list">
+                            @foreach (KazoFeatureRole role in feature.App.Roles)
+                            {
+                                <li><span class="feature-item-name">@role.Title</span> <code>@role.Id</code></li>
+                            }
+                        </ul>
+                    }
+
+                    <h6>@L["Features.Dependents"]</h6>
+                    @if (DependentsOf(feature.App.Id) is { Count: > 0 } dependents)
+                    {
+                        <ul class="feature-list">
+                            @foreach (KazoPackageDependent dependent in dependents)
+                            {
+                                <li>@dependent.Name <code>@dependent.AppId</code></li>
+                            }
+                        </ul>
+                    }
+                    else
+                    {
+                        <p class="setting-desc">@L["Features.NoDependents"]</p>
+                    }
+                </section>
+
+                <InstalledAppsPanel OnlyAppId="@feature.App.Id" />
+
+                <div class="feature-actions">
+                    <button type="button" class="apps-btn" @onclick="() => ShowDetails.InvokeAsync(feature.App.Id)">@L["Features.Details"]</button>
+                    <button type="button" class="apps-btn" @onclick="() => OpenInStoreAsync(feature.App.Id)">@L["Features.OpenInStore"]</button>
+                </div>
+                <p class="setting-desc feature-remove">
+                    @LocalizedMarkup.Format(L["Features.Remove"], LocalizedMarkup.Code($"sudo kazopkg remove --system {feature.App.Id}"))
+                </p>
+            </article>
+        }
+    }
+
+    @if (!string.IsNullOrEmpty(_message))
+    {
+        <p class="apps-message" role="alert">@_message</p>
+    }
+</div>

@@ -57,6 +57,21 @@ public sealed record KazoAppInfo(
     /// </summary>
     public string? ParentId { get; init; }
 
+    /// <summary>
+    /// Gets the role of its feature a user must hold to see this entry point (ADR 0247 §2), or
+    /// <see langword="null"/> when it is open to every user. Settings ▸ Features shows it (ADR 0249 §1).
+    /// </summary>
+    public string? RequiresRole { get; init; }
+
+    /// <summary>Gets the roles a feature declares (ADR 0247 §1); empty for any other app.</summary>
+    public IReadOnlyList<Kazo.Os.AppSdk.Administration.KazoFeatureRole> Roles { get; init; } = [];
+
+    /// <summary>
+    /// Gets the identifiers of the permissions a feature declares for other apps to ask for
+    /// (ADR 0246); empty for any other app. Settings ▸ Features shows them (ADR 0249 §1).
+    /// </summary>
+    public IReadOnlyList<string> ProvidedCapabilities { get; init; } = [];
+
     /// <summary>Builds the public description of a manifest. Called by the platform's catalog gateway.</summary>
     /// <param name="manifest">Validated manifest.</param>
     /// <param name="isSystemApp">Whether the host declares the app as a system app.</param>
@@ -80,7 +95,11 @@ public sealed record KazoAppInfo(
             Urls = manifest.Web is { } web ? [.. web.Urls] : [],
             Capabilities = [.. manifest.Capabilities],
             IconUrl = KazoAppAssets.IconUrlOf(manifest),
-            ParentId = manifest.Parent
+            ParentId = manifest.Parent,
+            RequiresRole = manifest.RequiresRole,
+            Roles = [.. (manifest.Roles ?? []).Select(role =>
+                new Kazo.Os.AppSdk.Administration.KazoFeatureRole(role.Id, role.Title, manifest.Id, manifest.Name))],
+            ProvidedCapabilities = [.. (manifest.ProvidedCapabilities ?? []).Select(static capability => capability.Id)]
         };
     }
 }

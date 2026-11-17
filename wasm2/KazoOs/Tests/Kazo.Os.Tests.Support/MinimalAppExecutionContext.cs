@@ -40,7 +40,8 @@ public sealed class MinimalAppExecutionContext(
     Kazo.Os.AppSdk.Administration.IAppUserAccountsGateway? userAccounts = null,
     Kazo.Os.AppSdk.Administration.IAppServerConnectionGateway? serverConnection = null,
     Kazo.Os.AppSdk.CloudAccounts.IAppCloudAccountsGateway? cloudAccounts = null,
-    Kazo.Os.AppSdk.Storage.IAppStorageGateway? storage = null) : IAppExecutionContext
+    Kazo.Os.AppSdk.Storage.IAppStorageGateway? storage = null,
+    Kazo.Os.AppSdk.Apps.IAppManagementGateway? appManagement = null) : IAppExecutionContext
 {
     public AppManifest Manifest { get; } = manifest;
     public Guid InstanceId { get; } = Guid.NewGuid();
@@ -95,10 +96,31 @@ public sealed class MinimalAppExecutionContext(
     Kazo.Os.AppSdk.Storage.IAppStorageGateway IAppExecutionContext.Storage =>
         storage ?? Kazo.Os.AppSdk.Storage.UnsupportedAppStorageGateway.Instance;
 
+    // Without app management, every call throws NotSupportedException, as the interface's own default.
+    Kazo.Os.AppSdk.Apps.IAppManagementGateway IAppExecutionContext.AppManagement =>
+        appManagement ?? UnsupportedAppManagement.Instance;
+
     public Kazo.Os.AppSdk.IO.IAppDriveGateway Drives => drives ?? throw Unsupported(nameof(Drives));
 
     private static NotSupportedException Unsupported(string gatewayName) =>
         new($"'{gatewayName}' was not provided to this test's MinimalAppExecutionContext.");
+}
+
+/// <summary>Stands for the SDK's default app management of a context that wires none.</summary>
+file sealed class UnsupportedAppManagement : Kazo.Os.AppSdk.Apps.IAppManagementGateway
+{
+    public static readonly UnsupportedAppManagement Instance = new();
+
+    public ValueTask<IReadOnlyList<Kazo.Os.AppSdk.Apps.KazoAppInstallInfo>> GetAllAsync(CancellationToken cancellationToken = default) =>
+        throw new NotSupportedException("This IAppExecutionContext implementation does not provide an AppManagement gateway.");
+
+    public ValueTask<IReadOnlyList<string>> UninstallAsync(
+        string appId, Kazo.Os.AppSdk.Apps.KazoInstallScope scope, CancellationToken cancellationToken = default) =>
+        throw new NotSupportedException("This IAppExecutionContext implementation does not provide an AppManagement gateway.");
+
+    public ValueTask<IReadOnlyList<string>> ReinstallAsync(
+        string appId, Kazo.Os.AppSdk.Apps.KazoInstallScope scope, CancellationToken cancellationToken = default) =>
+        throw new NotSupportedException("This IAppExecutionContext implementation does not provide an AppManagement gateway.");
 }
 
 /// <summary>Stands for the SDK's default catalog of a context that wires none.</summary>

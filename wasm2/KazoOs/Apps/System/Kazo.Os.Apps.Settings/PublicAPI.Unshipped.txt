@@ -13,3 +13,19 @@ Kazo.Os.Apps.Settings.FeatureRolesPanel.Changed.get -> Microsoft.AspNetCore.Comp
 Kazo.Os.Apps.Settings.FeatureRolesPanel.Changed.set -> void
 override Kazo.Os.Apps.Settings.FeatureRolesPanel.OnInitializedAsync() -> System.Threading.Tasks.Task!
 ~override Kazo.Os.Apps.Settings.FeatureRolesPanel.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
+Kazo.Os.Apps.Settings.FeatureSettingsPageView
+Kazo.Os.Apps.Settings.FeatureSettingsPageView.FeatureSettingsPageView() -> void
+Kazo.Os.Apps.Settings.InstalledFeaturesPanel
+Kazo.Os.Apps.Settings.InstalledFeaturesPanel.InstalledFeaturesPanel() -> void
+override Kazo.Os.Apps.Settings.FeatureSettingsPageView.OnParametersSetAsync() -> System.Threading.Tasks.Task!
+Kazo.Os.Apps.Settings.FeatureSettingsPageView.DisposeAsync() -> System.Threading.Tasks.ValueTask
+~override Kazo.Os.Apps.Settings.FeatureSettingsPageView.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
+Kazo.Os.Apps.Settings.FeatureSettingsPageView.Page.get -> Kazo.Os.AppSdk.Blazor.Settings.FeatureSettingsPageInfo!
+Kazo.Os.Apps.Settings.FeatureSettingsPageView.Page.set -> void
+Kazo.Os.Apps.Settings.InstalledFeaturesPanel.Notice.get -> string?
+Kazo.Os.Apps.Settings.InstalledFeaturesPanel.Notice.set -> void
+Kazo.Os.Apps.Settings.InstalledFeaturesPanel.ShowDetails.get -> Microsoft.AspNetCore.Components.EventCallback<string!>
+Kazo.Os.Apps.Settings.InstalledFeaturesPanel.ShowDetails.set -> void
+override Kazo.Os.Apps.Settings.InstalledFeaturesPanel.OnInitializedAsync() -> System.Threading.Tasks.Task!
+Kazo.Os.Apps.Settings.InstalledFeaturesPanel.Dispose() -> void
+~override Kazo.Os.Apps.Settings.InstalledFeaturesPanel.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void

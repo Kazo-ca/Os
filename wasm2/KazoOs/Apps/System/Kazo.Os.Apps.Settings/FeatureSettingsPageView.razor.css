@@ -1,0 +1,43 @@
+.feature-page-host {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    min-height: 0;
+}
+
+.feature-page-header {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--kos-border, rgba(127, 127, 127, 0.3));
+}
+
+.feature-page-feature {
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--kos-accent, #7aa2f7);
+}
+
+.feature-page-header h4 {
+    margin: 0;
+}
+
+.feature-page-body {
+    min-height: 0;
+}
+
+.feature-page-message {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem;
+    background: var(--kos-surface-muted, rgba(127, 127, 127, 0.12));
+}
+
+.feature-page-message p {
+    margin: 0;
+}

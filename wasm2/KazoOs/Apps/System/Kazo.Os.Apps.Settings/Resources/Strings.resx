@@ -2280,4 +2280,67 @@
   <data name="Roles.Error" xml:space="preserve">
     <value>Role unchanged: {0}</value>
   </data>
+  <data name="Nav.Group.Features" xml:space="preserve">
+    <value>Features</value>
+  </data>
+  <data name="Tab.Features" xml:space="preserve">
+    <value>Installed features</value>
+  </data>
+  <data name="Details.Kind.SettingsPage" xml:space="preserve">
+    <value>Settings page</value>
+  </data>
+  <data name="Features.Title" xml:space="preserve">
+    <value>Installed features</value>
+  </data>
+  <data name="Features.Description" xml:space="preserve">
+    <value>The optional features of the OS, installed for the whole machine by an administrator. The pages they add follow in this section.</value>
+  </data>
+  <data name="Features.Empty" xml:space="preserve">
+    <value>No feature. The Kazo OS Store offers some.</value>
+  </data>
+  <data name="Features.OpenStore" xml:space="preserve">
+    <value>Open the Store</value>
+  </data>
+  <data name="Features.EntryPoints" xml:space="preserve">
+    <value>Entry points</value>
+  </data>
+  <data name="Features.RequiresRole" xml:space="preserve">
+    <value>role {0}</value>
+  </data>
+  <data name="Features.Permissions" xml:space="preserve">
+    <value>Permissions it declares</value>
+  </data>
+  <data name="Features.Roles" xml:space="preserve">
+    <value>Roles it declares</value>
+  </data>
+  <data name="Features.Dependents" xml:space="preserve">
+    <value>Apps that depend on it</value>
+  </data>
+  <data name="Features.NoDependents" xml:space="preserve">
+    <value>No installed app depends on it.</value>
+  </data>
+  <data name="Features.Details" xml:space="preserve">
+    <value>Details</value>
+  </data>
+  <data name="Features.OpenInStore" xml:space="preserve">
+    <value>Open in the Store</value>
+  </data>
+  <data name="Features.Remove" xml:space="preserve">
+    <value>To remove it: the Store, or {0}. The apps that depend on it are disabled.</value>
+  </data>
+  <data name="Features.StoreUnavailable" xml:space="preserve">
+    <value>The Store could not be opened.</value>
+  </data>
+  <data name="Features.PageUnavailable" xml:space="preserve">
+    <value>This page is not available to you: it requires a role you do not hold, or its feature is disabled.</value>
+  </data>
+  <data name="Features.Page.Reopen" xml:space="preserve">
+    <value>Open again</value>
+  </data>
+  <data name="Features.Page.Exited" xml:space="preserve">
+    <value>The page stopped.</value>
+  </data>
+  <data name="Features.Page.Failed" xml:space="preserve">
+    <value>The page could not start: {0}</value>
+  </data>
 </root>
