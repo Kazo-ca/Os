@@ -52,6 +52,7 @@ public static partial class AppManifestValidator
 
         ValidateCapabilities(manifest, errors);
         ValidateProvidedCapabilities(manifest, errors);
+        ValidateRoles(manifest, errors);
         if (manifest.Kind != AppKind.Feature)
         {
             // ADR 0260 §3: a feature's set may hold what its window children need; the feature itself never runs.
@@ -151,6 +152,13 @@ public static partial class AppManifestValidator
             }
         }
 
+        // ADR 0247 §2: an entry point is opened by a role its own feature declares.
+        HashSet<string> roles = new((feature.Roles ?? []).Select(static role => role.Id ?? string.Empty), StringComparer.Ordinal);
+        foreach (AppManifest child in children.Where(child => child.RequiresRole is { } role && !roles.Contains(role)))
+        {
+            AddError(errors, "manifest.feature.role-unknown", "requiresRole", $"'{child.Id}' requires the role '{child.RequiresRole}', which its feature '{feature.Id}' does not declare.");
+        }
+
         // ADR 0262 §1: a service runs with the capabilities of one child of the feature, or with the whole set.
         HashSet<string> childIds = new(children.Select(static child => child.Id ?? string.Empty), StringComparer.Ordinal);
         foreach (AppProvidedServiceManifest service in (feature.ProvidedServices ?? []).Where(service => service.EntryPoint is not null && !childIds.Contains(service.EntryPoint)))
@@ -167,6 +175,54 @@ public static partial class AppManifestValidator
     /// declared once, a dangerous one with its risk statement; it covers only permissions of the same
     /// feature, never one more dangerous than itself.
     /// </summary>
+    /// <summary>
+    /// ADR 0247 §1: only a feature declares roles, each under its permission prefix
+    /// (<c>&lt;prefix&gt;.&lt;name&gt;</c>, a lowercase name after the dot), with a title; only an entry
+    /// point of a feature names one in <c>requiresRole</c>.
+    /// </summary>
+    private static void ValidateRoles(AppManifest manifest, List<ManifestValidationError> errors)
+    {
+        if (manifest.RequiresRole is { } required && (manifest.Parent is null || string.IsNullOrWhiteSpace(required)))
+        {
+            AddError(errors, "manifest.role.requires-not-entry-point", "requiresRole", "Only an entry point of a feature names the role that opens it (ADR 0247 §2).");
+        }
+
+        IReadOnlyList<AppRoleManifest> roles = manifest.Roles ?? [];
+        if (roles.Count == 0)
+        {
+            return;
+        }
+
+        if (manifest.Kind != AppKind.Feature)
+        {
+            AddError(errors, "manifest.role.not-feature", "roles", "Only a feature declares roles (ADR 0247).");
+            return;
+        }
+
+        string? prefix = manifest.CapabilityPrefix;
+        if (!FeatureCapabilities.IsWellFormedPrefix(prefix))
+        {
+            AddError(errors, "manifest.role.prefix", "capabilityPrefix", "A feature that declares roles names its prefix, such as 'x86' (ADR 0247 §1).");
+            return;
+        }
+
+        ValidateUniqueValues(roles.Select(static role => role.Id ?? string.Empty), "roles", errors);
+        foreach (AppRoleManifest role in roles)
+        {
+            string id = role.Id ?? string.Empty;
+            string name = id.StartsWith(prefix + ".", StringComparison.Ordinal) ? id[(prefix!.Length + 1)..] : string.Empty;
+            if (name.Length == 0 || !name.All(static c => c is (>= 'a' and <= 'z') or (>= '0' and <= '9') or '-'))
+            {
+                AddError(errors, "manifest.role.id", "roles", $"The role '{id}' is not '{prefix}.<name>' with a lowercase name.");
+            }
+
+            if (string.IsNullOrWhiteSpace(role.Title))
+            {
+                AddError(errors, "manifest.role.title", "roles", $"The role '{id}' has no title.");
+            }
+        }
+    }
+
     private static void ValidateProvidedCapabilities(AppManifest manifest, List<ManifestValidationError> errors)
     {
         IReadOnlyList<AppProvidedCapabilityManifest> declared = manifest.ProvidedCapabilities ?? [];
