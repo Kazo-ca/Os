@@ -426,6 +426,9 @@ Cette section liste ce qui est publié dans la branche `main` et en ligne.
   n'est pas élaguée), et l'installation refuse avec la méthode exacte une app
   qui appelle une méthode que l'OS publié n'a pas, au lieu de la laisser
   planter. ([ADR 0242](dev/adr/0242-framework-api-for-installed-apps.md))
+  LINQ, les expressions régulières et les canaux (`System.Linq`,
+  `System.Text.RegularExpressions`, `System.Threading.Channels`) sont aussi
+  entiers. ([ADR 0280](dev/adr/0280-keep-linq-regex-channels-whole.md))
   Elle peut afficher ses propres pages HTML dans une iframe, avec des paramètres
   dans l'adresse, aussi une fois l'OS publié et hors ligne.
   ([ADR 0243](dev/adr/0243-serve-installed-app-pages.md))

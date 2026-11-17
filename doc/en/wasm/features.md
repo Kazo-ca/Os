@@ -411,6 +411,9 @@ This section lists what is released in the `main` branch and online.
   trimmed), and the install refuses, with the exact method, an app that calls
   a method the published OS lacks, instead of letting it crash.
   ([ADR 0242](dev/adr/0242-framework-api-for-installed-apps.md))
+  LINQ, regular expressions and channels (`System.Linq`,
+  `System.Text.RegularExpressions`, `System.Threading.Channels`) are whole
+  too. ([ADR 0280](dev/adr/0280-keep-linq-regex-channels-whole.md))
   It can show its own HTML pages in an iframe, with parameters in the address,
   also once the OS is published and offline.
   ([ADR 0243](dev/adr/0243-serve-installed-app-pages.md))
