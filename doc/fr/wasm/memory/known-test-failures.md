@@ -2,7 +2,7 @@
 
 # Échecs de tests préexistants connus
 
-État au **2026-10-30**. Ces tests échouent ou sont instables sur `main` sans
+État au **2026-11-16**. Ces tests échouent ou sont instables sur `main` sans
 lien avec une PR. Une PR qui les voit échouer les **nomme** dans sa section
 Tests ; elle ne les désactive pas, ne les ignore pas et ne les met pas en
 quarantaine. Si un de ces tests passe de nouveau de façon stable, le retirer de
@@ -11,21 +11,30 @@ cette liste. Les causes déjà trouvées et corrigées sont dans
 
 ## Échouent à chaque fois (conteneur cloud Linux)
 
-| Suite | Test | Symptôme |
-| --- | --- | --- |
-| `Kazo.Os.E2E.Tests` | `Window_runtime_renders_and_handles_mouse_and_touch_pointer_gestures`, `Window_runtime_handles_every_resize_edge_in_real_browser` | Délai dépassé ; toujours là après l'ADR 0177. |
-| `Kazo.Os.UI.E2E.Tests` | `Every_listed_surface_has_no_serious_axe_violation…`, `Representative_real_app_surfaces…` (axe) | `label-content-name-mismatch` sur `.launcher-trigger` et `.taskbar-clock` de la barre des tâches. |
-| `Kazo.Os.TrimmedPublish.E2E.Tests` | test de la Calculatrice (axe) | `label-content-name-mismatch` sur les touches MC, MR, M+, M-, AC, x². |
-| `Kazo.Os.UI.E2E.Tests` | `LowStorageSpaceTests.A_full_quota_warns_once…` | « No low-space notification within 60 s ». |
+Aucun.
+
+Corrigés le 2026-11-16 par la série `known-failures` (#493, PR #580 à #582) : les
+tests `Window_runtime_*` (vrais gestes stylet et tactile par CDP), les tests axe
+`label-content-name-mismatch` de la barre des tâches, du menu Démarrer et de la
+calculatrice, et `Trimmed_publish_boots_offline_after_the_first_load` (plus
+aucune requête réseau hors ligne). Les causes sont dans
+[`../dev/pitfalls.md`](../dev/pitfalls.md) §4. Le test instable `AppInstallationService` est corrigé par la même série
+(la surveillance d'`apps.config` démarre avant sa lecture), ainsi que
+`LowStorageSpaceTests` (une écriture refusée vaut disque plein, ADR 0279 ; le
+quota est posé avant la première navigation).
 
 ## Instables (passent seuls, échouent parfois sous charge)
 
-- `AppInstallationService` (tests unitaires) ;
 - `LocalNetworkTests` avec un web worker ;
 - le harnais E2E des fenêtres détachées ;
-- `Kazo.Os.UI.E2E.Tests` : `FileExplorerDownload` et `BrowserHomePage` quand
-  toute la suite tourne ;
+- `Kazo.Os.UI.E2E.Tests` : `FileExplorerDownload`, `BrowserHomePage` et
+  `FileExplorerUpload…non_empty_folder` (le fichier préparé n'apparaît pas en
+  30 s ; vu une fois le 2026-11-16, 3 passes sur 3 seul) quand toute la suite
+  tourne ;
 - `Kazo.Os.Platform.WorkerHost.Tests` : un test de temps.
+- `Kazo.Os.TrimmedPublish.E2E.Tests` : `Trimmed_publish_runs_every_app…` reste
+  parfois sur la page People de l'Intranet après le clic sur Board (vu une fois
+  sur deux passes le 2026-11-16).
 
 La CI relance une fois un test en échec et signale « Flaky test » s'il passe au
 second essai ([`../dev/ci-workflows.md`](../dev/ci-workflows.md)).

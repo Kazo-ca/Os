@@ -87,3 +87,99 @@
 .network-eject:disabled {
     cursor: progress;
 }
+
+/* Phone (Compact): the drives are chips of the places bar, like Home and Trash (FileExplorerMobileWindow.razor.css). */
+.network-chip {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-height: 2.25rem;
+    padding: 0 0.9rem;
+    border: 1px solid var(--kos-border, #30363d);
+    border-radius: 1.125rem;
+    background: transparent;
+    color: var(--kos-text-secondary, #8b949e);
+    font: inherit;
+    font-size: 0.9rem;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.network-chip.active {
+    color: var(--kos-accent, #42d392);
+    border-color: var(--kos-accent, #42d392);
+    background: var(--kos-list-selected-bg, var(--kos-accent-subtle, #123a2b));
+}
+
+.network-chip.disconnected {
+    opacity: 0.6;
+    font-style: italic;
+}
+
+.network-connect-chip {
+    border-style: dashed;
+}
+
+.network-chip-eject {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2.25rem;
+    min-height: 2.25rem;
+    border: none;
+    border-radius: 1.125rem;
+    background: transparent;
+    color: var(--kos-text-muted, #6e7681);
+    cursor: pointer;
+}
+
+.network-chip-eject:hover,
+.network-chip-eject:focus-visible {
+    color: var(--kos-danger, #f85149);
+}
+
+/* A cloud drive shows its account on the first line and its service (and start folder) below. */
+.network-drive-text {
+    display: inline-flex;
+    flex-direction: column;
+    line-height: 1.15;
+}
+
+.network-drive-detail {
+    font-size: 0.7rem;
+    color: var(--kos-text-muted, #6e7681);
+}
+
+.sidebar-entry.active .network-drive-detail {
+    color: inherit;
+    opacity: 0.8;
+}
+
+/* A drive whose provider is missing (ADR 0282 §5): greyed, with the reason and, when the Store has it, the install action. */
+.sidebar-entry.missing,
+.network-chip.missing {
+    opacity: 0.7;
+}
+
+.sidebar-entry.missing[aria-disabled="true"],
+.network-chip.missing[aria-disabled="true"] {
+    cursor: default;
+}
+
+.network-drive-action {
+    font-size: 0.7rem;
+    color: var(--kos-accent, #42d392);
+    text-decoration: underline;
+}
+
+/* Text for screen readers only: separates the lines of a drive's name when it is read aloud. */
+.network-sr {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+}

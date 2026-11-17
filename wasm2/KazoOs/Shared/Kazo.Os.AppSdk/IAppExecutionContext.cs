@@ -71,6 +71,19 @@ public interface IAppExecutionContext
     /// <summary>Gets the capabilities granted to this app instance by OS policy.</summary>
     IReadOnlySet<string> GrantedCapabilities { get; }
 
+    /// <summary>
+    /// Gets the roles of the installed features the acting user holds (ADR 0247 §1): those an
+    /// administrator granted them, or every declared role for an administrator. Empty by default.
+    /// </summary>
+    IReadOnlySet<string> Roles => NoRoles.Instance;
+
+    /// <summary>
+    /// Gets the OS's authentication of the sensitive operations of a feature, behind
+    /// <see cref="Kazo.Os.AppSdk.Features.KazoFeatureAuthentication"/> (ADR 0247 §3). Unsupported by default; the
+    /// trusted platform factory sets it for a feature and its entry points.
+    /// </summary>
+    Kazo.Os.AppSdk.Features.IKazoFeatureAuthentication FeatureAuthentication => Kazo.Os.AppSdk.Features.UnsupportedFeatureAuthentication.Instance;
+
     /// <summary>Gets the session this app instance belongs to.</summary>
     SessionId SessionId { get; }
 
@@ -346,6 +359,13 @@ public interface IAppExecutionContext
     WhatsNew.IAppWhatsNewGateway WhatsNew => UnsupportedAdministrationGateways.WhatsNew;
 
     /// <summary>
+    /// Gets this instance's gateway to the browser storage of the page, behind
+    /// <see cref="Storage.KazoStorage"/> (ADR 0250; no capability to read). Defaults to a gateway with
+    /// nothing to report; the trusted platform factory overrides it on a browser host.
+    /// </summary>
+    Storage.IAppStorageGateway Storage => Kazo.Os.AppSdk.Storage.UnsupportedAppStorageGateway.Instance;
+
+    /// <summary>
     /// Gets this instance's ability to host interactive shells (<c>shell.host</c>, ADR 0056
     /// section 7), read by <see cref="Shell.KazoShell"/>. Defaults to an unsupported gateway so
     /// existing <see cref="IAppExecutionContext"/> implementations that predate this member keep
@@ -398,6 +418,13 @@ public interface IAppExecutionContext
     /// factory overrides it.
     /// </summary>
     Kazo.Os.AppSdk.Keyring.IAppKeyringGateway Keyring => Kazo.Os.AppSdk.Keyring.UnsupportedAppKeyringGateway.Instance;
+
+    /// <summary>
+    /// Gets the session user's cloud accounts, behind <see cref="CloudAccounts.KazoCloudAccounts"/>
+    /// (ADR 0270; capability <c>cloud-accounts.manage</c>). Defaults to a host without cloud accounts
+    /// so existing implementations keep compiling; the trusted platform factory overrides it.
+    /// </summary>
+    CloudAccounts.IAppCloudAccountsGateway CloudAccounts => Kazo.Os.AppSdk.CloudAccounts.UnsupportedAppCloudAccountsGateway.Instance;
 
     /// <summary>
     /// Gets the session's effective accessibility preferences, behind

@@ -30,12 +30,19 @@ namespace Kazo.Os.Commands.Kazopkg;
 /// the page waits for a restart of Kazo OS, which the command says. <c>rollback</c> goes back to the
 /// version the last update kept, <c>repair</c> finishes or undoes an interrupted install (§3, §4).
 /// </para>
+/// <para>
+/// ADR 0248: <c>install</c> and <c>update</c> print the plan when the app pulls in dependencies
+/// (each package, its version, source, size and dangerous permissions) and ask for a confirmation;
+/// <c>remove</c> lists the apps that need the package and are disabled with it, and asks too.
+/// <c>--yes</c> answers for the user. A missing dependency stops the installation with its id and range.
+/// </para>
 /// </remarks>
 public sealed class KazopkgCommand(AppManifest manifest) : TerminalAppBase(manifest)
 {
     private const string UserOption = "--user";
     private const string SystemOption = "--system";
     private const string TrustedOption = "--trusted";
+    private const string YesOption = "--yes";
 
     /// <inheritdoc />
     public override async ValueTask<int> ExecuteAsync(TerminalExecutionContext context, CancellationToken cancellationToken)
@@ -73,6 +80,7 @@ public sealed class KazopkgCommand(AppManifest manifest) : TerminalAppBase(manif
             return 2;
         }
 
+        bool yes = options.Contains(YesOption);
         KazoPackageScope scope = options.Contains(UserOption) ? KazoPackageScope.User
             : options.Contains(SystemOption) ? KazoPackageScope.System
             : KazoPackageScope.Auto;
@@ -80,9 +88,9 @@ public sealed class KazopkgCommand(AppManifest manifest) : TerminalAppBase(manif
         {
             return verb switch
             {
-                "install" => await InstallAsync(context, operands[0], scope, cancellationToken),
-                "remove" => await RemoveAsync(context, operands[0], scope, cancellationToken),
-                "update" => await UpdateAsync(context, operands.Count == 0 ? null : operands[0], cancellationToken),
+                "install" => await InstallAsync(context, operands[0], scope, yes, cancellationToken),
+                "remove" => await RemoveAsync(context, operands[0], scope, yes, cancellationToken),
+                "update" => await UpdateAsync(context, operands.Count == 0 ? null : operands[0], yes, cancellationToken),
                 "rollback" => await RollbackAsync(context, operands[0], scope, cancellationToken),
                 "repair" => await RepairAsync(context, options.Contains(SystemOption), cancellationToken),
                 "list" => await ListAsync(context, cancellationToken),
@@ -117,6 +125,7 @@ public sealed class KazopkgCommand(AppManifest manifest) : TerminalAppBase(manif
         SystemOption => verb is "install" or "remove" or "rollback" or "repair",
         UserOption => verb is "install" or "remove" or "rollback",
         TrustedOption => verb == "sources" && operands.Count > 0 && operands[0] == "add",
+        YesOption => verb is "install" or "remove" or "update",
         _ => false
     };
 
@@ -144,14 +153,132 @@ public sealed class KazopkgCommand(AppManifest manifest) : TerminalAppBase(manif
     }
 
     private static async Task<int> InstallAsync(
-        TerminalExecutionContext context, string source, KazoPackageScope scope, CancellationToken cancellationToken)
+        TerminalExecutionContext context, string source, KazoPackageScope scope, bool yes, CancellationToken cancellationToken)
     {
         IStringLocalizer<Strings> text = context.App.GetLocalizer<Strings>();
         await context.StandardOutput.WriteLineAsync(text["Downloading", source]);
-        KazoPackageInstallReport report = await KazoAppPackages.InstallAsync(source, scope, cancellationToken);
+        KazoPackageInstallReport report;
+        try
+        {
+            // ADR 0248 §1: the plan is shown, and confirmed, before anything is written.
+            KazoPackageInstallPlan? plan = await PlanAsync(source, scope, cancellationToken);
+            if (plan is { HasDependencies: true })
+            {
+                await WritePlanAsync(context, plan);
+                if (!yes && !await ConfirmAsync(context, cancellationToken))
+                {
+                    await context.StandardError.WriteLineAsync(text["Cancelled"]);
+                    return 1;
+                }
+            }
+
+            // The version the user confirmed, not a newer one published in between.
+            string confirmed = plan?.Packages.LastOrDefault(static package => package.Requested) is { } requested && !source.Contains('@', StringComparison.Ordinal)
+                ? $"{source}@{requested.Version}"
+                : source;
+            report = await KazoAppPackages.InstallAsync(confirmed, scope, cancellationToken);
+        }
+        catch (Exception exception) when (exception is KazoUnauthorizedAccessException
+            || exception is KazoPackageException { Code: "apps.package.dependency-unresolved" or "apps.package.dependency-conflict" })
+        {
+            // ADR 0248 §1: a refusal or a missing dependency stops everything; nothing was installed.
+            await context.StandardError.WriteLineAsync(text["InstallStopped", source, exception.Message]);
+            return 1;
+        }
+
+        foreach (KazoPackageInstallReport dependency in report.Dependencies)
+        {
+            await WriteReportAsync(context, dependency);
+        }
+
         await WriteReportAsync(context, report);
+        foreach (string reactivated in report.Reactivated.Concat(report.ReactivatedDependents))
+        {
+            await context.StandardOutput.WriteLineAsync(text["Reactivated", reactivated]);
+        }
+
         return 0;
     }
+
+    /// <summary>The plan of an installation, or <see langword="null"/> on an OS that predates ADR 0248 (it then installs as before).</summary>
+    private static async Task<KazoPackageInstallPlan?> PlanAsync(string source, KazoPackageScope scope, CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await KazoAppPackages.PlanInstallAsync(source, scope, cancellationToken);
+        }
+        catch (NotSupportedException)
+        {
+            return null;
+        }
+    }
+
+    /// <summary>Prints a plan as <c>apt</c> lists what it installs: one line per package, then its dangerous permissions.</summary>
+    private static async Task WritePlanAsync(TerminalExecutionContext context, KazoPackageInstallPlan plan)
+    {
+        IStringLocalizer<Strings> text = context.App.GetLocalizer<Strings>();
+        await context.StandardOutput.WriteLineAsync(text["PlanHeader"]);
+        foreach (KazoPlannedPackage package in plan.Packages)
+        {
+            string version = package.PreviousVersion is { } from ? $"{from} -> {package.Version}" : package.Version;
+            string role = package.IsFeature ? text["PlanFeature"].Value
+                : package.Requested ? text["PlanRequested"].Value
+                : text["PlanDependency"].Value;
+            await context.StandardOutput.WriteLineAsync(text[
+                "PlanPackage",
+                package.Name,
+                version,
+                package.Source,
+                FormatSize(package.SizeBytes),
+                package.SystemWide ? text["ScopeSystem"].Value : text["ScopeUser"].Value,
+                role]);
+            if (package.DangerousCapabilities.Count > 0)
+            {
+                await context.StandardOutput.WriteLineAsync(text["PlanDangerous", string.Join(", ", package.DangerousCapabilities)]);
+            }
+        }
+
+        foreach (string reactivated in plan.Reactivated)
+        {
+            await context.StandardOutput.WriteLineAsync(text["PlanReactivated", reactivated]);
+        }
+
+        if (plan.RequiresAdministrator)
+        {
+            await context.StandardOutput.WriteLineAsync(text["PlanAdministrator"]);
+        }
+    }
+
+    /// <summary>Asks « Continuer ? [o/N] » on the terminal; an empty answer or the end of the input is no.</summary>
+    private static async Task<bool> ConfirmAsync(TerminalExecutionContext context, CancellationToken cancellationToken)
+    {
+        IStringLocalizer<Strings> text = context.App.GetLocalizer<Strings>();
+        await context.StandardOutput.WriteAsync(text["ConfirmPrompt"]);
+        await context.StandardOutput.FlushAsync(cancellationToken);
+        string? answer = (await context.StandardInput.ReadLineAsync(cancellationToken))?.Trim();
+        return answer is { Length: > 0 }
+            && (answer.Equals("y", StringComparison.OrdinalIgnoreCase)
+                || answer.Equals("yes", StringComparison.OrdinalIgnoreCase)
+                || answer.Equals(text["YesKey"], StringComparison.OrdinalIgnoreCase)
+                || answer.Equals(text["Yes"], StringComparison.OrdinalIgnoreCase));
+    }
+
+    /// <summary>A size as the plan prints it, in binary units.</summary>
+    private static string FormatSize(long bytes) => bytes switch
+    {
+        < 1024 => $"{bytes} B",
+        < 1024 * 1024 => string.Create(System.Globalization.CultureInfo.InvariantCulture, $"{bytes / 1024d:0.#} KiB"),
+        _ => string.Create(System.Globalization.CultureInfo.InvariantCulture, $"{bytes / (1024d * 1024d):0.#} MiB"),
+    };
+
+    /// <summary>
+    /// Gets whether the OS classifies a capability of the report dangerous (ADR 0246): its own list
+    /// when it gave one (features' permissions included), the built-in catalog otherwise.
+    /// </summary>
+    private static bool IsDangerous(KazoPackageInstallReport report, string capability) =>
+        report.DangerousCapabilities is { } dangerous
+            ? dangerous.Contains(capability, StringComparer.Ordinal)
+            : AppCapabilities.IsDangerous(capability);
 
     private static async Task WriteReportAsync(TerminalExecutionContext context, KazoPackageInstallReport report)
     {
@@ -184,9 +311,9 @@ public sealed class KazopkgCommand(AppManifest manifest) : TerminalAppBase(manif
         {
             await context.StandardOutput.WriteLineAsync(text[
                 "Capabilities",
-                string.Join(", ", report.Capabilities.Select(static capability =>
-                    AppCapabilities.IsDangerous(capability) ? $"{capability} (!)" : capability))]);
-            if (report.Capabilities.Any(AppCapabilities.IsDangerous))
+                string.Join(", ", report.Capabilities.Select(capability =>
+                    IsDangerous(report, capability) ? $"{capability} (!)" : capability))]);
+            if (report.Capabilities.Any(capability => IsDangerous(report, capability)))
             {
                 // ADR 0260 §3: the administrator's consent to the installation approved a feature's set.
                 await context.StandardOutput.WriteLineAsync(text[report.IsFeature ? "FeatureApproved" : "DangerousNote"]);
@@ -202,12 +329,38 @@ public sealed class KazopkgCommand(AppManifest manifest) : TerminalAppBase(manif
     }
 
     private static async Task<int> RemoveAsync(
-        TerminalExecutionContext context, string appId, KazoPackageScope scope, CancellationToken cancellationToken)
+        TerminalExecutionContext context, string appId, KazoPackageScope scope, bool yes, CancellationToken cancellationToken)
     {
         IStringLocalizer<Strings> text = context.App.GetLocalizer<Strings>();
+        IReadOnlyList<KazoPackageDependent> dependents;
+        try
+        {
+            dependents = await KazoAppPackages.GetDependentsAsync(appId, cancellationToken);
+        }
+        catch (NotSupportedException)
+        {
+            dependents = [];
+        }
+
+        if (dependents.Count > 0)
+        {
+            // ADR 0248 §3: they are disabled, not removed; their data stays.
+            await context.StandardOutput.WriteLineAsync(text["DependentsWarning", string.Join(", ", dependents.Select(static app => app.Name))]);
+            if (!yes && !await ConfirmAsync(context, cancellationToken))
+            {
+                await context.StandardError.WriteLineAsync(text["Cancelled"]);
+                return 1;
+            }
+        }
+
         KazoInstalledPackage removed = await KazoAppPackages.RemoveAsync(appId, scope, cancellationToken);
         // Loaded: the removed app stays in the page until the next restart (ADR 0214 §1).
         await context.StandardOutput.WriteLineAsync(text[removed.Loaded ? "RemovedRestart" : "Removed", removed.AppId, removed.Version]);
+        foreach (string disabled in removed.DisabledDependents)
+        {
+            await context.StandardOutput.WriteLineAsync(text["Disabled", disabled]);
+        }
+
         return 0;
     }
 
@@ -239,7 +392,7 @@ public sealed class KazopkgCommand(AppManifest manifest) : TerminalAppBase(manif
         return 0;
     }
 
-    private static async Task<int> UpdateAsync(TerminalExecutionContext context, string? appId, CancellationToken cancellationToken)
+    private static async Task<int> UpdateAsync(TerminalExecutionContext context, string? appId, bool yes, CancellationToken cancellationToken)
     {
         IStringLocalizer<Strings> text = context.App.GetLocalizer<Strings>();
         IReadOnlyList<KazoInstalledPackage> installed = await KazoAppPackages.GetInstalledAsync(cancellationToken);
@@ -258,6 +411,7 @@ public sealed class KazopkgCommand(AppManifest manifest) : TerminalAppBase(manif
             return 0;
         }
 
+        int failures = 0;
         foreach (KazoInstalledPackage package in targets)
         {
             KazoPackageInfo info = await KazoAppPackages.GetInfoAsync(package.Source, cancellationToken);
@@ -267,16 +421,21 @@ public sealed class KazopkgCommand(AppManifest manifest) : TerminalAppBase(manif
                 continue;
             }
 
-            await context.StandardOutput.WriteLineAsync(text["Downloading", $"{package.Source}@{info.Latest}"]);
             // An update keeps the copy where it is; a source no longer trusted asks an administrator again.
-            KazoPackageInstallReport report = await KazoAppPackages.InstallAsync(
+            // ADR 0248 §4: it follows the plan of an installation; a version out of a dependent's range is refused.
+            int code = await InstallAsync(
+                context,
                 $"{package.Source}@{info.Latest}",
                 package.SystemWide ? KazoPackageScope.System : KazoPackageScope.User,
+                yes,
                 cancellationToken);
-            await WriteReportAsync(context, report);
+            if (code != 0)
+            {
+                failures++;
+            }
         }
 
-        return 0;
+        return failures == 0 ? 0 : 1;
     }
 
     private static bool IsNewer(string candidate, string current) =>

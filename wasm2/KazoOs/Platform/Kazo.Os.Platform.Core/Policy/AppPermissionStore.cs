@@ -1,3 +1,4 @@
+using Kazo.Os.App.Abstractions;
 using Kazo.Os.Platform.Core.Settings;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -42,6 +43,17 @@ public interface IAppPermissionStore
     ValueTask WriteApprovedRealNetworkPortsAsync(
         string appId, IReadOnlyCollection<string>? ports, CancellationToken cancellationToken = default) => ValueTask.CompletedTask;
 
+    /// <summary>
+    /// Records, in the <c>[direct-network-hosts]</c> section of the machine file, the direct-network
+    /// hosts an administrator approved with <c>network.direct.access</c> (ADR 0282 §4), as an audited
+    /// system operation like <see cref="WriteMachineDecisionsAsync"/>.
+    /// </summary>
+    /// <param name="appId">App identifier.</param>
+    /// <param name="hosts">The approved declarations (<c>api.example.com</c>), or <see langword="null"/> to remove the line.</param>
+    /// <param name="cancellationToken">Cancels the write.</param>
+    ValueTask WriteApprovedDirectNetworkHostsAsync(
+        string appId, IReadOnlyCollection<string>? hosts, CancellationToken cancellationToken = default) => ValueTask.CompletedTask;
+
     /// <summary>Records <c>deny</c> lines in the session user's own file.</summary>
     /// <param name="appId">App identifier.</param>
     /// <param name="capabilities">Dangerous capabilities the user refused.</param>
@@ -77,6 +89,12 @@ public sealed class AppPermissionStore : IAppPermissionStore
         _logger = (ILogger?)logger ?? NullLogger.Instance;
     }
 
+    /// <summary>
+    /// Gets the catalog of capabilities the decisions are read against (ADR 0246 §3);
+    /// <see langword="null"/> for the built-in catalog alone.
+    /// </summary>
+    public ICapabilityCatalog? Capabilities { get; init; }
+
     /// <inheritdoc />
     public async ValueTask<AppPermissionDecisions> ReadAsync(CancellationToken cancellationToken = default)
     {
@@ -87,7 +105,8 @@ public sealed class AppPermissionStore : IAppPermissionStore
             machine,
             user,
             AppPermissionsDocument.MachineFile.Resolve(null).Value,
-            home is null ? "~/.config/kazoos/" + AppPermissionsDocument.FileName : AppPermissionsDocument.UserFile.Resolve(home).Value);
+            home is null ? "~/.config/kazoos/" + AppPermissionsDocument.FileName : AppPermissionsDocument.UserFile.Resolve(home).Value,
+            Capabilities ?? BuiltInCapabilityCatalog.Instance);
 
         foreach (string warning in decisions.Warnings)
         {
@@ -147,6 +166,27 @@ public sealed class AppPermissionStore : IAppPermissionStore
         string edited = ports is null
             ? AppPermissionsDocument.RemoveRealNetworkPorts(content, appId)
             : AppPermissionsDocument.SetRealNetworkPorts(content, appId, ports);
+        if (!string.Equals(edited, content, StringComparison.Ordinal))
+        {
+            // writer: null on a System file = audited system operation (OsSettingsService.WriteFileAsync).
+            await _settings.WriteFileAsync(AppPermissionsDocument.MachineFile, edited, writer: null, cancellationToken).ConfigureAwait(false);
+        }
+    }
+
+    /// <inheritdoc />
+    public async ValueTask WriteApprovedDirectNetworkHostsAsync(
+        string appId, IReadOnlyCollection<string>? hosts, CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(appId);
+        string? content = await _settings.ReadFileAsync(AppPermissionsDocument.MachineFile, cancellationToken).ConfigureAwait(false);
+        if (hosts is null && content is null)
+        {
+            return;
+        }
+
+        string edited = hosts is null
+            ? AppPermissionsDocument.RemoveDirectNetworkHosts(content, appId)
+            : AppPermissionsDocument.SetDirectNetworkHosts(content, appId, hosts);
         if (!string.Equals(edited, content, StringComparison.Ordinal))
         {
             // writer: null on a System file = audited system operation (OsSettingsService.WriteFileAsync).

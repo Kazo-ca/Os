@@ -296,7 +296,7 @@ public sealed partial class TrimmedPublishTests(ITestOutputHelper output)
     {
         await page.GetByRole(AriaRole.Button, new() { Name = "App launcher" }).ClickAsync();
         await page.GetByRole(AriaRole.Combobox, new() { Name = "Search applications" }).FillAsync(appName);
-        await page.GetByRole(AriaRole.Button, new() { Name = $"Launch {appName}", Exact = true }).ClickAsync();
+        await page.GetByRole(AriaRole.Button, new() { NameRegex = new Regex($"^Launch {Regex.Escape(appName)}(,|$)") }).ClickAsync();
     }
 
     /// <summary>Types a command line into the xterm.js screen, as a person would.</summary>
@@ -407,6 +407,7 @@ public sealed partial class TrimmedPublishTests(ITestOutputHelper output)
     private sealed class Session : IAsyncDisposable
     {
         private readonly List<string> _errors = [];
+        private readonly List<string> _notFoundOrigins = [];
         private IPlaywright _playwright = null!;
         private IBrowser _browser = null!;
 
@@ -426,6 +427,12 @@ public sealed partial class TrimmedPublishTests(ITestOutputHelper output)
             session.Page.SetDefaultTimeout(StepTimeoutMs);
             session.Page.Console += (_, message) =>
             {
+                if (message.Type == "error" && session.IsExpectedNotFound(message))
+                {
+                    output.WriteLine($"[trimmed] [console:expected] {message.Text} ({message.Location})");
+                    return;
+                }
+
                 if (message.Type == "error")
                 {
                     lock (session._errors)
@@ -449,6 +456,28 @@ public sealed partial class TrimmedPublishTests(ITestOutputHelper output)
                 output.WriteLine($"[trimmed] [pageerror] {error}");
             };
             return session;
+        }
+
+        /// <summary>
+        /// Accepts the <c>404</c> answers of <paramref name="origin"/>: a file system asks a server
+        /// whether a file exists before creating it, and the browser logs every <c>404</c> it gets
+        /// as a console error, although the OS expected it.
+        /// </summary>
+        public void ExpectNotFoundFrom(string origin)
+        {
+            lock (_errors)
+            {
+                _notFoundOrigins.Add(origin);
+            }
+        }
+
+        private bool IsExpectedNotFound(IConsoleMessage message)
+        {
+            lock (_errors)
+            {
+                return message.Text.Contains("status of 404", StringComparison.Ordinal)
+                    && _notFoundOrigins.Exists(origin => message.Location.StartsWith(origin + "/", StringComparison.Ordinal));
+            }
         }
 
         /// <summary>Fails when any console error or uncaught page error happened so far.</summary>

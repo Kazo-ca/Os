@@ -216,6 +216,29 @@ public sealed class AppCatalog
     /// <param name="contractType">Full name of the contract.</param>
     public AppServiceProvider? FindServiceProvider(string contractType) => GetServiceProviders(contractType) is [var first, ..] ? first : null;
 
+    /// <summary>
+    /// Gets the network drive types the features of the catalog provide (ADR 0282 §1), ordered by
+    /// feature id then type. The installer keeps one provider per type
+    /// (<c>apps.package.drive-type-already-provided</c>); when two features still declare the same
+    /// type, the first one in this order is the provider. Enablement is not checked here: callers
+    /// ask <see cref="Lifecycle.IAppEnablementRegistry"/>.
+    /// </summary>
+    public IReadOnlyList<AppDriveProviderRegistration> GetDriveProviders() =>
+        [.. Manifests.Values
+            .Where(static manifest => manifest.Kind == AppKind.Feature && manifest.DriveProviders is { Count: > 0 })
+            .OrderBy(static manifest => manifest.Id, StringComparer.Ordinal)
+            .SelectMany(static manifest => manifest.DriveProviders!
+                .OrderBy(static provider => provider.Type, StringComparer.Ordinal)
+                .Select(provider => new AppDriveProviderRegistration(manifest, provider)))];
+
+    /// <summary>Gets the provider of a network drive type (ADR 0282 §1), or <see langword="null"/> when no feature provides it.</summary>
+    /// <param name="type">The filesystem type, e.g. <c>exemple</c> (ordinal comparison).</param>
+    public AppDriveProviderRegistration? FindDriveProvider(string type)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(type);
+        return GetDriveProviders().FirstOrDefault(registration => string.Equals(registration.Provider.Type, type, StringComparison.Ordinal));
+    }
+
     /// <summary>Gets the children of a feature, in activation order; empty for any other app.</summary>
     /// <param name="featureId">The feature's identifier.</param>
     public IReadOnlyList<string> GetFeatureChildren(string featureId)
@@ -781,3 +804,8 @@ public sealed record AppCatalogBuildResult(
 /// <param name="Feature">The feature's manifest.</param>
 /// <param name="Service">The service.</param>
 public sealed record AppServiceProvider(AppManifest Feature, AppProvidedServiceManifest Service);
+
+/// <summary>A feature of the catalog and one network drive type it provides (ADR 0282 §1).</summary>
+/// <param name="Feature">The feature's manifest.</param>
+/// <param name="Provider">The drive type's declaration.</param>
+public sealed record AppDriveProviderRegistration(AppManifest Feature, AppDriveProviderManifest Provider);

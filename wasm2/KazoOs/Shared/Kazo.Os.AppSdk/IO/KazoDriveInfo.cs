@@ -6,7 +6,7 @@ public enum KazoDriveType
     /// <summary>A fixed disk: the IndexedDB disk behind <c>/</c>.</summary>
     Fixed,
 
-    /// <summary>A network drive: a folder of the host computer mounted in <c>/mnt</c> (ADR 0181).</summary>
+    /// <summary>A network drive: a folder of the host computer (ADR 0181) or a cloud storage (ADR 0267) mounted in <c>/mnt</c>.</summary>
     Network
 }
 
@@ -31,6 +31,72 @@ public sealed record KazoDriveSnapshot(
 
     /// <summary>Gets whether the drive can be read; a network drive is not until the browser grants its permission.</summary>
     public bool IsReady { get; init; } = true;
+
+    /// <summary>
+    /// Gets the id of the cloud account a network drive belongs to (ADR 0270), as
+    /// <see cref="CloudAccounts.KazoCloudAccount.Id"/> gives it; <see langword="null"/> for a folder
+    /// of the computer and for the other drives.
+    /// </summary>
+    public string? Account { get; init; }
+
+    /// <summary>
+    /// Gets the folder of the service a network drive starts at (<see cref="KazoNetworkDriveRequest.Root"/>),
+    /// relative to what its account reaches; <see langword="null"/> for the whole storage and for the other drives.
+    /// </summary>
+    public string? Root { get; init; }
+
+    /// <summary>
+    /// Gets why a network drive is kept without being mounted (ADR 0282 §3, §5);
+    /// <see cref="KazoDriveProviderMissingReason.None"/> for a mounted drive.
+    /// </summary>
+    public KazoDriveProviderMissingReason ProviderMissing { get; init; }
+
+    /// <summary>
+    /// Gets the id of the feature that provided the drive's type, for a drive kept while that feature is
+    /// removed or disabled; <see langword="null"/> otherwise.
+    /// </summary>
+    public string? ProviderFeatureId { get; init; }
+}
+
+/// <summary>
+/// What to mount as a network drive (ADR 0270), for <see cref="KazoDriveInfo.MountNetworkDriveAsync"/>.
+/// </summary>
+/// <param name="Type">
+/// The type of drive, as <c>mount -t</c> takes it: <c>hostfs</c> (a folder of the computer),
+/// <c>dropbox</c>, <c>onedrive</c> or <c>s3</c>. <see cref="KazoDriveInfo.GetNetworkDriveTypesAsync"/>
+/// lists the ones this OS can mount.
+/// </param>
+/// <param name="Account">
+/// The cloud account to use (<see cref="CloudAccounts.KazoCloudAccount.Id"/>); needed by
+/// <c>dropbox</c> and <c>onedrive</c>, optional for <c>s3</c> (its keys), ignored by <c>hostfs</c>.
+/// </param>
+/// <param name="Root">The folder of the service the drive starts at; <see langword="null"/> for the whole storage.</param>
+public sealed record KazoNetworkDriveRequest(string Type, string? Account = null, string? Root = null)
+{
+    /// <summary>
+    /// Gets the settings the user typed, none of them secret: for <c>s3</c>, <c>endpoint</c>,
+    /// <c>region</c>, <c>bucket</c>, <c>prefix</c> and <c>addressing</c> (<c>path</c> or
+    /// <c>virtual</c>); <see langword="null"/> for none.
+    /// </summary>
+    public IReadOnlyDictionary<string, string>? Options { get; init; }
+
+    /// <summary>
+    /// Gets the secrets the user typed, which the OS seals on the device and never shows again: for
+    /// <c>s3</c>, <c>access-key-id</c> and <c>secret-access-key</c>. <see cref="ToString"/> never
+    /// prints their values. <see langword="null"/> for none.
+    /// </summary>
+    public IReadOnlyDictionary<string, string>? Secrets { get; init; }
+
+    /// <summary>Prints the request without the values of <see cref="Secrets"/>, which must never reach a log.</summary>
+    private bool PrintMembers(System.Text.StringBuilder builder)
+    {
+        builder.Append("Type = ").Append(Type)
+            .Append(", Account = ").Append(Account)
+            .Append(", Root = ").Append(Root)
+            .Append(", Options = ").Append(Options is null ? "" : string.Join(";", Options.Select(static pair => pair.Key + "=" + pair.Value)))
+            .Append(", Secrets = ").Append(Secrets is null ? "" : string.Join(";", Secrets.Keys.Select(static key => key + "=***")));
+        return true;
+    }
 }
 
 /// <summary>
@@ -60,6 +126,44 @@ public interface IAppDriveGateway
     /// <summary>Unmounts a network drive.</summary>
     ValueTask UnmountAsync(string mountPoint, CancellationToken cancellationToken = default) =>
         throw new NotSupportedException("This drive gateway cannot mount host folders.");
+
+    /// <summary>
+    /// Gets the types of network drive a user can mount here (ADR 0270): <c>hostfs</c> when the
+    /// browser has the folder dialog, <c>dropbox</c> and <c>onedrive</c> when the OS has their app
+    /// ids, <c>s3</c> when the OS has the connector. None by default.
+    /// </summary>
+    ValueTask<IReadOnlyList<string>> GetNetworkDriveTypesAsync(CancellationToken cancellationToken = default) =>
+        ValueTask.FromResult<IReadOnlyList<string>>([]);
+
+    /// <summary>
+    /// Describes the types of network drive a user can mount here (ADR 0282 §5): the same types as
+    /// <see cref="GetNetworkDriveTypesAsync"/>, each with its name, icon, connection and provider.
+    /// By default, each type of <see cref="GetNetworkDriveTypesAsync"/> with its name only.
+    /// </summary>
+    /// <param name="language">The language of the texts the OS writes (labels of its own forms).</param>
+    /// <param name="cancellationToken">Cancels the read.</param>
+    async ValueTask<IReadOnlyList<KazoNetworkDriveTypeInfo>> DescribeNetworkDriveTypesAsync(
+        System.Globalization.CultureInfo language,
+        CancellationToken cancellationToken = default) =>
+        [.. (await GetNetworkDriveTypesAsync(cancellationToken).ConfigureAwait(false))
+            .Select(static type => new KazoNetworkDriveTypeInfo(type, type, type == "hostfs" ? KazoNetworkDriveConnection.HostFolder : KazoNetworkDriveConnection.OAuth))];
+
+    /// <summary>
+    /// Gets the caller's network drives kept without being mounted because their type has no provider
+    /// now (ADR 0282 §3, §5), each with its <see cref="KazoDriveSnapshot.ProviderMissing"/> reason. None by default.
+    /// </summary>
+    ValueTask<IReadOnlyList<KazoDriveSnapshot>> GetProviderMissingDrivesAsync(CancellationToken cancellationToken = default) =>
+        ValueTask.FromResult<IReadOnlyList<KazoDriveSnapshot>>([]);
+
+    /// <summary>
+    /// Mounts a network drive of any type (ADR 0270); <see langword="null"/> when the user closed
+    /// the source's dialog. A cloud type needs the capability <c>cloud-accounts.manage</c>.
+    /// </summary>
+    ValueTask<KazoDriveSnapshot?> MountNetworkDriveAsync(
+        KazoNetworkDriveRequest request,
+        string? mountPoint,
+        CancellationToken cancellationToken = default) =>
+        throw new NotSupportedException("This drive gateway cannot mount network drives.");
 }
 
 /// <summary>
@@ -91,7 +195,32 @@ public sealed class KazoDriveInfo
         AvailableFreeSpace = Math.Max(0, snapshot.AvailableFreeSpace);
         DriveType = snapshot.DriveType;
         IsReady = snapshot.IsReady;
+        Account = snapshot.Account;
+        Root = snapshot.Root;
+        ProviderMissing = snapshot.ProviderMissing;
+        ProviderFeatureId = snapshot.ProviderFeatureId;
     }
+
+    /// <summary>
+    /// Gets why the drive is kept without being mounted (ADR 0282 §3, §5): its provider was removed or
+    /// disabled. <see cref="KazoDriveProviderMissingReason.None"/> for a mounted drive.
+    /// </summary>
+    public KazoDriveProviderMissingReason ProviderMissing { get; }
+
+    /// <summary>Gets the id of the feature that provided a drive kept without its provider; <see langword="null"/> otherwise.</summary>
+    public string? ProviderFeatureId { get; }
+
+    /// <summary>
+    /// Gets the folder of the service the drive starts at, relative to what its account reaches;
+    /// <see langword="null"/> for the whole storage and for the other drives.
+    /// </summary>
+    public string? Root { get; }
+
+    /// <summary>
+    /// Gets the id of the cloud account the drive belongs to (ADR 0270); <see langword="null"/> for
+    /// a folder of the computer and for the other drives.
+    /// </summary>
+    public string? Account { get; }
 
     /// <summary>Gets the mount point, e.g. <c>/</c>.</summary>
     public string Name { get; }
@@ -162,6 +291,68 @@ public sealed class KazoDriveInfo
     /// <exception cref="UnauthorizedAccessException">The drive belongs to another user.</exception>
     public static async Task<bool> ReconnectAsync(string mountPoint, CancellationToken cancellationToken = default) =>
         await KazoExecutionContext.Current.Drives.ReconnectAsync(mountPoint, cancellationToken).ConfigureAwait(false);
+
+    /// <summary>
+    /// Gets the types of network drive the user can mount here (ADR 0270): <c>hostfs</c> (a folder
+    /// of the computer, when the browser can), and the cloud services this OS is set up for
+    /// (<c>dropbox</c>, <c>onedrive</c>, <c>s3</c>).
+    /// </summary>
+    /// <exception cref="KazoExecutionContextMissingException">Called outside an app's execution context.</exception>
+    public static async Task<IReadOnlyList<string>> GetNetworkDriveTypesAsync(CancellationToken cancellationToken = default) =>
+        await KazoExecutionContext.Current.Drives.GetNetworkDriveTypesAsync(cancellationToken).ConfigureAwait(false);
+
+    /// <summary>
+    /// Describes the types of network drive the user can mount here (ADR 0282 §5): for each, its name,
+    /// its icon, how the user connects it (a folder of the computer, a sign-in with its scopes, a form
+    /// with its fields), and the feature that provides it when it is not one of the OS's own. The OS
+    /// writes its own labels in the language of the calling instance.
+    /// </summary>
+    /// <exception cref="KazoExecutionContextMissingException">Called outside an app's execution context.</exception>
+    public static async Task<IReadOnlyList<KazoNetworkDriveTypeInfo>> DescribeNetworkDriveTypesAsync(CancellationToken cancellationToken = default)
+    {
+        IAppExecutionContext context = KazoExecutionContext.Current;
+        return await context.Drives.DescribeNetworkDriveTypesAsync(context.Culture, cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Gets the user's network drives kept without being mounted because their type has no provider now
+    /// (ADR 0282 §3, §5): the feature that provided it was removed or disabled, or the administrator
+    /// switched off one of the OS's own types. They mount again by themselves when the provider is back.
+    /// </summary>
+    /// <exception cref="KazoExecutionContextMissingException">Called outside an app's execution context.</exception>
+    public static async Task<KazoDriveInfo[]> GetProviderMissingDrivesAsync(CancellationToken cancellationToken = default)
+    {
+        IReadOnlyList<KazoDriveSnapshot> drives = await KazoExecutionContext.Current.Drives
+            .GetProviderMissingDrivesAsync(cancellationToken)
+            .ConfigureAwait(false);
+        return [.. drives.Select(static drive => new KazoDriveInfo(drive))];
+    }
+
+    /// <summary>
+    /// Mounts a network drive of any type (ADR 0270): a folder of the computer, or a cloud storage
+    /// with an account connected through <see cref="CloudAccounts.KazoCloudAccounts"/>. Call it from
+    /// a click or a key press: a folder of the computer opens the browser's dialog.
+    /// </summary>
+    /// <param name="request">The type, the account, the root and the source's own settings.</param>
+    /// <param name="mountPoint"><c>/mnt/&lt;name&gt;</c>, or <see langword="null"/> for the source's default name.</param>
+    /// <param name="cancellationToken">Cancels the mount.</param>
+    /// <returns>The new drive, or <see langword="null"/> when the user closed the dialog.</returns>
+    /// <exception cref="NotSupportedException">The type is unknown or not set up here.</exception>
+    /// <exception cref="UnauthorizedAccessException">A cloud type without the capability <c>cloud-accounts.manage</c>.</exception>
+    /// <exception cref="ArgumentException">The service refused the request (an unknown account, wrong keys, a missing bucket).</exception>
+    /// <exception cref="InvalidOperationException">No recent user gesture, or nobody is signed in.</exception>
+    /// <exception cref="IOException">The mount point is not usable.</exception>
+    public static async Task<KazoDriveInfo?> MountNetworkDriveAsync(
+        KazoNetworkDriveRequest request,
+        string? mountPoint = null,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        KazoDriveSnapshot? drive = await KazoExecutionContext.Current.Drives
+            .MountNetworkDriveAsync(request, mountPoint, cancellationToken)
+            .ConfigureAwait(false);
+        return drive is null ? null : new KazoDriveInfo(drive);
+    }
 
     /// <summary>Unmounts a network drive; the folder of the host computer is not touched.</summary>
     /// <exception cref="IOException">No network drive is mounted there.</exception>

@@ -121,6 +121,9 @@
 
 <PasskeysPanel Changed="LoadAsync" />
 
+@* ADR 0247: the roles of the features, granted to ordinary accounts by an administrator. *@
+<FeatureRolesPanel Accounts="_accounts" CanManage="CurrentIsAdministrator" Changed="LoadAsync" />
+
 <div class="setting-group users-panel">
     <h4>@L["Users.Own.Title"]</h4>
     <p class="setting-desc">@L["Users.Own.Description"]</p>

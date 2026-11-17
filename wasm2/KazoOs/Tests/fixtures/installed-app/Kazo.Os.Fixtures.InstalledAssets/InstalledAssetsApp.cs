@@ -32,6 +32,10 @@ public sealed class InstalledAssetsApp : AppDefinition
     public override string Description => "Test package: loads a module, a Web Worker and an image from its wwwroot/ once installed.";
 
     /// <inheritdoc />
+    /// <remarks>Issue #420: the launcher must show it before the app's first launch.</remarks>
+    public override IReadOnlyList<string> Icons => ["images/dot.svg"];
+
+    /// <inheritdoc />
     public override IReadOnlyList<AssetManifest> Assets =>
     [
         new("probe.js", AssetKind.JavaScriptModule, new string('0', 64)),

@@ -14,6 +14,7 @@ namespace Kazo.Os.Tests.Support;
 public sealed class FakeAppFileSystemGateway : IAppFileSystemGateway
 {
     private readonly Dictionary<string, Entry> _entries = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, Func<Stream>> _streams = new(StringComparer.Ordinal);
     private readonly DateTimeOffset _now = DateTimeOffset.UtcNow;
 
     public FakeAppFileSystemGateway()
@@ -42,6 +43,16 @@ public sealed class FakeAppFileSystemGateway : IAppFileSystemGateway
     }
 
     /// <summary>Seeds a file (and any missing ancestor directories) at revision 1.</summary>
+    /// <summary>
+    /// Serves <paramref name="path"/> from a stream made by <paramref name="open"/> on every read, like a
+    /// character device (<c>/dev/zero</c>): lets a test hand a command an endless or counting stream.
+    /// </summary>
+    public FakeAppFileSystemGateway WithStream(string path, Func<Stream> open)
+    {
+        _streams[VirtualPath.Parse(path).Value] = open;
+        return this;
+    }
+
     public FakeAppFileSystemGateway WithFile(string path, string content = "")
     {
         string canonical = VirtualPath.Parse(path).Value;
@@ -91,6 +102,15 @@ public sealed class FakeAppFileSystemGateway : IAppFileSystemGateway
     public ValueTask<FileSystemResult<FileSystemContentReadHandle>> ReadAsync(
         FileSystemReadRequest request, CancellationToken cancellationToken = default)
     {
+        if (_streams.TryGetValue(request.Path.Value, out Func<Stream>? open))
+        {
+            return ValueTask.FromResult(FileSystemResult<FileSystemContentReadHandle>.Success(
+                new FileSystemContentReadHandle(
+                    Snapshot(request.Path, Entry.NewFile([])),
+                    FileSystemContentDescriptor.Binary(),
+                    open())));
+        }
+
         if (!_entries.TryGetValue(request.Path.Value, out Entry? entry) || entry.Kind != FileSystemEntryKind.File)
         {
             // Like the real engine, reading a directory is NotFile rather than NotFound.

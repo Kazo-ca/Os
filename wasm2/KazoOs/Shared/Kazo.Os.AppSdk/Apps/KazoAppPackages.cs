@@ -103,6 +103,44 @@ public static class KazoAppPackages
         return CallAsync(gateway => gateway.InstallPackageAsync(source, scope, progress, cancellationToken));
     }
 
+    /// <summary>
+    /// Builds the plan of an installation without writing anything (ADR 0248 §1): the package and
+    /// each required dependency it pulls in (absent or out of range), dependencies first, with the
+    /// uninstalled dependencies it reactivates. <see cref="InstallAsync(string, KazoPackageScope, CancellationToken)"/>
+    /// installs the same plan in one transaction, after one consent.
+    /// </summary>
+    /// <param name="source">The repository, <c>catalog:name/app.id</c> or an app ID alone, optionally followed by <c>@version</c>.</param>
+    /// <param name="scope">For whom the requested package is installed; a feature always goes to the system (ADR 0260 §4).</param>
+    /// <param name="cancellationToken">Cancels the downloads.</param>
+    /// <exception cref="KazoPackageException">
+    /// A package is refused; <c>apps.package.dependency-unresolved</c> when a required dependency is in
+    /// no configured catalog or has no version in range, <c>apps.package.dependency-conflict</c> when a
+    /// version would leave the range of an installed app that needs it.
+    /// </exception>
+    /// <exception cref="KazoUnauthorizedAccessException">This app lacks <c>apps.manage</c>.</exception>
+    /// <exception cref="KazoExecutionContextMissingException">No app context is active.</exception>
+    public static Task<KazoPackageInstallPlan> PlanInstallAsync(
+        string source, KazoPackageScope scope = KazoPackageScope.Auto, CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(source);
+        return CallAsync(gateway => gateway.PlanPackageInstallAsync(source, scope, cancellationToken));
+    }
+
+    /// <summary>
+    /// Lists the installed apps that need a package through a required dependency (ADR 0248 §3):
+    /// removing the package disables them (their data and package stay, and installing it again
+    /// reactivates them). An app whose dependency is optional is not listed.
+    /// </summary>
+    /// <param name="appId">An installed package.</param>
+    /// <param name="cancellationToken">Cancels the request.</param>
+    /// <exception cref="KazoUnauthorizedAccessException">This app lacks <c>apps.manage</c>.</exception>
+    /// <exception cref="KazoExecutionContextMissingException">No app context is active.</exception>
+    public static Task<IReadOnlyList<KazoPackageDependent>> GetDependentsAsync(string appId, CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(appId);
+        return CallAsync(gateway => gateway.GetPackageDependentsAsync(appId, cancellationToken));
+    }
+
     /// <summary>Removes an app installed from a package: the user's own copy freely, a system copy after the two-step approval.</summary>
     /// <param name="appId">The installed app.</param>
     /// <param name="scope">Which copy; <see cref="KazoPackageScope.Auto"/> takes the user's own, else the system's.</param>

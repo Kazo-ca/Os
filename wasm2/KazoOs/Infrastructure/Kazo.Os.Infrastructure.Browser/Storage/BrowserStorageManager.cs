@@ -6,9 +6,11 @@ namespace Kazo.Os.Infrastructure.Browser.Storage;
 /// <summary>Reports browser storage capacity and requests durable storage retention.</summary>
 /// <remarks>
 /// It is also the OS's <see cref="IStorageCapacityProbe"/> (ADR 0099, section 2): the low-space
-/// warning, the root reserve and <c>df</c> read the origin's real usage and quota through it.
+/// warning, the root reserve and <c>df</c> read the origin's real usage and quota through it; and its
+/// <see cref="IOriginStorage"/> (ADR 0250): <c>persist()</c> once for the origin, the boot marker of
+/// the eviction check, and whether a database or a file of the Origin Private File System exists.
 /// </remarks>
-public sealed class BrowserStorageManager : IStorageCapacityProbe, IAsyncDisposable
+public sealed class BrowserStorageManager : IStorageCapacityProbe, IOriginStorage, IAsyncDisposable
 {
     /// <summary>Absolute free-space threshold used alongside the proportional threshold.</summary>
     public const long LowSpaceByteThreshold = StorageSpacePolicy.LowSpaceBytes;
@@ -71,6 +73,61 @@ public sealed class BrowserStorageManager : IStorageCapacityProbe, IAsyncDisposa
             .ConfigureAwait(false);
 
     /// <inheritdoc />
+    async ValueTask<OriginStorageStatus?> IOriginStorage.GetStatusAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            BrowserStorageEstimate estimate = await (await GetModuleAsync(cancellationToken).ConfigureAwait(false))
+                .InvokeAsync<BrowserStorageEstimate>("getStorageEstimate", cancellationToken)
+                .ConfigureAwait(false);
+            return new OriginStorageStatus(estimate.UsageBytes, estimate.QuotaBytes, estimate.IsPersisted)
+            {
+                IndexedDbBytes = estimate.IndexedDbBytes,
+                CacheBytes = estimate.CacheBytes,
+                FileSystemBytes = estimate.FileSystemBytes,
+            };
+        }
+        catch (JSException)
+        {
+            // A browser without the StorageManager API cannot tell its quota.
+            return null;
+        }
+    }
+
+    /// <inheritdoc />
+    public async ValueTask<string?> ReadBootMarkerAsync(CancellationToken cancellationToken = default) =>
+        await (await GetModuleAsync(cancellationToken).ConfigureAwait(false))
+            .InvokeAsync<string?>("readBootMarker", cancellationToken)
+            .ConfigureAwait(false);
+
+    /// <inheritdoc />
+    public async ValueTask WriteBootMarkerAsync(string marker, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(marker);
+        await (await GetModuleAsync(cancellationToken).ConfigureAwait(false))
+            .InvokeVoidAsync("writeBootMarker", cancellationToken, marker)
+            .ConfigureAwait(false);
+    }
+
+    /// <inheritdoc />
+    public async ValueTask<bool?> DatabaseExistsAsync(string name, CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        return await (await GetModuleAsync(cancellationToken).ConfigureAwait(false))
+            .InvokeAsync<bool?>("databaseExists", cancellationToken, name)
+            .ConfigureAwait(false);
+    }
+
+    /// <inheritdoc />
+    public async ValueTask<bool?> FileExistsAsync(string path, CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(path);
+        return await (await GetModuleAsync(cancellationToken).ConfigureAwait(false))
+            .InvokeAsync<bool?>("fileExists", cancellationToken, path)
+            .ConfigureAwait(false);
+    }
+
+    /// <inheritdoc />
     public async ValueTask DisposeAsync()
     {
         if (_disposed)
@@ -115,7 +172,8 @@ public sealed class BrowserStorageManager : IStorageCapacityProbe, IAsyncDisposa
         }
     }
 
-    private sealed record BrowserStorageEstimate(long UsageBytes, long QuotaBytes, bool IsPersisted);
+    private sealed record BrowserStorageEstimate(
+        long UsageBytes, long QuotaBytes, bool IsPersisted, long? IndexedDbBytes = null, long? CacheBytes = null, long? FileSystemBytes = null);
 }
 
 /// <summary>Describes the browser's current origin-storage state.</summary>

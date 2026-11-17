@@ -105,6 +105,10 @@
                 @if (latest is not null)
                 {
                     @RenderCapabilities(latest)
+                    @if (latest.Dependencies is { Count: > 0 })
+                    {
+                        @RenderDependencies(latest)
+                    }
                     @if (StoreAppFacts.FileTypes(latest.FileHandlers) is { Count: > 0 } types)
                     {
                         <section class="store-facts-card" aria-labelledby="@IdOf("types")">
@@ -186,6 +190,56 @@
                 </button>
             }
         </section>
+    };
+
+    /// <summary>ADR 0248 §2: what the app needs, and for each one « installed », « installed with this app » or « optional ».</summary>
+    private RenderFragment RenderDependencies(KazoCatalogAppVersion latest) => __builder =>
+    {
+        <section class="store-facts-card" aria-labelledby="@IdOf("dependencies")">
+            <h3 id="@IdOf("dependencies")">@L["Detail.Dependencies"]</h3>
+            <ul class="store-dependencies">
+                @foreach (StoreDependency dependency in Store.DependenciesOf(latest))
+                {
+                    <li key="@dependency.AppId" class="store-dependency is-@(dependency.State.ToString().ToLowerInvariant())">
+                        <KazoIcon Library="IconLibrary.Lucide" Name="@DependencyIcon(dependency.State)" Size="16" Title="" />
+                        <span class="store-dependency-text">
+                            <span class="store-dependency-name">@dependency.Name</span>
+                            <span class="store-dependency-state">@DependencyText(dependency)</span>
+                            @if (dependency.IsFeature && dependency.State is StoreDependencyState.WithThisApp or StoreDependencyState.OutOfRange)
+                            {
+                                @* A feature goes to the whole machine: an administrator approves it, with its permission set (ADR 0260 §3, answer 268 A). *@
+                                <span class="store-dependency-note">@L["Detail.Dependency.FeatureNote"]</span>
+                                @if (dependency.DangerousPermissions.Count > 0)
+                                {
+                                    <span class="store-dependency-note is-dangerous">@L["Detail.Dependency.FeaturePermissions", string.Join(", ", StoreAppFacts.DescribeCapabilities(dependency.DangerousPermissions, L).SelectMany(static group => group.Capabilities).Select(static capability => capability.Title))]</span>
+                                }
+                            }
+                            @if (_showIdentifiers)
+                            {
+                                <code>@dependency.AppId @dependency.Range</code>
+                            }
+                        </span>
+                    </li>
+                }
+            </ul>
+        </section>
+    };
+
+    private static string DependencyIcon(StoreDependencyState state) => state switch
+    {
+        StoreDependencyState.Installed => "check",
+        StoreDependencyState.WithThisApp => "download",
+        StoreDependencyState.OutOfRange => "triangle-alert",
+        _ => "circle-dashed"
+    };
+
+    private string DependencyText(StoreDependency dependency) => dependency.State switch
+    {
+        StoreDependencyState.Installed => L["Detail.Dependency.Installed", dependency.InstalledVersion ?? string.Empty],
+        StoreDependencyState.WithThisApp => L["Detail.Dependency.WithThisApp", dependency.Range],
+        StoreDependencyState.OutOfRange when dependency.Optional => L["Detail.Dependency.OptionalOutOfRange", dependency.InstalledVersion ?? string.Empty, dependency.Range],
+        StoreDependencyState.OutOfRange => L["Detail.Dependency.OutOfRange", dependency.InstalledVersion ?? string.Empty, dependency.Range],
+        _ => L["Detail.Dependency.Optional"]
     };
 
     private RenderFragment RenderInformation(StoreEntry entry) => __builder =>

@@ -16,8 +16,9 @@ public sealed class FeatureDefinitionTests
         public override string Version => "1.2.3";
         public override string PublisherId => "ca.kazo";
         public override IReadOnlyList<string> Capabilities =>
-            [AppCapabilities.FileSystemUserHomeRead, AppCapabilities.NetworkRealAccess, AppCapabilities.DialogFileOpen];
+            [AppCapabilities.FileSystemUserHomeRead, AppCapabilities.NetworkRealAccess, AppCapabilities.NetworkDirectAccess, AppCapabilities.DialogFileOpen];
         public override IReadOnlyList<string> RealNetworkPorts => ["tcp/8080"];
+        public override IReadOnlyList<string> DirectNetworkHosts => ["images.example.org"];
         public override IReadOnlyList<FeatureEntryPoint> EntryPoints =>
         [
             new("cli", "x86", AppKind.Terminal, typeof(CliEntryPoint))
@@ -31,7 +32,11 @@ public sealed class FeatureDefinitionTests
                 LaunchVisibility = AppLaunchVisibility.Visible,
                 Window = new WindowOptions { DefaultWidth = 480, DefaultHeight = 320 }
             },
-            new("daemon", "x86 daemon", AppKind.Service, typeof(ServiceEntryPoint)) { AutoStart = true }
+            new("daemon", "x86 daemon", AppKind.Service, typeof(ServiceEntryPoint))
+            {
+                AutoStart = true,
+                Capabilities = [AppCapabilities.NetworkDirectAccess]
+            }
         ];
     }
 
@@ -69,6 +74,10 @@ public sealed class FeatureDefinitionTests
         Assert.Null(manifests.Children[1].RealNetworkPorts);
         Assert.Equal(480, manifests.Children[1].Window!.DefaultWidth);
         Assert.True(manifests.Children[2].AutoStart);
+        // ADR 0282 §4: the hosts go with the capability that needs them.
+        Assert.Equal(["images.example.org"], feature.DirectNetworkHosts);
+        Assert.Null(cli.DirectNetworkHosts);
+        Assert.Equal(["images.example.org"], manifests.Children[2].DirectNetworkHosts);
         // ToManifest on a feature gives the feature's own manifest.
         Assert.Equal(AppKind.Feature, AppDefinitionMapper.ToManifest(new X86Feature(), "3.2.0").Kind);
     }

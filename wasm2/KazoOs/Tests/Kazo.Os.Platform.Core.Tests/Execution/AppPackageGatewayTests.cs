@@ -732,7 +732,8 @@ public sealed partial class AppPackageGatewayTests
 
         internal SettingsFilesHarness Settings { get; }
 
-        internal AppCatalog Catalog { get; }
+        /// <summary>The running catalog the gateways see; a test of ADR 0248 swaps it for one that loaded a feature and its dependents.</summary>
+        internal AppCatalog Catalog { get; set; }
 
         internal IReadOnlyList<Uri> Downloads => _downloader.Requested;
 

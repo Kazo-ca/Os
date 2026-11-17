@@ -40,6 +40,13 @@ public interface IStorageSpaceGuard
 
     /// <summary>Asks for a new measure soon, without waiting; called after writes and after an <c>ENOSPC</c>.</summary>
     void RequestRefresh();
+
+    /// <summary>
+    /// Reports that the browser refused a write for lack of space (<c>QuotaExceededError</c>, ADR 0279):
+    /// a real full disk, which a rounded <c>navigator.storage.estimate()</c> may never show. The
+    /// default only asks for a new measure.
+    /// </summary>
+    void ReportWriteRefused() => RequestRefresh();
 }
 
 /// <summary>Thresholds of ADR 0099, section 2, shared by the browser storage manager and the OS monitor.</summary>

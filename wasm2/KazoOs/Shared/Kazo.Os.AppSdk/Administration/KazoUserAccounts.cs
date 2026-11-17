@@ -315,6 +315,59 @@ public static class KazoUserAccounts
         }
     }
 
+    /// <summary>Lists the roles the installed features declare (ADR 0247, ambient context).</summary>
+    /// <param name="cancellationToken">Cancels the read.</param>
+    public static Task<IReadOnlyList<KazoFeatureRole>> ListRolesAsync(CancellationToken cancellationToken = default) =>
+        ListRolesAsync(KazoExecutionContext.Current, cancellationToken);
+
+    /// <summary>Lists the roles the installed features declare (ADR 0247).</summary>
+    /// <param name="context">The calling app's context.</param>
+    /// <param name="cancellationToken">Cancels the read.</param>
+    public static Task<IReadOnlyList<KazoFeatureRole>> ListRolesAsync(IAppExecutionContext context, CancellationToken cancellationToken = default) =>
+        Call(context, gateway => gateway.ListRolesAsync(cancellationToken));
+
+    /// <summary>Grants a role of a feature to an ordinary account (ADR 0247, ambient context).</summary>
+    /// <param name="loginName">The account.</param>
+    /// <param name="role">The role, such as <c>x86:vm-manager</c>.</param>
+    /// <param name="cancellationToken">Cancels the change.</param>
+    /// <returns><see langword="true"/> when the grant was written; <see langword="false"/> for an administrator, who holds every role.</returns>
+    public static Task<bool> GrantRoleAsync(string loginName, string role, CancellationToken cancellationToken = default) =>
+        GrantRoleAsync(KazoExecutionContext.Current, loginName, role, cancellationToken);
+
+    /// <summary>Grants a role of a feature to an ordinary account (ADR 0247); needs <c>users.manage</c> and an administrator.</summary>
+    /// <param name="context">The calling app's context.</param>
+    /// <param name="loginName">The account.</param>
+    /// <param name="role">The role.</param>
+    /// <param name="cancellationToken">Cancels the change.</param>
+    /// <returns><see langword="true"/> when the grant was written; <see langword="false"/> for an administrator, who holds every role.</returns>
+    public static Task<bool> GrantRoleAsync(IAppExecutionContext context, string loginName, string role, CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(loginName);
+        ArgumentException.ThrowIfNullOrWhiteSpace(role);
+        return Call(context, gateway => gateway.GrantRoleAsync(loginName, role, cancellationToken));
+    }
+
+    /// <summary>Takes a role of a feature back from an ordinary account (ADR 0247, ambient context).</summary>
+    /// <param name="loginName">The account.</param>
+    /// <param name="role">The role.</param>
+    /// <param name="cancellationToken">Cancels the change.</param>
+    /// <returns><see langword="true"/> when the grant was removed.</returns>
+    public static Task<bool> RevokeRoleAsync(string loginName, string role, CancellationToken cancellationToken = default) =>
+        RevokeRoleAsync(KazoExecutionContext.Current, loginName, role, cancellationToken);
+
+    /// <summary>Takes a role of a feature back from an ordinary account (ADR 0247); needs <c>users.manage</c> and an administrator.</summary>
+    /// <param name="context">The calling app's context.</param>
+    /// <param name="loginName">The account.</param>
+    /// <param name="role">The role.</param>
+    /// <param name="cancellationToken">Cancels the change.</param>
+    /// <returns><see langword="true"/> when the grant was removed.</returns>
+    public static Task<bool> RevokeRoleAsync(IAppExecutionContext context, string loginName, string role, CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(loginName);
+        ArgumentException.ThrowIfNullOrWhiteSpace(role);
+        return Call(context, gateway => gateway.RevokeRoleAsync(loginName, role, cancellationToken));
+    }
+
     private static async Task<T> Call<T>(IAppExecutionContext context, Func<IAppUserAccountsGateway, ValueTask<T>> call)
     {
         ArgumentNullException.ThrowIfNull(context);

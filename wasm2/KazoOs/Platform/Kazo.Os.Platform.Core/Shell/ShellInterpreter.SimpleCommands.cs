@@ -302,6 +302,11 @@ public sealed partial class ShellInterpreter
                 await exec.Err.WriteLineAsync(ErrorPrefix(exec) + exec.Text["Shell.ElevationDenied", name]).ConfigureAwait(false);
                 exec.Line.LastFailure = ShellFailure.ElevationDenied;
                 return 1;
+            case AppLaunchStatus.RoleRequired:
+                // ADR 0247 §2: found but not executable for this user, like bash's 126.
+                await exec.Err.WriteLineAsync(ErrorPrefix(exec) + exec.Text["Shell.RoleRequired", name]).ConfigureAwait(false);
+                exec.Line.LastFailure = ShellFailure.RoleRequired;
+                return NotExecutableExitCode;
             default:
                 await exec.Err.WriteLineAsync(ErrorPrefix(exec) + exec.Text["Shell.Error", name, launch.ErrorMessage ?? launch.ErrorCode ?? string.Empty]).ConfigureAwait(false);
                 exec.Line.LastFailure = ShellFailure.Fault;
@@ -522,6 +527,9 @@ public sealed partial class ShellInterpreter
             case AppLaunchStatus.ElevationDenied:
                 await error.WriteLineAsync($"{caller}: " + texts["Shell.ElevationDenied", name]).ConfigureAwait(false);
                 return StageOutcome.Failed(1, ShellFailure.ElevationDenied);
+            case AppLaunchStatus.RoleRequired:
+                await error.WriteLineAsync($"{caller}: " + texts["Shell.RoleRequired", name]).ConfigureAwait(false);
+                return StageOutcome.Failed(NotExecutableExitCode, ShellFailure.RoleRequired);
             default:
                 if (cancellationToken.IsCancellationRequested)
                 {

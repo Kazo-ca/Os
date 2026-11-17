@@ -40,6 +40,12 @@ public static class AppPermissionsDocument
     /// </summary>
     public const string RealNetworkPortsSection = "real-network-ports";
 
+    /// <summary>
+    /// Machine-file section holding the direct-network hosts an administrator approved with
+    /// <c>network.direct.access</c> (ADR 0282 §4): one line <c>&lt;appId&gt;=api.example.com,*.example.org</c> per app.
+    /// </summary>
+    public const string DirectNetworkHostsSection = "direct-network-hosts";
+
     /// <summary>Serialized <see cref="AppPermissionDecision.Allow"/>.</summary>
     public const string AllowValue = "allow";
 
@@ -121,6 +127,30 @@ public static class AppPermissionsDocument
     public static string RemoveRealNetworkPorts(string? content, string appId) =>
         ConfigDocumentEditor.RemoveValue(content, RealNetworkPortsSection, appId);
 
+    /// <summary>
+    /// Records the direct-network hosts approved for <paramref name="appId"/> in
+    /// <see cref="DirectNetworkHostsSection"/> (ADR 0282 §4), in canonical order; an empty list keeps a
+    /// line with no host, so an app that later declares one is asked again.
+    /// </summary>
+    /// <param name="content">Current machine content, or <see langword="null"/> for a new file.</param>
+    /// <param name="appId">App identifier.</param>
+    /// <param name="hosts">The approved declarations; invalid ones are dropped.</param>
+    public static string SetDirectNetworkHosts(string? content, string appId, IEnumerable<string>? hosts)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(appId);
+        return ConfigDocumentEditor.SetValue(
+            string.IsNullOrEmpty(content) ? DefaultMachineContent : content,
+            DirectNetworkHostsSection,
+            appId,
+            string.Join(",", DirectNetworkHosts.Normalize(hosts) ?? []));
+    }
+
+    /// <summary>Removes the approved-hosts line of <paramref name="appId"/>; unchanged when absent.</summary>
+    /// <param name="content">Current machine content.</param>
+    /// <param name="appId">App identifier.</param>
+    public static string RemoveDirectNetworkHosts(string? content, string appId) =>
+        ConfigDocumentEditor.RemoveValue(content, DirectNetworkHostsSection, appId);
+
     /// <summary>Removes one decision line; unchanged when absent.</summary>
     /// <param name="content">Current content.</param>
     /// <param name="appId">App identifier.</param>
@@ -144,21 +174,24 @@ public sealed class AppPermissionDecisions
     private readonly Dictionary<(string AppId, string Capability), AppPermissionDecision> _machine;
     private readonly HashSet<(string AppId, string Capability)> _userDenials;
     private readonly Dictionary<string, IReadOnlySet<RealNetworkPort>> _approvedPorts;
+    private readonly Dictionary<string, IReadOnlySet<string>> _approvedHosts;
 
     private AppPermissionDecisions(
         Dictionary<(string AppId, string Capability), AppPermissionDecision> machine,
         HashSet<(string AppId, string Capability)> userDenials,
         Dictionary<string, IReadOnlySet<RealNetworkPort>> approvedPorts,
+        Dictionary<string, IReadOnlySet<string>> approvedHosts,
         IReadOnlyList<string> warnings)
     {
         _machine = machine;
         _userDenials = userDenials;
         _approvedPorts = approvedPorts;
+        _approvedHosts = approvedHosts;
         Warnings = warnings;
     }
 
     /// <summary>Gets decisions with no line at all (both files absent).</summary>
-    public static AppPermissionDecisions Empty { get; } = new([], [], [], []);
+    public static AppPermissionDecisions Empty { get; } = new([], [], [], [], []);
 
     /// <summary>Gets one warning line per ignored line, formatted like ADR 0044 settings warnings.</summary>
     public IReadOnlyList<string> Warnings { get; }
@@ -172,19 +205,40 @@ public sealed class AppPermissionDecisions
         string? machineContent,
         string? userContent,
         string machinePath = "/etc/kazoos/app-permissions.config",
-        string userPath = "~/.config/kazoos/app-permissions.config")
+        string userPath = "~/.config/kazoos/app-permissions.config") =>
+        Parse(machineContent, userContent, machinePath, userPath, BuiltInCapabilityCatalog.Instance);
+
+    /// <summary>
+    /// Parses the two files against the catalog of the running OS (ADR 0246 §3): a line about a
+    /// dangerous permission of an installed feature, or a topic permission, is a decision; a line
+    /// about a capability the catalog does not know is ignored with a warning, and stays in the file
+    /// (it applies again once the feature is reinstalled).
+    /// </summary>
+    /// <param name="machineContent">Content of the machine file, or <see langword="null"/> when absent.</param>
+    /// <param name="userContent">Content of the session user's file, or <see langword="null"/> when absent or no session.</param>
+    /// <param name="machinePath">Machine file path used in warnings.</param>
+    /// <param name="userPath">User file path used in warnings.</param>
+    /// <param name="catalog">The catalog of capabilities of the running OS.</param>
+    public static AppPermissionDecisions Parse(
+        string? machineContent,
+        string? userContent,
+        string machinePath,
+        string userPath,
+        ICapabilityCatalog catalog)
     {
+        ArgumentNullException.ThrowIfNull(catalog);
         Dictionary<(string, string), AppPermissionDecision> machine = [];
         HashSet<(string, string)> userDenials = [];
         Dictionary<string, IReadOnlySet<RealNetworkPort>> approvedPorts = new(StringComparer.Ordinal);
+        Dictionary<string, IReadOnlySet<string>> approvedHosts = new(StringComparer.Ordinal);
         List<string> warnings = [];
 
-        foreach (((string appId, string capability), AppPermissionDecision decision) in ParseFile(machineContent, machinePath, warnings, approvedPorts))
+        foreach (((string appId, string capability), AppPermissionDecision decision) in ParseFile(machineContent, machinePath, warnings, new ApprovedLists(approvedPorts, approvedHosts), catalog))
         {
             machine[(appId, capability)] = decision;
         }
 
-        foreach (((string appId, string capability), AppPermissionDecision decision) in ParseFile(userContent, userPath, warnings, approvedPorts: null))
+        foreach (((string appId, string capability), AppPermissionDecision decision) in ParseFile(userContent, userPath, warnings, approved: null, catalog))
         {
             if (decision == AppPermissionDecision.Allow)
             {
@@ -196,7 +250,7 @@ public sealed class AppPermissionDecisions
             userDenials.Add((appId, capability));
         }
 
-        return new AppPermissionDecisions(machine, userDenials, approvedPorts, warnings);
+        return new AppPermissionDecisions(machine, userDenials, approvedPorts, approvedHosts, warnings);
     }
 
     /// <summary>Gets the machine decision for one app capability, or <see langword="null"/> when none.</summary>
@@ -221,8 +275,24 @@ public sealed class AppPermissionDecisions
 
     private static readonly IReadOnlySet<RealNetworkPort> NoPorts = new HashSet<RealNetworkPort>();
 
+    /// <summary>
+    /// Gets the direct-network hosts an administrator approved for <paramref name="appId"/> with
+    /// <c>network.direct.access</c> (machine section <c>[direct-network-hosts]</c>, ADR 0282 §4), in
+    /// canonical form; empty when the file has no line for it.
+    /// </summary>
+    /// <param name="appId">App identifier.</param>
+    public IReadOnlySet<string> GetApprovedDirectNetworkHosts(string appId) =>
+        _approvedHosts.TryGetValue(appId, out IReadOnlySet<string>? hosts) ? hosts : NoHosts;
+
+    private static readonly IReadOnlySet<string> NoHosts = new HashSet<string>(StringComparer.Ordinal);
+
+    /// <summary>The machine file's approved lists; <see langword="null"/> when parsing a user file.</summary>
+    private sealed record ApprovedLists(
+        Dictionary<string, IReadOnlySet<RealNetworkPort>> Ports,
+        Dictionary<string, IReadOnlySet<string>> Hosts);
+
     private static IEnumerable<KeyValuePair<(string AppId, string Capability), AppPermissionDecision>> ParseFile(
-        string? content, string path, List<string> warnings, Dictionary<string, IReadOnlySet<RealNetworkPort>>? approvedPorts)
+        string? content, string path, List<string> warnings, ApprovedLists? approved, ICapabilityCatalog catalog)
     {
         if (string.IsNullOrEmpty(content))
         {
@@ -237,11 +307,18 @@ public sealed class AppPermissionDecisions
 
         string prefix = AppPermissionsDocument.Section + ".";
         string portsPrefix = AppPermissionsDocument.RealNetworkPortsSection + ".";
+        string hostsPrefix = AppPermissionsDocument.DirectNetworkHostsSection + ".";
         foreach ((string qualifiedKey, string rawValue) in parsed.Values)
         {
             if (qualifiedKey.StartsWith(portsPrefix, StringComparison.Ordinal))
             {
-                ReadApprovedPorts(qualifiedKey[portsPrefix.Length..], rawValue, path, warnings, approvedPorts);
+                ReadApprovedPorts(qualifiedKey[portsPrefix.Length..], rawValue, path, warnings, approved?.Ports);
+                continue;
+            }
+
+            if (qualifiedKey.StartsWith(hostsPrefix, StringComparison.Ordinal))
+            {
+                ReadApprovedHosts(qualifiedKey[hostsPrefix.Length..], rawValue, path, warnings, approved?.Hosts);
                 continue;
             }
 
@@ -256,7 +333,8 @@ public sealed class AppPermissionDecisions
             }
 
             string key = qualifiedKey[prefix.Length..];
-            int separator = key.LastIndexOf(':');
+            // An app id never holds ':'; a topic permission does (topic-publish:...), so the first one separates.
+            int separator = key.IndexOf(':');
             if (separator <= 0 || separator == key.Length - 1)
             {
                 warnings.Add($"settings: {path}: '{key}' is not <appId>:<capability>, line ignored");
@@ -265,13 +343,13 @@ public sealed class AppPermissionDecisions
 
             string appId = key[..separator];
             string capability = key[(separator + 1)..];
-            if (!AppCapabilities.IsKnown(capability))
+            if (!catalog.IsKnown(capability))
             {
                 warnings.Add($"settings: {path}: unknown capability '{capability}', line ignored");
                 continue;
             }
 
-            if (!AppCapabilities.IsDangerous(capability))
+            if (!catalog.IsDangerous(capability))
             {
                 // A normal capability needs no decision: ignored without effect.
                 continue;
@@ -324,5 +402,34 @@ public sealed class AppPermissionDecisions
         }
 
         approvedPorts[appId] = ports;
+    }
+
+    /// <summary>
+    /// Reads one <c>[direct-network-hosts]</c> line (ADR 0282 §4). Only the machine file can approve
+    /// hosts: the line is ignored with a warning in the user file. An invalid host drops the whole
+    /// line, so a typo never approves something else.
+    /// </summary>
+    private static void ReadApprovedHosts(
+        string appId, string rawValue, string path, List<string> warnings, Dictionary<string, IReadOnlySet<string>>? approvedHosts)
+    {
+        if (approvedHosts is null)
+        {
+            warnings.Add($"settings: {path}: [{AppPermissionsDocument.DirectNetworkHostsSection}] '{appId}' ignored, only the machine file approves hosts");
+            return;
+        }
+
+        HashSet<string> hosts = new(StringComparer.Ordinal);
+        foreach (string entry in rawValue.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            if (!DirectNetworkHosts.TryParse(entry, out string host, out string? error))
+            {
+                warnings.Add($"settings: {path}: [{AppPermissionsDocument.DirectNetworkHostsSection}] '{appId}': {error} Line ignored");
+                return;
+            }
+
+            hosts.Add(host);
+        }
+
+        approvedHosts[appId] = hosts;
     }
 }

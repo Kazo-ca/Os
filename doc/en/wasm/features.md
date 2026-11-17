@@ -181,6 +181,34 @@ This section lists what is released in the `main` branch and online.
   reads and writes the user's network drives like their personal files,
   without a dangerous capability; another user's drive and `/mnt` stay system
   files. ([ADR 0231](dev/adr/0231-network-drives-count-as-personal-files.md))
+- **Cloud storage as a network drive**: the user connects their Dropbox, their
+  OneDrive (personal or work) or an S3-compatible storage and finds it under
+  `/mnt`, in the File Explorer, Settings ▸ Network ▸ Cloud accounts and
+  `mount -t`. Everything happens in the browser, with no server; they choose
+  between their whole storage and a folder reserved for Kazo OS. Apps go
+  through the SDK behind `cloud-accounts.manage`.
+  ([ADR 0267](dev/adr/0267-cloud-drives-as-network-drives.md),
+  [ADR 0269](dev/adr/0269-cloud-tokens-stay-on-the-device.md),
+  [ADR 0270](dev/adr/0270-cloud-drives-in-the-app-sdk.md),
+  [`cloud-drives.md`](dev/cloud-drives.md))
+- **Third-party network drive providers**: a Store feature can add a network drive type
+  (WebDAV, for example); it shows up without a restart in the "Connect a network drive"
+  dialog, Settings ▸ Cloud accounts and `mount -t`, marked "Provided by <feature>". The OS
+  runs the sign-in (OAuth with PKCE or a form), keeps tokens and secrets sealed on the
+  device, and lends the provider only what the open drive needs. The administrator who
+  installs the feature approves `drives.provide` on a screen that names the hosts it reaches.
+  A drive whose provider was removed stays greyed with **Install the provider**. Dropbox,
+  OneDrive and S3 stay shipped and can be left out at publish (`KazoOsDropboxDrives`,
+  `KazoOsOneDriveDrives`, `KazoOsS3Drives`, package `Kazo.Os.Platform.CloudDrives`) or hidden
+  without publishing again (`KazoOs:CloudDrives:Disabled`).
+  ([ADR 0282](dev/adr/0282-third-party-drive-providers.md),
+  [ADR 0284](dev/adr/0284-drive-provider-hosts-and-typed-server-address.md),
+  [`drive-providers.md`](framework/drive-providers.md))
+- **Privacy and terms of use**: `os.kazo.ca/privacy.html` and `terms.html`,
+  in French and English, say what Kazo OS does with data (nothing on a
+  server of the publisher; third parties listed); linked from the sign-in
+  screen and Settings ▸ About.
+  ([`legal-pages.md`](dev/legal-pages.md))
 - **Faster and lighter files**: content is kept in binary instead of base64 (about 25%
   less space, saving 52.5 MiB from 3.4 s to 1.0 s in Chromium), each 256 KiB chunk checked
   by its fingerprint when read; old content is converted once at the first boot, behind a
@@ -401,6 +429,9 @@ This section lists what is released in the `main` branch and online.
   trimmed), and the install refuses, with the exact method, an app that calls
   a method the published OS lacks, instead of letting it crash.
   ([ADR 0242](dev/adr/0242-framework-api-for-installed-apps.md))
+  LINQ, regular expressions and channels (`System.Linq`,
+  `System.Text.RegularExpressions`, `System.Threading.Channels`) are whole
+  too. ([ADR 0280](dev/adr/0280-keep-linq-regex-channels-whole.md))
   It can show its own HTML pages in an iframe, with parameters in the address,
   also once the OS is published and offline.
   ([ADR 0243](dev/adr/0243-serve-installed-app-pages.md))
@@ -463,6 +494,7 @@ This section lists what is released in the `main` branch and online.
 - **Installable features ("Feature" app type)**: an optional feature of the OS installed for the whole machine by an administrator, with its child entry points. ([ADR 0260](dev/adr/0260-feature-app-type.md), [`app-installation.md`](dev/app-installation.md#features-adr-0260))
 - **App libraries and shared versions**: a package carries the app's libraries, and a shared library (`KazoOsSharedLibrary`) is loaded once, in its newest compatible version. ([ADR 0261](dev/adr/0261-app-libraries-and-shared-versions.md), [ADR 0256](dev/adr/0256-app-libraries-implementation-adjustments.md))
 - **Feature services**: an app asks for an interface a Feature provides with `KazoFeatures.GetServiceAsync<T>()`, with no dependency in its binary. ([ADR 0262](dev/adr/0262-feature-service-registry-and-async-resolution.md), [`feature-services.md`](framework/feature-services.md))
+- **Network drive providers and direct web access** (version 3.5.0): a feature declares a drive type and derives `KazoDriveProvider`; the `dotnet new kazoos-drive-provider` template, the public conformance suite `KazoDriveProviderTests` (package `Kazo.Os.AppSdk.Testing`) and the WebDAV form sample show how. `KazoDirectHttpClient` sends requests to the web straight from the browser, without the Kazo server, to the declared hosts (`network.direct.access`, `directNetworkHosts`). ([ADR 0282](dev/adr/0282-third-party-drive-providers.md), [ADR 0284](dev/adr/0284-drive-provider-hosts-and-typed-server-address.md), [`drive-providers.md`](framework/drive-providers.md))
 
 ## In development
 
@@ -478,12 +510,19 @@ points to its PR.
 | File address served on demand | An app gets an address to read a large file (audio, video) without copying it in memory, with partial reads to seek in a track. `storage/base` series; the partial read is done (work item 3), the address is still to do. | [0275](dev/adr/0275-partial-read-and-file-address.md) | [#379](https://github.com/Kazo-ca/Os/issues/379) |
 | Drag files onto an app | Public SDK contract to receive files dragged from the File Explorer or the desktop. | To write | [#380](https://github.com/Kazo-ca/Os/issues/380) |
 
+### Network
+
+| Feature | Description | ADR | Issue |
+| --- | --- | --- | --- |
+| Kazo server relay state for apps | An app with access to the real network knows, without trying, whether the Kazo server's relay is ready (no server, relay turned off, permission pending), and a connection failure gives the real reason. `todo-wins/base` series. | [0278](dev/adr/0278-real-network-relay-state-for-apps.md) | [#418](https://github.com/Kazo-ca/Os/issues/418) |
+
 ### Kazo OS Store
 
 | Feature | Description | ADR | Issue |
 | --- | --- | --- | --- |
 | Application catalog | Catalog format, checking and publishing of the offered applications. | [0188](dev/adr/0188-hack-store-and-app-catalog.md) | [AppMarketPlace #1](https://github.com/Kazo-ca/Os-AppMarketPlace/issues/1) |
-| Beta channel and automatic app updates | A beta version of Kazo OS online (`os-beta.kazo.ca`), the SDK as a prerelease on nuget.org, and each app rebuilding and offering its update when the SDK ships. The OS side is done: the `beta` branch, the beta site with its "Beta" badge, the beta catalog and the reusable app workflows. Prerelease 3.4.0-preview.1 shipped on 2026-11-15. Each app repository still has to be aligned (work item 7). | [0271](dev/adr/0271-beta-channel-and-automatic-app-updates.md), [plan](dev/plans/release-channels-plan.md) | [#456](https://github.com/Kazo-ca/Os/issues/456) |
+| API check before publishing | An app's build (`KazoOsPack`) and the Store's CI refuse an app that calls an API the published OS removed, listing the missing members, instead of refusing it only at install time. `todo-wins/base` series. | [0277](dev/adr/0277-trimmed-api-check-before-publishing.md) | [#346](https://github.com/Kazo-ca/Os/issues/346) |
+| Beta channel and automatic app updates | A beta version of Kazo OS online (`os-beta.kazo.ca`), the SDK as a prerelease on nuget.org, and each app rebuilding and offering its update when the SDK ships. The OS side is done: the `beta` branch, the beta site with its "Beta" badge, the beta catalog and the reusable app workflows. Prereleases 3.4.0-preview.1 to 4 shipped on 2026-11-15, each app repository is aligned (work item 7) and the apps offered their beta version by themselves; the stable 3.4.0 follows. What is left is the trial of the app updates for the stable 3.4.0 (work item 8). | [0271](dev/adr/0271-beta-channel-and-automatic-app-updates.md), [plan](dev/plans/release-channels-plan.md) | [#456](https://github.com/Kazo-ca/Os/issues/456) |
 
 ### Personalization
 
@@ -508,11 +547,11 @@ one row per ADR).
 
 | Feature | Description | ADR | Issue |
 | --- | --- | --- | --- |
-| Permissions declared by a Feature | A Feature declares its own permissions, dangerous ones included; they follow the rules of the OS catalog and are never granted silently. | [0246](dev/adr/0246-provider-declared-permissions.md) | — |
-| Roles declared by a Feature | A Feature declares roles an administrator assigns; every sensitive operation goes through the OS authentication. | [0247](dev/adr/0247-feature-declared-roles.md) | — |
-| Dependency resolution | The Store and `kazopkg` install the dependencies declared in the manifest, with one consent; removing a package warns and disables the dependent apps. | [0248](dev/adr/0248-store-and-kazopkg-dependency-resolution.md) | — |
+| Permissions declared by a Feature | A Feature declares its own permissions, dangerous ones included; they follow the rules of the OS catalog and are never granted silently. Code delivered by work item `feature/17` (`ProvidedCapabilities`, reserved prefix, the `ICapabilityCatalog` catalog of capabilities, a seeder that grants only what is known and dangerous topic permissions, issue #432, `Covers`, `Caller.Require`, the secure window even from the terminal; [`capabilities.md`](framework/capabilities.md#permissions-declared-by-a-feature-adr-0246)). | [0246](dev/adr/0246-provider-declared-permissions.md) | — |
+| Roles declared by a Feature | A Feature declares roles an administrator assigns; every sensitive operation goes through the OS authentication. Code delivered by work item `feature/20` (`FeatureDefinition.Roles`, `RequiresRole`, `/etc/kazoos/roles.config`, implicit roles of the administrators, entry point absent and exit 126 without the role, roles column in Settings ▸ Users, `kazorole`, `KazoFeatureAuthentication` and tickets bound to the operation, `feature.*` and `role.*` entries of `auth.log`; `KazoUser.Current.IsInRole("x86:vm-manager")` and the OS role `admin`, adjusted by [ADR 0283](dev/adr/0283-feature-roles-isinrole-adjustments.md); [`system-administration.md`](framework/system-administration.md#roles-of-the-features-adr-0247-adjusted-by-adr-0283)). | [0247](dev/adr/0247-feature-declared-roles.md), [0283](dev/adr/0283-feature-roles-isinrole-adjustments.md) | — |
+| Dependency resolution | The Store and `kazopkg` install the dependencies declared in the manifest, with one consent; removing a package warns and disables the dependent apps. Code delivered by work item `feature/18` (`BuildPlanAsync` plan, transaction over the plan, `dependency-unresolved` and `dependency-conflict`, `kazopkg --yes`, the plan in the approval window with the Features' permissions, dependencies on the Store page, `KazoApps.RequestInstallAsync`, `dependencies` of `catalog.json`; [`app-installation.md`](dev/app-installation.md#dependencies-between-packages-adr-0248)). | [0248](dev/adr/0248-store-and-kazopkg-dependency-resolution.md) | — |
 | “Features” section of Settings | Settings lists the installed Features and shows the pages they provide, by the user's role. | [0249](dev/adr/0249-settings-features-section.md) | — |
-| Storage persistence and eviction | The OS asks the browser not to erase its storage, shows the quota and warns when the browser erased data anyway. | [0250](dev/adr/0250-storage-persistence-and-eviction.md) | — |
+| Storage persistence and eviction | The OS asks the browser not to erase its storage, shows the quota and warns when the browser erased data anyway. Code delivered by work item `feature/19` (`KazoStorage`, `persist()` once per origin, eviction detected before the databases open, features' markers, Settings ▸ System ▸ Storage, `df`; [`system-administration.md`](framework/system-administration.md#browser-storage-kazostorage-adr-0250)). | [0250](dev/adr/0250-storage-persistence-and-eviction.md) | — |
 | Shell route to execute-capable apps | `./program.exe` in the terminal is typed by a Feature's format detector, then handed to the app that declares `execute` for that MIME type, without an execute bit nor a script reading. | [0251](dev/adr/0251-shell-route-to-execute-capable-apps.md) | — |
 | The Terminal shows a guest program | A Feature's console program (Linux shell, text-mode DOS program) shows in the Kazo Terminal: per-cell colors, function keys, Ctrl+C to the program. | [0252](dev/adr/0252-terminal-shows-a-guest-program.md) | — |
 | Marked sender | An app launched or a file opened by another app knows the sender, marked by the OS, for its journal. | [0253](dev/adr/0253-marked-sender-on-launch-and-open.md) | — |

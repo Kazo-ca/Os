@@ -100,6 +100,13 @@ public sealed record AppPackageInstallContext(
     /// not assemblies of the OS (ADR 0261 §1).
     /// </summary>
     public IReadOnlySet<string> LoadedPackageLibraries { get; init; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// Gets the catalog apps uninstalled for the session (ADR 0048), each with whether it is the
+    /// machine file that uninstalls it: a dependency among them is reactivated by the plan, not
+    /// downloaded again (ADR 0248 §1), and reactivating it for the machine needs an administrator.
+    /// </summary>
+    public IReadOnlyDictionary<string, bool> DisabledApps { get; init; } = new Dictionary<string, bool>(StringComparer.Ordinal);
 }
 
 /// <summary>
@@ -772,6 +779,8 @@ public sealed partial class AppPackageInstaller
 
         CheckLibraries(package, catalog, packagedAppIds, installedApps, loadedPackageLibraries);
         CheckProvidedServices(package, catalog);
+        CheckProvidedDriveTypes(package.Manifest, catalog);
+        CheckProvidedCapabilities(package, catalog);
         IReadOnlyList<MissingRuntimeApi> missing = AppPackageApiCheck.FindMissing(package.Assemblies, _runtime);
         if (missing.Count > 0)
         {
@@ -812,6 +821,53 @@ public sealed partial class AppPackageInstaller
     }
 
     /// <summary>
+    /// ADR 0246 §2: a feature's prefix and permissions are its own. A feature whose prefix another
+    /// installed feature took is refused (<c>apps.package.capability-prefix-taken</c>), as is one that
+    /// declares an identifier another feature already declares (<c>apps.package.capability-already-provided</c>).
+    /// An app that asks for the permission of an installed feature declares that feature as a dependency.
+    /// An update of the same feature is not compared with itself.
+    /// </summary>
+    internal static void CheckProvidedCapabilities(AppPackage package, AppCatalog catalog)
+    {
+        AppManifest[] others = [.. catalog.Manifests.Values.Where(manifest =>
+            manifest.Kind == AppKind.Feature && !string.Equals(manifest.Id, package.AppId, StringComparison.Ordinal))];
+        AppManifest manifest = package.Manifest;
+        if (manifest.CapabilityPrefix is { } prefix
+            && others.FirstOrDefault(other => string.Equals(other.CapabilityPrefix, prefix, StringComparison.Ordinal)) is { } owner)
+        {
+            throw new AppPackageException(
+                "apps.package.capability-prefix-taken",
+                $"{package.AppId} declares permissions under '{prefix}.', which the feature {owner.Name} ({owner.Id}) already uses (ADR 0246 §2).");
+        }
+
+        foreach (AppProvidedCapabilityManifest capability in manifest.ProvidedCapabilities ?? [])
+        {
+            if (others.FirstOrDefault(other => (other.ProvidedCapabilities ?? []).Any(item => string.Equals(item.Id, capability.Id, StringComparison.Ordinal))) is { } declaring)
+            {
+                throw new AppPackageException(
+                    "apps.package.capability-already-provided",
+                    $"{package.AppId} declares '{capability.Id}', which the feature {declaring.Name} ({declaring.Id}) already declares (ADR 0246 §1).");
+            }
+        }
+
+        foreach (AppManifest app in package.Manifests)
+        {
+            foreach (string capability in app.Capabilities.Where(FeatureCapabilities.IsFeaturePermission))
+            {
+                string wanted = FeatureCapabilities.GetPrefix(capability);
+                bool own = string.Equals(manifest.CapabilityPrefix, wanted, StringComparison.Ordinal);
+                if (!own && others.FirstOrDefault(other => string.Equals(other.CapabilityPrefix, wanted, StringComparison.Ordinal)) is { } provider
+                    && !app.Dependencies.Any(dependency => string.Equals(dependency.AppId, provider.Id, StringComparison.Ordinal)))
+                {
+                    throw new AppPackageException(
+                        "manifest.capability.unknown",
+                        $"{app.Id} asks for '{capability}' of the feature {provider.Id} without declaring that feature as a dependency (ADR 0246 §2).");
+                }
+            }
+        }
+    }
+
+    /// <summary>
     /// ADR 0262 §1: one provider per contract. A feature that provides a contract another feature of
     /// the catalog already provides is refused; an update of the same feature is not compared with itself.
     /// </summary>
@@ -824,6 +880,26 @@ public sealed partial class AppPackageInstaller
                 throw new AppPackageException(
                     "apps.package.service-already-provided",
                     $"{package.AppId} provides {service.ContractType}, which the feature {other.Feature.Name} ({other.Feature.Id}) already provides: a contract has one provider (ADR 0262 §1).");
+            }
+        }
+    }
+
+    /// <summary>
+    /// ADR 0282 §1: one provider per network drive type. A feature that declares a type another
+    /// feature of the catalog already provides is refused; an update of the same feature is not
+    /// compared with itself. The types of the OS are refused earlier, by the manifest validator.
+    /// </summary>
+    internal static void CheckProvidedDriveTypes(AppManifest feature, AppCatalog catalog)
+    {
+        foreach (AppDriveProviderManifest provider in feature.DriveProviders ?? [])
+        {
+            if (catalog.GetDriveProviders().FirstOrDefault(registration =>
+                    string.Equals(registration.Provider.Type, provider.Type, StringComparison.Ordinal)
+                    && !string.Equals(registration.Feature.Id, feature.Id, StringComparison.Ordinal)) is { } other)
+            {
+                throw new AppPackageException(
+                    "apps.package.drive-type-already-provided",
+                    $"{feature.Id} provides the drive type '{provider.Type}', which the feature {other.Feature.Name} ({other.Feature.Id}) already provides: a drive type has one provider (ADR 0282 §1).");
             }
         }
     }

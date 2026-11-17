@@ -25,6 +25,9 @@ public partial class SettingsWindow
     /// <summary>Id of the "Application" page, only listed for <c>--app=&lt;id&gt;</c> (ADR 0096 §4).</summary>
     internal const string ApplicationPageId = "application";
 
+    /// <summary>Id of the "Cloud accounts" page (<c>--page=cloud-accounts</c>, ADR 0267 §11).</summary>
+    internal const string CloudAccountsPageId = "cloud-accounts";
+
     /// <summary>Id of the "What's new" page (<c>--page=whats-new</c>, ADR 0186 §4.5), opened by the sign-in notification.</summary>
     internal const string WhatsNewPageId = "whats-new";
 
@@ -49,8 +52,11 @@ public partial class SettingsWindow
         new(ApplicationPageId, "Nav.Group.Applications", "Tab.Application", Icons.Material.Filled.Info),
         new("server", "Nav.Group.Network", "Tab.ServerConnection", Icons.Material.Filled.Cloud),
         new("sync", "Nav.Group.Network", "Tab.Synchronization", Icons.Material.Filled.Sync),
+        new(CloudAccountsPageId, "Nav.Group.Network", "Tab.CloudAccounts", Icons.Material.Filled.CloudQueue),
         new("users", "Nav.Group.System", "Tab.Users", Icons.Material.Filled.People),
         new("memory", "Nav.Group.System", "Tab.Memory", Icons.Material.Filled.Memory),
+        // ADR 0250 §3 (answer 2 A): next to Memory.
+        new("storage", "Nav.Group.System", "Tab.Storage", Icons.Material.Filled.Storage),
         new(BackupPageId, "Nav.Group.System", "Tab.Backup", Icons.Material.Filled.Backup),
         new(WhatsNewPageId, "Nav.Group.System", "Tab.WhatsNew", Icons.Material.Filled.NewReleases),
         new("about", "Nav.Group.System", "Tab.About", Icons.Material.Filled.Info),

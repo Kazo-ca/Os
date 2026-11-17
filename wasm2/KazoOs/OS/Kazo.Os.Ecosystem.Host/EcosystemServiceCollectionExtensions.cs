@@ -1,6 +1,7 @@
 using Kazo.Os.App.Abstractions;
 using Kazo.Os.App.Abstractions.Policy;
 using Kazo.Os.Infrastructure.Browser.Catalog;
+using Kazo.Os.Infrastructure.Browser.CloudAccounts;
 using Kazo.Os.Infrastructure.Browser.FileSystem;
 using Kazo.Os.Infrastructure.Browser.Interop;
 using Kazo.Os.Infrastructure.Browser.Policy;
@@ -11,6 +12,7 @@ using Kazo.Os.Infrastructure.Browser.Sync;
 using Kazo.Os.Platform.Core.ServerConnection;
 using Kazo.Os.Ecosystem.Administration;
 using Kazo.Os.Platform.Core.Administration;
+using Kazo.Os.Platform.Core.CloudAccounts;
 using Kazo.Os.Platform.Core.Power;
 using Kazo.Os.Platform.Core.Backup;
 using Kazo.Os.Platform.Core.Storage;
@@ -19,6 +21,7 @@ using Kazo.Os.Platform.Core.Apps;
 using Kazo.Os.Platform.Core.Apps.Packages;
 using Kazo.Os.Platform.Core;
 using Kazo.Os.Platform.WorkerHost.Host;
+using Kazo.Os.Simulation.Abstractions.CloudAccounts;
 using Kazo.Os.Simulation.Abstractions.Workers;
 using Kazo.Os.Platform.Core.Diagnostics;
 using Kazo.Os.Platform.Core.Discovery;
@@ -28,6 +31,7 @@ using Kazo.Os.Platform.Core.Execution;
 using Kazo.Os.Platform.Core.Isolation;
 using Kazo.Os.Platform.Core.Keyring;
 using Kazo.Os.Platform.Core.FileSystem;
+using Kazo.Os.Platform.Core.FileSystem.DriveProviders;
 using Kazo.Os.Platform.Core.FileSystem.HostFolders;
 using Kazo.Os.Platform.Core.FileSystem.Virtual;
 using Kazo.Os.Platform.Core.Intents;
@@ -272,9 +276,16 @@ public static class EcosystemServiceCollectionExtensions
         services.AddScoped<IDynamicFileSystemMountRouter>(provider => provider.GetRequiredService<FileSystemMountRouter>());
         services.AddScoped<IHostFolderAccess>(provider =>
             new BrowserHostFolderAccess(provider.GetRequiredService<Microsoft.JSInterop.IJSRuntime>()));
+        // ADR 0267 §3: the folders of the computer (hostfs) and every other drive source registered
+        // as INetworkDriveSource (the cloud connectors).
         services.AddScoped<NetworkDriveService>(provider => new NetworkDriveService(
             provider.GetRequiredService<IDynamicFileSystemMountRouter>(),
-            provider.GetRequiredService<IHostFolderAccess>(),
+            [
+                new HostFolderDriveSource(provider.GetRequiredService<IHostFolderAccess>()),
+                .. provider.GetServices<INetworkDriveSource>()
+            ],
+            // ADR 0282 §3: and the drive types the installed features provide, read at each use.
+            provider.GetService<FeatureDriveSources>(),
             () => provider.GetRequiredService<ISessionService>().CurrentPrincipal,
             provider.GetService<IEventBus>(),
             logger: provider.GetService<ILogger<NetworkDriveService>>()));
@@ -388,7 +399,11 @@ public static class EcosystemServiceCollectionExtensions
             provider.GetRequiredService<IOsSettingsService>(),
             provider.GetRequiredService<IServerConnectionService>(),
             provider.GetRequiredService<IProxyClient>(),
-            provider.GetService<ILogger<RealNetworkGrantReconciler>>()));
+            provider.GetService<ILogger<RealNetworkGrantReconciler>>())
+        {
+            // ADR 0278 §1: a grant synchronized on the server changes what the apps see of the relay.
+            GrantsChanged = () => provider.GetService<AppExecutionContextFactory>()?.RelayPolicy?.Invalidate()
+        });
 
         // FileAssociations domain sync (ADR 0033): /etc/kazoos/file-associations.json under its own
         // domain string. The AppCatalog domain is retired by ADR 0048: uninstalls are apps.config
@@ -435,9 +450,17 @@ public static class EcosystemServiceCollectionExtensions
         // Dangerous capabilities (ADR 0049): remembered decisions, the launch gate and its
         // secure-desktop overlay (the broker is the host's default approval prompt), and the
         // administration behind Settings > Permissions. Scoped: they read the session user's files.
+        // ADR 0246: the catalog of capabilities of the running OS, the built-in one plus the
+        // permissions of the installed, enabled features; everything that decides a grant reads it.
+        services.TryAddSingleton<ICapabilityCatalog>(provider => new Kazo.Os.Platform.Core.Features.InstalledCapabilityCatalog(
+            provider.GetRequiredService<AppCatalog>(),
+            provider.GetService<IAppEnablementRegistry>()));
         services.AddScoped<IAppPermissionStore>(provider => new AppPermissionStore(
             provider.GetRequiredService<IOsSettingsService>(),
-            provider.GetService<ILogger<AppPermissionStore>>()));
+            provider.GetService<ILogger<AppPermissionStore>>())
+        {
+            Capabilities = provider.GetService<ICapabilityCatalog>(),
+        });
         services.AddScoped<DangerousCapabilityApprovalBroker>();
         services.AddScoped<IDangerousCapabilityApprovalPrompt>(provider =>
             provider.GetRequiredService<DangerousCapabilityApprovalBroker>());
@@ -450,7 +473,8 @@ public static class EcosystemServiceCollectionExtensions
             provider.GetRequiredService<IAuditLog>(),
             provider.GetRequiredService<IDangerousCapabilityApprovalPrompt>())
         {
-            RealNetworkGrants = provider.GetRequiredService<IRealNetworkGrantReconciler>()
+            RealNetworkGrants = provider.GetRequiredService<IRealNetworkGrantReconciler>(),
+            Capabilities = provider.GetService<ICapabilityCatalog>() ?? BuiltInCapabilityCatalog.Instance,
         });
         // OS authentication agent (ADR 0055 section 5, polkit-like): gateways that need an
         // administrator ask it; its secure-desktop overlay is rendered by the shell.
@@ -468,8 +492,18 @@ public static class EcosystemServiceCollectionExtensions
             // ADR 0168 section 4: an administrator may confirm with a passkey instead of a password.
             PasskeyVerifier = provider.GetRequiredService<IAdminElevationVerifier>() is AdminElevationVerifier verifier
                 ? (login, ct) => verifier.VerifyWithPasskeyAsync(login, provider.GetRequiredService<PasskeyService>(), ct)
-                : null
+                : null,
+            // ADR 0247 §3: the holder of a feature's role authenticates with their own password.
+            UserVerifier = provider.GetRequiredService<IAdminElevationVerifier>() is AdminElevationVerifier userVerifier
+                ? userVerifier.VerifyUserAsync
+                : null,
         });
+        // ADR 0247: the roles the features declare and who holds them (/etc/kazoos/roles.config);
+        // grants and refusals go to /var/log/auth.log.
+        services.AddScoped<Kazo.Os.Platform.Core.Roles.FeatureRoleService>(provider => new Kazo.Os.Platform.Core.Roles.FeatureRoleService(
+            () => provider.GetRequiredService<AppCatalog>(),
+            provider.GetRequiredService<IOsSettingsService>(),
+            provider.GetRequiredService<IAuditLog>()));
         services.AddScoped<AppPermissionAdministration>(provider => new AppPermissionAdministration(
             provider.GetRequiredService<AppCatalog>(),
             provider.GetRequiredService<IAppPermissionStore>(),
@@ -477,7 +511,8 @@ public static class EcosystemServiceCollectionExtensions
             provider.GetRequiredService<IAdminElevationVerifier>(),
             provider.GetRequiredService<IAuditLog>())
         {
-            RealNetworkGrants = provider.GetRequiredService<IRealNetworkGrantReconciler>()
+            RealNetworkGrants = provider.GetRequiredService<IRealNetworkGrantReconciler>(),
+            Capabilities = provider.GetService<ICapabilityCatalog>() ?? BuiltInCapabilityCatalog.Instance,
         });
         // Reboot and factory reset (ADR 0056 section 11): the browser reloads the page and deletes
         // the OS database; KazoSystem reaches them only after the authentication agent agreed.
@@ -524,6 +559,20 @@ public static class EcosystemServiceCollectionExtensions
             Reclaimer = provider.GetRequiredService<IStorageReclaimer>(),
         });
         services.AddScoped<IStorageSpaceGuard>(provider => provider.GetRequiredService<StorageSpaceMonitor>());
+        // ADR 0250: the eviction check runs before anything opens the OS database (InstalledAppsBoot),
+        // so it lives in the root provider with its own access to the browser's storage.
+        services.AddSingleton<StorageEvictionDetector>(provider =>
+            new StorageEvictionDetector(new BrowserStorageManager(provider.GetRequiredService<Microsoft.JSInterop.IJSRuntime>())));
+        services.AddScoped<OriginStorageService>(provider =>
+            new OriginStorageService(
+                new BrowserStorageManager(provider.GetRequiredService<Microsoft.JSInterop.IJSRuntime>()),
+                provider.GetRequiredService<IFileSystemService>(),
+                provider.GetRequiredService<ISimulationClock>(),
+                provider.GetRequiredService<StorageEvictionDetector>(),
+                provider.GetRequiredService<INotificationQueue>(),
+                () => provider.GetRequiredService<ISessionService>().CurrentPrincipal,
+                provider.GetService<KernelLog>(),
+                language: () => provider.GetRequiredService<Kazo.Os.Platform.Core.Globalization.SessionLocaleService>().Culture));
 
         // User keyring (ADR 0100 section 2): ~/.local/share/keyrings/login.keyring, sealed with
         // AES-GCM through Web Crypto, unlocked by the session service at login.
@@ -535,6 +584,40 @@ public static class EcosystemServiceCollectionExtensions
             provider.GetRequiredService<IKeyringCipher>(),
             provider.GetRequiredService<IAuditLog>(),
             provider.GetService<ILogger<UserKeyringService>>()));
+
+        // Cloud accounts (ADR 0267 §5): OAuth with PKCE in a pop-up window that returns to the static
+        // oauth-callback.html of Infrastructure.Browser, tokens sealed on the device under a key of
+        // the keyring above. Nothing is offered until KazoOs:CloudDrives has app ids.
+        services.TryAddScoped<IOAuthAuthorizationWindow>(provider => new BrowserOAuthAuthorizationWindow(
+            provider.GetRequiredService<IJSRuntime>(),
+            new Uri(provider.GetRequiredService<Microsoft.AspNetCore.Components.NavigationManager>().BaseUri)));
+        // ADR 0282 §3: an OAuth drive type an installed and enabled feature declares is signed in by
+        // the OS like Dropbox and OneDrive; the catalog is read at each call, so a feature installed
+        // or removed is offered or withdrawn without a restart.
+        services.TryAddScoped<ICloudProviderCatalog>(provider => new CloudProviderCatalog(
+            // ADR 0282 §5: a provider whose connector the build left out is never offered.
+            CloudDriveServiceCollectionExtensions.WithLeftOutTypes(provider.GetService<CloudProviderSettings>() ?? CloudProviderSettings.None),
+            provider.GetRequiredService<IOsSettingsService>())
+        {
+            DeclaredProviders = () => provider.GetService<AppCatalog>() is { } catalog
+                ? DeclaredCloudProviders.GetOAuthRegistrations(catalog, provider.GetService<IAppEnablementRegistry>())
+                : []
+        });
+        services.AddScoped<CloudAccountService>(provider => new CloudAccountService(
+            provider.GetRequiredService<IFileSystemService>(),
+            provider.GetRequiredService<ISimulationClock>(),
+            provider.GetRequiredService<UserKeyringService>(),
+            provider.GetRequiredService<IKeyringCipher>(),
+            provider.GetRequiredService<ICloudProviderCatalog>(),
+            provider.GetRequiredService<IOAuthAuthorizationWindow>(),
+            new CloudOAuthTokenClient(new HttpClient()),
+            () => provider.GetRequiredService<ISessionService>().CurrentPrincipal,
+            drives: () => provider.GetService<NetworkDriveService>(),
+            provider.GetService<IEventBus>(),
+            logger: provider.GetService<ILogger<CloudAccountService>>()));
+        // ADR 0267 §6: the shipped connectors (Dropbox, OneDrive, S3), drive sources of the network
+        // drive service, each as the build kept it (ADR 0282 §5, build/Kazo.Os.CloudDrives.targets).
+        services.AddKazoOsShippedCloudDrives();
 
         // passwd and the Settings "Users" tab (ADR 0120): new credentials hashed through Web Crypto
         // like at login, the login keyring re-sealed or set aside, every attempt in auth.log.
@@ -600,7 +683,12 @@ public static class EcosystemServiceCollectionExtensions
                 grantRepository: provider.GetService<ICapabilityGrantRepository>(),
                 catalog: provider.GetService<AppCatalog>(),
                 profileInitializer: provider.GetRequiredService<SettingsStoreToFilesMigration>(),
-                keyring: provider.GetRequiredService<UserKeyringService>());
+                keyring: provider.GetRequiredService<UserKeyringService>())
+            {
+                // ADR 0246 §3: only what the catalog knows is granted at sign-in (issue #432).
+                Capabilities = provider.GetService<ICapabilityCatalog>(),
+                Logger = provider.GetService<ILogger<LocalSessionService>>(),
+            };
         });
         // Per-process arguments, working directory and environment (ADR 0050): filled and
         // emptied by the process manager, read by /proc and each app's Environment gateway.
@@ -719,7 +807,17 @@ public static class EcosystemServiceCollectionExtensions
         services.TryAddSingleton<SystemStartupSignal>();
         // ADR 0131: what the page found at boot; the browser host also registers the probe.
         services.TryAddSingleton<CrossOriginIsolationState>();
-        services.AddScoped<EcosystemBootCoordinator>();
+        services.AddScoped<EcosystemBootCoordinator>(provider =>
+        {
+            EcosystemBootCoordinator coordinator = ActivatorUtilities.CreateInstance<EcosystemBootCoordinator>(provider);
+            // ADR 0250: the eviction check, the features' markers and kern.log.
+            coordinator.EvictionDetector = provider.GetService<StorageEvictionDetector>();
+            coordinator.OriginStorage = provider.GetService<OriginStorageService>();
+            coordinator.KernelLog = provider.GetService<KernelLog>();
+            // ADR 0247 §1: roles.config read at boot.
+            coordinator.FeatureRoles = provider.GetService<Kazo.Os.Platform.Core.Roles.FeatureRoleService>();
+            return coordinator;
+        });
 
         services.AddSingleton(_ => catalog ?? CreateEmptyCatalog());
         // ADR 0098 §5: assets checked against their manifest hash at first read. The WebAssembly host
@@ -794,6 +892,36 @@ public static class EcosystemServiceCollectionExtensions
             new WebAppActivator(
                 () => provider.GetRequiredService<AppLifecycleOrchestrator>(),
                 provider.GetRequiredService<ListeningPortTable>())));
+        // ADR 0282 §3: the drive providers features declare, one instance per page and type, created
+        // at the first drive of the type in the feature's own process, like its services (ADR 0262).
+        services.TryAddScoped(provider => new FeatureDriveProviderLoader(
+            (assemblyFileName, cancellationToken) => LoadFeatureAssemblyAsync(provider, assemblyFileName, cancellationToken),
+            (runAs, implementation) => provider.GetRequiredService<AppLifecycleOrchestrator>()
+                .StartFeatureService(runAs, implementation, ServiceAccount.CreatePrincipal(
+                    InstallationId.FromGuid(Guid.NewGuid()), DeviceId.FromGuid(Guid.NewGuid()), DateTimeOffset.UtcNow))
+                .Context,
+            (featureId, message) => provider.GetService<LogFileWriter>()?.Write(
+                LogFileTarget.ForApp(featureId), Kazo.Os.Simulation.Abstractions.Diagnostics.DiagnosticSeverity.Error, "drives", message),
+            provider.GetService<ILogger<FeatureDriveProviderLoader>>()));
+        // ADR 0284 §2: the servers users typed, allowed to their provider while the drive is open.
+        services.TryAddScoped<Kazo.Os.Platform.Core.Network.DriveServerHosts>();
+        services.TryAddScoped(provider => new FeatureDriveSources(
+            provider.GetRequiredService<AppCatalog>(),
+            provider.GetRequiredService<IAppEnablementRegistry>(),
+            registration => new FeatureDriveSource(
+                registration,
+                provider.GetRequiredService<FeatureDriveProviderLoader>(),
+                provider.GetRequiredService<CloudAccountService>(),
+                (type, accountId, availabilityChanged, cancellationToken) => ConnectFeatureDriveAsync(
+                    provider, type, registration.Feature.Id, accountId, availabilityChanged, cancellationToken))
+            {
+                ServerHosts = provider.GetRequiredService<Kazo.Os.Platform.Core.Network.DriveServerHosts>(),
+                // ADR 0282 §5: a new drive of a form type creates its account, checked against the
+                // declaration and owned by the feature that provides the type.
+                SaveFormAccount = (type, displayName, options, secrets, cancellationToken) =>
+                    provider.GetRequiredService<CloudAccountService>().SaveFormAccountAsync(
+                        type, registration.Feature.Id, displayName, options, secrets, cancellationToken)
+            }));
         // ADR 0262: the services features provide, one instance per page, created on the first
         // request in the feature's own process (kazoos-svc, like a system daemon).
         services.TryAddScoped(provider => new Kazo.Os.Platform.Core.Features.FeatureServiceResolver(
@@ -806,7 +934,7 @@ public static class EcosystemServiceCollectionExtensions
                 .Context,
             () => provider.GetService<IInstalledLibraryState>(),
             provider.GetService<ILogger<Kazo.Os.Platform.Core.Features.FeatureServiceResolver>>()));
-        services.AddScoped<AppExecutionContextFactory>(provider => new AppExecutionContextFactory(
+        services.AddScoped<AppExecutionContextFactory>(provider => WithRelayFollowingTheServer(provider, new AppExecutionContextFactory(
             provider.GetRequiredService<ICapabilityGrantRepository>(),
             provider.GetRequiredService<IFileSystemService>(),
             provider.GetRequiredService<IEventBus>(),
@@ -848,8 +976,12 @@ public static class EcosystemServiceCollectionExtensions
                 InstalledLibraries = () => provider.GetService<IInstalledLibraryState>(),
                 // ADR 0262 §2: each app's KazoFeatures, answered by the page's resolver.
                 FeatureServices = () => provider.GetService<Kazo.Os.Platform.Core.Features.FeatureServiceResolver>(),
+                // ADR 0246: each app's capability checks know the features' permissions and what they cover.
+                Capabilities = () => provider.GetService<ICapabilityCatalog>(),
                 // ADR 0260 §3: the consent to a feature's installation is written as machine allow lines.
                 PermissionStore = () => provider.GetService<IAppPermissionStore>(),
+                // ADR 0247: each app's roles and the OS's authentication of a feature's operations.
+                Roles = () => provider.GetService<Kazo.Os.Platform.Core.Roles.FeatureRoleService>(),
             },
             // Lazy for the same reason: ShellInterpreter depends on the orchestrator (ADR 0056 section 7).
             shellHostProvider: () => provider.GetRequiredService<ShellHostService>(),
@@ -864,7 +996,10 @@ public static class EcosystemServiceCollectionExtensions
                 {
                     // ADR 0181: KazoDriveInfo.MountHostFolderAsync, ReconnectAsync and UnmountAsync.
                     // Resolved now, with the execution factory, so it sees the first login event.
-                    NetworkDrives = NetworkDrivesOf(provider)
+                    NetworkDrives = NetworkDrivesOf(provider),
+                    // ADR 0282 §5: the scopes of the OAuth types, and which feature a kept drive's type belongs to.
+                    CloudProviders = cancellationToken => provider.GetRequiredService<CloudAccountService>().GetProvidersAsync(cancellationToken),
+                    FeatureOfType = type => provider.GetRequiredService<AppCatalog>().FindDriveProvider(type)?.Feature.Id
                 },
                 // ADR 0068: write-stream buffers and sockets in flight, charged to each app's process.
                 provider.GetRequiredService<IKernelMemoryLedger>())
@@ -910,6 +1045,8 @@ public static class EcosystemServiceCollectionExtensions
                 Passkeys = () => provider.GetRequiredService<PasskeyService>(),
                 // ADR 0187: the guest's "Create my account", shown by the host.
                 GuestRequests = () => provider.GetRequiredService<GuestAccountRequests>(),
+                // KazoCloudAccounts (ADR 0270): Explorer and Settings connect and remove cloud accounts.
+                CloudAccounts = () => provider.GetRequiredService<Kazo.Os.Platform.Core.CloudAccounts.CloudAccountService>(),
                 // KazoComponentProviders (ADR 0156): a third-party provider goes through the approval window.
                 ComponentProviders = () => provider.GetRequiredService<Kazo.Os.Platform.Core.ComponentProviders.ComponentProviderService>(),
                 ApprovalPrompt = () => provider.GetRequiredService<IDangerousCapabilityApprovalPrompt>(),
@@ -919,13 +1056,17 @@ public static class EcosystemServiceCollectionExtensions
                 Screens = OperatingSystem.IsBrowser() ? () => provider.GetRequiredService<ScreenControl>() : null,
                 // KazoWhatsNew (ADR 0186): the served change list, on a host that registers its source.
                 WhatsNew = provider.GetService<Kazo.Os.Platform.Core.WhatsNew.IWhatsNewSource>() is null ? null : () => provider.GetRequiredService<Kazo.Os.Platform.Core.WhatsNew.WhatsNewService>(),
+                // ADR 0250: the browser storage of the page behind KazoStorage.
+                OriginStorage = () => provider.GetRequiredService<OriginStorageService>(),
             })
         {
             // KazoBackground (ADR 0128): each task a child process, in a worker when the host has some.
             BackgroundJobs = () => provider.GetRequiredService<BackgroundJobService>(),
             // ADR 0193: IAppExecutionContext.TimeZone follows Settings > Date and time.
             TimeZones = provider.GetRequiredService<Kazo.Os.Platform.Core.Globalization.SessionTimeZoneService>(),
-        });
+            // ADR 0284 §2: the servers users typed for the open drives of a provider.
+            DriveServerHosts = provider.GetRequiredService<Kazo.Os.Platform.Core.Network.DriveServerHosts>(),
+        }));
         services.AddScoped<BackgroundJobService>(provider => new BackgroundJobService(
             provider.GetRequiredService<IProcessManager>(),
             // Lazy: the orchestrator depends on the context factory, which carries this service.
@@ -985,9 +1126,12 @@ public static class EcosystemServiceCollectionExtensions
         {
             // ADR 0125, section 3: a session's root process gets the limits of limits.conf.
             LoginResourceLimits = provider.GetRequiredService<LoginResourceLimitsProvider>(),
+            Capabilities = provider.GetService<ICapabilityCatalog>() ?? BuiltInCapabilityCatalog.Instance,
             // ADR 0214 §4.2: the data of an installed app is backed up when its version changes.
             DataGuard = new AppDataGuard(
                 () => provider.GetService<InstalledPackageCatalog>(), provider.GetService<ILogger<AppDataGuard>>()),
+            // ADR 0247 §2: an entry point that requires a role opens only for its holders.
+            Roles = () => provider.GetService<Kazo.Os.Platform.Core.Roles.FeatureRoleService>(),
         });
         // Uninstall/reinstall through /etc/kazoos/apps.config + ~/.config/kazoos/apps.config
         // (ADR 0048). Started by EcosystemBootCoordinator once storage is ready; feeds the
@@ -1383,6 +1527,20 @@ public static class EcosystemServiceCollectionExtensions
     /// uninstalled for the machine. Runs after each change of the installed state; a failure is
     /// written to the system log and never blocks the uninstall.
     /// </summary>
+    /// <summary>
+    /// Reads the relay policy again when the server connects, disconnects or stops answering
+    /// (ADR 0278 §1), so the apps that follow the relay's state see the change.
+    /// </summary>
+    private static AppExecutionContextFactory WithRelayFollowingTheServer(IServiceProvider provider, AppExecutionContextFactory factory)
+    {
+        if (factory.RelayPolicy is { } relayPolicy && provider.GetService<ServerPresenceService>() is { } presence)
+        {
+            presence.Changed += relayPolicy.Invalidate;
+        }
+
+        return factory;
+    }
+
     private static async Task RemoveUninstalledComponentProvidersAsync(IServiceProvider provider, AppInstallationService installation)
     {
         try
@@ -1419,6 +1577,55 @@ public static class EcosystemServiceCollectionExtensions
                 "context-menu",
                 $"context-menus.d could not be updated after an install change: {exception.Message}");
         }
+    }
+
+    /// <summary>
+    /// What the OS lends the provider of a declared drive type for one drive (ADR 0282 §3): the
+    /// context bound to the drive's account (work item 5) and the non-secret values of a form
+    /// account. An account that is gone, of another type, or added with another feature's provider
+    /// of that type is <c>SignInRequired</c>: the drive stays disconnected.
+    /// </summary>
+    private static async ValueTask<FeatureDriveConnection> ConnectFeatureDriveAsync(
+        IServiceProvider provider, string type, string featureId, string accountId, Action availabilityChanged, CancellationToken cancellationToken)
+    {
+        CloudAccountService accounts = provider.GetRequiredService<CloudAccountService>();
+        await GrantFeatureServiceCapabilitiesAsync(provider, featureId, cancellationToken).ConfigureAwait(false);
+        try
+        {
+            Kazo.Os.AppSdk.Drives.IKazoDriveProviderContext context = await accounts
+                .CreateDriveProviderContextAsync(type, featureId, accountId, availabilityChanged, cancellationToken).ConfigureAwait(false);
+            CloudAccount? account = await accounts.FindAccountAsync(accountId, cancellationToken).ConfigureAwait(false);
+            return new FeatureDriveConnection(context, account?.Options ?? new Dictionary<string, string>(StringComparer.Ordinal));
+        }
+        catch (CloudAccountException exception)
+        {
+            throw new Kazo.Os.AppSdk.Drives.KazoDriveException(
+                Kazo.Os.AppSdk.Drives.KazoDriveErrorKind.SignInRequired, $"{type}: {exception.Message}", exception);
+        }
+    }
+
+    /// <summary>
+    /// ADR 0282 §3: a drive provider runs in its feature's process, as <c>kazoos-svc</c>. Its
+    /// dangerous capabilities (<c>drives.provide</c>, which its network calls need) are the ones the
+    /// administrator approved for the machine when the feature was installed: they are granted to
+    /// that account here, before each connection, without asking anything. A capability still
+    /// pending or refused stays refused, and the provider's calls fail as for any app.
+    /// </summary>
+    private static async ValueTask GrantFeatureServiceCapabilitiesAsync(
+        IServiceProvider provider, string featureId, CancellationToken cancellationToken)
+    {
+        if (provider.GetService<IDangerousCapabilityGate>() is not { } gate
+            || !provider.GetRequiredService<AppCatalog>().Manifests.TryGetValue(featureId, out AppManifest? feature))
+        {
+            return;
+        }
+
+        await gate.EnsureDecidedAsync(
+            feature,
+            ServiceAccount.CreatePrincipal(InstallationId.FromGuid(Guid.NewGuid()), DeviceId.FromGuid(Guid.NewGuid()), DateTimeOffset.UtcNow),
+            prompt: null,
+            interactive: false,
+            cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>

@@ -62,6 +62,18 @@ public sealed class BrowserRealSitesTests
         Assert.Contains(view.Hints, hint => hint.Contains("KazoOs:Proxy", StringComparison.Ordinal));
     }
 
+    [Theory]
+    [InlineData("ERR_KAZO_RELAY_NO_SERVER", "n'est connecté")]
+    [InlineData("ERR_KAZO_RELAY_DISABLED", "a arrêté son relais")]
+    [InlineData("ERR_KAZO_RELAY_GRANT_PENDING", "pas encore reçu l'autorisation")]
+    public void A_relay_refusal_of_adr_0278_says_why_on_its_page(string code, string expected)
+    {
+        BrowserErrorView view = BrowserErrorPages.ForNetworkError(code, new Uri("https://example.com/"), French);
+
+        Assert.Equal(code, view.Code);
+        Assert.Contains(view.Hints.Append(view.Message), text => text.Contains(expected, StringComparison.Ordinal));
+    }
+
     [Fact]
     public void An_unknown_host_suggests_connecting_a_server_for_real_sites()
     {

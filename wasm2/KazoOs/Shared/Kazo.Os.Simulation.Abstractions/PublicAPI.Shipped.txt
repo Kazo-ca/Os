@@ -6,6 +6,29 @@ Kazo.Os.Simulation.Abstractions.Clipboard.IHostClipboardChannel.SyncGuestTextAsy
 Kazo.Os.Simulation.Abstractions.Clipboard.IHostClipboardSink
 Kazo.Os.Simulation.Abstractions.Clipboard.IHostClipboardSink.OnHostPaste(string? text, System.Collections.Generic.IReadOnlyList<string!>! fileNames) -> void
 Kazo.Os.Simulation.Abstractions.Clipboard.IHostClipboardSink.OnNativeCopy(string! text) -> void
+Kazo.Os.Simulation.Abstractions.CloudAccounts.IOAuthAuthorizationWindow
+Kazo.Os.Simulation.Abstractions.CloudAccounts.IOAuthAuthorizationWindow.AuthorizeAsync(System.Uri! authorizationUrl, string! state, System.TimeSpan timeout, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.Simulation.Abstractions.CloudAccounts.OAuthAuthorizationResult!>
+Kazo.Os.Simulation.Abstractions.CloudAccounts.IOAuthAuthorizationWindow.PrepareAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Kazo.Os.Simulation.Abstractions.CloudAccounts.IOAuthAuthorizationWindow.RedirectUri.get -> System.Uri!
+Kazo.Os.Simulation.Abstractions.CloudAccounts.OAuthAuthorizationResult
+Kazo.Os.Simulation.Abstractions.CloudAccounts.OAuthAuthorizationResult.<Clone>$() -> Kazo.Os.Simulation.Abstractions.CloudAccounts.OAuthAuthorizationResult!
+Kazo.Os.Simulation.Abstractions.CloudAccounts.OAuthAuthorizationResult.Code.get -> string?
+Kazo.Os.Simulation.Abstractions.CloudAccounts.OAuthAuthorizationResult.Code.init -> void
+Kazo.Os.Simulation.Abstractions.CloudAccounts.OAuthAuthorizationResult.Deconstruct(out Kazo.Os.Simulation.Abstractions.CloudAccounts.OAuthAuthorizationStatus Status, out string? Code, out string? Error, out string? ErrorDescription) -> void
+Kazo.Os.Simulation.Abstractions.CloudAccounts.OAuthAuthorizationResult.Equals(Kazo.Os.Simulation.Abstractions.CloudAccounts.OAuthAuthorizationResult? other) -> bool
+Kazo.Os.Simulation.Abstractions.CloudAccounts.OAuthAuthorizationResult.Error.get -> string?
+Kazo.Os.Simulation.Abstractions.CloudAccounts.OAuthAuthorizationResult.Error.init -> void
+Kazo.Os.Simulation.Abstractions.CloudAccounts.OAuthAuthorizationResult.ErrorDescription.get -> string?
+Kazo.Os.Simulation.Abstractions.CloudAccounts.OAuthAuthorizationResult.ErrorDescription.init -> void
+Kazo.Os.Simulation.Abstractions.CloudAccounts.OAuthAuthorizationResult.OAuthAuthorizationResult(Kazo.Os.Simulation.Abstractions.CloudAccounts.OAuthAuthorizationStatus Status, string? Code = null, string? Error = null, string? ErrorDescription = null) -> void
+Kazo.Os.Simulation.Abstractions.CloudAccounts.OAuthAuthorizationResult.Status.get -> Kazo.Os.Simulation.Abstractions.CloudAccounts.OAuthAuthorizationStatus
+Kazo.Os.Simulation.Abstractions.CloudAccounts.OAuthAuthorizationResult.Status.init -> void
+Kazo.Os.Simulation.Abstractions.CloudAccounts.OAuthAuthorizationStatus
+Kazo.Os.Simulation.Abstractions.CloudAccounts.OAuthAuthorizationStatus.Authorized = 0 -> Kazo.Os.Simulation.Abstractions.CloudAccounts.OAuthAuthorizationStatus
+Kazo.Os.Simulation.Abstractions.CloudAccounts.OAuthAuthorizationStatus.Blocked = 2 -> Kazo.Os.Simulation.Abstractions.CloudAccounts.OAuthAuthorizationStatus
+Kazo.Os.Simulation.Abstractions.CloudAccounts.OAuthAuthorizationStatus.Cancelled = 4 -> Kazo.Os.Simulation.Abstractions.CloudAccounts.OAuthAuthorizationStatus
+Kazo.Os.Simulation.Abstractions.CloudAccounts.OAuthAuthorizationStatus.Failed = 1 -> Kazo.Os.Simulation.Abstractions.CloudAccounts.OAuthAuthorizationStatus
+Kazo.Os.Simulation.Abstractions.CloudAccounts.OAuthAuthorizationStatus.TimedOut = 3 -> Kazo.Os.Simulation.Abstractions.CloudAccounts.OAuthAuthorizationStatus
 Kazo.Os.Simulation.Abstractions.Diagnostics.AuditEntry
 Kazo.Os.Simulation.Abstractions.Diagnostics.AuditEntry.<Clone>$() -> Kazo.Os.Simulation.Abstractions.Diagnostics.AuditEntry!
 Kazo.Os.Simulation.Abstractions.Diagnostics.AuditEntry.Action.get -> string!
@@ -560,18 +583,23 @@ Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderEntry.Length.get -> long
 Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderEntry.Length.init -> void
 Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderEntry.Name.get -> string!
 Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderEntry.Name.init -> void
+Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderEntry.Revision.get -> string?
+Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderEntry.Revision.init -> void
 Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderEntryKind
 Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderEntryKind.Directory = 1 -> Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderEntryKind
 Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderEntryKind.File = 0 -> Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderEntryKind
 Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderErrorKind
 Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderErrorKind.AlreadyExists = 1 -> Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderErrorKind
 Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderErrorKind.Failure = 7 -> Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderErrorKind
+Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderErrorKind.FileTooLarge = 10 -> Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderErrorKind
 Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderErrorKind.InvalidName = 6 -> Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderErrorKind
 Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderErrorKind.NoSpace = 5 -> Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderErrorKind
 Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderErrorKind.NotAllowed = 4 -> Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderErrorKind
 Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderErrorKind.NotEmpty = 3 -> Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderErrorKind
 Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderErrorKind.NotFound = 0 -> Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderErrorKind
+Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderErrorKind.RevisionConflict = 8 -> Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderErrorKind
 Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderErrorKind.TypeMismatch = 2 -> Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderErrorKind
+Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderErrorKind.Unavailable = 9 -> Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderErrorKind
 Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderException
 Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderException.HostFolderException(Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderErrorKind kind, string! message, System.Exception? innerException = null) -> void
 Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderException.Kind.get -> Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderErrorKind
@@ -579,6 +607,7 @@ Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderPermission
 Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderPermission.Denied = 2 -> Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderPermission
 Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderPermission.Granted = 0 -> Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderPermission
 Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderPermission.Prompt = 1 -> Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderPermission
+Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderPermission.Unavailable = 3 -> Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderPermission
 Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderPick
 Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderPick.<Clone>$() -> Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderPick!
 Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderPick.Deconstruct(out string! Key, out Kazo.Os.Simulation.Abstractions.FileSystem.IHostFolder! Folder) -> void
@@ -588,8 +617,19 @@ Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderPick.Folder.init -> void
 Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderPick.HostFolderPick(string! Key, Kazo.Os.Simulation.Abstractions.FileSystem.IHostFolder! Folder) -> void
 Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderPick.Key.get -> string!
 Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderPick.Key.init -> void
+Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderQuota
+Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderQuota.<Clone>$() -> Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderQuota!
+Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderQuota.Deconstruct(out long TotalBytes, out long FreeBytes) -> void
+Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderQuota.Equals(Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderQuota? other) -> bool
+Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderQuota.FreeBytes.get -> long
+Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderQuota.FreeBytes.init -> void
+Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderQuota.HostFolderQuota(long TotalBytes, long FreeBytes) -> void
+Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderQuota.TotalBytes.get -> long
+Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderQuota.TotalBytes.init -> void
 Kazo.Os.Simulation.Abstractions.FileSystem.IAppFileSystemWatchGateway
 Kazo.Os.Simulation.Abstractions.FileSystem.IAppFileSystemWatchGateway.WatchAsync(Kazo.Os.App.Abstractions.VirtualPath path, Kazo.Os.Simulation.Abstractions.FileSystem.FileSystemWatchScope scope, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.Simulation.Abstractions.Events.ITopicChannelSubscription<Kazo.Os.Simulation.Abstractions.FileSystem.FileSystemChangeEvent!>!>
+Kazo.Os.Simulation.Abstractions.FileSystem.IConditionalHostFolder
+Kazo.Os.Simulation.Abstractions.FileSystem.IConditionalHostFolder.WriteIfMatchAsync(System.Collections.Generic.IReadOnlyList<string!>! path, byte[]! content, string! expectedRevision, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
 Kazo.Os.Simulation.Abstractions.FileSystem.IDynamicFileSystemMountRouter
 Kazo.Os.Simulation.Abstractions.FileSystem.IDynamicFileSystemMountRouter.Mount(Kazo.Os.Simulation.Abstractions.FileSystem.FileSystemMount! mount) -> void
 Kazo.Os.Simulation.Abstractions.FileSystem.IDynamicFileSystemMountRouter.MountsChanged -> System.Action?
@@ -638,8 +678,54 @@ Kazo.Os.Simulation.Abstractions.FileSystem.IHostFolderAccess.ForgetAsync(string!
 Kazo.Os.Simulation.Abstractions.FileSystem.IHostFolderAccess.IsSupportedAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<bool>
 Kazo.Os.Simulation.Abstractions.FileSystem.IHostFolderAccess.LoadAsync(string! key, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.Simulation.Abstractions.FileSystem.IHostFolder?>
 Kazo.Os.Simulation.Abstractions.FileSystem.IHostFolderAccess.PickAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderPick?>
+Kazo.Os.Simulation.Abstractions.FileSystem.IHostFolderQuota
+Kazo.Os.Simulation.Abstractions.FileSystem.IHostFolderQuota.GetQuotaAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderQuota?>
+Kazo.Os.Simulation.Abstractions.FileSystem.INetworkDriveSource
+Kazo.Os.Simulation.Abstractions.FileSystem.INetworkDriveSource.AvailabilityChanged -> System.Action?
+Kazo.Os.Simulation.Abstractions.FileSystem.INetworkDriveSource.CreateAsync(Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveRequest! request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveCreation?>
+Kazo.Os.Simulation.Abstractions.FileSystem.INetworkDriveSource.ForgetAsync(Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveReference! reference, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Kazo.Os.Simulation.Abstractions.FileSystem.INetworkDriveSource.IsAvailableAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<bool>
+Kazo.Os.Simulation.Abstractions.FileSystem.INetworkDriveSource.OpenAsync(Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveReference! reference, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.Simulation.Abstractions.FileSystem.IHostFolder?>
+Kazo.Os.Simulation.Abstractions.FileSystem.INetworkDriveSource.Type.get -> string!
 Kazo.Os.Simulation.Abstractions.FileSystem.IObservableHostFolder
 Kazo.Os.Simulation.Abstractions.FileSystem.IObservableHostFolder.ObserveAsync(System.Collections.Generic.IReadOnlyList<string!>! path, System.Action! changed, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<System.IAsyncDisposable?>
+Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveCreation
+Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveCreation.<Clone>$() -> Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveCreation!
+Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveCreation.Deconstruct(out Kazo.Os.Simulation.Abstractions.FileSystem.IHostFolder! Folder, out Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveReference! Reference, out string! DefaultMountName) -> void
+Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveCreation.DefaultMountName.get -> string!
+Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveCreation.DefaultMountName.init -> void
+Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveCreation.Equals(Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveCreation? other) -> bool
+Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveCreation.Folder.get -> Kazo.Os.Simulation.Abstractions.FileSystem.IHostFolder!
+Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveCreation.Folder.init -> void
+Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveCreation.NetworkDriveCreation(Kazo.Os.Simulation.Abstractions.FileSystem.IHostFolder! Folder, Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveReference! Reference, string! DefaultMountName) -> void
+Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveCreation.Reference.get -> Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveReference!
+Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveCreation.Reference.init -> void
+Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveReference
+Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveReference.<Clone>$() -> Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveReference!
+Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveReference.Account.get -> string?
+Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveReference.Account.init -> void
+Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveReference.Deconstruct(out string! Name, out string? Key, out string? Account, out string? Root) -> void
+Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveReference.Equals(Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveReference? other) -> bool
+Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveReference.Key.get -> string?
+Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveReference.Key.init -> void
+Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveReference.Name.get -> string!
+Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveReference.Name.init -> void
+Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveReference.NetworkDriveReference(string! Name, string? Key = null, string? Account = null, string? Root = null) -> void
+Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveReference.Root.get -> string?
+Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveReference.Root.init -> void
+Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveRequest
+Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveRequest.<Clone>$() -> Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveRequest!
+Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveRequest.Account.get -> string?
+Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveRequest.Account.init -> void
+Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveRequest.Deconstruct(out string? Account, out string? Root) -> void
+Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveRequest.Equals(Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveRequest? other) -> bool
+Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveRequest.NetworkDriveRequest(string? Account = null, string? Root = null) -> void
+Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveRequest.Options.get -> System.Collections.Generic.IReadOnlyDictionary<string!, string!>?
+Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveRequest.Options.init -> void
+Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveRequest.Root.get -> string?
+Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveRequest.Root.init -> void
+Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveRequest.Secrets.get -> System.Collections.Generic.IReadOnlyDictionary<string!, string!>?
+Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveRequest.Secrets.init -> void
 Kazo.Os.Simulation.Abstractions.FileSystem.SymbolicLinkMetadata
 Kazo.Os.Simulation.Abstractions.FileSystem.SymbolicLinkMetadata.Equals(Kazo.Os.Simulation.Abstractions.FileSystem.SymbolicLinkMetadata? other) -> bool
 Kazo.Os.Simulation.Abstractions.FileSystem.SymbolicLinkMetadata.Length.get -> int
@@ -927,6 +1013,13 @@ Kazo.Os.Simulation.Abstractions.Metrics.INetworkInterfaceStatistics.GetInterface
 Kazo.Os.Simulation.Abstractions.Metrics.INetworkInterfaceStatistics.RecordReceive(string! interfaceName, long bytes) -> void
 Kazo.Os.Simulation.Abstractions.Metrics.INetworkInterfaceStatistics.RecordReceiveError(string! interfaceName) -> void
 Kazo.Os.Simulation.Abstractions.Metrics.INetworkInterfaceStatistics.RecordTransmit(string! interfaceName, long bytes) -> void
+Kazo.Os.Simulation.Abstractions.Metrics.IOriginStorage
+Kazo.Os.Simulation.Abstractions.Metrics.IOriginStorage.DatabaseExistsAsync(string! name, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<bool?>
+Kazo.Os.Simulation.Abstractions.Metrics.IOriginStorage.FileExistsAsync(string! path, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<bool?>
+Kazo.Os.Simulation.Abstractions.Metrics.IOriginStorage.GetStatusAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.Simulation.Abstractions.Metrics.OriginStorageStatus?>
+Kazo.Os.Simulation.Abstractions.Metrics.IOriginStorage.ReadBootMarkerAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<string?>
+Kazo.Os.Simulation.Abstractions.Metrics.IOriginStorage.RequestPersistenceAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<bool>
+Kazo.Os.Simulation.Abstractions.Metrics.IOriginStorage.WriteBootMarkerAsync(string! marker, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
 Kazo.Os.Simulation.Abstractions.Metrics.IProcessIoAccounting
 Kazo.Os.Simulation.Abstractions.Metrics.IProcessIoAccounting.Get(Kazo.Os.Simulation.Abstractions.Processes.ProcessId pid) -> Kazo.Os.Simulation.Abstractions.Metrics.ProcessIoCounters
 Kazo.Os.Simulation.Abstractions.Metrics.IProcessIoAccounting.RecordRead(Kazo.Os.Simulation.Abstractions.Processes.ProcessId pid, long bytes, bool fromStorage) -> void
@@ -934,8 +1027,11 @@ Kazo.Os.Simulation.Abstractions.Metrics.IProcessIoAccounting.RecordWrite(Kazo.Os
 Kazo.Os.Simulation.Abstractions.Metrics.IProcessIoAccounting.Retain(System.Collections.Generic.IReadOnlyCollection<Kazo.Os.Simulation.Abstractions.Processes.ProcessId>! livePids) -> void
 Kazo.Os.Simulation.Abstractions.Metrics.IStorageCapacityProbe
 Kazo.Os.Simulation.Abstractions.Metrics.IStorageCapacityProbe.GetCapacityAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.Simulation.Abstractions.Metrics.StorageCapacity?>
+Kazo.Os.Simulation.Abstractions.Metrics.IStorageReclaimer
+Kazo.Os.Simulation.Abstractions.Metrics.IStorageReclaimer.ReclaimAsync(bool lowSpace, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<long>
 Kazo.Os.Simulation.Abstractions.Metrics.IStorageSpaceGuard
 Kazo.Os.Simulation.Abstractions.Metrics.IStorageSpaceGuard.IsRootReserveReached.get -> bool
+Kazo.Os.Simulation.Abstractions.Metrics.IStorageSpaceGuard.ReportWriteRefused() -> void
 Kazo.Os.Simulation.Abstractions.Metrics.IStorageSpaceGuard.RequestRefresh() -> void
 Kazo.Os.Simulation.Abstractions.Metrics.IStorageUsageProvider
 Kazo.Os.Simulation.Abstractions.Metrics.IStorageUsageProvider.GetUsageAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.Simulation.Abstractions.Metrics.StorageUsage>
@@ -963,6 +1059,23 @@ Kazo.Os.Simulation.Abstractions.Metrics.NetworkInterfaceCounters.TransmitErrors.
 Kazo.Os.Simulation.Abstractions.Metrics.NetworkInterfaceCounters.TransmitPackets.get -> long
 Kazo.Os.Simulation.Abstractions.Metrics.NetworkInterfaceCounters.TransmitPackets.init -> void
 Kazo.Os.Simulation.Abstractions.Metrics.NetworkInterfaceNames
+Kazo.Os.Simulation.Abstractions.Metrics.OriginStorageStatus
+Kazo.Os.Simulation.Abstractions.Metrics.OriginStorageStatus.<Clone>$() -> Kazo.Os.Simulation.Abstractions.Metrics.OriginStorageStatus!
+Kazo.Os.Simulation.Abstractions.Metrics.OriginStorageStatus.CacheBytes.get -> long?
+Kazo.Os.Simulation.Abstractions.Metrics.OriginStorageStatus.CacheBytes.init -> void
+Kazo.Os.Simulation.Abstractions.Metrics.OriginStorageStatus.Deconstruct(out long UsageBytes, out long QuotaBytes, out bool IsPersisted) -> void
+Kazo.Os.Simulation.Abstractions.Metrics.OriginStorageStatus.Equals(Kazo.Os.Simulation.Abstractions.Metrics.OriginStorageStatus? other) -> bool
+Kazo.Os.Simulation.Abstractions.Metrics.OriginStorageStatus.FileSystemBytes.get -> long?
+Kazo.Os.Simulation.Abstractions.Metrics.OriginStorageStatus.FileSystemBytes.init -> void
+Kazo.Os.Simulation.Abstractions.Metrics.OriginStorageStatus.IndexedDbBytes.get -> long?
+Kazo.Os.Simulation.Abstractions.Metrics.OriginStorageStatus.IndexedDbBytes.init -> void
+Kazo.Os.Simulation.Abstractions.Metrics.OriginStorageStatus.IsPersisted.get -> bool
+Kazo.Os.Simulation.Abstractions.Metrics.OriginStorageStatus.IsPersisted.init -> void
+Kazo.Os.Simulation.Abstractions.Metrics.OriginStorageStatus.OriginStorageStatus(long UsageBytes, long QuotaBytes, bool IsPersisted) -> void
+Kazo.Os.Simulation.Abstractions.Metrics.OriginStorageStatus.QuotaBytes.get -> long
+Kazo.Os.Simulation.Abstractions.Metrics.OriginStorageStatus.QuotaBytes.init -> void
+Kazo.Os.Simulation.Abstractions.Metrics.OriginStorageStatus.UsageBytes.get -> long
+Kazo.Os.Simulation.Abstractions.Metrics.OriginStorageStatus.UsageBytes.init -> void
 Kazo.Os.Simulation.Abstractions.Metrics.ProcessIoCounters
 Kazo.Os.Simulation.Abstractions.Metrics.ProcessIoCounters.CancelledWriteBytes.get -> long
 Kazo.Os.Simulation.Abstractions.Metrics.ProcessIoCounters.CancelledWriteBytes.init -> void
@@ -2516,6 +2629,9 @@ const Kazo.Os.Simulation.Abstractions.Sounds.OsSoundEvents.IndexFileName = "inde
 const Kazo.Os.Simulation.Abstractions.Sounds.OsSoundEvents.MaxSoundFileBytes = 1048576 -> long
 const Kazo.Os.Simulation.Abstractions.Sounds.OsSoundEvents.SystemThemesDirectory = "/usr/share/sounds" -> string!
 const Kazo.Os.Simulation.Abstractions.Sounds.OsSoundEvents.UserThemesRelativeDirectory = ".local/share/sounds" -> string!
+override Kazo.Os.Simulation.Abstractions.CloudAccounts.OAuthAuthorizationResult.Equals(object? obj) -> bool
+override Kazo.Os.Simulation.Abstractions.CloudAccounts.OAuthAuthorizationResult.GetHashCode() -> int
+override Kazo.Os.Simulation.Abstractions.CloudAccounts.OAuthAuthorizationResult.ToString() -> string!
 override Kazo.Os.Simulation.Abstractions.Diagnostics.AuditEntry.Equals(object? obj) -> bool
 override Kazo.Os.Simulation.Abstractions.Diagnostics.AuditEntry.GetHashCode() -> int
 override Kazo.Os.Simulation.Abstractions.Diagnostics.AuditEntry.ToString() -> string!
@@ -2666,6 +2782,18 @@ override Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderEntry.ToString() -
 override Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderPick.Equals(object? obj) -> bool
 override Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderPick.GetHashCode() -> int
 override Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderPick.ToString() -> string!
+override Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderQuota.Equals(object? obj) -> bool
+override Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderQuota.GetHashCode() -> int
+override Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderQuota.ToString() -> string!
+override Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveCreation.Equals(object? obj) -> bool
+override Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveCreation.GetHashCode() -> int
+override Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveCreation.ToString() -> string!
+override Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveReference.Equals(object? obj) -> bool
+override Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveReference.GetHashCode() -> int
+override Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveReference.ToString() -> string!
+override Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveRequest.Equals(object? obj) -> bool
+override Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveRequest.GetHashCode() -> int
+override Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveRequest.ToString() -> string!
 override Kazo.Os.Simulation.Abstractions.FileSystem.SymbolicLinkMetadata.<Clone>$() -> Kazo.Os.Simulation.Abstractions.FileSystem.SymbolicLinkMetadata!
 override Kazo.Os.Simulation.Abstractions.FileSystem.SymbolicLinkMetadata.Equals(object? obj) -> bool
 override Kazo.Os.Simulation.Abstractions.FileSystem.SymbolicLinkMetadata.GetHashCode() -> int
@@ -2695,6 +2823,9 @@ override Kazo.Os.Simulation.Abstractions.Gateways.ServiceStatusSnapshot.ToString
 override Kazo.Os.Simulation.Abstractions.Metrics.BlockDeviceCounters.GetHashCode() -> int
 override Kazo.Os.Simulation.Abstractions.Metrics.CpuTimes.GetHashCode() -> int
 override Kazo.Os.Simulation.Abstractions.Metrics.NetworkInterfaceCounters.GetHashCode() -> int
+override Kazo.Os.Simulation.Abstractions.Metrics.OriginStorageStatus.Equals(object? obj) -> bool
+override Kazo.Os.Simulation.Abstractions.Metrics.OriginStorageStatus.GetHashCode() -> int
+override Kazo.Os.Simulation.Abstractions.Metrics.OriginStorageStatus.ToString() -> string!
 override Kazo.Os.Simulation.Abstractions.Metrics.ProcessIoCounters.GetHashCode() -> int
 override Kazo.Os.Simulation.Abstractions.Metrics.StorageCapacity.GetHashCode() -> int
 override Kazo.Os.Simulation.Abstractions.Metrics.StorageUsage.GetHashCode() -> int
@@ -2958,6 +3089,8 @@ override sealed Kazo.Os.Simulation.Abstractions.Network.NavigationSection.Equals
 override sealed Kazo.Os.Simulation.Abstractions.Network.ParagraphSection.Equals(Kazo.Os.Simulation.Abstractions.Network.SimulatedPageSection? other) -> bool
 override sealed Kazo.Os.Simulation.Abstractions.Network.ProductGridSection.Equals(Kazo.Os.Simulation.Abstractions.Network.SimulatedPageSection? other) -> bool
 override sealed Kazo.Os.Simulation.Abstractions.Network.TableSection.Equals(Kazo.Os.Simulation.Abstractions.Network.SimulatedPageSection? other) -> bool
+static Kazo.Os.Simulation.Abstractions.CloudAccounts.OAuthAuthorizationResult.operator !=(Kazo.Os.Simulation.Abstractions.CloudAccounts.OAuthAuthorizationResult? left, Kazo.Os.Simulation.Abstractions.CloudAccounts.OAuthAuthorizationResult? right) -> bool
+static Kazo.Os.Simulation.Abstractions.CloudAccounts.OAuthAuthorizationResult.operator ==(Kazo.Os.Simulation.Abstractions.CloudAccounts.OAuthAuthorizationResult? left, Kazo.Os.Simulation.Abstractions.CloudAccounts.OAuthAuthorizationResult? right) -> bool
 static Kazo.Os.Simulation.Abstractions.Diagnostics.AuditEntry.operator !=(Kazo.Os.Simulation.Abstractions.Diagnostics.AuditEntry? left, Kazo.Os.Simulation.Abstractions.Diagnostics.AuditEntry? right) -> bool
 static Kazo.Os.Simulation.Abstractions.Diagnostics.AuditEntry.operator ==(Kazo.Os.Simulation.Abstractions.Diagnostics.AuditEntry? left, Kazo.Os.Simulation.Abstractions.Diagnostics.AuditEntry? right) -> bool
 static Kazo.Os.Simulation.Abstractions.Diagnostics.AuditLineFormat.Format(Kazo.Os.Simulation.Abstractions.Diagnostics.AuditRecord! record) -> string!
@@ -3088,6 +3221,14 @@ static Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderEntry.operator !=(Ka
 static Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderEntry.operator ==(Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderEntry? left, Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderEntry? right) -> bool
 static Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderPick.operator !=(Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderPick? left, Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderPick? right) -> bool
 static Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderPick.operator ==(Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderPick? left, Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderPick? right) -> bool
+static Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderQuota.operator !=(Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderQuota? left, Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderQuota? right) -> bool
+static Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderQuota.operator ==(Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderQuota? left, Kazo.Os.Simulation.Abstractions.FileSystem.HostFolderQuota? right) -> bool
+static Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveCreation.operator !=(Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveCreation? left, Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveCreation? right) -> bool
+static Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveCreation.operator ==(Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveCreation? left, Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveCreation? right) -> bool
+static Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveReference.operator !=(Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveReference? left, Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveReference? right) -> bool
+static Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveReference.operator ==(Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveReference? left, Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveReference? right) -> bool
+static Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveRequest.operator !=(Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveRequest? left, Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveRequest? right) -> bool
+static Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveRequest.operator ==(Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveRequest? left, Kazo.Os.Simulation.Abstractions.FileSystem.NetworkDriveRequest? right) -> bool
 static Kazo.Os.Simulation.Abstractions.FileSystem.SymbolicLinkMetadata.operator !=(Kazo.Os.Simulation.Abstractions.FileSystem.SymbolicLinkMetadata? left, Kazo.Os.Simulation.Abstractions.FileSystem.SymbolicLinkMetadata? right) -> bool
 static Kazo.Os.Simulation.Abstractions.FileSystem.SymbolicLinkMetadata.operator ==(Kazo.Os.Simulation.Abstractions.FileSystem.SymbolicLinkMetadata? left, Kazo.Os.Simulation.Abstractions.FileSystem.SymbolicLinkMetadata? right) -> bool
 static Kazo.Os.Simulation.Abstractions.Gateways.AppIntentLaunchResult.operator !=(Kazo.Os.Simulation.Abstractions.Gateways.AppIntentLaunchResult? left, Kazo.Os.Simulation.Abstractions.Gateways.AppIntentLaunchResult? right) -> bool
@@ -3114,6 +3255,8 @@ static Kazo.Os.Simulation.Abstractions.Metrics.CpuTimes.operator +(Kazo.Os.Simul
 static Kazo.Os.Simulation.Abstractions.Metrics.CpuTimes.operator ==(Kazo.Os.Simulation.Abstractions.Metrics.CpuTimes left, Kazo.Os.Simulation.Abstractions.Metrics.CpuTimes right) -> bool
 static Kazo.Os.Simulation.Abstractions.Metrics.NetworkInterfaceCounters.operator !=(Kazo.Os.Simulation.Abstractions.Metrics.NetworkInterfaceCounters left, Kazo.Os.Simulation.Abstractions.Metrics.NetworkInterfaceCounters right) -> bool
 static Kazo.Os.Simulation.Abstractions.Metrics.NetworkInterfaceCounters.operator ==(Kazo.Os.Simulation.Abstractions.Metrics.NetworkInterfaceCounters left, Kazo.Os.Simulation.Abstractions.Metrics.NetworkInterfaceCounters right) -> bool
+static Kazo.Os.Simulation.Abstractions.Metrics.OriginStorageStatus.operator !=(Kazo.Os.Simulation.Abstractions.Metrics.OriginStorageStatus? left, Kazo.Os.Simulation.Abstractions.Metrics.OriginStorageStatus? right) -> bool
+static Kazo.Os.Simulation.Abstractions.Metrics.OriginStorageStatus.operator ==(Kazo.Os.Simulation.Abstractions.Metrics.OriginStorageStatus? left, Kazo.Os.Simulation.Abstractions.Metrics.OriginStorageStatus? right) -> bool
 static Kazo.Os.Simulation.Abstractions.Metrics.ProcessIoCounters.Zero.get -> Kazo.Os.Simulation.Abstractions.Metrics.ProcessIoCounters
 static Kazo.Os.Simulation.Abstractions.Metrics.ProcessIoCounters.operator !=(Kazo.Os.Simulation.Abstractions.Metrics.ProcessIoCounters left, Kazo.Os.Simulation.Abstractions.Metrics.ProcessIoCounters right) -> bool
 static Kazo.Os.Simulation.Abstractions.Metrics.ProcessIoCounters.operator ==(Kazo.Os.Simulation.Abstractions.Metrics.ProcessIoCounters left, Kazo.Os.Simulation.Abstractions.Metrics.ProcessIoCounters right) -> bool

@@ -41,6 +41,12 @@ public sealed class AppPermissionAdministration
     private readonly IAuditLog _auditLog;
     private readonly Func<DateTimeOffset> _clock;
 
+    /// <summary>
+    /// Gets the catalog of capabilities of the running OS (ADR 0246): the built-in catalog by default,
+    /// plus the permissions of the installed features when the host gives it.
+    /// </summary>
+    public ICapabilityCatalog Capabilities { get; init; } = BuiltInCapabilityCatalog.Instance;
+
     /// <summary>Creates the service.</summary>
     /// <param name="catalog">App catalog.</param>
     /// <param name="permissions">Remembered decisions.</param>
@@ -82,14 +88,14 @@ public sealed class AppPermissionAdministration
         DangerousCapabilityPolicy policy = await GetPolicyAsync(cancellationToken).ConfigureAwait(false);
         AppPermissionDecisions decisions = await _permissions.ReadAsync(cancellationToken).ConfigureAwait(false);
         return [.. _catalog.Manifests.Values
-            .Where(DangerousCapabilityEvaluator.DeclaresDangerousCapabilities)
+            .Where(manifest => DangerousCapabilityEvaluator.DeclaresDangerousCapabilities(manifest, Capabilities))
             .Select(manifest =>
             {
                 bool isSystemApp = _catalog.IsSystemApp(manifest.Id);
                 return new AppPermissionOverview(
                     manifest,
                     isSystemApp,
-                    DangerousCapabilityEvaluator.Evaluate(manifest, isSystemApp, policy, decisions));
+                    DangerousCapabilityEvaluator.Evaluate(manifest, isSystemApp, policy, decisions, Capabilities));
             })
             .OrderBy(overview => overview.IsSystemApp)
             .ThenBy(overview => overview.Manifest.Name, StringComparer.CurrentCultureIgnoreCase)];
@@ -304,6 +310,19 @@ public sealed class AppPermissionAdministration
             await _permissions.RemoveUserDenialAsync(appId, capability, cancellationToken).ConfigureAwait(false);
         }
 
+        if (DangerousCapabilityEvaluator.HostCapabilities.Contains(capability))
+        {
+            // ADR 0282 §4 and ADR 0284 §1: an allow approves the hosts the capability names now (a
+            // later new host asks again); a refusal withdraws them, keeping those another capability
+            // of the app still names.
+            AppPermissionDecisions before = await _permissions.ReadAsync(cancellationToken).ConfigureAwait(false);
+            bool allowed = decision == AppPermissionDecision.Allow;
+            IReadOnlyCollection<string>? hosts = DangerousCapabilityEvaluator.HostsToApprove(
+                _catalog.Manifests[appId], before.GetApprovedDirectNetworkHosts(appId), allowed ? [capability] : [], allowed ? [] : [capability]);
+            await _permissions.WriteApprovedDirectNetworkHostsAsync(appId, hosts, cancellationToken).ConfigureAwait(false);
+            return;
+        }
+
         if (!string.Equals(capability, AppCapabilities.NetworkRealAccess, StringComparison.Ordinal))
         {
             return;
@@ -328,7 +347,7 @@ public sealed class AppPermissionAdministration
             throw new ArgumentException($"'{appId}' is not a non-system catalog app.", nameof(appId));
         }
 
-        if (!AppCapabilities.IsDangerous(capability) || !manifest.Capabilities.Contains(capability, StringComparer.Ordinal))
+        if (!Capabilities.IsDangerous(capability) || !manifest.Capabilities.Contains(capability, StringComparer.Ordinal))
         {
             throw new ArgumentException($"'{appId}' does not declare the dangerous capability '{capability}'.", nameof(capability));
         }

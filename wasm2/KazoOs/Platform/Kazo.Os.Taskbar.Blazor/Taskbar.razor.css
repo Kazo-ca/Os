@@ -137,6 +137,11 @@
     font-weight: 800;
 }
 
+/* Generated content: axe 4.14 counts aria-hidden text as visible text, but not ::before content. */
+.launcher-mark::before {
+    content: attr(data-mark);
+}
+
 .taskbar-item {
     justify-content: flex-start;
     max-width: 12rem;

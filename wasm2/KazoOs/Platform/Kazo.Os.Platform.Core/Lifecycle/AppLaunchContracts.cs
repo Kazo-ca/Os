@@ -120,7 +120,13 @@ public enum AppLaunchStatus
     ElevationDenied,
 
     /// <summary>A newer Kazo OS waits for a restart; the app starts once the OS runs it (ADR 0239).</summary>
-    UpdateRequired
+    UpdateRequired,
+
+    /// <summary>
+    /// The entry point requires a role of its feature the user does not hold (ADR 0247 §2); the shell
+    /// answers « rôle requis » with exit code 126.
+    /// </summary>
+    RoleRequired
 }
 
 /// <summary>Contains the result of one launch attempt, including any fault, per `P1-APP-004`.</summary>

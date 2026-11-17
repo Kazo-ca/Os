@@ -528,7 +528,7 @@ public sealed class AppManifestValidatorTests
         Web = new WebAppManifest(["http://intranet.hack/"])
     };
 
-    private static AppManifest CreateValidManifest() => new()
+    internal static AppManifest CreateValidManifest() => new()
     {
         Id = "org.kazoos.text-editor",
         Name = "Text Editor",

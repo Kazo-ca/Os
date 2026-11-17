@@ -100,6 +100,8 @@ public sealed partial class TrimmedPublishTests
             await WaitForTerminalTextAsync(rows, text => text.Contains("available now", StringComparison.Ordinal), "the end of the installation");
             Log("the test package was installed.");
             session.AssertNoErrors("kazopkg install");
+            await WaitForProbeIconAsync(page);
+            Log("its icon is served before its first launch (issue #420).");
 
             // --- Without a restart (ADR 0214 §1): an app never loaded opens at once ---
             await OpenAppAsync(page, ProbeAppName);
@@ -109,6 +111,8 @@ public sealed partial class TrimmedPublishTests
             Log("its French satellite assembly loaded without a restart.");
             // ADR 0242: CoreLib stays whole, so overloads the OS does not use itself still run.
             await Assertions.Expect(page.Locator("[data-probe-corelib]")).ToHaveTextAsync("corelib 42 0 2", new() { Timeout = StepTimeoutMs });
+            // ADR 0280: System.Linq, System.Text.RegularExpressions and System.Threading.Channels kept whole.
+            await Assertions.Expect(page.Locator("[data-probe-framework-libraries]")).ToHaveTextAsync("libraries a<1>b<2> Kazo_OS 4 True", new() { Timeout = StepTimeoutMs });
             Log("CoreLib overloads the OS does not use itself ran (Int32.Parse of a span, String.Compare with offsets, String.Split of strings).");
             // ADR 0261 §1 (issue #419): the package has two assemblies; the library is loaded before the app.
             await Assertions.Expect(page.Locator("[data-probe-library]")).ToHaveTextAsync(LibraryAnswer, new() { Timeout = StepTimeoutMs });
@@ -117,6 +121,8 @@ public sealed partial class TrimmedPublishTests
             // --- Restart (ADR 0182, Q5 C): the app joins the catalog at boot ---
             await page.ReloadAsync(new PageReloadOptions { WaitUntil = WaitUntilState.DOMContentLoaded });
             await SignInAsync(page);
+            await WaitForProbeIconAsync(page);
+            Log("after the restart, its icon is served before the app is opened (issue #420).");
             await OpenAppAsync(page, ProbeAppName);
 
             ILocator status = page.Locator("[data-probe-status]");
@@ -156,6 +162,16 @@ public sealed partial class TrimmedPublishTests
             throw;
         }
     }
+
+    /// <summary>
+    /// Issue #420: the icon the launcher, the Start menu and the desktop ask for answers 200 before
+    /// the app is opened in the session.
+    /// </summary>
+    private static async Task WaitForProbeIconAsync(IPage page) =>
+        await page.WaitForFunctionAsync(
+            $"async () => (await fetch('{ProbeContent}images/dot.svg', {{ cache: 'no-store' }})).status === 200",
+            null,
+            new PageWaitForFunctionOptions { Timeout = StepTimeoutMs, PollingInterval = 500 });
 
     /// <summary>
     /// The published service worker (on the address where index.html registers it) answers a file the

@@ -375,6 +375,8 @@ Kazo.Os.Server.Contracts.Proxy.ProxyHttpResponse.StatusCode.get -> int
 Kazo.Os.Server.Contracts.Proxy.ProxyHttpResponse.StatusCode.init -> void
 Kazo.Os.Server.Contracts.Proxy.ProxyPolicyResponse
 Kazo.Os.Server.Contracts.Proxy.ProxyPolicyResponse.<Clone>$() -> Kazo.Os.Server.Contracts.Proxy.ProxyPolicyResponse!
+Kazo.Os.Server.Contracts.Proxy.ProxyPolicyResponse.AccountGrantedApps.get -> System.Collections.Generic.IReadOnlyList<string!>?
+Kazo.Os.Server.Contracts.Proxy.ProxyPolicyResponse.AccountGrantedApps.init -> void
 Kazo.Os.Server.Contracts.Proxy.ProxyPolicyResponse.AllowAllPorts.get -> bool
 Kazo.Os.Server.Contracts.Proxy.ProxyPolicyResponse.AllowAllPorts.init -> void
 Kazo.Os.Server.Contracts.Proxy.ProxyPolicyResponse.AllowPrivateNetworks.get -> bool

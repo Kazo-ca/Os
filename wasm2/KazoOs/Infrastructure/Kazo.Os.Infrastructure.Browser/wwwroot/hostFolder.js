@@ -326,11 +326,13 @@ export function unobserve(observerId) {
 }
 
 // ADR 0185 §15: whether the page is visible, and when it comes back (shown again, or focused).
+// ADR 0267 §9: the network coming back counts too, so a cloud drive reconnects by itself.
 export function watchActivity(callbacks) {
     const report = (resumed) => callbacks
         .invokeMethodAsync('OnActivity', document.visibilityState === 'visible', resumed)
         .catch(() => { });
     document.addEventListener('visibilitychange', () => report(document.visibilityState === 'visible'));
     window.addEventListener('focus', () => report(true));
+    window.addEventListener('online', () => report(true));
     return document.visibilityState === 'visible';
 }

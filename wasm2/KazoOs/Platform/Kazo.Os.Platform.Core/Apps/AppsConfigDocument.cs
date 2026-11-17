@@ -149,6 +149,71 @@ public static class AppsConfigDocument
     }
 
     /// <summary>
+    /// Section of the apps an installation removal disabled (ADR 0248 §3): <c>&lt;appId&gt; = &lt;dependency&gt;</c>.
+    /// The app is also listed under <c>[uninstalled]</c>; reinstalling the dependency reactivates
+    /// exactly the apps of its lines, not the ones a user uninstalled by choice.
+    /// </summary>
+    public const string DisabledByDependencySection = "disabled-by-dependency";
+
+    /// <summary>Records that removing <paramref name="dependencyId"/> disabled <paramref name="appIds"/>, keeping every other line exactly.</summary>
+    /// <param name="content">Current content, or <see langword="null"/> for a new file.</param>
+    /// <param name="appIds">The dependents disabled with the removal.</param>
+    /// <param name="dependencyId">The package removed.</param>
+    /// <param name="defaultContent">Header used when the file does not exist yet.</param>
+    public static string MarkDisabledByDependency(string? content, IEnumerable<string> appIds, string dependencyId, string defaultContent)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(dependencyId);
+        string edited = MarkUninstalled(content, appIds, defaultContent);
+        foreach (string appId in appIds)
+        {
+            edited = ConfigDocumentEditor.SetValue(edited, DisabledByDependencySection, appId, dependencyId);
+        }
+
+        return edited;
+    }
+
+    /// <summary>Gets the apps the removal of <paramref name="dependencyId"/> disabled, from <see cref="DisabledByDependencySection"/>.</summary>
+    /// <param name="content">File content, or <see langword="null"/> when absent.</param>
+    /// <param name="dependencyId">The package being installed again.</param>
+    public static IReadOnlyList<string> ReadDisabledByDependency(string? content, string dependencyId)
+    {
+        if (string.IsNullOrEmpty(content))
+        {
+            return [];
+        }
+
+        Dictionary<string, string> last = new(StringComparer.Ordinal);
+        foreach (ConfigLine line in ConfigDocumentLines.Parse(content))
+        {
+            if (line.Kind == ConfigLineKind.KeyValue
+                && !line.InMalformedSection
+                && string.Equals(line.Group, DisabledByDependencySection, StringComparison.Ordinal)
+                && line.Key is { Length: > 0 } key)
+            {
+                last[key] = (line.Value ?? string.Empty).Trim();
+            }
+        }
+
+        return [.. last.Where(pair => string.Equals(pair.Value, dependencyId, StringComparison.Ordinal))
+            .Select(static pair => pair.Key)
+            .Order(StringComparer.Ordinal)];
+    }
+
+    /// <summary>Forgets the lines of <see cref="DisabledByDependencySection"/> of each app, keeping every other line exactly.</summary>
+    /// <param name="content">Current content.</param>
+    /// <param name="appIds">The apps reactivated.</param>
+    public static string ForgetDisabledByDependency(string? content, IEnumerable<string> appIds)
+    {
+        string edited = content ?? string.Empty;
+        foreach (string appId in appIds)
+        {
+            edited = ConfigDocumentEditor.RemoveValue(edited, DisabledByDependencySection, appId);
+        }
+
+        return edited;
+    }
+
+    /// <summary>
     /// Reads the <c>[installed]</c> section (ADR 0182 §5). Never fails: a line whose value is not a
     /// source pinned to a version is skipped with a warning; the last occurrence of a key wins.
     /// </summary>

@@ -5,12 +5,12 @@ Kazo.Os.Ecosystem.App.Dispose() -> void
 Kazo.Os.Ecosystem.App.TestDemoEnabled.get -> bool
 Kazo.Os.Ecosystem.App.TestDemoEnabled.set -> void
 Kazo.Os.Ecosystem.BrowserInstalledAppAssetCache
-Kazo.Os.Ecosystem.BrowserInstalledAppAssetCache.BrowserInstalledAppAssetCache() -> void
+Kazo.Os.Ecosystem.BrowserInstalledAppAssetCache.BrowserInstalledAppAssetCache(Microsoft.JSInterop.IJSRuntime! runtime) -> void
 Kazo.Os.Ecosystem.BrowserInstalledAppAssetCache.LinkStyleSheetAsync(string! url, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask
 Kazo.Os.Ecosystem.BrowserInstalledAppAssetCache.ListAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<string!>!>
 Kazo.Os.Ecosystem.BrowserInstalledAppAssetCache.PrepareAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<bool>
-Kazo.Os.Ecosystem.BrowserInstalledAppAssetCache.PutAsync(string! url, byte[]! bytes, string! contentType, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask
-Kazo.Os.Ecosystem.BrowserInstalledAppAssetCache.RemoveAsync(string! url, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask
+Kazo.Os.Ecosystem.BrowserInstalledAppAssetCache.RemoveAsync(System.Collections.Generic.IReadOnlyList<string!>! urls, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask
+Kazo.Os.Ecosystem.BrowserInstalledAppAssetCache.ServeAsync(string! appId, System.Collections.Generic.IReadOnlyList<Kazo.Os.Infrastructure.Browser.FileSystem.ServedFileRequest!>! files, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<Kazo.Os.Infrastructure.Browser.FileSystem.ServedFileResult!>!>
 Kazo.Os.Ecosystem.CpuAccountingRegistration
 Kazo.Os.Ecosystem.CpuAccountingRegistration.<Clone>$() -> Kazo.Os.Ecosystem.CpuAccountingRegistration!
 Kazo.Os.Ecosystem.CpuAccountingRegistration.CpuAccountingRegistration(System.IDisposable! Registration) -> void
@@ -18,10 +18,21 @@ Kazo.Os.Ecosystem.CpuAccountingRegistration.Deconstruct(out System.IDisposable! 
 Kazo.Os.Ecosystem.CpuAccountingRegistration.Equals(Kazo.Os.Ecosystem.CpuAccountingRegistration? other) -> bool
 Kazo.Os.Ecosystem.CpuAccountingRegistration.Registration.get -> System.IDisposable!
 Kazo.Os.Ecosystem.CpuAccountingRegistration.Registration.init -> void
+Kazo.Os.Ecosystem.DefaultContextLibraryRuntime
+Kazo.Os.Ecosystem.DefaultContextLibraryRuntime.FindLoaded(string! simpleName) -> System.Version?
+Kazo.Os.Ecosystem.DefaultContextLibraryRuntime.Load(byte[]! assembly) -> void
 Kazo.Os.Ecosystem.EcosystemBootCoordinator
 Kazo.Os.Ecosystem.EcosystemBootCoordinator.BootAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.Ecosystem.EcosystemBootResult!>
 Kazo.Os.Ecosystem.EcosystemBootCoordinator.EcosystemBootCoordinator(Kazo.Os.Infrastructure.Browser.FileSystem.IndexedDbFileSystemBootstrapper! fileSystemBootstrapper, Kazo.Os.Platform.Core.Settings.SettingsStoreToFilesMigration! settingsMigration, Kazo.Os.App.Abstractions.Policy.IPersistentCapabilityGrantRepository! grants, Kazo.Os.App.Abstractions.IPersistentAppCatalogRepository! catalog, Kazo.Os.Platform.Core.AppCatalog! selectedCatalog, Kazo.Os.Platform.Core.Apps.AppEnablementToFilesMigration! appsMigration, Kazo.Os.Simulation.Abstractions.Sessions.ILocalGroupRepository! groups, Kazo.Os.Simulation.Abstractions.Sessions.ILocalUserRepository! users, Kazo.Os.Platform.Core.Diagnostics.LogFileWriter? logWriter = null, Kazo.Os.Simulation.Abstractions.FileSystem.IFileSystemService? fileSystem = null, Kazo.Os.Platform.Core.Time.SimulationClockDriver? clockDriver = null, Kazo.Os.Platform.Core.Apps.AppInstallationService? installation = null, Kazo.Os.Platform.Core.Processes.ResourceSamplingService? resourceSampling = null, Kazo.Os.Platform.Core.Processes.Accounting.ResourceAccountingPlan? resourceAccounting = null, Kazo.Os.Platform.Core.Lifecycle.SystemStartupSignal? startup = null, Kazo.Os.Platform.Core.Execution.IRemoteProcessHost? remoteHost = null, Kazo.Os.Simulation.Abstractions.Workers.IWorkerPoolStatus? workers = null, Kazo.Os.Platform.Core.Lifecycle.ServiceStartupCoordinator? serviceStartup = null, Kazo.Os.Platform.Core.Storage.StorageSpaceMonitor? spaceMonitor = null, Kazo.Os.Platform.Core.Backup.SystemBackupService? backup = null, Kazo.Os.Platform.Core.Processes.OomKiller? oomKiller = null, Kazo.Os.Platform.Core.Settings.IOsSettingsService? settings = null, Kazo.Os.Platform.Core.Isolation.CrossOriginIsolationProbe? isolation = null) -> void
+Kazo.Os.Ecosystem.EcosystemBootCoordinator.EvictionDetector.get -> Kazo.Os.Platform.Core.Storage.StorageEvictionDetector?
+Kazo.Os.Ecosystem.EcosystemBootCoordinator.EvictionDetector.set -> void
+Kazo.Os.Ecosystem.EcosystemBootCoordinator.FeatureRoles.get -> Kazo.Os.Platform.Core.Roles.FeatureRoleService?
+Kazo.Os.Ecosystem.EcosystemBootCoordinator.FeatureRoles.set -> void
+Kazo.Os.Ecosystem.EcosystemBootCoordinator.KernelLog.get -> Kazo.Os.Platform.Core.Diagnostics.KernelLog?
+Kazo.Os.Ecosystem.EcosystemBootCoordinator.KernelLog.set -> void
 Kazo.Os.Ecosystem.EcosystemBootCoordinator.MarkSystemStarted() -> void
+Kazo.Os.Ecosystem.EcosystemBootCoordinator.OriginStorage.get -> Kazo.Os.Platform.Core.Storage.OriginStorageService?
+Kazo.Os.Ecosystem.EcosystemBootCoordinator.OriginStorage.set -> void
 Kazo.Os.Ecosystem.EcosystemBootResult
 Kazo.Os.Ecosystem.EcosystemBootResult.<Clone>$() -> Kazo.Os.Ecosystem.EcosystemBootResult!
 Kazo.Os.Ecosystem.EcosystemBootResult.CatalogEntryCount.get -> int
@@ -37,6 +48,7 @@ Kazo.Os.Ecosystem.EcosystemHostState
 Kazo.Os.Ecosystem.EcosystemHostState.AvailableVersion.get -> string?
 Kazo.Os.Ecosystem.EcosystemHostState.BeginInitialization() -> void
 Kazo.Os.Ecosystem.EcosystemHostState.BeginLoginProgress() -> void
+Kazo.Os.Ecosystem.EcosystemHostState.BeginWelcome() -> void
 Kazo.Os.Ecosystem.EcosystemHostState.CompleteIdentityLoad(System.Collections.Generic.IReadOnlyList<Kazo.Os.Simulation.Abstractions.Sessions.LocalUser!>! users) -> void
 Kazo.Os.Ecosystem.EcosystemHostState.CompleteLogin() -> void
 Kazo.Os.Ecosystem.EcosystemHostState.EcosystemHostState() -> void
@@ -61,6 +73,7 @@ Kazo.Os.Ecosystem.EcosystemHostView.Initializing = 0 -> Kazo.Os.Ecosystem.Ecosys
 Kazo.Os.Ecosystem.EcosystemHostView.Login = 2 -> Kazo.Os.Ecosystem.EcosystemHostView
 Kazo.Os.Ecosystem.EcosystemHostView.LoginProgress = 3 -> Kazo.Os.Ecosystem.EcosystemHostView
 Kazo.Os.Ecosystem.EcosystemHostView.Recovery = 5 -> Kazo.Os.Ecosystem.EcosystemHostView
+Kazo.Os.Ecosystem.EcosystemHostView.Welcome = 7 -> Kazo.Os.Ecosystem.EcosystemHostView
 Kazo.Os.Ecosystem.EcosystemServiceCollectionExtensions
 Kazo.Os.Ecosystem.FileDialogServiceFactory
 Kazo.Os.Ecosystem.FileDialogServiceFactory.Create(Kazo.Os.Simulation.Abstractions.Sessions.SessionId sessionId) -> Kazo.Os.AppSdk.Blazor.IFileDialogService!
@@ -112,10 +125,15 @@ Kazo.Os.Ecosystem.IInstalledAppAssetCache
 Kazo.Os.Ecosystem.IInstalledAppAssetCache.LinkStyleSheetAsync(string! url, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask
 Kazo.Os.Ecosystem.IInstalledAppAssetCache.ListAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<string!>!>
 Kazo.Os.Ecosystem.IInstalledAppAssetCache.PrepareAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<bool>
-Kazo.Os.Ecosystem.IInstalledAppAssetCache.PutAsync(string! url, byte[]! bytes, string! contentType, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask
-Kazo.Os.Ecosystem.IInstalledAppAssetCache.RemoveAsync(string! url, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask
+Kazo.Os.Ecosystem.IInstalledAppAssetCache.RemoveAsync(System.Collections.Generic.IReadOnlyList<string!>! urls, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask
+Kazo.Os.Ecosystem.IInstalledAppAssetCache.ServeAsync(string! appId, System.Collections.Generic.IReadOnlyList<Kazo.Os.Infrastructure.Browser.FileSystem.ServedFileRequest!>! files, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<Kazo.Os.Infrastructure.Browser.FileSystem.ServedFileResult!>!>
+Kazo.Os.Ecosystem.IInstalledLibraryRuntime
+Kazo.Os.Ecosystem.IInstalledLibraryRuntime.FindLoaded(string! simpleName) -> System.Version?
+Kazo.Os.Ecosystem.IInstalledLibraryRuntime.Load(byte[]! assembly) -> void
 Kazo.Os.Ecosystem.InstalledAppAssemblyTransport
 Kazo.Os.Ecosystem.InstalledAppAssemblyTransport.InstalledAppAssemblyTransport(Kazo.Os.Platform.Blazor.LazyLoading.IBuildKnownAssemblyTransport! inner, Kazo.Os.Ecosystem.InstalledAppsBoot! installed, Kazo.Os.Ecosystem.InstalledAppAssetPublisher? assets = null) -> void
+Kazo.Os.Ecosystem.InstalledAppAssemblyTransport.Libraries.get -> Kazo.Os.Ecosystem.InstalledAppLibraries?
+Kazo.Os.Ecosystem.InstalledAppAssemblyTransport.Libraries.init -> void
 Kazo.Os.Ecosystem.InstalledAppAssemblyTransport.LoadAsync(System.Collections.Generic.IReadOnlyList<string!>! assemblyNames, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<System.Reflection.Assembly!>!>!
 Kazo.Os.Ecosystem.InstalledAppAssemblyTransport.Satellites.get -> Kazo.Os.Ecosystem.InstalledAppSatellites?
 Kazo.Os.Ecosystem.InstalledAppAssemblyTransport.Satellites.init -> void
@@ -123,16 +141,29 @@ Kazo.Os.Ecosystem.InstalledAppAssetContentTypes
 Kazo.Os.Ecosystem.InstalledAppAssetPublisher
 Kazo.Os.Ecosystem.InstalledAppAssetPublisher.InstalledAppAssetPublisher(Kazo.Os.Ecosystem.InstalledAppsBoot! installed, Kazo.Os.Ecosystem.IInstalledAppAssetCache! cache, System.Func<Kazo.Os.Platform.Core.Apps.AppAssetStore!>! store, Microsoft.Extensions.Logging.ILogger<Kazo.Os.Ecosystem.InstalledAppAssetPublisher!>? logger = null) -> void
 Kazo.Os.Ecosystem.InstalledAppAssetPublisher.PublishAsync(Kazo.Os.Platform.Core.Apps.Packages.InstalledApp! app, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Kazo.Os.Ecosystem.InstalledAppAssetPublisher.PublishIconsAsync(System.Collections.Generic.IReadOnlyList<Kazo.Os.Platform.Core.Apps.Packages.InstalledApp!>! apps, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 Kazo.Os.Ecosystem.InstalledAppAssetSource
 Kazo.Os.Ecosystem.InstalledAppAssetSource.InstalledAppAssetSource(Kazo.Os.Platform.Core.Apps.IAppAssetSource! inner, Kazo.Os.Ecosystem.InstalledAppsBoot! installed) -> void
 Kazo.Os.Ecosystem.InstalledAppAssetSource.ReadAsync(Kazo.Os.App.Abstractions.AppManifest! manifest, string! assetPath, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<byte[]?>
+Kazo.Os.Ecosystem.InstalledAppLibraries
+Kazo.Os.Ecosystem.InstalledAppLibraries.GetPendingRestarts() -> System.Collections.Generic.IReadOnlyList<Kazo.Os.Platform.Core.Apps.Packages.LibraryRestart!>!
+Kazo.Os.Ecosystem.InstalledAppLibraries.InstalledAppLibraries(Kazo.Os.Ecosystem.InstalledAppsBoot! installed, Microsoft.Extensions.Logging.ILogger<Kazo.Os.Ecosystem.InstalledAppLibraries!>? logger = null, Kazo.Os.Ecosystem.IInstalledLibraryRuntime? runtime = null) -> void
+Kazo.Os.Ecosystem.InstalledAppLibraries.LoadForAsync(Kazo.Os.Platform.Core.Apps.Packages.InstalledApp! app, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+Kazo.Os.Ecosystem.InstalledAppLibraries.LoadedFromPackages.get -> System.Collections.Generic.IReadOnlySet<string!>!
+Kazo.Os.Ecosystem.InstalledAppLibraries.ReportPendingRestarts() -> System.Collections.Generic.IReadOnlyList<Kazo.Os.Platform.Core.Apps.Packages.LibraryRestart!>!
+Kazo.Os.Ecosystem.InstalledAppLibraries.Satellites.get -> Kazo.Os.Ecosystem.InstalledAppSatellites?
+Kazo.Os.Ecosystem.InstalledAppLibraries.Satellites.init -> void
 Kazo.Os.Ecosystem.InstalledAppSatellites
 Kazo.Os.Ecosystem.InstalledAppSatellites.Cultures.get -> System.Collections.Generic.IReadOnlyList<string!>!
 Kazo.Os.Ecosystem.InstalledAppSatellites.InstalledAppSatellites(System.Collections.Generic.IEnumerable<string!>! cultures) -> void
 Kazo.Os.Ecosystem.InstalledAppSatellites.LoadAsync(Kazo.Os.Platform.Core.Apps.Packages.InstalledApp! app, string! assemblyFileName, Kazo.Os.Platform.Core.Apps.Packages.InstalledAppFileReader! read, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<string!>!>!
 Kazo.Os.Ecosystem.InstalledAppsActivator
 Kazo.Os.Ecosystem.InstalledAppsActivator.ActivateAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.Platform.Core.Apps.Packages.InstalledAppsActivation!>
+Kazo.Os.Ecosystem.InstalledAppsActivator.Assets.get -> Kazo.Os.Ecosystem.InstalledAppAssetPublisher?
+Kazo.Os.Ecosystem.InstalledAppsActivator.Assets.init -> void
 Kazo.Os.Ecosystem.InstalledAppsActivator.InstalledAppsActivator(Kazo.Os.Ecosystem.InstalledAppsBoot! installed, Kazo.Os.Platform.Blazor.LazyLoading.BuildKnownAssemblyLoaderRegistry! assemblies, Microsoft.Extensions.Logging.ILogger<Kazo.Os.Ecosystem.InstalledAppsActivator!>? logger = null) -> void
+Kazo.Os.Ecosystem.InstalledAppsActivator.Libraries.get -> Kazo.Os.Ecosystem.InstalledAppLibraries?
+Kazo.Os.Ecosystem.InstalledAppsActivator.Libraries.init -> void
 Kazo.Os.Ecosystem.InstalledAppsBoot
 Kazo.Os.Ecosystem.InstalledAppsBoot.Apply(Kazo.Os.Platform.Core.Apps.Packages.InstalledAppsImage! image, Kazo.Os.Platform.Core.Apps.Packages.InstalledAppFileReader! read, Kazo.Os.Platform.Core.Apps.Packages.InstalledAppHomeLister? listHomes = null) -> void
 Kazo.Os.Ecosystem.InstalledAppsBoot.BuiltIn.get -> Kazo.Os.Ecosystem.HostAppCatalog!
@@ -204,12 +235,25 @@ Kazo.Os.Ecosystem.SignInFactoryResetSettings.Enabled.get -> bool
 Kazo.Os.Ecosystem.SignInFactoryResetSettings.Enabled.init -> void
 Kazo.Os.Ecosystem.SignInFactoryResetSettings.Equals(Kazo.Os.Ecosystem.SignInFactoryResetSettings? other) -> bool
 Kazo.Os.Ecosystem.SignInFactoryResetSettings.SignInFactoryResetSettings(bool Enabled) -> void
+Kazo.Os.Ecosystem.StorageEvictionNotice
+Kazo.Os.Ecosystem.StorageEvictionNotice.Eviction.get -> Kazo.Os.Platform.Core.Storage.StorageEviction!
+Kazo.Os.Ecosystem.StorageEvictionNotice.Eviction.set -> void
+Kazo.Os.Ecosystem.StorageEvictionNotice.StorageEvictionNotice() -> void
 Kazo.Os.Ecosystem.WebAssemblyEcosystemHostEnvironment
 Kazo.Os.Ecosystem.WebAssemblyEcosystemHostEnvironment.IsDevelopment.get -> bool
 Kazo.Os.Ecosystem.WebAssemblyEcosystemHostEnvironment.WebAssemblyEcosystemHostEnvironment(Microsoft.AspNetCore.Components.WebAssembly.Hosting.IWebAssemblyHostEnvironment! inner) -> void
 Kazo.Os.Ecosystem.WebAssemblyLazyAssemblyTransport
 Kazo.Os.Ecosystem.WebAssemblyLazyAssemblyTransport.LoadAsync(System.Collections.Generic.IReadOnlyList<string!>! assemblyNames, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<System.Reflection.Assembly!>!>!
 Kazo.Os.Ecosystem.WebAssemblyLazyAssemblyTransport.WebAssemblyLazyAssemblyTransport(Microsoft.AspNetCore.Components.WebAssembly.Services.LazyAssemblyLoader! loader) -> void
+Kazo.Os.Ecosystem.WelcomeWizard
+Kazo.Os.Ecosystem.WelcomeWizard.Dispose() -> void
+Kazo.Os.Ecosystem.WelcomeWizard.OnFinished.get -> Microsoft.AspNetCore.Components.EventCallback
+Kazo.Os.Ecosystem.WelcomeWizard.OnFinished.set -> void
+Kazo.Os.Ecosystem.WelcomeWizard.Platform.get -> Kazo.Os.Theming.Abstractions.ThemePlatform
+Kazo.Os.Ecosystem.WelcomeWizard.Platform.set -> void
+Kazo.Os.Ecosystem.WelcomeWizard.Steps.get -> System.Collections.Generic.IReadOnlyList<Kazo.Os.Platform.Core.Welcome.WelcomeStep>!
+Kazo.Os.Ecosystem.WelcomeWizard.Steps.set -> void
+Kazo.Os.Ecosystem.WelcomeWizard.WelcomeWizard() -> void
 Kazo.Os.Ecosystem._Imports
 Kazo.Os.Ecosystem._Imports.Execute() -> void
 Kazo.Os.Ecosystem._Imports._Imports() -> void
@@ -248,6 +292,7 @@ override Kazo.Os.Ecosystem.SignInFactoryResetSettings.GetHashCode() -> int
 override Kazo.Os.Ecosystem.SignInFactoryResetSettings.ToString() -> string!
 static Kazo.Os.Ecosystem.CpuAccountingRegistration.operator !=(Kazo.Os.Ecosystem.CpuAccountingRegistration? left, Kazo.Os.Ecosystem.CpuAccountingRegistration? right) -> bool
 static Kazo.Os.Ecosystem.CpuAccountingRegistration.operator ==(Kazo.Os.Ecosystem.CpuAccountingRegistration? left, Kazo.Os.Ecosystem.CpuAccountingRegistration? right) -> bool
+static Kazo.Os.Ecosystem.DefaultContextLibraryRuntime.Instance.get -> Kazo.Os.Ecosystem.DefaultContextLibraryRuntime!
 static Kazo.Os.Ecosystem.EcosystemBootResult.operator !=(Kazo.Os.Ecosystem.EcosystemBootResult? left, Kazo.Os.Ecosystem.EcosystemBootResult? right) -> bool
 static Kazo.Os.Ecosystem.EcosystemBootResult.operator ==(Kazo.Os.Ecosystem.EcosystemBootResult? left, Kazo.Os.Ecosystem.EcosystemBootResult? right) -> bool
 static Kazo.Os.Ecosystem.EcosystemServiceCollectionExtensions.AddKazoOsEcosystem(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, Kazo.Os.Platform.Core.AppCatalog? catalog = null, System.Func<System.IServiceProvider!, System.Collections.Generic.IReadOnlyDictionary<string!, Kazo.Os.Platform.Core.Discovery.AppDescriptor!>!>? descriptorProvider = null, System.Func<System.IServiceProvider!, Kazo.Os.Platform.Core.Lifecycle.IAppDescriptorLoader?>? descriptorLoaderProvider = null) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!

@@ -187,6 +187,94 @@ public sealed class KazopkgCommandTests
         Assert.Equal(["policy Category social True", "policy Capability network.real.access False"], packages.Calls);
     }
 
+    [Theory]
+    [InlineData("n", false)]
+    [InlineData("", false)]
+    [InlineData("y", true)]
+    [InlineData("yes", true)]
+    public async Task Install_prints_the_plan_of_an_app_with_dependencies_and_asks_first(string answer, bool installed)
+    {
+        FakePackages packages = new() { Plan = FeaturePlan() };
+
+        (int exit, string stdout, string stderr) = await RunWithInputAsync(packages, answer + "\n", "install", "org.kazo.client");
+
+        // ADR 0248 §1: the plan, then one question; the answer decides before anything is written.
+        Assert.Contains("this installation installs, in this order:", stdout, StringComparison.Ordinal);
+        Assert.Contains("Feature 1.0.0 from catalog:official/org.kazo.feature@1.0.0", stdout, StringComparison.Ordinal);
+        Assert.Contains("dangerous permissions: filesystem.system.read", stdout, StringComparison.Ordinal);
+        Assert.Contains("an administrator approves this installation once", stdout, StringComparison.Ordinal);
+        Assert.Contains("Continue? [y/N]", stdout, StringComparison.Ordinal);
+        Assert.Equal(installed ? 0 : 1, exit);
+        Assert.Equal(installed, packages.Calls.Contains("install org.kazo.client@1.0.0 scope=Auto"));
+        Assert.Equal(!installed, stderr.Contains("cancelled, nothing was installed", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task Install_with_yes_does_not_ask()
+    {
+        FakePackages packages = new() { Plan = FeaturePlan() };
+
+        (int exit, string stdout, _) = await RunAsync(packages, "install", "org.kazo.client", "--yes");
+
+        Assert.Equal(0, exit);
+        Assert.DoesNotContain("Continue?", stdout, StringComparison.Ordinal);
+        // The version of the plan the user saw is the one installed.
+        Assert.Contains("install org.kazo.client@1.0.0 scope=Auto", packages.Calls);
+    }
+
+    [Fact]
+    public async Task A_missing_dependency_stops_the_installation_with_its_reason()
+    {
+        FakePackages packages = new()
+        {
+            Refusal = new KazoPackageException(
+                "apps.package.dependency-unresolved",
+                "Client (org.kazo.client 1.0.0) needs org.kazo.feature >= 1.0.0, which none of the configured catalogs publishes."),
+        };
+
+        (int exit, _, string stderr) = await RunAsync(packages, "install", "org.kazo.client");
+
+        Assert.Equal(1, exit);
+        Assert.Contains("kazopkg: the installation of org.kazo.client is stopped: Client (org.kazo.client 1.0.0) needs org.kazo.feature >= 1.0.0", stderr, StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Remove_warns_about_the_apps_it_disables(bool yes)
+    {
+        FakePackages packages = new() { Dependents = [new KazoPackageDependent("org.kazo.client", "Client")] };
+
+        (int exit, string stdout, string stderr) = yes
+            ? await RunAsync(packages, "remove", "org.kazo.feature", "--yes")
+            : await RunAsync(packages, "remove", "org.kazo.feature");
+
+        // ADR 0248 §3: the dependents are named; without an answer nothing is removed.
+        Assert.Contains("Client will no longer work and will be disabled", stdout, StringComparison.Ordinal);
+        Assert.Equal(yes ? 0 : 1, exit);
+        Assert.Equal(yes, packages.Calls.Contains("remove org.kazo.feature scope=Auto"));
+        if (yes)
+        {
+            Assert.Contains("kazopkg: org.kazo.client disabled", stdout, StringComparison.Ordinal);
+        }
+        else
+        {
+            Assert.Contains("cancelled", stderr, StringComparison.Ordinal);
+        }
+    }
+
+    private static KazoPackageInstallPlan FeaturePlan() => new(
+        [
+            new KazoPlannedPackage(
+                "org.kazo.feature", "Feature", "1.0.0", "catalog:official/org.kazo.feature@1.0.0", null, 2048,
+                SystemWide: true, IsFeature: true, KazoPackageTrust.Verified, ["filesystem.system.read"], Requested: false),
+            new KazoPlannedPackage(
+                "org.kazo.client", "Client", "1.0.0", "catalog:official/org.kazo.client@1.0.0", null, 1024,
+                SystemWide: false, IsFeature: false, KazoPackageTrust.Verified, [], Requested: true),
+        ],
+        [],
+        RequiresAdministrator: true);
+
     [Fact]
     public async Task A_host_without_packages_says_so()
     {
@@ -196,7 +284,10 @@ public sealed class KazopkgCommandTests
         Assert.Contains("cannot install apps from a repository", stderr, StringComparison.Ordinal);
     }
 
-    private static async Task<(int Exit, string Stdout, string Stderr)> RunAsync(FakePackages packages, params string[] args)
+    private static Task<(int Exit, string Stdout, string Stderr)> RunAsync(FakePackages packages, params string[] args) =>
+        RunWithInputAsync(packages, input: null, args);
+
+    private static async Task<(int Exit, string Stdout, string Stderr)> RunWithInputAsync(FakePackages packages, string? input, params string[] args)
     {
         AppManifest manifest = AppDefinitionMapper.ToManifest(new KazopkgApp());
         PackagesContext app = new(manifest, packages);
@@ -205,7 +296,7 @@ public sealed class KazopkgCommandTests
         TerminalExecutionContext context = new(
             app: app,
             arguments: args.ToImmutableArray(),
-            standardInput: TextReader.Null,
+            standardInput: input is null ? TextReader.Null : new StringReader(input),
             standardOutput: stdout,
             standardError: stderr,
             workingDirectory: "/root",
@@ -224,6 +315,19 @@ public sealed class KazopkgCommandTests
         public bool Immediate { get; init; }
 
         public List<string> Calls { get; } = [];
+
+        /// <summary>The plan <c>kazopkg install</c> reads first (ADR 0248 §1); none says the OS predates it.</summary>
+        public KazoPackageInstallPlan? Plan { get; init; }
+
+        /// <summary>The apps that need the package <c>kazopkg remove</c> is asked to remove (ADR 0248 §3).</summary>
+        public IReadOnlyList<KazoPackageDependent> Dependents { get; init; } = [];
+
+        public ValueTask<KazoPackageInstallPlan> PlanPackageInstallAsync(
+            string source, KazoPackageScope scope = KazoPackageScope.Auto, CancellationToken cancellationToken = default) =>
+            Plan is { } plan ? ValueTask.FromResult(plan) : throw new NotSupportedException();
+
+        public ValueTask<IReadOnlyList<KazoPackageDependent>> GetPackageDependentsAsync(string appId, CancellationToken cancellationToken = default) =>
+            ValueTask.FromResult(Dependents);
 
         public ValueTask<IReadOnlyList<KazoAppInstallInfo>> GetAllAsync(CancellationToken cancellationToken = default) =>
             throw new NotSupportedException();
@@ -291,7 +395,10 @@ public sealed class KazopkgCommandTests
             string appId, KazoPackageScope scope = KazoPackageScope.Auto, CancellationToken cancellationToken = default)
         {
             Calls.Add($"remove {appId} scope={scope}");
-            return ValueTask.FromResult(new KazoInstalledPackage(appId, "github:Kazo-ca/Os-App-IRC", "0.2.0", Loaded: true));
+            return ValueTask.FromResult(new KazoInstalledPackage(appId, "github:Kazo-ca/Os-App-IRC", "0.2.0", Loaded: true)
+            {
+                DisabledDependents = [.. Dependents.Select(static app => app.AppId)],
+            });
         }
 
         public ValueTask<KazoPackageSources> AddPackageSourceAsync(string source, bool trusted, CancellationToken cancellationToken = default)

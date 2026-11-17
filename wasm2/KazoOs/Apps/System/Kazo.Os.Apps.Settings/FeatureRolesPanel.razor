@@ -1,0 +1,57 @@
+@inherits Kazo.Os.AppSdk.Blazor.KazoComponentBase
+@using Kazo.Os.AppSdk.Administration
+
+@if (_roles.Count > 0)
+{
+    <div class="setting-group users-panel" role="region" aria-label="@L["Roles.Title"]">
+        <h4>@L["Roles.Title"]</h4>
+        <p class="setting-desc">
+            @LocalizedMarkup.Format(L["Roles.Description"], LocalizedMarkup.Code("sudo kazorole grant"), LocalizedMarkup.Code("users.manage"))
+        </p>
+        <div class="roles-scroll">
+            <table class="roles-table">
+                <thead>
+                    <tr>
+                        <th scope="col">@L["Roles.Account"]</th>
+                        @foreach (KazoFeatureRole role in _roles)
+                        {
+                            <th scope="col" title="@(role.Description ?? role.Id)">
+                                <span class="role-title">@role.Title</span>
+                                <span class="role-feature">@role.FeatureName</span>
+                            </th>
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (KazoUserAccount account in Accounts)
+                    {
+                        <tr>
+                            <th scope="row" class="role-account">@account.LoginName</th>
+                            @if (account.IsAdministrator)
+                            {
+                                @* ADR 0247, answer 233 B: an administrator holds every role, with no line in roles.config. *@
+                                <td colspan="@_roles.Count" class="role-implicit">@L["Roles.Implicit"]</td>
+                            }
+                            else
+                            {
+                                @foreach (KazoFeatureRole role in _roles)
+                                {
+                                    bool held = account.Roles.Contains(role.Id);
+                                    <td class="role-cell">
+                                        <input type="checkbox" checked="@held" disabled="@(_busy || !CanManage)"
+                                               aria-label="@L["Roles.Toggle", role.Title, account.LoginName]"
+                                               @onchange="change => ToggleAsync(account, role, change)" />
+                                    </td>
+                                }
+                            }
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        @if (!string.IsNullOrEmpty(_message))
+        {
+            <p class="@(_failed ? "dialog-error" : "users-result")" role="@(_failed ? "alert" : "status")">@_message</p>
+        }
+    </div>
+}

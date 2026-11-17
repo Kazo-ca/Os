@@ -60,6 +60,10 @@
                             <div class="permissions-capability-text">
                                 <span class="permissions-capability-title">@capability.Title</span>
                                 <code>@capability.Capability</code>
+                                @if (capability.ProviderId is { } provider)
+                                {
+                                    <span class="permissions-capability-provider">@L["Permissions.Provider", provider]</span>
+                                }
                                 <span class="permissions-capability-risk">@capability.RiskDescription</span>
                             </div>
                             <span class="@StateClass(capability.State)">@StateLabel(capability.State)</span>

@@ -150,6 +150,25 @@ public sealed class EcosystemBootCoordinator
     }
 
     /// <summary>
+    /// Gets or sets the eviction check of ADR 0250 §2, which ran before the OS database was opened; the
+    /// boot logs what it found and writes the marker of this boot. A property rather than a constructor
+    /// parameter keeps the published constructor unchanged.
+    /// </summary>
+    public Kazo.Os.Platform.Core.Storage.StorageEvictionDetector? EvictionDetector { get; set; }
+
+    /// <summary>Gets or sets the browser storage of the page (ADR 0250): the features' markers checked at boot.</summary>
+    public Kazo.Os.Platform.Core.Storage.OriginStorageService? OriginStorage { get; set; }
+
+    /// <summary>Gets or sets <c>kern.log</c>, where <c>storage.evicted</c> is written; <c>syslog</c> alone without it.</summary>
+    public Kazo.Os.Platform.Core.Diagnostics.KernelLog? KernelLog { get; set; }
+
+    /// <summary>
+    /// Gets or sets the roles of the features (ADR 0247 §1): <c>/etc/kazoos/roles.config</c> is read
+    /// once storage is ready, before the system services and the login screen.
+    /// </summary>
+    public Kazo.Os.Platform.Core.Roles.FeatureRoleService? FeatureRoles { get; set; }
+
+    /// <summary>
     /// Raises the boot's end signal (ADR 0071, section 2): the session is open, the desktop shown and
     /// the startup apps launched. The worker pool then waits for the browser to be idle (at most 2 s)
     /// and warms up its ready worker and its cores. Idempotent; the host calls it once the desktop
@@ -163,6 +182,9 @@ public sealed class EcosystemBootCoordinator
         }
 
         _startup.MarkStarted();
+
+        // ADR 0250 §2: a feature's storage the browser erased is told to the user now signed in.
+        OriginStorage?.NotifyEvictions();
 
         // The desktop is shown: give back the orphan content of rewritten and deleted files in the
         // background (ADR 0273 section 4).
@@ -242,6 +264,14 @@ public sealed class EcosystemBootCoordinator
             "kernel",
             $"boot: storage ready, policy revision {policyRevision}, {catalog.Count} apps in catalog, {users.Count} local users");
 
+        await RecordStorageBootAsync(cancellationToken).ConfigureAwait(false);
+
+        // ADR 0247 §1: who holds the roles of the features, before any entry point opens.
+        if (FeatureRoles is not null)
+        {
+            await FeatureRoles.RefreshAsync(cancellationToken).ConfigureAwait(false);
+        }
+
         // ADR 0097 section 4: the system services start before the login screen, as kazoos-svc.
         // A failure is logged and never blocks the boot.
         if (_serviceStartup is not null)
@@ -250,6 +280,44 @@ public sealed class EcosystemBootCoordinator
         }
 
         return new EcosystemBootResult(users, policyRevision, catalog.Count);
+    }
+
+    /// <summary>
+    /// ADR 0250 §2, once storage is ready: logs an eviction the check found before the database was
+    /// opened (<c>storage.evicted</c> in <c>kern.log</c> and <c>syslog</c>), writes the marker of this
+    /// successful boot, and checks the features' markers in the Origin Private File System.
+    /// </summary>
+    private async ValueTask RecordStorageBootAsync(CancellationToken cancellationToken)
+    {
+        if (EvictionDetector is null)
+        {
+            return;
+        }
+
+        if (EvictionDetector.Eviction is { } eviction)
+        {
+            string lastBoot = eviction.LastBootUtc?.ToString("O", System.Globalization.CultureInfo.InvariantCulture) ?? "unknown";
+            string line = $"storage.evicted: the browser erased Kazo OS's data (last boot {lastBoot}); starting as a new installation";
+            if (KernelLog is not null)
+            {
+                KernelLog.Write(Kazo.Os.Platform.Core.Diagnostics.KernelLogLevel.Warning, line);
+            }
+            else
+            {
+                _logWriter?.Write(LogFileTarget.Syslog, DiagnosticSeverity.Warning, "kernel", line);
+            }
+        }
+
+        await EvictionDetector.RecordBootAsync(cancellationToken).ConfigureAwait(false);
+        if (EvictionDetector.PersistenceLost)
+        {
+            _logWriter?.Write(LogFileTarget.Syslog, DiagnosticSeverity.Warning, "kernel", "storage: the browser no longer protects Kazo OS's storage from eviction");
+        }
+
+        if (OriginStorage is not null)
+        {
+            await OriginStorage.CheckMarkersAsync(cancellationToken).ConfigureAwait(false);
+        }
     }
 
     /// <summary>

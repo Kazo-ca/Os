@@ -458,6 +458,25 @@ last commit of that version, and adds it to the E2E test.
 dotnet test Tests/Kazo.Os.UI.E2E.Tests -c Release --no-build --filter "FullyQualifiedName~IndexedDbUpgradeFixtureTests"
 ```
 
+### Browser storage under Firefox and Safari (ADR 0250)
+
+The storage unit tests (`OriginStorageTests`, `StoragePanelTests`,
+`EcosystemBootCoordinatorTests`) replace the browser with a double of
+`IOriginStorage`. Browsers differ where those doubles see nothing:
+
+- Firefox limits the origin to the smaller of 10 % of the disk or 10 GiB
+  without `persist()`, and asks the user before granting persistence; before
+  126, `indexedDB.databases()` is missing and the eviction is not detected.
+- Safari may erase after 7 days without interaction; without
+  `usageDetails`, the Storage page shows the total only.
+- Chromium grants `persist()` by engagement (installed PWA, bookmark),
+  without a prompt.
+
+To try an eviction by hand: start Kazo OS, sign in, then, in the browser's
+tools, delete the `kazoos` IndexedDB database without touching
+`localStorage`, and reload: the first-run screen tells of the eviction and
+`kern.log` has `storage.evicted`.
+
 ### Accessibility (ADR 0105)
 
 Two classes of `Kazo.Os.UI.E2E.Tests` run axe-core (Deque.AxeCore.Playwright);

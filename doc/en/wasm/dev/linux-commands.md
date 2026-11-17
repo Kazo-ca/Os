@@ -52,7 +52,7 @@ alice@kazoos:~$ watch -n 1 'ps | wc -l'
 | Command | Options | Notes |
 |---|---|---|
 | `sort` | `-r -n -h -V -f -b -u -c`, `-k N[,M]`, `-t SEP`, `-o FICHIER` | Stable sort with a final byte-by-byte comparison, like GNU sort; combinable options (`-rn`). |
-| `head` | `-n N`, `-N`, `-n -N` (all but the last N), `-c N`, `-q`, `-v` | Reads standard input as it comes: `yes \| head` terminates. |
+| `head` | `-n N`, `-N`, `-n -N` (all but the last N), `-c N` (bytes), `-q`, `-v` | Reads a file or standard input as it comes and stops after what it prints: `yes \| head` and `head -c 16 /dev/urandom` terminate (#542). The terminal's output is text: the bytes read are decoded as UTF-8, so `head -c N file > copy` does not copy a binary file faithfully (#573). |
 | `tail` | `-n N`, `-N`, `-n +N`, `-c N`, `-f`, `-q`, `-v` | `-f` follows the file (reread every 500 ms) until Ctrl+C; reports `file truncated`. |
 | `cut` | `-f LISTE` with `-d SEP`, `-s`, `--output-delimiter`, `-c`/`-b LISTE`, `--complement` | LIST: `N`, `N-M`, `N-`, `-M`, comma-separated. |
 | `tee` | `-a` | Copies the input to the output and to each file; an inaccessible file does not stop the others (code 1). |
