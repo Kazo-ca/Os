@@ -122,6 +122,10 @@ public sealed class AppDefinitionInspectorTests
         AssertSingleCode(Inspect(typeof(PlainFeatureKindApp)), GeneratorCodes.FeatureOnly, typeof(PlainFeatureKindApp));
 
     [Fact]
+    public void KOSAPP0033_ordinary_definition_claiming_the_settings_page_kind() =>
+        AssertSingleCode(Inspect(typeof(PlainSettingsPageApp)), GeneratorCodes.FeatureOnly, typeof(PlainSettingsPageApp));
+
+    [Fact]
     public void KOSAPP0033_feature_next_to_another_app_in_one_project()
     {
         InspectionResult result = Inspect(typeof(ValidFeature), typeof(ValidCommandApp));
