@@ -70,11 +70,14 @@ Kazo.Os.AppSdk.Administration.IAppUserAccountsGateway.AddPasskeyAsync(string! na
 Kazo.Os.AppSdk.Administration.IAppUserAccountsGateway.ChangePasswordAsync(string! currentPassword, string! newPassword, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
 Kazo.Os.AppSdk.Administration.IAppUserAccountsGateway.CreateAsync(Kazo.Os.AppSdk.Administration.KazoNewUserAccount! account, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.Administration.KazoUserAccount!>
 Kazo.Os.AppSdk.Administration.IAppUserAccountsGateway.DeleteAsync(string! loginName, bool removeHome, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Kazo.Os.AppSdk.Administration.IAppUserAccountsGateway.GrantRoleAsync(string! loginName, string! role, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<bool>
 Kazo.Os.AppSdk.Administration.IAppUserAccountsGateway.ListAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.Administration.KazoUserAccount!>!>
 Kazo.Os.AppSdk.Administration.IAppUserAccountsGateway.ListPasskeysAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.Administration.KazoPasskey!>!>
+Kazo.Os.AppSdk.Administration.IAppUserAccountsGateway.ListRolesAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.Administration.KazoFeatureRole!>!>
 Kazo.Os.AppSdk.Administration.IAppUserAccountsGateway.RemovePasskeyAsync(string! passkeyId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<bool>
 Kazo.Os.AppSdk.Administration.IAppUserAccountsGateway.RequestGuestAccountCreationAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<bool>
 Kazo.Os.AppSdk.Administration.IAppUserAccountsGateway.ResetPasswordAsync(string! loginName, string? newPassword, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Kazo.Os.AppSdk.Administration.IAppUserAccountsGateway.RevokeRoleAsync(string! loginName, string! role, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<bool>
 Kazo.Os.AppSdk.Administration.KazoAppPermissionInfo
 Kazo.Os.AppSdk.Administration.KazoAppPermissionInfo.<Clone>$() -> Kazo.Os.AppSdk.Administration.KazoAppPermissionInfo!
 Kazo.Os.AppSdk.Administration.KazoAppPermissionInfo.AppId.get -> string!
@@ -114,6 +117,8 @@ Kazo.Os.AppSdk.Administration.KazoCapabilityPermissionInfo.Deconstruct(out strin
 Kazo.Os.AppSdk.Administration.KazoCapabilityPermissionInfo.Equals(Kazo.Os.AppSdk.Administration.KazoCapabilityPermissionInfo? other) -> bool
 Kazo.Os.AppSdk.Administration.KazoCapabilityPermissionInfo.IsGranted.get -> bool
 Kazo.Os.AppSdk.Administration.KazoCapabilityPermissionInfo.KazoCapabilityPermissionInfo(string! Capability, string! Title, string! RiskDescription, Kazo.Os.AppSdk.Administration.KazoPermissionState State) -> void
+Kazo.Os.AppSdk.Administration.KazoCapabilityPermissionInfo.ProviderId.get -> string?
+Kazo.Os.AppSdk.Administration.KazoCapabilityPermissionInfo.ProviderId.init -> void
 Kazo.Os.AppSdk.Administration.KazoCapabilityPermissionInfo.RiskDescription.get -> string!
 Kazo.Os.AppSdk.Administration.KazoCapabilityPermissionInfo.RiskDescription.init -> void
 Kazo.Os.AppSdk.Administration.KazoCapabilityPermissionInfo.State.get -> Kazo.Os.AppSdk.Administration.KazoPermissionState
@@ -150,6 +155,21 @@ Kazo.Os.AppSdk.Administration.KazoComponentProviders
 Kazo.Os.AppSdk.Administration.KazoDangerousCapabilityPolicy
 Kazo.Os.AppSdk.Administration.KazoDangerousCapabilityPolicy.Block = 1 -> Kazo.Os.AppSdk.Administration.KazoDangerousCapabilityPolicy
 Kazo.Os.AppSdk.Administration.KazoDangerousCapabilityPolicy.Prompt = 0 -> Kazo.Os.AppSdk.Administration.KazoDangerousCapabilityPolicy
+Kazo.Os.AppSdk.Administration.KazoFeatureRole
+Kazo.Os.AppSdk.Administration.KazoFeatureRole.<Clone>$() -> Kazo.Os.AppSdk.Administration.KazoFeatureRole!
+Kazo.Os.AppSdk.Administration.KazoFeatureRole.Deconstruct(out string! Id, out string! Title, out string! FeatureId, out string! FeatureName) -> void
+Kazo.Os.AppSdk.Administration.KazoFeatureRole.Description.get -> string?
+Kazo.Os.AppSdk.Administration.KazoFeatureRole.Description.init -> void
+Kazo.Os.AppSdk.Administration.KazoFeatureRole.Equals(Kazo.Os.AppSdk.Administration.KazoFeatureRole? other) -> bool
+Kazo.Os.AppSdk.Administration.KazoFeatureRole.FeatureId.get -> string!
+Kazo.Os.AppSdk.Administration.KazoFeatureRole.FeatureId.init -> void
+Kazo.Os.AppSdk.Administration.KazoFeatureRole.FeatureName.get -> string!
+Kazo.Os.AppSdk.Administration.KazoFeatureRole.FeatureName.init -> void
+Kazo.Os.AppSdk.Administration.KazoFeatureRole.Id.get -> string!
+Kazo.Os.AppSdk.Administration.KazoFeatureRole.Id.init -> void
+Kazo.Os.AppSdk.Administration.KazoFeatureRole.KazoFeatureRole(string! Id, string! Title, string! FeatureId, string! FeatureName) -> void
+Kazo.Os.AppSdk.Administration.KazoFeatureRole.Title.get -> string!
+Kazo.Os.AppSdk.Administration.KazoFeatureRole.Title.init -> void
 Kazo.Os.AppSdk.Administration.KazoFileMenuEntries
 Kazo.Os.AppSdk.Administration.KazoFileMenuEntryInfo
 Kazo.Os.AppSdk.Administration.KazoFileMenuEntryInfo.<Clone>$() -> Kazo.Os.AppSdk.Administration.KazoFileMenuEntryInfo!
@@ -436,6 +456,8 @@ Kazo.Os.AppSdk.Administration.KazoUserAccount.LoginName.get -> string!
 Kazo.Os.AppSdk.Administration.KazoUserAccount.LoginName.init -> void
 Kazo.Os.AppSdk.Administration.KazoUserAccount.PasskeyCount.get -> int
 Kazo.Os.AppSdk.Administration.KazoUserAccount.PasskeyCount.init -> void
+Kazo.Os.AppSdk.Administration.KazoUserAccount.Roles.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Kazo.Os.AppSdk.Administration.KazoUserAccount.Roles.init -> void
 Kazo.Os.AppSdk.Administration.KazoUserAccount.UpdatedAtUtc.get -> System.DateTimeOffset
 Kazo.Os.AppSdk.Administration.KazoUserAccount.UpdatedAtUtc.init -> void
 Kazo.Os.AppSdk.Administration.KazoUserAccounts
@@ -480,6 +502,7 @@ Kazo.Os.AppSdk.Apps.IAppManagementGateway.GetCatalogDescriptionAsync(string! cat
 Kazo.Os.AppSdk.Apps.IAppManagementGateway.GetInstalledPackagesAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.Apps.KazoInstalledPackage!>!>
 Kazo.Os.AppSdk.Apps.IAppManagementGateway.GetInstalledThemePacksAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.Apps.KazoInstalledThemePack!>!>
 Kazo.Os.AppSdk.Apps.IAppManagementGateway.GetPackageCatalogsAsync(bool refresh = false, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.Apps.KazoAppCatalog!>!>
+Kazo.Os.AppSdk.Apps.IAppManagementGateway.GetPackageDependentsAsync(string! appId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.Apps.KazoPackageDependent!>!>
 Kazo.Os.AppSdk.Apps.IAppManagementGateway.GetPackageInfoAsync(string! source, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.Apps.KazoPackageInfo!>
 Kazo.Os.AppSdk.Apps.IAppManagementGateway.GetPackagePolicyAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.Apps.KazoPackagePolicy!>
 Kazo.Os.AppSdk.Apps.IAppManagementGateway.GetPackageSourcesAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.Apps.KazoPackageSources!>
@@ -487,6 +510,7 @@ Kazo.Os.AppSdk.Apps.IAppManagementGateway.GetPackageUpdatesAsync(System.Threadin
 Kazo.Os.AppSdk.Apps.IAppManagementGateway.InstallPackageAsync(string! source, Kazo.Os.AppSdk.Apps.KazoPackageScope scope = Kazo.Os.AppSdk.Apps.KazoPackageScope.Auto, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.Apps.KazoPackageInstallReport!>
 Kazo.Os.AppSdk.Apps.IAppManagementGateway.InstallPackageAsync(string! source, Kazo.Os.AppSdk.Apps.KazoPackageScope scope, System.IProgress<Kazo.Os.AppSdk.Apps.KazoPackageInstallProgress!>? progress, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.Apps.KazoPackageInstallReport!>
 Kazo.Os.AppSdk.Apps.IAppManagementGateway.InstallThemePackAsync(string! source, Kazo.Os.AppSdk.Apps.KazoPackageScope scope = Kazo.Os.AppSdk.Apps.KazoPackageScope.Auto, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.Apps.KazoThemePackInstallReport!>
+Kazo.Os.AppSdk.Apps.IAppManagementGateway.PlanPackageInstallAsync(string! source, Kazo.Os.AppSdk.Apps.KazoPackageScope scope = Kazo.Os.AppSdk.Apps.KazoPackageScope.Auto, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.Apps.KazoPackageInstallPlan!>
 Kazo.Os.AppSdk.Apps.IAppManagementGateway.PlanUninstallAsync(string! appId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.Apps.KazoUninstallPlan!>
 Kazo.Os.AppSdk.Apps.IAppManagementGateway.ReinstallAsync(string! appId, Kazo.Os.AppSdk.Apps.KazoInstallScope scope, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<string!>!>
 Kazo.Os.AppSdk.Apps.IAppManagementGateway.RemovePackageAsync(string! appId, Kazo.Os.AppSdk.Apps.KazoPackageScope scope = Kazo.Os.AppSdk.Apps.KazoPackageScope.Auto, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.Apps.KazoInstalledPackage!>
@@ -625,6 +649,8 @@ Kazo.Os.AppSdk.Apps.KazoCatalogAppVersion.<Clone>$() -> Kazo.Os.AppSdk.Apps.Kazo
 Kazo.Os.AppSdk.Apps.KazoCatalogAppVersion.Capabilities.get -> System.Collections.Generic.IReadOnlyList<string!>!
 Kazo.Os.AppSdk.Apps.KazoCatalogAppVersion.Capabilities.init -> void
 Kazo.Os.AppSdk.Apps.KazoCatalogAppVersion.Deconstruct(out string! Version, out long SizeBytes, out System.Collections.Generic.IReadOnlyList<string!>! Capabilities) -> void
+Kazo.Os.AppSdk.Apps.KazoCatalogAppVersion.Dependencies.get -> System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.Apps.KazoPackageDependency!>?
+Kazo.Os.AppSdk.Apps.KazoCatalogAppVersion.Dependencies.init -> void
 Kazo.Os.AppSdk.Apps.KazoCatalogAppVersion.DescriptionLanguages.get -> System.Collections.Generic.IReadOnlyList<string!>!
 Kazo.Os.AppSdk.Apps.KazoCatalogAppVersion.DescriptionLanguages.init -> void
 Kazo.Os.AppSdk.Apps.KazoCatalogAppVersion.Equals(Kazo.Os.AppSdk.Apps.KazoCatalogAppVersion? other) -> bool
@@ -681,6 +707,17 @@ Kazo.Os.AppSdk.Apps.KazoFileAssociation.Target.init -> void
 Kazo.Os.AppSdk.Apps.KazoFileAssociationLayer
 Kazo.Os.AppSdk.Apps.KazoFileAssociationLayer.System = 0 -> Kazo.Os.AppSdk.Apps.KazoFileAssociationLayer
 Kazo.Os.AppSdk.Apps.KazoFileAssociationLayer.User = 1 -> Kazo.Os.AppSdk.Apps.KazoFileAssociationLayer
+Kazo.Os.AppSdk.Apps.KazoInstallRequestResult
+Kazo.Os.AppSdk.Apps.KazoInstallRequestResult.<Clone>$() -> Kazo.Os.AppSdk.Apps.KazoInstallRequestResult!
+Kazo.Os.AppSdk.Apps.KazoInstallRequestResult.AppId.get -> string!
+Kazo.Os.AppSdk.Apps.KazoInstallRequestResult.AppId.init -> void
+Kazo.Os.AppSdk.Apps.KazoInstallRequestResult.Deconstruct(out string! AppId, out bool StoreOpened, out string? Message) -> void
+Kazo.Os.AppSdk.Apps.KazoInstallRequestResult.Equals(Kazo.Os.AppSdk.Apps.KazoInstallRequestResult? other) -> bool
+Kazo.Os.AppSdk.Apps.KazoInstallRequestResult.KazoInstallRequestResult(string! AppId, bool StoreOpened, string? Message) -> void
+Kazo.Os.AppSdk.Apps.KazoInstallRequestResult.Message.get -> string?
+Kazo.Os.AppSdk.Apps.KazoInstallRequestResult.Message.init -> void
+Kazo.Os.AppSdk.Apps.KazoInstallRequestResult.StoreOpened.get -> bool
+Kazo.Os.AppSdk.Apps.KazoInstallRequestResult.StoreOpened.init -> void
 Kazo.Os.AppSdk.Apps.KazoInstallScope
 Kazo.Os.AppSdk.Apps.KazoInstallScope.Machine = 1 -> Kazo.Os.AppSdk.Apps.KazoInstallScope
 Kazo.Os.AppSdk.Apps.KazoInstallScope.User = 0 -> Kazo.Os.AppSdk.Apps.KazoInstallScope
@@ -689,6 +726,8 @@ Kazo.Os.AppSdk.Apps.KazoInstalledPackage.<Clone>$() -> Kazo.Os.AppSdk.Apps.KazoI
 Kazo.Os.AppSdk.Apps.KazoInstalledPackage.AppId.get -> string!
 Kazo.Os.AppSdk.Apps.KazoInstalledPackage.AppId.init -> void
 Kazo.Os.AppSdk.Apps.KazoInstalledPackage.Deconstruct(out string! AppId, out string! Source, out string! Version, out bool Loaded) -> void
+Kazo.Os.AppSdk.Apps.KazoInstalledPackage.DisabledDependents.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Kazo.Os.AppSdk.Apps.KazoInstalledPackage.DisabledDependents.init -> void
 Kazo.Os.AppSdk.Apps.KazoInstalledPackage.Equals(Kazo.Os.AppSdk.Apps.KazoInstalledPackage? other) -> bool
 Kazo.Os.AppSdk.Apps.KazoInstalledPackage.KazoInstalledPackage(string! AppId, string! Source, string! Version, bool Loaded) -> void
 Kazo.Os.AppSdk.Apps.KazoInstalledPackage.Loaded.get -> bool
@@ -765,6 +804,28 @@ Kazo.Os.AppSdk.Apps.KazoPackageCatalog.Name.get -> string!
 Kazo.Os.AppSdk.Apps.KazoPackageCatalog.Name.init -> void
 Kazo.Os.AppSdk.Apps.KazoPackageCatalog.Trust.get -> Kazo.Os.AppSdk.Apps.KazoPackageTrust
 Kazo.Os.AppSdk.Apps.KazoPackageCatalog.Trust.init -> void
+Kazo.Os.AppSdk.Apps.KazoPackageDependency
+Kazo.Os.AppSdk.Apps.KazoPackageDependency.<Clone>$() -> Kazo.Os.AppSdk.Apps.KazoPackageDependency!
+Kazo.Os.AppSdk.Apps.KazoPackageDependency.AppId.get -> string!
+Kazo.Os.AppSdk.Apps.KazoPackageDependency.AppId.init -> void
+Kazo.Os.AppSdk.Apps.KazoPackageDependency.Deconstruct(out string! AppId, out string! MinimumVersion, out string? MaximumVersion, out bool Optional) -> void
+Kazo.Os.AppSdk.Apps.KazoPackageDependency.Equals(Kazo.Os.AppSdk.Apps.KazoPackageDependency? other) -> bool
+Kazo.Os.AppSdk.Apps.KazoPackageDependency.KazoPackageDependency(string! AppId, string! MinimumVersion, string? MaximumVersion, bool Optional) -> void
+Kazo.Os.AppSdk.Apps.KazoPackageDependency.MaximumVersion.get -> string?
+Kazo.Os.AppSdk.Apps.KazoPackageDependency.MaximumVersion.init -> void
+Kazo.Os.AppSdk.Apps.KazoPackageDependency.MinimumVersion.get -> string!
+Kazo.Os.AppSdk.Apps.KazoPackageDependency.MinimumVersion.init -> void
+Kazo.Os.AppSdk.Apps.KazoPackageDependency.Optional.get -> bool
+Kazo.Os.AppSdk.Apps.KazoPackageDependency.Optional.init -> void
+Kazo.Os.AppSdk.Apps.KazoPackageDependent
+Kazo.Os.AppSdk.Apps.KazoPackageDependent.<Clone>$() -> Kazo.Os.AppSdk.Apps.KazoPackageDependent!
+Kazo.Os.AppSdk.Apps.KazoPackageDependent.AppId.get -> string!
+Kazo.Os.AppSdk.Apps.KazoPackageDependent.AppId.init -> void
+Kazo.Os.AppSdk.Apps.KazoPackageDependent.Deconstruct(out string! AppId, out string! Name) -> void
+Kazo.Os.AppSdk.Apps.KazoPackageDependent.Equals(Kazo.Os.AppSdk.Apps.KazoPackageDependent? other) -> bool
+Kazo.Os.AppSdk.Apps.KazoPackageDependent.KazoPackageDependent(string! AppId, string! Name) -> void
+Kazo.Os.AppSdk.Apps.KazoPackageDependent.Name.get -> string!
+Kazo.Os.AppSdk.Apps.KazoPackageDependent.Name.init -> void
 Kazo.Os.AppSdk.Apps.KazoPackageException
 Kazo.Os.AppSdk.Apps.KazoPackageException.Code.get -> string!
 Kazo.Os.AppSdk.Apps.KazoPackageException.KazoPackageException(string! code, string! message) -> void
@@ -791,6 +852,18 @@ Kazo.Os.AppSdk.Apps.KazoPackageInfo.Trusted.get -> bool
 Kazo.Os.AppSdk.Apps.KazoPackageInfo.Trusted.init -> void
 Kazo.Os.AppSdk.Apps.KazoPackageInfo.Versions.get -> System.Collections.Generic.IReadOnlyList<string!>!
 Kazo.Os.AppSdk.Apps.KazoPackageInfo.Versions.init -> void
+Kazo.Os.AppSdk.Apps.KazoPackageInstallPlan
+Kazo.Os.AppSdk.Apps.KazoPackageInstallPlan.<Clone>$() -> Kazo.Os.AppSdk.Apps.KazoPackageInstallPlan!
+Kazo.Os.AppSdk.Apps.KazoPackageInstallPlan.Deconstruct(out System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.Apps.KazoPlannedPackage!>! Packages, out System.Collections.Generic.IReadOnlyList<string!>! Reactivated, out bool RequiresAdministrator) -> void
+Kazo.Os.AppSdk.Apps.KazoPackageInstallPlan.Equals(Kazo.Os.AppSdk.Apps.KazoPackageInstallPlan? other) -> bool
+Kazo.Os.AppSdk.Apps.KazoPackageInstallPlan.HasDependencies.get -> bool
+Kazo.Os.AppSdk.Apps.KazoPackageInstallPlan.KazoPackageInstallPlan(System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.Apps.KazoPlannedPackage!>! Packages, System.Collections.Generic.IReadOnlyList<string!>! Reactivated, bool RequiresAdministrator) -> void
+Kazo.Os.AppSdk.Apps.KazoPackageInstallPlan.Packages.get -> System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.Apps.KazoPlannedPackage!>!
+Kazo.Os.AppSdk.Apps.KazoPackageInstallPlan.Packages.init -> void
+Kazo.Os.AppSdk.Apps.KazoPackageInstallPlan.Reactivated.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Kazo.Os.AppSdk.Apps.KazoPackageInstallPlan.Reactivated.init -> void
+Kazo.Os.AppSdk.Apps.KazoPackageInstallPlan.RequiresAdministrator.get -> bool
+Kazo.Os.AppSdk.Apps.KazoPackageInstallPlan.RequiresAdministrator.init -> void
 Kazo.Os.AppSdk.Apps.KazoPackageInstallProgress
 Kazo.Os.AppSdk.Apps.KazoPackageInstallProgress.<Clone>$() -> Kazo.Os.AppSdk.Apps.KazoPackageInstallProgress!
 Kazo.Os.AppSdk.Apps.KazoPackageInstallProgress.BytesReceived.get -> long?
@@ -811,7 +884,11 @@ Kazo.Os.AppSdk.Apps.KazoPackageInstallReport.BlockedBy.get -> string?
 Kazo.Os.AppSdk.Apps.KazoPackageInstallReport.BlockedBy.init -> void
 Kazo.Os.AppSdk.Apps.KazoPackageInstallReport.Capabilities.get -> System.Collections.Generic.IReadOnlyList<string!>!
 Kazo.Os.AppSdk.Apps.KazoPackageInstallReport.Capabilities.init -> void
+Kazo.Os.AppSdk.Apps.KazoPackageInstallReport.DangerousCapabilities.get -> System.Collections.Generic.IReadOnlyList<string!>?
+Kazo.Os.AppSdk.Apps.KazoPackageInstallReport.DangerousCapabilities.init -> void
 Kazo.Os.AppSdk.Apps.KazoPackageInstallReport.Deconstruct(out string! AppId, out string! Name, out string! Version, out string! Source, out string? PreviousVersion, out System.Collections.Generic.IReadOnlyList<string!>! Capabilities, out bool Trusted) -> void
+Kazo.Os.AppSdk.Apps.KazoPackageInstallReport.Dependencies.get -> System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.Apps.KazoPackageInstallReport!>!
+Kazo.Os.AppSdk.Apps.KazoPackageInstallReport.Dependencies.init -> void
 Kazo.Os.AppSdk.Apps.KazoPackageInstallReport.EntryPoints.get -> System.Collections.Generic.IReadOnlyList<string!>!
 Kazo.Os.AppSdk.Apps.KazoPackageInstallReport.EntryPoints.init -> void
 Kazo.Os.AppSdk.Apps.KazoPackageInstallReport.Equals(Kazo.Os.AppSdk.Apps.KazoPackageInstallReport? other) -> bool
@@ -822,6 +899,10 @@ Kazo.Os.AppSdk.Apps.KazoPackageInstallReport.Name.get -> string!
 Kazo.Os.AppSdk.Apps.KazoPackageInstallReport.Name.init -> void
 Kazo.Os.AppSdk.Apps.KazoPackageInstallReport.PreviousVersion.get -> string?
 Kazo.Os.AppSdk.Apps.KazoPackageInstallReport.PreviousVersion.init -> void
+Kazo.Os.AppSdk.Apps.KazoPackageInstallReport.Reactivated.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Kazo.Os.AppSdk.Apps.KazoPackageInstallReport.Reactivated.init -> void
+Kazo.Os.AppSdk.Apps.KazoPackageInstallReport.ReactivatedDependents.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Kazo.Os.AppSdk.Apps.KazoPackageInstallReport.ReactivatedDependents.init -> void
 Kazo.Os.AppSdk.Apps.KazoPackageInstallReport.ReplacedPersonalCopies.get -> int
 Kazo.Os.AppSdk.Apps.KazoPackageInstallReport.ReplacedPersonalCopies.init -> void
 Kazo.Os.AppSdk.Apps.KazoPackageInstallReport.RestartRequired.get -> bool
@@ -899,6 +980,33 @@ Kazo.Os.AppSdk.Apps.KazoPackageUpdate.Source.get -> string!
 Kazo.Os.AppSdk.Apps.KazoPackageUpdate.Source.init -> void
 Kazo.Os.AppSdk.Apps.KazoPackageUpdate.SystemWide.get -> bool
 Kazo.Os.AppSdk.Apps.KazoPackageUpdate.SystemWide.init -> void
+Kazo.Os.AppSdk.Apps.KazoPlannedPackage
+Kazo.Os.AppSdk.Apps.KazoPlannedPackage.<Clone>$() -> Kazo.Os.AppSdk.Apps.KazoPlannedPackage!
+Kazo.Os.AppSdk.Apps.KazoPlannedPackage.AppId.get -> string!
+Kazo.Os.AppSdk.Apps.KazoPlannedPackage.AppId.init -> void
+Kazo.Os.AppSdk.Apps.KazoPlannedPackage.DangerousCapabilities.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Kazo.Os.AppSdk.Apps.KazoPlannedPackage.DangerousCapabilities.init -> void
+Kazo.Os.AppSdk.Apps.KazoPlannedPackage.Deconstruct(out string! AppId, out string! Name, out string! Version, out string! Source, out string? PreviousVersion, out long SizeBytes, out bool SystemWide, out bool IsFeature, out Kazo.Os.AppSdk.Apps.KazoPackageTrust Trust, out System.Collections.Generic.IReadOnlyList<string!>! DangerousCapabilities, out bool Requested) -> void
+Kazo.Os.AppSdk.Apps.KazoPlannedPackage.Equals(Kazo.Os.AppSdk.Apps.KazoPlannedPackage? other) -> bool
+Kazo.Os.AppSdk.Apps.KazoPlannedPackage.IsFeature.get -> bool
+Kazo.Os.AppSdk.Apps.KazoPlannedPackage.IsFeature.init -> void
+Kazo.Os.AppSdk.Apps.KazoPlannedPackage.KazoPlannedPackage(string! AppId, string! Name, string! Version, string! Source, string? PreviousVersion, long SizeBytes, bool SystemWide, bool IsFeature, Kazo.Os.AppSdk.Apps.KazoPackageTrust Trust, System.Collections.Generic.IReadOnlyList<string!>! DangerousCapabilities, bool Requested) -> void
+Kazo.Os.AppSdk.Apps.KazoPlannedPackage.Name.get -> string!
+Kazo.Os.AppSdk.Apps.KazoPlannedPackage.Name.init -> void
+Kazo.Os.AppSdk.Apps.KazoPlannedPackage.PreviousVersion.get -> string?
+Kazo.Os.AppSdk.Apps.KazoPlannedPackage.PreviousVersion.init -> void
+Kazo.Os.AppSdk.Apps.KazoPlannedPackage.Requested.get -> bool
+Kazo.Os.AppSdk.Apps.KazoPlannedPackage.Requested.init -> void
+Kazo.Os.AppSdk.Apps.KazoPlannedPackage.SizeBytes.get -> long
+Kazo.Os.AppSdk.Apps.KazoPlannedPackage.SizeBytes.init -> void
+Kazo.Os.AppSdk.Apps.KazoPlannedPackage.Source.get -> string!
+Kazo.Os.AppSdk.Apps.KazoPlannedPackage.Source.init -> void
+Kazo.Os.AppSdk.Apps.KazoPlannedPackage.SystemWide.get -> bool
+Kazo.Os.AppSdk.Apps.KazoPlannedPackage.SystemWide.init -> void
+Kazo.Os.AppSdk.Apps.KazoPlannedPackage.Trust.get -> Kazo.Os.AppSdk.Apps.KazoPackageTrust
+Kazo.Os.AppSdk.Apps.KazoPlannedPackage.Trust.init -> void
+Kazo.Os.AppSdk.Apps.KazoPlannedPackage.Version.get -> string!
+Kazo.Os.AppSdk.Apps.KazoPlannedPackage.Version.init -> void
 Kazo.Os.AppSdk.Apps.KazoRunningProcessInfo
 Kazo.Os.AppSdk.Apps.KazoRunningProcessInfo.<Clone>$() -> Kazo.Os.AppSdk.Apps.KazoRunningProcessInfo!
 Kazo.Os.AppSdk.Apps.KazoRunningProcessInfo.AppId.get -> string!
@@ -1283,6 +1391,93 @@ Kazo.Os.AppSdk.DragDrop.VirtualFolderDragPayload.ItemCount.init -> void
 Kazo.Os.AppSdk.DragDrop.VirtualFolderDragPayload.SourceAppId.get -> string!
 Kazo.Os.AppSdk.DragDrop.VirtualFolderDragPayload.SourceAppId.init -> void
 Kazo.Os.AppSdk.DragDrop.VirtualFolderDragPayload.VirtualFolderDragPayload(string! SourceAppId, string! FolderPath, string! FolderName, int ItemCount) -> void
+Kazo.Os.AppSdk.Drives.IKazoDriveProviderContext
+Kazo.Os.AppSdk.Drives.IKazoDriveProviderContext.Account.get -> Kazo.Os.AppSdk.Drives.KazoDriveAccount?
+Kazo.Os.AppSdk.Drives.IKazoDriveProviderContext.GetAccessTokenAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<string!>
+Kazo.Os.AppSdk.Drives.IKazoDriveProviderContext.GetSecretAsync(string! name, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<string?>
+Kazo.Os.AppSdk.Drives.IKazoDriveProviderContext.NotifyAvailabilityChanged() -> void
+Kazo.Os.AppSdk.Drives.IKazoDriveProviderContext.Type.get -> string!
+Kazo.Os.AppSdk.Drives.KazoDriveAccount
+Kazo.Os.AppSdk.Drives.KazoDriveAccount.<Clone>$() -> Kazo.Os.AppSdk.Drives.KazoDriveAccount!
+Kazo.Os.AppSdk.Drives.KazoDriveAccount.Deconstruct(out string! Id, out string! DisplayName) -> void
+Kazo.Os.AppSdk.Drives.KazoDriveAccount.DisplayName.get -> string!
+Kazo.Os.AppSdk.Drives.KazoDriveAccount.DisplayName.init -> void
+Kazo.Os.AppSdk.Drives.KazoDriveAccount.Equals(Kazo.Os.AppSdk.Drives.KazoDriveAccount? other) -> bool
+Kazo.Os.AppSdk.Drives.KazoDriveAccount.Id.get -> string!
+Kazo.Os.AppSdk.Drives.KazoDriveAccount.Id.init -> void
+Kazo.Os.AppSdk.Drives.KazoDriveAccount.KazoDriveAccount(string! Id, string! DisplayName) -> void
+Kazo.Os.AppSdk.Drives.KazoDriveEntry
+Kazo.Os.AppSdk.Drives.KazoDriveEntry.<Clone>$() -> Kazo.Os.AppSdk.Drives.KazoDriveEntry!
+Kazo.Os.AppSdk.Drives.KazoDriveEntry.Deconstruct(out string! Name, out Kazo.Os.AppSdk.Drives.KazoDriveEntryKind Kind, out long Length, out System.DateTimeOffset? LastModifiedUtc) -> void
+Kazo.Os.AppSdk.Drives.KazoDriveEntry.Equals(Kazo.Os.AppSdk.Drives.KazoDriveEntry? other) -> bool
+Kazo.Os.AppSdk.Drives.KazoDriveEntry.KazoDriveEntry(string! Name, Kazo.Os.AppSdk.Drives.KazoDriveEntryKind Kind, long Length, System.DateTimeOffset? LastModifiedUtc) -> void
+Kazo.Os.AppSdk.Drives.KazoDriveEntry.Kind.get -> Kazo.Os.AppSdk.Drives.KazoDriveEntryKind
+Kazo.Os.AppSdk.Drives.KazoDriveEntry.Kind.init -> void
+Kazo.Os.AppSdk.Drives.KazoDriveEntry.LastModifiedUtc.get -> System.DateTimeOffset?
+Kazo.Os.AppSdk.Drives.KazoDriveEntry.LastModifiedUtc.init -> void
+Kazo.Os.AppSdk.Drives.KazoDriveEntry.Length.get -> long
+Kazo.Os.AppSdk.Drives.KazoDriveEntry.Length.init -> void
+Kazo.Os.AppSdk.Drives.KazoDriveEntry.Name.get -> string!
+Kazo.Os.AppSdk.Drives.KazoDriveEntry.Name.init -> void
+Kazo.Os.AppSdk.Drives.KazoDriveEntry.Revision.get -> string?
+Kazo.Os.AppSdk.Drives.KazoDriveEntry.Revision.init -> void
+Kazo.Os.AppSdk.Drives.KazoDriveEntryKind
+Kazo.Os.AppSdk.Drives.KazoDriveEntryKind.File = 0 -> Kazo.Os.AppSdk.Drives.KazoDriveEntryKind
+Kazo.Os.AppSdk.Drives.KazoDriveEntryKind.Folder = 1 -> Kazo.Os.AppSdk.Drives.KazoDriveEntryKind
+Kazo.Os.AppSdk.Drives.KazoDriveErrorKind
+Kazo.Os.AppSdk.Drives.KazoDriveErrorKind.AccessDenied = 10 -> Kazo.Os.AppSdk.Drives.KazoDriveErrorKind
+Kazo.Os.AppSdk.Drives.KazoDriveErrorKind.Exists = 1 -> Kazo.Os.AppSdk.Drives.KazoDriveErrorKind
+Kazo.Os.AppSdk.Drives.KazoDriveErrorKind.FileTooLarge = 5 -> Kazo.Os.AppSdk.Drives.KazoDriveErrorKind
+Kazo.Os.AppSdk.Drives.KazoDriveErrorKind.InvalidName = 9 -> Kazo.Os.AppSdk.Drives.KazoDriveErrorKind
+Kazo.Os.AppSdk.Drives.KazoDriveErrorKind.NotEmpty = 8 -> Kazo.Os.AppSdk.Drives.KazoDriveErrorKind
+Kazo.Os.AppSdk.Drives.KazoDriveErrorKind.NotFound = 0 -> Kazo.Os.AppSdk.Drives.KazoDriveErrorKind
+Kazo.Os.AppSdk.Drives.KazoDriveErrorKind.Other = 11 -> Kazo.Os.AppSdk.Drives.KazoDriveErrorKind
+Kazo.Os.AppSdk.Drives.KazoDriveErrorKind.QuotaExceeded = 6 -> Kazo.Os.AppSdk.Drives.KazoDriveErrorKind
+Kazo.Os.AppSdk.Drives.KazoDriveErrorKind.RevisionConflict = 4 -> Kazo.Os.AppSdk.Drives.KazoDriveErrorKind
+Kazo.Os.AppSdk.Drives.KazoDriveErrorKind.SignInRequired = 3 -> Kazo.Os.AppSdk.Drives.KazoDriveErrorKind
+Kazo.Os.AppSdk.Drives.KazoDriveErrorKind.TypeMismatch = 7 -> Kazo.Os.AppSdk.Drives.KazoDriveErrorKind
+Kazo.Os.AppSdk.Drives.KazoDriveErrorKind.Unavailable = 2 -> Kazo.Os.AppSdk.Drives.KazoDriveErrorKind
+Kazo.Os.AppSdk.Drives.KazoDriveException
+Kazo.Os.AppSdk.Drives.KazoDriveException.KazoDriveException(Kazo.Os.AppSdk.Drives.KazoDriveErrorKind kind, string! message, System.Exception? innerException = null) -> void
+Kazo.Os.AppSdk.Drives.KazoDriveException.Kind.get -> Kazo.Os.AppSdk.Drives.KazoDriveErrorKind
+Kazo.Os.AppSdk.Drives.KazoDriveFolder
+Kazo.Os.AppSdk.Drives.KazoDriveFolder.KazoDriveFolder() -> void
+Kazo.Os.AppSdk.Drives.KazoDriveLimits
+Kazo.Os.AppSdk.Drives.KazoDriveOpenRequest
+Kazo.Os.AppSdk.Drives.KazoDriveOpenRequest.<Clone>$() -> Kazo.Os.AppSdk.Drives.KazoDriveOpenRequest!
+Kazo.Os.AppSdk.Drives.KazoDriveOpenRequest.Context.get -> Kazo.Os.AppSdk.Drives.IKazoDriveProviderContext!
+Kazo.Os.AppSdk.Drives.KazoDriveOpenRequest.Context.init -> void
+Kazo.Os.AppSdk.Drives.KazoDriveOpenRequest.Deconstruct(out string! Name, out Kazo.Os.AppSdk.Drives.IKazoDriveProviderContext! Context) -> void
+Kazo.Os.AppSdk.Drives.KazoDriveOpenRequest.Equals(Kazo.Os.AppSdk.Drives.KazoDriveOpenRequest? other) -> bool
+Kazo.Os.AppSdk.Drives.KazoDriveOpenRequest.KazoDriveOpenRequest(string! Name, Kazo.Os.AppSdk.Drives.IKazoDriveProviderContext! Context) -> void
+Kazo.Os.AppSdk.Drives.KazoDriveOpenRequest.Name.get -> string!
+Kazo.Os.AppSdk.Drives.KazoDriveOpenRequest.Name.init -> void
+Kazo.Os.AppSdk.Drives.KazoDriveOpenRequest.Options.get -> System.Collections.Generic.IReadOnlyDictionary<string!, string!>!
+Kazo.Os.AppSdk.Drives.KazoDriveOpenRequest.Options.init -> void
+Kazo.Os.AppSdk.Drives.KazoDriveOpenRequest.Root.get -> string?
+Kazo.Os.AppSdk.Drives.KazoDriveOpenRequest.Root.init -> void
+Kazo.Os.AppSdk.Drives.KazoDrivePath
+Kazo.Os.AppSdk.Drives.KazoDrivePath.Append(string! name) -> Kazo.Os.AppSdk.Drives.KazoDrivePath!
+Kazo.Os.AppSdk.Drives.KazoDrivePath.Equals(Kazo.Os.AppSdk.Drives.KazoDrivePath? other) -> bool
+Kazo.Os.AppSdk.Drives.KazoDrivePath.IsRoot.get -> bool
+Kazo.Os.AppSdk.Drives.KazoDrivePath.Name.get -> string!
+Kazo.Os.AppSdk.Drives.KazoDrivePath.Parent.get -> Kazo.Os.AppSdk.Drives.KazoDrivePath?
+Kazo.Os.AppSdk.Drives.KazoDrivePath.Segments.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Kazo.Os.AppSdk.Drives.KazoDriveProvider
+Kazo.Os.AppSdk.Drives.KazoDriveProvider.KazoDriveProvider() -> void
+Kazo.Os.AppSdk.Drives.KazoDriveQuota
+Kazo.Os.AppSdk.Drives.KazoDriveQuota.<Clone>$() -> Kazo.Os.AppSdk.Drives.KazoDriveQuota!
+Kazo.Os.AppSdk.Drives.KazoDriveQuota.Deconstruct(out long TotalBytes, out long FreeBytes) -> void
+Kazo.Os.AppSdk.Drives.KazoDriveQuota.Equals(Kazo.Os.AppSdk.Drives.KazoDriveQuota? other) -> bool
+Kazo.Os.AppSdk.Drives.KazoDriveQuota.FreeBytes.get -> long
+Kazo.Os.AppSdk.Drives.KazoDriveQuota.FreeBytes.init -> void
+Kazo.Os.AppSdk.Drives.KazoDriveQuota.KazoDriveQuota(long TotalBytes, long FreeBytes) -> void
+Kazo.Os.AppSdk.Drives.KazoDriveQuota.TotalBytes.get -> long
+Kazo.Os.AppSdk.Drives.KazoDriveQuota.TotalBytes.init -> void
+Kazo.Os.AppSdk.Drives.KazoDriveState
+Kazo.Os.AppSdk.Drives.KazoDriveState.Ready = 0 -> Kazo.Os.AppSdk.Drives.KazoDriveState
+Kazo.Os.AppSdk.Drives.KazoDriveState.SignInRequired = 1 -> Kazo.Os.AppSdk.Drives.KazoDriveState
+Kazo.Os.AppSdk.Drives.KazoDriveState.Unavailable = 2 -> Kazo.Os.AppSdk.Drives.KazoDriveState
 Kazo.Os.AppSdk.Features.IAppFeatureGateway
 Kazo.Os.AppSdk.Features.IAppFeatureGateway.Changed -> System.EventHandler<Kazo.Os.AppSdk.Features.KazoFeatureServiceChangedEventArgs!>?
 Kazo.Os.AppSdk.Features.IAppFeatureGateway.GetServiceAsync(System.Type! contract, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<object?>
@@ -1293,15 +1488,44 @@ Kazo.Os.AppSdk.Features.IFeatureServiceContext.Caller.get -> Kazo.Os.AppSdk.Feat
 Kazo.Os.AppSdk.Features.IFeatureServiceContext.EnterFeature() -> System.IDisposable!
 Kazo.Os.AppSdk.Features.IFeatureServiceContext.Feature.get -> Kazo.Os.AppSdk.IAppExecutionContext!
 Kazo.Os.AppSdk.Features.IFeatureServiceContext.Stopping.get -> System.Threading.CancellationToken
+Kazo.Os.AppSdk.Features.IKazoFeatureAuthentication
+Kazo.Os.AppSdk.Features.IKazoFeatureAuthentication.AuthenticateAsync(string! operation, Kazo.Os.AppSdk.Features.KazoAuthenticationScope scope, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.Features.KazoAuthenticationTicket!>
+Kazo.Os.AppSdk.Features.IKazoFeatureAuthentication.ConsumeAsync(Kazo.Os.AppSdk.Features.KazoAuthenticationTicket! ticket, string! operation, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.Features.KazoAuthenticationTicket!>
+Kazo.Os.AppSdk.Features.IKazoFeatureAuthentication.IsSupported.get -> bool
+Kazo.Os.AppSdk.Features.KazoAuthenticationScope
+Kazo.Os.AppSdk.Features.KazoAuthenticationScope.Administrator = 1 -> Kazo.Os.AppSdk.Features.KazoAuthenticationScope
+Kazo.Os.AppSdk.Features.KazoAuthenticationScope.RoleHolder = 0 -> Kazo.Os.AppSdk.Features.KazoAuthenticationScope
+Kazo.Os.AppSdk.Features.KazoAuthenticationTicket
+Kazo.Os.AppSdk.Features.KazoAuthenticationTicket.<Clone>$() -> Kazo.Os.AppSdk.Features.KazoAuthenticationTicket!
+Kazo.Os.AppSdk.Features.KazoAuthenticationTicket.AuthenticatedBy.get -> string!
+Kazo.Os.AppSdk.Features.KazoAuthenticationTicket.AuthenticatedBy.init -> void
+Kazo.Os.AppSdk.Features.KazoAuthenticationTicket.Deconstruct(out System.Guid Token, out string! FeatureId, out string! Operation, out Kazo.Os.AppSdk.Features.KazoAuthenticationScope Scope, out string! AuthenticatedBy, out System.DateTimeOffset ExpiresAtUtc) -> void
+Kazo.Os.AppSdk.Features.KazoAuthenticationTicket.Equals(Kazo.Os.AppSdk.Features.KazoAuthenticationTicket? other) -> bool
+Kazo.Os.AppSdk.Features.KazoAuthenticationTicket.ExpiresAtUtc.get -> System.DateTimeOffset
+Kazo.Os.AppSdk.Features.KazoAuthenticationTicket.ExpiresAtUtc.init -> void
+Kazo.Os.AppSdk.Features.KazoAuthenticationTicket.FeatureId.get -> string!
+Kazo.Os.AppSdk.Features.KazoAuthenticationTicket.FeatureId.init -> void
+Kazo.Os.AppSdk.Features.KazoAuthenticationTicket.KazoAuthenticationTicket(System.Guid Token, string! FeatureId, string! Operation, Kazo.Os.AppSdk.Features.KazoAuthenticationScope Scope, string! AuthenticatedBy, System.DateTimeOffset ExpiresAtUtc) -> void
+Kazo.Os.AppSdk.Features.KazoAuthenticationTicket.Operation.get -> string!
+Kazo.Os.AppSdk.Features.KazoAuthenticationTicket.Operation.init -> void
+Kazo.Os.AppSdk.Features.KazoAuthenticationTicket.Scope.get -> Kazo.Os.AppSdk.Features.KazoAuthenticationScope
+Kazo.Os.AppSdk.Features.KazoAuthenticationTicket.Scope.init -> void
+Kazo.Os.AppSdk.Features.KazoAuthenticationTicket.Token.get -> System.Guid
+Kazo.Os.AppSdk.Features.KazoAuthenticationTicket.Token.init -> void
+Kazo.Os.AppSdk.Features.KazoFeatureAuthentication
 Kazo.Os.AppSdk.Features.KazoFeatureCaller
 Kazo.Os.AppSdk.Features.KazoFeatureCaller.<Clone>$() -> Kazo.Os.AppSdk.Features.KazoFeatureCaller!
 Kazo.Os.AppSdk.Features.KazoFeatureCaller.AppId.get -> string!
 Kazo.Os.AppSdk.Features.KazoFeatureCaller.AppId.init -> void
 Kazo.Os.AppSdk.Features.KazoFeatureCaller.Deconstruct(out string! AppId, out long ProcessId, out string! UserId) -> void
 Kazo.Os.AppSdk.Features.KazoFeatureCaller.Equals(Kazo.Os.AppSdk.Features.KazoFeatureCaller? other) -> bool
+Kazo.Os.AppSdk.Features.KazoFeatureCaller.Has(string! permission) -> bool
 Kazo.Os.AppSdk.Features.KazoFeatureCaller.KazoFeatureCaller(string! AppId, long ProcessId, string! UserId) -> void
+Kazo.Os.AppSdk.Features.KazoFeatureCaller.Permissions.get -> Kazo.Os.Simulation.Abstractions.Gateways.ICapabilityChecker?
+Kazo.Os.AppSdk.Features.KazoFeatureCaller.Permissions.init -> void
 Kazo.Os.AppSdk.Features.KazoFeatureCaller.ProcessId.get -> long
 Kazo.Os.AppSdk.Features.KazoFeatureCaller.ProcessId.init -> void
+Kazo.Os.AppSdk.Features.KazoFeatureCaller.Require(string! permission) -> void
 Kazo.Os.AppSdk.Features.KazoFeatureCaller.UserId.get -> string!
 Kazo.Os.AppSdk.Features.KazoFeatureCaller.UserId.init -> void
 Kazo.Os.AppSdk.Features.KazoFeatureServiceChangedEventArgs
@@ -1339,6 +1563,10 @@ Kazo.Os.AppSdk.Features.UnsupportedAppFeatureGateway.GetServiceAsync(System.Type
 Kazo.Os.AppSdk.Features.UnsupportedAppFeatureGateway.GetStatusAsync(System.Type! contract, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.Features.KazoFeatureServiceStatus!>
 Kazo.Os.AppSdk.Features.UnsupportedAppFeatureGateway.IsAvailable(System.Type! contract) -> bool
 Kazo.Os.AppSdk.Features.UnsupportedAppFeatureGateway.UnsupportedAppFeatureGateway() -> void
+Kazo.Os.AppSdk.Features.UnsupportedFeatureAuthentication
+Kazo.Os.AppSdk.Features.UnsupportedFeatureAuthentication.AuthenticateAsync(string! operation, Kazo.Os.AppSdk.Features.KazoAuthenticationScope scope, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.Features.KazoAuthenticationTicket!>
+Kazo.Os.AppSdk.Features.UnsupportedFeatureAuthentication.ConsumeAsync(Kazo.Os.AppSdk.Features.KazoAuthenticationTicket! ticket, string! operation, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.Features.KazoAuthenticationTicket!>
+Kazo.Os.AppSdk.Features.UnsupportedFeatureAuthentication.IsSupported.get -> bool
 Kazo.Os.AppSdk.Files.FileMenuScope
 Kazo.Os.AppSdk.Files.FileMenuScope.Background = 4 -> Kazo.Os.AppSdk.Files.FileMenuScope
 Kazo.Os.AppSdk.Files.FileMenuScope.Desktop = 8 -> Kazo.Os.AppSdk.Files.FileMenuScope
@@ -1487,6 +1715,7 @@ Kazo.Os.AppSdk.IAppExecutionContext.Culture.get -> System.Globalization.CultureI
 Kazo.Os.AppSdk.IAppExecutionContext.Drives.get -> Kazo.Os.AppSdk.IO.IAppDriveGateway!
 Kazo.Os.AppSdk.IAppExecutionContext.Environment.get -> Kazo.Os.Simulation.Abstractions.Gateways.IAppEnvironmentGateway!
 Kazo.Os.AppSdk.IAppExecutionContext.Events.get -> Kazo.Os.Simulation.Abstractions.Gateways.IAppEventGateway!
+Kazo.Os.AppSdk.IAppExecutionContext.FeatureAuthentication.get -> Kazo.Os.AppSdk.Features.IKazoFeatureAuthentication!
 Kazo.Os.AppSdk.IAppExecutionContext.Features.get -> Kazo.Os.AppSdk.Features.IAppFeatureGateway!
 Kazo.Os.AppSdk.IAppExecutionContext.FileMenuEntryAdministration.get -> Kazo.Os.AppSdk.Administration.IAppFileMenuEntryAdministrationGateway!
 Kazo.Os.AppSdk.IAppExecutionContext.FileSystem.get -> Kazo.Os.Simulation.Abstractions.Gateways.IAppFileSystemGateway!
@@ -1508,6 +1737,7 @@ Kazo.Os.AppSdk.IAppExecutionContext.PermissionAdministration.get -> Kazo.Os.AppS
 Kazo.Os.AppSdk.IAppExecutionContext.PermissionErrors.get -> Kazo.Os.Simulation.Abstractions.Gateways.IAppPermissionErrorGateway!
 Kazo.Os.AppSdk.IAppExecutionContext.ProcessId.get -> Kazo.Os.Simulation.Abstractions.Processes.ProcessId
 Kazo.Os.AppSdk.IAppExecutionContext.Processes.get -> Kazo.Os.Simulation.Abstractions.Gateways.IAppProcessGateway!
+Kazo.Os.AppSdk.IAppExecutionContext.Roles.get -> System.Collections.Generic.IReadOnlySet<string!>!
 Kazo.Os.AppSdk.IAppExecutionContext.Screens.get -> Kazo.Os.AppSdk.Administration.IAppScreensGateway!
 Kazo.Os.AppSdk.IAppExecutionContext.ServerConnection.get -> Kazo.Os.AppSdk.Administration.IAppServerConnectionGateway!
 Kazo.Os.AppSdk.IAppExecutionContext.ServiceNotify.get -> Kazo.Os.Simulation.Abstractions.Gateways.IAppServiceNotifyGateway!
@@ -1516,6 +1746,7 @@ Kazo.Os.AppSdk.IAppExecutionContext.SessionId.get -> Kazo.Os.Simulation.Abstract
 Kazo.Os.AppSdk.IAppExecutionContext.ShellHost.get -> Kazo.Os.AppSdk.Shell.IAppShellHostGateway!
 Kazo.Os.AppSdk.IAppExecutionContext.StopRequest.get -> Kazo.Os.AppSdk.Diagnostics.KazoStopRequestedEventArgs?
 Kazo.Os.AppSdk.IAppExecutionContext.StopRequested -> System.EventHandler<Kazo.Os.AppSdk.Diagnostics.KazoStopRequestedEventArgs!>?
+Kazo.Os.AppSdk.IAppExecutionContext.Storage.get -> Kazo.Os.AppSdk.Storage.IAppStorageGateway!
 Kazo.Os.AppSdk.IAppExecutionContext.StorageDiagnostics.get -> Kazo.Os.AppSdk.Administration.IAppStorageDiagnosticsGateway!
 Kazo.Os.AppSdk.IAppExecutionContext.SystemBackup.get -> Kazo.Os.AppSdk.Administration.IAppSystemBackupGateway!
 Kazo.Os.AppSdk.IAppExecutionContext.SystemPower.get -> Kazo.Os.AppSdk.Administration.IAppSystemPowerGateway!
@@ -1536,8 +1767,10 @@ Kazo.Os.AppSdk.IFullScreenTerminalSession.ReadKeyAsync(System.Threading.Cancella
 Kazo.Os.AppSdk.IFullScreenTerminalSession.RenderAsync(Kazo.Os.AppSdk.TerminalScreenFrame! frame, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
 Kazo.Os.AppSdk.IFullScreenTerminalSession.Viewport.get -> Kazo.Os.AppSdk.TerminalViewport
 Kazo.Os.AppSdk.IO.IAppDriveGateway
+Kazo.Os.AppSdk.IO.IAppDriveGateway.DescribeNetworkDriveTypesAsync(System.Globalization.CultureInfo! language, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.IO.KazoNetworkDriveTypeInfo!>!>
 Kazo.Os.AppSdk.IO.IAppDriveGateway.GetDrivesAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.IO.KazoDriveSnapshot!>!>
 Kazo.Os.AppSdk.IO.IAppDriveGateway.GetNetworkDriveTypesAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<string!>!>
+Kazo.Os.AppSdk.IO.IAppDriveGateway.GetProviderMissingDrivesAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.IO.KazoDriveSnapshot!>!>
 Kazo.Os.AppSdk.IO.IAppDriveGateway.IsHostFolderSupportedAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<bool>
 Kazo.Os.AppSdk.IO.IAppDriveGateway.MountHostFolderAsync(string? mountPoint, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.IO.KazoDriveSnapshot?>
 Kazo.Os.AppSdk.IO.IAppDriveGateway.MountNetworkDriveAsync(Kazo.Os.AppSdk.IO.KazoNetworkDriveRequest! request, string? mountPoint, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.IO.KazoDriveSnapshot?>
@@ -1578,11 +1811,18 @@ Kazo.Os.AppSdk.IO.KazoDriveInfo.DriveFormat.get -> string!
 Kazo.Os.AppSdk.IO.KazoDriveInfo.DriveType.get -> Kazo.Os.AppSdk.IO.KazoDriveType
 Kazo.Os.AppSdk.IO.KazoDriveInfo.IsReady.get -> bool
 Kazo.Os.AppSdk.IO.KazoDriveInfo.Name.get -> string!
+Kazo.Os.AppSdk.IO.KazoDriveInfo.ProviderFeatureId.get -> string?
+Kazo.Os.AppSdk.IO.KazoDriveInfo.ProviderMissing.get -> Kazo.Os.AppSdk.IO.KazoDriveProviderMissingReason
 Kazo.Os.AppSdk.IO.KazoDriveInfo.Root.get -> string?
 Kazo.Os.AppSdk.IO.KazoDriveInfo.RootDirectory.get -> Kazo.Os.AppSdk.IO.KazoDirectoryInfo!
 Kazo.Os.AppSdk.IO.KazoDriveInfo.TotalFreeSpace.get -> long
 Kazo.Os.AppSdk.IO.KazoDriveInfo.TotalSize.get -> long
 Kazo.Os.AppSdk.IO.KazoDriveInfo.VolumeLabel.get -> string!
+Kazo.Os.AppSdk.IO.KazoDriveProviderMissingReason
+Kazo.Os.AppSdk.IO.KazoDriveProviderMissingReason.Disabled = 2 -> Kazo.Os.AppSdk.IO.KazoDriveProviderMissingReason
+Kazo.Os.AppSdk.IO.KazoDriveProviderMissingReason.DisabledByAdministrator = 3 -> Kazo.Os.AppSdk.IO.KazoDriveProviderMissingReason
+Kazo.Os.AppSdk.IO.KazoDriveProviderMissingReason.None = 0 -> Kazo.Os.AppSdk.IO.KazoDriveProviderMissingReason
+Kazo.Os.AppSdk.IO.KazoDriveProviderMissingReason.Removed = 1 -> Kazo.Os.AppSdk.IO.KazoDriveProviderMissingReason
 Kazo.Os.AppSdk.IO.KazoDriveSnapshot
 Kazo.Os.AppSdk.IO.KazoDriveSnapshot.<Clone>$() -> Kazo.Os.AppSdk.IO.KazoDriveSnapshot!
 Kazo.Os.AppSdk.IO.KazoDriveSnapshot.Account.get -> string?
@@ -1600,6 +1840,10 @@ Kazo.Os.AppSdk.IO.KazoDriveSnapshot.IsReady.init -> void
 Kazo.Os.AppSdk.IO.KazoDriveSnapshot.KazoDriveSnapshot(string! Name, string! DriveFormat, string! VolumeLabel, long TotalSize, long AvailableFreeSpace) -> void
 Kazo.Os.AppSdk.IO.KazoDriveSnapshot.Name.get -> string!
 Kazo.Os.AppSdk.IO.KazoDriveSnapshot.Name.init -> void
+Kazo.Os.AppSdk.IO.KazoDriveSnapshot.ProviderFeatureId.get -> string?
+Kazo.Os.AppSdk.IO.KazoDriveSnapshot.ProviderFeatureId.init -> void
+Kazo.Os.AppSdk.IO.KazoDriveSnapshot.ProviderMissing.get -> Kazo.Os.AppSdk.IO.KazoDriveProviderMissingReason
+Kazo.Os.AppSdk.IO.KazoDriveSnapshot.ProviderMissing.init -> void
 Kazo.Os.AppSdk.IO.KazoDriveSnapshot.Root.get -> string?
 Kazo.Os.AppSdk.IO.KazoDriveSnapshot.Root.init -> void
 Kazo.Os.AppSdk.IO.KazoDriveSnapshot.TotalSize.get -> long
@@ -1745,6 +1989,45 @@ Kazo.Os.AppSdk.IO.KazoIOException
 Kazo.Os.AppSdk.IO.KazoIOException.ErrorCode.get -> Kazo.Os.Simulation.Abstractions.FileSystem.FileSystemErrorCode?
 Kazo.Os.AppSdk.IO.KazoIOException.KazoIOException(string! message, Kazo.Os.Simulation.Abstractions.FileSystem.FileSystemErrorCode? errorCode = null, string? path = null, System.Exception? innerException = null) -> void
 Kazo.Os.AppSdk.IO.KazoIOException.Path.get -> string?
+Kazo.Os.AppSdk.IO.KazoNetworkDriveConnection
+Kazo.Os.AppSdk.IO.KazoNetworkDriveConnection.Form = 2 -> Kazo.Os.AppSdk.IO.KazoNetworkDriveConnection
+Kazo.Os.AppSdk.IO.KazoNetworkDriveConnection.HostFolder = 0 -> Kazo.Os.AppSdk.IO.KazoNetworkDriveConnection
+Kazo.Os.AppSdk.IO.KazoNetworkDriveConnection.OAuth = 1 -> Kazo.Os.AppSdk.IO.KazoNetworkDriveConnection
+Kazo.Os.AppSdk.IO.KazoNetworkDriveField
+Kazo.Os.AppSdk.IO.KazoNetworkDriveField.<Clone>$() -> Kazo.Os.AppSdk.IO.KazoNetworkDriveField!
+Kazo.Os.AppSdk.IO.KazoNetworkDriveField.Choices.get -> System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.IO.KazoNetworkDriveFieldChoice!>!
+Kazo.Os.AppSdk.IO.KazoNetworkDriveField.Choices.init -> void
+Kazo.Os.AppSdk.IO.KazoNetworkDriveField.Deconstruct(out string! Name, out string! Label, out Kazo.Os.AppSdk.IO.KazoNetworkDriveFieldKind Kind) -> void
+Kazo.Os.AppSdk.IO.KazoNetworkDriveField.Default.get -> string?
+Kazo.Os.AppSdk.IO.KazoNetworkDriveField.Default.init -> void
+Kazo.Os.AppSdk.IO.KazoNetworkDriveField.Equals(Kazo.Os.AppSdk.IO.KazoNetworkDriveField? other) -> bool
+Kazo.Os.AppSdk.IO.KazoNetworkDriveField.IsSecret.get -> bool
+Kazo.Os.AppSdk.IO.KazoNetworkDriveField.KazoNetworkDriveField(string! Name, string! Label, Kazo.Os.AppSdk.IO.KazoNetworkDriveFieldKind Kind) -> void
+Kazo.Os.AppSdk.IO.KazoNetworkDriveField.Kind.get -> Kazo.Os.AppSdk.IO.KazoNetworkDriveFieldKind
+Kazo.Os.AppSdk.IO.KazoNetworkDriveField.Kind.init -> void
+Kazo.Os.AppSdk.IO.KazoNetworkDriveField.Label.get -> string!
+Kazo.Os.AppSdk.IO.KazoNetworkDriveField.Label.init -> void
+Kazo.Os.AppSdk.IO.KazoNetworkDriveField.Name.get -> string!
+Kazo.Os.AppSdk.IO.KazoNetworkDriveField.Name.init -> void
+Kazo.Os.AppSdk.IO.KazoNetworkDriveField.Placeholder.get -> string?
+Kazo.Os.AppSdk.IO.KazoNetworkDriveField.Placeholder.init -> void
+Kazo.Os.AppSdk.IO.KazoNetworkDriveField.Required.get -> bool
+Kazo.Os.AppSdk.IO.KazoNetworkDriveField.Required.init -> void
+Kazo.Os.AppSdk.IO.KazoNetworkDriveFieldChoice
+Kazo.Os.AppSdk.IO.KazoNetworkDriveFieldChoice.<Clone>$() -> Kazo.Os.AppSdk.IO.KazoNetworkDriveFieldChoice!
+Kazo.Os.AppSdk.IO.KazoNetworkDriveFieldChoice.Deconstruct(out string! Value, out string! Label) -> void
+Kazo.Os.AppSdk.IO.KazoNetworkDriveFieldChoice.Equals(Kazo.Os.AppSdk.IO.KazoNetworkDriveFieldChoice? other) -> bool
+Kazo.Os.AppSdk.IO.KazoNetworkDriveFieldChoice.KazoNetworkDriveFieldChoice(string! Value, string! Label) -> void
+Kazo.Os.AppSdk.IO.KazoNetworkDriveFieldChoice.Label.get -> string!
+Kazo.Os.AppSdk.IO.KazoNetworkDriveFieldChoice.Label.init -> void
+Kazo.Os.AppSdk.IO.KazoNetworkDriveFieldChoice.Value.get -> string!
+Kazo.Os.AppSdk.IO.KazoNetworkDriveFieldChoice.Value.init -> void
+Kazo.Os.AppSdk.IO.KazoNetworkDriveFieldKind
+Kazo.Os.AppSdk.IO.KazoNetworkDriveFieldKind.Choice = 3 -> Kazo.Os.AppSdk.IO.KazoNetworkDriveFieldKind
+Kazo.Os.AppSdk.IO.KazoNetworkDriveFieldKind.Number = 2 -> Kazo.Os.AppSdk.IO.KazoNetworkDriveFieldKind
+Kazo.Os.AppSdk.IO.KazoNetworkDriveFieldKind.Secret = 4 -> Kazo.Os.AppSdk.IO.KazoNetworkDriveFieldKind
+Kazo.Os.AppSdk.IO.KazoNetworkDriveFieldKind.Text = 0 -> Kazo.Os.AppSdk.IO.KazoNetworkDriveFieldKind
+Kazo.Os.AppSdk.IO.KazoNetworkDriveFieldKind.Url = 1 -> Kazo.Os.AppSdk.IO.KazoNetworkDriveFieldKind
 Kazo.Os.AppSdk.IO.KazoNetworkDriveRequest
 Kazo.Os.AppSdk.IO.KazoNetworkDriveRequest.<Clone>$() -> Kazo.Os.AppSdk.IO.KazoNetworkDriveRequest!
 Kazo.Os.AppSdk.IO.KazoNetworkDriveRequest.Account.get -> string?
@@ -1760,6 +2043,32 @@ Kazo.Os.AppSdk.IO.KazoNetworkDriveRequest.Secrets.get -> System.Collections.Gene
 Kazo.Os.AppSdk.IO.KazoNetworkDriveRequest.Secrets.init -> void
 Kazo.Os.AppSdk.IO.KazoNetworkDriveRequest.Type.get -> string!
 Kazo.Os.AppSdk.IO.KazoNetworkDriveRequest.Type.init -> void
+Kazo.Os.AppSdk.IO.KazoNetworkDriveTypeInfo
+Kazo.Os.AppSdk.IO.KazoNetworkDriveTypeInfo.<Clone>$() -> Kazo.Os.AppSdk.IO.KazoNetworkDriveTypeInfo!
+Kazo.Os.AppSdk.IO.KazoNetworkDriveTypeInfo.AppFolderPath.get -> string?
+Kazo.Os.AppSdk.IO.KazoNetworkDriveTypeInfo.AppFolderPath.init -> void
+Kazo.Os.AppSdk.IO.KazoNetworkDriveTypeInfo.Connection.get -> Kazo.Os.AppSdk.IO.KazoNetworkDriveConnection
+Kazo.Os.AppSdk.IO.KazoNetworkDriveTypeInfo.Connection.init -> void
+Kazo.Os.AppSdk.IO.KazoNetworkDriveTypeInfo.Deconstruct(out string! Type, out string! DisplayName, out Kazo.Os.AppSdk.IO.KazoNetworkDriveConnection Connection) -> void
+Kazo.Os.AppSdk.IO.KazoNetworkDriveTypeInfo.DisplayName.get -> string!
+Kazo.Os.AppSdk.IO.KazoNetworkDriveTypeInfo.DisplayName.init -> void
+Kazo.Os.AppSdk.IO.KazoNetworkDriveTypeInfo.Equals(Kazo.Os.AppSdk.IO.KazoNetworkDriveTypeInfo? other) -> bool
+Kazo.Os.AppSdk.IO.KazoNetworkDriveTypeInfo.Fields.get -> System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.IO.KazoNetworkDriveField!>!
+Kazo.Os.AppSdk.IO.KazoNetworkDriveTypeInfo.Fields.init -> void
+Kazo.Os.AppSdk.IO.KazoNetworkDriveTypeInfo.Icon.get -> string?
+Kazo.Os.AppSdk.IO.KazoNetworkDriveTypeInfo.Icon.init -> void
+Kazo.Os.AppSdk.IO.KazoNetworkDriveTypeInfo.IconUrl.get -> string?
+Kazo.Os.AppSdk.IO.KazoNetworkDriveTypeInfo.IconUrl.init -> void
+Kazo.Os.AppSdk.IO.KazoNetworkDriveTypeInfo.IsThirdParty.get -> bool
+Kazo.Os.AppSdk.IO.KazoNetworkDriveTypeInfo.KazoNetworkDriveTypeInfo(string! Type, string! DisplayName, Kazo.Os.AppSdk.IO.KazoNetworkDriveConnection Connection) -> void
+Kazo.Os.AppSdk.IO.KazoNetworkDriveTypeInfo.ProviderFeatureId.get -> string?
+Kazo.Os.AppSdk.IO.KazoNetworkDriveTypeInfo.ProviderFeatureId.init -> void
+Kazo.Os.AppSdk.IO.KazoNetworkDriveTypeInfo.ProviderFeatureName.get -> string?
+Kazo.Os.AppSdk.IO.KazoNetworkDriveTypeInfo.ProviderFeatureName.init -> void
+Kazo.Os.AppSdk.IO.KazoNetworkDriveTypeInfo.Scopes.get -> System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.CloudAccounts.KazoCloudAccessScope>!
+Kazo.Os.AppSdk.IO.KazoNetworkDriveTypeInfo.Scopes.init -> void
+Kazo.Os.AppSdk.IO.KazoNetworkDriveTypeInfo.Type.get -> string!
+Kazo.Os.AppSdk.IO.KazoNetworkDriveTypeInfo.Type.init -> void
 Kazo.Os.AppSdk.IO.KazoPath
 Kazo.Os.AppSdk.IO.KazoRecoveryDraft
 Kazo.Os.AppSdk.IO.KazoRecoveryDraft.DeleteAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
@@ -1840,6 +2149,7 @@ Kazo.Os.AppSdk.KazoEnvironment
 Kazo.Os.AppSdk.KazoExecutionContext
 Kazo.Os.AppSdk.KazoExecutionContextMissingException
 Kazo.Os.AppSdk.KazoExecutionContextMissingException.KazoExecutionContextMissingException() -> void
+Kazo.Os.AppSdk.KazoRoles
 Kazo.Os.AppSdk.KazoSpecialFolder
 Kazo.Os.AppSdk.KazoSpecialFolder.ApplicationData = 3 -> Kazo.Os.AppSdk.KazoSpecialFolder
 Kazo.Os.AppSdk.KazoSpecialFolder.Desktop = 1 -> Kazo.Os.AppSdk.KazoSpecialFolder
@@ -1857,9 +2167,12 @@ Kazo.Os.AppSdk.KazoUserInfo.HomeDirectory.get -> string!
 Kazo.Os.AppSdk.KazoUserInfo.HomeDirectory.init -> void
 Kazo.Os.AppSdk.KazoUserInfo.IsAdministrator.get -> bool
 Kazo.Os.AppSdk.KazoUserInfo.IsAdministrator.init -> void
+Kazo.Os.AppSdk.KazoUserInfo.IsInRole(string! role) -> bool
 Kazo.Os.AppSdk.KazoUserInfo.KazoUserInfo(string! LoginName, string! DisplayName, string! HomeDirectory, bool IsAdministrator) -> void
 Kazo.Os.AppSdk.KazoUserInfo.LoginName.get -> string!
 Kazo.Os.AppSdk.KazoUserInfo.LoginName.init -> void
+Kazo.Os.AppSdk.KazoUserInfo.Roles.get -> System.Collections.Generic.IReadOnlySet<string!>!
+Kazo.Os.AppSdk.KazoUserInfo.Roles.init -> void
 Kazo.Os.AppSdk.KazoWireContextAttribute
 Kazo.Os.AppSdk.KazoWireContextAttribute.ContextType.get -> System.Type!
 Kazo.Os.AppSdk.KazoWireContextAttribute.KazoWireContextAttribute(System.Type! contextType) -> void
@@ -1944,13 +2257,16 @@ Kazo.Os.AppSdk.Net.IAppNetworkGateway.ConnectTcpAsync(string! hostNameOrAddress,
 Kazo.Os.AppSdk.Net.IAppNetworkGateway.ConnectUdpAsync(string! hostNameOrAddress, int port, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.Net.KazoNetworkResult<Kazo.Os.AppSdk.Net.IKazoSocket!>!>
 Kazo.Os.AppSdk.Net.IAppNetworkGateway.ConnectWebSocketAsync(System.Uri! uri, System.Collections.Generic.IReadOnlyList<string!>! subProtocols, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.Net.KazoNetworkResult<System.Net.WebSockets.WebSocket!>!>
 Kazo.Os.AppSdk.Net.IAppNetworkGateway.DetectOperatingSystemAsync(string! hostNameOrAddress, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.Net.KazoNetworkResult<Kazo.Os.AppSdk.Net.KazoOsFingerprint?>!>
+Kazo.Os.AppSdk.Net.IAppNetworkGateway.GetRelayStateAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.Net.KazoRelayState!>
 Kazo.Os.AppSdk.Net.IAppNetworkGateway.GetTcpListenersAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.Net.KazoTcpListenerInfo!>!>
 Kazo.Os.AppSdk.Net.IAppNetworkGateway.ListenHttpAsync(System.Collections.Generic.IReadOnlyList<string!>! prefixes, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.Net.KazoNetworkResult<Kazo.Os.AppSdk.Net.IKazoHttpListenerSocket!>!>
 Kazo.Os.AppSdk.Net.IAppNetworkGateway.PingAsync(string! hostNameOrAddress, System.TimeSpan timeout, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.Net.KazoNetworkResult<Kazo.Os.AppSdk.Net.KazoPingReply!>!>
 Kazo.Os.AppSdk.Net.IAppNetworkGateway.ProbeTcpAsync(string! hostNameOrAddress, int firstPort, int lastPort, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.Net.KazoNetworkResult<System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.Net.KazoPortProbeResult!>!>!>
+Kazo.Os.AppSdk.Net.IAppNetworkGateway.RelayStateChanged -> System.EventHandler<Kazo.Os.AppSdk.Net.KazoRelayState!>?
 Kazo.Os.AppSdk.Net.IAppNetworkGateway.ResolveAsync(string! hostName, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.Net.KazoNetworkResult<Kazo.Os.AppSdk.Net.KazoHostEntry!>!>
 Kazo.Os.AppSdk.Net.IAppNetworkGateway.ReverseLookupAsync(System.Net.IPAddress! address, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.Net.KazoNetworkResult<Kazo.Os.AppSdk.Net.KazoHostEntry!>!>
 Kazo.Os.AppSdk.Net.IAppNetworkGateway.SendAsync(Kazo.Os.AppSdk.Net.KazoHttpRequest! request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.Net.KazoNetworkResult<Kazo.Os.AppSdk.Net.KazoHttpResponse!>!>
+Kazo.Os.AppSdk.Net.IAppNetworkGateway.SendDirectAsync(Kazo.Os.AppSdk.Net.KazoDirectHttpRequest! request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.Net.KazoNetworkResult<Kazo.Os.AppSdk.Net.KazoDirectHttpResponse!>!>
 Kazo.Os.AppSdk.Net.IKazoHttpListenerSocket
 Kazo.Os.AppSdk.Net.IKazoHttpListenerSocket.AcceptAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.Net.KazoHttpListenerExchange?>
 Kazo.Os.AppSdk.Net.IKazoHttpListenerSocket.Prefixes.get -> System.Collections.Generic.IReadOnlyList<string!>!
@@ -1989,6 +2305,52 @@ Kazo.Os.AppSdk.Net.KazoCookieContainer.GetAllCookies() -> System.Collections.Gen
 Kazo.Os.AppSdk.Net.KazoCookieContainer.GetCookies(System.Uri! uri) -> System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.Net.KazoCookie!>!
 Kazo.Os.AppSdk.Net.KazoCookieContainer.KazoCookieContainer() -> void
 Kazo.Os.AppSdk.Net.KazoCookieContainer.Remove(string! domain, string! name) -> bool
+Kazo.Os.AppSdk.Net.KazoDirectHttpClient
+Kazo.Os.AppSdk.Net.KazoDirectHttpClient.BaseAddress.get -> System.Uri?
+Kazo.Os.AppSdk.Net.KazoDirectHttpClient.BaseAddress.set -> void
+Kazo.Os.AppSdk.Net.KazoDirectHttpClient.DefaultRequestHeaders.get -> System.Collections.Generic.IDictionary<string!, string!>!
+Kazo.Os.AppSdk.Net.KazoDirectHttpClient.DeleteAsync(string! requestUri, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Kazo.Os.AppSdk.Net.KazoDirectHttpResponse!>!
+Kazo.Os.AppSdk.Net.KazoDirectHttpClient.Dispose() -> void
+Kazo.Os.AppSdk.Net.KazoDirectHttpClient.GetAsync(string! requestUri, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Kazo.Os.AppSdk.Net.KazoDirectHttpResponse!>!
+Kazo.Os.AppSdk.Net.KazoDirectHttpClient.GetByteArrayAsync(string! requestUri, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<byte[]!>!
+Kazo.Os.AppSdk.Net.KazoDirectHttpClient.GetFromJsonAsync<T>(string! requestUri, System.Text.Json.Serialization.Metadata.JsonTypeInfo<T>! jsonTypeInfo, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<T?>!
+Kazo.Os.AppSdk.Net.KazoDirectHttpClient.GetStringAsync(string! requestUri, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<string!>!
+Kazo.Os.AppSdk.Net.KazoDirectHttpClient.KazoDirectHttpClient() -> void
+Kazo.Os.AppSdk.Net.KazoDirectHttpClient.PatchAsync(string! requestUri, Kazo.Os.AppSdk.Net.KazoDirectHttpContent? content, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Kazo.Os.AppSdk.Net.KazoDirectHttpResponse!>!
+Kazo.Os.AppSdk.Net.KazoDirectHttpClient.PostAsJsonAsync<T>(string! requestUri, T value, System.Text.Json.Serialization.Metadata.JsonTypeInfo<T>! jsonTypeInfo, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Kazo.Os.AppSdk.Net.KazoDirectHttpResponse!>!
+Kazo.Os.AppSdk.Net.KazoDirectHttpClient.PostAsync(string! requestUri, Kazo.Os.AppSdk.Net.KazoDirectHttpContent? content, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Kazo.Os.AppSdk.Net.KazoDirectHttpResponse!>!
+Kazo.Os.AppSdk.Net.KazoDirectHttpClient.PutAsync(string! requestUri, Kazo.Os.AppSdk.Net.KazoDirectHttpContent? content, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Kazo.Os.AppSdk.Net.KazoDirectHttpResponse!>!
+Kazo.Os.AppSdk.Net.KazoDirectHttpClient.SendAsync(Kazo.Os.AppSdk.Net.KazoDirectHttpRequest! request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Kazo.Os.AppSdk.Net.KazoDirectHttpResponse!>!
+Kazo.Os.AppSdk.Net.KazoDirectHttpClient.SendAsync(System.Net.Http.HttpMethod! method, string! requestUri, Kazo.Os.AppSdk.Net.KazoDirectHttpContent? content = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Kazo.Os.AppSdk.Net.KazoDirectHttpResponse!>!
+Kazo.Os.AppSdk.Net.KazoDirectHttpClient.Timeout.get -> System.TimeSpan
+Kazo.Os.AppSdk.Net.KazoDirectHttpClient.Timeout.set -> void
+Kazo.Os.AppSdk.Net.KazoDirectHttpContent
+Kazo.Os.AppSdk.Net.KazoDirectHttpContent.ContentType.get -> string!
+Kazo.Os.AppSdk.Net.KazoDirectHttpContent.Length.get -> long?
+Kazo.Os.AppSdk.Net.KazoDirectHttpRequest
+Kazo.Os.AppSdk.Net.KazoDirectHttpRequest.Content.get -> Kazo.Os.AppSdk.Net.KazoDirectHttpContent?
+Kazo.Os.AppSdk.Net.KazoDirectHttpRequest.Content.set -> void
+Kazo.Os.AppSdk.Net.KazoDirectHttpRequest.Headers.get -> System.Collections.Generic.IList<System.Collections.Generic.KeyValuePair<string!, string!>>!
+Kazo.Os.AppSdk.Net.KazoDirectHttpRequest.KazoDirectHttpRequest(System.Net.Http.HttpMethod! method, System.Uri! requestUri) -> void
+Kazo.Os.AppSdk.Net.KazoDirectHttpRequest.Method.get -> System.Net.Http.HttpMethod!
+Kazo.Os.AppSdk.Net.KazoDirectHttpRequest.RequestUri.get -> System.Uri!
+Kazo.Os.AppSdk.Net.KazoDirectHttpResponse
+Kazo.Os.AppSdk.Net.KazoDirectHttpResponse.Content.get -> System.IO.Stream!
+Kazo.Os.AppSdk.Net.KazoDirectHttpResponse.ContentLength.get -> long?
+Kazo.Os.AppSdk.Net.KazoDirectHttpResponse.ContentType.get -> string?
+Kazo.Os.AppSdk.Net.KazoDirectHttpResponse.Dispose() -> void
+Kazo.Os.AppSdk.Net.KazoDirectHttpResponse.DisposeAsync() -> System.Threading.Tasks.ValueTask
+Kazo.Os.AppSdk.Net.KazoDirectHttpResponse.EnsureSuccessStatusCode() -> Kazo.Os.AppSdk.Net.KazoDirectHttpResponse!
+Kazo.Os.AppSdk.Net.KazoDirectHttpResponse.GetHeader(string! name) -> string?
+Kazo.Os.AppSdk.Net.KazoDirectHttpResponse.Headers.get -> System.Collections.Generic.IReadOnlyList<System.Collections.Generic.KeyValuePair<string!, string!>>!
+Kazo.Os.AppSdk.Net.KazoDirectHttpResponse.IsSuccessStatusCode.get -> bool
+Kazo.Os.AppSdk.Net.KazoDirectHttpResponse.KazoDirectHttpResponse(int statusCode, string! reasonPhrase, System.Uri! requestUri, System.Collections.Generic.IReadOnlyList<System.Collections.Generic.KeyValuePair<string!, string!>>! headers, System.IO.Stream! content) -> void
+Kazo.Os.AppSdk.Net.KazoDirectHttpResponse.ReadAsByteArrayAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<byte[]!>!
+Kazo.Os.AppSdk.Net.KazoDirectHttpResponse.ReadAsStringAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<string!>!
+Kazo.Os.AppSdk.Net.KazoDirectHttpResponse.ReadFromJsonAsync<T>(System.Text.Json.Serialization.Metadata.JsonTypeInfo<T>! jsonTypeInfo, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<T?>!
+Kazo.Os.AppSdk.Net.KazoDirectHttpResponse.ReasonPhrase.get -> string!
+Kazo.Os.AppSdk.Net.KazoDirectHttpResponse.RequestUri.get -> System.Uri!
+Kazo.Os.AppSdk.Net.KazoDirectHttpResponse.StatusCode.get -> int
 Kazo.Os.AppSdk.Net.KazoDns
 Kazo.Os.AppSdk.Net.KazoDnsSource
 Kazo.Os.AppSdk.Net.KazoDnsSource.HostedSite = 4 -> Kazo.Os.AppSdk.Net.KazoDnsSource
@@ -2223,6 +2585,9 @@ Kazo.Os.AppSdk.Net.KazoNetworkError.ConnectionRefused = 3 -> Kazo.Os.AppSdk.Net.
 Kazo.Os.AppSdk.Net.KazoNetworkError.HostNotFound = 1 -> Kazo.Os.AppSdk.Net.KazoNetworkError
 Kazo.Os.AppSdk.Net.KazoNetworkError.HostUnreachable = 2 -> Kazo.Os.AppSdk.Net.KazoNetworkError
 Kazo.Os.AppSdk.Net.KazoNetworkError.None = 0 -> Kazo.Os.AppSdk.Net.KazoNetworkError
+Kazo.Os.AppSdk.Net.KazoNetworkError.RelayDisabled = 11 -> Kazo.Os.AppSdk.Net.KazoNetworkError
+Kazo.Os.AppSdk.Net.KazoNetworkError.RelayGrantPending = 12 -> Kazo.Os.AppSdk.Net.KazoNetworkError
+Kazo.Os.AppSdk.Net.KazoNetworkError.RelayNoServer = 10 -> Kazo.Os.AppSdk.Net.KazoNetworkError
 Kazo.Os.AppSdk.Net.KazoNetworkError.TimedOut = 7 -> Kazo.Os.AppSdk.Net.KazoNetworkError
 Kazo.Os.AppSdk.Net.KazoNetworkError.TlsFailed = 9 -> Kazo.Os.AppSdk.Net.KazoNetworkError
 Kazo.Os.AppSdk.Net.KazoNetworkError.TooManyRedirects = 4 -> Kazo.Os.AppSdk.Net.KazoNetworkError
@@ -2284,6 +2649,27 @@ Kazo.Os.AppSdk.Net.KazoPortState
 Kazo.Os.AppSdk.Net.KazoPortState.Closed = 1 -> Kazo.Os.AppSdk.Net.KazoPortState
 Kazo.Os.AppSdk.Net.KazoPortState.Filtered = 2 -> Kazo.Os.AppSdk.Net.KazoPortState
 Kazo.Os.AppSdk.Net.KazoPortState.Open = 0 -> Kazo.Os.AppSdk.Net.KazoPortState
+Kazo.Os.AppSdk.Net.KazoRealNetwork
+Kazo.Os.AppSdk.Net.KazoRelayException
+Kazo.Os.AppSdk.Net.KazoRelayException.Code.get -> string!
+Kazo.Os.AppSdk.Net.KazoRelayException.KazoRelayException(Kazo.Os.AppSdk.Net.KazoNetworkError reason, System.Net.Sockets.SocketError socketError, string? message = null) -> void
+Kazo.Os.AppSdk.Net.KazoRelayException.Reason.get -> Kazo.Os.AppSdk.Net.KazoNetworkError
+Kazo.Os.AppSdk.Net.KazoRelayState
+Kazo.Os.AppSdk.Net.KazoRelayState.<Clone>$() -> Kazo.Os.AppSdk.Net.KazoRelayState!
+Kazo.Os.AppSdk.Net.KazoRelayState.Deconstruct(out Kazo.Os.AppSdk.Net.KazoRelayStatus Status) -> void
+Kazo.Os.AppSdk.Net.KazoRelayState.Equals(Kazo.Os.AppSdk.Net.KazoRelayState? other) -> bool
+Kazo.Os.AppSdk.Net.KazoRelayState.KazoRelayState(Kazo.Os.AppSdk.Net.KazoRelayStatus Status) -> void
+Kazo.Os.AppSdk.Net.KazoRelayState.Status.get -> Kazo.Os.AppSdk.Net.KazoRelayStatus
+Kazo.Os.AppSdk.Net.KazoRelayState.Status.init -> void
+Kazo.Os.AppSdk.Net.KazoRelayState.TcpBlockedPorts.get -> System.Collections.Generic.IReadOnlyList<int>!
+Kazo.Os.AppSdk.Net.KazoRelayState.TcpBlockedPorts.init -> void
+Kazo.Os.AppSdk.Net.KazoRelayState.UdpBlockedPorts.get -> System.Collections.Generic.IReadOnlyList<int>!
+Kazo.Os.AppSdk.Net.KazoRelayState.UdpBlockedPorts.init -> void
+Kazo.Os.AppSdk.Net.KazoRelayStatus
+Kazo.Os.AppSdk.Net.KazoRelayStatus.GrantPending = 2 -> Kazo.Os.AppSdk.Net.KazoRelayStatus
+Kazo.Os.AppSdk.Net.KazoRelayStatus.NoServer = 0 -> Kazo.Os.AppSdk.Net.KazoRelayStatus
+Kazo.Os.AppSdk.Net.KazoRelayStatus.Ready = 3 -> Kazo.Os.AppSdk.Net.KazoRelayStatus
+Kazo.Os.AppSdk.Net.KazoRelayStatus.RelayDisabled = 1 -> Kazo.Os.AppSdk.Net.KazoRelayStatus
 Kazo.Os.AppSdk.Net.KazoStringContent
 Kazo.Os.AppSdk.Net.KazoStringContent.KazoStringContent(string! content, System.Text.Encoding? encoding = null, string? mediaType = null) -> void
 Kazo.Os.AppSdk.Net.KazoStringContent.KazoStringContent(string! content, string! mediaType) -> void
@@ -2571,6 +2957,70 @@ Kazo.Os.AppSdk.ShellJobState
 Kazo.Os.AppSdk.ShellJobState.Done = 1 -> Kazo.Os.AppSdk.ShellJobState
 Kazo.Os.AppSdk.ShellJobState.Running = 0 -> Kazo.Os.AppSdk.ShellJobState
 Kazo.Os.AppSdk.ShellJobState.Terminated = 2 -> Kazo.Os.AppSdk.ShellJobState
+Kazo.Os.AppSdk.Storage.IAppStorageGateway
+Kazo.Os.AppSdk.Storage.IAppStorageGateway.Changed -> System.EventHandler<Kazo.Os.AppSdk.Storage.KazoStorageChangedEventArgs!>?
+Kazo.Os.AppSdk.Storage.IAppStorageGateway.GetEstimateAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.Storage.KazoStorageEstimate!>
+Kazo.Os.AppSdk.Storage.IAppStorageGateway.GetFeatureUsageAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.Storage.KazoFeatureStorageUsage!>!>
+Kazo.Os.AppSdk.Storage.IAppStorageGateway.IsSupported.get -> bool
+Kazo.Os.AppSdk.Storage.IAppStorageGateway.RegisterMarkerAsync(string! path, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Kazo.Os.AppSdk.Storage.IAppStorageGateway.ReportUsageAsync(long bytes, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Kazo.Os.AppSdk.Storage.IAppStorageGateway.RequestPersistenceAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<bool>
+Kazo.Os.AppSdk.Storage.KazoFeatureStorageUsage
+Kazo.Os.AppSdk.Storage.KazoFeatureStorageUsage.<Clone>$() -> Kazo.Os.AppSdk.Storage.KazoFeatureStorageUsage!
+Kazo.Os.AppSdk.Storage.KazoFeatureStorageUsage.Deconstruct(out string! FeatureId, out string! Name, out long? UsageBytes, out System.DateTimeOffset? ReportedAtUtc) -> void
+Kazo.Os.AppSdk.Storage.KazoFeatureStorageUsage.Equals(Kazo.Os.AppSdk.Storage.KazoFeatureStorageUsage? other) -> bool
+Kazo.Os.AppSdk.Storage.KazoFeatureStorageUsage.FeatureId.get -> string!
+Kazo.Os.AppSdk.Storage.KazoFeatureStorageUsage.FeatureId.init -> void
+Kazo.Os.AppSdk.Storage.KazoFeatureStorageUsage.KazoFeatureStorageUsage(string! FeatureId, string! Name, long? UsageBytes, System.DateTimeOffset? ReportedAtUtc) -> void
+Kazo.Os.AppSdk.Storage.KazoFeatureStorageUsage.Name.get -> string!
+Kazo.Os.AppSdk.Storage.KazoFeatureStorageUsage.Name.init -> void
+Kazo.Os.AppSdk.Storage.KazoFeatureStorageUsage.ReportedAtUtc.get -> System.DateTimeOffset?
+Kazo.Os.AppSdk.Storage.KazoFeatureStorageUsage.ReportedAtUtc.init -> void
+Kazo.Os.AppSdk.Storage.KazoFeatureStorageUsage.UsageBytes.get -> long?
+Kazo.Os.AppSdk.Storage.KazoFeatureStorageUsage.UsageBytes.init -> void
+Kazo.Os.AppSdk.Storage.KazoStorage
+Kazo.Os.AppSdk.Storage.KazoStorageChangeKind
+Kazo.Os.AppSdk.Storage.KazoStorageChangeKind.Evicted = 0 -> Kazo.Os.AppSdk.Storage.KazoStorageChangeKind
+Kazo.Os.AppSdk.Storage.KazoStorageChangeKind.PersistenceLost = 1 -> Kazo.Os.AppSdk.Storage.KazoStorageChangeKind
+Kazo.Os.AppSdk.Storage.KazoStorageChangedEventArgs
+Kazo.Os.AppSdk.Storage.KazoStorageChangedEventArgs.DetectedAtUtc.get -> System.DateTimeOffset
+Kazo.Os.AppSdk.Storage.KazoStorageChangedEventArgs.FeatureId.get -> string!
+Kazo.Os.AppSdk.Storage.KazoStorageChangedEventArgs.KazoStorageChangedEventArgs(Kazo.Os.AppSdk.Storage.KazoStorageChangeKind kind, string! featureId, string? markerPath, System.DateTimeOffset detectedAtUtc) -> void
+Kazo.Os.AppSdk.Storage.KazoStorageChangedEventArgs.Kind.get -> Kazo.Os.AppSdk.Storage.KazoStorageChangeKind
+Kazo.Os.AppSdk.Storage.KazoStorageChangedEventArgs.MarkerPath.get -> string?
+Kazo.Os.AppSdk.Storage.KazoStorageEstimate
+Kazo.Os.AppSdk.Storage.KazoStorageEstimate.<Clone>$() -> Kazo.Os.AppSdk.Storage.KazoStorageEstimate!
+Kazo.Os.AppSdk.Storage.KazoStorageEstimate.CacheBytes.get -> long?
+Kazo.Os.AppSdk.Storage.KazoStorageEstimate.CacheBytes.init -> void
+Kazo.Os.AppSdk.Storage.KazoStorageEstimate.DeclaredUsageBytes.get -> long?
+Kazo.Os.AppSdk.Storage.KazoStorageEstimate.DeclaredUsageBytes.init -> void
+Kazo.Os.AppSdk.Storage.KazoStorageEstimate.Deconstruct(out long UsageBytes, out long QuotaBytes, out bool IsPersisted, out bool IsLowSpace) -> void
+Kazo.Os.AppSdk.Storage.KazoStorageEstimate.Equals(Kazo.Os.AppSdk.Storage.KazoStorageEstimate? other) -> bool
+Kazo.Os.AppSdk.Storage.KazoStorageEstimate.FileSystemBytes.get -> long?
+Kazo.Os.AppSdk.Storage.KazoStorageEstimate.FileSystemBytes.init -> void
+Kazo.Os.AppSdk.Storage.KazoStorageEstimate.IndexedDbBytes.get -> long?
+Kazo.Os.AppSdk.Storage.KazoStorageEstimate.IndexedDbBytes.init -> void
+Kazo.Os.AppSdk.Storage.KazoStorageEstimate.IsKnown.get -> bool
+Kazo.Os.AppSdk.Storage.KazoStorageEstimate.IsKnown.init -> void
+Kazo.Os.AppSdk.Storage.KazoStorageEstimate.IsLowSpace.get -> bool
+Kazo.Os.AppSdk.Storage.KazoStorageEstimate.IsLowSpace.init -> void
+Kazo.Os.AppSdk.Storage.KazoStorageEstimate.IsPersisted.get -> bool
+Kazo.Os.AppSdk.Storage.KazoStorageEstimate.IsPersisted.init -> void
+Kazo.Os.AppSdk.Storage.KazoStorageEstimate.KazoStorageEstimate(long UsageBytes, long QuotaBytes, bool IsPersisted, bool IsLowSpace) -> void
+Kazo.Os.AppSdk.Storage.KazoStorageEstimate.PersistenceLost.get -> bool
+Kazo.Os.AppSdk.Storage.KazoStorageEstimate.PersistenceLost.init -> void
+Kazo.Os.AppSdk.Storage.KazoStorageEstimate.QuotaBytes.get -> long
+Kazo.Os.AppSdk.Storage.KazoStorageEstimate.QuotaBytes.init -> void
+Kazo.Os.AppSdk.Storage.KazoStorageEstimate.UsageBytes.get -> long
+Kazo.Os.AppSdk.Storage.KazoStorageEstimate.UsageBytes.init -> void
+Kazo.Os.AppSdk.Storage.UnsupportedAppStorageGateway
+Kazo.Os.AppSdk.Storage.UnsupportedAppStorageGateway.Changed -> System.EventHandler<Kazo.Os.AppSdk.Storage.KazoStorageChangedEventArgs!>?
+Kazo.Os.AppSdk.Storage.UnsupportedAppStorageGateway.GetEstimateAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.Storage.KazoStorageEstimate!>
+Kazo.Os.AppSdk.Storage.UnsupportedAppStorageGateway.GetFeatureUsageAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.Storage.KazoFeatureStorageUsage!>!>
+Kazo.Os.AppSdk.Storage.UnsupportedAppStorageGateway.IsSupported.get -> bool
+Kazo.Os.AppSdk.Storage.UnsupportedAppStorageGateway.RegisterMarkerAsync(string! path, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Kazo.Os.AppSdk.Storage.UnsupportedAppStorageGateway.ReportUsageAsync(long bytes, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Kazo.Os.AppSdk.Storage.UnsupportedAppStorageGateway.RequestPersistenceAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<bool>
 Kazo.Os.AppSdk.TerminalAppBase
 Kazo.Os.AppSdk.TerminalAppBase.TerminalAppBase(Kazo.Os.App.Abstractions.AppManifest! manifest) -> void
 Kazo.Os.AppSdk.TerminalCursor
@@ -2890,6 +3340,14 @@ Kazo.Os.AppSdk.WhatsNew.KazoChangeList.KazoChangeList(System.Collections.Generic
 Kazo.Os.AppSdk.WhatsNew.KazoChangeList.NewCount.get -> int
 Kazo.Os.AppSdk.WhatsNew.KazoChangeList.NewCount.init -> void
 Kazo.Os.AppSdk.WhatsNew.KazoWhatsNew
+abstract Kazo.Os.AppSdk.Drives.KazoDriveFolder.CreateFolderAsync(Kazo.Os.AppSdk.Drives.KazoDrivePath! path, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+abstract Kazo.Os.AppSdk.Drives.KazoDriveFolder.DeleteAsync(Kazo.Os.AppSdk.Drives.KazoDrivePath! path, bool recursive, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+abstract Kazo.Os.AppSdk.Drives.KazoDriveFolder.GetStateAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.Drives.KazoDriveState>
+abstract Kazo.Os.AppSdk.Drives.KazoDriveFolder.ListAsync(Kazo.Os.AppSdk.Drives.KazoDrivePath! path, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.Drives.KazoDriveEntry!>!>
+abstract Kazo.Os.AppSdk.Drives.KazoDriveFolder.ReadAsync(Kazo.Os.AppSdk.Drives.KazoDrivePath! path, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<byte[]!>
+abstract Kazo.Os.AppSdk.Drives.KazoDriveFolder.StatAsync(Kazo.Os.AppSdk.Drives.KazoDrivePath! path, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.Drives.KazoDriveEntry!>
+abstract Kazo.Os.AppSdk.Drives.KazoDriveFolder.WriteAsync(Kazo.Os.AppSdk.Drives.KazoDrivePath! path, System.ReadOnlyMemory<byte> content, string? ifRevision, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+abstract Kazo.Os.AppSdk.Drives.KazoDriveProvider.OpenAsync(Kazo.Os.AppSdk.Drives.KazoDriveOpenRequest! request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.Drives.KazoDriveFolder!>
 abstract Kazo.Os.AppSdk.IO.KazoFileSystemInfo.Exists.get -> bool
 abstract Kazo.Os.AppSdk.ServiceAppBase.RunCoreAsync(Kazo.Os.AppSdk.IAppExecutionContext! context, System.Threading.CancellationToken sessionCancellationToken) -> System.Threading.Tasks.Task!
 abstract Kazo.Os.AppSdk.Shell.KazoCredentialPrompt.ReadCredentialAsync(Kazo.Os.AppSdk.Shell.KazoCredentialRequest! request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Kazo.Os.AppSdk.Shell.KazoCredential?>!
@@ -2907,6 +3365,8 @@ const Kazo.Os.AppSdk.Components.KazoComponentContracts.ContextMenu = "kazoos.con
 const Kazo.Os.AppSdk.Components.KazoComponentContracts.FileDialogs = "kazoos.file-dialogs" -> string!
 const Kazo.Os.AppSdk.Components.KazoComponentContracts.FileView = "kazoos.file-view" -> string!
 const Kazo.Os.AppSdk.Components.KazoComponentContracts.Terminal = "kazoos.terminal" -> string!
+const Kazo.Os.AppSdk.Drives.KazoDriveLimits.MaxFileBytes = 134217728 -> long
+const Kazo.Os.AppSdk.Drives.KazoDrivePath.MaxNameLength = 255 -> int
 const Kazo.Os.AppSdk.Files.KazoDesktopEntry.Extension = ".desktop" -> string!
 const Kazo.Os.AppSdk.Files.KazoDesktopEntry.Group = "Desktop Entry" -> string!
 const Kazo.Os.AppSdk.Files.KazoDesktopEntry.MaxFileSize = 16384 -> int
@@ -2948,6 +3408,8 @@ const Kazo.Os.AppSdk.IO.KazoPath.AltDirectorySeparatorChar = '/' -> char
 const Kazo.Os.AppSdk.IO.KazoPath.DirectorySeparatorChar = '/' -> char
 const Kazo.Os.AppSdk.IO.KazoPath.PathSeparator = ':' -> char
 const Kazo.Os.AppSdk.IO.KazoTrash.InfoExtension = ".trashinfo" -> string!
+const Kazo.Os.AppSdk.KazoRoles.Administrator = "admin" -> string!
+const Kazo.Os.AppSdk.KazoRoles.FeatureSeparator = ':' -> char
 const Kazo.Os.AppSdk.Net.Hosting.KazoBlazorBootManifest.BootPath = "_framework/blazor.boot.json" -> string!
 const Kazo.Os.AppSdk.Net.Hosting.KazoBlazorBootManifest.ScriptPath = "_framework/blazor.kazo.js" -> string!
 const Kazo.Os.AppSdk.Net.Hosting.KazoWebSiteFile.Extension = ".site" -> string!
@@ -2988,6 +3450,9 @@ override Kazo.Os.AppSdk.Administration.KazoComponentContractInfo.ToString() -> s
 override Kazo.Os.AppSdk.Administration.KazoComponentProviderInfo.Equals(object? obj) -> bool
 override Kazo.Os.AppSdk.Administration.KazoComponentProviderInfo.GetHashCode() -> int
 override Kazo.Os.AppSdk.Administration.KazoComponentProviderInfo.ToString() -> string!
+override Kazo.Os.AppSdk.Administration.KazoFeatureRole.Equals(object? obj) -> bool
+override Kazo.Os.AppSdk.Administration.KazoFeatureRole.GetHashCode() -> int
+override Kazo.Os.AppSdk.Administration.KazoFeatureRole.ToString() -> string!
 override Kazo.Os.AppSdk.Administration.KazoFileMenuEntryInfo.Equals(object? obj) -> bool
 override Kazo.Os.AppSdk.Administration.KazoFileMenuEntryInfo.GetHashCode() -> int
 override Kazo.Os.AppSdk.Administration.KazoFileMenuEntryInfo.ToString() -> string!
@@ -3060,6 +3525,9 @@ override Kazo.Os.AppSdk.Apps.KazoCatalogCategory.ToString() -> string!
 override Kazo.Os.AppSdk.Apps.KazoFileAssociation.Equals(object? obj) -> bool
 override Kazo.Os.AppSdk.Apps.KazoFileAssociation.GetHashCode() -> int
 override Kazo.Os.AppSdk.Apps.KazoFileAssociation.ToString() -> string!
+override Kazo.Os.AppSdk.Apps.KazoInstallRequestResult.Equals(object? obj) -> bool
+override Kazo.Os.AppSdk.Apps.KazoInstallRequestResult.GetHashCode() -> int
+override Kazo.Os.AppSdk.Apps.KazoInstallRequestResult.ToString() -> string!
 override Kazo.Os.AppSdk.Apps.KazoInstalledPackage.Equals(object? obj) -> bool
 override Kazo.Os.AppSdk.Apps.KazoInstalledPackage.GetHashCode() -> int
 override Kazo.Os.AppSdk.Apps.KazoInstalledPackage.ToString() -> string!
@@ -3075,9 +3543,18 @@ override Kazo.Os.AppSdk.Apps.KazoOpenFileResult.ToString() -> string!
 override Kazo.Os.AppSdk.Apps.KazoPackageCatalog.Equals(object? obj) -> bool
 override Kazo.Os.AppSdk.Apps.KazoPackageCatalog.GetHashCode() -> int
 override Kazo.Os.AppSdk.Apps.KazoPackageCatalog.ToString() -> string!
+override Kazo.Os.AppSdk.Apps.KazoPackageDependency.Equals(object? obj) -> bool
+override Kazo.Os.AppSdk.Apps.KazoPackageDependency.GetHashCode() -> int
+override Kazo.Os.AppSdk.Apps.KazoPackageDependency.ToString() -> string!
+override Kazo.Os.AppSdk.Apps.KazoPackageDependent.Equals(object? obj) -> bool
+override Kazo.Os.AppSdk.Apps.KazoPackageDependent.GetHashCode() -> int
+override Kazo.Os.AppSdk.Apps.KazoPackageDependent.ToString() -> string!
 override Kazo.Os.AppSdk.Apps.KazoPackageInfo.Equals(object? obj) -> bool
 override Kazo.Os.AppSdk.Apps.KazoPackageInfo.GetHashCode() -> int
 override Kazo.Os.AppSdk.Apps.KazoPackageInfo.ToString() -> string!
+override Kazo.Os.AppSdk.Apps.KazoPackageInstallPlan.Equals(object? obj) -> bool
+override Kazo.Os.AppSdk.Apps.KazoPackageInstallPlan.GetHashCode() -> int
+override Kazo.Os.AppSdk.Apps.KazoPackageInstallPlan.ToString() -> string!
 override Kazo.Os.AppSdk.Apps.KazoPackageInstallProgress.Equals(object? obj) -> bool
 override Kazo.Os.AppSdk.Apps.KazoPackageInstallProgress.GetHashCode() -> int
 override Kazo.Os.AppSdk.Apps.KazoPackageInstallProgress.ToString() -> string!
@@ -3093,6 +3570,9 @@ override Kazo.Os.AppSdk.Apps.KazoPackageSources.ToString() -> string!
 override Kazo.Os.AppSdk.Apps.KazoPackageUpdate.Equals(object? obj) -> bool
 override Kazo.Os.AppSdk.Apps.KazoPackageUpdate.GetHashCode() -> int
 override Kazo.Os.AppSdk.Apps.KazoPackageUpdate.ToString() -> string!
+override Kazo.Os.AppSdk.Apps.KazoPlannedPackage.Equals(object? obj) -> bool
+override Kazo.Os.AppSdk.Apps.KazoPlannedPackage.GetHashCode() -> int
+override Kazo.Os.AppSdk.Apps.KazoPlannedPackage.ToString() -> string!
 override Kazo.Os.AppSdk.Apps.KazoRunningProcessInfo.Equals(object? obj) -> bool
 override Kazo.Os.AppSdk.Apps.KazoRunningProcessInfo.GetHashCode() -> int
 override Kazo.Os.AppSdk.Apps.KazoRunningProcessInfo.ToString() -> string!
@@ -3140,6 +3620,24 @@ override Kazo.Os.AppSdk.DragDrop.VirtualFileDragPayload.ToString() -> string!
 override Kazo.Os.AppSdk.DragDrop.VirtualFolderDragPayload.Equals(object? obj) -> bool
 override Kazo.Os.AppSdk.DragDrop.VirtualFolderDragPayload.GetHashCode() -> int
 override Kazo.Os.AppSdk.DragDrop.VirtualFolderDragPayload.ToString() -> string!
+override Kazo.Os.AppSdk.Drives.KazoDriveAccount.Equals(object? obj) -> bool
+override Kazo.Os.AppSdk.Drives.KazoDriveAccount.GetHashCode() -> int
+override Kazo.Os.AppSdk.Drives.KazoDriveAccount.ToString() -> string!
+override Kazo.Os.AppSdk.Drives.KazoDriveEntry.Equals(object? obj) -> bool
+override Kazo.Os.AppSdk.Drives.KazoDriveEntry.GetHashCode() -> int
+override Kazo.Os.AppSdk.Drives.KazoDriveEntry.ToString() -> string!
+override Kazo.Os.AppSdk.Drives.KazoDriveOpenRequest.Equals(object? obj) -> bool
+override Kazo.Os.AppSdk.Drives.KazoDriveOpenRequest.GetHashCode() -> int
+override Kazo.Os.AppSdk.Drives.KazoDriveOpenRequest.ToString() -> string!
+override Kazo.Os.AppSdk.Drives.KazoDrivePath.Equals(object? obj) -> bool
+override Kazo.Os.AppSdk.Drives.KazoDrivePath.GetHashCode() -> int
+override Kazo.Os.AppSdk.Drives.KazoDrivePath.ToString() -> string!
+override Kazo.Os.AppSdk.Drives.KazoDriveQuota.Equals(object? obj) -> bool
+override Kazo.Os.AppSdk.Drives.KazoDriveQuota.GetHashCode() -> int
+override Kazo.Os.AppSdk.Drives.KazoDriveQuota.ToString() -> string!
+override Kazo.Os.AppSdk.Features.KazoAuthenticationTicket.Equals(object? obj) -> bool
+override Kazo.Os.AppSdk.Features.KazoAuthenticationTicket.GetHashCode() -> int
+override Kazo.Os.AppSdk.Features.KazoAuthenticationTicket.ToString() -> string!
 override Kazo.Os.AppSdk.Features.KazoFeatureCaller.Equals(object? obj) -> bool
 override Kazo.Os.AppSdk.Features.KazoFeatureCaller.GetHashCode() -> int
 override Kazo.Os.AppSdk.Features.KazoFeatureCaller.ToString() -> string!
@@ -3213,9 +3711,18 @@ override Kazo.Os.AppSdk.IO.KazoFileTransferResult.ToString() -> string!
 override Kazo.Os.AppSdk.IO.KazoHostFile.Equals(object? obj) -> bool
 override Kazo.Os.AppSdk.IO.KazoHostFile.GetHashCode() -> int
 override Kazo.Os.AppSdk.IO.KazoHostFile.ToString() -> string!
+override Kazo.Os.AppSdk.IO.KazoNetworkDriveField.Equals(object? obj) -> bool
+override Kazo.Os.AppSdk.IO.KazoNetworkDriveField.GetHashCode() -> int
+override Kazo.Os.AppSdk.IO.KazoNetworkDriveField.ToString() -> string!
+override Kazo.Os.AppSdk.IO.KazoNetworkDriveFieldChoice.Equals(object? obj) -> bool
+override Kazo.Os.AppSdk.IO.KazoNetworkDriveFieldChoice.GetHashCode() -> int
+override Kazo.Os.AppSdk.IO.KazoNetworkDriveFieldChoice.ToString() -> string!
 override Kazo.Os.AppSdk.IO.KazoNetworkDriveRequest.Equals(object? obj) -> bool
 override Kazo.Os.AppSdk.IO.KazoNetworkDriveRequest.GetHashCode() -> int
 override Kazo.Os.AppSdk.IO.KazoNetworkDriveRequest.ToString() -> string!
+override Kazo.Os.AppSdk.IO.KazoNetworkDriveTypeInfo.Equals(object? obj) -> bool
+override Kazo.Os.AppSdk.IO.KazoNetworkDriveTypeInfo.GetHashCode() -> int
+override Kazo.Os.AppSdk.IO.KazoNetworkDriveTypeInfo.ToString() -> string!
 override Kazo.Os.AppSdk.IO.KazoRecoveryDraftContent.Equals(object? obj) -> bool
 override Kazo.Os.AppSdk.IO.KazoRecoveryDraftContent.GetHashCode() -> int
 override Kazo.Os.AppSdk.IO.KazoRecoveryDraftContent.ToString() -> string!
@@ -3302,6 +3809,9 @@ override Kazo.Os.AppSdk.Net.KazoPingReply.ToString() -> string!
 override Kazo.Os.AppSdk.Net.KazoPortProbeResult.Equals(object? obj) -> bool
 override Kazo.Os.AppSdk.Net.KazoPortProbeResult.GetHashCode() -> int
 override Kazo.Os.AppSdk.Net.KazoPortProbeResult.ToString() -> string!
+override Kazo.Os.AppSdk.Net.KazoRelayState.Equals(object? obj) -> bool
+override Kazo.Os.AppSdk.Net.KazoRelayState.GetHashCode() -> int
+override Kazo.Os.AppSdk.Net.KazoRelayState.ToString() -> string!
 override Kazo.Os.AppSdk.Net.KazoTcpListenerInfo.Equals(object? obj) -> bool
 override Kazo.Os.AppSdk.Net.KazoTcpListenerInfo.GetHashCode() -> int
 override Kazo.Os.AppSdk.Net.KazoTcpListenerInfo.ToString() -> string!
@@ -3335,6 +3845,12 @@ override Kazo.Os.AppSdk.ShellCommandInfo.ToString() -> string!
 override Kazo.Os.AppSdk.ShellJobInfo.Equals(object? obj) -> bool
 override Kazo.Os.AppSdk.ShellJobInfo.GetHashCode() -> int
 override Kazo.Os.AppSdk.ShellJobInfo.ToString() -> string!
+override Kazo.Os.AppSdk.Storage.KazoFeatureStorageUsage.Equals(object? obj) -> bool
+override Kazo.Os.AppSdk.Storage.KazoFeatureStorageUsage.GetHashCode() -> int
+override Kazo.Os.AppSdk.Storage.KazoFeatureStorageUsage.ToString() -> string!
+override Kazo.Os.AppSdk.Storage.KazoStorageEstimate.Equals(object? obj) -> bool
+override Kazo.Os.AppSdk.Storage.KazoStorageEstimate.GetHashCode() -> int
+override Kazo.Os.AppSdk.Storage.KazoStorageEstimate.ToString() -> string!
 override Kazo.Os.AppSdk.TerminalCursor.GetHashCode() -> int
 override Kazo.Os.AppSdk.TerminalKeyEvent.Equals(object? obj) -> bool
 override Kazo.Os.AppSdk.TerminalKeyEvent.GetHashCode() -> int
@@ -3411,6 +3927,8 @@ static Kazo.Os.AppSdk.Administration.KazoComponentProviders.GetOverviewAsync(Kaz
 static Kazo.Os.AppSdk.Administration.KazoComponentProviders.GetOverviewAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.Administration.KazoComponentContractInfo!>!>!
 static Kazo.Os.AppSdk.Administration.KazoComponentProviders.SetProviderAsync(Kazo.Os.AppSdk.IAppExecutionContext! context, System.Collections.Generic.IReadOnlyList<string!>! contracts, string? appId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 static Kazo.Os.AppSdk.Administration.KazoComponentProviders.SetProviderAsync(System.Collections.Generic.IReadOnlyList<string!>! contracts, string? appId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+static Kazo.Os.AppSdk.Administration.KazoFeatureRole.operator !=(Kazo.Os.AppSdk.Administration.KazoFeatureRole? left, Kazo.Os.AppSdk.Administration.KazoFeatureRole? right) -> bool
+static Kazo.Os.AppSdk.Administration.KazoFeatureRole.operator ==(Kazo.Os.AppSdk.Administration.KazoFeatureRole? left, Kazo.Os.AppSdk.Administration.KazoFeatureRole? right) -> bool
 static Kazo.Os.AppSdk.Administration.KazoFileMenuEntries.GetEntriesAsync(Kazo.Os.AppSdk.IAppExecutionContext! context, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.Administration.KazoFileMenuEntryInfo!>!>!
 static Kazo.Os.AppSdk.Administration.KazoFileMenuEntries.GetEntriesAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.Administration.KazoFileMenuEntryInfo!>!>!
 static Kazo.Os.AppSdk.Administration.KazoFileMenuEntries.SetHiddenAsync(Kazo.Os.AppSdk.IAppExecutionContext! context, string! appId, string! name, bool hidden, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
@@ -3521,10 +4039,14 @@ static Kazo.Os.AppSdk.Administration.KazoUserAccounts.CreateAsync(Kazo.Os.AppSdk
 static Kazo.Os.AppSdk.Administration.KazoUserAccounts.CreateAsync(Kazo.Os.AppSdk.IAppExecutionContext! context, Kazo.Os.AppSdk.Administration.KazoNewUserAccount! account, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Kazo.Os.AppSdk.Administration.KazoUserAccount!>!
 static Kazo.Os.AppSdk.Administration.KazoUserAccounts.DeleteAsync(Kazo.Os.AppSdk.IAppExecutionContext! context, string! loginName, bool removeHome, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 static Kazo.Os.AppSdk.Administration.KazoUserAccounts.DeleteAsync(string! loginName, bool removeHome, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+static Kazo.Os.AppSdk.Administration.KazoUserAccounts.GrantRoleAsync(Kazo.Os.AppSdk.IAppExecutionContext! context, string! loginName, string! role, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<bool>!
+static Kazo.Os.AppSdk.Administration.KazoUserAccounts.GrantRoleAsync(string! loginName, string! role, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<bool>!
 static Kazo.Os.AppSdk.Administration.KazoUserAccounts.ListAsync(Kazo.Os.AppSdk.IAppExecutionContext! context, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.Administration.KazoUserAccount!>!>!
 static Kazo.Os.AppSdk.Administration.KazoUserAccounts.ListAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.Administration.KazoUserAccount!>!>!
 static Kazo.Os.AppSdk.Administration.KazoUserAccounts.ListPasskeysAsync(Kazo.Os.AppSdk.IAppExecutionContext! context, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.Administration.KazoPasskey!>!>!
 static Kazo.Os.AppSdk.Administration.KazoUserAccounts.ListPasskeysAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.Administration.KazoPasskey!>!>!
+static Kazo.Os.AppSdk.Administration.KazoUserAccounts.ListRolesAsync(Kazo.Os.AppSdk.IAppExecutionContext! context, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.Administration.KazoFeatureRole!>!>!
+static Kazo.Os.AppSdk.Administration.KazoUserAccounts.ListRolesAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.Administration.KazoFeatureRole!>!>!
 static Kazo.Os.AppSdk.Administration.KazoUserAccounts.RemovePasskeyAsync(Kazo.Os.AppSdk.IAppExecutionContext! context, string! passkeyId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<bool>!
 static Kazo.Os.AppSdk.Administration.KazoUserAccounts.RemovePasskeyAsync(string! passkeyId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<bool>!
 static Kazo.Os.AppSdk.Administration.KazoUserAccounts.RemovePasswordAsync(Kazo.Os.AppSdk.IAppExecutionContext! context, string! loginName, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
@@ -3533,6 +4055,8 @@ static Kazo.Os.AppSdk.Administration.KazoUserAccounts.RequestGuestAccountCreatio
 static Kazo.Os.AppSdk.Administration.KazoUserAccounts.RequestGuestAccountCreationAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<bool>!
 static Kazo.Os.AppSdk.Administration.KazoUserAccounts.ResetPasswordAsync(Kazo.Os.AppSdk.IAppExecutionContext! context, string! loginName, string! newPassword, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 static Kazo.Os.AppSdk.Administration.KazoUserAccounts.ResetPasswordAsync(string! loginName, string! newPassword, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+static Kazo.Os.AppSdk.Administration.KazoUserAccounts.RevokeRoleAsync(Kazo.Os.AppSdk.IAppExecutionContext! context, string! loginName, string! role, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<bool>!
+static Kazo.Os.AppSdk.Administration.KazoUserAccounts.RevokeRoleAsync(string! loginName, string! role, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<bool>!
 static Kazo.Os.AppSdk.Administration.KazoUserAccounts.ValidateNewAccount(Kazo.Os.AppSdk.Administration.KazoNewUserAccount? account) -> string?
 static Kazo.Os.AppSdk.Administration.KazoUserAccounts.ValidateNewPassword(string? newPassword) -> string?
 static Kazo.Os.AppSdk.Administration.KazoWebSiteDatabaseInfo.operator !=(Kazo.Os.AppSdk.Administration.KazoWebSiteDatabaseInfo? left, Kazo.Os.AppSdk.Administration.KazoWebSiteDatabaseInfo? right) -> bool
@@ -3558,6 +4082,7 @@ static Kazo.Os.AppSdk.Apps.KazoAppManagement.UninstallWithReportAsync(string! ap
 static Kazo.Os.AppSdk.Apps.KazoAppPackages.AddSourceAsync(string! source, bool trusted = false, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Kazo.Os.AppSdk.Apps.KazoPackageSources!>!
 static Kazo.Os.AppSdk.Apps.KazoAppPackages.GetCatalogDescriptionAsync(Kazo.Os.AppSdk.Apps.KazoCatalogApp! app, string? version = null, string! language = "en", System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<string?>!
 static Kazo.Os.AppSdk.Apps.KazoAppPackages.GetCatalogsAsync(bool refresh = false, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.Apps.KazoAppCatalog!>!>!
+static Kazo.Os.AppSdk.Apps.KazoAppPackages.GetDependentsAsync(string! appId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.Apps.KazoPackageDependent!>!>!
 static Kazo.Os.AppSdk.Apps.KazoAppPackages.GetInfoAsync(string! source, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Kazo.Os.AppSdk.Apps.KazoPackageInfo!>!
 static Kazo.Os.AppSdk.Apps.KazoAppPackages.GetInstalledAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.Apps.KazoInstalledPackage!>!>!
 static Kazo.Os.AppSdk.Apps.KazoAppPackages.GetInstalledThemePacksAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.Apps.KazoInstalledThemePack!>!>!
@@ -3567,6 +4092,7 @@ static Kazo.Os.AppSdk.Apps.KazoAppPackages.GetUpdatesAsync(System.Threading.Canc
 static Kazo.Os.AppSdk.Apps.KazoAppPackages.InstallAsync(string! source, Kazo.Os.AppSdk.Apps.KazoPackageScope scope = Kazo.Os.AppSdk.Apps.KazoPackageScope.Auto, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Kazo.Os.AppSdk.Apps.KazoPackageInstallReport!>!
 static Kazo.Os.AppSdk.Apps.KazoAppPackages.InstallAsync(string! source, Kazo.Os.AppSdk.Apps.KazoPackageScope scope, System.IProgress<Kazo.Os.AppSdk.Apps.KazoPackageInstallProgress!>? progress, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Kazo.Os.AppSdk.Apps.KazoPackageInstallReport!>!
 static Kazo.Os.AppSdk.Apps.KazoAppPackages.InstallThemePackAsync(string! source, Kazo.Os.AppSdk.Apps.KazoPackageScope scope = Kazo.Os.AppSdk.Apps.KazoPackageScope.Auto, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Kazo.Os.AppSdk.Apps.KazoThemePackInstallReport!>!
+static Kazo.Os.AppSdk.Apps.KazoAppPackages.PlanInstallAsync(string! source, Kazo.Os.AppSdk.Apps.KazoPackageScope scope = Kazo.Os.AppSdk.Apps.KazoPackageScope.Auto, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Kazo.Os.AppSdk.Apps.KazoPackageInstallPlan!>!
 static Kazo.Os.AppSdk.Apps.KazoAppPackages.RemoveAsync(string! appId, Kazo.Os.AppSdk.Apps.KazoPackageScope scope = Kazo.Os.AppSdk.Apps.KazoPackageScope.Auto, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Kazo.Os.AppSdk.Apps.KazoInstalledPackage!>!
 static Kazo.Os.AppSdk.Apps.KazoAppPackages.RemoveSourceAsync(string! source, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Kazo.Os.AppSdk.Apps.KazoPackageSources!>!
 static Kazo.Os.AppSdk.Apps.KazoAppPackages.RemoveThemePackAsync(string! packId, Kazo.Os.AppSdk.Apps.KazoPackageScope scope = Kazo.Os.AppSdk.Apps.KazoPackageScope.Auto, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Kazo.Os.AppSdk.Apps.KazoInstalledThemePack!>!
@@ -3584,6 +4110,7 @@ static Kazo.Os.AppSdk.Apps.KazoApps.LaunchAsync(string! appId, System.Collection
 static Kazo.Os.AppSdk.Apps.KazoApps.OpenFileAsync(string! path, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Kazo.Os.AppSdk.Apps.KazoOpenFileResult!>!
 static Kazo.Os.AppSdk.Apps.KazoApps.OpenUriAsync(System.Uri! uri, string? appId = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Kazo.Os.AppSdk.Apps.KazoIntentResult!>!
 static Kazo.Os.AppSdk.Apps.KazoApps.OpenUriAsync(string! uri, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Kazo.Os.AppSdk.Apps.KazoIntentResult!>!
+static Kazo.Os.AppSdk.Apps.KazoApps.RequestInstallAsync(string! appId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Kazo.Os.AppSdk.Apps.KazoInstallRequestResult!>!
 static Kazo.Os.AppSdk.Apps.KazoApps.ResetDefaultHandlerAsync(string! target, string! action = "open", System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Kazo.Os.AppSdk.Apps.KazoDefaultHandlerStatus>!
 static Kazo.Os.AppSdk.Apps.KazoApps.RevealFileAsync(string! path, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 static Kazo.Os.AppSdk.Apps.KazoApps.SendIntentAsync(string! intentId, string? payloadJson = null, string? targetAppId = null, bool rememberChoice = false, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Kazo.Os.AppSdk.Apps.KazoIntentResult!>!
@@ -3599,6 +4126,8 @@ static Kazo.Os.AppSdk.Apps.KazoCatalogCategory.operator !=(Kazo.Os.AppSdk.Apps.K
 static Kazo.Os.AppSdk.Apps.KazoCatalogCategory.operator ==(Kazo.Os.AppSdk.Apps.KazoCatalogCategory? left, Kazo.Os.AppSdk.Apps.KazoCatalogCategory? right) -> bool
 static Kazo.Os.AppSdk.Apps.KazoFileAssociation.operator !=(Kazo.Os.AppSdk.Apps.KazoFileAssociation? left, Kazo.Os.AppSdk.Apps.KazoFileAssociation? right) -> bool
 static Kazo.Os.AppSdk.Apps.KazoFileAssociation.operator ==(Kazo.Os.AppSdk.Apps.KazoFileAssociation? left, Kazo.Os.AppSdk.Apps.KazoFileAssociation? right) -> bool
+static Kazo.Os.AppSdk.Apps.KazoInstallRequestResult.operator !=(Kazo.Os.AppSdk.Apps.KazoInstallRequestResult? left, Kazo.Os.AppSdk.Apps.KazoInstallRequestResult? right) -> bool
+static Kazo.Os.AppSdk.Apps.KazoInstallRequestResult.operator ==(Kazo.Os.AppSdk.Apps.KazoInstallRequestResult? left, Kazo.Os.AppSdk.Apps.KazoInstallRequestResult? right) -> bool
 static Kazo.Os.AppSdk.Apps.KazoInstalledPackage.operator !=(Kazo.Os.AppSdk.Apps.KazoInstalledPackage? left, Kazo.Os.AppSdk.Apps.KazoInstalledPackage? right) -> bool
 static Kazo.Os.AppSdk.Apps.KazoInstalledPackage.operator ==(Kazo.Os.AppSdk.Apps.KazoInstalledPackage? left, Kazo.Os.AppSdk.Apps.KazoInstalledPackage? right) -> bool
 static Kazo.Os.AppSdk.Apps.KazoInstalledThemePack.operator !=(Kazo.Os.AppSdk.Apps.KazoInstalledThemePack? left, Kazo.Os.AppSdk.Apps.KazoInstalledThemePack? right) -> bool
@@ -3609,8 +4138,14 @@ static Kazo.Os.AppSdk.Apps.KazoOpenFileResult.operator !=(Kazo.Os.AppSdk.Apps.Ka
 static Kazo.Os.AppSdk.Apps.KazoOpenFileResult.operator ==(Kazo.Os.AppSdk.Apps.KazoOpenFileResult? left, Kazo.Os.AppSdk.Apps.KazoOpenFileResult? right) -> bool
 static Kazo.Os.AppSdk.Apps.KazoPackageCatalog.operator !=(Kazo.Os.AppSdk.Apps.KazoPackageCatalog? left, Kazo.Os.AppSdk.Apps.KazoPackageCatalog? right) -> bool
 static Kazo.Os.AppSdk.Apps.KazoPackageCatalog.operator ==(Kazo.Os.AppSdk.Apps.KazoPackageCatalog? left, Kazo.Os.AppSdk.Apps.KazoPackageCatalog? right) -> bool
+static Kazo.Os.AppSdk.Apps.KazoPackageDependency.operator !=(Kazo.Os.AppSdk.Apps.KazoPackageDependency? left, Kazo.Os.AppSdk.Apps.KazoPackageDependency? right) -> bool
+static Kazo.Os.AppSdk.Apps.KazoPackageDependency.operator ==(Kazo.Os.AppSdk.Apps.KazoPackageDependency? left, Kazo.Os.AppSdk.Apps.KazoPackageDependency? right) -> bool
+static Kazo.Os.AppSdk.Apps.KazoPackageDependent.operator !=(Kazo.Os.AppSdk.Apps.KazoPackageDependent? left, Kazo.Os.AppSdk.Apps.KazoPackageDependent? right) -> bool
+static Kazo.Os.AppSdk.Apps.KazoPackageDependent.operator ==(Kazo.Os.AppSdk.Apps.KazoPackageDependent? left, Kazo.Os.AppSdk.Apps.KazoPackageDependent? right) -> bool
 static Kazo.Os.AppSdk.Apps.KazoPackageInfo.operator !=(Kazo.Os.AppSdk.Apps.KazoPackageInfo? left, Kazo.Os.AppSdk.Apps.KazoPackageInfo? right) -> bool
 static Kazo.Os.AppSdk.Apps.KazoPackageInfo.operator ==(Kazo.Os.AppSdk.Apps.KazoPackageInfo? left, Kazo.Os.AppSdk.Apps.KazoPackageInfo? right) -> bool
+static Kazo.Os.AppSdk.Apps.KazoPackageInstallPlan.operator !=(Kazo.Os.AppSdk.Apps.KazoPackageInstallPlan? left, Kazo.Os.AppSdk.Apps.KazoPackageInstallPlan? right) -> bool
+static Kazo.Os.AppSdk.Apps.KazoPackageInstallPlan.operator ==(Kazo.Os.AppSdk.Apps.KazoPackageInstallPlan? left, Kazo.Os.AppSdk.Apps.KazoPackageInstallPlan? right) -> bool
 static Kazo.Os.AppSdk.Apps.KazoPackageInstallProgress.operator !=(Kazo.Os.AppSdk.Apps.KazoPackageInstallProgress? left, Kazo.Os.AppSdk.Apps.KazoPackageInstallProgress? right) -> bool
 static Kazo.Os.AppSdk.Apps.KazoPackageInstallProgress.operator ==(Kazo.Os.AppSdk.Apps.KazoPackageInstallProgress? left, Kazo.Os.AppSdk.Apps.KazoPackageInstallProgress? right) -> bool
 static Kazo.Os.AppSdk.Apps.KazoPackageInstallReport.operator !=(Kazo.Os.AppSdk.Apps.KazoPackageInstallReport? left, Kazo.Os.AppSdk.Apps.KazoPackageInstallReport? right) -> bool
@@ -3621,6 +4156,8 @@ static Kazo.Os.AppSdk.Apps.KazoPackageSources.operator !=(Kazo.Os.AppSdk.Apps.Ka
 static Kazo.Os.AppSdk.Apps.KazoPackageSources.operator ==(Kazo.Os.AppSdk.Apps.KazoPackageSources? left, Kazo.Os.AppSdk.Apps.KazoPackageSources? right) -> bool
 static Kazo.Os.AppSdk.Apps.KazoPackageUpdate.operator !=(Kazo.Os.AppSdk.Apps.KazoPackageUpdate? left, Kazo.Os.AppSdk.Apps.KazoPackageUpdate? right) -> bool
 static Kazo.Os.AppSdk.Apps.KazoPackageUpdate.operator ==(Kazo.Os.AppSdk.Apps.KazoPackageUpdate? left, Kazo.Os.AppSdk.Apps.KazoPackageUpdate? right) -> bool
+static Kazo.Os.AppSdk.Apps.KazoPlannedPackage.operator !=(Kazo.Os.AppSdk.Apps.KazoPlannedPackage? left, Kazo.Os.AppSdk.Apps.KazoPlannedPackage? right) -> bool
+static Kazo.Os.AppSdk.Apps.KazoPlannedPackage.operator ==(Kazo.Os.AppSdk.Apps.KazoPlannedPackage? left, Kazo.Os.AppSdk.Apps.KazoPlannedPackage? right) -> bool
 static Kazo.Os.AppSdk.Apps.KazoRunningProcessInfo.operator !=(Kazo.Os.AppSdk.Apps.KazoRunningProcessInfo? left, Kazo.Os.AppSdk.Apps.KazoRunningProcessInfo? right) -> bool
 static Kazo.Os.AppSdk.Apps.KazoRunningProcessInfo.operator ==(Kazo.Os.AppSdk.Apps.KazoRunningProcessInfo? left, Kazo.Os.AppSdk.Apps.KazoRunningProcessInfo? right) -> bool
 static Kazo.Os.AppSdk.Apps.KazoSuggestedCatalogApp.operator !=(Kazo.Os.AppSdk.Apps.KazoSuggestedCatalogApp? left, Kazo.Os.AppSdk.Apps.KazoSuggestedCatalogApp? right) -> bool
@@ -3680,6 +4217,25 @@ static Kazo.Os.AppSdk.DragDrop.VirtualFileDragPayload.operator !=(Kazo.Os.AppSdk
 static Kazo.Os.AppSdk.DragDrop.VirtualFileDragPayload.operator ==(Kazo.Os.AppSdk.DragDrop.VirtualFileDragPayload? left, Kazo.Os.AppSdk.DragDrop.VirtualFileDragPayload? right) -> bool
 static Kazo.Os.AppSdk.DragDrop.VirtualFolderDragPayload.operator !=(Kazo.Os.AppSdk.DragDrop.VirtualFolderDragPayload? left, Kazo.Os.AppSdk.DragDrop.VirtualFolderDragPayload? right) -> bool
 static Kazo.Os.AppSdk.DragDrop.VirtualFolderDragPayload.operator ==(Kazo.Os.AppSdk.DragDrop.VirtualFolderDragPayload? left, Kazo.Os.AppSdk.DragDrop.VirtualFolderDragPayload? right) -> bool
+static Kazo.Os.AppSdk.Drives.KazoDriveAccount.operator !=(Kazo.Os.AppSdk.Drives.KazoDriveAccount? left, Kazo.Os.AppSdk.Drives.KazoDriveAccount? right) -> bool
+static Kazo.Os.AppSdk.Drives.KazoDriveAccount.operator ==(Kazo.Os.AppSdk.Drives.KazoDriveAccount? left, Kazo.Os.AppSdk.Drives.KazoDriveAccount? right) -> bool
+static Kazo.Os.AppSdk.Drives.KazoDriveEntry.operator !=(Kazo.Os.AppSdk.Drives.KazoDriveEntry? left, Kazo.Os.AppSdk.Drives.KazoDriveEntry? right) -> bool
+static Kazo.Os.AppSdk.Drives.KazoDriveEntry.operator ==(Kazo.Os.AppSdk.Drives.KazoDriveEntry? left, Kazo.Os.AppSdk.Drives.KazoDriveEntry? right) -> bool
+static Kazo.Os.AppSdk.Drives.KazoDriveOpenRequest.operator !=(Kazo.Os.AppSdk.Drives.KazoDriveOpenRequest? left, Kazo.Os.AppSdk.Drives.KazoDriveOpenRequest? right) -> bool
+static Kazo.Os.AppSdk.Drives.KazoDriveOpenRequest.operator ==(Kazo.Os.AppSdk.Drives.KazoDriveOpenRequest? left, Kazo.Os.AppSdk.Drives.KazoDriveOpenRequest? right) -> bool
+static Kazo.Os.AppSdk.Drives.KazoDrivePath.FromSegments(System.Collections.Generic.IEnumerable<string!>! segments) -> Kazo.Os.AppSdk.Drives.KazoDrivePath!
+static Kazo.Os.AppSdk.Drives.KazoDrivePath.IsValidName(string? name) -> bool
+static Kazo.Os.AppSdk.Drives.KazoDrivePath.Parse(string! path) -> Kazo.Os.AppSdk.Drives.KazoDrivePath!
+static Kazo.Os.AppSdk.Drives.KazoDrivePath.Root.get -> Kazo.Os.AppSdk.Drives.KazoDrivePath!
+static Kazo.Os.AppSdk.Drives.KazoDrivePath.TryParse(string? path, out Kazo.Os.AppSdk.Drives.KazoDrivePath? result) -> bool
+static Kazo.Os.AppSdk.Drives.KazoDrivePath.operator !=(Kazo.Os.AppSdk.Drives.KazoDrivePath? left, Kazo.Os.AppSdk.Drives.KazoDrivePath? right) -> bool
+static Kazo.Os.AppSdk.Drives.KazoDrivePath.operator ==(Kazo.Os.AppSdk.Drives.KazoDrivePath? left, Kazo.Os.AppSdk.Drives.KazoDrivePath? right) -> bool
+static Kazo.Os.AppSdk.Drives.KazoDriveQuota.operator !=(Kazo.Os.AppSdk.Drives.KazoDriveQuota? left, Kazo.Os.AppSdk.Drives.KazoDriveQuota? right) -> bool
+static Kazo.Os.AppSdk.Drives.KazoDriveQuota.operator ==(Kazo.Os.AppSdk.Drives.KazoDriveQuota? left, Kazo.Os.AppSdk.Drives.KazoDriveQuota? right) -> bool
+static Kazo.Os.AppSdk.Features.KazoAuthenticationTicket.operator !=(Kazo.Os.AppSdk.Features.KazoAuthenticationTicket? left, Kazo.Os.AppSdk.Features.KazoAuthenticationTicket? right) -> bool
+static Kazo.Os.AppSdk.Features.KazoAuthenticationTicket.operator ==(Kazo.Os.AppSdk.Features.KazoAuthenticationTicket? left, Kazo.Os.AppSdk.Features.KazoAuthenticationTicket? right) -> bool
+static Kazo.Os.AppSdk.Features.KazoFeatureAuthentication.AuthenticateAsync(string! operation, Kazo.Os.AppSdk.Features.KazoAuthenticationScope scope, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.Features.KazoAuthenticationTicket!>
+static Kazo.Os.AppSdk.Features.KazoFeatureAuthentication.ConsumeAsync(Kazo.Os.AppSdk.Features.KazoAuthenticationTicket! ticket, string! operation, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.Features.KazoAuthenticationTicket!>
 static Kazo.Os.AppSdk.Features.KazoFeatureCaller.operator !=(Kazo.Os.AppSdk.Features.KazoFeatureCaller? left, Kazo.Os.AppSdk.Features.KazoFeatureCaller? right) -> bool
 static Kazo.Os.AppSdk.Features.KazoFeatureCaller.operator ==(Kazo.Os.AppSdk.Features.KazoFeatureCaller? left, Kazo.Os.AppSdk.Features.KazoFeatureCaller? right) -> bool
 static Kazo.Os.AppSdk.Features.KazoFeatureServiceStatus.NotInstalled.get -> Kazo.Os.AppSdk.Features.KazoFeatureServiceStatus!
@@ -3689,6 +4245,7 @@ static Kazo.Os.AppSdk.Features.KazoFeatures.Changed -> System.EventHandler<Kazo.
 static Kazo.Os.AppSdk.Features.KazoFeatures.GetServiceAsync<T>(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<T?>
 static Kazo.Os.AppSdk.Features.KazoFeatures.GetStatusAsync<T>(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.Features.KazoFeatureServiceStatus!>
 static Kazo.Os.AppSdk.Features.KazoFeatures.IsAvailable<T>() -> bool
+static Kazo.Os.AppSdk.Features.UnsupportedFeatureAuthentication.Instance.get -> Kazo.Os.AppSdk.Features.UnsupportedFeatureAuthentication!
 static Kazo.Os.AppSdk.Files.KazoDesktopArrangement.operator !=(Kazo.Os.AppSdk.Files.KazoDesktopArrangement? left, Kazo.Os.AppSdk.Files.KazoDesktopArrangement? right) -> bool
 static Kazo.Os.AppSdk.Files.KazoDesktopArrangement.operator ==(Kazo.Os.AppSdk.Files.KazoDesktopArrangement? left, Kazo.Os.AppSdk.Files.KazoDesktopArrangement? right) -> bool
 static Kazo.Os.AppSdk.Files.KazoDesktopCell.TryParse(string? text, out Kazo.Os.AppSdk.Files.KazoDesktopCell cell) -> bool
@@ -3776,8 +4333,10 @@ static Kazo.Os.AppSdk.IO.KazoDirectory.MoveAsync(string! sourceDirName, string! 
 static Kazo.Os.AppSdk.IO.KazoDirectoryInfo.GetAsync(string! path, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.IO.KazoDirectoryInfo!>
 static Kazo.Os.AppSdk.IO.KazoDirectorySize.operator !=(Kazo.Os.AppSdk.IO.KazoDirectorySize? left, Kazo.Os.AppSdk.IO.KazoDirectorySize? right) -> bool
 static Kazo.Os.AppSdk.IO.KazoDirectorySize.operator ==(Kazo.Os.AppSdk.IO.KazoDirectorySize? left, Kazo.Os.AppSdk.IO.KazoDirectorySize? right) -> bool
+static Kazo.Os.AppSdk.IO.KazoDriveInfo.DescribeNetworkDriveTypesAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.IO.KazoNetworkDriveTypeInfo!>!>!
 static Kazo.Os.AppSdk.IO.KazoDriveInfo.GetDrivesAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Kazo.Os.AppSdk.IO.KazoDriveInfo![]!>!
 static Kazo.Os.AppSdk.IO.KazoDriveInfo.GetNetworkDriveTypesAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<string!>!>!
+static Kazo.Os.AppSdk.IO.KazoDriveInfo.GetProviderMissingDrivesAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Kazo.Os.AppSdk.IO.KazoDriveInfo![]!>!
 static Kazo.Os.AppSdk.IO.KazoDriveInfo.IsHostFolderSupportedAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<bool>!
 static Kazo.Os.AppSdk.IO.KazoDriveInfo.MountHostFolderAsync(string? mountPoint = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Kazo.Os.AppSdk.IO.KazoDriveInfo?>!
 static Kazo.Os.AppSdk.IO.KazoDriveInfo.MountNetworkDriveAsync(Kazo.Os.AppSdk.IO.KazoNetworkDriveRequest! request, string? mountPoint = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Kazo.Os.AppSdk.IO.KazoDriveInfo?>!
@@ -3840,8 +4399,14 @@ static Kazo.Os.AppSdk.IO.KazoFileTransferResult.operator !=(Kazo.Os.AppSdk.IO.Ka
 static Kazo.Os.AppSdk.IO.KazoFileTransferResult.operator ==(Kazo.Os.AppSdk.IO.KazoFileTransferResult? left, Kazo.Os.AppSdk.IO.KazoFileTransferResult? right) -> bool
 static Kazo.Os.AppSdk.IO.KazoHostFile.operator !=(Kazo.Os.AppSdk.IO.KazoHostFile? left, Kazo.Os.AppSdk.IO.KazoHostFile? right) -> bool
 static Kazo.Os.AppSdk.IO.KazoHostFile.operator ==(Kazo.Os.AppSdk.IO.KazoHostFile? left, Kazo.Os.AppSdk.IO.KazoHostFile? right) -> bool
+static Kazo.Os.AppSdk.IO.KazoNetworkDriveField.operator !=(Kazo.Os.AppSdk.IO.KazoNetworkDriveField? left, Kazo.Os.AppSdk.IO.KazoNetworkDriveField? right) -> bool
+static Kazo.Os.AppSdk.IO.KazoNetworkDriveField.operator ==(Kazo.Os.AppSdk.IO.KazoNetworkDriveField? left, Kazo.Os.AppSdk.IO.KazoNetworkDriveField? right) -> bool
+static Kazo.Os.AppSdk.IO.KazoNetworkDriveFieldChoice.operator !=(Kazo.Os.AppSdk.IO.KazoNetworkDriveFieldChoice? left, Kazo.Os.AppSdk.IO.KazoNetworkDriveFieldChoice? right) -> bool
+static Kazo.Os.AppSdk.IO.KazoNetworkDriveFieldChoice.operator ==(Kazo.Os.AppSdk.IO.KazoNetworkDriveFieldChoice? left, Kazo.Os.AppSdk.IO.KazoNetworkDriveFieldChoice? right) -> bool
 static Kazo.Os.AppSdk.IO.KazoNetworkDriveRequest.operator !=(Kazo.Os.AppSdk.IO.KazoNetworkDriveRequest? left, Kazo.Os.AppSdk.IO.KazoNetworkDriveRequest? right) -> bool
 static Kazo.Os.AppSdk.IO.KazoNetworkDriveRequest.operator ==(Kazo.Os.AppSdk.IO.KazoNetworkDriveRequest? left, Kazo.Os.AppSdk.IO.KazoNetworkDriveRequest? right) -> bool
+static Kazo.Os.AppSdk.IO.KazoNetworkDriveTypeInfo.operator !=(Kazo.Os.AppSdk.IO.KazoNetworkDriveTypeInfo? left, Kazo.Os.AppSdk.IO.KazoNetworkDriveTypeInfo? right) -> bool
+static Kazo.Os.AppSdk.IO.KazoNetworkDriveTypeInfo.operator ==(Kazo.Os.AppSdk.IO.KazoNetworkDriveTypeInfo? left, Kazo.Os.AppSdk.IO.KazoNetworkDriveTypeInfo? right) -> bool
 static Kazo.Os.AppSdk.IO.KazoPath.ChangeExtension(string? path, string? extension) -> string?
 static Kazo.Os.AppSdk.IO.KazoPath.Combine(params string![]! paths) -> string!
 static Kazo.Os.AppSdk.IO.KazoPath.GetDirectoryName(string? path) -> string?
@@ -3895,6 +4460,7 @@ static Kazo.Os.AppSdk.KazoExecutionContext.Enter(Kazo.Os.AppSdk.IAppExecutionCon
 static Kazo.Os.AppSdk.KazoExecutionContext.WorkingDirectory.get -> string!
 static Kazo.Os.AppSdk.KazoUser.Current.get -> Kazo.Os.AppSdk.KazoUserInfo!
 static Kazo.Os.AppSdk.KazoUser.Describe(Kazo.Os.AppSdk.IAppExecutionContext! context) -> Kazo.Os.AppSdk.KazoUserInfo!
+static Kazo.Os.AppSdk.KazoUser.IsInRole(string! role) -> bool
 static Kazo.Os.AppSdk.KazoUserInfo.operator !=(Kazo.Os.AppSdk.KazoUserInfo? left, Kazo.Os.AppSdk.KazoUserInfo? right) -> bool
 static Kazo.Os.AppSdk.KazoUserInfo.operator ==(Kazo.Os.AppSdk.KazoUserInfo? left, Kazo.Os.AppSdk.KazoUserInfo? right) -> bool
 static Kazo.Os.AppSdk.Keyring.KazoKeyring.DeleteAsync(Kazo.Os.AppSdk.IAppExecutionContext! context, string! id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<bool>
@@ -3929,6 +4495,11 @@ static Kazo.Os.AppSdk.Net.Hosting.KazoWebSiteFile.Validate(Kazo.Os.AppSdk.Net.Ho
 static Kazo.Os.AppSdk.Net.KazoCookie.operator !=(Kazo.Os.AppSdk.Net.KazoCookie? left, Kazo.Os.AppSdk.Net.KazoCookie? right) -> bool
 static Kazo.Os.AppSdk.Net.KazoCookie.operator ==(Kazo.Os.AppSdk.Net.KazoCookie? left, Kazo.Os.AppSdk.Net.KazoCookie? right) -> bool
 static Kazo.Os.AppSdk.Net.KazoCookieContainer.DomainMatches(string! host, string! domain) -> bool
+static Kazo.Os.AppSdk.Net.KazoDirectHttpContent.From(Kazo.Os.AppSdk.Net.KazoHttpContent! content) -> Kazo.Os.AppSdk.Net.KazoDirectHttpContent!
+static Kazo.Os.AppSdk.Net.KazoDirectHttpContent.FromBytes(System.ReadOnlyMemory<byte> content, string! contentType = "application/octet-stream") -> Kazo.Os.AppSdk.Net.KazoDirectHttpContent!
+static Kazo.Os.AppSdk.Net.KazoDirectHttpContent.FromJson<T>(T value, System.Text.Json.Serialization.Metadata.JsonTypeInfo<T>! jsonTypeInfo) -> Kazo.Os.AppSdk.Net.KazoDirectHttpContent!
+static Kazo.Os.AppSdk.Net.KazoDirectHttpContent.FromStream(System.IO.Stream! content, string! contentType = "application/octet-stream", long? length = null) -> Kazo.Os.AppSdk.Net.KazoDirectHttpContent!
+static Kazo.Os.AppSdk.Net.KazoDirectHttpContent.FromString(string! content, string! mediaType = "text/plain") -> Kazo.Os.AppSdk.Net.KazoDirectHttpContent!
 static Kazo.Os.AppSdk.Net.KazoDns.GetHostAddressesAsync(string! hostNameOrAddress, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Net.IPAddress![]!>!
 static Kazo.Os.AppSdk.Net.KazoDns.GetHostEntryAsync(System.Net.IPAddress! address, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Kazo.Os.AppSdk.Net.KazoHostEntry!>!
 static Kazo.Os.AppSdk.Net.KazoDns.GetHostEntryAsync(string! hostNameOrAddress, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Kazo.Os.AppSdk.Net.KazoHostEntry!>!
@@ -3961,6 +4532,10 @@ static Kazo.Os.AppSdk.Net.KazoPingReply.operator !=(Kazo.Os.AppSdk.Net.KazoPingR
 static Kazo.Os.AppSdk.Net.KazoPingReply.operator ==(Kazo.Os.AppSdk.Net.KazoPingReply? left, Kazo.Os.AppSdk.Net.KazoPingReply? right) -> bool
 static Kazo.Os.AppSdk.Net.KazoPortProbeResult.operator !=(Kazo.Os.AppSdk.Net.KazoPortProbeResult? left, Kazo.Os.AppSdk.Net.KazoPortProbeResult? right) -> bool
 static Kazo.Os.AppSdk.Net.KazoPortProbeResult.operator ==(Kazo.Os.AppSdk.Net.KazoPortProbeResult? left, Kazo.Os.AppSdk.Net.KazoPortProbeResult? right) -> bool
+static Kazo.Os.AppSdk.Net.KazoRealNetwork.GetRelayStateAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.Net.KazoRelayState!>
+static Kazo.Os.AppSdk.Net.KazoRealNetwork.RelayStateChanged -> System.EventHandler<Kazo.Os.AppSdk.Net.KazoRelayState!>?
+static Kazo.Os.AppSdk.Net.KazoRelayState.operator !=(Kazo.Os.AppSdk.Net.KazoRelayState? left, Kazo.Os.AppSdk.Net.KazoRelayState? right) -> bool
+static Kazo.Os.AppSdk.Net.KazoRelayState.operator ==(Kazo.Os.AppSdk.Net.KazoRelayState? left, Kazo.Os.AppSdk.Net.KazoRelayState? right) -> bool
 static Kazo.Os.AppSdk.Net.KazoTcpClient.ConnectAsync(string! hostNameOrAddress, int port, Kazo.Os.AppSdk.Net.KazoTcpConnectOptions! options, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<Kazo.Os.AppSdk.Net.KazoNetworkStream!>!
 static Kazo.Os.AppSdk.Net.KazoTcpClient.ConnectAsync(string! hostNameOrAddress, int port, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Kazo.Os.AppSdk.Net.KazoNetworkStream!>!
 static Kazo.Os.AppSdk.Net.KazoTcpClient.DetectOperatingSystemAsync(string! hostNameOrAddress, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Kazo.Os.AppSdk.Net.KazoOsFingerprint?>!
@@ -4007,6 +4582,19 @@ static Kazo.Os.AppSdk.ShellErrorText.Describe(System.Exception! exception) -> st
 static Kazo.Os.AppSdk.ShellErrorText.Describe(System.Exception! exception, Kazo.Os.AppSdk.IAppExecutionContext? context) -> string!
 static Kazo.Os.AppSdk.ShellJobInfo.operator !=(Kazo.Os.AppSdk.ShellJobInfo? left, Kazo.Os.AppSdk.ShellJobInfo? right) -> bool
 static Kazo.Os.AppSdk.ShellJobInfo.operator ==(Kazo.Os.AppSdk.ShellJobInfo? left, Kazo.Os.AppSdk.ShellJobInfo? right) -> bool
+static Kazo.Os.AppSdk.Storage.KazoFeatureStorageUsage.operator !=(Kazo.Os.AppSdk.Storage.KazoFeatureStorageUsage? left, Kazo.Os.AppSdk.Storage.KazoFeatureStorageUsage? right) -> bool
+static Kazo.Os.AppSdk.Storage.KazoFeatureStorageUsage.operator ==(Kazo.Os.AppSdk.Storage.KazoFeatureStorageUsage? left, Kazo.Os.AppSdk.Storage.KazoFeatureStorageUsage? right) -> bool
+static Kazo.Os.AppSdk.Storage.KazoStorage.Changed -> System.EventHandler<Kazo.Os.AppSdk.Storage.KazoStorageChangedEventArgs!>?
+static Kazo.Os.AppSdk.Storage.KazoStorage.GetEstimateAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.Storage.KazoStorageEstimate!>
+static Kazo.Os.AppSdk.Storage.KazoStorage.GetFeatureUsageAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.Storage.KazoFeatureStorageUsage!>!>
+static Kazo.Os.AppSdk.Storage.KazoStorage.IsSupported.get -> bool
+static Kazo.Os.AppSdk.Storage.KazoStorage.RegisterMarkerAsync(string! path, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+static Kazo.Os.AppSdk.Storage.KazoStorage.ReportUsageAsync(long bytes, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+static Kazo.Os.AppSdk.Storage.KazoStorage.RequestPersistenceAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<bool>
+static Kazo.Os.AppSdk.Storage.KazoStorageEstimate.Unknown.get -> Kazo.Os.AppSdk.Storage.KazoStorageEstimate!
+static Kazo.Os.AppSdk.Storage.KazoStorageEstimate.operator !=(Kazo.Os.AppSdk.Storage.KazoStorageEstimate? left, Kazo.Os.AppSdk.Storage.KazoStorageEstimate? right) -> bool
+static Kazo.Os.AppSdk.Storage.KazoStorageEstimate.operator ==(Kazo.Os.AppSdk.Storage.KazoStorageEstimate? left, Kazo.Os.AppSdk.Storage.KazoStorageEstimate? right) -> bool
+static Kazo.Os.AppSdk.Storage.UnsupportedAppStorageGateway.Instance.get -> Kazo.Os.AppSdk.Storage.UnsupportedAppStorageGateway!
 static Kazo.Os.AppSdk.TerminalCursor.operator !=(Kazo.Os.AppSdk.TerminalCursor left, Kazo.Os.AppSdk.TerminalCursor right) -> bool
 static Kazo.Os.AppSdk.TerminalCursor.operator ==(Kazo.Os.AppSdk.TerminalCursor left, Kazo.Os.AppSdk.TerminalCursor right) -> bool
 static Kazo.Os.AppSdk.TerminalKeyEvent.operator !=(Kazo.Os.AppSdk.TerminalKeyEvent? left, Kazo.Os.AppSdk.TerminalKeyEvent? right) -> bool
@@ -4082,6 +4670,10 @@ static readonly Kazo.Os.AppSdk.Diagnostics.KazoProcess.DefaultTerminateTimeout -
 static readonly Kazo.Os.AppSdk.KazoUser.Root -> Kazo.Os.AppSdk.KazoUserInfo!
 static readonly Kazo.Os.AppSdk.Net.Hosting.KazoWebSite.DefaultDefaultDocuments -> System.Collections.Generic.IReadOnlyList<string!>!
 static readonly Kazo.Os.AppSdk.Net.KazoPing.DefaultTimeout -> System.TimeSpan
+virtual Kazo.Os.AppSdk.Drives.KazoDriveFolder.CreateFileAsync(Kazo.Os.AppSdk.Drives.KazoDrivePath! path, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+virtual Kazo.Os.AppSdk.Drives.KazoDriveFolder.DisposeAsync() -> System.Threading.Tasks.ValueTask
+virtual Kazo.Os.AppSdk.Drives.KazoDriveFolder.GetQuotaAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.Drives.KazoDriveQuota?>
+virtual Kazo.Os.AppSdk.Drives.KazoDriveFolder.TryMoveAsync(Kazo.Os.AppSdk.Drives.KazoDrivePath! from, Kazo.Os.AppSdk.Drives.KazoDrivePath! to, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<bool>
 virtual Kazo.Os.AppSdk.IO.KazoFileConflictResolver.Invoke(Kazo.Os.AppSdk.IO.KazoFileTransferConflict! conflict) -> System.Threading.Tasks.Task<Kazo.Os.AppSdk.IO.KazoFileConflictResolution!>!
 virtual Kazo.Os.AppSdk.IO.KazoFileSystemInfo.Name.get -> string!
 virtual Kazo.Os.AppSdk.ServiceAppBase.OnIntentReceivedAsync(Kazo.Os.App.Abstractions.AppIntentDelivery! intent, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!

@@ -1,10 +1,1 @@
 #nullable enable
-Kazo.Os.Apps.FileExplorer.DriveTypeIcon
-Kazo.Os.Apps.FileExplorer.DriveTypeIcon.DriveTypeIcon() -> void
-Kazo.Os.Apps.FileExplorer.DriveTypeIcon.Fallback.get -> (Kazo.Os.AppSdk.Icons.IconLibrary Library, string! Name)?
-Kazo.Os.Apps.FileExplorer.DriveTypeIcon.Fallback.set -> void
-Kazo.Os.Apps.FileExplorer.DriveTypeIcon.Info.get -> Kazo.Os.AppSdk.IO.KazoNetworkDriveTypeInfo?
-Kazo.Os.Apps.FileExplorer.DriveTypeIcon.Info.set -> void
-Kazo.Os.Apps.FileExplorer.DriveTypeIcon.Size.get -> int
-Kazo.Os.Apps.FileExplorer.DriveTypeIcon.Size.set -> void
-~override Kazo.Os.Apps.FileExplorer.DriveTypeIcon.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
