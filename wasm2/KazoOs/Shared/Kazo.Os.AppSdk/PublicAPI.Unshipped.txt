@@ -313,3 +313,4 @@ const Kazo.Os.AppSdk.KazoRoles.FeatureSeparator = ':' -> char
 Kazo.Os.AppSdk.KazoRoles
 static Kazo.Os.AppSdk.KazoUser.IsInRole(string! role) -> bool
 Kazo.Os.AppSdk.KazoUserInfo.IsInRole(string! role) -> bool
+static Kazo.Os.AppSdk.Apps.KazoApps.ShowSettingsPageAsync(string! pageId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!

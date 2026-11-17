@@ -194,6 +194,7 @@ public sealed class AppIntentDispatcher
             EditFileIntent edit => await DispatchEditFileAsync(request, edit, principal),
             OpenUriIntent openUri => await DispatchOpenUriAsync(request, openUri, principal, cancellationToken),
             ShowAppSettingsIntent showSettings => await DispatchShowSettingsAsync(request, showSettings, principal),
+            ShowSettingsPageIntent showPage => await DispatchShowSettingsPageAsync(request, showPage, principal),
             CustomIntent custom => await DispatchCustomAsync(request, custom, principal, cancellationToken),
             _ => new AppIntentDispatchResult(AppIntentDispatchStatus.NotFound, ErrorCode: "intent.unknown")
         };
@@ -210,6 +211,9 @@ public sealed class AppIntentDispatcher
 
     /// <summary>Prefix of the Settings argument naming the app whose page to show, <c>--app=&lt;id&gt;</c>.</summary>
     public const string SettingsAppArgumentPrefix = "--app=";
+
+    /// <summary>Prefix of the Settings argument naming the page to show, <c>--page=&lt;id&gt;</c> (ADR 0249 §4).</summary>
+    public const string SettingsPageArgumentPrefix = "--page=";
 
     /// <summary>Prefix of the folder-handler argument naming the item to select, <c>--select=&lt;path&gt;</c> (ADR 0096, section 1).</summary>
     public const string SelectArgumentPrefix = "--select=";
@@ -558,6 +562,39 @@ public sealed class AppIntentDispatcher
             handler, principal, arguments,
             Intent: new AppIntentDelivery(AppIntentIds.ShowAppSettings, SenderAppId: request.CallerAppId) { Arguments = arguments }));
         return launch.Status == AppLaunchStatus.NotFound && !ownPage
+            ? new AppIntentDispatchResult(AppIntentDispatchStatus.NotFound, ErrorCode: "intent.show-settings.no-settings-app")
+            : ToDispatchResult(launch);
+    }
+
+    /// <summary>
+    /// Opens Settings on a page a feature adds to Settings ▸ Features (ADR 0249 §4):
+    /// <c>--page=&lt;id&gt;</c>, delivered to a running Settings as a show-settings intent. The caller
+    /// needs <see cref="AppCapabilities.AppsLaunch"/>. Whether the user may see the page (its role) is
+    /// Settings' answer: without the role, it opens on "Installed features" with a message.
+    /// </summary>
+    private async ValueTask<AppIntentDispatchResult> DispatchShowSettingsPageAsync(
+        AppIntentRequest request, ShowSettingsPageIntent intent, AuthenticatedPrincipal principal)
+    {
+        if (!HasAppsLaunch(request.CallerAppId, request.UserId, principal.Authority))
+        {
+            return new AppIntentDispatchResult(AppIntentDispatchStatus.CapabilityDenied, ErrorCode: "intent.capability-denied");
+        }
+
+        if (!_catalog.Manifests.TryGetValue(intent.PageId, out AppManifest? page) || page.Kind != AppKind.SettingsPage)
+        {
+            return new AppIntentDispatchResult(AppIntentDispatchStatus.NotFound, ErrorCode: "intent.show-settings-page.not-found");
+        }
+
+        if (!_enablement.IsEnabled(intent.PageId))
+        {
+            return new AppIntentDispatchResult(AppIntentDispatchStatus.Disabled, ErrorCode: "intent.show-settings-page.disabled");
+        }
+
+        string[] arguments = [SettingsPageArgumentPrefix + intent.PageId];
+        AppLaunchResult launch = await _orchestrator.LaunchAsync(new AppLaunchRequest(
+            SettingsAppId, principal, arguments,
+            Intent: new AppIntentDelivery(AppIntentIds.ShowAppSettings, SenderAppId: request.CallerAppId) { Arguments = arguments }));
+        return launch.Status == AppLaunchStatus.NotFound
             ? new AppIntentDispatchResult(AppIntentDispatchStatus.NotFound, ErrorCode: "intent.show-settings.no-settings-app")
             : ToDispatchResult(launch);
     }

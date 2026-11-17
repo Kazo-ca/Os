@@ -628,6 +628,17 @@ public interface IAppIntentGateway
         throw new NotSupportedException("This intents gateway does not support showing app settings.");
 
     /// <summary>
+    /// Requests Settings on a page a feature adds to Settings ▸ Features (ADR 0249 §4), named by the
+    /// id of its entry point: Settings opens with <c>--page=&lt;id&gt;</c>, or on "Installed features"
+    /// with a message when the user may not see the page.
+    /// </summary>
+    /// <param name="pageId">The id of the page's entry point, for example <c>ca.kazo.x86.admin</c>.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <exception cref="AppGatewayAccessDeniedException">Policy denies <see cref="AppCapabilities.AppsLaunch"/>.</exception>
+    ValueTask<AppIntentResult> ShowSettingsPageAsync(string pageId, CancellationToken cancellationToken = default) =>
+        throw new NotSupportedException("This intents gateway does not support showing a settings page.");
+
+    /// <summary>
     /// Sends an app-defined intent (ADR 0096, section 5) to the installed apps declaring
     /// <paramref name="intentId"/>: the only one, the remembered choice, or
     /// <see cref="AppIntentOutcome.ChooserRequired"/> with the candidates.

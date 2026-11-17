@@ -92,6 +92,7 @@ internal static class RemoteOps
     public const string IntentReveal = "int.reveal";
     public const string IntentOpenUri = "int.uri";
     public const string IntentShowSettings = "int.settings";
+    public const string IntentShowSettingsPage = "int.settings-page";
     public const string IntentSend = "int.send";
     public const string ClipboardGetText = "clip.get";
     public const string ClipboardSetText = "clip.set";

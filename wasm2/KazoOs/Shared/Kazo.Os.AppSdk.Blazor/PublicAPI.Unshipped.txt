@@ -1,1 +1,57 @@
 #nullable enable
+Kazo.Os.AppSdk.Blazor.KazoSettingsPageBase
+Kazo.Os.AppSdk.Blazor.KazoSettingsPageBase.KazoSettingsPageBase() -> void
+Kazo.Os.AppSdk.Blazor.Settings.IFeatureSettingsPages
+Kazo.Os.AppSdk.Blazor.Settings.IFeatureSettingsPages.Changed -> System.EventHandler?
+Kazo.Os.AppSdk.Blazor.Settings.IFeatureSettingsPageSession
+Kazo.Os.AppSdk.Blazor.Settings.FeatureSettingsPageInfo.FeatureId.get -> string!
+Kazo.Os.AppSdk.Blazor.Settings.IFeatureSettingsPageSession.Exited -> System.Action?
+Kazo.Os.AppSdk.Blazor.Settings.FeatureSettingsPageInfo.FeatureId.init -> void
+Kazo.Os.AppSdk.Blazor.Settings.FeatureSettingsPageInfo.Id.get -> string!
+Kazo.Os.AppSdk.Blazor.Settings.FeatureSettingsPageInfo
+Kazo.Os.AppSdk.Blazor.Settings.FeatureSettingsPageInfo.FeatureName.get -> string!
+Kazo.Os.AppSdk.Blazor.Settings.FeatureSettingsPageInfo.Id.init -> void
+Kazo.Os.AppSdk.Blazor.Settings.FeatureSettingsPageInfo.Title.get -> string!
+override Kazo.Os.AppSdk.Blazor.Settings.FeatureSettingsPageInfo.ToString() -> string!
+Kazo.Os.AppSdk.Blazor.Settings.FeatureSettingsPageInfo.FeatureName.init -> void
+Kazo.Os.AppSdk.Blazor.Settings.FeatureSettingsPageInfo.Title.init -> void
+static Kazo.Os.AppSdk.Blazor.Settings.FeatureSettingsPageInfo.operator !=(Kazo.Os.AppSdk.Blazor.Settings.FeatureSettingsPageInfo? left, Kazo.Os.AppSdk.Blazor.Settings.FeatureSettingsPageInfo? right) -> bool
+static Kazo.Os.AppSdk.Blazor.Settings.FeatureSettingsPageInfo.operator ==(Kazo.Os.AppSdk.Blazor.Settings.FeatureSettingsPageInfo? left, Kazo.Os.AppSdk.Blazor.Settings.FeatureSettingsPageInfo? right) -> bool
+Kazo.Os.AppSdk.Blazor.Settings.FeatureSettingsPageInfo.Order.get -> int
+override Kazo.Os.AppSdk.Blazor.Settings.FeatureSettingsPageInfo.GetHashCode() -> int
+Kazo.Os.AppSdk.Blazor.Settings.FeatureSettingsPageInfo.Order.init -> void
+override Kazo.Os.AppSdk.Blazor.Settings.FeatureSettingsPageInfo.Equals(object? obj) -> bool
+Kazo.Os.AppSdk.Blazor.Settings.FeatureSettingsPageInfo.Equals(Kazo.Os.AppSdk.Blazor.Settings.FeatureSettingsPageInfo? other) -> bool
+Kazo.Os.AppSdk.Blazor.Settings.FeatureSettingsPageInfo.<Clone>$() -> Kazo.Os.AppSdk.Blazor.Settings.FeatureSettingsPageInfo!
+Kazo.Os.AppSdk.Blazor.Settings.FeatureSettingsPageInfo.Deconstruct(out string! Id, out string! FeatureId, out string! FeatureName, out string! Title, out int Order) -> void
+Kazo.Os.AppSdk.Blazor.Settings.FeatureSettingsPageStart
+override Kazo.Os.AppSdk.Blazor.Settings.FeatureSettingsPageStart.ToString() -> string!
+static Kazo.Os.AppSdk.Blazor.Settings.FeatureSettingsPageStart.operator !=(Kazo.Os.AppSdk.Blazor.Settings.FeatureSettingsPageStart? left, Kazo.Os.AppSdk.Blazor.Settings.FeatureSettingsPageStart? right) -> bool
+static Kazo.Os.AppSdk.Blazor.Settings.FeatureSettingsPageStart.operator ==(Kazo.Os.AppSdk.Blazor.Settings.FeatureSettingsPageStart? left, Kazo.Os.AppSdk.Blazor.Settings.FeatureSettingsPageStart? right) -> bool
+override Kazo.Os.AppSdk.Blazor.Settings.FeatureSettingsPageStart.GetHashCode() -> int
+override Kazo.Os.AppSdk.Blazor.Settings.FeatureSettingsPageStart.Equals(object? obj) -> bool
+Kazo.Os.AppSdk.Blazor.Settings.FeatureSettingsPageStart.Session.get -> Kazo.Os.AppSdk.Blazor.Settings.IFeatureSettingsPageSession?
+Kazo.Os.AppSdk.Blazor.Settings.FeatureSettingsPageStart.Error.get -> string?
+Kazo.Os.AppSdk.Blazor.Settings.FeatureSettingsPageStart.Equals(Kazo.Os.AppSdk.Blazor.Settings.FeatureSettingsPageStart? other) -> bool
+Kazo.Os.AppSdk.Blazor.Settings.FeatureSettingsPageStart.Session.init -> void
+Kazo.Os.AppSdk.Blazor.Settings.FeatureSettingsPageStart.Error.init -> void
+Kazo.Os.AppSdk.Blazor.Settings.FeatureSettingsPageStart.<Clone>$() -> Kazo.Os.AppSdk.Blazor.Settings.FeatureSettingsPageStart!
+Kazo.Os.AppSdk.Blazor.Settings.FeatureSettingsPageStart.IsDenied.get -> bool
+Kazo.Os.AppSdk.Blazor.Settings.FeatureSettingsPageStart.IsDenied.init -> void
+Kazo.Os.AppSdk.Blazor.Settings.FeatureSettingsPageStart.Deconstruct(out Kazo.Os.AppSdk.Blazor.Settings.IFeatureSettingsPageSession? Session, out string? Error, out bool IsDenied) -> void
+Kazo.Os.AppSdk.Blazor.KazoSettingsPageBase.PageTitle.get -> string!
+Kazo.Os.AppSdk.Blazor.Settings.IFeatureSettingsPages.GetPages(Kazo.Os.AppSdk.IAppExecutionContext! host) -> System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.Blazor.Settings.FeatureSettingsPageInfo!>!
+Kazo.Os.AppSdk.Blazor.Settings.IFeatureSettingsPages.OpenAsync(Kazo.Os.AppSdk.IAppExecutionContext! host, string! pageId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Kazo.Os.AppSdk.Blazor.Settings.FeatureSettingsPageStart!>!
+Kazo.Os.AppSdk.Blazor.Settings.FeatureSettingsPageInfo.FeatureSettingsPageInfo(string! Id, string! FeatureId, string! FeatureName, string! Title, int Order) -> void
+Kazo.Os.AppSdk.Blazor.Settings.FeatureSettingsPageInfo.IconUrl.get -> string?
+Kazo.Os.AppSdk.Blazor.Settings.FeatureSettingsPageInfo.IconUrl.init -> void
+Kazo.Os.AppSdk.Blazor.Settings.IFeatureSettingsPageSession.Page.get -> Kazo.Os.AppSdk.Blazor.Settings.FeatureSettingsPageInfo!
+Kazo.Os.AppSdk.Blazor.Settings.IFeatureSettingsPageSession.Content.get -> Microsoft.AspNetCore.Components.RenderFragment!
+Kazo.Os.AppSdk.Blazor.Settings.IFeatureSettingsPageSession.HasExited.get -> bool
+Kazo.Os.AppSdk.Blazor.Settings.IFeatureSettingsPageSession.Context.get -> Kazo.Os.AppSdk.IAppExecutionContext!
+Kazo.Os.AppSdk.Blazor.Settings.IFeatureSettingsPageSession.StopAsync() -> System.Threading.Tasks.Task!
+Kazo.Os.AppSdk.Blazor.Settings.FeatureSettingsPageStart.FeatureSettingsPageStart(Kazo.Os.AppSdk.Blazor.Settings.IFeatureSettingsPageSession? Session, string? Error, bool IsDenied = false) -> void
+Kazo.Os.AppSdk.Blazor.Settings.FeatureSettingsPageStart.IsStarted.get -> bool
+static Kazo.Os.AppSdk.Blazor.Settings.FeatureSettingsPageStart.Started(Kazo.Os.AppSdk.Blazor.Settings.IFeatureSettingsPageSession! session) -> Kazo.Os.AppSdk.Blazor.Settings.FeatureSettingsPageStart!
+static Kazo.Os.AppSdk.Blazor.Settings.FeatureSettingsPageStart.Denied(string! error) -> Kazo.Os.AppSdk.Blazor.Settings.FeatureSettingsPageStart!
+static Kazo.Os.AppSdk.Blazor.Settings.FeatureSettingsPageStart.Failed(string! error) -> Kazo.Os.AppSdk.Blazor.Settings.FeatureSettingsPageStart!

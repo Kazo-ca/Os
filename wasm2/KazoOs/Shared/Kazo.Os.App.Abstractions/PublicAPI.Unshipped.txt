@@ -140,3 +140,16 @@ Kazo.Os.App.Abstractions.SettingsPageOptions.MobileSupported.get -> bool
 Kazo.Os.App.Abstractions.FeatureEntryPoint.SettingsPage.get -> Kazo.Os.App.Abstractions.SettingsPageOptions?
 Kazo.Os.App.Abstractions.FeatureEntryPoint.SettingsPage.init -> void
 ~Kazo.Os.App.Abstractions.AppManifestJsonSerializerContext.SettingsPageOptions.get -> System.Text.Json.Serialization.Metadata.JsonTypeInfo<Kazo.Os.App.Abstractions.SettingsPageOptions>
+Kazo.Os.App.Abstractions.ShowSettingsPageIntent.PageId.get -> string!
+Kazo.Os.App.Abstractions.ShowSettingsPageIntent.PageId.init -> void
+Kazo.Os.App.Abstractions.ShowSettingsPageIntent
+override Kazo.Os.App.Abstractions.ShowSettingsPageIntent.ToString() -> string!
+static Kazo.Os.App.Abstractions.ShowSettingsPageIntent.operator !=(Kazo.Os.App.Abstractions.ShowSettingsPageIntent? left, Kazo.Os.App.Abstractions.ShowSettingsPageIntent? right) -> bool
+static Kazo.Os.App.Abstractions.ShowSettingsPageIntent.operator ==(Kazo.Os.App.Abstractions.ShowSettingsPageIntent? left, Kazo.Os.App.Abstractions.ShowSettingsPageIntent? right) -> bool
+override Kazo.Os.App.Abstractions.ShowSettingsPageIntent.GetHashCode() -> int
+override Kazo.Os.App.Abstractions.ShowSettingsPageIntent.Equals(object? obj) -> bool
+Kazo.Os.App.Abstractions.ShowSettingsPageIntent.Equals(Kazo.Os.App.Abstractions.ShowSettingsPageIntent? other) -> bool
+Kazo.Os.App.Abstractions.ShowSettingsPageIntent.<Clone>$() -> Kazo.Os.App.Abstractions.ShowSettingsPageIntent!
+Kazo.Os.App.Abstractions.ShowSettingsPageIntent.Deconstruct(out string! PageId) -> void
+Kazo.Os.App.Abstractions.ShowSettingsPageIntent.ShowSettingsPageIntent(string! PageId) -> void
+Kazo.Os.App.Abstractions.ShowSettingsPageIntent.IntentId.get -> string!

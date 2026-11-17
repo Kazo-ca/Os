@@ -347,6 +347,28 @@ public static class KazoApps
     }
 
     /// <summary>
+    /// Opens Settings on a page a feature adds to Settings ▸ Features (ADR 0249 §4), for example
+    /// <c>ca.kazo.x86.admin</c>: an app sends its user there instead of acting itself. When the user
+    /// may not see the page (role, disabled feature), Settings opens on "Installed features" with a
+    /// message. Needs <c>apps.launch</c>.
+    /// </summary>
+    /// <param name="pageId">The id of the page's entry point.</param>
+    /// <param name="cancellationToken">Cancels the request.</param>
+    /// <exception cref="ArgumentException"><paramref name="pageId"/> is empty.</exception>
+    /// <exception cref="KazoAppLaunchException">The page is unknown, its feature is disabled, or Settings failed to start.</exception>
+    /// <exception cref="KazoUnauthorizedAccessException">This app lacks <c>apps.launch</c>.</exception>
+    /// <exception cref="KazoExecutionContextMissingException">No app context is active.</exception>
+    public static async Task ShowSettingsPageAsync(string pageId, CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(pageId);
+        AppIntentResult result = await Call(intents => intents.ShowSettingsPageAsync(pageId, cancellationToken)).ConfigureAwait(false);
+        if (result.Outcome != AppIntentOutcome.Dispatched)
+        {
+            throw new KazoAppLaunchException($"The settings page '{pageId}' could not be shown ({result.ErrorCode}).", pageId, result.ErrorCode);
+        }
+    }
+
+    /// <summary>
     /// Sends an app-defined intent (ADR 0096, section 5) to the installed apps that declare it in
     /// their manifest: the only one, the one the user chose to "always use", or, when several can
     /// and none was chosen, nothing yet: the result lists them so the caller asks the user, then

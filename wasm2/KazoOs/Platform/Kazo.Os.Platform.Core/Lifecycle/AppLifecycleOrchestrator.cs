@@ -206,6 +206,9 @@ public sealed class AppLifecycleOrchestrator
     /// <summary>The error code of a launch refused for want of the entry point's role (ADR 0247 §2).</summary>
     public const string RoleRequiredErrorCode = "lifecycle.role.required";
 
+    /// <summary>The error code of a launch of a page of Settings ▸ Features, which only Settings draws (ADR 0249 §2).</summary>
+    public const string SettingsPageNotLaunchableErrorCode = "lifecycle.settings-page.not-launchable";
+
     /// <summary>
     /// Gets or sets how long a service may stay <c>activating</c> (its <c>OnStartAsync</c>) before
     /// the OS kills it and marks it <c>failed (Result: timeout)</c> (ADR 0097, section 1). 30 s, like
@@ -468,6 +471,15 @@ public sealed class AppLifecycleOrchestrator
             return new AppLaunchResult(AppLaunchStatus.Disabled, ErrorCode: "lifecycle.app.disabled");
         }
 
+        if (descriptor.Manifest.Kind == AppKind.SettingsPage)
+        {
+            // ADR 0249 §2: a page of Settings ▸ Features is drawn by Settings, never launched alone.
+            return new AppLaunchResult(
+                AppLaunchStatus.NotFound,
+                ErrorCode: SettingsPageNotLaunchableErrorCode,
+                ErrorMessage: $"'{request.AppId}' is a page of Settings: open it with KazoApps.ShowSettingsPageAsync.");
+        }
+
         // ADR 0247 §2: the role is checked before a running instance receives the request and before
         // an elevation ticket is used up. A request that claims sudo is checked again once its ticket
         // is consumed (root holds every role), but never reaches a running instance on that claim.
@@ -649,9 +661,13 @@ public sealed class AppLifecycleOrchestrator
     /// It is not the site's instance: on-demand activation (ADR 0074 §3) still starts the site, and
     /// stopping it (task manager, <c>kill</c>) ends only this renderer.
     /// </summary>
-    /// <param name="appId">The web app whose component is rendered.</param>
-    /// <param name="principal">The user of the browser tab.</param>
-    /// <param name="parentPid">The browser window's process.</param>
+    /// <remarks>
+    /// It also starts the process of a page of Settings ▸ Features (ADR 0249 §2), a child of
+    /// Settings' process with the page's id and capabilities, after the role check of ADR 0247 §2.
+    /// </remarks>
+    /// <param name="appId">The web app whose component is rendered, or the settings page.</param>
+    /// <param name="principal">The user of the browser tab or of Settings.</param>
+    /// <param name="parentPid">The browser window's process, or Settings'.</param>
     /// <param name="arguments"><c>argv</c> after the app name (<c>--type=renderer</c>, the URL).</param>
     /// <param name="cancellationToken">Cancels the load of the app's assembly.</param>
     /// <returns>The launch: the process and its context, or why it did not start.</returns>
@@ -671,7 +687,8 @@ public sealed class AppLifecycleOrchestrator
             return new AppLaunchResult(AppLaunchStatus.NotFound, ErrorCode: "lifecycle.app.not-found", ErrorMessage: error);
         }
 
-        if (descriptor.Manifest.Kind != AppKind.Web)
+        AppKind kind = descriptor.Manifest.Kind;
+        if (kind is not (AppKind.Web or AppKind.SettingsPage))
         {
             return new AppLaunchResult(AppLaunchStatus.NotFound, ErrorCode: "lifecycle.auxiliary.not-web", ErrorMessage: $"'{appId}' is not a web app.");
         }
@@ -681,6 +698,11 @@ public sealed class AppLifecycleOrchestrator
             return new AppLaunchResult(AppLaunchStatus.Disabled, ErrorCode: "lifecycle.app.disabled");
         }
 
+        if (kind == AppKind.SettingsPage && RefuseForRole(descriptor.Manifest, principal, isRootElevated: false) is { } roleRefusal)
+        {
+            return roleRefusal;
+        }
+
         HashSet<string> granted = ComputeGrantedCapabilities(descriptor.Manifest, principal);
         granted.Remove(AppCapabilities.NetworkListen);
         granted.Remove(AppCapabilities.NetworkListenPrivileged);
@@ -688,7 +710,7 @@ public sealed class AppLifecycleOrchestrator
             parentPid,
             appId,
             AppInstanceId.FromGuid(Guid.NewGuid()),
-            AppKind.Web,
+            kind,
             principal.UserId,
             principal.SessionId,
             ToResourceProfile(descriptor.Manifest.Resources),

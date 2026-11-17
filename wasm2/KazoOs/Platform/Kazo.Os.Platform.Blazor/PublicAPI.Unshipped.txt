@@ -1,1 +1,12 @@
 #nullable enable
+Kazo.Os.Platform.Blazor.Settings.FeatureSettingsPages
+const Kazo.Os.Platform.Blazor.Settings.FeatureSettingsPages.PageArgument = "--type=settings-page" -> string!
+Kazo.Os.Platform.Blazor.Settings.FeatureSettingsPages.Changed -> System.EventHandler?
+Kazo.Os.Platform.Blazor.Settings.FeatureSettingsPages.StartPage
+virtual Kazo.Os.Platform.Blazor.Settings.FeatureSettingsPages.StartPage.Invoke(string! appId, Kazo.Os.Simulation.Abstractions.Sessions.AuthenticatedPrincipal! principal, Kazo.Os.Simulation.Abstractions.Processes.ProcessId parentPid, System.Collections.Generic.IReadOnlyList<string!>! arguments, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<Kazo.Os.Platform.Core.Lifecycle.AppLaunchResult!>!
+Kazo.Os.Platform.Blazor.Settings.FeatureSettingsPages.FeatureSettingsPages(Kazo.Os.Platform.Core.AppCatalog! catalog, Kazo.Os.Platform.Core.Lifecycle.IAppEnablementRegistry! enablement, Kazo.Os.Simulation.Abstractions.Sessions.ISessionService! sessions, System.Func<Kazo.Os.Platform.Core.Roles.FeatureRoleService?>! roles, System.Func<System.Globalization.CultureInfo!>! culture, System.Func<bool>! isMobile, System.Func<string!, System.Threading.CancellationToken, System.Threading.Tasks.Task<(Kazo.Os.Platform.Core.Discovery.AppDescriptor? Descriptor, string? Error)>!>! descriptors, Kazo.Os.Platform.Blazor.Settings.FeatureSettingsPages.StartPage! start, System.Func<Kazo.Os.Simulation.Abstractions.Processes.ProcessId, Kazo.Os.Simulation.Abstractions.Processes.ProcessExitReason, System.Threading.Tasks.Task<bool>!>! stop) -> void
+Kazo.Os.Platform.Blazor.Settings.FeatureSettingsPages.GetPages(Kazo.Os.AppSdk.IAppExecutionContext! host) -> System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.Blazor.Settings.FeatureSettingsPageInfo!>!
+Kazo.Os.Platform.Blazor.Settings.FeatureSettingsPages.OpenAsync(Kazo.Os.AppSdk.IAppExecutionContext! host, string! pageId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Kazo.Os.AppSdk.Blazor.Settings.FeatureSettingsPageStart!>!
+Kazo.Os.Platform.Blazor.Settings.FeatureSettingsPages.Dispose() -> void
+Kazo.Os.Platform.Blazor.Windows.AppErrorBoundary.AllowClose.get -> bool
+Kazo.Os.Platform.Blazor.Windows.AppErrorBoundary.AllowClose.set -> void

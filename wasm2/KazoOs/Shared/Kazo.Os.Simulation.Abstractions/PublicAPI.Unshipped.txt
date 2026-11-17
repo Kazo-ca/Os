@@ -29,3 +29,4 @@ Kazo.Os.Simulation.Abstractions.Metrics.IOriginStorage.WriteBootMarkerAsync(stri
 Kazo.Os.Simulation.Abstractions.Metrics.IOriginStorage.DatabaseExistsAsync(string! name, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<bool?>
 Kazo.Os.Simulation.Abstractions.Metrics.IOriginStorage.FileExistsAsync(string! path, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<bool?>
 Kazo.Os.Simulation.Abstractions.Metrics.IStorageSpaceGuard.ReportWriteRefused() -> void
+Kazo.Os.Simulation.Abstractions.Gateways.IAppIntentGateway.ShowSettingsPageAsync(string! pageId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.Simulation.Abstractions.Gateways.AppIntentResult!>

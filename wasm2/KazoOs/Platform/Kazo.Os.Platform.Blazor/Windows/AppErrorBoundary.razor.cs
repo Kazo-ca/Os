@@ -42,11 +42,18 @@ public sealed partial class AppErrorBoundary
     [Parameter]
     public IAppExecutionContext? AppContext { get; set; }
 
+    /// <summary>
+    /// Gets or sets whether the panel may offer to close the app (the default). A page of Settings ▸
+    /// Features (ADR 0249 §2) offers only to retry: Settings, not the page, owns the window.
+    /// </summary>
+    [Parameter]
+    public bool AllowClose { get; set; } = true;
+
     private string TitleId { get; } = $"app-failure-title-{Guid.NewGuid():N}";
 
     private string DisplayName => string.IsNullOrWhiteSpace(AppName) ? AppContext?.Manifest.Id ?? "?" : AppName;
 
-    private bool CanClose => AppContext is not null && Services.GetService(typeof(AppLifecycleOrchestrator)) is not null;
+    private bool CanClose => AllowClose && AppContext is not null && Services.GetService(typeof(AppLifecycleOrchestrator)) is not null;
 
     private string ErrorSummary => CurrentException is null
         ? string.Empty
