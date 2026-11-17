@@ -149,6 +149,29 @@ public sealed class FileViewTests
     }
 
     [Fact]
+    public async Task RefreshAsync_keeps_the_order_in_which_the_items_were_selected()
+    {
+        // "Open" on a multiple selection opens the files in the order they were picked: a refresh
+        // of the folder in between must not put them back in the listing's order.
+        FileViewTestFixture fixture = await FileViewTestFixture.CreateAsync();
+        await fixture.CreateFileAsync("/home/user/a.txt");
+        await fixture.CreateFileAsync("/home/user/b.txt");
+        TestComponentRenderer renderer = new(EmptyServices());
+        TestableFileView view = new() { FileSystem = fixture.FileSystem, InitialDirectory = VirtualPath.Parse("/home/user") };
+        await renderer.RenderAsync(view);
+        await OnDispatcherAsync(renderer, () =>
+        {
+            view.SelectByName("b.txt");
+            view.SelectItemInternal(view.Items.Single(item => item.FileName == "a.txt"), additive: true);
+        });
+
+        await fixture.CreateFileAsync("/home/user/c.txt");
+        await renderer.RunAsync(() => view.RefreshAsync());
+
+        Assert.Equal(["b.txt", "a.txt"], view.SelectedItems.Select(item => item.FileName));
+    }
+
+    [Fact]
     public async Task SelectByName_selects_a_single_item()
     {
         FileViewTestFixture fixture = await FileViewTestFixture.CreateAsync();

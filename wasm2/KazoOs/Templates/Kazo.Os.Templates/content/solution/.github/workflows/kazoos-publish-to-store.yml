@@ -106,6 +106,9 @@ jobs:
           cp store/short_description.*.txt store/description.*.md "$folder/"
           if [[ -d store/screenshots ]]; then cp -r store/screenshots "$folder/"; fi
           package="$APP_DIRECTORY/bin/kazoos-packages/$version/$app_id-$version.kazoapp"
+          # The manifest of the package, not the generated one: the catalog compares it with the
+          # package its CI builds, and copies its "dependencies" into catalog.json (ADR 0248 §5),
+          # so the Store plans an installation without downloading every package.
           unzip -p "$package" manifest.json > "$folder/manifest.json"
           # The commit actually built, not the one that started the caller (they differ when the
           # SDK update or Tag a release calls this workflow on a new tag).

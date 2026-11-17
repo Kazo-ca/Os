@@ -551,9 +551,11 @@ public partial class FileView : IAsyncDisposable
 
     private void RebuildItems(FileSystemDirectorySnapshot snapshot, bool preserveSelection)
     {
-        HashSet<string> selectedNames = preserveSelection
-            ? new HashSet<string>(_selection.Select(item => item.FileName), StringComparer.Ordinal)
-            : [];
+        // The names in the order they were selected: "Open" on a multiple selection opens the files
+        // in that order, so a refresh must not put them back in the listing's order.
+        List<string> selectedOrder = preserveSelection ? [.. _selection.Select(item => item.FileName)] : [];
+        HashSet<string> selectedNames = new(selectedOrder, StringComparer.Ordinal);
+        List<FileViewItem> reselected = [];
 
         // An item being renamed in place survives a reload of the same folder (the watch refreshes
         // right after "New folder" created it): the views key the typed name by the item (ADR 0175).
@@ -586,10 +588,15 @@ public partial class FileView : IAsyncDisposable
             if (selectedNames.Contains(item.FileName))
             {
                 item.IsSelected = true;
-                _selection.Add(item);
+                reselected.Add(item);
             }
 
             _items.Add(item);
+        }
+
+        foreach (FileViewItem item in reselected.OrderBy(item => selectedOrder.IndexOf(item.FileName)))
+        {
+            _selection.Add(item);
         }
 
         Items = _items.AsReadOnly();

@@ -197,3 +197,12 @@ public sealed class KazoAppLaunchException : InvalidOperationException
     /// <summary>Gets the stable error code from the OS, when there is one.</summary>
     public string? ErrorCode { get; }
 }
+
+/// <summary>What <see cref="KazoApps.RequestInstallAsync"/> did (ADR 0248 §2).</summary>
+/// <param name="AppId">The package proposed.</param>
+/// <param name="StoreOpened">Whether the Kazo OS Store opened on its page.</param>
+/// <param name="Message">
+/// Without a Store, the sentence to show the user (« Installe … avec : kazopkg install … »), in the
+/// language of the calling process; <see langword="null"/> when the Store opened.
+/// </param>
+public sealed record KazoInstallRequestResult(string AppId, bool StoreOpened, string? Message);

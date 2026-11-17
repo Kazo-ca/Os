@@ -786,4 +786,7 @@ Annuler : décider au prochain lancement.</value>
   <data name="Capability.cloud-accounts.manage.Risk" xml:space="preserve">
     <value>Connecter ou retirer vos comptes Dropbox, OneDrive ou S3 et monter leur stockage comme lecteurs réseau.</value>
   </data>
+  <data name="Admin.App.InstallDependencies" xml:space="preserve">
+    <value>Installer {0} {1} avec ce qu'il lui faut pour tous les utilisateurs : {2}</value>
+  </data>
 </root>

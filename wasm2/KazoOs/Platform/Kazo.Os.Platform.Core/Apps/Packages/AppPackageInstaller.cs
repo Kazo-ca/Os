@@ -100,6 +100,13 @@ public sealed record AppPackageInstallContext(
     /// not assemblies of the OS (ADR 0261 §1).
     /// </summary>
     public IReadOnlySet<string> LoadedPackageLibraries { get; init; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// Gets the catalog apps uninstalled for the session (ADR 0048), each with whether it is the
+    /// machine file that uninstalls it: a dependency among them is reactivated by the plan, not
+    /// downloaded again (ADR 0248 §1), and reactivating it for the machine needs an administrator.
+    /// </summary>
+    public IReadOnlyDictionary<string, bool> DisabledApps { get; init; } = new Dictionary<string, bool>(StringComparer.Ordinal);
 }
 
 /// <summary>

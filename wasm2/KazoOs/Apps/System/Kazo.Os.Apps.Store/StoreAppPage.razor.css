@@ -388,3 +388,58 @@
     font-size: 0.78rem;
     color: var(--kos-info, #58a6ff);
 }
+
+/* ADR 0248 §2: the dependencies of the app and where each one stands. */
+.store-dependencies {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.store-dependency {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.store-dependency-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.store-dependency-name {
+    color: var(--kos-text-primary, #e6edf3);
+    font-weight: 600;
+}
+
+.store-dependency-state,
+.store-dependency-note {
+    color: var(--kos-text-secondary, #8b949e);
+}
+
+.store-dependency.is-installed {
+    color: var(--kos-success, #3fb950);
+}
+
+.store-dependency.is-withthisapp {
+    color: var(--kos-accent, #58a6ff);
+}
+
+.store-dependency.is-outofrange,
+.store-dependency-note.is-dangerous {
+    color: var(--kos-warning, #d29922);
+}
+
+.store-dependency.is-optional {
+    color: var(--kos-text-secondary, #8b949e);
+}
+
+.store-dependency code {
+    font-size: 0.75rem;
+    overflow-wrap: anywhere;
+}

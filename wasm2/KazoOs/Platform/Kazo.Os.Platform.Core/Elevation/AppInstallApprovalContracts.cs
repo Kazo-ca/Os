@@ -68,7 +68,52 @@ public sealed record AppInstallApprovalRequest(
     /// Gets the entry points of a feature (ADR 0260 §2), as "name (kind)" lines the window lists; empty for an app.
     /// </summary>
     public IReadOnlyList<string> FeatureEntryPoints { get; init; } = [];
+
+    /// <summary>
+    /// Gets the packages installed with the app, dependencies first (ADR 0248 §1): the window lists
+    /// each one, and the one approval covers the whole plan; empty for an app without missing dependency.
+    /// </summary>
+    public IReadOnlyList<AppInstallApprovalDependency> Dependencies { get; init; } = [];
+
+    /// <summary>Gets the names of the installed dependencies the plan reactivates (ADR 0248 §1, ADR 0048).</summary>
+    public IReadOnlyList<string> Reactivated { get; init; } = [];
+
+    /// <summary>
+    /// Gets the manifests of the features the plan installs (ADR 0248 §1, answer 268 A): the window
+    /// describes the permissions they declare (ADR 0246) with their own title and risk, although the
+    /// running OS does not know them yet.
+    /// </summary>
+    public IReadOnlyList<AppManifest> PlannedFeatures { get; init; } = [];
+
+    /// <summary>
+    /// Gets, for a removal, the names of the installed apps that need the package and are disabled
+    /// with it (ADR 0248 §3); empty otherwise.
+    /// </summary>
+    public IReadOnlyList<string> DisabledDependents { get; init; } = [];
 }
+
+/// <summary>One package a plan installs with the requested app (ADR 0248 §1), as the approval window lists it.</summary>
+/// <param name="AppId">Package identifier.</param>
+/// <param name="Name">Package name.</param>
+/// <param name="Version">Version installed.</param>
+/// <param name="PreviousVersion">Version it replaces, or <see langword="null"/>.</param>
+/// <param name="SizeBytes">Size of the package's files.</param>
+/// <param name="Source">The source, pinned to its version.</param>
+/// <param name="Trust">Trust level of the source.</param>
+/// <param name="SystemWide">Whether it is installed for every user (always for a feature, ADR 0260 §4).</param>
+/// <param name="IsFeature">Whether it is a feature: its whole permission set is approved with it (ADR 0260 §3).</param>
+/// <param name="DangerousCapabilities">Its dangerous capabilities, the permissions it declares included (ADR 0246).</param>
+public sealed record AppInstallApprovalDependency(
+    string AppId,
+    string Name,
+    string Version,
+    string? PreviousVersion,
+    long SizeBytes,
+    string Source,
+    AppSourceTrust Trust,
+    bool SystemWide,
+    bool IsFeature,
+    IReadOnlyList<string> DangerousCapabilities);
 
 /// <summary>How the approval window ended.</summary>
 public enum AppInstallApprovalOutcome

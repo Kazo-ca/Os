@@ -85,7 +85,7 @@
     <value>kazopkg: {0} updated from {1} to {2}</value>
   </data>
   <data name="Usage" xml:space="preserve">
-    <value>usage: kazopkg install &lt;appId|repo&gt;[@version] [--user|--system] | remove &lt;appId&gt; [--user|--system] | update [&lt;appId&gt;] | rollback &lt;appId&gt; [--user|--system] | repair [--system] | list | info &lt;appId|repo&gt; | sources [add &lt;source&gt; [--trusted] | remove &lt;source&gt;] | policy [block|unblock app|category|capability &lt;value&gt;]</value>
+    <value>usage: kazopkg install &lt;appId|repo&gt;[@version] [--user|--system] [--yes] | remove &lt;appId&gt; [--user|--system] [--yes] | update [&lt;appId&gt;] [--yes] | rollback &lt;appId&gt; [--user|--system] | repair [--system] | list | info &lt;appId|repo&gt; | sources [add &lt;source&gt; [--trusted] | remove &lt;source&gt;] | policy [block|unblock app|category|capability &lt;value&gt;]</value>
   </data>
   <data name="Yes" xml:space="preserve">
     <value>yes</value>
@@ -188,5 +188,50 @@
   </data>
   <data name="FeatureEntryPoints" xml:space="preserve">
     <value>  entry points: {0}</value>
+  </data>
+  <data name="Cancelled" xml:space="preserve">
+    <value>kazopkg: cancelled, nothing was installed or removed (--yes answers for you)</value>
+  </data>
+  <data name="InstallStopped" xml:space="preserve">
+    <value>kazopkg: the installation of {0} is stopped: {1}</value>
+  </data>
+  <data name="Reactivated" xml:space="preserve">
+    <value>kazopkg: {0} reactivated</value>
+  </data>
+  <data name="PlanHeader" xml:space="preserve">
+    <value>kazopkg: this installation installs, in this order:</value>
+  </data>
+  <data name="PlanPackage" xml:space="preserve">
+    <value>  {0} {1} from {2}, {3}, for {4} ({5})</value>
+  </data>
+  <data name="PlanFeature" xml:space="preserve">
+    <value>feature</value>
+  </data>
+  <data name="PlanRequested" xml:space="preserve">
+    <value>requested</value>
+  </data>
+  <data name="PlanDependency" xml:space="preserve">
+    <value>needed</value>
+  </data>
+  <data name="PlanDangerous" xml:space="preserve">
+    <value>    dangerous permissions: {0}</value>
+  </data>
+  <data name="PlanReactivated" xml:space="preserve">
+    <value>  {0}: installed, reactivated</value>
+  </data>
+  <data name="PlanAdministrator" xml:space="preserve">
+    <value>kazopkg: an administrator approves this installation once, for every package</value>
+  </data>
+  <data name="ConfirmPrompt" xml:space="preserve">
+    <value>Continue? [y/N] </value>
+  </data>
+  <data name="YesKey" xml:space="preserve">
+    <value>y</value>
+  </data>
+  <data name="DependentsWarning" xml:space="preserve">
+    <value>kazopkg: {0} will no longer work and will be disabled (their data stays; installing this package again reactivates them)</value>
+  </data>
+  <data name="Disabled" xml:space="preserve">
+    <value>kazopkg: {0} disabled</value>
   </data>
 </root>

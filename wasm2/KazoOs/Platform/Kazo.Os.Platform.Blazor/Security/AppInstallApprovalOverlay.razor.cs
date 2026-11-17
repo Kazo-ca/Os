@@ -139,11 +139,13 @@ public sealed partial class AppInstallApprovalOverlay
     /// <summary>
     /// The capabilities with their title and risk sentence (ADR 0104), dangerous ones first, as the
     /// catalog of the running OS describes them (ADR 0246): a feature's permission shows its own texts
-    /// and the feature that declares it.
+    /// and the feature that declares it. The features of the plan (ADR 0248, answer 268 A) describe
+    /// their permissions before they are installed.
     /// </summary>
-    private IEnumerable<CapabilityLine> Describe(IReadOnlyList<string> capabilities)
+    private IEnumerable<CapabilityLine> Describe(IReadOnlyList<string> capabilities, IReadOnlyList<AppManifest> plannedFeatures)
     {
-        ICapabilityCatalog catalog = Services?.GetService(typeof(ICapabilityCatalog)) as ICapabilityCatalog ?? BuiltInCapabilityCatalog.Instance;
+        ICapabilityCatalog running = Services?.GetService(typeof(ICapabilityCatalog)) as ICapabilityCatalog ?? BuiltInCapabilityCatalog.Instance;
+        ICapabilityCatalog catalog = plannedFeatures.Count == 0 ? running : new FeatureCapabilityCatalog(running, plannedFeatures);
         return capabilities
             .Select(capability =>
             {
