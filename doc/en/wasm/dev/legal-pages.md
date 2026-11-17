@@ -44,7 +44,7 @@ updating the pages and their "Effective" date.
 | Identity read: display name and account id (`users/get_current_account`, `/me`) | `CloudOAuthProvider.cs`, `CloudAccountStore.cs` (`DisplayName`, `ProviderAccountId`) |
 | Tokens sealed AES-256-GCM on the device, key in the keyring, never synchronized | [ADR 0269](adr/0269-cloud-tokens-stay-on-the-device.md), [`cloud-accounts.md`](cloud-accounts.md) |
 | Removal: unmount, erase, Dropbox revocation | `CloudAccountService.cs` (`RemoveAsync`) |
-| Roboto font loaded from `fonts.googleapis.com` | `OS/Kazo.Os.Ecosystem/wwwroot/index.html` |
+| Roboto font served by the site (no call to Google Fonts) | `OS/Kazo.Os.Ecosystem.Host/wwwroot/fonts/roboto/`, `OS/Kazo.Os.Ecosystem/wwwroot/index.html` |
 | Store catalog and packages on `raw.githubusercontent.com` | `Platform.Core/Apps/Packages/AppPackageDefaults.cs`, `AppPackageSource.cs` |
 | Real network only with `network.real.access`, approved by an administrator | [`dangerous-capability-approval.md`](dangerous-capability-approval.md) |
 | Kazo AI: key sent only to the chosen service; local model from Hugging Face | repository `Kazo-ca/Os-App-AI`, `doc/en/providers.md` |
@@ -58,8 +58,9 @@ updating the pages and their "Effective" date.
 - Published contact: `confidentialite@kazo.ca` (dedicated address).
 - Governing law: laws of Québec and federal laws of Canada, courts of Québec,
   subject to consumer rights.
-- Google Fonts: disclosed in the policy; Roboto will be served by the site in a
-  separate PR, after which the Google Fonts line leaves the policy.
+- Google Fonts: removed; Roboto (`@fontsource/roboto` 5.3.0, SIL OFL 1.1, latin
+  and latin-ext subsets, weights 300 to 700) is served by the site from
+  `_content/Kazo.Os.Ecosystem.Host/fonts/roboto/roboto.css`.
 - One pair of bilingual pages for every provider (choice of 2026-11-15,
   [`cloud-accounts.md`](cloud-accounts.md#public-pages-for-the-providers)).
 
@@ -89,4 +90,4 @@ updating the pages and their "Effective" date.
 - [x] Link the pages from the sign-in footer and About.
 - [x] Unit and E2E tests.
 - [x] FR + EN documentation and indexes.
-- [ ] Serve Roboto from the site (separate PR), then remove Google Fonts from the policy.
+- [x] Serve Roboto from the site and remove Google Fonts from the policy.
