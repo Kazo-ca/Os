@@ -64,7 +64,6 @@ public sealed class OriginStorageService
     private readonly Lock _evictionGate = new();
     private readonly Dictionary<string, KazoStorageChangedEventArgs> _pendingChanges = new(StringComparer.Ordinal);
     private readonly List<FeatureStorageRecord> _toNotify = [];
-    private bool _persistenceGranted;
 
     /// <summary>Creates the service.</summary>
     /// <param name="storage">The origin's storage.</param>
@@ -135,7 +134,8 @@ public sealed class OriginStorageService
 
     /// <summary>
     /// ADR 0250 §1: asks the browser to protect the origin. The OS asks for the whole origin, one call at
-    /// a time, and not at all once the origin is protected: a feature and Settings never ask twice.
+    /// a time, and not at all while the origin is protected: a feature and Settings never ask twice. The
+    /// state is read again at each call, since the browser may withdraw its protection.
     /// </summary>
     /// <param name="cancellationToken">Cancels the request.</param>
     /// <returns>Whether the origin is protected.</returns>
@@ -144,23 +144,17 @@ public sealed class OriginStorageService
         await _persistGate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            if (_persistenceGranted)
-            {
-                return true;
-            }
-
             if (await _storage.GetStatusAsync(cancellationToken).ConfigureAwait(false) is { IsPersisted: true })
             {
-                _persistenceGranted = true;
                 return true;
             }
 
             PersistenceRequests++;
-            _persistenceGranted = await _storage.RequestPersistenceAsync(cancellationToken).ConfigureAwait(false);
+            bool granted = await _storage.RequestPersistenceAsync(cancellationToken).ConfigureAwait(false);
             _kernelLog?.Write(
                 KernelLogLevel.Notice,
-                _persistenceGranted ? "storage: persistence granted by the browser" : "storage: persistence refused by the browser");
-            return _persistenceGranted;
+                granted ? "storage: persistence granted by the browser" : "storage: persistence refused by the browser");
+            return granted;
         }
         finally
         {
@@ -173,11 +167,19 @@ public sealed class OriginStorageService
     /// <param name="name">Its name.</param>
     /// <param name="path">The marker's path from the root of the Origin Private File System.</param>
     /// <param name="cancellationToken">Cancels the write.</param>
-    /// <exception cref="ArgumentException">The path is empty, too long, absolute or leaves the root.</exception>
-    public ValueTask RegisterMarkerAsync(string featureId, string name, string path, CancellationToken cancellationToken = default)
+    /// <exception cref="ArgumentException">
+    /// The path is empty, too long, absolute or leaves the root; or the file is not in the Origin Private
+    /// File System yet (a marker registered before it is written would read as an eviction at the next boot).
+    /// </exception>
+    public async ValueTask RegisterMarkerAsync(string featureId, string name, string path, CancellationToken cancellationToken = default)
     {
         string marker = NormalizeMarkerPath(path);
-        return UpdateAsync(featureId, record => record with { Name = name, MarkerPath = marker }, cancellationToken);
+        if (await _storage.FileExistsAsync(marker, cancellationToken).ConfigureAwait(false) == false)
+        {
+            throw new ArgumentException($"'{marker}' is not in the Origin Private File System: write the marker first, then register it.", nameof(path));
+        }
+
+        await UpdateAsync(featureId, record => record with { Name = name, MarkerPath = marker }, cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>Records the bytes a feature declared (ADR 0250 §3).</summary>
@@ -234,7 +236,12 @@ public sealed class OriginStorageService
                     _toNotify.Add(record);
                 }
 
-                await UpdateAsync(record.FeatureId, static current => current with { MarkerPath = null }, cancellationToken).ConfigureAwait(false);
+                // Forget only the marker found missing: one the feature registered meanwhile stays.
+                await UpdateAsync(
+                        record.FeatureId,
+                        current => string.Equals(current.MarkerPath, record.MarkerPath, StringComparison.Ordinal) ? current with { MarkerPath = null } : current,
+                        cancellationToken)
+                    .ConfigureAwait(false);
             }
 
             NotifyEvictions();

@@ -182,6 +182,16 @@ public sealed class OriginStorageTests
         Assert.Null((await fixture.GatewayFor(FeaturePermissionFixtures.Client()).GetEstimateAsync()).DeclaredUsageBytes);
     }
 
+    [Fact]
+    public async Task A_marker_must_be_written_before_it_is_registered()
+    {
+        Fixture fixture = await Fixture.CreateAsync();
+        AppStorageGateway feature = fixture.GatewayFor(FeaturePermissionFixtures.Feature());
+
+        await Assert.ThrowsAsync<ArgumentException>(() => feature.RegisterMarkerAsync(FeatureDisk.MarkerPath).AsTask());
+        Assert.Empty(await fixture.Service.GetFeaturesAsync());
+    }
+
     [Theory]
     [InlineData("/machines/marker")]
     [InlineData("machines/../marker")]
