@@ -195,7 +195,8 @@ Work item 4 wires the declared types into the file system
   repeats the operation; otherwise the drive is disconnected (`NotAllowed` if
   the account was removed).
 - **Account.** A drive of a provided type always belongs to an account of that
-  type; the OS refuses an account of another type and lends the provider only
+  type and to the feature that added it; the OS refuses an account of another
+  type, or of another feature serving the same type, and lends the provider only
   that account's context (`KazoDriveState` → `Granted`, `Prompt` for
   `SignInRequired`, else `Unavailable`). A name returned by `ListAsync` that
   could leave the folder is not shown; a file larger than

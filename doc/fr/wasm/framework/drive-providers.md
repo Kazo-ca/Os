@@ -198,7 +198,8 @@ Le chantier 4 branche les types déclarés dans le système de fichiers
   refait l'opération ; sinon le lecteur est déconnecté (`NotAllowed` si le
   compte a été retiré).
 - **Compte.** Un lecteur d'un type fourni appartient toujours à un compte de ce
-  type ; l'OS refuse un compte d'un autre type et ne prête au fournisseur que
+  type et à la fonctionnalité qui l'a ajouté ; l'OS refuse un compte d'un autre
+  type ou d'une autre fonctionnalité qui sert le même type, et ne prête au fournisseur que
   le contexte de ce compte (`KazoDriveState` → `Granted`, `Prompt` pour
   `SignInRequired`, sinon `Unavailable`). Un nom renvoyé par `ListAsync` qui
   pourrait sortir du dossier n'est pas affiché ; un fichier de plus de

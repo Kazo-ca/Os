@@ -97,6 +97,13 @@ public sealed record CloudAccount(
     /// <see langword="null"/> otherwise. The secret fields are never here: they stay sealed.
     /// </summary>
     public IReadOnlyDictionary<string, string>? Options { get; init; }
+
+    /// <summary>
+    /// Gets the id of the feature whose declared drive type the account belongs to (ADR 0282 §3), or
+    /// <see langword="null"/> for an account of a type the OS ships. Only that feature's provider is
+    /// ever lent the account: another feature serving the same type later finds no account.
+    /// </summary>
+    public string? FeatureId { get; init; }
 }
 
 /// <summary>A provider this OS can connect, with the scopes it has an app id for.</summary>
