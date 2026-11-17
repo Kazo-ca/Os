@@ -12,8 +12,12 @@ at the end of each series or when a convention changes.
 - **Active code**: `wasm2/KazoOs/` (simulated OS in Blazor WebAssembly, .NET 10,
   solution `Kazo.Os.sln`). `src/` is the old version, kept as a
   reference.
-- **Version**: Kazo OS and the SDK move to **3.4.1** (branch
-  `release/3.4.1`, 2026-11-15), a fix: "Open" on a multiple selection in
+- **Version**: Kazo OS and the SDK move to **3.4.2** (branch
+  `release/3.4.2`, 2026-11-17), a fix: the publish keeps `System.Linq`,
+  `System.Text.RegularExpressions` and `System.Threading.Channels` whole
+  (ADR 0280, Os#595), so Kazo AI installs from the Store; Kazo AI must then be
+  rebuilt on 3.4.2 to declare 3.4.2 as its minimum version. No SDK API change.
+- **Version 3.4.1** (branch `release/3.4.1`, 2026-11-15, published), a fix: "Open" on a multiple selection in
   the File Explorer keeps the chosen order after a refresh (Os#569). It
   unblocks Webamp's update, whose order test failed with 3.4.0. No SDK change.
 - **Version 3.4.0** stable (2026-11-15, published), after the prereleases 3.4.0-preview.1 to 4
