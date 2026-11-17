@@ -197,3 +197,39 @@ Kazo.Os.Platform.Core.Network.RelayPolicyCache.RelayPolicyCache(Kazo.Os.Platform
 static readonly Kazo.Os.Platform.Core.Network.RelayPolicyCache.Lifetime -> System.TimeSpan
 Kazo.Os.Platform.Core.ServerConnection.RealNetworkGrantReconciler.GrantsChanged.get -> System.Action?
 Kazo.Os.Platform.Core.ServerConnection.RealNetworkGrantReconciler.GrantsChanged.init -> void
+const Kazo.Os.Platform.Core.Roles.FeatureRolesDocument.FileName = "roles.config" -> string!
+Kazo.Os.Platform.Core.Roles.FeatureRolesDocument
+const Kazo.Os.Platform.Core.Roles.FeatureRolesDocument.Section = "roles" -> string!
+const Kazo.Os.Platform.Core.Roles.FeatureRolesDocument.DefaultContent = "# Roles of the features granted to ordinary users (ADR 0247). One role per line, set to the\n# comma-separated ids of the users who hold it. Administrators hold every role and are not listed.\n# Edit with: sudo kazorole grant|revoke <user> <role>, or Settings > Users.\n[roles]\n" -> string!
+Kazo.Os.Platform.Core.Roles.DeclaredFeatureRole
+Kazo.Os.Platform.Core.Roles.DeclaredFeatureRole.FeatureName.get -> string!
+Kazo.Os.Platform.Core.Roles.DeclaredFeatureRole.FeatureId.get -> string!
+override Kazo.Os.Platform.Core.Roles.DeclaredFeatureRole.ToString() -> string!
+Kazo.Os.Platform.Core.Roles.DeclaredFeatureRole.FeatureName.init -> void
+Kazo.Os.Platform.Core.Roles.DeclaredFeatureRole.Role.get -> Kazo.Os.App.Abstractions.AppRoleManifest!
+static Kazo.Os.Platform.Core.Roles.DeclaredFeatureRole.operator !=(Kazo.Os.Platform.Core.Roles.DeclaredFeatureRole? left, Kazo.Os.Platform.Core.Roles.DeclaredFeatureRole? right) -> bool
+Kazo.Os.Platform.Core.Roles.DeclaredFeatureRole.FeatureId.init -> void
+Kazo.Os.Platform.Core.Roles.DeclaredFeatureRole.Role.init -> void
+static Kazo.Os.Platform.Core.Roles.DeclaredFeatureRole.operator ==(Kazo.Os.Platform.Core.Roles.DeclaredFeatureRole? left, Kazo.Os.Platform.Core.Roles.DeclaredFeatureRole? right) -> bool
+override Kazo.Os.Platform.Core.Roles.DeclaredFeatureRole.GetHashCode() -> int
+override Kazo.Os.Platform.Core.Roles.DeclaredFeatureRole.Equals(object? obj) -> bool
+Kazo.Os.Platform.Core.Roles.DeclaredFeatureRole.Equals(Kazo.Os.Platform.Core.Roles.DeclaredFeatureRole? other) -> bool
+Kazo.Os.Platform.Core.Roles.DeclaredFeatureRole.<Clone>$() -> Kazo.Os.Platform.Core.Roles.DeclaredFeatureRole!
+Kazo.Os.Platform.Core.Roles.DeclaredFeatureRole.Deconstruct(out string! FeatureId, out string! FeatureName, out Kazo.Os.App.Abstractions.AppRoleManifest! Role) -> void
+Kazo.Os.Platform.Core.Roles.FeatureRoleService
+const Kazo.Os.Platform.Core.Roles.FeatureRoleService.GrantAction = "role.grant" -> string!
+const Kazo.Os.Platform.Core.Roles.FeatureRoleService.DeniedAction = "feature.role-denied" -> string!
+const Kazo.Os.Platform.Core.Roles.FeatureRoleService.RevokeAction = "role.revoke" -> string!
+Kazo.Os.Platform.Core.Roles.FeatureRoleService.FeatureRoleService(System.Func<Kazo.Os.Platform.Core.AppCatalog!>! catalog, Kazo.Os.Platform.Core.Settings.IOsSettingsService! settings, Kazo.Os.Simulation.Abstractions.Diagnostics.IAuditLog? audit = null, System.Func<System.DateTimeOffset>? clock = null) -> void
+Kazo.Os.Platform.Core.Roles.FeatureRoleService.DeclaredRoles.get -> System.Collections.Generic.IReadOnlyList<Kazo.Os.Platform.Core.Roles.DeclaredFeatureRole!>!
+Kazo.Os.Platform.Core.Roles.FeatureRoleService.RefreshAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+static Kazo.Os.Platform.Core.Roles.FeatureRolesDocument.MachineFile.get -> Kazo.Os.Platform.Core.Settings.OsSettingsFile!
+Kazo.Os.Platform.Core.Roles.FeatureRoleService.RolesOf(Kazo.Os.Simulation.Abstractions.Sessions.AuthenticatedPrincipal! principal, bool isRootElevated = false) -> System.Collections.Generic.IReadOnlySet<string!>!
+Kazo.Os.Platform.Core.Roles.FeatureRoleService.HasRole(Kazo.Os.Simulation.Abstractions.Sessions.AuthenticatedPrincipal! principal, string! role, bool isRootElevated = false) -> bool
+Kazo.Os.Platform.Core.Roles.DeclaredFeatureRole.DeclaredFeatureRole(string! FeatureId, string! FeatureName, Kazo.Os.App.Abstractions.AppRoleManifest! Role) -> void
+Kazo.Os.Platform.Core.Roles.FeatureRoleService.HoldersOf(string! role) -> System.Collections.Generic.IReadOnlySet<string!>!
+Kazo.Os.Platform.Core.Roles.FeatureRoleService.GrantAsync(string! role, Kazo.Os.Simulation.Abstractions.Sessions.LocalUser! user, string! administrator, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<bool>
+Kazo.Os.Platform.Core.Roles.FeatureRoleService.RevokeAsync(string! role, Kazo.Os.Simulation.Abstractions.Sessions.LocalUser! user, string! administrator, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<bool>
+static Kazo.Os.Platform.Core.Roles.FeatureRolesDocument.Parse(string? content) -> System.Collections.Generic.IReadOnlyDictionary<string!, System.Collections.Generic.IReadOnlySet<string!>!>!
+Kazo.Os.Platform.Core.Roles.FeatureRoleService.RecordDenied(Kazo.Os.App.Abstractions.AppManifest! app, Kazo.Os.Simulation.Abstractions.Sessions.AuthenticatedPrincipal! principal) -> void
+static Kazo.Os.Platform.Core.Roles.FeatureRolesDocument.SetHolders(string? content, string! role, System.Collections.Generic.IEnumerable<string!>! holders) -> string!
