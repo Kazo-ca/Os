@@ -194,6 +194,17 @@ Le manifeste les écrit dans `providedServices`
 `KazoFeatures.GetServiceAsync<T>()`, qui rend `null` quand la fonctionnalité
 est absente ou désactivée : voir [`feature-services.md`](feature-services.md).
 
+#### Types de lecteurs réseau : `DriveProviders` (ADR 0282)
+
+Une fonctionnalité qui demande la capacité dangereuse `drives.provide` peut
+fournir des **types de lecteurs réseau** (`mount -t pcloud`) : chaque
+`KazoDriveProviderDeclaration` donne le type, le nom affiché, la classe dérivée
+de `KazoDriveProvider`, la connexion (OAuth ou formulaire), l'icône et les
+hôtes joints. Le manifeste les écrit dans `driveProviders`. Une app ordinaire
+qui déclare l'un ou l'autre est refusée (`manifest.feature.only`,
+`KOSAPP0033`) ; une classe que l'OS ne peut pas créer donne `KOSAPP0036`. Voir
+[`drive-providers.md`](drive-providers.md).
+
 ### Intents et schémas d'URI (ADR 0096)
 
 - `Intents` (`AppIntentDeclarationManifest(IntentId, PayloadSchemaAssetPath)`)
@@ -356,7 +367,8 @@ avec le nom complet de la classe en cause : `App.csproj : error KOSAPP0005: [Ns.
 | `KOSAPP0025` | Retiré, jamais réutilisé : refusait à une app non système `kazoos.file-view` et `kazoos.file-dialogs` (ADR 0153 §4), que l'ADR 0156 ouvre à toute app fenêtrée (ADR 0158 §1). |
 | `KOSAPP0030` | Frontière du SDK : `ProjectReference` interdite dans un projet d'app (ADR 0055 §2, numéro fixé par l'ADR 0059). Émis par la cible `ValidateKazoOsSdkBoundary`. Voir [`app-sdk.md`](app-sdk.md). |
 | `KOSAPP0032` | Fonctionnalité (ADR 0260 §1) : une `FeatureDefinition` surcharge `EntryPoint` ; une fonctionnalité n'a pas de point d'entrée à elle, seuls ses `EntryPoints` s'exécutent. |
-| `KOSAPP0033` | Fonctionnalité (ADR 0260 §5) : une app ordinaire déclare ce que seule une fonctionnalité peut (le genre `Feature` hors d'une `FeatureDefinition`), ou une fonctionnalité est déclarée à côté d'autres apps dans un même projet. |
+| `KOSAPP0033` | Fonctionnalité (ADR 0260 §5) : une app ordinaire déclare ce que seule une fonctionnalité peut (le genre `Feature` hors d'une `FeatureDefinition`, ou la capacité `drives.provide`, ADR 0282), ou une fonctionnalité est déclarée à côté d'autres apps dans un même projet. |
+| `KOSAPP0036` | Fournisseur de lecteurs (ADR 0282 §1) : la classe d'un `DriveProviders` ne dérive pas de `KazoDriveProvider`, est abstraite, n'est pas dans l'assemblage de la fonctionnalité ou n'a pas de constructeur public `()` ou `(IFeatureServiceContext)` ; un type réservé ou mal formé échoue aussi au build ([`drive-providers.md`](drive-providers.md)). |
 | `KOSAPP0031` | Frontière du SDK : service injecté qui n'est ni un type du SDK, ni MudBlazor, ni `IJSRuntime` (ADR 0055 §3, ADR 0059). Voir [`app-sdk.md`](app-sdk.md). |
 | `KOSAPP0040` | Traductions du manifeste (ADR 0104 §4) : `Resources/AppManifest.<culture>.resx` illisible, nom de culture invalide, clé autre que `Name`, `Description`, `Terminal.Usage` (préfixées de l'id dans un projet à plusieurs apps), `Terminal.Usage` pour une app qui n'est pas une commande, ou fichier `localization/` référencé illisible à l'agrégation. Voir [`localization.md`](localization.md). |
 | `KOSAPP0090` | Arguments de l'outil invalides. |

@@ -73,7 +73,8 @@ public static class AppManifestJsonSerializer
             "oomScoreAdj",
             "realNetworkPorts",
             "directNetworkHosts",
-            "providedServices"
+            "providedServices",
+            "driveProviders"
         });
 
         return JsonSerializer.Deserialize(document.RootElement.GetRawText(), AppManifestJsonSerializerContext.Default.AppManifest)
@@ -190,6 +191,12 @@ public static class AppManifestJsonSerializer
             ProvidedServices = manifest.ProvidedServices is not { Count: > 0 }
                 ? null
                 : [.. manifest.ProvidedServices.OrderBy(item => item.Contract, StringComparer.Ordinal)],
+            // ADR 0282: an empty list is written as no property; types sorted, hosts sorted, the
+            // form fields keep their declared order (it is their display order).
+            DriveProviders = manifest.DriveProviders is not { Count: > 0 }
+                ? null
+                : [.. manifest.DriveProviders.OrderBy(item => item.Type, StringComparer.Ordinal)
+                    .Select(item => item with { Hosts = [.. (item.Hosts ?? []).OrderBy(host => host, StringComparer.Ordinal)] })],
             // The first URL is the site's primary address: the declared order is kept.
             Web = manifest.Web
         };
@@ -283,6 +290,10 @@ public static class AppManifestJsonSerializer
                 case "providedServices":
                     ValidateArray(property.Value, $"{path}.providedServices", ["contract", "implementation", "entryPoint"]);
                     break;
+                case "driveProviders":
+                    ValidateArray(property.Value, $"{path}.driveProviders", ["type", "name", "provider", "connection", "icon", "hosts"]);
+                    ValidateDriveProviderConnections(property.Value, $"{path}.driveProviders");
+                    break;
                 case "contextMenus":
                     ValidateArray(property.Value, $"{path}.contextMenus", ["name", "title", "titles", "target", "intent", "icon", "scopes", "types", "selection", "first", "after", "afterGroup", "parent", "screens", "screen"]);
                     if (property.Value.ValueKind != JsonValueKind.Array)
@@ -318,6 +329,55 @@ public static class AppManifestJsonSerializer
                     break;
                 default:
                     break;
+            }
+        }
+    }
+
+    /// <summary>Rejects unknown properties inside each provider's <c>connection</c> (ADR 0282 §3).</summary>
+    private static void ValidateDriveProviderConnections(JsonElement providers, string path)
+    {
+        if (providers.ValueKind != JsonValueKind.Array)
+        {
+            return;
+        }
+
+        foreach (JsonElement provider in providers.EnumerateArray().Where(static item => item.ValueKind == JsonValueKind.Object))
+        {
+            if (!provider.TryGetProperty("connection", out JsonElement connection))
+            {
+                continue;
+            }
+
+            string at = $"{path}.connection";
+            ValidateObject(connection, at, ["kind", "oauth", "fields"]);
+            if (connection.ValueKind != JsonValueKind.Object)
+            {
+                continue;
+            }
+
+            if (connection.TryGetProperty("fields", out JsonElement fields))
+            {
+                ValidateArray(fields, $"{at}.fields", ["name", "label", "kind", "secret", "required", "default", "choices"]);
+            }
+
+            if (connection.TryGetProperty("oauth", out JsonElement oauth))
+            {
+                ValidateObject(oauth, $"{at}.oauth", ["authorizationEndpoint", "tokenEndpoint", "revocationEndpoint", "fullAccess", "appFolder", "appFolderPath", "extraAuthorizationParameters", "identity"]);
+                if (oauth.ValueKind == JsonValueKind.Object)
+                {
+                    foreach (string client in new[] { "fullAccess", "appFolder" })
+                    {
+                        if (oauth.TryGetProperty(client, out JsonElement value))
+                        {
+                            ValidateObject(value, $"{at}.oauth.{client}", ["clientId", "scope"]);
+                        }
+                    }
+
+                    if (oauth.TryGetProperty("identity", out JsonElement identity))
+                    {
+                        ValidateObject(identity, $"{at}.oauth.identity", ["address", "idPath", "usePost", "namePaths"]);
+                    }
+                }
             }
         }
     }
@@ -371,6 +431,14 @@ public static class AppManifestJsonSerializer
 [JsonSerializable(typeof(WindowOptions))]
 [JsonSerializable(typeof(WebAppManifest))]
 [JsonSerializable(typeof(WebBlazorManifest))]
+[JsonSerializable(typeof(AppDriveProviderManifest))]
+[JsonSerializable(typeof(AppDriveConnectionManifest))]
+[JsonSerializable(typeof(AppDriveOAuthManifest))]
+[JsonSerializable(typeof(AppDriveOAuthClientManifest))]
+[JsonSerializable(typeof(AppDriveIdentityManifest))]
+[JsonSerializable(typeof(AppDriveFormFieldManifest))]
+[JsonSerializable(typeof(AppDriveConnectionKind))]
+[JsonSerializable(typeof(AppDriveFormFieldKind))]
 [JsonSerializable(typeof(AppKind))]
 [JsonSerializable(typeof(AppExecutionHost))]
 [JsonSerializable(typeof(AppLaunchVisibility))]

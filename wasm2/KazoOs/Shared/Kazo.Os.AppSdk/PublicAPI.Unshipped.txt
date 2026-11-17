@@ -1,6 +1,168 @@
 #nullable enable
+abstract Kazo.Os.AppSdk.Drives.KazoDriveFolder.CreateFolderAsync(Kazo.Os.AppSdk.Drives.KazoDrivePath! path, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+abstract Kazo.Os.AppSdk.Drives.KazoDriveFolder.DeleteAsync(Kazo.Os.AppSdk.Drives.KazoDrivePath! path, bool recursive, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+abstract Kazo.Os.AppSdk.Drives.KazoDriveFolder.GetStateAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.Drives.KazoDriveState>
+abstract Kazo.Os.AppSdk.Drives.KazoDriveFolder.ListAsync(Kazo.Os.AppSdk.Drives.KazoDrivePath! path, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.Drives.KazoDriveEntry!>!>
+abstract Kazo.Os.AppSdk.Drives.KazoDriveFolder.ReadAsync(Kazo.Os.AppSdk.Drives.KazoDrivePath! path, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<byte[]!>
+abstract Kazo.Os.AppSdk.Drives.KazoDriveFolder.StatAsync(Kazo.Os.AppSdk.Drives.KazoDrivePath! path, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.Drives.KazoDriveEntry!>
+abstract Kazo.Os.AppSdk.Drives.KazoDriveFolder.WriteAsync(Kazo.Os.AppSdk.Drives.KazoDrivePath! path, System.ReadOnlyMemory<byte> content, string? ifRevision, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+abstract Kazo.Os.AppSdk.Drives.KazoDriveProvider.OpenAsync(Kazo.Os.AppSdk.Drives.KazoDriveOpenRequest! request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.Drives.KazoDriveFolder!>
+const Kazo.Os.AppSdk.Drives.KazoDriveLimits.MaxFileBytes = 134217728 -> long
+const Kazo.Os.AppSdk.Drives.KazoDrivePath.MaxNameLength = 255 -> int
+Kazo.Os.AppSdk.Drives.IKazoDriveProviderContext
+Kazo.Os.AppSdk.Drives.IKazoDriveProviderContext.Account.get -> Kazo.Os.AppSdk.Drives.KazoDriveAccount?
+Kazo.Os.AppSdk.Drives.IKazoDriveProviderContext.GetAccessTokenAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<string!>
+Kazo.Os.AppSdk.Drives.IKazoDriveProviderContext.GetSecretAsync(string! name, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<string?>
+Kazo.Os.AppSdk.Drives.IKazoDriveProviderContext.NotifyAvailabilityChanged() -> void
+Kazo.Os.AppSdk.Drives.IKazoDriveProviderContext.Type.get -> string!
+Kazo.Os.AppSdk.Drives.KazoDriveAccount
+Kazo.Os.AppSdk.Drives.KazoDriveAccount.<Clone>$() -> Kazo.Os.AppSdk.Drives.KazoDriveAccount!
+Kazo.Os.AppSdk.Drives.KazoDriveAccount.Deconstruct(out string! Id, out string! DisplayName) -> void
+Kazo.Os.AppSdk.Drives.KazoDriveAccount.DisplayName.get -> string!
+Kazo.Os.AppSdk.Drives.KazoDriveAccount.DisplayName.init -> void
+Kazo.Os.AppSdk.Drives.KazoDriveAccount.Equals(Kazo.Os.AppSdk.Drives.KazoDriveAccount? other) -> bool
+Kazo.Os.AppSdk.Drives.KazoDriveAccount.Id.get -> string!
+Kazo.Os.AppSdk.Drives.KazoDriveAccount.Id.init -> void
+Kazo.Os.AppSdk.Drives.KazoDriveAccount.KazoDriveAccount(string! Id, string! DisplayName) -> void
+Kazo.Os.AppSdk.Drives.KazoDriveEntry
+Kazo.Os.AppSdk.Drives.KazoDriveEntry.<Clone>$() -> Kazo.Os.AppSdk.Drives.KazoDriveEntry!
+Kazo.Os.AppSdk.Drives.KazoDriveEntry.Deconstruct(out string! Name, out Kazo.Os.AppSdk.Drives.KazoDriveEntryKind Kind, out long Length, out System.DateTimeOffset? LastModifiedUtc) -> void
+Kazo.Os.AppSdk.Drives.KazoDriveEntry.Equals(Kazo.Os.AppSdk.Drives.KazoDriveEntry? other) -> bool
+Kazo.Os.AppSdk.Drives.KazoDriveEntry.KazoDriveEntry(string! Name, Kazo.Os.AppSdk.Drives.KazoDriveEntryKind Kind, long Length, System.DateTimeOffset? LastModifiedUtc) -> void
+Kazo.Os.AppSdk.Drives.KazoDriveEntry.Kind.get -> Kazo.Os.AppSdk.Drives.KazoDriveEntryKind
+Kazo.Os.AppSdk.Drives.KazoDriveEntry.Kind.init -> void
+Kazo.Os.AppSdk.Drives.KazoDriveEntry.LastModifiedUtc.get -> System.DateTimeOffset?
+Kazo.Os.AppSdk.Drives.KazoDriveEntry.LastModifiedUtc.init -> void
+Kazo.Os.AppSdk.Drives.KazoDriveEntry.Length.get -> long
+Kazo.Os.AppSdk.Drives.KazoDriveEntry.Length.init -> void
+Kazo.Os.AppSdk.Drives.KazoDriveEntry.Name.get -> string!
+Kazo.Os.AppSdk.Drives.KazoDriveEntry.Name.init -> void
+Kazo.Os.AppSdk.Drives.KazoDriveEntry.Revision.get -> string?
+Kazo.Os.AppSdk.Drives.KazoDriveEntry.Revision.init -> void
+Kazo.Os.AppSdk.Drives.KazoDriveEntryKind
+Kazo.Os.AppSdk.Drives.KazoDriveEntryKind.File = 0 -> Kazo.Os.AppSdk.Drives.KazoDriveEntryKind
+Kazo.Os.AppSdk.Drives.KazoDriveEntryKind.Folder = 1 -> Kazo.Os.AppSdk.Drives.KazoDriveEntryKind
+Kazo.Os.AppSdk.Drives.KazoDriveErrorKind
+Kazo.Os.AppSdk.Drives.KazoDriveErrorKind.AccessDenied = 10 -> Kazo.Os.AppSdk.Drives.KazoDriveErrorKind
+Kazo.Os.AppSdk.Drives.KazoDriveErrorKind.Exists = 1 -> Kazo.Os.AppSdk.Drives.KazoDriveErrorKind
+Kazo.Os.AppSdk.Drives.KazoDriveErrorKind.FileTooLarge = 5 -> Kazo.Os.AppSdk.Drives.KazoDriveErrorKind
+Kazo.Os.AppSdk.Drives.KazoDriveErrorKind.InvalidName = 9 -> Kazo.Os.AppSdk.Drives.KazoDriveErrorKind
+Kazo.Os.AppSdk.Drives.KazoDriveErrorKind.NotEmpty = 8 -> Kazo.Os.AppSdk.Drives.KazoDriveErrorKind
+Kazo.Os.AppSdk.Drives.KazoDriveErrorKind.NotFound = 0 -> Kazo.Os.AppSdk.Drives.KazoDriveErrorKind
+Kazo.Os.AppSdk.Drives.KazoDriveErrorKind.Other = 11 -> Kazo.Os.AppSdk.Drives.KazoDriveErrorKind
+Kazo.Os.AppSdk.Drives.KazoDriveErrorKind.QuotaExceeded = 6 -> Kazo.Os.AppSdk.Drives.KazoDriveErrorKind
+Kazo.Os.AppSdk.Drives.KazoDriveErrorKind.RevisionConflict = 4 -> Kazo.Os.AppSdk.Drives.KazoDriveErrorKind
+Kazo.Os.AppSdk.Drives.KazoDriveErrorKind.SignInRequired = 3 -> Kazo.Os.AppSdk.Drives.KazoDriveErrorKind
+Kazo.Os.AppSdk.Drives.KazoDriveErrorKind.TypeMismatch = 7 -> Kazo.Os.AppSdk.Drives.KazoDriveErrorKind
+Kazo.Os.AppSdk.Drives.KazoDriveErrorKind.Unavailable = 2 -> Kazo.Os.AppSdk.Drives.KazoDriveErrorKind
+Kazo.Os.AppSdk.Drives.KazoDriveException
+Kazo.Os.AppSdk.Drives.KazoDriveException.KazoDriveException(Kazo.Os.AppSdk.Drives.KazoDriveErrorKind kind, string! message, System.Exception? innerException = null) -> void
+Kazo.Os.AppSdk.Drives.KazoDriveException.Kind.get -> Kazo.Os.AppSdk.Drives.KazoDriveErrorKind
+Kazo.Os.AppSdk.Drives.KazoDriveFolder
+Kazo.Os.AppSdk.Drives.KazoDriveFolder.KazoDriveFolder() -> void
+Kazo.Os.AppSdk.Drives.KazoDriveLimits
+Kazo.Os.AppSdk.Drives.KazoDriveOpenRequest
+Kazo.Os.AppSdk.Drives.KazoDriveOpenRequest.<Clone>$() -> Kazo.Os.AppSdk.Drives.KazoDriveOpenRequest!
+Kazo.Os.AppSdk.Drives.KazoDriveOpenRequest.Context.get -> Kazo.Os.AppSdk.Drives.IKazoDriveProviderContext!
+Kazo.Os.AppSdk.Drives.KazoDriveOpenRequest.Context.init -> void
+Kazo.Os.AppSdk.Drives.KazoDriveOpenRequest.Deconstruct(out string! Name, out Kazo.Os.AppSdk.Drives.IKazoDriveProviderContext! Context) -> void
+Kazo.Os.AppSdk.Drives.KazoDriveOpenRequest.Equals(Kazo.Os.AppSdk.Drives.KazoDriveOpenRequest? other) -> bool
+Kazo.Os.AppSdk.Drives.KazoDriveOpenRequest.KazoDriveOpenRequest(string! Name, Kazo.Os.AppSdk.Drives.IKazoDriveProviderContext! Context) -> void
+Kazo.Os.AppSdk.Drives.KazoDriveOpenRequest.Name.get -> string!
+Kazo.Os.AppSdk.Drives.KazoDriveOpenRequest.Name.init -> void
+Kazo.Os.AppSdk.Drives.KazoDriveOpenRequest.Options.get -> System.Collections.Generic.IReadOnlyDictionary<string!, string!>!
+Kazo.Os.AppSdk.Drives.KazoDriveOpenRequest.Options.init -> void
+Kazo.Os.AppSdk.Drives.KazoDriveOpenRequest.Root.get -> string?
+Kazo.Os.AppSdk.Drives.KazoDriveOpenRequest.Root.init -> void
+Kazo.Os.AppSdk.Drives.KazoDrivePath
+Kazo.Os.AppSdk.Drives.KazoDrivePath.Append(string! name) -> Kazo.Os.AppSdk.Drives.KazoDrivePath!
+Kazo.Os.AppSdk.Drives.KazoDrivePath.Equals(Kazo.Os.AppSdk.Drives.KazoDrivePath? other) -> bool
+Kazo.Os.AppSdk.Drives.KazoDrivePath.IsRoot.get -> bool
+Kazo.Os.AppSdk.Drives.KazoDrivePath.Name.get -> string!
+Kazo.Os.AppSdk.Drives.KazoDrivePath.Parent.get -> Kazo.Os.AppSdk.Drives.KazoDrivePath?
+Kazo.Os.AppSdk.Drives.KazoDrivePath.Segments.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Kazo.Os.AppSdk.Drives.KazoDriveProvider
+Kazo.Os.AppSdk.Drives.KazoDriveProvider.KazoDriveProvider() -> void
+Kazo.Os.AppSdk.Drives.KazoDriveQuota
+Kazo.Os.AppSdk.Drives.KazoDriveQuota.<Clone>$() -> Kazo.Os.AppSdk.Drives.KazoDriveQuota!
+Kazo.Os.AppSdk.Drives.KazoDriveQuota.Deconstruct(out long TotalBytes, out long FreeBytes) -> void
+Kazo.Os.AppSdk.Drives.KazoDriveQuota.Equals(Kazo.Os.AppSdk.Drives.KazoDriveQuota? other) -> bool
+Kazo.Os.AppSdk.Drives.KazoDriveQuota.FreeBytes.get -> long
+Kazo.Os.AppSdk.Drives.KazoDriveQuota.FreeBytes.init -> void
+Kazo.Os.AppSdk.Drives.KazoDriveQuota.KazoDriveQuota(long TotalBytes, long FreeBytes) -> void
+Kazo.Os.AppSdk.Drives.KazoDriveQuota.TotalBytes.get -> long
+Kazo.Os.AppSdk.Drives.KazoDriveQuota.TotalBytes.init -> void
+Kazo.Os.AppSdk.Drives.KazoDriveState
+Kazo.Os.AppSdk.Drives.KazoDriveState.Ready = 0 -> Kazo.Os.AppSdk.Drives.KazoDriveState
+Kazo.Os.AppSdk.Drives.KazoDriveState.SignInRequired = 1 -> Kazo.Os.AppSdk.Drives.KazoDriveState
+Kazo.Os.AppSdk.Drives.KazoDriveState.Unavailable = 2 -> Kazo.Os.AppSdk.Drives.KazoDriveState
 Kazo.Os.AppSdk.Net.IAppNetworkGateway.GetRelayStateAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.Net.KazoRelayState!>
 Kazo.Os.AppSdk.Net.IAppNetworkGateway.RelayStateChanged -> System.EventHandler<Kazo.Os.AppSdk.Net.KazoRelayState!>?
+Kazo.Os.AppSdk.Net.KazoNetworkError.RelayDisabled = 11 -> Kazo.Os.AppSdk.Net.KazoNetworkError
+Kazo.Os.AppSdk.Net.KazoNetworkError.RelayGrantPending = 12 -> Kazo.Os.AppSdk.Net.KazoNetworkError
+Kazo.Os.AppSdk.Net.KazoNetworkError.RelayNoServer = 10 -> Kazo.Os.AppSdk.Net.KazoNetworkError
+Kazo.Os.AppSdk.Net.KazoRealNetwork
+Kazo.Os.AppSdk.Net.KazoRelayException
+Kazo.Os.AppSdk.Net.KazoRelayException.Code.get -> string!
+Kazo.Os.AppSdk.Net.KazoRelayException.KazoRelayException(Kazo.Os.AppSdk.Net.KazoNetworkError reason, System.Net.Sockets.SocketError socketError, string? message = null) -> void
+Kazo.Os.AppSdk.Net.KazoRelayException.Reason.get -> Kazo.Os.AppSdk.Net.KazoNetworkError
+Kazo.Os.AppSdk.Net.KazoRelayState
+Kazo.Os.AppSdk.Net.KazoRelayState.<Clone>$() -> Kazo.Os.AppSdk.Net.KazoRelayState!
+Kazo.Os.AppSdk.Net.KazoRelayState.Deconstruct(out Kazo.Os.AppSdk.Net.KazoRelayStatus Status) -> void
+Kazo.Os.AppSdk.Net.KazoRelayState.Equals(Kazo.Os.AppSdk.Net.KazoRelayState? other) -> bool
+Kazo.Os.AppSdk.Net.KazoRelayState.KazoRelayState(Kazo.Os.AppSdk.Net.KazoRelayStatus Status) -> void
+Kazo.Os.AppSdk.Net.KazoRelayState.Status.get -> Kazo.Os.AppSdk.Net.KazoRelayStatus
+Kazo.Os.AppSdk.Net.KazoRelayState.Status.init -> void
+Kazo.Os.AppSdk.Net.KazoRelayState.TcpBlockedPorts.get -> System.Collections.Generic.IReadOnlyList<int>!
+Kazo.Os.AppSdk.Net.KazoRelayState.TcpBlockedPorts.init -> void
+Kazo.Os.AppSdk.Net.KazoRelayState.UdpBlockedPorts.get -> System.Collections.Generic.IReadOnlyList<int>!
+Kazo.Os.AppSdk.Net.KazoRelayState.UdpBlockedPorts.init -> void
+Kazo.Os.AppSdk.Net.KazoRelayStatus
+Kazo.Os.AppSdk.Net.KazoRelayStatus.GrantPending = 2 -> Kazo.Os.AppSdk.Net.KazoRelayStatus
+Kazo.Os.AppSdk.Net.KazoRelayStatus.NoServer = 0 -> Kazo.Os.AppSdk.Net.KazoRelayStatus
+Kazo.Os.AppSdk.Net.KazoRelayStatus.Ready = 3 -> Kazo.Os.AppSdk.Net.KazoRelayStatus
+Kazo.Os.AppSdk.Net.KazoRelayStatus.RelayDisabled = 1 -> Kazo.Os.AppSdk.Net.KazoRelayStatus
+override Kazo.Os.AppSdk.Drives.KazoDriveAccount.Equals(object? obj) -> bool
+override Kazo.Os.AppSdk.Drives.KazoDriveAccount.GetHashCode() -> int
+override Kazo.Os.AppSdk.Drives.KazoDriveAccount.ToString() -> string!
+override Kazo.Os.AppSdk.Drives.KazoDriveEntry.Equals(object? obj) -> bool
+override Kazo.Os.AppSdk.Drives.KazoDriveEntry.GetHashCode() -> int
+override Kazo.Os.AppSdk.Drives.KazoDriveEntry.ToString() -> string!
+override Kazo.Os.AppSdk.Drives.KazoDriveOpenRequest.Equals(object? obj) -> bool
+override Kazo.Os.AppSdk.Drives.KazoDriveOpenRequest.GetHashCode() -> int
+override Kazo.Os.AppSdk.Drives.KazoDriveOpenRequest.ToString() -> string!
+override Kazo.Os.AppSdk.Drives.KazoDrivePath.Equals(object? obj) -> bool
+override Kazo.Os.AppSdk.Drives.KazoDrivePath.GetHashCode() -> int
+override Kazo.Os.AppSdk.Drives.KazoDrivePath.ToString() -> string!
+override Kazo.Os.AppSdk.Drives.KazoDriveQuota.Equals(object? obj) -> bool
+override Kazo.Os.AppSdk.Drives.KazoDriveQuota.GetHashCode() -> int
+override Kazo.Os.AppSdk.Drives.KazoDriveQuota.ToString() -> string!
+override Kazo.Os.AppSdk.Net.KazoRelayState.Equals(object? obj) -> bool
+override Kazo.Os.AppSdk.Net.KazoRelayState.GetHashCode() -> int
+override Kazo.Os.AppSdk.Net.KazoRelayState.ToString() -> string!
+static Kazo.Os.AppSdk.Drives.KazoDriveAccount.operator !=(Kazo.Os.AppSdk.Drives.KazoDriveAccount? left, Kazo.Os.AppSdk.Drives.KazoDriveAccount? right) -> bool
+static Kazo.Os.AppSdk.Drives.KazoDriveAccount.operator ==(Kazo.Os.AppSdk.Drives.KazoDriveAccount? left, Kazo.Os.AppSdk.Drives.KazoDriveAccount? right) -> bool
+static Kazo.Os.AppSdk.Drives.KazoDriveEntry.operator !=(Kazo.Os.AppSdk.Drives.KazoDriveEntry? left, Kazo.Os.AppSdk.Drives.KazoDriveEntry? right) -> bool
+static Kazo.Os.AppSdk.Drives.KazoDriveEntry.operator ==(Kazo.Os.AppSdk.Drives.KazoDriveEntry? left, Kazo.Os.AppSdk.Drives.KazoDriveEntry? right) -> bool
+static Kazo.Os.AppSdk.Drives.KazoDriveOpenRequest.operator !=(Kazo.Os.AppSdk.Drives.KazoDriveOpenRequest? left, Kazo.Os.AppSdk.Drives.KazoDriveOpenRequest? right) -> bool
+static Kazo.Os.AppSdk.Drives.KazoDriveOpenRequest.operator ==(Kazo.Os.AppSdk.Drives.KazoDriveOpenRequest? left, Kazo.Os.AppSdk.Drives.KazoDriveOpenRequest? right) -> bool
+static Kazo.Os.AppSdk.Drives.KazoDrivePath.FromSegments(System.Collections.Generic.IEnumerable<string!>! segments) -> Kazo.Os.AppSdk.Drives.KazoDrivePath!
+static Kazo.Os.AppSdk.Drives.KazoDrivePath.IsValidName(string? name) -> bool
+static Kazo.Os.AppSdk.Drives.KazoDrivePath.operator !=(Kazo.Os.AppSdk.Drives.KazoDrivePath? left, Kazo.Os.AppSdk.Drives.KazoDrivePath? right) -> bool
+static Kazo.Os.AppSdk.Drives.KazoDrivePath.operator ==(Kazo.Os.AppSdk.Drives.KazoDrivePath? left, Kazo.Os.AppSdk.Drives.KazoDrivePath? right) -> bool
+static Kazo.Os.AppSdk.Drives.KazoDrivePath.Parse(string! path) -> Kazo.Os.AppSdk.Drives.KazoDrivePath!
+static Kazo.Os.AppSdk.Drives.KazoDrivePath.Root.get -> Kazo.Os.AppSdk.Drives.KazoDrivePath!
+static Kazo.Os.AppSdk.Drives.KazoDrivePath.TryParse(string? path, out Kazo.Os.AppSdk.Drives.KazoDrivePath? result) -> bool
+static Kazo.Os.AppSdk.Drives.KazoDriveQuota.operator !=(Kazo.Os.AppSdk.Drives.KazoDriveQuota? left, Kazo.Os.AppSdk.Drives.KazoDriveQuota? right) -> bool
+static Kazo.Os.AppSdk.Drives.KazoDriveQuota.operator ==(Kazo.Os.AppSdk.Drives.KazoDriveQuota? left, Kazo.Os.AppSdk.Drives.KazoDriveQuota? right) -> bool
+static Kazo.Os.AppSdk.Net.KazoRealNetwork.GetRelayStateAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.Net.KazoRelayState!>
+static Kazo.Os.AppSdk.Net.KazoRealNetwork.RelayStateChanged -> System.EventHandler<Kazo.Os.AppSdk.Net.KazoRelayState!>?
+static Kazo.Os.AppSdk.Net.KazoRelayState.operator !=(Kazo.Os.AppSdk.Net.KazoRelayState? left, Kazo.Os.AppSdk.Net.KazoRelayState? right) -> bool
+static Kazo.Os.AppSdk.Net.KazoRelayState.operator ==(Kazo.Os.AppSdk.Net.KazoRelayState? left, Kazo.Os.AppSdk.Net.KazoRelayState? right) -> bool
+virtual Kazo.Os.AppSdk.Drives.KazoDriveFolder.CreateFileAsync(Kazo.Os.AppSdk.Drives.KazoDrivePath! path, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+virtual Kazo.Os.AppSdk.Drives.KazoDriveFolder.DisposeAsync() -> System.Threading.Tasks.ValueTask
+virtual Kazo.Os.AppSdk.Drives.KazoDriveFolder.GetQuotaAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.Drives.KazoDriveQuota?>
+virtual Kazo.Os.AppSdk.Drives.KazoDriveFolder.TryMoveAsync(Kazo.Os.AppSdk.Drives.KazoDrivePath! from, Kazo.Os.AppSdk.Drives.KazoDrivePath! to, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<bool>
 Kazo.Os.AppSdk.Net.IAppNetworkGateway.SendDirectAsync(Kazo.Os.AppSdk.Net.KazoDirectHttpRequest! request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.Net.KazoNetworkResult<Kazo.Os.AppSdk.Net.KazoDirectHttpResponse!>!>
 Kazo.Os.AppSdk.Net.KazoDirectHttpClient
 Kazo.Os.AppSdk.Net.KazoDirectHttpClient.BaseAddress.get -> System.Uri?
@@ -48,39 +210,8 @@ Kazo.Os.AppSdk.Net.KazoDirectHttpResponse.ReadFromJsonAsync<T>(System.Text.Json.
 Kazo.Os.AppSdk.Net.KazoDirectHttpResponse.ReasonPhrase.get -> string!
 Kazo.Os.AppSdk.Net.KazoDirectHttpResponse.RequestUri.get -> System.Uri!
 Kazo.Os.AppSdk.Net.KazoDirectHttpResponse.StatusCode.get -> int
-Kazo.Os.AppSdk.Net.KazoNetworkError.RelayDisabled = 11 -> Kazo.Os.AppSdk.Net.KazoNetworkError
-Kazo.Os.AppSdk.Net.KazoNetworkError.RelayGrantPending = 12 -> Kazo.Os.AppSdk.Net.KazoNetworkError
-Kazo.Os.AppSdk.Net.KazoNetworkError.RelayNoServer = 10 -> Kazo.Os.AppSdk.Net.KazoNetworkError
-Kazo.Os.AppSdk.Net.KazoRealNetwork
-Kazo.Os.AppSdk.Net.KazoRelayException
-Kazo.Os.AppSdk.Net.KazoRelayException.Code.get -> string!
-Kazo.Os.AppSdk.Net.KazoRelayException.KazoRelayException(Kazo.Os.AppSdk.Net.KazoNetworkError reason, System.Net.Sockets.SocketError socketError, string? message = null) -> void
-Kazo.Os.AppSdk.Net.KazoRelayException.Reason.get -> Kazo.Os.AppSdk.Net.KazoNetworkError
-Kazo.Os.AppSdk.Net.KazoRelayState
-Kazo.Os.AppSdk.Net.KazoRelayState.<Clone>$() -> Kazo.Os.AppSdk.Net.KazoRelayState!
-Kazo.Os.AppSdk.Net.KazoRelayState.Deconstruct(out Kazo.Os.AppSdk.Net.KazoRelayStatus Status) -> void
-Kazo.Os.AppSdk.Net.KazoRelayState.Equals(Kazo.Os.AppSdk.Net.KazoRelayState? other) -> bool
-Kazo.Os.AppSdk.Net.KazoRelayState.KazoRelayState(Kazo.Os.AppSdk.Net.KazoRelayStatus Status) -> void
-Kazo.Os.AppSdk.Net.KazoRelayState.Status.get -> Kazo.Os.AppSdk.Net.KazoRelayStatus
-Kazo.Os.AppSdk.Net.KazoRelayState.Status.init -> void
-Kazo.Os.AppSdk.Net.KazoRelayState.TcpBlockedPorts.get -> System.Collections.Generic.IReadOnlyList<int>!
-Kazo.Os.AppSdk.Net.KazoRelayState.TcpBlockedPorts.init -> void
-Kazo.Os.AppSdk.Net.KazoRelayState.UdpBlockedPorts.get -> System.Collections.Generic.IReadOnlyList<int>!
-Kazo.Os.AppSdk.Net.KazoRelayState.UdpBlockedPorts.init -> void
-Kazo.Os.AppSdk.Net.KazoRelayStatus
-Kazo.Os.AppSdk.Net.KazoRelayStatus.GrantPending = 2 -> Kazo.Os.AppSdk.Net.KazoRelayStatus
-Kazo.Os.AppSdk.Net.KazoRelayStatus.NoServer = 0 -> Kazo.Os.AppSdk.Net.KazoRelayStatus
-Kazo.Os.AppSdk.Net.KazoRelayStatus.Ready = 3 -> Kazo.Os.AppSdk.Net.KazoRelayStatus
-Kazo.Os.AppSdk.Net.KazoRelayStatus.RelayDisabled = 1 -> Kazo.Os.AppSdk.Net.KazoRelayStatus
-override Kazo.Os.AppSdk.Net.KazoRelayState.Equals(object? obj) -> bool
-override Kazo.Os.AppSdk.Net.KazoRelayState.GetHashCode() -> int
-override Kazo.Os.AppSdk.Net.KazoRelayState.ToString() -> string!
 static Kazo.Os.AppSdk.Net.KazoDirectHttpContent.From(Kazo.Os.AppSdk.Net.KazoHttpContent! content) -> Kazo.Os.AppSdk.Net.KazoDirectHttpContent!
 static Kazo.Os.AppSdk.Net.KazoDirectHttpContent.FromBytes(System.ReadOnlyMemory<byte> content, string! contentType = "application/octet-stream") -> Kazo.Os.AppSdk.Net.KazoDirectHttpContent!
 static Kazo.Os.AppSdk.Net.KazoDirectHttpContent.FromJson<T>(T value, System.Text.Json.Serialization.Metadata.JsonTypeInfo<T>! jsonTypeInfo) -> Kazo.Os.AppSdk.Net.KazoDirectHttpContent!
 static Kazo.Os.AppSdk.Net.KazoDirectHttpContent.FromStream(System.IO.Stream! content, string! contentType = "application/octet-stream", long? length = null) -> Kazo.Os.AppSdk.Net.KazoDirectHttpContent!
 static Kazo.Os.AppSdk.Net.KazoDirectHttpContent.FromString(string! content, string! mediaType = "text/plain") -> Kazo.Os.AppSdk.Net.KazoDirectHttpContent!
-static Kazo.Os.AppSdk.Net.KazoRealNetwork.GetRelayStateAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.Net.KazoRelayState!>
-static Kazo.Os.AppSdk.Net.KazoRealNetwork.RelayStateChanged -> System.EventHandler<Kazo.Os.AppSdk.Net.KazoRelayState!>?
-static Kazo.Os.AppSdk.Net.KazoRelayState.operator !=(Kazo.Os.AppSdk.Net.KazoRelayState? left, Kazo.Os.AppSdk.Net.KazoRelayState? right) -> bool
-static Kazo.Os.AppSdk.Net.KazoRelayState.operator ==(Kazo.Os.AppSdk.Net.KazoRelayState? left, Kazo.Os.AppSdk.Net.KazoRelayState? right) -> bool

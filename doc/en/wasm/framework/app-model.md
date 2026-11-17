@@ -193,6 +193,17 @@ The manifest writes them in `providedServices`
 `KazoFeatures.GetServiceAsync<T>()`, which returns `null` when the feature is
 absent or disabled: see [`feature-services.md`](feature-services.md).
 
+#### Network drive types: `DriveProviders` (ADR 0282)
+
+A feature that asks for the dangerous `drives.provide` capability can provide
+**network drive types** (`mount -t pcloud`): each
+`KazoDriveProviderDeclaration` gives the type, the displayed name, the class
+derived from `KazoDriveProvider`, the connection (OAuth or form), the icon and
+the hosts reached. The manifest writes them in `driveProviders`. An ordinary
+app that declares either is refused (`manifest.feature.only`, `KOSAPP0033`);
+a class the OS cannot create gives `KOSAPP0036`. See
+[`drive-providers.md`](drive-providers.md).
+
 ### Intents and URI schemes (ADR 0096)
 
 - `Intents` (`AppIntentDeclarationManifest(IntentId, PayloadSchemaAssetPath)`)
@@ -356,7 +367,8 @@ with the full name of the class at fault: `App.csproj : error KOSAPP0005: [Ns.My
 | `KOSAPP0030` | SDK boundary: `ProjectReference` forbidden in an app project (ADR 0055 §2, number fixed by ADR 0059). Emitted by the target `ValidateKazoOsSdkBoundary`. See [`app-sdk.md`](app-sdk.md). |
 | `KOSAPP0031` | SDK boundary: injected service that is neither an SDK type, nor MudBlazor, nor `IJSRuntime` (ADR 0055 §3, ADR 0059). See [`app-sdk.md`](app-sdk.md). |
 | `KOSAPP0032` | Feature (ADR 0260 §1): a `FeatureDefinition` overrides `EntryPoint`; a feature has no entry point of its own, only its `EntryPoints` run. |
-| `KOSAPP0033` | Feature (ADR 0260 §5): an ordinary app declares what only a feature can (the `Feature` kind outside a `FeatureDefinition`), or a feature is declared next to other apps in one project. |
+| `KOSAPP0033` | Feature (ADR 0260 §5): an ordinary app declares what only a feature can (the `Feature` kind outside a `FeatureDefinition`, or the `drives.provide` capability, ADR 0282), or a feature is declared next to other apps in one project. |
+| `KOSAPP0036` | Drive provider (ADR 0282 §1): the class of a `DriveProviders` entry does not derive from `KazoDriveProvider`, is abstract, is not in the feature's assembly or has no public `()` or `(IFeatureServiceContext)` constructor; a reserved or malformed type also fails the build ([`drive-providers.md`](drive-providers.md)). |
 | `KOSAPP0040` | Manifest translations (ADR 0104 §4): unreadable `Resources/AppManifest.<culture>.resx`, invalid culture name, key other than `Name`, `Description`, `Terminal.Usage` (prefixed with the id in a multi-app project), `Terminal.Usage` for an app that is not a command, or a referenced `localization/` file that is unreadable at aggregation. See [`localization.md`](localization.md). |
 | `KOSAPP0090` | Invalid tool arguments. |
 | `KOSAPP0091` | App assembly cannot be loaded. |

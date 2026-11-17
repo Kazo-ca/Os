@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 1,
+  "id": "ca.example.pcloud",
+  "name": "pCloud drives",
+  "version": "1.0.0",
+  "publisherId": "ca.example",
+  "description": "Provides pCloud storage as network drives (ADR 0282).",
+  "kind": "feature",
+  "sdkCompatibility": {
+    "minimumVersion": "3.2.0"
+  },
+  "presentation": {
+    "category": "system",
+    "launchVisibility": "hidden",
+    "iconAssetPaths": []
+  },
+  "capabilities": [
+    "drives.provide"
+  ],
+  "resources": {
+    "baselineCpuWeight": 0.0,
+    "burstCpuWeight": 0.0,
+    "baselineMemoryWeight": 0.0,
+    "burstMemoryWeight": 0.0,
+    "baselineStorageIoWeight": 0.0,
+    "burstStorageIoWeight": 0.0,
+    "baselineNetworkIoWeight": 0.0,
+    "burstNetworkIoWeight": 0.0
+  },
+  "execution": "mainThread",
+  "driveProviders": [
+    {
+      "type": "dropbox",
+      "name": "pCloud",
+      "provider": "Pcloud.PcloudDriveProvider, Pcloud",
+      "hosts": [
+        "*.pcloud.com",
+        "api.pcloud.com"
+      ],
+      "connection": {
+        "kind": "oauth",
+        "oauth": {
+          "authorizationEndpoint": "https://my.pcloud.com/oauth2/authorize",
+          "tokenEndpoint": "https://api.pcloud.com/oauth2_token",
+          "fullAccess": {
+            "clientId": "public-app-id"
+          },
+          "identity": {
+            "address": "https://api.pcloud.com/userinfo",
+            "idPath": "userid",
+            "namePaths": [
+              "email"
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

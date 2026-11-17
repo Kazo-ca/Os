@@ -77,6 +77,7 @@ public sealed class AppCapabilitiesTests
         { AppCapabilities.KeyringReadAll, CapabilityRisk.Dangerous },
         { AppCapabilities.UsersManage, CapabilityRisk.Dangerous },
         { AppCapabilities.CloudAccountsManage, CapabilityRisk.Dangerous },
+        { AppCapabilities.DrivesProvide, CapabilityRisk.Dangerous },
     };
 
     [Theory]
