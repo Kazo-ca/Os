@@ -110,6 +110,43 @@ version, stores, record count, estimated size) and
 (ADR 0088 §4, [`asp-kazo-site-data.md`](asp-kazo-site-data.md)). Diagnostics shows them
 under *Website databases*.
 
+### Browser storage (`KazoStorage`, ADR 0250)
+
+`KazoStorage` (`Shared/Kazo.Os.AppSdk/Storage/`) tells about the storage of
+the page's origin, which Kazo's Files (IndexedDB), the OS caches and the
+features' OPFS share:
+
+- `GetEstimateAsync`: usage, quota, `IsPersisted`, `IsLowSpace` (thresholds
+  of ADR 0099), the part of each kind of storage when the browser gives it
+  (`IndexedDbBytes`, `CacheBytes`, `FileSystemBytes`, Chromium only), the
+  space the calling feature declared and `PersistenceLost`. No capability.
+- `RequestPersistenceAsync`: `navigator.storage.persist()`, **once per
+  origin** (`OriginStorageService` does not ask again when `persisted()` is
+  true). For features, their entry points and system apps only; an ordinary
+  app gets `KazoUnauthorizedAccessException` (`manifest.feature.only`). Call
+  it right after a gesture of the user.
+- `RegisterMarkerAsync(path)` and `ReportUsageAsync(bytes)`: a feature
+  registers a marker file of its OPFS and the space it uses, kept by the OS in
+  `/var/lib/kazoos/storage/features.json`.
+- `GetFeatureUsageAsync`: the features and their declared space (Settings,
+  `df`).
+- `Changed`: `Evicted` when the marker is gone from the OPFS, delivered to
+  the feature as soon as it subscribes at its next launch.
+
+At boot, `StorageEvictionDetector` compares, **before** the databases are
+opened, the `kazoos.storage.marker` marker of `localStorage` with the
+existence of the `kazoos` database: a marker without the database is an
+eviction. The first-run screen says so (date of the last boot, restoring a
+backup), `kern.log` and `syslog` get `storage.evicted`, then the successful
+boot writes the marker again. The features' markers are checked next; a
+marker gone gives the user a notification and the feature `Changed(Evicted)`.
+
+Settings ▸ System ▸ Storage (`StoragePanel`) shows usage, quota, the parts,
+the "protected" state and the "Protect the storage against erasure" button,
+and each feature's space. `df` adds a `/dev/feature/<id>` line per feature
+that declared its space. The 5 % reserve still counts the whole origin: the
+features' disks count in the space of the Files.
+
 ### Backup (`system.backup`)
 
 `KazoSystemBackup.CreateAsync` downloads a `.kosbak` archive of the whole
