@@ -184,6 +184,18 @@ ca.example.drive:network.direct.access=allow
 ca.example.drive=*.example.com,api.example.com
 ```
 
+Under `drives.provide`
+([ADR 0284](adr/0284-drive-provider-hosts-and-typed-server-address.md) §1),
+the same line names the hosts of the `driveProviders` declarations
+(`DirectNetworkHostText.For`), and a second line the server address field when
+there is one: "Each user's server, typed in: Server address"
+(`DirectNetworkHostText.TypedServersFor`). The hosts of both capabilities
+share the `[direct-network-hosts]` section: allowing or refusing one keeps the
+approved hosts the other still declares
+(`DangerousCapabilityEvaluator.HostsToApprove`), and a host an update adds to
+a provider puts `drives.provide` back in `Pending`. The typed server is never
+written: it is allowed while the drive is open (`DriveServerHosts`).
+
 `DangerousCapabilityApprovalBroker` shows one request at a time. Without an
 attached window, a request ends as `Unavailable` (hence
 `capability.deferred`); if the shell disappears (logout), pending requests are

@@ -135,6 +135,7 @@ provider's author sees is in
 | `FeatureDriveFolder` (internal) | The `IHostFolder` of one drive, over `KazoDriveFolder`: quota, conditional writes, translation of errors and states, one renewal of a refused token. |
 | `FeatureDriveProviderLoader` | Loads the provider at the first drive of the type, one instance per page, in the feature's process and context; a failure is never kept. |
 | `FeatureDriveContextFactory`, `FeatureDriveConnection` | What the OS lends the provider for one drive: the context bound to the account and the form's non-secret values. |
+| `DriveServerHosts` (`Network/`) | The server typed in the `serverAddress` field (ADR 0284 §2): `FeatureDriveFolder` takes a lease when the drive opens and returns it when it closes; the feature's network gateway allows the host while a lease holds it. One instance per page. |
 | `InMemoryDriveProvider`, `InMemoryDriveService` (`Tests/Kazo.Os.Tests.Support`) | In-memory fake provider and service, reused by work items 6 and 7. |
 
 `NetworkDriveService` reads these sources at each use, next to the host's (a

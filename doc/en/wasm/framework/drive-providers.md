@@ -4,56 +4,104 @@
 
 ## Purpose
 
-A Store **feature** (`Feature` kind,
+A Store **feature** (kind `Feature`,
 [ADR 0260](../dev/adr/0260-feature-app-type.md)) can provide one more **type
-of network drive**, like the Dropbox, OneDrive and S3 drives shipped with the
-OS: pCloud, a company WebDAV server, an in-house service.
-[ADR 0282](../dev/adr/0282-third-party-drive-providers.md) sets the model:
-the OS keeps everything that is the same for every type (the mount under
-`/mnt`, its modes, the drive list, the connect dialog, Settings, `mount -t`,
-the sign-in and the sealing of tokens and secrets); the **provider** only
-talks to its service.
+of network drive**, like Dropbox, OneDrive and S3 shipped with the OS: a
+storage service, a company WebDAV server, an in-house service.
+[ADR 0282](../dev/adr/0282-third-party-drive-providers.md) sets the model: the
+OS keeps everything that is the same for every type (the mount under `/mnt`,
+its modes, the list of drives, the connect dialog, Settings, `mount -t`, the
+sign-in to the account and the sealing of tokens and secrets); the
+**provider** only talks to its service.
+[ADR 0284](../dev/adr/0284-drive-provider-hosts-and-typed-server-address.md)
+says which hosts it may reach.
 
-This document describes the **public contract** (work item 2 of the
-`drive-providers` series): the SDK types of `Kazo.Os.AppSdk.Drives` and the
-`FeatureDefinition.DriveProviders` declaration, then what the OS does with
-it (work item 4). The connect dialog and Settings come in work item 6.
+This guide goes from the `dotnet new` template to publishing: write the
+provider, reach the service without the Kazo server, check CORS, register the
+OAuth return page, pass the conformance suite, then what the OS does with the
+provider and what the Store review looks at. The examples use a fictional
+service, "Exemple", on `api.example.com`.
+
+## Step by step
+
+1. **Create the project** from the template (package `Kazo.Os.Templates`,
+   [`building-on-kazoos.md`](building-on-kazoos.md)):
+
+   ```bash
+   dotnet new install Kazo.Os.Templates
+   dotnet new kazoos-drive-provider -n Contoso.ExempleDrive \
+     --appId com.contoso.exemple-drive --publisherId com.contoso \
+     --driveType exemple --apiHost api.example.com
+   cd Contoso.ExempleDrive && dotnet test
+   ```
+
+   The template gives a `src/` + `tests/` solution:
+
+   | File | Role |
+   | --- | --- |
+   | `CloudDriveFeature.cs` | The feature (`[AppManifest]`): `drives.provide`, the declaration of the type, the OAuth connection, the API host. The build writes `manifest.json` from it. |
+   | `CloudDriveProvider.cs` | The provider: `OpenAsync` creates the drive without sending anything. |
+   | `CloudDriveFolder.cs` | The drive: each operation becomes one call to the service. |
+   | `ICloudDriveApi.cs` | The calls to the service, with the errors expected. |
+   | `CloudDriveHttpApi.cs` | Those calls over a fictional JSON API, through `KazoDirectHttpClient`, JSON generated at build. |
+   | `tests/…/InMemoryCloudDrive.cs` | An in-memory service (offline, refused token, large file, revisions). |
+   | `tests/…/CloudDriveProviderTests.cs` | The public conformance suite against that service, and the manifest. |
+
+   The tests pass from the start: they reach no real service.
+
+2. **Plug in your service.** Replace the addresses, requests and JSON of
+   `CloudDriveHttpApi` with your API's. Keep the mapping of the answers to
+   `KazoDriveErrorKind` (table [below](#expected-errors)). A service without
+   PKCE or without OAuth takes a form connection
+   (`AppDriveConnectionManifest.WithForm`), like the [WebDAV sample](#the-webdav-sample).
+3. **Declare the hosts** the code reaches in `Hosts`, and nothing else.
+4. **Register the app with the service** with the OS's
+   [return page](#addresses-to-register-with-the-service), and put its public
+   id in `FullAccess` or `AppFolder`.
+5. **Check CORS** ([below](#cors-what-the-service-must-accept)).
+6. **Keep the suite green**: adapt the in-memory service to what your service
+   answers, and let `CloudDriveConformanceTests` pass all its cases.
+7. **Try it in the OS**: install the package as a feature for the machine,
+   approve `drives.provide`, then "Connect a network drive…" or
+   `mount -t exemple`.
+8. **Publish** to the Store like any feature (publishing by a tag,
+   [`app-repository.md`](app-repository.md)).
 
 ## Writing a provider
 
 1. A class derived from **`KazoDriveProvider`**, concrete, in the feature's
-   assembly, with a public constructor that takes an `IFeatureServiceContext`
-   or no parameter (the same rule as services,
+   assembly, with a public constructor taking an `IFeatureServiceContext` or no
+   parameter (the same rule as services,
    [`feature-services.md`](feature-services.md)). The OS creates one instance
-   per page, on the first drive of that type.
-2. Its `OpenAsync(KazoDriveOpenRequest)` method returns a **`KazoDriveFolder`**:
-   one drive of the user. It **never** reaches the service (the OS calls it at
-   login, and a login never waits on the network); `GetStateAsync` tells later
-   whether the service answers.
+   per page, at the first drive of that type.
+2. Its `OpenAsync(KazoDriveOpenRequest)` method returns a
+   **`KazoDriveFolder`**: one drive of the user. It **never** reaches the
+   service (the OS calls it at login, which does not wait for the network);
+   `GetStateAsync` says later whether the service answers.
 3. The feature declares it and asks for the `drives.provide` capability:
 
 ```csharp
 [AppManifest]
-public sealed class PCloudFeature : FeatureDefinition
+public sealed class ExempleDriveFeature : FeatureDefinition
 {
-    public override string Id => "ca.example.pcloud";
-    public override string Name => "pCloud";
-    public override string PublisherId => "ca.example";
+    public override string Id => "com.contoso.exemple-drive";
+    public override string Name => "Exemple";
+    public override string PublisherId => "com.contoso";
     public override IReadOnlyList<string> Capabilities => [AppCapabilities.DrivesProvide];
     public override IReadOnlyList<FeatureEntryPoint> EntryPoints => [];
 
     public override IReadOnlyList<KazoDriveProviderDeclaration> DriveProviders =>
     [
-        new("pcloud", "pCloud", typeof(PCloudProvider), AppDriveConnectionManifest.WithOAuth(
+        new("exemple", "Exemple", typeof(ExempleDriveProvider), AppDriveConnectionManifest.WithOAuth(
             new AppDriveOAuthManifest(
-                "https://my.pcloud.com/oauth2/authorize",
-                "https://api.pcloud.com/oauth2_token")
+                "https://api.example.com/oauth2/authorize",
+                "https://api.example.com/oauth2/token")
             {
-                FullAccess = new AppDriveOAuthClientManifest("public-client-id"),
+                FullAccess = new AppDriveOAuthClientManifest("your-public-app-id"),
             }))
         {
-            Icon = "assets/pcloud.svg",
-            Hosts = ["api.pcloud.com", "*.pcloud.com"],
+            Icon = "assets/exemple.svg",
+            Hosts = ["api.example.com", "*.files.example.com"],
         },
     ];
 }
@@ -91,7 +139,7 @@ and `Hosts`:
 | `Provider` | The provider class; the manifest writes it `"Namespace.Class, Assembly"`. |
 | `Connection` | `AppDriveConnectionManifest.WithOAuth(...)` or `WithForm(...)` (below). |
 | `Icon` | Path of a package asset, optional. |
-| `Hosts` | The hosts the provider reaches: an exact name (`api.pcloud.com`) or a subdomain wildcard (`*.pcloud.com`), always over `https`. Refused: a bare wildcard, a name without a dot, an IP address, uppercase. |
+| `Hosts` | The hosts the provider reaches: an exact name (`api.example.com`) or a subdomain wildcard (`*.files.example.com`), always over `https`. Refused: a bare wildcard, a name without a dot, an IP address, uppercase. `drives.provide` is enough to reach them ([below](#reaching-the-service)). |
 
 **OAuth** (`AppDriveOAuthManifest`): `AuthorizationEndpoint`, `TokenEndpoint`,
 `RevocationEndpoint` (optional), all `https`; one client per scope,
@@ -104,27 +152,128 @@ client is public (PKCE), as for Dropbox and OneDrive.
 **Form** (`AppDriveFormFieldManifest(Name, Label, Kind)`): `Kind` `Text`,
 `Url`, `Number` or `Choice` (with `Choices`), `Secret` (sealed by the OS,
 returned by `GetSecretAsync`), `Required` (true by default), `Default`.
-Unique names, at most 64 characters.
+Unique names, at most 64 characters. **`ServerAddress`** (`serverAddress` in
+the manifest) marks the field where the user types the address of their
+server ([ADR 0284](../dev/adr/0284-drive-provider-hosts-and-typed-server-address.md) §2):
+kind `Url`, never `Secret`, required, one per provider at most, and only in a
+form connection.
 
 In the manifest (`driveProviders`, sorted by type):
 
 ```json
 "driveProviders": [{
-  "type": "pcloud",
-  "name": "pCloud",
-  "provider": "Example.PCloud.PCloudProvider, Example.PCloud",
-  "icon": "assets/pcloud.svg",
-  "hosts": ["*.pcloud.com", "api.pcloud.com"],
+  "type": "exemple",
+  "name": "Exemple",
+  "provider": "Contoso.ExempleDrive.ExempleDriveProvider, Contoso.ExempleDrive",
+  "icon": "assets/exemple.svg",
+  "hosts": ["*.files.example.com", "api.example.com"],
   "connection": {
     "kind": "oauth",
     "oauth": {
-      "authorizationEndpoint": "https://my.pcloud.com/oauth2/authorize",
-      "tokenEndpoint": "https://api.pcloud.com/oauth2_token",
-      "fullAccess": { "clientId": "public-client-id" }
+      "authorizationEndpoint": "https://api.example.com/oauth2/authorize",
+      "tokenEndpoint": "https://api.example.com/oauth2/token",
+      "fullAccess": { "clientId": "your-public-app-id" }
     }
   }
 }]
 ```
+
+## Reaching the service
+
+The provider talks to its service **straight from the browser**, with
+**`KazoDirectHttpClient`** (`Kazo.Os.AppSdk.Net`,
+[`sdk-network.md`](sdk-network.md)): the request leaves through the page's
+`fetch`, without the Kazo server, so it works on an installation with no
+server.
+
+```csharp
+using KazoDirectHttpClient client = new() { Timeout = TimeSpan.FromSeconds(60) };
+
+string token = await context.GetAccessTokenAsync(cancellationToken); // the OS renews it
+KazoDirectHttpRequest request = new(HttpMethod.Get, new Uri("https://api.example.com/v1/children?path=%2F"));
+request.Headers.Add(new("Authorization", "Bearer " + token));
+await using KazoDirectHttpResponse response = await client.SendAsync(request, cancellationToken);
+Children? children = await response.ReadFromJsonAsync(MyJson.Default.Children, cancellationToken);
+```
+
+- **Declared hosts.** `drives.provide` is enough to reach a host in the
+  `Hosts` of the feature's declarations; `network.direct.access` is **not**
+  needed ([ADR 0284](../dev/adr/0284-drive-provider-hosts-and-typed-server-address.md) §1).
+  The gateway decides in this order: a host of `directNetworkHosts` requires
+  `network.direct.access`; otherwise a provider host or a typed server
+  requires `drives.provide`; otherwise the request is refused
+  (`UnauthorizedAccessException` naming the host) and nothing is sent.
+- **A server the user types** (WebDAV, Nextcloud, a NAS: no host known in
+  advance). Mark the address field `ServerAddress = true`. When a drive of that
+  type opens, the OS reads that field's value, keeps its host when valid
+  (absolute `https` address, no user name or password in the address, no IP
+  address, no `localhost`, a name with a dot) and allows it **to that feature
+  alone, while the drive is open**. Two drives on the same server keep it
+  allowed until the second one closes. The connect dialog writes it before
+  saving ("This provider will reach dav.example.org"). The provider has
+  nothing more to do: it reads the address in `KazoDriveOpenRequest.Options`.
+- **Network errors.** A network failure, a CORS refusal and a TLS error all
+  give `HttpRequestException` ("Failed to fetch" for the page): the provider
+  turns them into `KazoDriveErrorKind.Unavailable`. A `Timeout` that runs out
+  throws `TaskCanceledException` without the caller's token being cancelled:
+  `Unavailable` as well.
+- **What the browser forbids.** No cookie, no reserved header (`Host`,
+  `Cookie`, `Origin`, `Referer`, `Sec-*`…), and only the response headers the
+  service exposes can be read (`ETag` included).
+
+### Expected errors
+
+The OS turns `KazoDriveException.Kind` into a file system error; the
+conformance suite checks the same kinds:
+
+| The service answers | `KazoDriveErrorKind` | File system error |
+| --- | --- | --- |
+| Nothing (network, CORS, TLS), 408, 429, 5xx | `Unavailable` | `ProviderUnavailable`, drive disconnected |
+| 401, token refused | `SignInRequired` | the OS renews the token once, otherwise the drive is disconnected |
+| 403 | `AccessDenied` | `PermissionDenied` |
+| 404 | `NotFound` | `NotFound` |
+| The name is taken | `Exists` | `AlreadyExists` |
+| The revision no longer matches | `RevisionConflict` | `RevisionConflict` |
+| Listing a file, reading a folder | `TypeMismatch` | `NotDirectory` |
+| Folder not empty, without recursion | `NotEmpty` | `DirectoryNotEmpty` |
+| Name refused by the service | `InvalidName` | `InvalidName` |
+| Over 128 MiB | `FileTooLarge` | `FileTooLarge` |
+| Storage full | `QuotaExceeded` | `NoSpace` |
+| Anything else | `Other` | `ProviderFailure` |
+
+## CORS: what the service must accept
+
+The request leaves from the OS's page: the browser lets it through only if the
+service accepts the **OS's origin** (`https://os.kazo.ca`, or the address
+where the OS is served). For a request with `Authorization`, the browser first
+sends an `OPTIONS` request ("preflight"); the service must answer it `2xx`
+**without** asking for authentication, with:
+
+| Response header | Value |
+| --- | --- |
+| `Access-Control-Allow-Origin` | the OS's origin (or `*`) |
+| `Access-Control-Allow-Methods` | the methods used (`GET, PUT, POST, DELETE`, and for WebDAV `PROPFIND, MKCOL, MOVE`) |
+| `Access-Control-Allow-Headers` | `Authorization` and the other headers sent (`Content-Type`, `Depth`, `Destination`, `Overwrite`, `If-Match`, `If-None-Match`); `*` does not cover `Authorization` |
+| `Access-Control-Expose-Headers` | `ETag`, `Content-Length` (otherwise the page does not see them) |
+
+To check, from a terminal:
+
+```bash
+curl -i -X OPTIONS "https://api.example.com/v1/children?path=%2F" \
+  -H "Origin: https://os.kazo.ca" \
+  -H "Access-Control-Request-Method: GET" \
+  -H "Access-Control-Request-Headers: authorization"
+```
+
+The answer must be `200` or `204` with the headers above. In the OS, a request
+refused by CORS shows as an `Unavailable` drive, and the browser's console
+(F12) names the missing header.
+
+**A WebDAV server must accept CORS**: Nextcloud, ownCloud and most WebDAV
+servers do not by default. The server's administrator adds the headers above
+in the web server in front of it (Apache, nginx), and makes `OPTIONS` answer
+without authentication. Without that, the drive stays disconnected, whatever
+the provider.
 
 ## Sign-in run by the OS (work item 5)
 
@@ -205,6 +354,84 @@ Work item 4 wires the declared types into the file system
   (tree, revisions, quota, accepted token, offline, failures, slow or failing
   open).
 
+## Testing: the conformance suite
+
+The **`Kazo.Os.AppSdk.Testing`** package gives `KazoDriveProviderTests`
+(namespace `Kazo.Os.AppSdk.Testing.Drives`): the same cases the OS expects of
+every provider. A test class derives from it, opens a drive on a test service
+(never a real one), and runs each case:
+
+```csharp
+public sealed class ExempleConformanceTests : KazoDriveProviderTests
+{
+    private readonly InMemoryCloudDrive _service = new();
+
+    public static TheoryData<string> Cases => new(CaseNames);
+
+    [Theory]
+    [MemberData(nameof(Cases))]
+    public async Task The_provider_conforms(string name) =>
+        Assert.Equal(KazoDriveConformanceOutcome.Passed, (await RunAsync(name)).Outcome);
+
+    protected override ValueTask<KazoDriveFolder> OpenDriveAsync(CancellationToken cancellationToken) =>
+        new ExempleDriveProvider(_service.Connect).OpenAsync(
+            new KazoDriveOpenRequest("Exemple", new KazoDriveTestContext("exemple") { AccessToken = "token-1" }),
+            cancellationToken);
+}
+```
+
+| Case | What is checked |
+| --- | --- |
+| `root-is-a-folder` | The root is a folder, the state is `Ready`. |
+| `write-then-read`, `empty-file`, `overwrite` | Write, read back, describe, list; an empty file; a whole replacement. |
+| `create-folder-and-list`, `create-existing` | Create a folder, list only the direct children; `Exists` on a taken name. |
+| `missing`, `wrong-kind` | `NotFound`; `TypeMismatch`. |
+| `delete` | A file, an empty folder, `NotEmpty` without recursion, a recursive delete. |
+| `revision-conflict` | A conditional write of a file another device changed throws `RevisionConflict` (skipped when the service keeps no revision). |
+| `move` | A move in one call, file and folder (an informative result when `TryMoveAsync` answers `false`). |
+| `quota` | `0 <= free <= total` (informative when `null`). |
+| `names` | Spaces, accents, `%`, `#`, `?`, `+`, `&`, brackets, an apostrophe, Japanese, an emoji, `.cache` come back as written, or are refused with `InvalidName`. |
+| `offline` | `OpenAsync` does not reach the service; the state is `Unavailable`, then `Ready` when the network is back. |
+| `sign-in-expired` | State `SignInRequired`, operations `SignInRequired`. |
+| `file-too-large` | A file over 128 MiB stays listed with its length, but reading it throws `FileTooLarge`. |
+
+For the last three, the test class overrides `SetServiceReachableAsync`,
+`ExpireSignInAsync` and `PlaceLargeFileAsync` (otherwise the case is skipped,
+with the reason); `ResetAsync` puts the service back between two cases.
+`KazoDriveTestContext` plays the OS's context: `AccessToken` (without a token,
+`GetAccessTokenAsync` throws `SignInRequired`), `Secrets`, and the
+`TokenRequests` and `AvailabilityNotifications` counters. Each case works in a
+`kazo-conformance-…` folder that it deletes afterwards.
+
+## The WebDAV sample
+
+`Apps/Samples/Kazo.Os.Samples.WebDavDrive` is a complete provider to copy,
+with a **form connection**: server address (`ServerAddress`), user name,
+app password (`Secret`, sealed by the OS). It sends WebDAV (RFC 4918) through
+`KazoDirectHttpClient`, signs each request with HTTP Basic using the password
+it asks the OS for each time, and takes the `ETag` as the revision (`If-Match`
+for a conditional write, `If-None-Match: *` for a create). It declares no host:
+the server the user types is enough. Its tests
+(`Tests/Kazo.Os.Samples.WebDavDrive.Tests`) pass the whole suite against a
+local in-memory WebDAV server (`LocalWebDavServer`).
+
+## Limits and the Store review
+
+- **128 MiB per file** (`KazoDriveLimits.MaxFileBytes`): a file is read and
+  written whole. A larger file stays listed, but is neither read nor written.
+- **No sandbox.** The feature's code runs in the page; its own JavaScript can
+  call `fetch`. The host list bounds what goes through the SDK, not a
+  malicious provider.
+- **The Store review is the real barrier**: only the Store repository signs
+  packages; it checks the declaration (type not reserved, hosts over `https`,
+  no bare wildcard) and the review reads the code: the hosts reached must be
+  the declared ones, no token or secret may leave to another host, no
+  JavaScript that goes around the SDK.
+- **CORS**: without the service's consent, nothing gets through
+  ([above](#cors-what-the-service-must-accept)).
+- **Phishing**: the OS always shows the feature's name next to the service's
+  name in the connect dialog and Settings.
+
 ## Checks
 
 | Where | Code | Case |
@@ -215,6 +442,7 @@ Work item 4 wires the declared types into the file system
 | Validator | `manifest.drive-provider.name`, `.class`, `.icon` | An empty name, a missing or malformed class, an empty icon. |
 | Validator | `manifest.drive-provider.host` | A refused host (above). |
 | Validator | `manifest.drive-provider.connection`, `.oauth`, `.form`, `.address` | An inconsistent connection, no OAuth client, repeated or malformed fields, an address that is not `https`. |
+| Validator | `manifest.drive-provider.server-address` | A `serverAddress` field that is not a required, non-secret `Url`, or more than one per provider. |
 | Generator | `KOSAPP0033` | An ordinary app asks for `drives.provide`. |
 | Generator | `KOSAPP0036` | The declared class does not derive from `KazoDriveProvider`, is abstract, is not in the feature's assembly, or has no public `()` or `(IFeatureServiceContext)` constructor. |
 
@@ -222,7 +450,10 @@ The `manifest.schema.v1.json` schema carries the same shape rules (fixtures
 `feature-provides-drive-*.valid.json` and `invalid-drive-provider-*.json`).
 
 The **`drives.provide`** capability is dangerous: the approval screen names it
-"Provide a type of network drive".
+"Provide a type of network drive", with the hosts of the declarations and,
+when there is one, the label of the server address field ("Each user's
+server, typed in: Server address"). An update that adds a host puts it back
+to pending ([approval](../dev/dangerous-capability-approval.md)).
 
 ## Deviations from the sketch of ADR 0282
 
@@ -245,7 +476,9 @@ substance (no operation removed, the OS still keeps the tokens):
   rule of `DirectNetworkHosts` (work item 1, `network.direct.access`) in its
   canonical form: one rule for both.
 
-## Task list (work item 2)
+## Task list
+
+Work item 2 (contract):
 
 - [x] SDK types of `Kazo.Os.AppSdk.Drives` and their tests
 - [x] `FeatureDefinition.DriveProviders`, `KazoDriveProviderDeclaration`
@@ -255,3 +488,11 @@ substance (no operation removed, the OS still keeps the tokens):
 - [x] Dangerous capability `drives.provide`
 - [x] Sign-in run by the OS, form accounts, provider context (work item 5)
 - [x] Wiring into the OS (work item 4, see above)
+
+Work item 7 (developer kit):
+
+- [x] Public conformance suite `KazoDriveProviderTests` (`Kazo.Os.AppSdk.Testing`)
+- [x] `dotnet new kazoos-drive-provider` template
+- [x] WebDAV sample with a form connection
+- [x] ADR 0284: `drives.provide` is enough for declared hosts, a typed server address
+- [x] This guide

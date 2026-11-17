@@ -184,6 +184,19 @@ ca.exemple.drive:network.direct.access=allow
 ca.exemple.drive=*.example.com,api.example.com
 ```
 
+Sous `drives.provide`
+([ADR 0284](adr/0284-drive-provider-hosts-and-typed-server-address.md) §1),
+la même ligne nomme les hôtes des déclarations `driveProviders`
+(`DirectNetworkHostText.For`), et une seconde ligne le champ d'adresse du
+serveur s'il y en a un : « Le serveur que chaque utilisateur tape dans :
+Adresse du serveur » (`DirectNetworkHostText.TypedServersFor`). Les hôtes des
+deux capacités partagent la section `[direct-network-hosts]` : approuver ou
+refuser l'une garde les hôtes approuvés que l'autre déclare encore
+(`DangerousCapabilityEvaluator.HostsToApprove`), et un hôte ajouté à un
+fournisseur par une mise à jour remet `drives.provide` en `Pending`. Le serveur
+tapé n'est jamais écrit : il est permis tant que le lecteur est ouvert
+(`DriveServerHosts`).
+
 `DangerousCapabilityApprovalBroker` montre une demande à la fois. Sans fenêtre
 attachée, une demande finit en `Unavailable` (donc `capability.deferred`) ; si
 la coque disparaît (déconnexion), les demandes en cours sont fermées sans

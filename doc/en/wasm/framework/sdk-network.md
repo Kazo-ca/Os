@@ -279,6 +279,10 @@ using KazoDirectHttpResponse uploaded = await client.PutAsync(
   administrator approves the list ([approval](../dev/dangerous-capability-approval.md)).
   The client is offered to every app (maintainer's choice, 2026-11-17); the
   permission decides.
+  A feature that provides a network drive reaches the hosts of its
+  `driveProviders` declarations, and the server typed in a `serverAddress`
+  field, with `drives.provide` alone (ADR 0284,
+  [`drive-providers.md`](drive-providers.md#reaching-the-service)).
 - **Refusals.** Without the capability: `UnauthorizedAccessException`.
   Undeclared host: `UnauthorizedAccessException` naming the host. An `http`
   address, a relative one without `BaseAddress`, or a header only the browser
