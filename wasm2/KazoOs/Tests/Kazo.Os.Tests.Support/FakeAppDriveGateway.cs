@@ -25,6 +25,44 @@ public sealed class FakeAppDriveGateway : IAppDriveGateway
     /// <summary>Network drive types the OS offers (ADR 0270); empty by default, as the SDK's default.</summary>
     public List<string> NetworkTypes { get; } = [];
 
+    /// <summary>
+    /// Descriptions of the types (ADR 0282 §5), by type; a type of <see cref="NetworkTypes"/> without one
+    /// is described as the SDK's default describes it.
+    /// </summary>
+    public Dictionary<string, KazoNetworkDriveTypeInfo> TypeInfos { get; } = new(StringComparer.Ordinal);
+
+    /// <summary>Drives kept without their provider (ADR 0282 §5).</summary>
+    public List<KazoDriveSnapshot> MissingDrives { get; } = [];
+
+    /// <summary>The description of an S3 storage as the OS gives it: a form whose keys are secret.</summary>
+    public static KazoNetworkDriveTypeInfo S3Info { get; } = new("s3", "S3", KazoNetworkDriveConnection.Form)
+    {
+        Fields =
+        [
+            new("endpoint", "Endpoint", KazoNetworkDriveFieldKind.Url),
+            new("bucket", "Bucket", KazoNetworkDriveFieldKind.Text),
+            new("region", "Region", KazoNetworkDriveFieldKind.Text) { Required = false },
+            new("prefix", "Prefix", KazoNetworkDriveFieldKind.Text) { Required = false },
+            new("addressing", "Addressing", KazoNetworkDriveFieldKind.Choice)
+            {
+                Required = false,
+                Default = string.Empty,
+                Choices = [new(string.Empty, "Auto"), new("path", "Path"), new("virtual", "Virtual")]
+            },
+            new("access-key-id", "Access key ID", KazoNetworkDriveFieldKind.Secret),
+            new("secret-access-key", "Secret access key", KazoNetworkDriveFieldKind.Secret)
+        ]
+    };
+
+    /// <summary>Offers a described type.</summary>
+    public FakeAppDriveGateway WithType(KazoNetworkDriveTypeInfo info)
+    {
+        ArgumentNullException.ThrowIfNull(info);
+        NetworkTypes.Add(info.Type);
+        TypeInfos[info.Type] = info;
+        return this;
+    }
+
     /// <summary>Gets the last request <see cref="MountNetworkDriveAsync"/> received.</summary>
     public KazoNetworkDriveRequest? LastNetworkRequest { get; private set; }
 
@@ -70,6 +108,17 @@ public sealed class FakeAppDriveGateway : IAppDriveGateway
 
     public ValueTask<IReadOnlyList<string>> GetNetworkDriveTypesAsync(CancellationToken cancellationToken = default) =>
         ValueTask.FromResult<IReadOnlyList<string>>([.. NetworkTypes]);
+
+    public async ValueTask<IReadOnlyList<KazoNetworkDriveTypeInfo>> DescribeNetworkDriveTypesAsync(
+        System.Globalization.CultureInfo language, CancellationToken cancellationToken = default)
+    {
+        IReadOnlyList<KazoNetworkDriveTypeInfo> defaults =
+            await ((IAppDriveGateway)new DefaultDescriptions(NetworkTypes)).DescribeNetworkDriveTypesAsync(language, cancellationToken);
+        return [.. defaults.Select(info => TypeInfos.GetValueOrDefault(info.Type) ?? info)];
+    }
+
+    public ValueTask<IReadOnlyList<KazoDriveSnapshot>> GetProviderMissingDrivesAsync(CancellationToken cancellationToken = default) =>
+        ValueTask.FromResult<IReadOnlyList<KazoDriveSnapshot>>([.. MissingDrives]);
 
     public ValueTask<KazoDriveSnapshot?> MountNetworkDriveAsync(
         KazoNetworkDriveRequest request, string? mountPoint, CancellationToken cancellationToken = default)
@@ -120,4 +169,14 @@ public sealed class FakeAppDriveGateway : IAppDriveGateway
 
     private static KazoDriveSnapshot Network(string mountPoint, string name, bool ready) =>
         new(mountPoint, "hostfs", name, 0, 0) { DriveType = KazoDriveType.Network, IsReady = ready };
+
+    /// <summary>A gateway with only the types, to reach the SDK's default description of them.</summary>
+    private sealed class DefaultDescriptions(IReadOnlyList<string> types) : IAppDriveGateway
+    {
+        public ValueTask<IReadOnlyList<KazoDriveSnapshot>> GetDrivesAsync(CancellationToken cancellationToken = default) =>
+            ValueTask.FromResult<IReadOnlyList<KazoDriveSnapshot>>([]);
+
+        public ValueTask<IReadOnlyList<string>> GetNetworkDriveTypesAsync(CancellationToken cancellationToken = default) =>
+            ValueTask.FromResult<IReadOnlyList<string>>([.. types]);
+    }
 }

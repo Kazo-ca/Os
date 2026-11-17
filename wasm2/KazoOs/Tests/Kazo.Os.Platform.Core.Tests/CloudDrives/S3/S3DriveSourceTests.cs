@@ -1,7 +1,9 @@
+using System.Globalization;
 using System.Net;
 using System.Text;
 using System.Text.Json;
 using Kazo.Os.App.Abstractions;
+using Kazo.Os.AppSdk.IO;
 using Kazo.Os.Platform.Core.CloudAccounts;
 using Kazo.Os.Platform.Core.CloudDrives.S3;
 using Kazo.Os.Platform.Core.FileSystem.HostFolders;
@@ -29,6 +31,26 @@ public sealed class S3DriveSourceTests
 {
     private const string Read = AppCapabilities.FileSystemSystemRead;
     private const string Write = AppCapabilities.FileSystemSystemWrite;
+
+    [Fact]
+    public async Task S3_is_described_as_a_form_of_the_os_whose_keys_are_secret_in_the_callers_language()
+    {
+        Harness harness = await Harness.CreateAsync();
+
+        KazoNetworkDriveTypeInfo english = harness.Source.Describe(CultureInfo.GetCultureInfo("en"));
+        KazoNetworkDriveTypeInfo french = harness.Source.Describe(CultureInfo.GetCultureInfo("fr"));
+
+        Assert.Equal(("s3", KazoNetworkDriveConnection.Form, false), (english.Type, english.Connection, english.IsThirdParty));
+        Assert.Equal(
+            ["endpoint", "bucket", "region", "prefix", "addressing", "access-key-id", "secret-access-key"],
+            english.Fields.Select(static field => field.Name));
+        Assert.Equal(
+            ["access-key-id", "secret-access-key"],
+            english.Fields.Where(static field => field.IsSecret).Select(static field => field.Name));
+        Assert.Equal(KazoNetworkDriveFieldKind.Url, english.Fields[0].Kind);
+        Assert.Equal(["", "path", "virtual"], english.Fields.Single(static field => field.Name == "addressing").Choices.Select(static choice => choice.Value));
+        Assert.NotEqual(english.Fields[1].Label, french.Fields[1].Label);
+    }
 
     [Fact]
     public async Task A_bucket_mounts_under_its_name_with_its_keys_sealed_in_an_s3_account()

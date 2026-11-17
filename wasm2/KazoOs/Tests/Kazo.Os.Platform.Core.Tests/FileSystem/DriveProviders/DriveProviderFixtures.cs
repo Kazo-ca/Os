@@ -127,7 +127,13 @@ public static class DriveProviderFixtures
                 registration, Loader, tokens, Contexts(tokens, serviceOf, ExtraOptions))
             {
                 OpenTimeout = openTimeout,
-                ServerHosts = ServerHosts
+                ServerHosts = ServerHosts,
+                SaveFormAccount = (type, displayName, options, secrets, _) =>
+                {
+                    FormAccounts.Add((type, displayName, options, secrets));
+                    CloudAccount account = tokens.Add($"form-{FormAccounts.Count}", type, displayName: displayName);
+                    return ValueTask.FromResult(account);
+                }
             });
         }
 
@@ -150,6 +156,9 @@ public static class DriveProviderFixtures
         public bool ProcessFails { get; set; }
 
         public List<string> Loads { get; } = [];
+
+        /// <summary>The form accounts the source saved: type, name, plain values and secrets (ADR 0282 §3).</summary>
+        public List<(string Type, string Name, IReadOnlyDictionary<string, string> Options, IReadOnlyDictionary<string, string> Secrets)> FormAccounts { get; } = [];
 
         public List<(string AppId, Type Implementation)> Started { get; } = [];
 

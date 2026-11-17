@@ -1,7 +1,12 @@
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
+using Kazo.Os.App.Abstractions;
+using Kazo.Os.AppSdk.Apps;
+using Kazo.Os.AppSdk.IO;
 using Kazo.Os.AppSdk.Drives;
 using Kazo.Os.Platform.Core.CloudAccounts;
 using Kazo.Os.Platform.Core.CloudDrives;
+using Kazo.Os.Platform.Core.FileSystem.HostFolders;
 using Kazo.Os.Simulation.Abstractions.FileSystem;
 
 namespace Kazo.Os.Platform.Core.FileSystem.DriveProviders;
@@ -25,6 +30,19 @@ public delegate ValueTask<FeatureDriveConnection> FeatureDriveContextFactory(
     Action availabilityChanged,
     CancellationToken cancellationToken);
 
+/// <summary>Saves the account of a form connection (<see cref="CloudAccountService.SaveFormAccountAsync"/>).</summary>
+/// <param name="type">The drive type.</param>
+/// <param name="displayName">What the account list shows.</param>
+/// <param name="options">The non-secret values.</param>
+/// <param name="secrets">The secret values, sealed by the OS.</param>
+/// <param name="cancellationToken">Cancels the write.</param>
+public delegate ValueTask<CloudAccount> FeatureFormAccountWriter(
+    string type,
+    string displayName,
+    IReadOnlyDictionary<string, string> options,
+    IReadOnlyDictionary<string, string> secrets,
+    CancellationToken cancellationToken);
+
 /// <summary>
 /// The <see cref="INetworkDriveSource"/> of one drive type a feature provides (ADR 0282 §3): the
 /// platform's internal contract on one side, the feature's <see cref="KazoDriveProvider"/> on the
@@ -43,7 +61,7 @@ public delegate ValueTask<FeatureDriveConnection> FeatureDriveContextFactory(
 /// <see cref="IKazoDriveProviderContext.NotifyAvailabilityChanged"/>.
 /// </para>
 /// </remarks>
-public sealed class FeatureDriveSource : INetworkDriveSource, IDisposable
+public sealed class FeatureDriveSource : IDescribedNetworkDriveSource, IDisposable
 {
     /// <summary>How long loading a provider and opening a drive may take before the drive stays disconnected.</summary>
     public static readonly TimeSpan DefaultOpenTimeout = TimeSpan.FromSeconds(20);
@@ -97,6 +115,13 @@ public sealed class FeatureDriveSource : INetworkDriveSource, IDisposable
     /// <summary>Gets or sets how long the state question may take; <see cref="DefaultStateTimeout"/> by default.</summary>
     public TimeSpan StateTimeout { get; init; } = DefaultStateTimeout;
 
+    /// <summary>
+    /// Gets or sets what saves the account of a form connection (ADR 0282 §3,
+    /// <see cref="CloudAccountService.SaveFormAccountAsync"/>): the non-secret values in the clear, the
+    /// secret ones sealed. <see langword="null"/> refuses a new form account (tests of OAuth types).
+    /// </summary>
+    public FeatureFormAccountWriter? SaveFormAccount { get; init; }
+
     /// <summary>Gets the cloud accounts.</summary>
     internal ICloudAccountTokens Accounts { get; }
 
@@ -105,6 +130,59 @@ public sealed class FeatureDriveSource : INetworkDriveSource, IDisposable
 
     /// <inheritdoc />
     public event Action? AvailabilityChanged;
+
+    /// <inheritdoc />
+    /// <remarks>
+    /// The declaration as the feature wrote it (names and labels are not translated), the feature's id
+    /// and name (ADR 0282, Security: the OS always names the feature next to the service), and the icon
+    /// the feature ships, served from its package. An OAuth type gets its scopes from the caller.
+    /// </remarks>
+    public KazoNetworkDriveTypeInfo Describe(CultureInfo language)
+    {
+        AppDriveProviderManifest declaration = Registration.Provider;
+        bool form = declaration.Connection.Kind == AppDriveConnectionKind.Form;
+        return new(Type, declaration.Name, form ? KazoNetworkDriveConnection.Form : KazoNetworkDriveConnection.OAuth)
+        {
+            Icon = NetworkDriveTypeIcons.Generic,
+            IconUrl = IconUrl(),
+            Fields = form ? [.. declaration.Connection.Fields.Select(Describe)] : [],
+            ProviderFeatureId = Registration.Feature.Id,
+            ProviderFeatureName = Registration.Feature.Name
+        };
+    }
+
+    /// <summary>The page address of the declared icon; <see langword="null"/> without one or without a package to serve it.</summary>
+    private string? IconUrl()
+    {
+        if (string.IsNullOrWhiteSpace(Registration.Provider.Icon))
+        {
+            return null;
+        }
+
+        try
+        {
+            return KazoAppAssets.RelativeUrl(Registration.Feature, Registration.Provider.Icon);
+        }
+        catch (InvalidOperationException)
+        {
+            // The feature has no entry-point assembly to serve the file from: the generic icon.
+            return null;
+        }
+    }
+
+    private static KazoNetworkDriveField Describe(AppDriveFormFieldManifest field) =>
+        new(field.Name, field.Label, field.Secret ? KazoNetworkDriveFieldKind.Secret : field.Kind switch
+        {
+            AppDriveFormFieldKind.Url => KazoNetworkDriveFieldKind.Url,
+            AppDriveFormFieldKind.Number => KazoNetworkDriveFieldKind.Number,
+            AppDriveFormFieldKind.Choice => KazoNetworkDriveFieldKind.Choice,
+            _ => KazoNetworkDriveFieldKind.Text
+        })
+        {
+            Required = field.Required,
+            Default = field.Secret ? null : field.Default,
+            Choices = [.. (field.Choices ?? []).Select(static choice => new KazoNetworkDriveFieldChoice(choice, choice))]
+        };
 
     /// <inheritdoc />
     /// <remarks>Always: the registry only lists the types of installed and enabled features.</remarks>
@@ -120,10 +198,11 @@ public sealed class FeatureDriveSource : INetworkDriveSource, IDisposable
         ArgumentNullException.ThrowIfNull(request);
         if (string.IsNullOrEmpty(request.Account))
         {
-            throw new ArgumentException($"{Type}: choose an account first.", nameof(request));
+            CloudAccount saved = await SaveFormAccountAsync(request, cancellationToken).ConfigureAwait(false);
+            request = request with { Account = saved.Id, Options = null, Secrets = null };
         }
 
-        CloudAccount? account = await Accounts.FindAccountAsync(request.Account, cancellationToken).ConfigureAwait(false);
+        CloudAccount? account = await Accounts.FindAccountAsync(request.Account!, cancellationToken).ConfigureAwait(false);
         if (account is null || !string.Equals(account.ProviderId, Type, StringComparison.Ordinal))
         {
             throw new ArgumentException($"{request.Account}: no {Registration.Provider.Name} account has this id.", nameof(request));
@@ -144,6 +223,26 @@ public sealed class FeatureDriveSource : INetworkDriveSource, IDisposable
     /// <inheritdoc />
     /// <remarks>Nothing to forget: the account stays until the user removes it (ADR 0282 §3).</remarks>
     public ValueTask ForgetAsync(NetworkDriveReference reference, CancellationToken cancellationToken = default) => ValueTask.CompletedTask;
+
+    /// <summary>
+    /// The account of a new drive of a form type (ADR 0282 §3, §5): the values of the form checked
+    /// against the declaration, then saved by the OS (secret ones sealed). An OAuth type needs an
+    /// account the user connected first.
+    /// </summary>
+    /// <exception cref="ArgumentException">An OAuth type without an account, or a value missing, unknown or malformed.</exception>
+    private async ValueTask<CloudAccount> SaveFormAccountAsync(NetworkDriveRequest request, CancellationToken cancellationToken)
+    {
+        AppDriveConnectionManifest connection = Registration.Provider.Connection;
+        if (connection.Kind != AppDriveConnectionKind.Form || SaveFormAccount is null)
+        {
+            throw new ArgumentException($"{Type}: choose an account first.", nameof(request));
+        }
+
+        (Dictionary<string, string> options, Dictionary<string, string> secrets) = FeatureDriveForm.Check(
+            Type, connection.Fields, request.Options, request.Secrets);
+        return await SaveFormAccount(Type, FeatureDriveForm.AccountName(connection.Fields, options, Registration.Provider.Name), options, secrets, cancellationToken)
+            .ConfigureAwait(false);
+    }
 
     /// <inheritdoc />
     public void Dispose() => Accounts.Changed -= RaiseAvailabilityChanged;

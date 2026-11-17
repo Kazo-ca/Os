@@ -39,6 +39,9 @@ public sealed class OneDriveDriveSource : CloudDriveSource
     public override string DefaultMountName => "OneDrive";
 
     /// <inheritdoc />
+    public override string Icon => "bootstrap:microsoft";
+
+    /// <inheritdoc />
     protected override IHostFolder CreateFolder(CloudDriveConnection connection, CloudAccount account, string? root) =>
         new OneDriveFolder(connection, Http, account.DisplayName, account.Scope, Split(root));
 

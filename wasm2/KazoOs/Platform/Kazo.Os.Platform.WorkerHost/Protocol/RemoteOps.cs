@@ -84,6 +84,8 @@ internal static class RemoteOps
     public const string DriveUnmount = "drv.umount";
     public const string DriveTypes = "drv.types";
     public const string DriveMountNetwork = "drv.mountnet";
+    public const string DriveDescribeTypes = "drv.describe";
+    public const string DriveProviderMissing = "drv.missing";
     public const string CloudCanConnect = "cld.can";
     public const string CloudPrepare = "cld.prepare";
     public const string CloudProviders = "cld.providers";

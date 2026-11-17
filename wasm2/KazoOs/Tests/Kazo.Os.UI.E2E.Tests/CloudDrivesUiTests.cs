@@ -56,6 +56,154 @@ public sealed class CloudDrivesUiTests(ITestOutputHelper output)
         }
     }
 
+    /// <summary>
+    /// ADR 0282 §5: a drive whose provider is missing stays in the Explorer, greyed, with the reason:
+    /// a type the administrator switched off (<c>KazoOs:CloudDrives:Disabled</c>), and a type whose
+    /// Feature is not installed, which offers « Install the provider ». The drive list is written from
+    /// the terminal, then the session signs in again, as after a reboot.
+    /// </summary>
+    [Fact]
+    public async Task A_drive_without_its_provider_is_greyed_with_the_reason_on_desktop_and_phone()
+    {
+        string solutionDirectory = E2ESupport.FindSolutionDirectory();
+        string shots = Path.Combine(solutionDirectory, "Tests", "TestResults", "cloud-drives");
+        Directory.CreateDirectory(shots);
+        int port = E2ESupport.ReservePort();
+        string address = $"http://127.0.0.1:{port}";
+        using Process server = E2ESupport.StartHarness(solutionDirectory, address, testDemo: false, output);
+        List<string> findings = [];
+
+        try
+        {
+            using IPlaywright playwright = await Playwright.CreateAsync();
+            await using IBrowser browser = await ChromiumLauncher.LaunchAsync(playwright, new BrowserTypeLaunchOptions { Headless = true });
+            await using IBrowserContext context = await browser.NewContextAsync(new() { ViewportSize = new() { Width = 1280, Height = 800 } });
+            await context.RouteAsync("**/appsettings.json", async route =>
+            {
+                IAPIResponse original = await route.FetchAsync();
+                string json = (await original.TextAsync())
+                    .Replace("\"CloudDrives\": {", "\"CloudDrives\": { \"Disabled\": \"s3\",", StringComparison.Ordinal);
+                await route.FulfillAsync(new() { Response = original, Body = json });
+            });
+            IPage page = await context.NewPageAsync();
+            E2ESupport.AttachDiagnostics(page, output);
+            try
+            {
+                await RunMissingProviderStepsAsync(page, address, shots, findings);
+            }
+            catch
+            {
+                await page.ScreenshotAsync(new() { Path = Path.Combine(shots, "failure-missing-provider.png") });
+                throw;
+            }
+
+            Assert.True(findings.Count == 0, string.Join('\n', findings));
+        }
+        finally
+        {
+            E2ESupport.StopProcess(server);
+        }
+    }
+
+    private async Task RunMissingProviderStepsAsync(IPage page, string address, string shots, List<string> findings)
+    {
+        await E2ESupport.NavigateWhenReadyAsync(page, address, output);
+        await E2ESupport.CreateLocalProfileAndReachDesktopAsync(page, output);
+
+        // The user's drive list, as a session that mounted both drives earlier would have left it.
+        await E2ESupport.OpenAppAsync(page, "Terminal", output);
+        ILocator rows = page.Locator("[data-terminal-panel] .xterm-rows").First;
+        await WaitForTerminalAsync(rows, static text => text.Contains('$', StringComparison.Ordinal), "the shell prompt");
+        await page.Locator("[data-terminal-panel] .xterm-screen").First.ClickAsync();
+        const string table =
+            "{\"schemaVersion\":1,\"drives\":["
+            + "{\"mountPoint\":\"/mnt/Bucket\",\"name\":\"Bucket\",\"createdMountPoint\":true,\"type\":\"s3\",\"account\":\"s3-e2e\"},"
+            + "{\"mountPoint\":\"/mnt/Pictures\",\"name\":\"Pictures\",\"createdMountPoint\":true,\"type\":\"e2ecloud\",\"account\":\"e2e-1\",\"provider\":\"org.example.e2ecloud\"}]}";
+        await RunInTerminalAsync(page, rows, "mkdir -p ~/.local/state/kazoos");
+        await RunInTerminalAsync(page, rows, "echo '" + table + "' > ~/.local/state/kazoos/network-drives.json");
+        await RunInTerminalAsync(page, rows, "clear");
+        await page.Keyboard.TypeAsync("ls ~/.local/state/kazoos");
+        await page.Keyboard.PressAsync("Enter");
+        await WaitForTerminalAsync(rows, static text => text.Contains("network-drives.json", StringComparison.Ordinal), "the drive list written");
+
+        // Sign in again: the drives are read at login.
+        await page.ReloadAsync();
+        await page.GetByLabel("Password", new() { Exact = true }).FillAsync(E2ESupport.Password, new() { Timeout = 60000 });
+        await page.GetByRole(AriaRole.Button, new() { Name = "Start session", Exact = true }).ClickAsync();
+        await E2ESupport.PassWelcomeAsync(page);
+
+        // The login kept both lines without mounting them: nothing new under /mnt, the list unchanged.
+        await E2ESupport.OpenAppAsync(page, "Terminal", output);
+        ILocator after = page.Locator("[data-terminal-panel] .xterm-rows").First;
+        await WaitForTerminalAsync(after, static text => text.Contains('$', StringComparison.Ordinal), "the shell prompt");
+        await page.Locator("[data-terminal-panel] .xterm-screen").First.ClickAsync();
+        await RunInTerminalAsync(page, after, "mount");
+        await RunInTerminalAsync(page, after, "cat ~/.local/state/kazoos/network-drives.json");
+        string listed = (await after.InnerTextAsync()).Replace("\n", string.Empty, StringComparison.Ordinal);
+        Assert.DoesNotContain("/mnt/Bucket type", listed, StringComparison.Ordinal);
+        Assert.Contains("org.example.e2ecloud", listed, StringComparison.Ordinal);
+
+        await E2ESupport.OpenAppAsync(page, "File Explorer", output);
+        ILocator disabled = page.Locator(".sidebar-entry.missing", new() { HasText = "Bucket" });
+        ILocator removed = page.Locator(".sidebar-entry.missing", new() { HasText = "Pictures" });
+        await Assertions.Expect(disabled).ToBeVisibleAsync(new() { Timeout = 30000 });
+        await Assertions.Expect(removed).ToBeVisibleAsync();
+        await Assertions.Expect(disabled).ToHaveAttributeAsync("aria-disabled", "true");
+        await Assertions.Expect(removed).ToHaveAttributeAsync("aria-disabled", "false");
+        await Assertions.Expect(disabled).ToContainTextAsync("Disabled by the administrator");
+        await Assertions.Expect(removed).ToContainTextAsync("Provider not installed");
+        await Assertions.Expect(removed).ToContainTextAsync("Install the provider");
+        await Assertions.Expect(disabled).Not.ToContainTextAsync("Install the provider");
+        await ScanAsync(page, page.Locator(".network-drive").First.Locator(".."), "desktop-missing-provider", shots, findings);
+
+        // Phone: the same drives are chips of the places bar.
+        await page.GetByRole(AriaRole.Button, new() { Name = "System clock, notifications, and calendar" }).ClickAsync();
+        await page.GetByRole(AriaRole.Dialog, new() { Name = "Notifications and calendar" })
+            .GetByRole(AriaRole.Radio, new() { Name = "Mobile", Exact = true }).ClickAsync();
+        await page.SetViewportSizeAsync(390, 844);
+        await page.GetByRole(AriaRole.Button, new() { Name = "Home", Exact = true }).ClickAsync();
+        ILocator home = page.Locator(".mobile-home-screen");
+        await Assertions.Expect(home).ToBeVisibleAsync(new() { Timeout = 15000 });
+        await home.GetByRole(AriaRole.Button, new() { Name = "All applications", Exact = true }).ClickAsync();
+        ILocator drawer = page.GetByRole(AriaRole.Dialog, new() { Name = "All applications", Exact = true });
+        await drawer.GetByRole(AriaRole.Searchbox, new() { Name = "Search applications" }).FillAsync("File Explorer");
+        await drawer.GetByRole(AriaRole.Button, new() { Name = "File Explorer", Exact = true }).ClickAsync();
+        ILocator chip = page.Locator(".network-chip.missing");
+        await Assertions.Expect(chip).ToHaveCountAsync(2, new() { Timeout = 30000 });
+        await ScanAsync(page, chip.First.Locator(".."), "mobile-missing-provider", shots, findings);
+    }
+
+    /// <summary>Types a command and waits for the next prompt: the shell runs one line at a time.</summary>
+    private async Task RunInTerminalAsync(IPage page, ILocator rows, string command)
+    {
+        static int Prompts(string text) => text.Split("@kazoos:").Length - 1;
+        int before = Prompts(await rows.InnerTextAsync());
+        await page.Keyboard.TypeAsync(command);
+        await page.Keyboard.PressAsync("Enter");
+        await WaitForTerminalAsync(
+            rows, text => command == "clear" ? Prompts(text) >= 1 : Prompts(text) > before, $"the prompt after '{command.Split(' ')[0]}'");
+    }
+
+    /// <summary>Polls the terminal's rendered rows until <paramref name="done"/> holds.</summary>
+    private async Task WaitForTerminalAsync(ILocator rows, Func<string, bool> done, string what)
+    {
+        Stopwatch elapsed = Stopwatch.StartNew();
+        string text = string.Empty;
+        while (elapsed.Elapsed < TimeSpan.FromSeconds(30))
+        {
+            text = (await rows.InnerTextAsync()).Replace(' ', ' ').Replace("\n", string.Empty, StringComparison.Ordinal);
+            if (done(text))
+            {
+                return;
+            }
+
+            await Task.Delay(200);
+        }
+
+        output.WriteLine(text);
+        throw new TimeoutException($"The terminal never showed {what}.");
+    }
+
     private async Task RunStepsAsync(IPage page, string address, string shots, List<string> findings)
     {
         await E2ESupport.NavigateWhenReadyAsync(page, address, output);

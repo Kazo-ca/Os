@@ -1,4 +1,7 @@
+using System.Globalization;
+using Kazo.Os.AppSdk.IO;
 using Kazo.Os.Platform.Core.CloudAccounts;
+using Kazo.Os.Platform.Core.FileSystem.HostFolders;
 using Kazo.Os.Simulation.Abstractions.FileSystem;
 
 namespace Kazo.Os.Platform.Core.CloudDrives;
@@ -20,7 +23,7 @@ namespace Kazo.Os.Platform.Core.CloudDrives;
 /// or the network returns, so a disconnected drive tries again by itself (§9).
 /// </para>
 /// </remarks>
-public abstract class CloudDriveSource : INetworkDriveSource, IDisposable
+public abstract class CloudDriveSource : IDescribedNetworkDriveSource, IDisposable
 {
     private readonly ICloudProviderCatalog _catalog;
     private readonly IHostActivitySignal? _activity;
@@ -53,6 +56,12 @@ public abstract class CloudDriveSource : INetworkDriveSource, IDisposable
     /// <summary>Gets the default mount point name under <c>/mnt</c>, e.g. <c>Dropbox</c>.</summary>
     public abstract string DefaultMountName { get; }
 
+    /// <summary>
+    /// Gets the icon of the service as <see cref="KazoNetworkDriveTypeInfo.Icon"/> names it, from the SDK's
+    /// icon fonts (Benoit allowed the services' marks on 2026-11-15); a cloud by default.
+    /// </summary>
+    public virtual string Icon => NetworkDriveTypeIcons.Generic;
+
     /// <summary>Gets the cloud accounts.</summary>
     protected ICloudAccountTokens Tokens { get; }
 
@@ -61,6 +70,14 @@ public abstract class CloudDriveSource : INetworkDriveSource, IDisposable
 
     /// <inheritdoc />
     public event Action? AvailabilityChanged;
+
+    /// <inheritdoc />
+    /// <remarks>
+    /// A sign-in to the service, named by its brand (<see cref="DefaultMountName"/>). The scopes come from
+    /// the configured provider, which the caller adds.
+    /// </remarks>
+    public KazoNetworkDriveTypeInfo Describe(CultureInfo language) =>
+        new(Type, DefaultMountName, KazoNetworkDriveConnection.OAuth) { Icon = Icon };
 
     /// <summary>Available when this OS has an app id for the provider.</summary>
     public async ValueTask<bool> IsAvailableAsync(CancellationToken cancellationToken = default)
