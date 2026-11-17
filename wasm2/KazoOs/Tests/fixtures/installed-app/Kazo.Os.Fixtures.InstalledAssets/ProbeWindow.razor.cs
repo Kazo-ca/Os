@@ -1,5 +1,7 @@
 using System.Globalization;
 using System.Resources;
+using System.Text.RegularExpressions;
+using System.Threading.Channels;
 using Kazo.Os.AppSdk.Blazor;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
@@ -13,7 +15,9 @@ namespace Kazo.Os.Fixtures.InstalledAssets;
 /// (ADR 0221). Shows its French greeting, read from the satellite assembly
 /// <c>lib/fr/Kazo.Os.Fixtures.InstalledAssets.resources.dll</c> of the package (ADR 0222).
 /// Calls CoreLib overloads the OS itself does not use, which trimming removed before ADR 0242:
-/// without CoreLib kept whole, the install check refuses this package.
+/// without CoreLib kept whole, the install check refuses this package. Calls the System.Linq,
+/// System.Text.RegularExpressions and System.Threading.Channels members Kazo AI 0.1.1 calls, which
+/// trimming removed before ADR 0280.
 /// Calls <c>Kazo.Fixtures.InstalledLibrary</c>, a library of the app the package carries in
 /// <c>lib/</c> (ADR 0261 §1): the OS loads it before this assembly.
 /// </summary>
@@ -28,6 +32,10 @@ public partial class ProbeWindow : WindowAppBase
     // ADR 0242: the overloads IRC 1.0.0 and Webamp 1.1.0 call (Int32.Parse of a span,
     // String.Compare with offsets, String.Split of strings).
     private readonly string _coreLib = CallCoreLibOverloads();
+
+    // ADR 0280: the members Kazo AI 0.1.1 calls (Regex.Replace with an evaluator or a static
+    // timeout, Enumerable.Sum over double, ChannelWriter<T>.WriteAsync).
+    private readonly string _frameworkLibraries = CallFrameworkLibraryMembers();
 
     // ADR 0261 §1: a call into the second assembly of the package, a library of the app.
     private readonly string _library = Kazo.Fixtures.InstalledLibrary.ProbeLibrary.Describe();
@@ -74,6 +82,16 @@ public partial class ProbeWindow : WindowAppBase
         int compared = string.Compare("xKAZO", 1, "kazo", 0, 4, StringComparison.OrdinalIgnoreCase);
         int lines = "a\r\nb".Split(["\r\n", "\n"], StringSplitOptions.None).Length;
         return $"corelib {number} {compared} {lines}";
+    }
+
+    private static string CallFrameworkLibraryMembers()
+    {
+        string evaluated = new Regex("[0-9]").Replace("a1b2", match => "<" + match.Value + ">");
+        string slug = Regex.Replace("Kazo OS", "[^A-Za-z]+", "_", RegexOptions.None, TimeSpan.FromMilliseconds(100));
+        double sum = new[] { 1.5, 2.5 }.Sum();
+        Channel<int> channel = Channel.CreateUnbounded<int>();
+        bool written = channel.Writer.WriteAsync(7, CancellationToken.None).IsCompletedSuccessfully;
+        return $"libraries {evaluated} {slug} {sum.ToString(CultureInfo.InvariantCulture)} {written}";
     }
 
     private static string ReadFrenchGreeting()

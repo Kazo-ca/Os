@@ -33,6 +33,8 @@ Ecosystem.csproj            PublishTrimmed=true, TrimMode=partial
                                     │
                               ILLink (publish)
             System.Private.CoreLib : entière (ADR 0242)
+            System.Linq, System.Text.RegularExpressions,
+            System.Threading.Channels : entières (ADR 0280)
             reste du framework et bibliothèques élaguables : élagués
             assemblies Kazo OS et apps : entières
             paquets non élaguables (MudBlazor…) : entiers (partial)
@@ -57,7 +59,11 @@ Ecosystem.csproj            PublishTrimmed=true, TrimMode=partial
   GitHub n'est pas une racine : elle trouve le framework que l'OS a gardé.
   `System.Private.CoreLib` reste donc entière (`TrimmerRootAssembly` de
   `_KazoOsRootKazoOsAssemblies`, +0,6 Mio en Brotli ; `KazoOsKeepCoreLib=false`
-  l'élague comme avant). Pour le reste du framework, `kazopkg` compare la
+  l'élague comme avant). `System.Linq`, `System.Text.RegularExpressions` et
+  `System.Threading.Channels` restent aussi entières (ADR 0280,
+  `KazoOsKeepAppFrameworkLibraries=false` les élague) : Kazo AI 0.1.1 était
+  refusée pour `Regex.Replace` avec un `MatchEvaluator`, `Enumerable.Sum` et
+  `ChannelWriter<T>.WriteAsync`. Pour le reste du framework, `kazopkg` compare la
   signature complète de chaque méthode référencée par le paquet au runtime
   chargé, et refuse le paquet avec la surcharge manquante
   (`apps.package.missing-api`). Avant l'ADR 0242, seul le nombre de paramètres
@@ -87,7 +93,7 @@ alerte `IL…`, sert la publication sur `127.0.0.1` et `127.0.0.2`, puis lance
 | `Trimmed_publish_boots_offline_after_the_first_load` | sur `127.0.0.2` (le service worker n'est pas enregistré sur `127.0.0.1`) : mise en cache de la version, rechargement sans réseau, connexion, lancement d'une app jamais chargée |
 | `The_calculator_rendered_in_a_worker_works_like_on_the_page` | essai de l'ADR 0133, réglage activé par une réécriture d'`appsettings.json` : la Calculatrice dans un worker calcule à la souris et au clavier, garde son CSS, `Tab`, axe, `Alt+F7`/`Alt+Q`, worker dédié libéré à la fermeture ([`remote-window-rendering.md`](remote-window-rendering.md)) |
 | `Measures_the_calculator_on_the_page_and_in_a_worker` | mesures de l'ADR 0133 (ouverture, latence, mémoire, lots), écrites dans `remote-window-measurements.json` du dossier des artefacts |
-| `An_installed_app_finds_its_wwwroot_files_and_its_worker_scripts` | ADR 0206 : le paquet de test `Tests/fixtures/installed-app` (emballé par le script avec `KazoOsPack`, servi par Playwright à la place de `raw.githubusercontent.com`) est installé par `sudo kazopkg install`, l'OS redémarre, l'app importe son module, lance son Web Worker (`importScripts` relatif), affiche son image et appelle des surcharges de CoreLib que l'OS n'utilise pas lui-même (ADR 0242) ; sur `127.0.0.1`, par le service worker du mode `installed-apps` |
+| `An_installed_app_finds_its_wwwroot_files_and_its_worker_scripts` | ADR 0206 : le paquet de test `Tests/fixtures/installed-app` (emballé par le script avec `KazoOsPack`, servi par Playwright à la place de `raw.githubusercontent.com`) est installé par `sudo kazopkg install`, l'OS redémarre, l'app importe son module, lance son Web Worker (`importScripts` relatif), affiche son image et appelle des surcharges de CoreLib que l'OS n'utilise pas lui-même (ADR 0242) et les membres de Linq, Regex et Channels qu'appelle Kazo AI (ADR 0280) ; sur `127.0.0.1`, par le service worker du mode `installed-apps` |
 | `The_published_service_worker_serves_installed_app_files_to_a_worker` | ADR 0206 sur `127.0.0.2` : le service worker publié sert à un Web Worker sous isolation cross-origin des fichiers rangés comme ceux d'une app installée (ligne de `servedFiles` et bloc de `fsContent`, ADR 0274), et répond `206` à une requête `Range` |
 | `The_published_service_worker_serves_an_installed_app_page_to_an_iframe` | ADR 0243 sur `127.0.0.2` : une page HTML servie depuis le contenu du système de fichiers (ADR 0274) s'ouvre dans une iframe avec sa requête (`?author=kazo&webgl`), isolée comme l'OS, en ligne puis hors ligne, au lieu de l'`index.html` de l'OS |
 | `The_installed_apps_worker_serves_an_installed_app_page_to_an_iframe` | ADR 0243 sur `127.0.0.1` : la même page, servie par le worker du mode `installed-apps` |
@@ -147,3 +153,4 @@ Avant de comparer, supprimer `OS/Kazo.Os.Ecosystem/obj/Release/net10.0/linked`,
 - [x] Tailles avant et après mesurées (ici et dans `building-and-testing.md`).
 - [x] ADR 0113.
 - [x] ADR 0242 : CoreLib entière, vérification exacte des signatures, paquet de test qui appelle des surcharges de CoreLib.
+- [x] ADR 0280 : Linq, Regex et Channels entières, paquet de test qui appelle les membres de Kazo AI 0.1.1.

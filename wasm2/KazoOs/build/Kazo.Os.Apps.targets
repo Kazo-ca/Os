@@ -608,6 +608,14 @@
         that needs a member they lost. KazoOsKeepCoreLib=false trims CoreLib as before.
       -->
       <TrimmerRootAssembly Include="System.Private.CoreLib" Condition="'$(KazoOsKeepCoreLib)' != 'false'" />
+      <!--
+        ADR 0280: three more framework assemblies stay whole, for the same reason. Kazo AI 0.1.1
+        was refused by the Store of 3.4.1 for Regex.Replace with a MatchEvaluator or a static
+        timeout, Enumerable.Sum over double and ChannelWriter<T>.WriteAsync: common calls the OS
+        itself does not make. KazoOsKeepAppFrameworkLibraries=false trims them as before.
+      -->
+      <TrimmerRootAssembly Include="System.Linq;System.Text.RegularExpressions;System.Threading.Channels"
+                           Condition="'$(KazoOsKeepAppFrameworkLibraries)' != 'false'" />
     </ItemGroup>
   </Target>
 
