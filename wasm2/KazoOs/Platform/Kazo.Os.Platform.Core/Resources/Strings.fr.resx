@@ -246,6 +246,12 @@
   <data name="Capability.network.listen.privileged.Title" xml:space="preserve">
     <value>Écouter un port privilégié</value>
   </data>
+  <data name="Capability.network.direct.access.Risk" xml:space="preserve">
+    <value>Envoyer et recevoir des données auprès des services web nommés par l'application, directement depuis le navigateur.</value>
+  </data>
+  <data name="Capability.network.direct.access.Title" xml:space="preserve">
+    <value>Joindre des services web directement</value>
+  </data>
   <data name="Capability.network.real.access.Risk" xml:space="preserve">
     <value>Joindre de vrais serveurs sur Internet par le serveur relais.</value>
   </data>

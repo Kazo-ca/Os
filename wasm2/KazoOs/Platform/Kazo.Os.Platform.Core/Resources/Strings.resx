@@ -246,6 +246,12 @@
   <data name="Capability.network.listen.privileged.Title" xml:space="preserve">
     <value>Listen on a privileged port</value>
   </data>
+  <data name="Capability.network.direct.access.Risk" xml:space="preserve">
+    <value>Send and receive data with the web services the app names, directly from the browser.</value>
+  </data>
+  <data name="Capability.network.direct.access.Title" xml:space="preserve">
+    <value>Reach web services directly</value>
+  </data>
   <data name="Capability.network.real.access.Risk" xml:space="preserve">
     <value>Reach real servers on the Internet through the relay server.</value>
   </data>

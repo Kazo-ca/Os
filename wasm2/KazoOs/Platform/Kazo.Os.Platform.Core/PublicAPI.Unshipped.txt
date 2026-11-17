@@ -27,5 +27,6 @@ static Kazo.Os.Platform.Core.Policy.DangerousCapabilityEvaluator.UnapprovedDirec
 static Kazo.Os.Platform.Core.Policy.DirectNetworkHostText.For(Kazo.Os.App.Abstractions.AppManifest! manifest, string! capability) -> string?
 Kazo.Os.Platform.Core.Network.AppNetworkGateway.DirectHosts.get -> System.Collections.Generic.IReadOnlyList<string!>!
 Kazo.Os.Platform.Core.Network.AppNetworkGateway.DirectHosts.init -> void
-Kazo.Os.Platform.Core.Network.AppNetworkGateway.DirectHttp.get -> System.Net.Http.HttpMessageInvoker!
+Kazo.Os.Platform.Core.Network.AppNetworkGateway.DirectHttp.get -> System.Net.Http.HttpMessageInvoker?
 Kazo.Os.Platform.Core.Network.AppNetworkGateway.DirectHttp.init -> void
+Kazo.Os.Platform.Core.Network.AppNetworkGateway.SendDirectAsync(Kazo.Os.AppSdk.Net.KazoDirectHttpRequest! request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.Net.KazoNetworkResult<Kazo.Os.AppSdk.Net.KazoDirectHttpResponse!>!>

@@ -771,6 +771,17 @@ internal sealed class RemoteProcessSession
                 Kazo.Os.AppSdk.Net.KazoRelayState state = await c.Network.GetRelayStateAsync(cancellationToken).ConfigureAwait(false);
                 return writer => WireCodec.WriteRelayState(writer, state);
             }
+            case RemoteOps.NetDirectCheck:
+            {
+                // ADR 0282 §4: the worker sends with its own fetch once the OS has said yes.
+                if (c.Network is not Kazo.Os.Platform.Core.Network.AppNetworkGateway direct)
+                {
+                    throw new NotSupportedException("This network gateway cannot send direct web requests.");
+                }
+
+                direct.AuthorizeDirect(WireCodec.ReadDirectCheck(a));
+                return static _ => { };
+            }
 
             case RemoteOps.CatalogInstalled:
             {

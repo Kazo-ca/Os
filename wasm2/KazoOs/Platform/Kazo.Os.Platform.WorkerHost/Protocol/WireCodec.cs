@@ -544,6 +544,50 @@ internal static class WireCodec
             UdpBlockedPorts = ReadInts(element, "ub")
         };
 
+    /// <summary>
+    /// Writes what the OS needs to allow a direct request from a worker (ADR 0282 §4): method, URI,
+    /// headers and the body's type and length. The body itself stays in the worker.
+    /// </summary>
+    public static void WriteDirectCheck(Utf8JsonWriter writer, KazoDirectHttpRequest request)
+    {
+        writer.WriteString("m", request.Method.Method);
+        writer.WriteString("u", request.RequestUri.AbsoluteUri);
+        WriteStrings(writer, "hk", request.Headers.Select(static header => header.Key));
+        WriteStrings(writer, "hv", request.Headers.Select(static header => header.Value));
+        if (request.Content is { } content)
+        {
+            writer.WriteString("ct", content.ContentType);
+            if (content.Length is { } length)
+            {
+                writer.WriteNumber("cl", length);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Reads what <see cref="WriteDirectCheck"/> wrote, as a request whose body is empty but keeps
+    /// its type and length (the OS only checks and counts it).
+    /// </summary>
+    public static KazoDirectHttpRequest ReadDirectCheck(JsonElement element)
+    {
+        KazoDirectHttpRequest request = new(
+            new System.Net.Http.HttpMethod(element.GetString("m")), new Uri(element.GetString("u"), UriKind.Absolute));
+        string[] keys = ReadStrings(element, "hk");
+        string[] values = ReadStrings(element, "hv");
+        for (int index = 0; index < Math.Min(keys.Length, values.Length); index++)
+        {
+            request.Headers.Add(new(keys[index], values[index]));
+        }
+
+        if (element.GetOptionalString("ct") is { } contentType)
+        {
+            long? length = element.TryGetProperty("cl", out JsonElement cl) ? cl.GetInt64() : null;
+            request.Content = KazoDirectHttpContent.FromStream(Stream.Null, contentType, length);
+        }
+
+        return request;
+    }
+
     private static void WriteInts(Utf8JsonWriter writer, string name, IReadOnlyList<int> values)
     {
         writer.WriteStartArray(name);

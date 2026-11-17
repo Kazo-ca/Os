@@ -456,6 +456,21 @@ internal sealed class RemoteNetworkGateway(RemoteProcessChannel channel) : IAppN
     /// </summary>
     public async ValueTask<KazoRelayState> GetRelayStateAsync(CancellationToken cancellationToken = default) =>
         WireCodec.ReadRelayState(await channel.CallAsync(RemoteOps.NetRelayState, null, cancellationToken).ConfigureAwait(false));
+
+    /// <summary>
+    /// Sends a direct web request from the worker (ADR 0282 §4). The OS first checks the capability
+    /// and the declared host (<see cref="RemoteOps.NetDirectCheck"/>), so the rules are the same as
+    /// on the main thread; the request then leaves through the worker's own <c>fetch</c>, and the
+    /// body streams into the worker without crossing the OS.
+    /// </summary>
+    public async ValueTask<KazoNetworkResult<KazoDirectHttpResponse>> SendDirectAsync(
+        KazoDirectHttpRequest request, CancellationToken cancellationToken = default)
+    {
+        KazoDirectHttpTransport.Validate(request);
+        await channel.CallAsync(RemoteOps.NetDirectCheck, writer => WireCodec.WriteDirectCheck(writer, request), cancellationToken)
+            .ConfigureAwait(false);
+        return await KazoDirectHttpTransport.SendAsync(KazoDirectHttpTransport.Shared, request, cancellationToken).ConfigureAwait(false);
+    }
 }
 
 /// <summary>
