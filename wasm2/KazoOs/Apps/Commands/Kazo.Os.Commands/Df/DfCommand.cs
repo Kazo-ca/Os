@@ -2,6 +2,7 @@ using System.Globalization;
 using Kazo.Os.App.Abstractions;
 using Kazo.Os.AppSdk;
 using Kazo.Os.AppSdk.IO;
+using Kazo.Os.AppSdk.Storage;
 using Kazo.Os.Commands.Common;
 using Kazo.Os.AppSdk.Globalization;
 using Microsoft.Extensions.Localization;
@@ -97,6 +98,16 @@ public sealed class DfCommand(AppManifest manifest) : TerminalAppBase(manifest)
             ]);
         }
 
+        // ADR 0250 §3: a feature's disks live in the Origin Private File System, which the OS does not
+        // measure; the space the feature declared shows as its own device.
+        foreach (KazoFeatureStorageUsage feature in await ReadFeatureUsageAsync(cancellationToken))
+        {
+            if (feature.UsageBytes is { } bytes)
+            {
+                rows.Add(["/dev/feature/" + feature.FeatureId, "opfs", "-", Size(bytes, human), "-", "-", "-"]);
+            }
+        }
+
         if (all)
         {
             foreach ((string device, string type, string mount) in await ReadPseudoMountsAsync(cancellationToken))
@@ -156,5 +167,18 @@ public sealed class DfCommand(AppManifest manifest) : TerminalAppBase(manifest)
         }
 
         return mounts;
+    }
+
+    /// <summary>The space the features declared (ADR 0250 §3); none on a host without browser storage.</summary>
+    private static async Task<IReadOnlyList<KazoFeatureStorageUsage>> ReadFeatureUsageAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await KazoStorage.GetFeatureUsageAsync(cancellationToken);
+        }
+        catch (Exception exception) when (exception is NotSupportedException or IOException or InvalidOperationException)
+        {
+            return [];
+        }
     }
 }
