@@ -59,6 +59,8 @@ public sealed class CommandParityTests
         new("nslookup", ["nslookup example.kazoos", "nslookup nowhere.invalid", "nslookup"]),
         new("nmap", ["nmap example.kazoos", "nmap -p 80-443 -sV 10.0.0.10"]),
         new("passwd", ["passwd -S", "passwd bob", "passwd -x"]),
+        // ADR 0247: listing, a usage error and a grant without sudo (refused, exit 1).
+        new("kazorole", ["kazorole", "kazorole bogus", "kazorole grant bob vm.manager"]),
         new("ping", ["ping example.kazoos", "ping nowhere.invalid"]),
         new("prlimit", ["prlimit --nofile --nproc", "prlimit --nofile=512:1024 --nofile", "prlimit --pid 99999", "prlimit --bogus"]),
         new("printf", ["printf '%s-%d\\n' a 1 b 2"]),
@@ -118,7 +120,7 @@ public sealed class CommandParityTests
             .Where(name => !covered.Contains(name))];
 
         Assert.Empty(missing);
-        Assert.Equal(78, OsFixture.BuiltInCommands.Count);
+        Assert.Equal(79, OsFixture.BuiltInCommands.Count);
     }
 
     [Fact]

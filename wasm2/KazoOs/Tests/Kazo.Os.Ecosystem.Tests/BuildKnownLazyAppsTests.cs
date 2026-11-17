@@ -13,11 +13,11 @@ public sealed class BuildKnownLazyAppsTests
 
         // 15 window apps (Theme Editor with ADR 0103, Kazo OS Store with ADR 0212), the kazowebd service (ADR 0077),
         // the « Set as wallpaper » service of Settings (ADR 0218), the sample Blazor site (ADR 0084), the Intranet
-        // sample (web/11) and 78 commands (stress joined with ADR 0070, nslookup with ADR 0074,
+        // sample (web/11) and 79 commands (stress joined with ADR 0070, nslookup with ADR 0074,
         // ausearch with ADR 0100, xdg-open with ADR 0096, kazobackup with ADR 0099, localectl with ADR 0104,
-        // xdg-mime with ADR 0121, passwd with ADR 0120, prlimit with ADR 0125, nice and renice with ADR 0127, dmesg with ADR 0126, mount and umount with ADR 0181, kazopkg with ADR 0182, date with ADR 0193), plus sample-cmd, the third-party command the worker
+        // xdg-mime with ADR 0121, passwd with ADR 0120, prlimit with ADR 0125, nice and renice with ADR 0127, dmesg with ADR 0126, mount and umount with ADR 0181, kazopkg with ADR 0182, date with ADR 0193, kazorole with ADR 0247), plus sample-cmd, the third-party command the worker
         // pool loads on demand (ADR 0124 §4).
-        Assert.Equal(99, catalog.Manifests.Count);
+        Assert.Equal(100, catalog.Manifests.Count);
         // ADR 0064: the Linux commands added with the POSIX shell.
         foreach (string command in new[] { "locate", "zip", "unzip", "cut", "tee", "whoami", "df", "du", "top", "htop", "systemctl", "watch", "jobs", "wget", "ip", "netstat", "ln", "test", "read", "stress", "nslookup", "ausearch", "xdg-open", "localectl", "xdg-mime", "prlimit", "dmesg", "mount", "umount" })
         {
