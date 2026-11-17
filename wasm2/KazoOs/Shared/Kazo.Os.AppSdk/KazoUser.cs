@@ -10,7 +10,29 @@ namespace Kazo.Os.AppSdk;
 /// <param name="DisplayName">Display name captured at login (the GECOS field); <c>root</c> under <c>sudo</c>.</param>
 /// <param name="HomeDirectory">Canonical home directory (<c>/home/benoit</c>, or <c>/root</c> under <c>sudo</c>).</param>
 /// <param name="IsAdministrator">Whether the user is an administrator, or the process runs as root.</param>
-public sealed record KazoUserInfo(string LoginName, string DisplayName, string HomeDirectory, bool IsAdministrator);
+public sealed record KazoUserInfo(string LoginName, string DisplayName, string HomeDirectory, bool IsAdministrator)
+{
+    /// <summary>Gets the roles of the installed features the user holds (ADR 0247 §1).</summary>
+    public IReadOnlySet<string> Roles { get; init; } = NoRoles.Instance;
+
+    /// <summary>
+    /// Gets whether the user holds <paramref name="role"/> (ADR 0247 §1): granted by an administrator,
+    /// or held implicitly by every administrator (and by root under <c>sudo</c>).
+    /// </summary>
+    /// <param name="role">The role, such as <c>x86.vm-admin</c>.</param>
+    public bool HasRole(string role)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(role);
+        return IsAdministrator || Roles.Contains(role);
+    }
+}
+
+/// <summary>The empty set of roles.</summary>
+internal static class NoRoles
+{
+    /// <summary>Gets the empty set.</summary>
+    public static IReadOnlySet<string> Instance { get; } = new HashSet<string>(StringComparer.Ordinal);
+}
 
 /// <summary>
 /// The user the current process runs as (ADR 0056, section 1). Replaces
@@ -47,6 +69,9 @@ public static class KazoUser
             context.UserLoginName,
             context.UserDisplayName,
             context.HomeDirectory,
-            AppAuthorityPolicy.Satisfies(context.UserAuthority, AppAuthority.Administrator));
+            AppAuthorityPolicy.Satisfies(context.UserAuthority, AppAuthority.Administrator))
+        {
+            Roles = context.Roles,
+        };
     }
 }
