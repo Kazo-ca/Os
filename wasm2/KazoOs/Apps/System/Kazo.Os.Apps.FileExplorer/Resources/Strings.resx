@@ -628,12 +628,6 @@
   <data name="CloudDrive.ProviderTitle" xml:space="preserve">
     <value>Connect {0}</value>
   </data>
-  <data name="CloudDrive.S3" xml:space="preserve">
-    <value>S3 compatible storage</value>
-  </data>
-  <data name="CloudDrive.S3Detail" xml:space="preserve">
-    <value>Amazon S3, Cloudflare R2, Backblaze B2, MinIO…</value>
-  </data>
   <data name="CloudDrive.AccountDetail" xml:space="preserve">
     <value>{0}, {1}</value>
   </data>
@@ -681,39 +675,6 @@
   </data>
   <data name="CloudDrive.Mount" xml:space="preserve">
     <value>Mount</value>
-  </data>
-  <data name="CloudDrive.S3.Endpoint" xml:space="preserve">
-    <value>Address of the service</value>
-  </data>
-  <data name="CloudDrive.S3.Bucket" xml:space="preserve">
-    <value>Bucket</value>
-  </data>
-  <data name="CloudDrive.S3.Region" xml:space="preserve">
-    <value>Region</value>
-  </data>
-  <data name="CloudDrive.S3.Prefix" xml:space="preserve">
-    <value>Prefix (optional)</value>
-  </data>
-  <data name="CloudDrive.S3.Addressing" xml:space="preserve">
-    <value>Addressing</value>
-  </data>
-  <data name="CloudDrive.S3.AddressingAuto" xml:space="preserve">
-    <value>Automatic</value>
-  </data>
-  <data name="CloudDrive.S3.AddressingPath" xml:space="preserve">
-    <value>Path (service/bucket)</value>
-  </data>
-  <data name="CloudDrive.S3.AddressingVirtual" xml:space="preserve">
-    <value>Virtual host (bucket.service)</value>
-  </data>
-  <data name="CloudDrive.S3.AccessKey" xml:space="preserve">
-    <value>Access key ID</value>
-  </data>
-  <data name="CloudDrive.S3.Secret" xml:space="preserve">
-    <value>Secret access key</value>
-  </data>
-  <data name="CloudDrive.S3.CorsNote" xml:space="preserve">
-    <value>The bucket must allow this address with a CORS rule. The keys are sealed on this device and never shown again.</value>
   </data>
   <data name="CloudDrive.Error.Refused" xml:space="preserve">
     <value>The service refused: {0}</value>
@@ -801,5 +762,38 @@
   </data>
   <data name="Category.Utilities" xml:space="preserve">
     <value>Utilities</value>
+  </data>
+  <data name="CloudDrive.ProvidedBy" xml:space="preserve">
+    <value>Provided by {0} ({1})</value>
+  </data>
+  <data name="CloudDrive.FormDetail" xml:space="preserve">
+    <value>Type the address and the keys of the service</value>
+  </data>
+  <data name="CloudDrive.FormCorsNote" xml:space="preserve">
+    <value>{0} must allow this address with a CORS rule. Secret values are sealed on this device and never shown again.</value>
+  </data>
+  <data name="CloudDrive.Optional" xml:space="preserve">
+    <value>{0} (optional)</value>
+  </data>
+  <data name="Drives.ProviderMissing.Install" xml:space="preserve">
+    <value>Install the provider</value>
+  </data>
+  <data name="Drives.ProviderMissing.Removed" xml:space="preserve">
+    <value>Provider not installed</value>
+  </data>
+  <data name="Drives.ProviderMissing.Disabled" xml:space="preserve">
+    <value>Provider disabled</value>
+  </data>
+  <data name="Drives.ProviderMissing.Administrator" xml:space="preserve">
+    <value>Disabled by the administrator</value>
+  </data>
+  <data name="Drives.ProviderMissing.Label" xml:space="preserve">
+    <value>{0}, {1}</value>
+  </data>
+  <data name="CloudDrive.ServerHost" xml:space="preserve">
+    <value>This provider will reach {0}.</value>
+  </data>
+  <data name="CloudDrive.ServerHostRefused" xml:space="preserve">
+    <value>This server address cannot be used: give an https address with a server name, without a user name, a password, an IP address or localhost.</value>
   </data>
 </root>

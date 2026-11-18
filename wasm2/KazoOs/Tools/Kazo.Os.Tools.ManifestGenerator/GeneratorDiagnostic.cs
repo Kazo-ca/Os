@@ -171,6 +171,13 @@ public static class GeneratorCodes
     /// </summary>
     public const string FeatureService = "KOSAPP0035";
 
+    /// <summary>
+    /// A drive provider a feature declares (ADR 0282 §2) is not one the OS can create: the class is
+    /// not a concrete class of the feature's assembly deriving from <c>KazoDriveProvider</c>, or it
+    /// has no public constructor taking an <c>IFeatureServiceContext</c> or none.
+    /// </summary>
+    public const string DriveProvider = "KOSAPP0036";
+
     /// <summary>The tool was called with invalid arguments.</summary>
     public const string InvalidArguments = "KOSAPP0090";
 

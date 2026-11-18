@@ -30,6 +30,32 @@ public sealed class TemplateBuildTests(TemplateWorkspace workspace)
     }
 
     /// <summary>
+    /// ADR 0282, ADR 0284: a drive provider made with <c>kazoos-drive-provider</c> builds, its
+    /// manifest declares the drive type with its host under <c>drives.provide</c>, and its tests run
+    /// the public conformance suite against the in-memory service.
+    /// </summary>
+    [Fact]
+    public async Task The_drive_provider_template_builds_and_passes_the_conformance_suite()
+    {
+        string directory = Path.Combine(workspace.Root, "Contoso.CloudDrive");
+
+        await workspace.RunCheckedAsync(workspace.Root, "new", "kazoos-drive-provider", "-n", "Contoso.CloudDrive", "-o", directory,
+            "--appId", "com.contoso.cloud-drive", "--driveType", "contoso-cloud", "--apiHost", "api.cloud.contoso.com");
+        await workspace.RunCheckedAsync(directory, "build");
+        string output = await workspace.RunCheckedAsync(directory, "test", "--no-build");
+
+        using JsonDocument manifest = JsonDocument.Parse(File.ReadAllText(Path.Combine(directory, "src", "Contoso.CloudDrive", "manifest.json")));
+        JsonElement root = manifest.RootElement;
+        Assert.Equal("com.contoso.cloud-drive", root.GetProperty("id").GetString());
+        Assert.Equal("feature", root.GetProperty("kind").GetString());
+        Assert.Equal(["drives.provide"], root.GetProperty("capabilities").EnumerateArray().Select(static c => c.GetString()));
+        JsonElement provider = Assert.Single(root.GetProperty("driveProviders").EnumerateArray().ToArray());
+        Assert.Equal("contoso-cloud", provider.GetProperty("type").GetString());
+        Assert.Equal(["api.cloud.contoso.com"], provider.GetProperty("hosts").EnumerateArray().Select(static h => h.GetString()));
+        Assert.Contains("Passed!", output, StringComparison.Ordinal);
+    }
+
+    /// <summary>
     /// ADR 0176 §8, ADR 0207: a repository made with <c>kazoos-solution</c>, its Kazo OS submodule
     /// replaced by this repository (<c>KazoOsSourceRoot</c>), builds and tests both profiles. Debug
     /// compiles Kazo OS from the sources (every Kazo OS reference is a project, the host aggregates

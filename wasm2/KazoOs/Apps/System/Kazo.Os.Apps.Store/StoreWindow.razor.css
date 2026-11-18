@@ -1164,3 +1164,24 @@ button.store-card-name:focus-visible {
         animation: none;
     }
 }
+
+/* ADR 0248 §3: uninstalling a package other apps need asks a second click. */
+.store-removal-warning,
+.store-body ::deep .store-removal-warning {
+    flex-basis: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    border: 1px solid var(--kos-danger, #f85149);
+    border-radius: var(--kos-radius-md, 8px);
+    background-color: rgba(248, 81, 73, 0.08);
+    font-size: 0.82rem;
+}
+
+.store-removal-warning p,
+.store-body ::deep .store-removal-warning p {
+    flex-basis: 100%;
+    margin: 0;
+}

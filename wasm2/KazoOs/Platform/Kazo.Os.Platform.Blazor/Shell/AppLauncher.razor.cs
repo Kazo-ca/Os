@@ -370,7 +370,10 @@ public partial class AppLauncher : ComponentBase, IDisposable
     private void RebuildProjection(bool resetSelection = false)
     {
         _projection = LauncherAppProjection.Create(
-            Catalog.Manifests.Values.Select(manifest => Catalog.Localize(manifest, Locale.Culture)),
+            // ADR 0247 §2: an entry point that requires a role the user does not hold is absent.
+            Catalog.Manifests.Values
+                .Where(manifest => EntryPointRoleFilter.OpensToCurrentUser(Services, manifest))
+                .Select(manifest => Catalog.Localize(manifest, Locale.Culture)),
             Enablement,
             _pinnedAppIds,
             _selectedCategory,

@@ -48,7 +48,23 @@ internal sealed class FeatureServiceContext : IFeatureServiceContext
     private KazoFeatureCaller? Describe(IAppExecutionContext? current) =>
         current is null || ReferenceEquals(current, Feature)
             ? null
-            : new KazoFeatureCaller(current.Manifest.Id, current.ProcessId.Value, current.UserId);
+            : new KazoFeatureCaller(current.Manifest.Id, current.ProcessId.Value, current.UserId) { Permissions = PermissionsOf(current) };
+
+    /// <summary>
+    /// The caller's capability checks (ADR 0246 §4); <see langword="null"/> for a context that has none,
+    /// whose caller then holds no permission.
+    /// </summary>
+    private static Kazo.Os.Simulation.Abstractions.Gateways.ICapabilityChecker? PermissionsOf(IAppExecutionContext current)
+    {
+        try
+        {
+            return current.Capabilities;
+        }
+        catch (NotSupportedException)
+        {
+            return null;
+        }
+    }
 
     private sealed class Scope(Action dispose) : IDisposable
     {

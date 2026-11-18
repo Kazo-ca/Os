@@ -1,0 +1,224 @@
+{
+  "version": "3.4.3",
+  "date": "2026-11-17",
+  "entries": [
+    {
+      "id": "90de2674-e75b-4391-a14f-2b5190868df7",
+      "category": "new",
+      "audience": [
+        "developer",
+        "user"
+      ],
+      "title": {
+        "en": "A network app knows whether the Kazo server's relay works",
+        "fr": "Une app réseau sait si le relais du serveur Kazo marche"
+      },
+      "description": {
+        "en": "KazoRealNetwork.GetRelayStateAsync tells an app holding network.real.access, without trying, whether the Kazo server's relay can carry its connections (no server, relay turned off, permission not received yet, ready with the blocked ports), and RelayStateChanged says when it changes. A failed connection now says why: KazoTcpClient and KazoUdpClient throw a KazoRelayException with the same SocketError as before, KazoHttp carries ERR_KAZO_RELAY_* codes, and curl, wget, cat and the Browser explain them (ADR 0278).",
+        "fr": "KazoRealNetwork.GetRelayStateAsync dit à une app qui a network.real.access, sans essayer, si le relais du serveur Kazo peut porter ses connexions (aucun serveur, relais arrêté, autorisation pas encore reçue, prêt avec les ports bloqués), et RelayStateChanged dit quand cela change. Un échec de connexion dit maintenant pourquoi : KazoTcpClient et KazoUdpClient lèvent une KazoRelayException avec le même SocketError qu'avant, KazoHttp porte les codes ERR_KAZO_RELAY_*, et curl, wget, cat et le Navigateur les expliquent (ADR 0278)."
+      },
+      "links": [
+        "doc/en/wasm/framework/sdk-network.md"
+      ]
+    },
+    {
+      "id": "e402235b-0ab1-4a77-914b-e0d95bdef479",
+      "category": "fixed",
+      "audience": [
+        "user"
+      ],
+      "title": {
+        "en": "A warning when the browser storage is full",
+        "fr": "Un avertissement quand le stockage du navigateur est plein"
+      },
+      "description": {
+        "en": "Chromium no longer tells web pages how much space is really left, so Kazo OS now shows the \"Low storage space\" notification as soon as the browser refuses to save something, and frees the data of deleted files sooner to make room.",
+        "fr": "Chromium ne dit plus aux pages web combien de place il reste vraiment : Kazo OS affiche donc la notification « Espace de stockage faible » dès que le navigateur refuse d'enregistrer quelque chose, et libère plus tôt les données des fichiers supprimés pour faire de la place."
+      },
+      "links": [
+        "https://github.com/Kazo-ca/Os/issues/493"
+      ]
+    },
+    {
+      "id": "57c6d4f1-8482-4631-a17f-10b0b078b98e",
+      "category": "fixed",
+      "audience": [
+        "developer"
+      ],
+      "title": {
+        "en": "An app with only filesystem.private.* can create its ~/.config folder",
+        "fr": "Une app qui n'a que filesystem.private.* peut créer son dossier ~/.config"
+      },
+      "description": {
+        "en": "KazoDirectory.CreateDirectoryAsync no longer fails with CapabilityDenied on ~/.config when the app may create its own ~/.config/<appId>/ but not look at ~/.config.",
+        "fr": "KazoDirectory.CreateDirectoryAsync n'échoue plus avec CapabilityDenied sur ~/.config quand l'app peut créer son ~/.config/<appId>/ sans pouvoir regarder ~/.config."
+      },
+      "links": [
+        "doc/en/wasm/framework/capabilities.md"
+      ]
+    },
+    {
+      "id": "67c3ffe9-ca4a-4dc5-848f-d510a8f2c48f",
+      "category": "fixed",
+      "audience": [
+        "user"
+      ],
+      "title": {
+        "en": "An edit of apps.config made right after logging in is no longer missed",
+        "fr": "Une modification d'apps.config faite juste après la connexion n'est plus perdue"
+      },
+      "description": {
+        "en": "Kazo OS now starts watching apps.config before reading it, so a change written while the session opens is always applied.",
+        "fr": "Kazo OS surveille maintenant apps.config avant de le lire : une modification écrite pendant l'ouverture de la session est toujours appliquée."
+      },
+      "links": [
+        "https://github.com/Kazo-ca/Os/issues/493"
+      ]
+    },
+    {
+      "id": "da9db301-b38f-40f3-8e3f-ef61fff934a4",
+      "category": "fixed",
+      "audience": [
+        "user"
+      ],
+      "title": {
+        "en": "File dialogs no longer stop the desktop when closed right after entering a folder",
+        "fr": "Les dialogues de fichiers n'arrêtent plus le bureau s'ils se ferment juste après être entrés dans un dossier"
+      },
+      "description": {
+        "en": "Opening a folder in an Open or Save dialog and confirming at once could show \"An unhandled error has occurred\" and leave every window unresponsive. The dialog now closes cleanly.",
+        "fr": "Ouvrir un dossier dans un dialogue Ouvrir ou Enregistrer puis confirmer aussitôt pouvait afficher « An unhandled error has occurred » et laisser toutes les fenêtres sans réponse. Le dialogue se ferme maintenant proprement."
+      },
+      "links": [
+        "https://github.com/Kazo-ca/Os/issues/519"
+      ]
+    },
+    {
+      "id": "483975c4-08d6-48e9-af1b-c8a14982a11a",
+      "category": "fixed",
+      "audience": [
+        "user"
+      ],
+      "title": {
+        "en": "Installed apps show their icon before their first launch",
+        "fr": "Les apps installées montrent leur icône avant leur premier lancement"
+      },
+      "description": {
+        "en": "The OS now serves the icons of installed apps at boot and right after an install, so the launcher, the desktop and the Store no longer show a broken image until the app is opened once.",
+        "fr": "L'OS sert maintenant les icônes des apps installées au démarrage et juste après une installation : le lanceur, le bureau et le Store n'affichent plus une image cassée tant que l'app n'a pas été ouverte une fois."
+      },
+      "links": [
+        "doc/en/wasm/dev/app-installation.md"
+      ]
+    },
+    {
+      "id": "630239b5-7f85-4b43-9781-02e43c3d9b04",
+      "category": "fixed",
+      "audience": [
+        "user"
+      ],
+      "title": {
+        "en": "No network errors when Kazo OS starts offline",
+        "fr": "Plus d'erreurs réseau quand Kazo OS démarre hors ligne"
+      },
+      "description": {
+        "en": "With no network connection, Kazo OS no longer tries to check for a new version or refresh the app catalogs, so the browser console stays free of failed requests.",
+        "fr": "Sans connexion réseau, Kazo OS ne cherche plus de nouvelle version et ne rafraîchit plus les catalogues d'applications : la console du navigateur ne montre plus de requêtes en échec."
+      },
+      "links": [
+        "https://github.com/Kazo-ca/Os/issues/493"
+      ]
+    },
+    {
+      "id": "5a230dd2-546f-4645-9492-45e7a4895aae",
+      "category": "fixed",
+      "audience": [
+        "user",
+        "developer"
+      ],
+      "title": {
+        "en": "On mobile, the top of an app answers touches again",
+        "fr": "Sur mobile, le haut d'une app répond de nouveau aux touchers"
+      },
+      "description": {
+        "en": "The notification shade's handle now has a status-bar strip of its own above the open app, instead of covering the app's top buttons.",
+        "fr": "La poignée du volet de notifications a maintenant sa propre bande, comme une barre d'état, au-dessus de l'app ouverte, au lieu de couvrir les boutons du haut de l'app."
+      },
+      "links": [
+        "doc/en/wasm/dev/mobile-home-screen.md"
+      ]
+    },
+    {
+      "id": "acf27854-e11a-416e-8f39-3dbb21de3da5",
+      "category": "fixed",
+      "audience": [
+        "user"
+      ],
+      "title": {
+        "en": "Screen readers and voice control name the taskbar, Start menu and Calculator keys by what they show",
+        "fr": "Les lecteurs d'écran et la commande vocale nomment la barre des tâches, le menu Démarrer et la calculatrice d'après ce qu'ils affichent"
+      },
+      "description": {
+        "en": "The app launcher button, the taskbar clock, the Start menu apps and Quick access links, and the Calculator keys MC, MR, M+, M-, C, AC and x² now have accessible names that contain their visible text, so you can say what you see.",
+        "fr": "Le bouton du lanceur d'applications, l'horloge de la barre des tâches, les apps et les liens d'accès rapide du menu Démarrer, et les touches MC, MR, M+, M-, C, AC et x² de la calculatrice ont maintenant un nom accessible qui contient leur texte visible : il suffit de dire ce qu'on voit."
+      },
+      "links": [
+        "https://github.com/Kazo-ca/Os/issues/493"
+      ]
+    },
+    {
+      "id": "c2616a6a-9d48-4476-a26b-6a18a0a0b24f",
+      "category": "fixed",
+      "audience": [
+        "user"
+      ],
+      "title": {
+        "en": "head ends on /dev/urandom and counts bytes with -c",
+        "fr": "head se termine sur /dev/urandom et compte des octets avec -c"
+      },
+      "description": {
+        "en": "head now reads a file only as far as what it prints, so head -c 16 /dev/urandom ends instead of filling the tab's memory. -c counts bytes, as in Linux.",
+        "fr": "head ne lit plus un fichier au-delà de ce qu'il affiche : head -c 16 /dev/urandom se termine au lieu de remplir la mémoire de l'onglet. -c compte des octets, comme sous Linux."
+      },
+      "links": [
+        "doc/en/wasm/dev/linux-commands.md"
+      ]
+    },
+    {
+      "id": "686d1df0-0a8e-4677-bf3c-50bc8374ece4",
+      "category": "developer",
+      "audience": [
+        "developer"
+      ],
+      "title": {
+        "en": "A trimmed publish writes the API surface it ships",
+        "fr": "Une publication trimmée écrit la surface d'API qu'elle livre"
+      },
+      "description": {
+        "en": "A trimmed publish of a host now writes kazoos-api-surface.json.gz next to wwwroot/: every assembly it ships with its types, methods and fields, so an app can be checked against the trimmed OS before it is published (ADR 0277).",
+        "fr": "Une publication trimmée d'un hôte écrit maintenant kazoos-api-surface.json.gz à côté de wwwroot/ : chaque assemblage livré avec ses types, ses méthodes et ses champs, pour vérifier une app contre l'OS rogné avant de la publier (ADR 0277)."
+      },
+      "links": [
+        "doc/en/wasm/dev/trimmed-publish.md"
+      ]
+    },
+    {
+      "id": "b09d72eb-9c09-4b6a-bb75-37e9837867b2",
+      "category": "developer",
+      "audience": [
+        "developer"
+      ],
+      "title": {
+        "en": "An app's build refuses APIs the trimmed OS removed",
+        "fr": "Le build d'une app refuse les API que l'OS rogné a retirées"
+      },
+      "description": {
+        "en": "KazoOsPack now checks the package against the API surface of the targeted Kazo OS, which Kazo.Os.App.Build brings: a call to a member the trimmed OS does not have fails the build with KOSAPP0100 and a replacement when one is known, instead of being refused at installation. KazoOsApiCheck=false turns it into the warning KOSAPP0101 (ADR 0277).",
+        "fr": "KazoOsPack vérifie maintenant le paquet contre la surface d'API du Kazo OS visé, que Kazo.Os.App.Build apporte : un appel à un membre que l'OS rogné n'a pas fait échouer le build avec KOSAPP0100 et un remplacement quand il en connaît un, au lieu d'être refusé à l'installation. KazoOsApiCheck=false le change en avertissement KOSAPP0101 (ADR 0277)."
+      },
+      "links": [
+        "doc/en/wasm/framework/app-repository.md"
+      ]
+    }
+  ]
+}

@@ -197,6 +197,25 @@ Cette section liste ce qui est publié dans la branche `main` et en ligne.
   [ADR 0269](dev/adr/0269-cloud-tokens-stay-on-the-device.md),
   [ADR 0270](dev/adr/0270-cloud-drives-in-the-app-sdk.md),
   [`cloud-drives.md`](dev/cloud-drives.md))
+- **Fournisseurs de lecteurs réseau tiers** : une fonctionnalité du Store peut ajouter
+  un type de lecteur réseau (par exemple WebDAV) ; il apparaît sans redémarrage dans la
+  fenêtre « Connecter un lecteur réseau », Paramètres ▸ Comptes cloud et `mount -t`,
+  marqué « Fourni par <fonctionnalité> ». L'OS mène la connexion (OAuth avec PKCE ou
+  formulaire), garde les jetons et les secrets scellés sur l'appareil, et ne prête au
+  fournisseur que ce qui sert au lecteur ouvert. L'administrateur qui installe la
+  fonctionnalité approuve `drives.provide` sur un écran qui nomme les hôtes joints. Un
+  lecteur dont le fournisseur a été retiré reste grisé avec **Installer le fournisseur**.
+  Dropbox, OneDrive et S3 restent livrés et peuvent être retirés à la publication
+  (`KazoOsDropboxDrives`, `KazoOsOneDriveDrives`, `KazoOsS3Drives`, paquet
+  `Kazo.Os.Platform.CloudDrives`) ou masqués sans republier (`KazoOs:CloudDrives:Disabled`).
+  ([ADR 0282](dev/adr/0282-third-party-drive-providers.md),
+  [ADR 0284](dev/adr/0284-drive-provider-hosts-and-typed-server-address.md),
+  [`drive-providers.md`](framework/drive-providers.md))
+- **Confidentialité et conditions d'utilisation** : `os.kazo.ca/privacy.html` et
+  `terms.html`, en français et en anglais, disent ce que Kazo OS fait des
+  données (rien sur un serveur de l'éditeur ; tiers listés) ; liées depuis
+  l'écran de connexion et Paramètres ▸ À propos.
+  ([`legal-pages.md`](dev/legal-pages.md))
 - **Fichiers plus rapides et moins lourds** : le contenu est gardé en binaire au lieu
   de base64 (environ 25 % d'espace en moins, enregistrement de 52,5 Mio de 3,4 s à 1,0 s
   dans Chromium), chaque bloc de 256 Kio vérifié par son empreinte à la lecture ; l'ancien
@@ -494,6 +513,7 @@ Cette section liste ce qui est publié dans la branche `main` et en ligne.
 - **Fonctionnalités installables (type « Feature »)** : une fonctionnalité facultative de l'OS installée pour toute la machine par un administrateur, avec ses points d'entrée enfants. ([ADR 0260](dev/adr/0260-feature-app-type.md), [`app-installation.md`](dev/app-installation.md#fonctionnalités-adr-0260))
 - **Bibliothèques d'app et versions partagées** : un paquet emporte les bibliothèques de l'app, et une bibliothèque partagée (`KazoOsSharedLibrary`) est chargée une seule fois, dans sa version compatible la plus récente. ([ADR 0261](dev/adr/0261-app-libraries-and-shared-versions.md), [ADR 0256](dev/adr/0256-app-libraries-implementation-adjustments.md))
 - **Services des Features** : une app demande une interface qu'une Feature fournit, avec `KazoFeatures.GetServiceAsync<T>()`, sans dépendance dans son binaire. ([ADR 0262](dev/adr/0262-feature-service-registry-and-async-resolution.md), [`feature-services.md`](framework/feature-services.md))
+- **Fournisseurs de lecteurs réseau et accès web direct** (version 3.5.0) : une Feature déclare un type de lecteur et dérive `KazoDriveProvider` ; le modèle `dotnet new kazoos-drive-provider`, la suite de conformité publique `KazoDriveProviderTests` (paquet `Kazo.Os.AppSdk.Testing`) et l'exemple WebDAV par formulaire montrent comment. `KazoDirectHttpClient` envoie des requêtes au web directement depuis le navigateur, sans le serveur Kazo, vers les hôtes déclarés (`network.direct.access`, `directNetworkHosts`). ([ADR 0282](dev/adr/0282-third-party-drive-providers.md), [ADR 0284](dev/adr/0284-drive-provider-hosts-and-typed-server-address.md), [`drive-providers.md`](framework/drive-providers.md))
 
 ## En cours de développement
 
@@ -547,11 +567,11 @@ demande à l'OS le type d'app « Feature » et les points d'extension ci-dessous
 
 | Fonctionnalité | Description | ADR | Issue |
 | --- | --- | --- | --- |
-| Permissions déclarées par une Feature | Une Feature déclare ses propres permissions, dangereuses comprises ; elles suivent les règles du catalogue de l'OS et ne sont jamais accordées en silence. | [0246](dev/adr/0246-provider-declared-permissions.md) | — |
-| Rôles déclarés par une Feature | Une Feature déclare des rôles qu'un administrateur attribue ; chaque opération sensible passe par l'authentification de l'OS. | [0247](dev/adr/0247-feature-declared-roles.md) | — |
-| Résolution des dépendances | Le Store et `kazopkg` installent les dépendances déclarées dans le manifeste, avec un seul consentement ; retirer un paquet avertit et désactive les apps dépendantes. | [0248](dev/adr/0248-store-and-kazopkg-dependency-resolution.md) | — |
+| Permissions déclarées par une Feature | Une Feature déclare ses propres permissions, dangereuses comprises ; elles suivent les règles du catalogue de l'OS et ne sont jamais accordées en silence. Code livré par le chantier `feature/17` (`ProvidedCapabilities`, préfixe réservé, catalogue des capacités `ICapabilityCatalog`, semeur qui n'accorde que le connu et permissions sujet dangereuses, issue #432, `Covers`, `Caller.Require`, fenêtre sécurisée même depuis le terminal ; [`capabilities.md`](framework/capabilities.md#permissions-déclarées-par-une-feature-adr-0246)). | [0246](dev/adr/0246-provider-declared-permissions.md) | — |
+| Rôles déclarés par une Feature | Une Feature déclare des rôles qu'un administrateur attribue ; chaque opération sensible passe par l'authentification de l'OS. Code livré par le chantier `feature/20` (`FeatureDefinition.Roles`, `RequiresRole`, `/etc/kazoos/roles.config`, rôles implicites des administrateurs, point d'entrée absent et code 126 sans le rôle, colonne des rôles dans Paramètres ▸ Utilisateurs, `kazorole`, `KazoFeatureAuthentication` et billets liés à l'opération, entrées `feature.*` et `role.*` d'`auth.log` ; `KazoUser.Current.IsInRole("x86:vm-manager")` et rôle de l'OS `admin`, ajustés par l'[ADR 0283](dev/adr/0283-feature-roles-isinrole-adjustments.md) ; [`system-administration.md`](framework/system-administration.md#rôles-des-features-adr-0247-ajustée-par-ladr-0283)). | [0247](dev/adr/0247-feature-declared-roles.md), [0283](dev/adr/0283-feature-roles-isinrole-adjustments.md) | — |
+| Résolution des dépendances | Le Store et `kazopkg` installent les dépendances déclarées dans le manifeste, avec un seul consentement ; retirer un paquet avertit et désactive les apps dépendantes. Code livré par le chantier `feature/18` (plan `BuildPlanAsync`, transaction sur le plan, `dependency-unresolved` et `dependency-conflict`, `kazopkg --yes`, plan dans la fenêtre de validation avec les permissions des Features, dépendances sur la fiche du Store, `KazoApps.RequestInstallAsync`, `dependencies` de `catalog.json` ; [`app-installation.md`](dev/app-installation.md#dépendances-entre-paquets-adr-0248)). | [0248](dev/adr/0248-store-and-kazopkg-dependency-resolution.md) | — |
 | Section « Fonctionnalités » des Paramètres | Paramètres liste les Features installées et affiche les pages qu'elles fournissent, selon le rôle de l'usager. | [0249](dev/adr/0249-settings-features-section.md) | — |
-| Persistance et éviction du stockage | L'OS demande au navigateur de ne pas effacer son stockage, affiche le quota et avertit quand le navigateur a tout de même effacé des données. | [0250](dev/adr/0250-storage-persistence-and-eviction.md) | — |
+| Persistance et éviction du stockage | L'OS demande au navigateur de ne pas effacer son stockage, affiche le quota et avertit quand le navigateur a tout de même effacé des données. Code livré par le chantier `feature/19` (`KazoStorage`, `persist()` une fois par origine, détection d'éviction avant l'ouverture des bases, témoins des Features, Paramètres ▸ Système ▸ Stockage, `df` ; [`system-administration.md`](framework/system-administration.md#stockage-du-navigateur-kazostorage-adr-0250)). | [0250](dev/adr/0250-storage-persistence-and-eviction.md) | — |
 | Route du shell vers les apps à capacité d'exécution | `./programme.exe` au terminal est typé par le détecteur de format d'une Feature puis confié à l'app qui déclare `execute` pour ce type MIME, sans bit d'exécution ni lecture comme script. | [0251](dev/adr/0251-shell-route-to-execute-capable-apps.md) | — |
 | Le Terminal affiche un programme invité | Un programme console d'une Feature (shell Linux, programme DOS texte) s'affiche dans le Terminal de Kazo : couleurs par cellule, touches de fonction, Ctrl+C au programme. | [0252](dev/adr/0252-terminal-shows-a-guest-program.md) | — |
 | Expéditeur marqué | Une app lancée ou un fichier ouvert par une autre app connaît l'expéditeur, marqué par l'OS, pour son journal. | [0253](dev/adr/0253-marked-sender-on-launch-and-open.md) | — |

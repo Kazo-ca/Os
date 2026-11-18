@@ -90,11 +90,18 @@ public sealed partial class ShellInterpreter
     /// Language of the descriptions and usages (ADR 0104 section 4): the catalog's translations of
     /// each command's manifest and the built-ins' own texts; English when <see langword="null"/>.
     /// </param>
-    public IReadOnlyList<ShellCommandInfo> GetInstalledCommands(System.Globalization.CultureInfo? culture = null)
+    public IReadOnlyList<ShellCommandInfo> GetInstalledCommands(System.Globalization.CultureInfo? culture = null) =>
+        GetInstalledCommandsFor(null, culture);
+
+    /// <summary>
+    /// The installed commands <paramref name="principal"/> may run: a command that requires a role of
+    /// its feature the user does not hold is absent (ADR 0247 §2); every command when <see langword="null"/>.
+    /// </summary>
+    internal IReadOnlyList<ShellCommandInfo> GetInstalledCommandsFor(Kazo.Os.Simulation.Abstractions.Sessions.AuthenticatedPrincipal? principal, System.Globalization.CultureInfo? culture)
     {
         culture ??= Kazo.Os.AppSdk.Globalization.KazoLocale.DefaultLanguage;
         return [.. Resolver.GetTerminalCommands()
-            .Where(manifest => _enablement.IsEnabled(manifest.Id))
+            .Where(manifest => _enablement.IsEnabled(manifest.Id) && OpensTo(manifest, principal))
             .Select(manifest => _catalog.Localize(manifest, culture))
             .Select(manifest => new ShellCommandInfo(
                 manifest.Terminal!.Name, manifest.Terminal.Aliases, manifest.Terminal.Usage, manifest.Description))
@@ -107,17 +114,24 @@ public sealed partial class ShellInterpreter
     /// <c>text-editor</c>, <c>browser</c>…, unless a command already has that name.
     /// </summary>
     /// <param name="culture">Language of the descriptions; English when <see langword="null"/>.</param>
-    public IReadOnlyList<ShellCommandInfo> GetLaunchableApplications(System.Globalization.CultureInfo? culture = null)
+    public IReadOnlyList<ShellCommandInfo> GetLaunchableApplications(System.Globalization.CultureInfo? culture = null) =>
+        GetLaunchableApplicationsFor(null, culture);
+
+    /// <summary>The window apps <paramref name="principal"/> may start by short name (ADR 0247 §2).</summary>
+    internal IReadOnlyList<ShellCommandInfo> GetLaunchableApplicationsFor(Kazo.Os.Simulation.Abstractions.Sessions.AuthenticatedPrincipal? principal, System.Globalization.CultureInfo? culture)
     {
         culture ??= Kazo.Os.AppSdk.Globalization.KazoLocale.DefaultLanguage;
-        HashSet<string> commands = new(GetInstalledCommands(culture).SelectMany(command => command.Aliases.Prepend(command.Name)), StringComparer.OrdinalIgnoreCase);
+        HashSet<string> commands = new(GetInstalledCommandsFor(principal, culture).SelectMany(command => command.Aliases.Prepend(command.Name)), StringComparer.OrdinalIgnoreCase);
         return [.. Resolver.GetApplications()
-            .Where(manifest => _enablement.IsEnabled(manifest.Id))
+            .Where(manifest => _enablement.IsEnabled(manifest.Id) && OpensTo(manifest, principal))
             .Select(manifest => (Manifest: _catalog.Localize(manifest, culture), Name: ShellCommandResolver.ShortName(manifest.Id)))
             .Where(entry => !commands.Contains(entry.Name))
             .Select(entry => new ShellCommandInfo(
                 entry.Name, [], $"{entry.Name} [args...]", Strings.For(culture)["Shell.StartApp", entry.Manifest.Name]))];
     }
+
+    private bool OpensTo(AppManifest manifest, Kazo.Os.Simulation.Abstractions.Sessions.AuthenticatedPrincipal? principal) =>
+        principal is null || Roles.FeatureRoleService.OpensTo(_orchestrator.Roles?.Invoke(), manifest, principal);
 
     /// <summary>Runs one line (or several lines) typed in <paramref name="session"/>.</summary>
     /// <param name="session">The shell: process, variables, <c>$?</c>, jobs.</param>

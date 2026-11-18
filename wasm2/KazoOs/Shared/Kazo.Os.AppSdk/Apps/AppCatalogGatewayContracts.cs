@@ -206,6 +206,20 @@ public interface IAppManagementGateway
         InstallPackageAsync(source, scope, cancellationToken);
 
     /// <summary>
+    /// Builds the installation plan of a package without writing anything (ADR 0248 §1): the
+    /// package, then each required dependency absent or out of range, dependencies first, each one
+    /// downloaded and checked. <c>kazopkg</c> prints it before it asks for a confirmation.
+    /// </summary>
+    /// <param name="source">The repository or app ID, optionally followed by <c>@version</c>.</param>
+    /// <param name="scope">For whom the requested package is installed; a feature always goes to the system.</param>
+    /// <param name="cancellationToken">Cancels the downloads.</param>
+    /// <exception cref="KazoPackageException">A package of the plan is refused, or a dependency is unresolved or in conflict.</exception>
+    /// <exception cref="NotSupportedException">The gateway predates ADR 0248.</exception>
+    ValueTask<KazoPackageInstallPlan> PlanPackageInstallAsync(
+        string source, KazoPackageScope scope = KazoPackageScope.Auto, CancellationToken cancellationToken = default) =>
+        throw new NotSupportedException("This app-management gateway cannot plan an installation.");
+
+    /// <summary>
     /// Removes an app installed from a package: the session user's own copy without an
     /// administrator, a system one after the two-step approval. Settings stay; it leaves the
     /// catalog at once, or at the next start of the OS when it is loaded in the page (ADR 0214 §1).
@@ -217,6 +231,16 @@ public interface IAppManagementGateway
     ValueTask<KazoInstalledPackage> RemovePackageAsync(
         string appId, KazoPackageScope scope = KazoPackageScope.Auto, CancellationToken cancellationToken = default) =>
         throw new NotSupportedException("This app-management gateway cannot install packages.");
+
+    /// <summary>
+    /// Lists the installed apps that need <paramref name="appId"/> through a required dependency
+    /// (ADR 0248 §3): removing it disables them. <c>kazopkg remove</c> and the Store show them first.
+    /// </summary>
+    /// <param name="appId">An installed package.</param>
+    /// <param name="cancellationToken">Cancels the request.</param>
+    /// <exception cref="NotSupportedException">The gateway predates ADR 0248.</exception>
+    ValueTask<IReadOnlyList<KazoPackageDependent>> GetPackageDependentsAsync(string appId, CancellationToken cancellationToken = default) =>
+        throw new NotSupportedException("This app-management gateway cannot list dependents.");
 
     /// <summary>
     /// Puts back the version the last update of an installed app kept (ADR 0214 §4.1), with the

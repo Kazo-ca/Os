@@ -16,6 +16,12 @@
             Kazo-ca/Os
         </a>
     </span>
+    @* Static pages of the release (privacy.html, terms.html), opened at the section in the UI language. *@
+    <span class="project-credit project-legal">
+        <a class="project-privacy" href="@($"privacy.html#{LegalSection}")" target="_blank" rel="noopener noreferrer">@L["Project.Privacy"]</a>
+        <span aria-hidden="true">·</span>
+        <a class="project-terms" href="@($"terms.html#{LegalSection}")" target="_blank" rel="noopener noreferrer">@L["Project.Terms"]</a>
+    </span>
     @if (ShowLegacyNotice && IsPublicDomain)
     {
         <p class="legacy-notice">@L["Project.LegacyMoved"] <a href="https://os.kazo.ca/legacy/">https://os.kazo.ca/legacy</a></p>

@@ -246,6 +246,12 @@
   <data name="Capability.network.listen.privileged.Title" xml:space="preserve">
     <value>Écouter un port privilégié</value>
   </data>
+  <data name="Capability.network.direct.access.Risk" xml:space="preserve">
+    <value>Envoyer et recevoir des données auprès des services web nommés par l'application, directement depuis le navigateur.</value>
+  </data>
+  <data name="Capability.network.direct.access.Title" xml:space="preserve">
+    <value>Joindre des services web directement</value>
+  </data>
   <data name="Capability.network.real.access.Risk" xml:space="preserve">
     <value>Joindre de vrais serveurs sur Internet par le serveur relais.</value>
   </data>
@@ -398,6 +404,12 @@
   </data>
   <data name="Prompt.Dangerous.RealNetworkPorts" xml:space="preserve">
     <value>Vrais serveurs sur les ports : {0}</value>
+  </data>
+  <data name="Prompt.Dangerous.DirectNetworkHosts" xml:space="preserve">
+    <value>Services web joints directement : {0}</value>
+  </data>
+  <data name="Prompt.Dangerous.TypedServers" xml:space="preserve">
+    <value>Le serveur que chaque utilisateur tape dans : {0}</value>
   </data>
   <data name="Prompt.Dangerous.AuditNotice" xml:space="preserve">
     <value>Cette décision sera inscrite dans /var/log/auth.log.</value>
@@ -788,5 +800,71 @@ Annuler : décider au prochain lancement.</value>
   </data>
   <data name="Capability.cloud-accounts.manage.Risk" xml:space="preserve">
     <value>Connecter ou retirer vos comptes Dropbox, OneDrive ou S3 et monter leur stockage comme lecteurs réseau.</value>
+  </data>
+  <data name="Capability.drives.provide.Title" xml:space="preserve">
+    <value>Fournir un type de lecteur réseau</value>
+  </data>
+  <data name="Capability.drives.provide.Risk" xml:space="preserve">
+    <value>Lire et écrire tous les fichiers des lecteurs de ce type, avec un jeton d'accès des comptes de ses utilisateurs.</value>
+  </data>
+  <data name="Drives.HostFolder" xml:space="preserve">
+    <value>Dossier de cet ordinateur</value>
+  </data>
+  <data name="Drives.S3.Name" xml:space="preserve">
+    <value>Stockage compatible S3</value>
+  </data>
+  <data name="Drives.S3.Endpoint" xml:space="preserve">
+    <value>Adresse du service</value>
+  </data>
+  <data name="Drives.S3.Bucket" xml:space="preserve">
+    <value>Compartiment</value>
+  </data>
+  <data name="Drives.S3.Region" xml:space="preserve">
+    <value>Région</value>
+  </data>
+  <data name="Drives.S3.Prefix" xml:space="preserve">
+    <value>Préfixe</value>
+  </data>
+  <data name="Drives.S3.Addressing" xml:space="preserve">
+    <value>Adressage</value>
+  </data>
+  <data name="Drives.S3.AddressingAuto" xml:space="preserve">
+    <value>Automatique</value>
+  </data>
+  <data name="Drives.S3.AddressingPath" xml:space="preserve">
+    <value>Chemin (service/compartiment)</value>
+  </data>
+  <data name="Drives.S3.AddressingVirtual" xml:space="preserve">
+    <value>Hôte virtuel (compartiment.service)</value>
+  </data>
+  <data name="Drives.S3.AccessKey" xml:space="preserve">
+    <value>Identifiant de clé d'accès</value>
+  </data>
+  <data name="Drives.S3.Secret" xml:space="preserve">
+    <value>Clé d'accès secrète</value>
+  </data>
+  <data name="Admin.App.InstallDependencies" xml:space="preserve">
+    <value>Installer {0} {1} avec ce qu'il lui faut pour tous les utilisateurs : {2}</value>
+  </data>
+  <data name="Storage.Evicted.Title" xml:space="preserve">
+    <value>Stockage effacé par le navigateur</value>
+  </data>
+  <data name="Storage.Evicted.Message" xml:space="preserve">
+    <value>Le navigateur a effacé les données de {0} (par exemple les disques d'une machine virtuelle). Ouvrez-la pour exporter ce qui reste, ou Paramètres ▸ Stockage pour protéger le stockage.</value>
+  </data>
+  <data name="Storage.Evicted.OpenSettings" xml:space="preserve">
+    <value>Réglages du stockage</value>
+  </data>
+  <data name="Feature.Authenticate.Operation" xml:space="preserve">
+    <value>{0} demande : {1}</value>
+  </data>
+  <data name="Shell.RoleRequired" xml:space="preserve">
+    <value>{0} : rôle requis</value>
+  </data>
+  <data name="Admin.GrantRole" xml:space="preserve">
+    <value>Attribuer le rôle {0} au compte {1}</value>
+  </data>
+  <data name="Admin.RevokeRole" xml:space="preserve">
+    <value>Retirer le rôle {0} au compte {1}</value>
   </data>
 </root>

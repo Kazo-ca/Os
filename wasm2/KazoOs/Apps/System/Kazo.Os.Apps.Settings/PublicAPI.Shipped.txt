@@ -22,6 +22,14 @@ Kazo.Os.Apps.Settings.DateTimePanel.DateTimePanel() -> void
 Kazo.Os.Apps.Settings.DateTimePanel.DisposeAsync() -> System.Threading.Tasks.ValueTask
 Kazo.Os.Apps.Settings.DesktopPanel
 Kazo.Os.Apps.Settings.DesktopPanel.DesktopPanel() -> void
+Kazo.Os.Apps.Settings.FeatureRolesPanel
+Kazo.Os.Apps.Settings.FeatureRolesPanel.Accounts.get -> System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.Administration.KazoUserAccount!>!
+Kazo.Os.Apps.Settings.FeatureRolesPanel.Accounts.set -> void
+Kazo.Os.Apps.Settings.FeatureRolesPanel.CanManage.get -> bool
+Kazo.Os.Apps.Settings.FeatureRolesPanel.CanManage.set -> void
+Kazo.Os.Apps.Settings.FeatureRolesPanel.Changed.get -> Microsoft.AspNetCore.Components.EventCallback
+Kazo.Os.Apps.Settings.FeatureRolesPanel.Changed.set -> void
+Kazo.Os.Apps.Settings.FeatureRolesPanel.FeatureRolesPanel() -> void
 Kazo.Os.Apps.Settings.FileAssociationsPanel
 Kazo.Os.Apps.Settings.FileAssociationsPanel.FileAssociationsPanel() -> void
 Kazo.Os.Apps.Settings.FileMenuEntriesPanel
@@ -77,6 +85,8 @@ Kazo.Os.Apps.Settings.SettingsWindow.SettingsWindow() -> void
 Kazo.Os.Apps.Settings.SoundPanel
 Kazo.Os.Apps.Settings.SoundPanel.DisposeAsync() -> System.Threading.Tasks.ValueTask
 Kazo.Os.Apps.Settings.SoundPanel.SoundPanel() -> void
+Kazo.Os.Apps.Settings.StoragePanel
+Kazo.Os.Apps.Settings.StoragePanel.StoragePanel() -> void
 Kazo.Os.Apps.Settings.UsersPanel
 Kazo.Os.Apps.Settings.UsersPanel.UsersPanel() -> void
 Kazo.Os.Apps.Settings.WallpaperPanel
@@ -100,6 +110,7 @@ const Kazo.Os.Apps.Settings.SetWallpaperApp.SingleEntry = "set-wallpaper" -> str
 const Kazo.Os.Apps.Settings.SetWallpaperApp.SubmenuEntry = "set-wallpaper-on" -> string!
 override Kazo.Os.Apps.Settings.AppSourcesPanel.OnInitializedAsync() -> System.Threading.Tasks.Task!
 override Kazo.Os.Apps.Settings.CloudAccountsPanel.OnInitializedAsync() -> System.Threading.Tasks.Task!
+override Kazo.Os.Apps.Settings.FeatureRolesPanel.OnInitializedAsync() -> System.Threading.Tasks.Task!
 override Kazo.Os.Apps.Settings.InstalledAppsPanel.OnInitializedAsync() -> System.Threading.Tasks.Task!
 override Kazo.Os.Apps.Settings.PasskeysPanel.OnInitializedAsync() -> System.Threading.Tasks.Task!
 override Kazo.Os.Apps.Settings.SetWallpaperApp.Capabilities.get -> System.Collections.Generic.IReadOnlyList<string!>!
@@ -131,13 +142,16 @@ override Kazo.Os.Apps.Settings.SettingsWindow.OnAppInitializedAsync() -> System.
 override Kazo.Os.Apps.Settings.SettingsWindow.OnAppStopRequestedAsync(Kazo.Os.AppSdk.Diagnostics.KazoStopRequestedEventArgs! e) -> System.Threading.Tasks.Task!
 override Kazo.Os.Apps.Settings.SettingsWindow.OnIntentReceivedAsync(Kazo.Os.App.Abstractions.AppIntentDelivery! intent) -> System.Threading.Tasks.Task!
 override Kazo.Os.Apps.Settings.SettingsWindow.OnWindowActivatedAsync() -> System.Threading.Tasks.Task!
+override Kazo.Os.Apps.Settings.StoragePanel.OnInitializedAsync() -> System.Threading.Tasks.Task!
 override Kazo.Os.Apps.Settings.UsersPanel.OnInitializedAsync() -> System.Threading.Tasks.Task!
 static Kazo.Os.Apps.Settings.SetWallpaperApp.RegisterFileContextMenu(Kazo.Os.AppSdk.Blazor.Files.RegisterFileContextMenuContext! context) -> void
 static readonly Kazo.Os.Apps.Settings.SetWallpaperApp.ImageTypes -> System.Collections.Generic.IReadOnlyList<string!>!
 ~override Kazo.Os.Apps.Settings.AppSourcesPanel.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
 ~override Kazo.Os.Apps.Settings.BackupPanel.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
 ~override Kazo.Os.Apps.Settings.CloudAccountsPanel.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
+~override Kazo.Os.Apps.Settings.FeatureRolesPanel.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
 ~override Kazo.Os.Apps.Settings.InstalledAppsPanel.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
 ~override Kazo.Os.Apps.Settings.PasskeysPanel.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
 ~override Kazo.Os.Apps.Settings.SettingsWindow.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
+~override Kazo.Os.Apps.Settings.StoragePanel.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
 ~override Kazo.Os.Apps.Settings.UsersPanel.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void

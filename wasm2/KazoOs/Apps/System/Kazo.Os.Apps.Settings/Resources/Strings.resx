@@ -564,6 +564,9 @@
   <data name="Permissions.AskAgain" xml:space="preserve">
     <value>Ask again at launch</value>
   </data>
+  <data name="Permissions.Provider" xml:space="preserve">
+    <value>Declared by the feature {0}</value>
+  </data>
   <data name="Permissions.Empty" xml:space="preserve">
     <value>No installed application declares a dangerous capability.</value>
   </data>
@@ -1245,6 +1248,10 @@
 <data name="Mobile.HelpersError" xml:space="preserve"><value>Unable to update mobile mouse helpers.</value></data>
   <data name="About.Repository" xml:space="preserve"><value>GitHub project:</value></data>
   <data name="About.Author" xml:space="preserve"><value>Author:</value></data>
+  <data name="About.Legal" xml:space="preserve"><value>Legal:</value></data>
+  <data name="About.Privacy" xml:space="preserve"><value>Privacy policy</value></data>
+  <data name="About.Terms" xml:space="preserve"><value>Terms of use</value></data>
+  <data name="About.LegalSection" xml:space="preserve"><value>en</value></data>
   <data name="Users.Badge.Passkeys" xml:space="preserve">
     <value>{0} passkey(s)</value>
   </data>
@@ -2171,5 +2178,113 @@
   </data>
   <data name="Details.Kind.Feature" xml:space="preserve">
     <value>feature</value>
+  </data>
+  <data name="CloudAccounts.ProvidedBy" xml:space="preserve">
+    <value>Provided by {0} ({1})</value>
+  </data>
+  <data name="Tab.Storage" xml:space="preserve">
+    <value>Storage</value>
+  </data>
+  <data name="Storage.Loading" xml:space="preserve">
+    <value>Reading the browser's storage…</value>
+  </data>
+  <data name="Storage.Unknown" xml:space="preserve">
+    <value>This browser does not say how much storage Kazo OS uses.</value>
+  </data>
+  <data name="Storage.Title" xml:space="preserve">
+    <value>Browser storage</value>
+  </data>
+  <data name="Storage.Description" xml:space="preserve">
+    <value>Kazo OS keeps everything in your browser: its files, its caches and the disks of the features (a virtual machine, for example). They all share one quota, and the features' disks count in the space of your files: when it runs low, only an administrator can still write.</value>
+  </data>
+  <data name="Storage.UsageLabel" xml:space="preserve">
+    <value>Storage used</value>
+  </data>
+  <data name="Storage.Usage" xml:space="preserve">
+    <value>{0} used of {1} ({2} %)</value>
+  </data>
+  <data name="Storage.LowSpace" xml:space="preserve">
+    <value>Space is low: free some up, or protect the storage so the browser keeps it.</value>
+  </data>
+  <data name="Storage.Part.Files" xml:space="preserve">
+    <value>Kazo OS files (IndexedDB)</value>
+  </data>
+  <data name="Storage.Part.Caches" xml:space="preserve">
+    <value>OS caches</value>
+  </data>
+  <data name="Storage.Part.Features" xml:space="preserve">
+    <value>Features' disks</value>
+  </data>
+  <data name="Storage.NoDetail" xml:space="preserve">
+    <value>This browser gives the total only, not the part of each kind of storage.</value>
+  </data>
+  <data name="Storage.NotDetailed" xml:space="preserve">
+    <value>not detailed</value>
+  </data>
+  <data name="Storage.Protection.Title" xml:space="preserve">
+    <value>Protection against erasure</value>
+  </data>
+  <data name="Storage.Protection.On" xml:space="preserve">
+    <value>Protected: the browser will not erase Kazo OS's storage to make room.</value>
+  </data>
+  <data name="Storage.Protection.Lost" xml:space="preserve">
+    <value>The browser no longer protects the storage it protected before.</value>
+  </data>
+  <data name="Storage.Protection.Description" xml:space="preserve">
+    <value>Without protection the browser may erase Kazo OS's data when the disk is full, or after a while without a visit (Safari: 7 days). Some browsers ask you first; others decide alone (an installed app or a bookmarked site is protected more easily).</value>
+  </data>
+  <data name="Storage.Protection.Request" xml:space="preserve">
+    <value>Protect the storage against erasure</value>
+  </data>
+  <data name="Storage.Protection.Refused" xml:space="preserve">
+    <value>The browser refused. Install Kazo OS as an app, or add it to your bookmarks, then try again.</value>
+  </data>
+  <data name="Storage.Features.Title" xml:space="preserve">
+    <value>Features</value>
+  </data>
+  <data name="Storage.Features.Description" xml:space="preserve">
+    <value>The space each feature declared for its own storage. Kazo OS does not measure it itself.</value>
+  </data>
+  <data name="Storage.Features.None" xml:space="preserve">
+    <value>No feature keeps storage of its own.</value>
+  </data>
+  <data name="Storage.Features.Unknown" xml:space="preserve">
+    <value>unknown</value>
+  </data>
+  <data name="Storage.Error" xml:space="preserve">
+    <value>Storage could not be read: {0}</value>
+  </data>
+  <data name="Storage.MiB" xml:space="preserve">
+    <value>{0} MiB</value>
+  </data>
+  <data name="Storage.GiB" xml:space="preserve">
+    <value>{0} GiB</value>
+  </data>
+  <data name="Roles.Title" xml:space="preserve">
+    <value>Roles of the features</value>
+  </data>
+  <data name="Roles.Description" xml:space="preserve">
+    <value>A feature can declare roles, such as the manager of its virtual machines. An administrator grants one to an ordinary account here or with {0}; it needs {1}, and the system asks an administrator in its own window. Every administrator holds every role implicitly.</value>
+  </data>
+  <data name="Roles.Account" xml:space="preserve">
+    <value>Account</value>
+  </data>
+  <data name="Roles.Implicit" xml:space="preserve">
+    <value>implicit (administrator)</value>
+  </data>
+  <data name="Roles.Toggle" xml:space="preserve">
+    <value>{0} for {1}</value>
+  </data>
+  <data name="Roles.Granted" xml:space="preserve">
+    <value>{1} now holds the role {0}.</value>
+  </data>
+  <data name="Roles.Revoked" xml:space="preserve">
+    <value>{1} no longer holds the role {0}.</value>
+  </data>
+  <data name="Roles.Unchanged" xml:space="preserve">
+    <value>Nothing changed for {1} and the role {0}.</value>
+  </data>
+  <data name="Roles.Error" xml:space="preserve">
+    <value>Role unchanged: {0}</value>
   </data>
 </root>

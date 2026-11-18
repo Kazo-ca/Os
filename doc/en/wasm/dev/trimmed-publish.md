@@ -80,10 +80,14 @@ Ecosystem.csproj            PublishTrimmed=true, TrimMode=partial
 wasm2/KazoOs/build/publish-trimmed.sh            # publie, mesure, sert, teste
 wasm2/KazoOs/build/publish-trimmed.sh --compare  # publie aussi sans trimming et compare
 wasm2/KazoOs/build/publish-trimmed.sh --skip-build
+wasm2/KazoOs/build/publish-trimmed.sh --no-cloud-drives  # without Dropbox, OneDrive and S3 (ADR 0282 §5)
 ```
 
 The script publishes to `artifacts/publish-trimmed/publish`, fails on any `IL…`
-warning, serves the publication on `127.0.0.1` and `127.0.0.2`, then runs
+warning, checks that `Kazo.Os.Platform.CloudDrives` is published (or absent
+with `--no-cloud-drives`, which passes `-p:KazoOsDropboxDrives=false
+-p:KazoOsOneDriveDrives=false -p:KazoOsS3Drives=false` and runs the same tests
+on that OS, [`cloud-drives.md`](cloud-drives.md#switchable-connectors-adr-0282-5)), serves the publication on `127.0.0.1` and `127.0.0.2`, then runs
 `Tests/Kazo.Os.TrimmedPublish.E2E.Tests`:
 
 | Test | What it checks |
@@ -102,8 +106,9 @@ warning, serves the publication on `127.0.0.1` and `127.0.0.2`, then runs
 | `A_direct_link_with_an_account_opens_the_store_at_the_app_page` | ADR 0258: with an account, the sign-in notice, then the Store at the app's page; nothing downloaded |
 | `A_direct_link_reports_a_missing_app_and_can_be_cancelled` | ADR 0258: app missing from the official catalog → notification whose button opens the Store; **Cancel** during the download → no app and no notification |
 | `A_craft_app_on_the_os_module_opens_saves_and_follows_the_os` | ADR 0259: the test package `Tests/fixtures/craft-app` (a Craft window on the `Kazo.Os.AppSdk.Craft` module, around a fake Craft app; packed by the script into `kazoos-packages-craft`, without the module) is installed with `sudo kazopkg install`; `xdg-open seed.fake` opens the window on the file, typing puts `*` in the title, Ctrl+S rewrites the file and the app hears `saved`, F12 (a chord the window reserves) does Save As through the OS dialog, an error after `ready` becomes a notice, a light then dark theme is followed, Ctrl+O goes through the OS Open dialog, closing with changes asks, a second window reads back the setting the first one wrote ([`craft-apps.md`](../framework/craft-apps.md)) |
+| `An_installed_drive_provider_feature_mounts_a_server_by_its_form_and_reads_and_writes_it` | ADR 0282, ADR 0284: the sample `Apps/Samples/Kazo.Os.Samples.WebDavDrive` (packed by the script into `kazoos-packages-drive`); before the install, `mount -t webdav` does not know the type; `sudo kazopkg install` installs the Feature for the machine and the administrator approves `drives.provide`; the approval window names the "Server address" field; then, with no restart, `mount -t webdav` knows the type and writes the syntax of its form. Then the full journey (work item 9): in File Explorer, "Connect a network drive" offers WebDAV "provided by" the Feature, refuses an `http` address and writes "This provider will reach dav.kazoos-e2e.test." for the `https` one (screenshot `trimmed-webdav-server-host.png`), then connects a WebDAV drive by its form (address, user name, app password) to a test server answered by Playwright (`RoutedWebDavServer`, HTTP Basic, `ETag`, CORS); `mount` shows it, `cat` reads a file the server placed and `echo … >` writes one the server receives by `PUT` ([`drive-providers.md`](../framework/drive-providers.md)) |
 
-The script requires all fifteen tests to pass (`EXPECTED_TESTS`). For the three direct link tests, it
+The script requires all sixteen tests to pass (`EXPECTED_TESTS`). For the three direct link tests, it
 creates a P-256 key on every run (`openssl`, in `artifacts/publish-trimmed/test-catalog-signing/`) and
 publishes with `-p:KazoOsAppSigningKeys=catalog:official=<public key>`: the publish under test accepts
 that key for the official catalog, next to the real one.

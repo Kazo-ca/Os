@@ -59,6 +59,18 @@ public sealed class ProjectInformationTests
         Assert.DoesNotContain(">https://github.com/Kazo-ca/Os<", html);
     }
 
+    [Theory]
+    [InlineData("en", "en", "Privacy policy", "Terms of use")]
+    [InlineData("fr", "fr", "Politique de confidentialité", "Conditions d’utilisation")]
+    [InlineData("de", "en", "Privacy policy", "Terms of use")]
+    public async Task Footer_links_the_legal_pages_at_the_section_of_the_UI_language(string culture, string section, string privacy, string terms)
+    {
+        string html = System.Net.WebUtility.HtmlDecode(await RenderAsync("https://os.kazo.ca/", CultureInfo.GetCultureInfo(culture)));
+
+        Assert.Matches($@"<a class=""project-privacy"" href=""privacy\.html#{section}"" target=""_blank"" rel=""noopener noreferrer""[^>]*>{Regex.Escape(privacy)}</a>", html);
+        Assert.Matches($@"<a class=""project-terms"" href=""terms\.html#{section}"" target=""_blank"" rel=""noopener noreferrer""[^>]*>{Regex.Escape(terms)}</a>", html);
+    }
+
     [Fact]
     public async Task Without_a_release_monitor_the_footer_shows_a_local_build_and_no_status()
     {

@@ -24,6 +24,12 @@ internal static class TestCommands
         Command<ThrowCommand>("throw"),
         Command<ListenCommand>("listen") with { Capabilities = [AppCapabilities.NetworkListen] },
         Command<ReadFileCommand>("readfile") with { Capabilities = [AppCapabilities.FileSystemUserHomeRead] },
+        Command<DirectCommand>("direct") with
+        {
+            Capabilities = [AppCapabilities.NetworkDirectAccess],
+            DirectNetworkHosts = ["api.example.com"]
+        },
+        Command<DirectCommand>("nodirect"),
         Service<TestService>("org.test.ticker"),
         Web<EchoSite>("org.test.intranet", "http://intranet.hack/"),
         Web<EchoSite>("org.test.wiki", "http://wiki.hack/"),
@@ -155,6 +161,29 @@ internal static class TestCommands
                 return 0;
             }
             catch (Exception exception) when (exception is UnauthorizedAccessException or IOException)
+            {
+                context.StandardError.WriteLine($"{exception.GetType().Name}: {exception.Message}");
+                return 1;
+            }
+        }
+    }
+
+    /// <summary>
+    /// <c>direct</c> / <c>nodirect</c>: GET its argument with <see cref="KazoDirectHttpClient"/>
+    /// (ADR 0282 §4) and print the status and body; a refusal prints the error.
+    /// </summary>
+    public sealed class DirectCommand(AppManifest manifest) : TerminalAppBase(manifest)
+    {
+        public override async ValueTask<int> ExecuteAsync(TerminalExecutionContext context, CancellationToken cancellationToken)
+        {
+            try
+            {
+                using KazoDirectHttpClient client = new();
+                using KazoDirectHttpResponse response = await client.GetAsync(context.Arguments[0], cancellationToken);
+                context.StandardOutput.Write($"{response.StatusCode} {await response.ReadAsStringAsync(cancellationToken)}");
+                return 0;
+            }
+            catch (Exception exception) when (exception is UnauthorizedAccessException or System.Net.Http.HttpRequestException or ArgumentException)
             {
                 context.StandardError.WriteLine($"{exception.GetType().Name}: {exception.Message}");
                 return 1;

@@ -55,6 +55,37 @@ public abstract class FeatureDefinition : AppDefinition
     /// </summary>
     public virtual string? ServiceEntryPoint => null;
 
+    /// <summary>
+    /// Gets the types of network drive the feature provides (ADR 0282 §1): each pairs a filesystem
+    /// type (<c>exemple</c>) with the class of the feature that talks to the service, the way the
+    /// user connects, and the hosts the class reaches. The OS loads the class on the first drive of
+    /// that type and runs it in the feature's context; declaring any requires the capability
+    /// <c>drives.provide</c>. Empty by default.
+    /// </summary>
+    public virtual IReadOnlyList<KazoDriveProviderDeclaration> DriveProviders => [];
+
+    /// <summary>
+    /// Gets the prefix of the permissions the feature declares (ADR 0246 §2): one lowercase segment,
+    /// <c>x86</c>, that no built-in capability uses and no other installed feature took. Required
+    /// when <see cref="ProvidedCapabilities"/> is not empty.
+    /// </summary>
+    public virtual string? CapabilityPrefix => null;
+
+    /// <summary>
+    /// Gets the permissions the feature declares (ADR 0246 §1), each <c>&lt;prefix&gt;.&lt;name&gt;</c>:
+    /// its services and commands require them of their callers
+    /// (<c>IFeatureServiceContext.Caller.Require</c>). Empty by default.
+    /// </summary>
+    public virtual IReadOnlyList<ProvidedCapability> ProvidedCapabilities => [];
+
+    /// <summary>
+    /// Gets the roles the feature declares (ADR 0247 §1), each <c>&lt;prefix&gt;:&lt;name&gt;</c> with
+    /// <see cref="CapabilityPrefix"/> as prefix (ADR 0283): an administrator grants one to an ordinary user, and an entry
+    /// point marked <see cref="FeatureEntryPoint.RequiresRole"/> opens only for a user who holds it.
+    /// Every administrator holds them all, implicitly. Empty by default.
+    /// </summary>
+    public virtual IReadOnlyList<FeatureRole> Roles => [];
+
     /// <summary>A feature has no command of its own: a child of kind <see cref="AppKind.Terminal"/> does.</summary>
     public sealed override TerminalCommand? Terminal => null;
 
@@ -107,6 +138,13 @@ public sealed record FeatureEntryPoint(string Suffix, string Name, AppKind Kind,
     /// at run time. Empty by default; a capability outside the feature's set fails the build.
     /// </summary>
     public IReadOnlyList<string> Capabilities { get; init; } = [];
+
+    /// <summary>
+    /// Gets the role a user must hold to see and launch this entry point (ADR 0247 §2), one of the
+    /// feature's <see cref="FeatureDefinition.Roles"/>, or <see langword="null"/> for every user. The
+    /// role opens the entry point only: it grants no <c>Administrator</c> authority.
+    /// </summary>
+    public string? RequiresRole { get; init; }
 
     /// <summary>Gets the shell command of a <see cref="AppKind.Terminal"/> child; required for that kind.</summary>
     public TerminalCommand? Terminal { get; init; }

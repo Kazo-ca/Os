@@ -113,6 +113,14 @@ public static class AppCapabilities
     public const string NetworkRealAccess = "network.real.access";
 
     /// <summary>
+    /// Reach real web services directly through the browser's <c>fetch</c>, without the Kazo server
+    /// (ADR 0282 §4), only to the hosts the manifest declares in
+    /// <see cref="AppManifest.DirectNetworkHosts"/>. Dangerous: the app sends data to those services
+    /// and receives theirs, and the approval window names every declared host.
+    /// </summary>
+    public const string NetworkDirectAccess = "network.direct.access";
+
+    /// <summary>
     /// Act on the interactive shell that ran the command: change its directory, its environment,
     /// list its commands or ask it to run a command as root (ADR 0051, section 3). Normal: it only
     /// reaches the shell of the user who typed the command.
@@ -181,6 +189,14 @@ public static class AppCapabilities
     /// storage. It never sees a token or a key.
     /// </summary>
     public const string CloudAccountsManage = "cloud-accounts.manage";
+
+    /// <summary>
+    /// Provide a type of network drive (ADR 0282 §1): a feature's <c>KazoDriveProvider</c> reads and
+    /// writes every file of the drives of that type and receives an access token of their accounts.
+    /// Dangerous; only a feature declares it (<c>manifest.feature.only</c>), and the administrator
+    /// approves it once, at installation.
+    /// </summary>
+    public const string DrivesProvide = "drives.provide";
 
     /// <summary>
     /// Add entries to the file menus of the OS (ADR 0151 §6): an app declares it with its
@@ -252,6 +268,10 @@ public static class AppCapabilities
             NetworkRealAccess,
             "Accéder au vrai réseau",
             "Joindre de vrais serveurs sur Internet par le serveur relais."),
+        Dangerous(
+            NetworkDirectAccess,
+            "Joindre des services web directement",
+            "Envoyer et recevoir des données auprès des services web nommés par l'application, directement depuis le navigateur."),
         Normal(NetworkListen, "Écouter un port réseau"),
         Dangerous(
             NetworkListenPrivileged,
@@ -295,7 +315,11 @@ public static class AppCapabilities
         Dangerous(
             CloudAccountsManage,
             "Gérer les comptes cloud",
-            "Connecter ou retirer vos comptes Dropbox, OneDrive ou S3 et monter leur stockage comme lecteurs réseau.")
+            "Connecter ou retirer vos comptes Dropbox, OneDrive ou S3 et monter leur stockage comme lecteurs réseau."),
+        Dangerous(
+            DrivesProvide,
+            "Fournir un type de lecteur réseau",
+            "Lire et écrire tous les fichiers des lecteurs de ce type, avec un jeton d'accès des comptes de ses utilisateurs.")
     }.ToFrozenDictionary(description => description.Capability, StringComparer.Ordinal);
 
     private static readonly FrozenSet<string> KnownIdentifiers = Descriptions.Keys.ToFrozenSet(StringComparer.Ordinal);
@@ -361,13 +385,16 @@ public static class AppCapabilities
         new(capability, title, CapabilityRisk.Dangerous, riskDescription);
 }
 
-/// <summary>Risk class of a catalog capability (ADR 0049 section 1).</summary>
+/// <summary>Risk class of a catalog capability (ADR 0049 section 1), written <c>normal</c> or <c>dangerous</c> in a manifest (ADR 0246).</summary>
+[System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<CapabilityRisk>))]
 public enum CapabilityRisk
 {
     /// <summary>Granted by default to any app that declares it.</summary>
+    [System.Text.Json.Serialization.JsonStringEnumMemberName("normal")]
     Normal = 0,
 
     /// <summary>Granted to a non-system app only after an administrator approval.</summary>
+    [System.Text.Json.Serialization.JsonStringEnumMemberName("dangerous")]
     Dangerous = 1
 }
 
@@ -382,7 +409,17 @@ public sealed record CapabilityDescription(
     string Capability,
     string Title,
     CapabilityRisk Risk,
-    string? RiskDescription);
+    string? RiskDescription)
+{
+    /// <summary>
+    /// Gets the feature that declares this permission (ADR 0246 §1), or <see langword="null"/> for a
+    /// capability of the built-in catalog.
+    /// </summary>
+    public string? ProviderId { get; init; }
+
+    /// <summary>Gets the permissions this one covers directly (ADR 0246 §3); empty for none.</summary>
+    public IReadOnlyList<string> Covers { get; init; } = [];
+}
 
 /// <summary>
 /// Evaluates capability grants using the mandatory exact-match semantics.

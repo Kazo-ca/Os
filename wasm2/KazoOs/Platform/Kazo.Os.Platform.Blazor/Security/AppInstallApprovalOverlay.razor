@@ -84,6 +84,61 @@
                     }
                 }
 
+                @if (request.Dependencies.Count > 0 || request.Reactivated.Count > 0)
+                {
+                    @* ADR 0248 §1: one approval covers the whole plan, so the window lists every package of it. *@
+                    <h3 class="iap-section-title">@L["InstallApproval.Plan.Title"]</h3>
+                    <p class="iap-none">@L["InstallApproval.Plan.Note", request.Name]</p>
+                    <ul class="iap-plan">
+                        @foreach (AppInstallApprovalDependency dependency in request.Dependencies)
+                        {
+                            <li key="@dependency.AppId" class="iap-plan-package">
+                                <span class="iap-capability-title">@dependency.Name</span>
+                                <code class="iap-capability-id">@dependency.AppId</code>
+                                <span class="iap-plan-facts">
+                                    @(dependency.PreviousVersion is { } from ? $"{from} → {dependency.Version}" : dependency.Version)
+                                    · @FormatSize(dependency.SizeBytes)
+                                    · @TrustText(dependency.Trust)
+                                    · @(dependency.SystemWide ? L["InstallApproval.ForEveryone"] : L["InstallApproval.ForUser", request.RequestedBy?.LoginName.Value ?? "-"])
+                                    @if (dependency.IsFeature)
+                                    {
+                                        <span> · @L["InstallApproval.Plan.Feature"]</span>
+                                    }
+                                </span>
+                                <code class="iap-plan-source">@dependency.Source</code>
+                                @if (dependency.DangerousCapabilities.Count > 0)
+                                {
+                                    <ul class="iap-capabilities">
+                                        @foreach (CapabilityLine capability in Describe(dependency.DangerousCapabilities, request.PlannedFeatures))
+                                        {
+                                            <li key="@capability.Id" class="iap-capability is-dangerous">
+                                                <span class="iap-capability-title">@capability.Title</span>
+                                                <code class="iap-capability-id">@capability.Id</code>
+                                                @if (!string.IsNullOrEmpty(capability.Risk))
+                                                {
+                                                    <span class="iap-capability-risk">@capability.Risk</span>
+                                                }
+                                            </li>
+                                        }
+                                    </ul>
+                                }
+                            </li>
+                        }
+                        @foreach (string reactivated in request.Reactivated)
+                        {
+                            <li key="@reactivated" class="iap-plan-package">
+                                <span class="iap-capability-title">@reactivated</span>
+                                <span class="iap-plan-facts">@L["InstallApproval.Plan.Reactivated"]</span>
+                            </li>
+                        }
+                    </ul>
+                }
+
+                @if (request.Operation == AppInstallApprovalOperation.Remove && request.DisabledDependents.Count > 0)
+                {
+                    <p class="iap-warning" role="note">@L["InstallApproval.Remove.Dependents", string.Join(", ", request.DisabledDependents)]</p>
+                }
+
                 @if (request.Operation != AppInstallApprovalOperation.Remove)
                 {
                     <h3 class="iap-section-title">@L[request.IsFeature ? "InstallApproval.Feature.Capabilities" : "InstallApproval.Capabilities"]</h3>
@@ -94,7 +149,7 @@
                     else
                     {
                         <ul class="iap-capabilities">
-                            @foreach (CapabilityLine capability in Describe(request.Capabilities))
+                            @foreach (CapabilityLine capability in Describe(request.Capabilities, request.PlannedFeatures))
                             {
                                 <li key="@capability.Id" class="iap-capability @(capability.Dangerous ? "is-dangerous" : "")">
                                     <span class="iap-capability-title">@capability.Title</span>
@@ -102,6 +157,19 @@
                                     @if (!string.IsNullOrEmpty(capability.Risk))
                                     {
                                         <span class="iap-capability-risk">@capability.Risk</span>
+                                    }
+                                    @if (request.Manifest is { } manifest)
+                                    {
+                                        @if (Kazo.Os.Platform.Core.Policy.DirectNetworkHostText.For(manifest, capability.Id) is { } hosts)
+                                        {
+                                            @* ADR 0282 section 4, ADR 0284 section 1: the web services the package reaches without the server. *@
+                                            <span class="iap-capability-hosts">@L["Approval.DirectNetworkHosts", hosts]</span>
+                                        }
+                                        @if (Kazo.Os.Platform.Core.Policy.DirectNetworkHostText.TypedServersFor(manifest, capability.Id) is { } fields)
+                                        {
+                                            @* ADR 0284 section 2: the server each user types in a drive provider's form. *@
+                                            <span class="iap-capability-hosts">@L["Approval.TypedServers", fields]</span>
+                                        }
                                     }
                                 </li>
                             }

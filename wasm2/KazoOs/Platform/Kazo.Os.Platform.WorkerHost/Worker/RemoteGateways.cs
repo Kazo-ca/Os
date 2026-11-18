@@ -456,6 +456,21 @@ internal sealed class RemoteNetworkGateway(RemoteProcessChannel channel) : IAppN
     /// </summary>
     public async ValueTask<KazoRelayState> GetRelayStateAsync(CancellationToken cancellationToken = default) =>
         WireCodec.ReadRelayState(await channel.CallAsync(RemoteOps.NetRelayState, null, cancellationToken).ConfigureAwait(false));
+
+    /// <summary>
+    /// Sends a direct web request from the worker (ADR 0282 §4). The OS first checks the capability
+    /// and the declared host (<see cref="RemoteOps.NetDirectCheck"/>), so the rules are the same as
+    /// on the main thread; the request then leaves through the worker's own <c>fetch</c>, and the
+    /// body streams into the worker without crossing the OS.
+    /// </summary>
+    public async ValueTask<KazoNetworkResult<KazoDirectHttpResponse>> SendDirectAsync(
+        KazoDirectHttpRequest request, CancellationToken cancellationToken = default)
+    {
+        KazoDirectHttpTransport.Validate(request);
+        await channel.CallAsync(RemoteOps.NetDirectCheck, writer => WireCodec.WriteDirectCheck(writer, request), cancellationToken)
+            .ConfigureAwait(false);
+        return await KazoDirectHttpTransport.SendAsync(KazoDirectHttpTransport.Shared, request, cancellationToken).ConfigureAwait(false);
+    }
 }
 
 /// <summary>
@@ -715,6 +730,16 @@ internal sealed class RemoteDriveGateway(RemoteProcessChannel channel) : IAppDri
 
     public async ValueTask<IReadOnlyList<string>> GetNetworkDriveTypesAsync(CancellationToken cancellationToken = default) =>
         WireCodec.ReadStrings(await channel.CallAsync(RemoteOps.DriveTypes, null, cancellationToken).ConfigureAwait(false), "ts");
+
+    // ADR 0282 §5: the OS writes its own labels in the worker's language.
+    public async ValueTask<IReadOnlyList<KazoNetworkDriveTypeInfo>> DescribeNetworkDriveTypesAsync(
+        System.Globalization.CultureInfo language,
+        CancellationToken cancellationToken = default) =>
+        WireCodec.ReadDriveTypeInfos(await channel.CallAsync(RemoteOps.DriveDescribeTypes, writer => writer.WriteString("lg", language.Name), cancellationToken)
+            .ConfigureAwait(false));
+
+    public async ValueTask<IReadOnlyList<KazoDriveSnapshot>> GetProviderMissingDrivesAsync(CancellationToken cancellationToken = default) =>
+        WireCodec.ReadDrives(await channel.CallAsync(RemoteOps.DriveProviderMissing, null, cancellationToken).ConfigureAwait(false));
 
     // ADR 0270: the OS checks cloud-accounts.manage for a cloud type; a folder dialog opens on the page.
     public async ValueTask<KazoDriveSnapshot?> MountNetworkDriveAsync(

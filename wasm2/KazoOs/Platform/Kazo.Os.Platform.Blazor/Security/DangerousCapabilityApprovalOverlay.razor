@@ -54,6 +54,16 @@
                                 @* ADR 0235 section 3: the real ports the relay will open for this app. *@
                                 <span class="dca-capability-ports">@L["Approval.RealNetworkPorts", ports]</span>
                             }
+                            @if (Kazo.Os.Platform.Core.Policy.DirectNetworkHostText.For(request.Manifest, capability.Capability) is { } hosts)
+                            {
+                                @* ADR 0282 section 4: the web services the app reaches without the server. *@
+                                <span class="dca-capability-ports dca-capability-hosts">@L["Approval.DirectNetworkHosts", hosts]</span>
+                            }
+                            @if (Kazo.Os.Platform.Core.Policy.DirectNetworkHostText.TypedServersFor(request.Manifest, capability.Capability) is { } fields)
+                            {
+                                @* ADR 0284 section 2: the server each user types in a drive provider's form. *@
+                                <span class="dca-capability-ports dca-capability-hosts">@L["Approval.TypedServers", fields]</span>
+                            }
                         </li>
                     }
                 </ul>

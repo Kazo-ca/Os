@@ -354,6 +354,7 @@ public sealed class AppIntentDispatcher
             ShellFailure.Disabled => AppIntentDispatchStatus.Disabled,
             ShellFailure.ElevationDenied => AppIntentDispatchStatus.ElevationDenied,
             ShellFailure.Fault => AppIntentDispatchStatus.EntryPointFault,
+            ShellFailure.RoleRequired => AppIntentDispatchStatus.AccessDenied,
             _ => AppIntentDispatchStatus.Dispatched
         };
         string? errorCode = result.Failure switch
@@ -363,6 +364,7 @@ public sealed class AppIntentDispatcher
             ShellFailure.ElevationDenied => "lifecycle.elevation.denied",
             ShellFailure.Fault => "lifecycle.entry-point.fault",
             ShellFailure.Redirection => "shell.redirection.failed",
+            ShellFailure.RoleRequired => AppLifecycleOrchestrator.RoleRequiredErrorCode,
             ShellFailure.Syntax => result.SyntaxError!.Code,
             _ => null
         };
@@ -862,6 +864,8 @@ public sealed class AppIntentDispatcher
         AppLaunchStatus.NotFound => new AppIntentDispatchResult(AppIntentDispatchStatus.NotFound, ErrorCode: launch.ErrorCode),
         AppLaunchStatus.Disabled => new AppIntentDispatchResult(AppIntentDispatchStatus.Disabled, ErrorCode: launch.ErrorCode),
         AppLaunchStatus.ElevationDenied => new AppIntentDispatchResult(AppIntentDispatchStatus.ElevationDenied, ErrorCode: launch.ErrorCode),
+        // ADR 0247 §2: the user does not hold the role of the entry point.
+        AppLaunchStatus.RoleRequired => new AppIntentDispatchResult(AppIntentDispatchStatus.AccessDenied, ErrorCode: launch.ErrorCode),
         _ => new AppIntentDispatchResult(AppIntentDispatchStatus.EntryPointFault, launch.Process, launch.Context, ErrorCode: launch.ErrorCode)
     };
 }

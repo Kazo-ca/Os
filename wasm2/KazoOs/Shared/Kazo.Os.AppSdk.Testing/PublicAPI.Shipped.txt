@@ -1,0 +1,64 @@
+#nullable enable
+Kazo.Os.AppSdk.Testing.Drives.KazoDriveConformanceCases
+Kazo.Os.AppSdk.Testing.Drives.KazoDriveConformanceException
+Kazo.Os.AppSdk.Testing.Drives.KazoDriveConformanceException.Case.get -> string!
+Kazo.Os.AppSdk.Testing.Drives.KazoDriveConformanceException.KazoDriveConformanceException(string! caseName, string! message, System.Exception? innerException = null) -> void
+Kazo.Os.AppSdk.Testing.Drives.KazoDriveConformanceOutcome
+Kazo.Os.AppSdk.Testing.Drives.KazoDriveConformanceOutcome.Passed = 0 -> Kazo.Os.AppSdk.Testing.Drives.KazoDriveConformanceOutcome
+Kazo.Os.AppSdk.Testing.Drives.KazoDriveConformanceOutcome.Skipped = 1 -> Kazo.Os.AppSdk.Testing.Drives.KazoDriveConformanceOutcome
+Kazo.Os.AppSdk.Testing.Drives.KazoDriveConformanceResult
+Kazo.Os.AppSdk.Testing.Drives.KazoDriveConformanceResult.<Clone>$() -> Kazo.Os.AppSdk.Testing.Drives.KazoDriveConformanceResult!
+Kazo.Os.AppSdk.Testing.Drives.KazoDriveConformanceResult.Case.get -> string!
+Kazo.Os.AppSdk.Testing.Drives.KazoDriveConformanceResult.Case.init -> void
+Kazo.Os.AppSdk.Testing.Drives.KazoDriveConformanceResult.Deconstruct(out string! Case, out Kazo.Os.AppSdk.Testing.Drives.KazoDriveConformanceOutcome Outcome, out string? Detail) -> void
+Kazo.Os.AppSdk.Testing.Drives.KazoDriveConformanceResult.Detail.get -> string?
+Kazo.Os.AppSdk.Testing.Drives.KazoDriveConformanceResult.Detail.init -> void
+Kazo.Os.AppSdk.Testing.Drives.KazoDriveConformanceResult.Equals(Kazo.Os.AppSdk.Testing.Drives.KazoDriveConformanceResult? other) -> bool
+Kazo.Os.AppSdk.Testing.Drives.KazoDriveConformanceResult.KazoDriveConformanceResult(string! Case, Kazo.Os.AppSdk.Testing.Drives.KazoDriveConformanceOutcome Outcome, string? Detail = null) -> void
+Kazo.Os.AppSdk.Testing.Drives.KazoDriveConformanceResult.Outcome.get -> Kazo.Os.AppSdk.Testing.Drives.KazoDriveConformanceOutcome
+Kazo.Os.AppSdk.Testing.Drives.KazoDriveConformanceResult.Outcome.init -> void
+Kazo.Os.AppSdk.Testing.Drives.KazoDriveProviderTests
+Kazo.Os.AppSdk.Testing.Drives.KazoDriveProviderTests.KazoDriveProviderTests() -> void
+Kazo.Os.AppSdk.Testing.Drives.KazoDriveProviderTests.RunAllAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.Testing.Drives.KazoDriveConformanceResult!>!>!
+Kazo.Os.AppSdk.Testing.Drives.KazoDriveProviderTests.RunAsync(string! caseName, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Kazo.Os.AppSdk.Testing.Drives.KazoDriveConformanceResult!>!
+Kazo.Os.AppSdk.Testing.Drives.KazoDriveTestContext
+Kazo.Os.AppSdk.Testing.Drives.KazoDriveTestContext.AccessToken.get -> string?
+Kazo.Os.AppSdk.Testing.Drives.KazoDriveTestContext.AccessToken.set -> void
+Kazo.Os.AppSdk.Testing.Drives.KazoDriveTestContext.Account.get -> Kazo.Os.AppSdk.Drives.KazoDriveAccount?
+Kazo.Os.AppSdk.Testing.Drives.KazoDriveTestContext.AvailabilityNotifications.get -> int
+Kazo.Os.AppSdk.Testing.Drives.KazoDriveTestContext.GetAccessTokenAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<string!>
+Kazo.Os.AppSdk.Testing.Drives.KazoDriveTestContext.GetSecretAsync(string! name, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<string?>
+Kazo.Os.AppSdk.Testing.Drives.KazoDriveTestContext.KazoDriveTestContext(string! type, Kazo.Os.AppSdk.Drives.KazoDriveAccount? account = null) -> void
+Kazo.Os.AppSdk.Testing.Drives.KazoDriveTestContext.NotifyAvailabilityChanged() -> void
+Kazo.Os.AppSdk.Testing.Drives.KazoDriveTestContext.Secrets.get -> System.Collections.Generic.Dictionary<string!, string!>!
+Kazo.Os.AppSdk.Testing.Drives.KazoDriveTestContext.TokenRequests.get -> int
+Kazo.Os.AppSdk.Testing.Drives.KazoDriveTestContext.Type.get -> string!
+abstract Kazo.Os.AppSdk.Testing.Drives.KazoDriveProviderTests.OpenDriveAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.Drives.KazoDriveFolder!>
+const Kazo.Os.AppSdk.Testing.Drives.KazoDriveConformanceCases.CreateExisting = "create-existing" -> string!
+const Kazo.Os.AppSdk.Testing.Drives.KazoDriveConformanceCases.CreateFolderAndList = "create-folder-and-list" -> string!
+const Kazo.Os.AppSdk.Testing.Drives.KazoDriveConformanceCases.Delete = "delete" -> string!
+const Kazo.Os.AppSdk.Testing.Drives.KazoDriveConformanceCases.EmptyFile = "empty-file" -> string!
+const Kazo.Os.AppSdk.Testing.Drives.KazoDriveConformanceCases.FileTooLarge = "file-too-large" -> string!
+const Kazo.Os.AppSdk.Testing.Drives.KazoDriveConformanceCases.Missing = "missing" -> string!
+const Kazo.Os.AppSdk.Testing.Drives.KazoDriveConformanceCases.Move = "move" -> string!
+const Kazo.Os.AppSdk.Testing.Drives.KazoDriveConformanceCases.Names = "names" -> string!
+const Kazo.Os.AppSdk.Testing.Drives.KazoDriveConformanceCases.Offline = "offline" -> string!
+const Kazo.Os.AppSdk.Testing.Drives.KazoDriveConformanceCases.Overwrite = "overwrite" -> string!
+const Kazo.Os.AppSdk.Testing.Drives.KazoDriveConformanceCases.Quota = "quota" -> string!
+const Kazo.Os.AppSdk.Testing.Drives.KazoDriveConformanceCases.RevisionConflict = "revision-conflict" -> string!
+const Kazo.Os.AppSdk.Testing.Drives.KazoDriveConformanceCases.RootIsAFolder = "root-is-a-folder" -> string!
+const Kazo.Os.AppSdk.Testing.Drives.KazoDriveConformanceCases.SignInExpired = "sign-in-expired" -> string!
+const Kazo.Os.AppSdk.Testing.Drives.KazoDriveConformanceCases.WriteThenRead = "write-then-read" -> string!
+const Kazo.Os.AppSdk.Testing.Drives.KazoDriveConformanceCases.WrongKind = "wrong-kind" -> string!
+const Kazo.Os.AppSdk.Testing.Drives.KazoDriveProviderTests.WorkingFolderPrefix = "kazo-conformance-" -> string!
+override Kazo.Os.AppSdk.Testing.Drives.KazoDriveConformanceResult.Equals(object? obj) -> bool
+override Kazo.Os.AppSdk.Testing.Drives.KazoDriveConformanceResult.GetHashCode() -> int
+override Kazo.Os.AppSdk.Testing.Drives.KazoDriveConformanceResult.ToString() -> string!
+static Kazo.Os.AppSdk.Testing.Drives.KazoDriveConformanceResult.operator !=(Kazo.Os.AppSdk.Testing.Drives.KazoDriveConformanceResult? left, Kazo.Os.AppSdk.Testing.Drives.KazoDriveConformanceResult? right) -> bool
+static Kazo.Os.AppSdk.Testing.Drives.KazoDriveConformanceResult.operator ==(Kazo.Os.AppSdk.Testing.Drives.KazoDriveConformanceResult? left, Kazo.Os.AppSdk.Testing.Drives.KazoDriveConformanceResult? right) -> bool
+static Kazo.Os.AppSdk.Testing.Drives.KazoDriveProviderTests.CaseNames.get -> System.Collections.Generic.IReadOnlyList<string!>!
+virtual Kazo.Os.AppSdk.Testing.Drives.KazoDriveProviderTests.CaseTimeout.get -> System.TimeSpan
+virtual Kazo.Os.AppSdk.Testing.Drives.KazoDriveProviderTests.ExpireSignInAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<bool>
+virtual Kazo.Os.AppSdk.Testing.Drives.KazoDriveProviderTests.PlaceLargeFileAsync(Kazo.Os.AppSdk.Drives.KazoDrivePath! path, long length, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<bool>
+virtual Kazo.Os.AppSdk.Testing.Drives.KazoDriveProviderTests.ResetAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask
+virtual Kazo.Os.AppSdk.Testing.Drives.KazoDriveProviderTests.SetServiceReachableAsync(bool reachable, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<bool>

@@ -1,0 +1,35 @@
+@inherits Kazo.Os.AppSdk.Blazor.KazoComponentBase
+@using Kazo.Os.AppSdk.Icons
+@using Kazo.Os.AppSdk.IO
+
+@*
+    The icon of a network drive type (ADR 0282 §5): the image a feature ships with its provider, or a
+    glyph of the SDK's icon fonts for the OS's own types. Decorative: the text next to it names the service.
+*@
+@if (!string.IsNullOrEmpty(Info?.IconUrl) && !_imageFailed)
+{
+    <img class="drive-type-image size-@Size" src="@Info.IconUrl" alt="" aria-hidden="true" @onerror="() => _imageFailed = true" />
+}
+else
+{
+    <KazoIcon Library="@Glyph.Library" Name="@Glyph.Name" Size="@Size" />
+}
+
+@code {
+    private bool _imageFailed;
+
+    /// <summary>Gets or sets the type's description; <see langword="null"/> draws <see cref="Fallback"/>.</summary>
+    [Parameter]
+    public KazoNetworkDriveTypeInfo? Info { get; set; }
+
+    /// <summary>Gets or sets the glyph drawn when the type has no icon; a cloud by default.</summary>
+    [Parameter]
+    public (IconLibrary Library, string Name)? Fallback { get; set; }
+
+    /// <summary>Gets or sets the size in pixels: 14, 16 or 22.</summary>
+    [Parameter]
+    public int Size { get; set; } = 22;
+
+    private (IconLibrary Library, string Name) Glyph =>
+        Info?.Icon is { } icon ? NetworkDriveIcons.Parse(icon) : Fallback ?? NetworkDriveIcons.Generic;
+}

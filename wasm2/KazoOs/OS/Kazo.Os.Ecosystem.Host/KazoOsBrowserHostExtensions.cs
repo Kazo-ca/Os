@@ -194,7 +194,8 @@ public static partial class KazoOsBrowserHostExtensions
         // KazoOs:SignIn:FactoryReset:Enabled is false in appsettings.json.
         builder.Services.AddSingleton(SignInFactoryResetSettings.Read(builder.Configuration));
         // ADR 0267 §5: the public app ids of the cloud providers (KazoOs:CloudDrives); an empty id
-        // leaves that provider out. /etc/kazoos/cloud-drives.config can replace them.
+        // leaves that provider out. /etc/kazoos/cloud-drives.config can replace them. ADR 0282 §5:
+        // KazoOs:CloudDrives:Disabled switches shipped drive types off without publishing again.
         IConfigurationSection cloudDrives = builder.Configuration.GetSection(Kazo.Os.Platform.Core.CloudAccounts.CloudProviderSettings.SectionName);
         builder.Services.AddSingleton(new Kazo.Os.Platform.Core.CloudAccounts.CloudProviderSettings(
             cloudDrives["Dropbox:FullAccessClientId"],
@@ -202,7 +203,11 @@ public static partial class KazoOsBrowserHostExtensions
             cloudDrives["OneDrive:ClientId"],
             cloudDrives["OneDrive:Tenant"],
             cloudDrives["Dropbox:AppFolderPath"],
-            cloudDrives["OneDrive:AppFolderPath"]));
+            cloudDrives["OneDrive:AppFolderPath"])
+        {
+            // ADR 0282 §5: KazoOs:CloudDrives:Disabled, "dropbox, s3" or a JSON array of types.
+            Disabled = ReadDisabledCloudDriveTypes(cloudDrives.GetSection("Disabled"))
+        });
         // ADR 0182, ADR 0188: catalogs and packages are downloaded with fetch; offline, the download
         // fails as "unreachable" without a fetch that would log a console error (#493).
         builder.Services.AddSingleton<IAppPackageDownloader>(provider => new HttpAppPackageDownloader(
@@ -245,6 +250,16 @@ public static partial class KazoOsBrowserHostExtensions
 
         return builder;
     }
+
+    /// <summary>
+    /// Reads <c>KazoOs:CloudDrives:Disabled</c> (ADR 0282 §5): either a string (<c>"dropbox, s3"</c>)
+    /// or an array (<c>["dropbox", "s3"]</c>). Types are compared in lower case.
+    /// </summary>
+    internal static IReadOnlyList<string> ReadDisabledCloudDriveTypes(IConfigurationSection section) =>
+        section.Value is { } text
+            ? Kazo.Os.Platform.Core.CloudAccounts.CloudProviderSettings.ParseTypes(text)
+            : Kazo.Os.Platform.Core.CloudAccounts.CloudProviderSettings.ParseTypes(
+                string.Join(',', section.GetChildren().Select(static child => child.Value).OfType<string>()));
 
     /// <summary>Reads <c>KazoOs:RemoteWindowRendering</c> (ADR 0133): <c>Enabled</c>, and optionally <c>Apps</c>.</summary>
     private static RemoteWindowRenderingOptions ReadRemoteWindowRendering(IConfiguration configuration)

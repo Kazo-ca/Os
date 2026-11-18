@@ -39,6 +39,13 @@ public sealed record KazoCatalogAppVersion(string Version, long SizeBytes, IRead
     /// the app's page (ADR 0266 §4).
     /// </summary>
     public IReadOnlyList<KazoAppFileHandler> FileHandlers { get; init; } = [];
+
+    /// <summary>
+    /// Gets the dependencies it declares, copied by the catalog from its manifest (ADR 0248 §5): the
+    /// Store shows them on the app's page and builds the plan from them. <see langword="null"/> when
+    /// the catalog does not say (an older catalog).
+    /// </summary>
+    public IReadOnlyList<KazoPackageDependency>? Dependencies { get; init; }
 }
 
 /// <summary>An app of a catalog, as the Kazo OS Store shows it (ADR 0188 §2).</summary>

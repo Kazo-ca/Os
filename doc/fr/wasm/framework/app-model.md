@@ -41,6 +41,7 @@ Valeurs par défaut des membres facultatifs :
 | `ServiceStartup` | `null` (= `Login`) ; `serviceStartup` est alors omis du manifeste. `Boot` ne vaut que pour une app système de genre `Service` (ADR 0097 §4, ADR 0107) |
 | `OomScoreAdjust` | `null` (hérite ; `-500` pour un service système) ; `oomScoreAdj` est alors omis du manifeste. Négatif seulement pour une app système (`KOSAPP0024`, ADR 0126 §4, ADR 0142, [`oom-killer.md`](../dev/oom-killer.md)) |
 | `RealNetworkPorts` | vide ; `realNetworkPorts` est alors omis du manifeste. Ports réels `tcp/N` ou `udp/N` dont l'app a besoin par le relais du serveur, hors `AllowedPorts` ; exige `network.real.access`, affichés à l'approbation, refusés par le serveur s'ils sont dans `BlockedPorts` (ADR 0235 §3, [relais réseau](../dev/server-network-relay.md)) |
+| `DirectNetworkHosts` | vide ; `directNetworkHosts` est alors omis du manifeste. Hôtes web que l'app joint directement par le `fetch` du navigateur, sans serveur Kazo : un nom exact (`api.example.com`) ou un joker de sous-domaine (`*.example.org`, qui ne couvre pas `example.org` lui-même), toujours en `https`, tout port. Refusés : joker nu, joker sous un domaine de premier niveau (`*.com`), adresse IP, `localhost`, nom sans point, schéma, port ou chemin. Exige `network.direct.access`, affichés à l'approbation (ADR 0282 §4, `DirectNetworkHosts`) |
 | `Resources` | `AppResourceProfileManifest.None` |
 | `Window` | `null` : la fenêtre prend `WindowOptions.Default` (800×560, minimum 360×240) ; l'objet `window` est alors omis du manifeste (ADR 0095, [`window-model.md`](window-model.md)). Déclaré seulement par une app de genre `Window` (`manifest.window.*`). |
 
@@ -126,7 +127,8 @@ Règles de conversion propres à une fonctionnalité :
   son sous-ensemble de permissions, et hérite de la version, de l'éditeur, de
   la plage de SDK, des traductions et des ressources (`assets`) de la
   fonctionnalité : un seul paquet les porte. Les ports réels
-  (`realNetworkPorts`) vont à l'enfant qui demande `network.real.access` ;
+  (`realNetworkPorts`) vont à l'enfant qui demande `network.real.access`, et les
+  hôtes directs (`directNetworkHosts`) à celui qui demande `network.direct.access` ;
 - `AppManifestValidator.Validate` applique à chaque enfant les règles de son
   genre, et à la fonctionnalité celles du genre `Feature` :
   `manifest.feature.entryPoint.forbidden` (point d'entrée ou plateforme
@@ -172,6 +174,15 @@ désactivation et au retrait, et la commande d'un enfant `Terminal` passe avant
 celle d'une app ordinaire de même nom (après les apps système). Voir
 [`app-installation.md`](../dev/app-installation.md#fonctionnalités-adr-0260).
 
+#### Permissions déclarées : `ProvidedCapabilities` (ADR 0246)
+
+Une fonctionnalité déclare ses propres permissions sous un préfixe à elle
+(`CapabilityPrefix => "x86"`, `ProvidedCapabilities`), normales ou dangereuses,
+avec un titre, une phrase de risque et ce qu'elles couvrent ; une app cliente
+les demande dans `Capabilities` avec une dépendance vers la fonctionnalité.
+Elles suivent les règles du catalogue de l'OS : voir
+[`capabilities.md`](capabilities.md#permissions-déclarées-par-une-feature-adr-0246).
+
 #### Services fournis : `ProvidedServices` (ADR 0262)
 
 Une fonctionnalité fournit des **services** aux autres apps : chacun associe un
@@ -191,6 +202,17 @@ Le manifeste les écrit dans `providedServices`
 `"implementation": "OsX86.X86Service, OsX86"`). Une app les obtient par
 `KazoFeatures.GetServiceAsync<T>()`, qui rend `null` quand la fonctionnalité
 est absente ou désactivée : voir [`feature-services.md`](feature-services.md).
+
+#### Types de lecteurs réseau : `DriveProviders` (ADR 0282)
+
+Une fonctionnalité qui demande la capacité dangereuse `drives.provide` peut
+fournir des **types de lecteurs réseau** (`mount -t exemple`) : chaque
+`KazoDriveProviderDeclaration` donne le type, le nom affiché, la classe dérivée
+de `KazoDriveProvider`, la connexion (OAuth ou formulaire), l'icône et les
+hôtes joints. Le manifeste les écrit dans `driveProviders`. Une app ordinaire
+qui déclare l'un ou l'autre est refusée (`manifest.feature.only`,
+`KOSAPP0033`) ; une classe que l'OS ne peut pas créer donne `KOSAPP0036`. Voir
+[`drive-providers.md`](drive-providers.md).
 
 ### Intents et schémas d'URI (ADR 0096)
 
@@ -354,7 +376,8 @@ avec le nom complet de la classe en cause : `App.csproj : error KOSAPP0005: [Ns.
 | `KOSAPP0025` | Retiré, jamais réutilisé : refusait à une app non système `kazoos.file-view` et `kazoos.file-dialogs` (ADR 0153 §4), que l'ADR 0156 ouvre à toute app fenêtrée (ADR 0158 §1). |
 | `KOSAPP0030` | Frontière du SDK : `ProjectReference` interdite dans un projet d'app (ADR 0055 §2, numéro fixé par l'ADR 0059). Émis par la cible `ValidateKazoOsSdkBoundary`. Voir [`app-sdk.md`](app-sdk.md). |
 | `KOSAPP0032` | Fonctionnalité (ADR 0260 §1) : une `FeatureDefinition` surcharge `EntryPoint` ; une fonctionnalité n'a pas de point d'entrée à elle, seuls ses `EntryPoints` s'exécutent. |
-| `KOSAPP0033` | Fonctionnalité (ADR 0260 §5) : une app ordinaire déclare ce que seule une fonctionnalité peut (le genre `Feature` hors d'une `FeatureDefinition`), ou une fonctionnalité est déclarée à côté d'autres apps dans un même projet. |
+| `KOSAPP0033` | Fonctionnalité (ADR 0260 §5) : une app ordinaire déclare ce que seule une fonctionnalité peut (le genre `Feature` hors d'une `FeatureDefinition`, ou la capacité `drives.provide`, ADR 0282), ou une fonctionnalité est déclarée à côté d'autres apps dans un même projet. |
+| `KOSAPP0036` | Fournisseur de lecteurs (ADR 0282 §1) : la classe d'un `DriveProviders` ne dérive pas de `KazoDriveProvider`, est abstraite, n'est pas dans l'assemblage de la fonctionnalité ou n'a pas de constructeur public `()` ou `(IFeatureServiceContext)` ; un type réservé ou mal formé échoue aussi au build ([`drive-providers.md`](drive-providers.md)). |
 | `KOSAPP0031` | Frontière du SDK : service injecté qui n'est ni un type du SDK, ni MudBlazor, ni `IJSRuntime` (ADR 0055 §3, ADR 0059). Voir [`app-sdk.md`](app-sdk.md). |
 | `KOSAPP0040` | Traductions du manifeste (ADR 0104 §4) : `Resources/AppManifest.<culture>.resx` illisible, nom de culture invalide, clé autre que `Name`, `Description`, `Terminal.Usage` (préfixées de l'id dans un projet à plusieurs apps), `Terminal.Usage` pour une app qui n'est pas une commande, ou fichier `localization/` référencé illisible à l'agrégation. Voir [`localization.md`](localization.md). |
 | `KOSAPP0090` | Arguments de l'outil invalides. |

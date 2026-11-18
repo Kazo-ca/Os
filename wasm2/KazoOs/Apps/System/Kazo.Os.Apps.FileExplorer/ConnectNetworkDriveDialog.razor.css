@@ -220,6 +220,25 @@
     font-size: 0.82rem;
 }
 
+.cnd-host {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    margin: 0;
+    padding: 0.45rem 0.65rem;
+    border: 1px solid color-mix(in srgb, var(--kos-accent, #42d392) 45%, transparent);
+    border-radius: var(--kos-radius-sm, 6px);
+    background: color-mix(in srgb, var(--kos-accent, #42d392) 10%, transparent);
+    color: var(--kos-text-primary, #f0f6fc);
+    font-size: 0.85rem;
+    overflow-wrap: anywhere;
+}
+
+.cnd-host.refused {
+    border-color: var(--kos-danger, #f85149);
+    background: color-mix(in srgb, var(--kos-danger, #f85149) 12%, transparent);
+}
+
 .cnd-error {
     margin: 0;
     padding: 0.55rem 0.7rem;
@@ -282,4 +301,18 @@
 /* The dialog takes the focus when it opens (Escape closes it); its own outline would frame the whole box. */
 .cnd-dialog:focus {
     outline: none;
+}
+
+/* "Provided by <Feature>": a third-party service always says which Feature talks to it (ADR 0282 §5). */
+.cnd-option-provider {
+    color: var(--kos-accent, #42d392);
+    font-size: 0.75rem;
+}
+
+.cnd-provider {
+    margin: 0;
+    padding: 0.4rem 0.6rem;
+    border-left: 2px solid var(--kos-accent, #42d392);
+    color: var(--kos-text-secondary, #8b949e);
+    font-size: 0.8rem;
 }

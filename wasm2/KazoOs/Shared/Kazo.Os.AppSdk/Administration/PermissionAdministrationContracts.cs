@@ -61,6 +61,12 @@ public sealed record KazoCapabilityPermissionInfo(
 {
     /// <summary>Gets whether the app receives the capability at its next launch.</summary>
     public bool IsGranted => State is KazoPermissionState.System or KazoPermissionState.Allowed;
+
+    /// <summary>
+    /// Gets the feature that declares this permission (ADR 0246 §1), or <see langword="null"/> for a
+    /// capability of the OS's built-in catalog.
+    /// </summary>
+    public string? ProviderId { get; init; }
 }
 
 /// <summary>One catalog app that declares at least one dangerous capability.</summary>

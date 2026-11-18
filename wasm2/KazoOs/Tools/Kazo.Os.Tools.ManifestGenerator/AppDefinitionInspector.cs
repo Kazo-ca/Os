@@ -244,6 +244,13 @@ public static class AppDefinitionInspector
             return null;
         }
 
+        // ADR 0282 §1: providing a drive type, and its capability, belong to a feature.
+        if (feature is null && (manifest!.Capabilities ?? []).Contains(AppCapabilities.DrivesProvide, StringComparer.Ordinal))
+        {
+            diagnostics.Add(new(GeneratorCodes.FeatureOnly, subject, $"Only a feature declares '{AppCapabilities.DrivesProvide}' and provides a type of network drive (ADR 0282 §1)."));
+            return null;
+        }
+
         if (feature is not null)
         {
             if (type.GetProperty(nameof(AppDefinition.EntryPoint))?.DeclaringType != typeof(FeatureDefinition))
@@ -312,6 +319,7 @@ public static class AppDefinitionInspector
             }
 
             CheckProvidedServices(feature, assembly, subject, diagnostics);
+            CheckDriveProviders(feature, assembly, subject, diagnostics);
         }
 
         if (diagnostics.Count > before)
@@ -460,6 +468,62 @@ public static class AppDefinitionInspector
         {
             diagnostics.Add(new(GeneratorCodes.FeatureService, subject, $"ServiceEntryPoint '{suffix}' is not the suffix of one of the feature's EntryPoints."));
         }
+    }
+
+    /// <summary>Full name of the base class of a drive provider (ADR 0282 §2), compared by name across load contexts.</summary>
+    private const string DriveProviderBaseTypeName = "Kazo.Os.AppSdk.Drives.KazoDriveProvider";
+
+    /// <summary>
+    /// ADR 0282 §1 and §2 (<c>KOSAPP0036</c>): each drive provider names a concrete class of the
+    /// feature's assembly that derives from <c>KazoDriveProvider</c> and that the OS can create (a
+    /// public constructor taking an <c>IFeatureServiceContext</c>, or none). The rest of the
+    /// declaration (type, hosts, connection) is checked by <see cref="AppManifestValidator"/>.
+    /// </summary>
+    private static void CheckDriveProviders(FeatureDefinition feature, Assembly assembly, string subject, List<GeneratorDiagnostic> diagnostics)
+    {
+        foreach (KazoDriveProviderDeclaration declaration in feature.DriveProviders)
+        {
+            string where = $"DriveProviders[{declaration?.Type}]";
+            if (declaration?.Provider is not { IsClass: true, IsAbstract: false } provider)
+            {
+                diagnostics.Add(new(GeneratorCodes.DriveProvider, subject, $"{where}: the provider must be a concrete class."));
+                continue;
+            }
+
+            if (provider.Assembly != assembly)
+            {
+                diagnostics.Add(new(GeneratorCodes.DriveProvider, subject,
+                    $"{where}: {provider.FullName} lives in '{provider.Assembly.GetName().Name}', not in the feature's assembly '{assembly.GetName().Name}'."));
+            }
+
+            if (!DerivesFrom(provider, DriveProviderBaseTypeName))
+            {
+                diagnostics.Add(new(GeneratorCodes.DriveProvider, subject, $"{where}: {provider.FullName} does not derive from KazoDriveProvider."));
+            }
+
+            bool creatable = provider.GetConstructors().Any(static constructor =>
+                constructor.GetParameters() is { } parameters
+                && (parameters.Length == 0 || (parameters.Length == 1 && parameters[0].ParameterType.FullName == FeatureServiceContextTypeName)));
+            if (!creatable)
+            {
+                diagnostics.Add(new(GeneratorCodes.DriveProvider, subject,
+                    $"{where}: {provider.FullName} needs a public constructor taking an IFeatureServiceContext, or none."));
+            }
+        }
+    }
+
+    /// <summary>Whether <paramref name="type"/> has a base class named <paramref name="baseTypeName"/>, compared by name across load contexts.</summary>
+    private static bool DerivesFrom(Type type, string baseTypeName)
+    {
+        for (Type? current = type.BaseType; current is not null; current = current.BaseType)
+        {
+            if (string.Equals(current.FullName, baseTypeName, StringComparison.Ordinal))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static void CheckEntryPointAssembly(Type? entryPoint, string property, Assembly assembly, string subject, List<GeneratorDiagnostic> diagnostics)

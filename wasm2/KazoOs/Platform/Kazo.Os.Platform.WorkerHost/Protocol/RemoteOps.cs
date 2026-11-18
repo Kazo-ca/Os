@@ -59,6 +59,12 @@ internal static class RemoteOps
     /// <summary>The relay's state for the app (ADR 0278 §1); its event is not carried to a worker.</summary>
     public const string NetRelayState = "net.relay";
 
+    /// <summary>
+    /// Asks the OS whether a direct web request may leave (ADR 0282 §4): capability and declared host
+    /// are checked in the OS, then the worker sends it with its own <c>fetch</c>.
+    /// </summary>
+    public const string NetDirectCheck = "net.direct";
+
     // App catalog, services, drives, intents, clipboard.
     public const string CatalogInstalled = "cat.installed";
     public const string CatalogHandlers = "cat.handlers";
@@ -78,6 +84,8 @@ internal static class RemoteOps
     public const string DriveUnmount = "drv.umount";
     public const string DriveTypes = "drv.types";
     public const string DriveMountNetwork = "drv.mountnet";
+    public const string DriveDescribeTypes = "drv.describe";
+    public const string DriveProviderMissing = "drv.missing";
     public const string CloudCanConnect = "cld.can";
     public const string CloudPrepare = "cld.prepare";
     public const string CloudProviders = "cld.providers";

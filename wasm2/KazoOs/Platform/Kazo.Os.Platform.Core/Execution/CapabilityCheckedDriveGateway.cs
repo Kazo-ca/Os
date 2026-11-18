@@ -39,6 +39,16 @@ internal sealed class CapabilityCheckedDriveGateway(IAppDriveGateway inner, ICap
         inner.GetNetworkDriveTypesAsync(cancellationToken);
 
     /// <inheritdoc />
+    public ValueTask<IReadOnlyList<KazoNetworkDriveTypeInfo>> DescribeNetworkDriveTypesAsync(
+        System.Globalization.CultureInfo language,
+        CancellationToken cancellationToken = default) =>
+        inner.DescribeNetworkDriveTypesAsync(language, cancellationToken);
+
+    /// <inheritdoc />
+    public ValueTask<IReadOnlyList<KazoDriveSnapshot>> GetProviderMissingDrivesAsync(CancellationToken cancellationToken = default) =>
+        inner.GetProviderMissingDrivesAsync(cancellationToken);
+
+    /// <inheritdoc />
     public ValueTask<KazoDriveSnapshot?> MountNetworkDriveAsync(
         KazoNetworkDriveRequest request,
         string? mountPoint,

@@ -20,10 +20,8 @@ namespace Kazo.Os.Apps.Settings;
 /// </remarks>
 public partial class CloudAccountsPanel
 {
-    private const string S3Type = "s3";
-
     private IReadOnlyList<KazoCloudAccount> _accounts = [];
-    private IReadOnlyList<KazoCloudProvider> _providers = [];
+    private IReadOnlyList<KazoNetworkDriveTypeInfo> _types = [];
     private IReadOnlyList<KazoDriveInfo> _drives = [];
     private bool _loading = true;
     private bool _unsupported;
@@ -51,7 +49,8 @@ public partial class CloudAccountsPanel
         try
         {
             _canConnect = await KazoCloudAccounts.CanConnectAsync();
-            _providers = await KazoCloudAccounts.GetProvidersAsync();
+            // ADR 0282 §5: the name of each service comes from the type its provider declares.
+            _types = await KazoDriveInfo.DescribeNetworkDriveTypesAsync();
             _accounts = await KazoCloudAccounts.GetAccountsAsync();
             _drives = [.. (await KazoDriveInfo.GetDrivesAsync()).Where(static drive => drive.Account is not null)];
         }
@@ -68,15 +67,30 @@ public partial class CloudAccountsPanel
     private IReadOnlyList<KazoDriveInfo> DrivesOf(KazoCloudAccount account) =>
         [.. _drives.Where(drive => drive.Account == account.Id)];
 
-    private string ProviderName(string providerId) =>
-        _providers.FirstOrDefault(provider => provider.Id == providerId)?.DisplayName
-        ?? providerId switch
+    /// <summary>The description of the account's type; <see langword="null"/> when no provider serves it now.</summary>
+    private KazoNetworkDriveTypeInfo? TypeOf(KazoCloudAccount account) =>
+        _types.FirstOrDefault(type => string.Equals(type.Type, account.ProviderId, StringComparison.Ordinal));
+
+    /// <summary>The service's name as its provider writes it, or the type itself when no provider serves it now.</summary>
+    private string ProviderName(KazoCloudAccount account) => TypeOf(account)?.DisplayName ?? account.ProviderId;
+
+    /// <summary>
+    /// Gets whether the user signs in to the account (OAuth): it has a scope and can be reconnected. An
+    /// account whose provider is gone shows neither, since nothing could sign it in now.
+    /// </summary>
+    private bool SignsIn(KazoCloudAccount account) => TypeOf(account)?.Connection == KazoNetworkDriveConnection.OAuth;
+
+    /// <summary>"Provided by &lt;feature&gt; (&lt;id&gt;)" for a service a feature provides (ADR 0282 §5); <see langword="null"/> for the OS's own.</summary>
+    private string? ProvidedBy(KazoCloudAccount account)
+    {
+        if (TypeOf(account) is not { ProviderFeatureId: { } id } type)
         {
-            "dropbox" => "Dropbox",
-            "onedrive" => "OneDrive",
-            S3Type => "S3",
-            _ => providerId
-        };
+            return null;
+        }
+
+        string text = L["CloudAccounts.ProvidedBy", type.ProviderFeatureName ?? id, id];
+        return text;
+    }
 
     private void AskRemove(KazoCloudAccount account) => (_confirmRemove, _message) = (account.Id, null);
 

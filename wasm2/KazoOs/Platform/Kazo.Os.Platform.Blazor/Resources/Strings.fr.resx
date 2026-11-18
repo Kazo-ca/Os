@@ -42,6 +42,12 @@
   <data name="Approval.RealNetworkPorts" xml:space="preserve">
     <value>Vrais serveurs sur les ports : {0}</value>
   </data>
+  <data name="Approval.DirectNetworkHosts" xml:space="preserve">
+    <value>Services web joints directement : {0}</value>
+  </data>
+  <data name="Approval.TypedServers" xml:space="preserve">
+    <value>Le serveur que chaque utilisateur tape dans : {0}</value>
+  </data>
   <data name="Approval.Footer" xml:space="preserve">
     <value>Cette décision sera inscrite dans /var/log/auth.log</value>
   </data>
@@ -988,5 +994,20 @@
   </data>
   <data name="AppLink.Progress.Launching" xml:space="preserve">
     <value>Démarrage de l'app…</value>
+  </data>
+  <data name="InstallApproval.Plan.Title" xml:space="preserve">
+    <value>Installé avec elle</value>
+  </data>
+  <data name="InstallApproval.Plan.Note" xml:space="preserve">
+    <value>{0} a besoin de ces paquets. Cette approbation les installe tous, ou aucun.</value>
+  </data>
+  <data name="InstallApproval.Plan.Feature" xml:space="preserve">
+    <value>Feature : ses permissions sont approuvées avec elle</value>
+  </data>
+  <data name="InstallApproval.Plan.Reactivated" xml:space="preserve">
+    <value>déjà installée, réactivée</value>
+  </data>
+  <data name="InstallApproval.Remove.Dependents" xml:space="preserve">
+    <value>{0} ne fonctionneront plus et seront désactivées. Leurs données restent ; réinstaller ce paquet les réactive.</value>
   </data>
 </root>
