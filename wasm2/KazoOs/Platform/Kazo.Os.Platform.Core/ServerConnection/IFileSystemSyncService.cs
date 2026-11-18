@@ -141,6 +141,12 @@ public sealed class FileSystemSyncService : IFileSystemSyncService
     /// <inheritdoc />
     public event EventHandler? ConflictsChanged;
 
+    /// <summary>
+    /// Gets the user event journals (ADR 0254, section 2): a resolved conflict is also written to the
+    /// journal of the user whose file it is, besides <c>syslog</c>; <see langword="null"/> writes only <c>syslog</c>.
+    /// </summary>
+    public Diagnostics.IUserEventLog? UserEvents { get; init; }
+
     // ── Push ─────────────────────────────────────────────────────────────────
 
     /// <inheritdoc />
@@ -809,6 +815,7 @@ public sealed class FileSystemSyncService : IFileSystemSyncService
             conflicts.RemoveAt(index);
             await SaveConflictsAsync(pass, conflicts, cancellationToken).ConfigureAwait(false);
             _logger.LogInformation("sync: conflict on '{Path}' resolved: {Choice}", conflict.RelativePath, choice);
+            WriteConflictEvent(conflict.RelativePath, choice.ToString(), automatic: false);
         }
         finally
         {
@@ -939,7 +946,20 @@ public sealed class FileSystemSyncService : IFileSystemSyncService
         }
 
         _logger.LogInformation("sync: conflict on '{Path}' resolved automatically (same result on both devices)", conflict.RelativePath);
+        WriteConflictEvent(conflict.RelativePath, "Same", automatic: true);
         return true;
+    }
+
+    /// <summary>Writes a resolved conflict to the journal of the signed-in user, whose home was synchronized.</summary>
+    private void WriteConflictEvent(string relativePath, string choice, bool automatic)
+    {
+        if (UserEvents is { } userEvents && _session.CurrentPrincipal is { } principal)
+        {
+            userEvents.Write(
+                Diagnostics.UserEventOwner.Of(principal),
+                new Diagnostics.UserEventAuthor(Diagnostics.OsUserEvents.SyncAppId),
+                Diagnostics.OsUserEvents.ConflictResolved(relativePath, choice, automatic));
+        }
     }
 
     private async Task<ResolveSyncConflictResponse> ResolveOnServerAsync(

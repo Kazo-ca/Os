@@ -459,6 +459,9 @@
   <data name="Capability.clipboard.read.Title" xml:space="preserve">
     <value>Read the clipboard</value>
   </data>
+  <data name="Capability.events.write.Title" xml:space="preserve">
+    <value>Write to your event journal</value>
+  </data>
   <data name="Capability.clipboard.write.Title" xml:space="preserve">
     <value>Write to the clipboard</value>
   </data>

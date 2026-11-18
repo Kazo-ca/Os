@@ -129,6 +129,11 @@ public static class EcosystemServiceCollectionExtensions
         services.AddSingleton<IAuditLog>(provider => new FileAuditLog(
             provider.GetRequiredService<LogFileWriter>(),
             provider.GetRequiredService<IDiagnosticRedactor>()));
+        // /var/log/users/<id>/events.log (ADR 0254): each user's event journal, on the same writer.
+        services.AddSingleton<IUserEventLog>(provider => new FileUserEventLog(
+            provider.GetRequiredService<LogFileWriter>(),
+            provider.GetRequiredService<ISimulationClock>(),
+            provider.GetRequiredService<IDiagnosticRedactor>()));
         // /var/log/audit.log (ADR 0100 section 3): FileSystemService hands it every protected write.
         services.AddSingleton<IFileSystemAuditSink>(provider => new FileSystemAuditLog(
             provider.GetRequiredService<LogFileWriter>(),
@@ -378,7 +383,11 @@ public static class EcosystemServiceCollectionExtensions
             provider.GetRequiredService<IContentTransferClient>(),
             provider.GetRequiredService<ISyncCursorRepository>(),
             provider.GetRequiredService<ISyncRecordStateRepository>(),
-            logger: provider.GetService<Microsoft.Extensions.Logging.ILogger<FileSystemSyncService>>()));
+            logger: provider.GetService<Microsoft.Extensions.Logging.ILogger<FileSystemSyncService>>())
+        {
+            // ADR 0254: a resolved conflict is also written to the user's journal.
+            UserEvents = provider.GetRequiredService<IUserEventLog>(),
+        });
 
         // Grants domain sync (ADR 0031) — pull-only, applies server-issued grants into the durable
         // grant store. Not wired into live capability enforcement in this pass (see ADR 0031).
@@ -474,6 +483,8 @@ public static class EcosystemServiceCollectionExtensions
         {
             RealNetworkGrants = provider.GetRequiredService<IRealNetworkGrantReconciler>(),
             Capabilities = provider.GetService<ICapabilityCatalog>() ?? BuiltInCapabilityCatalog.Instance,
+            // ADR 0254: a permission granted or refused is also written to the user's journal.
+            UserEvents = provider.GetRequiredService<IUserEventLog>(),
         });
         // OS authentication agent (ADR 0055 section 5, polkit-like): gateways that need an
         // administrator ask it; its secure-desktop overlay is rendered by the shell.
@@ -502,7 +513,11 @@ public static class EcosystemServiceCollectionExtensions
         services.AddScoped<Kazo.Os.Platform.Core.Roles.FeatureRoleService>(provider => new Kazo.Os.Platform.Core.Roles.FeatureRoleService(
             () => provider.GetRequiredService<AppCatalog>(),
             provider.GetRequiredService<IOsSettingsService>(),
-            provider.GetRequiredService<IAuditLog>()));
+            provider.GetRequiredService<IAuditLog>())
+        {
+            // ADR 0254: a role granted or revoked is also written to the journal of its holder.
+            UserEvents = provider.GetRequiredService<IUserEventLog>(),
+        });
         services.AddScoped<AppPermissionAdministration>(provider => new AppPermissionAdministration(
             provider.GetRequiredService<AppCatalog>(),
             provider.GetRequiredService<IAppPermissionStore>(),
@@ -661,7 +676,11 @@ public static class EcosystemServiceCollectionExtensions
                 fileSystem: provider.GetRequiredService<IFileSystemService>(),
                 session: provider.GetRequiredService<ISessionService>(),
                 asyncHasher: (password, salt, iterations, length, ct) =>
-                    hasher.DeriveKeyAsync(password, salt, iterations, length, ct));
+                    hasher.DeriveKeyAsync(password, salt, iterations, length, ct))
+            {
+                // ADR 0254 §1: the guest's journal is deleted with the guest account.
+                UserEvents = provider.GetRequiredService<IUserEventLog>(),
+            };
         });
         services.AddScoped<LocalAccountService>(provider =>
         {
@@ -672,7 +691,11 @@ public static class EcosystemServiceCollectionExtensions
                 provider.GetRequiredService<IAuditLog>(),
                 provider.GetRequiredService<IFileSystemService>(),
                 asyncHasher: (password, salt, iterations, length, ct) =>
-                    hasher.DeriveKeyAsync(password, salt, iterations, length, ct));
+                    hasher.DeriveKeyAsync(password, salt, iterations, length, ct))
+            {
+                // ADR 0254 §1: a deleted account's journal is deleted with it.
+                UserEvents = provider.GetRequiredService<IUserEventLog>(),
+            };
         });
 
         services.AddScoped<ISessionService>(provider =>
@@ -1039,6 +1062,8 @@ public static class EcosystemServiceCollectionExtensions
             BackgroundJobs = () => provider.GetRequiredService<BackgroundJobService>(),
             // ADR 0193: IAppExecutionContext.TimeZone follows Settings > Date and time.
             TimeZones = provider.GetRequiredService<Kazo.Os.Platform.Core.Globalization.SessionTimeZoneService>(),
+            // KazoEvents (ADR 0254): the journal of the user each app runs for.
+            UserEvents = provider.GetRequiredService<IUserEventLog>(),
         }));
         services.AddScoped<BackgroundJobService>(provider => new BackgroundJobService(
             provider.GetRequiredService<IProcessManager>(),

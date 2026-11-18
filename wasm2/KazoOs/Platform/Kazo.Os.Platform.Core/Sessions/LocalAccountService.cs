@@ -198,7 +198,20 @@ public sealed class LocalAccountService
         }
 
         Record(administratorLogin, "users.delete", user.LoginName.Value + (removeHome ? " (home removed)" : string.Empty), AuditOutcome.Success);
+
+        // ADR 0254 §1: the journal goes with the account, whatever happens to the home; its
+        // directory is named after the account's id, which is never reused (ADR 0169).
+        if (UserEvents is { } userEvents)
+        {
+            await userEvents.DeleteAsync(user.Id, cancellationToken).ConfigureAwait(false);
+        }
     }
+
+    /// <summary>
+    /// Gets the user event journals (ADR 0254, section 1): a deleted account's journal,
+    /// <c>/var/log/users/&lt;id&gt;/</c>, goes with it; <see langword="null"/> leaves it in place.
+    /// </summary>
+    public Diagnostics.IUserEventLog? UserEvents { get; init; }
 
     private FileSystemAuthorizationContext SystemContext() => new(
         new AppOperationContext

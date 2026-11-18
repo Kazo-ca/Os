@@ -53,6 +53,15 @@ public sealed partial class AppPackageGatewayTests
         KazoInstalledPackage installed = Assert.Single(await (await harness.CreateGatewayAsync(agent)).GetInstalledPackagesAsync());
         Assert.False(installed.SystemWide);
         Assert.False(installed.Loaded);
+
+        // ADR 0254 §2: installed for Alice alone, so written to her journal, with the app that asked.
+        (Kazo.Os.Platform.Core.Diagnostics.UserEventOwner owner, Kazo.Os.Platform.Core.Diagnostics.UserEventAuthor author, Kazo.Os.AppSdk.UserEvents.KazoUserEvent event_) =
+            Assert.Single(harness.Events.Written);
+        Assert.Equal(harness.Settings.Alice.Id, owner.UserId);
+        Assert.Equal(("org.kazoos.packages", "org.test.term"), (author.AppId, author.SenderAppId));
+        Assert.Equal("kazoos.app.installed", event_.Kind);
+        Assert.Equal(("app", "org.kazo.sample"), (event_.Subject!.Type, event_.Subject.Id));
+        Assert.Equal("1.0.0", event_.Properties!["version"]);
     }
 
     [Fact]
@@ -81,6 +90,9 @@ public sealed partial class AppPackageGatewayTests
             "org.kazo.sample=github:Kazo-ca/Os-App-Sample@1.0.0",
             await harness.Settings.ReadAsync("/etc/kazoos/apps.config"),
             StringComparison.Ordinal);
+
+        // ADR 0254 §2: an app installed for everyone is not a personal event.
+        Assert.Empty(harness.Events.Written);
     }
 
     [Fact]
@@ -777,8 +789,12 @@ public sealed partial class AppPackageGatewayTests
                 RestartForPackages = restart,
                 UpdateMonitor = monitor is null ? null : () => monitor,
                 PermissionStore = permissions is null ? null : () => permissions,
+                UserEvents = Events,
             };
         }
+
+        /// <summary>Gets the events the package manager writes to the users' journals (ADR 0254).</summary>
+        internal Diagnostics.RecordingUserEventLog Events { get; } = new();
 
         /// <summary>
         /// Publishes the sample app in the official catalog (ADR 0188 §6): <c>catalog.json</c> on the
