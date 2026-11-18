@@ -62,6 +62,46 @@ public sealed class BuildKnownLazyAppDescriptorRegistryTests
         Assert.False(registry.Descriptors.ContainsKey(deferred.Id));
     }
 
+    [Fact]
+    public async Task A_child_of_a_feature_is_discovered_with_its_feature_and_without_its_siblings_assemblies()
+    {
+        // Os#621: the discovery catalog held the child alone, which the catalog refuses
+        // (catalog.feature.parent.missing), so no child of a feature could launch.
+        FeatureManifests feature = AppDefinitionMapper.ToFeatureManifests(new LazyFeature(), KazoOsSdk.Version);
+        AppManifest window = feature.Children.Single(static child => child.Id == "org.kazoos.lazy-feature.window");
+        AppManifest sibling = feature.Children.Single(static child => child.Id == "org.kazoos.lazy-feature.other") with
+        {
+            EntryPoint = new AppEntryPointManifest("Kazo.Os.Deferred.Sibling.dll", "Kazo.Os.Deferred.Sibling.Window"),
+        };
+        AppCatalog catalog = Assert.IsType<AppCatalog>(AppCatalog.Build([feature.Feature, window, sibling]).Catalog);
+        var transport = new RecordingTransport(typeof(TestWindow).Assembly);
+        var assemblies = new BuildKnownAssemblyLoaderRegistry([window.EntryPoint!.Assembly], transport);
+        var registry = new BuildKnownLazyAppDescriptorRegistry(catalog, assemblies);
+
+        AppDescriptorLoadResult result = await registry.EnsureAvailableAsync(window.Id, CancellationToken.None);
+
+        Assert.Equal(AppDescriptorLoadStatus.Available, result.Status);
+        Assert.Equal(typeof(TestWindow), registry.Descriptors[window.Id].EntryPointType);
+        Assert.False(registry.Descriptors.ContainsKey(sibling.Id));
+        Assert.False(registry.Descriptors.ContainsKey(feature.Feature.Id));
+    }
+
+    /// <summary>A feature with two window children (ADR 0260 §2).</summary>
+    public sealed class LazyFeature : FeatureDefinition
+    {
+        public override string Id => "org.kazoos.lazy-feature";
+
+        public override string Name => "Lazy feature";
+
+        public override string PublisherId => "pub.kazoos";
+
+        public override IReadOnlyList<FeatureEntryPoint> EntryPoints =>
+        [
+            new("window", "Lazy window", AppKind.Window, typeof(TestWindow)),
+            new("other", "Other window", AppKind.Window, typeof(TestWindow)),
+        ];
+    }
+
     private static AppManifest CreateManifest() => new()
     {
         Id = "org.kazoos.lazy-test",
