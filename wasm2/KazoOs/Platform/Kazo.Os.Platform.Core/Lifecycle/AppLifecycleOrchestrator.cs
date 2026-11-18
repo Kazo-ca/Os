@@ -801,7 +801,9 @@ public sealed class AppLifecycleOrchestrator
             }
 
             // Nobody is watching an auto-start: pending dangerous capabilities are deferred (ADR 0049 section 5.4).
-            results.Add(await LaunchAsync(new AppLaunchRequest(appId, principal, [], Interactive: false)));
+            AppLaunchResult launched = await LaunchAsync(new AppLaunchRequest(appId, principal, [], Interactive: false));
+            LogFailedAutomaticStart(appId, launched);
+            results.Add(launched);
         }
 
         return results;
@@ -845,10 +847,28 @@ public sealed class AppLifecycleOrchestrator
                 _logger.LogInformation("{Unit}: started at boot as {User}", UnitNameOf(appId), serviceAccount.LoginName.Value);
             }
 
+            LogFailedAutomaticStart(appId, launched);
             results.Add(launched);
         }
 
         return results;
+    }
+
+    /// <summary>
+    /// Writes an automatic service that did not start to <c>/var/log/syslog</c>, like systemd's
+    /// « Failed to start » line: since its code loads at that moment (ADR 0286), an asset that does
+    /// not load is reported there instead of being skipped silently.
+    /// </summary>
+    private void LogFailedAutomaticStart(string appId, AppLaunchResult launched)
+    {
+        if (launched.Status is AppLaunchStatus.Launched or AppLaunchStatus.FocusedExisting)
+        {
+            return;
+        }
+
+        _logger.LogWarning(
+            "{Unit}: failed to start ({Status}, {ErrorCode}): {Detail}",
+            UnitNameOf(appId), launched.Status, launched.ErrorCode, launched.ErrorMessage);
     }
 
     /// <summary>

@@ -43,6 +43,28 @@ public sealed partial class AppLifecycleOrchestratorTests
         Assert.Empty(fixture.Loader!.Loaded);
     }
 
+    [Fact]
+    public async Task A_service_whose_code_does_not_load_does_not_stop_the_next_service()
+    {
+        Fixture fixture = LazyFeatureFixture();
+        AuthenticatedPrincipal principal = await fixture.LoginAsync();
+        await SeedServiceStartModeAsync(
+            fixture.FileSystemService, principal.LoginName.Value, LazyManualServiceId, ServiceStartMode.Automatic);
+        fixture.Loader!.Broken.Add(LazyAutomaticServiceId);
+
+        IReadOnlyList<AppLaunchResult> results = await fixture.Orchestrator.StartAllServicesAsync(principal);
+
+        Assert.Collection(
+            results,
+            broken =>
+            {
+                Assert.Equal(AppLaunchStatus.NotFound, broken.Status);
+                Assert.Equal("lifecycle.app.asset-unavailable", broken.ErrorCode);
+            },
+            next => Assert.Equal(AppLaunchStatus.Launched, next.Status));
+        Assert.Equal([LazyManualServiceId], fixture.Loader.Loaded);
+    }
+
     /// <summary>A feature with an automatic and a manual service child, neither loaded yet.</summary>
     private static Fixture LazyFeatureFixture()
     {
