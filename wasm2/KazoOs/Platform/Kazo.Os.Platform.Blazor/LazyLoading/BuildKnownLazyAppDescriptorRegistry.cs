@@ -83,7 +83,7 @@ public sealed class BuildKnownLazyAppDescriptorRegistry : IAppDescriptorLoader
 
         // Isolate discovery to the requested manifest. The host catalog can contain
         // other lazy apps whose assemblies have intentionally not been fetched yet.
-        AppCatalogBuildResult appCatalogResult = AppCatalog.Build([manifest]);
+        AppCatalogBuildResult appCatalogResult = AppCatalog.Build(DiscoveryManifestsOf(manifest));
         if (appCatalogResult.Catalog is not AppCatalog appCatalog)
         {
             return AppDescriptorLoadResult.Unavailable(
@@ -107,4 +107,16 @@ public sealed class BuildKnownLazyAppDescriptorRegistry : IAppDescriptorLoader
         _descriptors.TryAdd(appId, descriptor);
         return AppDescriptorLoadResult.Available();
     }
+
+    /// <summary>
+    /// The manifests of the discovery catalog of <paramref name="manifest"/>: the manifest alone, or,
+    /// for an entry point of a feature (ADR 0260 §2), the manifest with its feature, since a catalog
+    /// refuses a child without its feature (<c>catalog.feature.parent.missing</c>, Os#621). The
+    /// feature has no entry point and discovery skips it; the other children of the feature stay out,
+    /// so their assemblies need not be loaded.
+    /// </summary>
+    private IReadOnlyList<AppManifest> DiscoveryManifestsOf(AppManifest manifest) =>
+        manifest.Parent is { } featureId && _catalog.Manifests.TryGetValue(featureId, out AppManifest? feature)
+            ? [feature, manifest]
+            : [manifest];
 }
