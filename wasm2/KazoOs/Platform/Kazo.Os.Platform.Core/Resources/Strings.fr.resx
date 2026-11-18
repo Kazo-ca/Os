@@ -849,6 +849,9 @@ Annuler : décider au prochain lancement.</value>
   <data name="UserEvent.SyncChoice.KeepOther" xml:space="preserve">
     <value>version du serveur gardée</value>
   </data>
+  <data name="UserEvent.SyncChoice.BothDeleted" xml:space="preserve">
+    <value>fichier supprimé sur les deux appareils</value>
+  </data>
   <data name="UserEvent.SyncChoice.Same" xml:space="preserve">
     <value>le même fichier sur les deux appareils</value>
   </data>

@@ -319,7 +319,7 @@ public sealed class FeatureRoleService
                         ["user"] = userId,
                         ["role"] = role,
                     }));
-                UserEvents?.Write(
+                UserEvents?.TryWriteSystem(
                     Diagnostics.UserEventOwner.Of(user),
                     new Diagnostics.UserEventAuthor(Diagnostics.OsUserEvents.AccountsAppId),
                     Diagnostics.OsUserEvents.RoleChanged(role, grant, administrator));

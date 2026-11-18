@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using Kazo.Os.AppSdk.UserEvents;
 using Kazo.Os.Simulation.Abstractions.Diagnostics;
 using Kazo.Os.Simulation.Abstractions.Sessions;
@@ -48,8 +49,10 @@ public sealed record UserEventOwner(LocalUserId UserId, LocalGroupId PrimaryGrou
 public interface IUserEventLog
 {
     /// <summary>
-    /// Queues one event for <paramref name="owner"/>'s journal. Synchronous and never blocks, like
-    /// every other log line (<see cref="LogFileWriter"/>).
+    /// Queues one event an app wrote (<c>KazoEvents.Write</c>). Synchronous and never blocks. The
+    /// event is checked (<see cref="FileUserEventLog.Validate(KazoUserEvent, bool)"/>, the OS's own
+    /// <c>kazoos.*</c> kinds refused) and rate-limited per app and user, like journald: past the
+    /// limit, events are dropped and the drop is written to <c>syslog</c>.
     /// </summary>
     /// <param name="owner">Account the event belongs to.</param>
     /// <param name="author">Who wrote the event.</param>
@@ -57,17 +60,30 @@ public interface IUserEventLog
     /// <exception cref="ArgumentException">The event is malformed or too large.</exception>
     void Write(UserEventOwner owner, UserEventAuthor author, KazoUserEvent userEvent);
 
+    /// <summary>
+    /// Queues one event of the OS itself (a permission granted, a role, an install, a conflict),
+    /// after the operation it tells of: fields too long are shortened and nothing is ever thrown, so
+    /// the journal can never break the operation; a failure is written to <c>syslog</c>.
+    /// </summary>
+    /// <param name="owner">Account the event belongs to.</param>
+    /// <param name="author">The OS's author, an <c>org.kazoos.*</c> id.</param>
+    /// <param name="userEvent">The event.</param>
+    /// <returns>Whether the event was queued.</returns>
+    bool TryWriteSystem(UserEventOwner owner, UserEventAuthor author, KazoUserEvent userEvent);
+
     /// <summary>Reads back the events of one account that pass <paramref name="filter"/>, oldest first.</summary>
     /// <param name="userId">Account whose journal is read.</param>
     /// <param name="filter">Which events to return.</param>
     /// <param name="cancellationToken">Cancels the read.</param>
     /// <exception cref="ArgumentOutOfRangeException">The filter's limit is out of range.</exception>
+    /// <exception cref="InvalidOperationException">The journal was read too often in a short time.</exception>
     Task<IReadOnlyList<KazoUserEventEntry>> ReadAsync(
         LocalUserId userId, KazoUserEventFilter filter, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Deletes the journal directory of a deleted account, archives included (ADR 0254, section 1).
-    /// Does nothing when it does not exist.
+    /// Deletes the journal directory of a deleted account, archives included (ADR 0254, section 1),
+    /// and drops any later event for it (an account id is never reused, ADR 0169). Never throws: the
+    /// account is already gone, so a failure is written to <c>syslog</c>.
     /// </summary>
     /// <param name="userId">Account that was deleted.</param>
     /// <param name="cancellationToken">Cancels the deletion.</param>
@@ -85,28 +101,45 @@ public sealed class FileUserEventLog : IUserEventLog
     public const int MaxKindLength = 128;
 
     /// <summary>Longest message accepted, in characters.</summary>
-    public const int MaxMessageLength = 4096;
+    public const int MaxMessageLength = 2048;
 
     /// <summary>Longest subject type, id or name accepted, in characters.</summary>
-    public const int MaxSubjectFieldLength = 512;
+    public const int MaxSubjectFieldLength = 256;
 
     /// <summary>Most properties one event may carry.</summary>
-    public const int MaxProperties = 32;
+    public const int MaxProperties = 16;
 
     /// <summary>Longest property key accepted, in characters.</summary>
     public const int MaxPropertyKeyLength = 64;
 
     /// <summary>Longest property value accepted, in characters.</summary>
-    public const int MaxPropertyValueLength = 1024;
+    public const int MaxPropertyValueLength = 512;
+
+    /// <summary>Most events one app may write for one user per <see cref="RateLimitInterval"/>, like journald's <c>RateLimitBurst</c>.</summary>
+    public const int RateLimitBurst = 200;
+
+    /// <summary>Most reads of one account's journal per <see cref="RateLimitInterval"/>.</summary>
+    public const int ReadLimitBurst = 60;
+
+    /// <summary>The window of the rate limits, like journald's <c>RateLimitIntervalSec</c>.</summary>
+    public static readonly TimeSpan RateLimitInterval = TimeSpan.FromSeconds(30);
+
+    /// <summary>Prefix of the kinds only the OS writes.</summary>
+    public const string SystemKindPrefix = "kazoos.";
+
+    private const string SyslogSource = "user-events";
 
     private readonly LogFileWriter _writer;
     private readonly ISimulationClock _clock;
     private readonly IDiagnosticRedactor _redactor;
+    private readonly ConcurrentDictionary<LocalUserId, byte> _deleted = new();
+    private readonly ConcurrentDictionary<(LocalUserId User, string AppId), RateWindow> _writeWindows = new();
+    private readonly ConcurrentDictionary<LocalUserId, RateWindow> _readWindows = new();
 
     /// <summary>Initializes the journals on the OS's log writer.</summary>
     /// <param name="writer">Log writer of the OS.</param>
-    /// <param name="clock">Clock stamping each event.</param>
-    /// <param name="redactor">Redactor applied to the app's properties, like every other log line.</param>
+    /// <param name="clock">Clock stamping each event and timing the rate limits.</param>
+    /// <param name="redactor">Redactor applied to the properties, like every other log line.</param>
     public FileUserEventLog(LogFileWriter writer, ISimulationClock clock, IDiagnosticRedactor? redactor = null)
     {
         _writer = writer ?? throw new ArgumentNullException(nameof(writer));
@@ -121,37 +154,57 @@ public sealed class FileUserEventLog : IUserEventLog
         ArgumentNullException.ThrowIfNull(author);
         ArgumentException.ThrowIfNullOrWhiteSpace(author.AppId);
         Validate(userEvent);
-
-        Dictionary<string, string> properties = new(StringComparer.Ordinal);
-        if (userEvent.Properties is { } extra)
+        if (_deleted.ContainsKey(owner.UserId))
         {
-            foreach ((string key, string value) in extra)
+            return;
+        }
+
+        RateWindow window = _writeWindows.GetOrAdd((owner.UserId, author.AppId), static _ => new RateWindow());
+        RateDecision decision = window.TryTake(_clock.UtcNow, RateLimitBurst);
+        if (decision.Suppressed > 0)
+        {
+            // Like journald's "Suppressed N messages": the app is named, never what it wrote.
+            _writer.Write(
+                LogFileTarget.Syslog,
+                DiagnosticSeverity.Warning,
+                SyslogSource,
+                $"suppressed {decision.Suppressed} events of {author.AppId} for one user (more than {RateLimitBurst} in {RateLimitInterval.TotalSeconds:0} s)");
+        }
+
+        if (decision.Allowed)
+        {
+            Enqueue(owner, author, userEvent);
+        }
+    }
+
+    /// <inheritdoc />
+    public bool TryWriteSystem(UserEventOwner owner, UserEventAuthor author, KazoUserEvent userEvent)
+    {
+        try
+        {
+            ArgumentNullException.ThrowIfNull(owner);
+            ArgumentNullException.ThrowIfNull(author);
+            ArgumentException.ThrowIfNullOrWhiteSpace(author.AppId);
+            KazoUserEvent fitted = Fit(userEvent);
+            Validate(fitted, allowSystemKinds: true);
+            if (_deleted.ContainsKey(owner.UserId))
             {
-                properties[key] = _redactor.Redact(key, value);
+                return false;
             }
-        }
 
-        properties[KazoUserEventProperties.Kind] = userEvent.Kind;
-        if (userEvent.Subject is { } subject)
+            Enqueue(owner, author, fitted);
+            return true;
+        }
+        catch (Exception exception) when (exception is not OutOfMemoryException)
         {
-            properties[KazoUserEventProperties.SubjectType] = subject.Type;
-            properties[KazoUserEventProperties.SubjectId] = subject.Id;
-            properties[KazoUserEventProperties.SubjectName] = subject.DisplayName;
+            // The operation the event tells of already happened: the journal never undoes it.
+            _writer.Write(
+                LogFileTarget.Syslog,
+                DiagnosticSeverity.Warning,
+                SyslogSource,
+                $"could not write the event {userEvent?.Kind ?? "-"} of {author?.AppId ?? "-"}: {exception.Message}");
+            return false;
         }
-
-        if (!string.IsNullOrWhiteSpace(author.SenderAppId))
-        {
-            properties[KazoUserEventProperties.Sender] = author.SenderAppId;
-        }
-
-        string line = LogLineFormat.Format(
-            _clock.UtcNow,
-            ToDiagnosticSeverity(userEvent.Severity),
-            author.AppId,
-            author.ProcessId,
-            userEvent.Message,
-            properties);
-        _writer.Enqueue(LogFileTarget.ForUser(owner.UserId, owner.PrimaryGroupId), line);
     }
 
     /// <inheritdoc />
@@ -160,6 +213,12 @@ public sealed class FileUserEventLog : IUserEventLog
     {
         ArgumentNullException.ThrowIfNull(filter);
         filter.EnsureValidLimit();
+        RateWindow window = _readWindows.GetOrAdd(userId, static _ => new RateWindow());
+        if (!window.TryTake(_clock.UtcNow, ReadLimitBurst).Allowed)
+        {
+            throw new InvalidOperationException(
+                $"The event journal was read more than {ReadLimitBurst} times in {RateLimitInterval.TotalSeconds:0} s; try again shortly.");
+        }
 
         IReadOnlyList<string> lines = await _writer
             .ReadLinesAsync(LogFileTarget.UserEventsPath(userId), includeArchives: true, cancellationToken)
@@ -177,8 +236,23 @@ public sealed class FileUserEventLog : IUserEventLog
     }
 
     /// <inheritdoc />
-    public Task DeleteAsync(LocalUserId userId, CancellationToken cancellationToken = default) =>
-        _writer.DeleteDirectoryAsync(LogFileTarget.UserDirectory(userId), cancellationToken);
+    public async Task DeleteAsync(LocalUserId userId, CancellationToken cancellationToken = default)
+    {
+        // First: no event queued from now on can recreate the directory of the deleted account.
+        _deleted[userId] = 0;
+        try
+        {
+            await _writer.DeleteDirectoryAsync(LogFileTarget.UserDirectory(userId), cancellationToken).ConfigureAwait(false);
+        }
+        catch (Exception exception) when (exception is not OutOfMemoryException)
+        {
+            _writer.Write(
+                LogFileTarget.Syslog,
+                DiagnosticSeverity.Warning,
+                SyslogSource,
+                $"could not delete {LogFileTarget.UserDirectory(userId).Value} of a deleted account: {exception.Message}");
+        }
+    }
 
     /// <summary>Maps the three severities of a user event to the levels of the OS's logs.</summary>
     /// <param name="severity">Severity of the event.</param>
@@ -191,11 +265,12 @@ public sealed class FileUserEventLog : IUserEventLog
 
     /// <summary>
     /// Refuses a malformed or oversized event before it reaches the queue: an app cannot forge the
-    /// OS's own keys, nor fill the journal of the user with a few huge lines.
+    /// OS's own keys or kinds, nor fill the journal of the user with a few huge lines.
     /// </summary>
     /// <param name="userEvent">Event to check.</param>
+    /// <param name="allowSystemKinds">Whether the OS's own <c>kazoos.*</c> kinds are accepted (the OS's events only).</param>
     /// <exception cref="ArgumentException">The event is malformed or too large.</exception>
-    public static void Validate(KazoUserEvent userEvent)
+    public static void Validate(KazoUserEvent userEvent, bool allowSystemKinds = false)
     {
         ArgumentNullException.ThrowIfNull(userEvent);
         if (string.IsNullOrWhiteSpace(userEvent.Kind)
@@ -204,6 +279,11 @@ public sealed class FileUserEventLog : IUserEventLog
         {
             throw new ArgumentException(
                 $"The kind of an event is one token of 1 to {MaxKindLength} characters, without whitespace.", nameof(userEvent));
+        }
+
+        if (!allowSystemKinds && userEvent.Kind.StartsWith(SystemKindPrefix, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new ArgumentException($"The kinds '{SystemKindPrefix}*' are written by the OS only.", nameof(userEvent));
         }
 
         if (string.IsNullOrWhiteSpace(userEvent.Message) || userEvent.Message.Length > MaxMessageLength)
@@ -250,6 +330,108 @@ public sealed class FileUserEventLog : IUserEventLog
             if (KazoUserEventProperties.IsReserved(key))
             {
                 throw new ArgumentException($"The property '{key}' is written by the OS.", nameof(userEvent));
+            }
+        }
+    }
+
+    /// <summary>
+    /// Shortens what the OS took from elsewhere (an app's name, a file path, a list of permissions) to
+    /// the limits, ending each cut text with <c>…</c>, so an OS event always fits.
+    /// </summary>
+    private static KazoUserEvent Fit(KazoUserEvent userEvent)
+    {
+        ArgumentNullException.ThrowIfNull(userEvent);
+        KazoEventSubject? subject = userEvent.Subject is { } original
+            ? new KazoEventSubject(
+                Cut(original.Type, MaxSubjectFieldLength),
+                Cut(original.Id, MaxSubjectFieldLength),
+                Cut(original.DisplayName ?? string.Empty, MaxSubjectFieldLength))
+            : null;
+        Dictionary<string, string>? properties = userEvent.Properties?
+            .Take(MaxProperties)
+            .ToDictionary(pair => Cut(pair.Key, MaxPropertyKeyLength), pair => Cut(pair.Value ?? string.Empty, MaxPropertyValueLength), StringComparer.Ordinal);
+        return userEvent with
+        {
+            Message = Cut(userEvent.Message, MaxMessageLength),
+            Subject = subject,
+            Properties = properties,
+        };
+    }
+
+    private static string Cut(string text, int length) =>
+        text.Length <= length ? text : string.Concat(text.AsSpan(0, length - 1), "…");
+
+    private void Enqueue(UserEventOwner owner, UserEventAuthor author, KazoUserEvent userEvent)
+    {
+        Dictionary<string, string> properties = new(StringComparer.Ordinal);
+        if (userEvent.Properties is { } extra)
+        {
+            foreach ((string key, string value) in extra)
+            {
+                properties[key] = _redactor.Redact(key, value);
+            }
+        }
+
+        properties[KazoUserEventProperties.Kind] = userEvent.Kind;
+        if (userEvent.Subject is { } subject)
+        {
+            properties[KazoUserEventProperties.SubjectType] = subject.Type;
+            properties[KazoUserEventProperties.SubjectId] = subject.Id;
+            properties[KazoUserEventProperties.SubjectName] = subject.DisplayName;
+        }
+
+        if (!string.IsNullOrWhiteSpace(author.SenderAppId))
+        {
+            properties[KazoUserEventProperties.Sender] = author.SenderAppId;
+        }
+
+        string line = LogLineFormat.Format(
+            _clock.UtcNow,
+            ToDiagnosticSeverity(userEvent.Severity),
+            author.AppId,
+            author.ProcessId,
+            userEvent.Message,
+            properties);
+        _writer.Enqueue(LogFileTarget.ForUser(owner.UserId, owner.PrimaryGroupId), line);
+    }
+
+    /// <summary>What a rate window decided for one call.</summary>
+    /// <param name="Allowed">Whether the call goes through.</param>
+    /// <param name="Suppressed">Calls dropped in the window that just ended, to report once; 0 otherwise.</param>
+    private readonly record struct RateDecision(bool Allowed, long Suppressed);
+
+    /// <summary>
+    /// A fixed window of <see cref="RateLimitInterval"/>, like journald's: at most a burst of calls per
+    /// window; the calls dropped are counted and reported when the next window opens.
+    /// </summary>
+    private sealed class RateWindow
+    {
+        private readonly Lock _gate = new();
+        private DateTimeOffset _start = DateTimeOffset.MinValue;
+        private int _used;
+        private long _dropped;
+
+        public RateDecision TryTake(DateTimeOffset now, int burst)
+        {
+            lock (_gate)
+            {
+                long report = 0;
+                if (now - _start >= RateLimitInterval || now < _start)
+                {
+                    report = _dropped;
+                    _start = now;
+                    _used = 0;
+                    _dropped = 0;
+                }
+
+                if (_used < burst)
+                {
+                    _used++;
+                    return new RateDecision(true, report);
+                }
+
+                _dropped++;
+                return new RateDecision(false, report);
             }
         }
     }

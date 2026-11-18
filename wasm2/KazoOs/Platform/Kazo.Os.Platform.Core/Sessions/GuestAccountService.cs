@@ -395,15 +395,15 @@ public sealed partial class GuestAccountService
     private static partial Regex GuestHomePattern();
 
     /// <summary>
-    /// Writes as the new account, as the seeder provisions a home (owner = login name, its own
-    /// group), so the account owns every copied entry.
-    /// </summary>
-    /// <summary>
     /// Gets the user event journals (ADR 0254, section 1): a deleted account's journal,
     /// <c>/var/log/users/&lt;id&gt;/</c>, goes with it; <see langword="null"/> leaves it in place.
     /// </summary>
     public Diagnostics.IUserEventLog? UserEvents { get; init; }
 
+    /// <summary>
+    /// Writes as the new account, as the seeder provisions a home (owner = login name, its own
+    /// group), so the account owns every copied entry.
+    /// </summary>
     private FileSystemAuthorizationContext OwnerContext(string loginName, LocalGroupId groupId) => new(
         new AppOperationContext
         {

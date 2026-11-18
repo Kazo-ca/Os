@@ -203,7 +203,7 @@ public sealed class LocalAccountService
         // directory is named after the account's id, which is never reused (ADR 0169).
         if (UserEvents is { } userEvents)
         {
-            await userEvents.DeleteAsync(user.Id, cancellationToken).ConfigureAwait(false);
+            await userEvents.DeleteAsync(user.Id, CancellationToken.None).ConfigureAwait(false);
         }
     }
 

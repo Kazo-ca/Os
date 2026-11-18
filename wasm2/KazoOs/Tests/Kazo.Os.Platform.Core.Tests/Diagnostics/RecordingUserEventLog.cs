@@ -17,10 +17,31 @@ internal sealed class RecordingUserEventLog : IUserEventLog
     /// <summary>Gets every account whose journal was deleted.</summary>
     public List<LocalUserId> Deleted { get; } = [];
 
+    /// <summary>Gets or sets whether every write fails, like a journal that cannot be written.</summary>
+    public bool Fails { get; set; }
+
     public void Write(UserEventOwner owner, UserEventAuthor author, KazoUserEvent userEvent)
     {
         FileUserEventLog.Validate(userEvent);
+        if (Fails)
+        {
+            throw new IOException("journal unavailable");
+        }
+
         Written.Add((owner, author, userEvent));
+    }
+
+    /// <summary>Records an OS event like the real journal: checked, never thrown, refused when it fails.</summary>
+    public bool TryWriteSystem(UserEventOwner owner, UserEventAuthor author, KazoUserEvent userEvent)
+    {
+        if (Fails)
+        {
+            return false;
+        }
+
+        FileUserEventLog.Validate(userEvent, allowSystemKinds: true);
+        Written.Add((owner, author, userEvent));
+        return true;
     }
 
     /// <summary>Gets the events each account's journal returns when read.</summary>

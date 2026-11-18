@@ -815,7 +815,7 @@ public sealed class FileSystemSyncService : IFileSystemSyncService
             conflicts.RemoveAt(index);
             await SaveConflictsAsync(pass, conflicts, cancellationToken).ConfigureAwait(false);
             _logger.LogInformation("sync: conflict on '{Path}' resolved: {Choice}", conflict.RelativePath, choice);
-            WriteConflictEvent(conflict.RelativePath, choice.ToString(), automatic: false);
+            WriteConflictEvent(pass, conflict.RelativePath, choice.ToString(), automatic: false);
         }
         finally
         {
@@ -946,17 +946,20 @@ public sealed class FileSystemSyncService : IFileSystemSyncService
         }
 
         _logger.LogInformation("sync: conflict on '{Path}' resolved automatically (same result on both devices)", conflict.RelativePath);
-        WriteConflictEvent(conflict.RelativePath, "Same", automatic: true);
+        WriteConflictEvent(pass, conflict.RelativePath, bothDeleted ? "BothDeleted" : "Same", automatic: true);
         return true;
     }
 
-    /// <summary>Writes a resolved conflict to the journal of the signed-in user, whose home was synchronized.</summary>
-    private void WriteConflictEvent(string relativePath, string choice, bool automatic)
+    /// <summary>
+    /// Writes a resolved conflict to the journal of the user of the pass, whose home was synchronized,
+    /// even if another user signed in meanwhile.
+    /// </summary>
+    private void WriteConflictEvent(PassContext pass, string relativePath, string choice, bool automatic)
     {
-        if (UserEvents is { } userEvents && _session.CurrentPrincipal is { } principal)
+        if (UserEvents is { } userEvents)
         {
-            userEvents.Write(
-                Diagnostics.UserEventOwner.Of(principal),
+            userEvents.TryWriteSystem(
+                Diagnostics.UserEventOwner.Of(pass.Principal),
                 new Diagnostics.UserEventAuthor(Diagnostics.OsUserEvents.SyncAppId),
                 Diagnostics.OsUserEvents.ConflictResolved(relativePath, choice, automatic));
         }
@@ -1054,6 +1057,7 @@ public sealed class FileSystemSyncService : IFileSystemSyncService
 
     /// <summary>Everything one pass needs: the user, the home, the server link.</summary>
     private sealed record PassContext(
+        AuthenticatedPrincipal Principal,
         string Login,
         VirtualPath Home,
         FileSystemAuthorizationContext Authorization,
@@ -1087,6 +1091,7 @@ public sealed class FileSystemSyncService : IFileSystemSyncService
 
         FileSystemAuthorizationContext authorization = CreateAuthorizationContext(principal);
         return new PassContext(
+            principal,
             principal.LoginName.Value,
             VirtualPath.Parse(principal.HomePath),
             authorization,

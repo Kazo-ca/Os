@@ -313,11 +313,7 @@ Kazo.Os.Platform.Core.Diagnostics.UserEventOwner.UserEventOwner(Kazo.Os.Simulati
 Kazo.Os.Platform.Core.Diagnostics.UserEventOwner.UserId.get -> Kazo.Os.Simulation.Abstractions.Sessions.LocalUserId
 Kazo.Os.Platform.Core.Diagnostics.UserEventOwner.UserId.init -> void
 const Kazo.Os.Platform.Core.Diagnostics.FileUserEventLog.MaxKindLength = 128 -> int
-const Kazo.Os.Platform.Core.Diagnostics.FileUserEventLog.MaxMessageLength = 4096 -> int
-const Kazo.Os.Platform.Core.Diagnostics.FileUserEventLog.MaxProperties = 32 -> int
 const Kazo.Os.Platform.Core.Diagnostics.FileUserEventLog.MaxPropertyKeyLength = 64 -> int
-const Kazo.Os.Platform.Core.Diagnostics.FileUserEventLog.MaxPropertyValueLength = 1024 -> int
-const Kazo.Os.Platform.Core.Diagnostics.FileUserEventLog.MaxSubjectFieldLength = 512 -> int
 override Kazo.Os.Platform.Core.Diagnostics.UserEventAuthor.Equals(object? obj) -> bool
 override Kazo.Os.Platform.Core.Diagnostics.UserEventAuthor.GetHashCode() -> int
 override Kazo.Os.Platform.Core.Diagnostics.UserEventAuthor.ToString() -> string!
@@ -325,7 +321,6 @@ override Kazo.Os.Platform.Core.Diagnostics.UserEventOwner.Equals(object? obj) ->
 override Kazo.Os.Platform.Core.Diagnostics.UserEventOwner.GetHashCode() -> int
 override Kazo.Os.Platform.Core.Diagnostics.UserEventOwner.ToString() -> string!
 static Kazo.Os.Platform.Core.Diagnostics.FileUserEventLog.ToDiagnosticSeverity(Kazo.Os.AppSdk.UserEvents.KazoEventSeverity severity) -> Kazo.Os.Simulation.Abstractions.Diagnostics.DiagnosticSeverity
-static Kazo.Os.Platform.Core.Diagnostics.FileUserEventLog.Validate(Kazo.Os.AppSdk.UserEvents.KazoUserEvent! userEvent) -> void
 static Kazo.Os.Platform.Core.Diagnostics.LogFileTarget.UserEventsPath(Kazo.Os.Simulation.Abstractions.Sessions.LocalUserId userId) -> Kazo.Os.App.Abstractions.VirtualPath
 static Kazo.Os.Platform.Core.Diagnostics.UserEventAuthor.operator !=(Kazo.Os.Platform.Core.Diagnostics.UserEventAuthor? left, Kazo.Os.Platform.Core.Diagnostics.UserEventAuthor? right) -> bool
 static Kazo.Os.Platform.Core.Diagnostics.UserEventAuthor.operator ==(Kazo.Os.Platform.Core.Diagnostics.UserEventAuthor? left, Kazo.Os.Platform.Core.Diagnostics.UserEventAuthor? right) -> bool
@@ -348,3 +343,14 @@ Kazo.Os.Platform.Core.Sessions.LocalAccountService.UserEvents.init -> void
 Kazo.Os.Platform.Core.Roles.FeatureOperationTickets.TryConsume(System.Guid token, string! featureId, string! operation, string! userId, out Kazo.Os.AppSdk.UserEvents.KazoEventSubject? subject) -> Kazo.Os.AppSdk.Features.KazoAuthenticationTicket?
 Kazo.Os.Platform.Core.Administration.SystemAdministrationGatewayServices.Audit.get -> System.Func<Kazo.Os.Simulation.Abstractions.Diagnostics.IAuditLog!>?
 Kazo.Os.Platform.Core.Administration.SystemAdministrationGatewayServices.Audit.init -> void
+Kazo.Os.Platform.Core.Diagnostics.FileUserEventLog.TryWriteSystem(Kazo.Os.Platform.Core.Diagnostics.UserEventOwner! owner, Kazo.Os.Platform.Core.Diagnostics.UserEventAuthor! author, Kazo.Os.AppSdk.UserEvents.KazoUserEvent! userEvent) -> bool
+Kazo.Os.Platform.Core.Diagnostics.IUserEventLog.TryWriteSystem(Kazo.Os.Platform.Core.Diagnostics.UserEventOwner! owner, Kazo.Os.Platform.Core.Diagnostics.UserEventAuthor! author, Kazo.Os.AppSdk.UserEvents.KazoUserEvent! userEvent) -> bool
+const Kazo.Os.Platform.Core.Diagnostics.FileUserEventLog.MaxMessageLength = 2048 -> int
+const Kazo.Os.Platform.Core.Diagnostics.FileUserEventLog.MaxProperties = 16 -> int
+const Kazo.Os.Platform.Core.Diagnostics.FileUserEventLog.MaxPropertyValueLength = 512 -> int
+const Kazo.Os.Platform.Core.Diagnostics.FileUserEventLog.MaxSubjectFieldLength = 256 -> int
+const Kazo.Os.Platform.Core.Diagnostics.FileUserEventLog.RateLimitBurst = 200 -> int
+const Kazo.Os.Platform.Core.Diagnostics.FileUserEventLog.ReadLimitBurst = 60 -> int
+const Kazo.Os.Platform.Core.Diagnostics.FileUserEventLog.SystemKindPrefix = "kazoos." -> string!
+static Kazo.Os.Platform.Core.Diagnostics.FileUserEventLog.Validate(Kazo.Os.AppSdk.UserEvents.KazoUserEvent! userEvent, bool allowSystemKinds = false) -> void
+static readonly Kazo.Os.Platform.Core.Diagnostics.FileUserEventLog.RateLimitInterval -> System.TimeSpan

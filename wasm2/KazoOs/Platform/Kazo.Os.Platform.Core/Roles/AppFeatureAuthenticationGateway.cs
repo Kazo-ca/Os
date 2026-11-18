@@ -157,7 +157,8 @@ internal sealed class AppFeatureAuthenticationGateway : IKazoFeatureAuthenticati
         if (subject is not null)
         {
             // Checked now, so a malformed subject fails before the window, not when the ticket is used.
-            Diagnostics.FileUserEventLog.Validate(new KazoUserEvent(Diagnostics.OsUserEvents.FeatureOperationAuthenticated, operation, subject));
+            Diagnostics.FileUserEventLog.Validate(
+                new KazoUserEvent(Diagnostics.OsUserEvents.FeatureOperationAuthenticated, operation, subject), allowSystemKinds: true);
         }
 
         if (!Enum.IsDefined(scope))
@@ -211,7 +212,7 @@ internal sealed class AppFeatureAuthenticationGateway : IKazoFeatureAuthenticati
 
         // ADR 0254 §2: the sensitive operation is about to run; the user's journal says so, with the
         // subject the feature named, the OS as author and the entry point as sender.
-        roles.UserEvents?.Write(
+        roles.UserEvents?.TryWriteSystem(
             Diagnostics.UserEventOwner.Of(_principal),
             new Diagnostics.UserEventAuthor(Diagnostics.OsUserEvents.AuthenticationAppId, SenderAppId: _caller.Id),
             Diagnostics.OsUserEvents.FeatureOperation(_featureName, featureId, stored, subject));

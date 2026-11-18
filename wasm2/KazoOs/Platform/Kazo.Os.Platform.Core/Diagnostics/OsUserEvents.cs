@@ -118,7 +118,7 @@ internal static class OsUserEvents
     /// <param name="path">The file, relative to the user's home.</param>
     /// <param name="choice">
     /// What was kept: <c>KeepMine</c>, <c>KeepOther</c> or <c>KeepBoth</c>, or <c>Same</c> when both
-    /// devices ended with the same file.
+    /// devices ended with the same file, <c>BothDeleted</c> when both deleted it.
     /// </param>
     /// <param name="automatic">Whether the OS resolved it without asking.</param>
     public static KazoUserEvent ConflictResolved(string path, string choice, bool automatic)

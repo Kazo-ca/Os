@@ -323,7 +323,7 @@ public sealed class DangerousCapabilityGate : IDangerousCapabilityGate
         });
 
     private void WriteUserEvent(AuthenticatedPrincipal principal, Kazo.Os.AppSdk.UserEvents.KazoUserEvent userEvent) =>
-        UserEvents?.Write(
+        UserEvents?.TryWriteSystem(
             Diagnostics.UserEventOwner.Of(principal),
             new Diagnostics.UserEventAuthor(Diagnostics.OsUserEvents.PermissionsAppId),
             userEvent);

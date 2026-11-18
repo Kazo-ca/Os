@@ -52,12 +52,19 @@ IReadOnlyList<KazoUserEventEntry> history = await KazoEvents.ReadAsync(
   `subject.name` and `sender` in the property block:
   `2026-11-18T09:30:00.000Z INFO  org.example.vm[42]: Windows 98 started {kind=x86.vm.started, memory=64 MiB, subject.id=4d2c, subject.name=Windows 98, subject.type=vm}`.
 - **Refused** (`ArgumentException`): an empty kind or one with whitespace (128
-  characters at most), an empty message (4,096 at most), a subject without a
-  type or an id (512 per field), more than 32 properties (key of 64, value of
-  1,024), and a property with a key of the OS (`KazoUserEventProperties`).
+  characters at most), a `kazoos.*` kind (kept for the OS's events), an empty
+  message (2,048 at most), a subject without a type or an id (256 per field),
+  more than 16 properties (key of 64, value of 512), and a property with a key
+  of the OS (`KazoUserEventProperties`).
+- **Rate**, like journald: at most 200 events per app and per user in 30 s;
+  beyond that, events are dropped without an error and `/var/log/syslog` says
+  how many (`user-events: suppressed N events of <app>`, without their
+  content). A journal is read back at most 60 times in 30 s; beyond that,
+  `ReadAsync` throws `InvalidOperationException`.
 - **Without `events.write`**, `Write` and `ReadAsync` throw
   `KazoUnauthorizedAccessException`. In a worker, `Write` is checked in the app
-  before it is sent.
+  before it is posted without an answer: a refusal by the OS after that check
+  only goes to the process's log.
 - `KazoEvents.ReadAsync` returns the events **of this app only**, oldest first,
   archives included; `KazoUserEventFilter` filters by kind (or a prefix ending
   in `.`), subject, minimum severity, date, text and count (1,000 by default,
@@ -68,6 +75,23 @@ IReadOnlyList<KazoUserEventEntry> history = await KazoEvents.ReadAsync(
   deleted with the account.
 - The "My events" tab of the Error Log Viewer shows the whole journal of the
   signed-in user, all apps together ([`logging.md`](../dev/logging.md#error-log-viewer)).
+- **Reading another account's journal**:
+  `KazoUserAccounts.ReadEventsAsync(login, filter)` returns all its events. The
+  signed-in user's own journal needs nothing; another account's needs an
+  administrator in the OS's window, once per process (the ticket stays valid
+  until the process ends), and each account read is written to `auth.log`
+  (`events.read-other user=<login>`).
+- **Sensitive operation of a feature**:
+  `KazoFeatureAuthentication.AuthenticateAsync(operation, scope, subject)`; when
+  the feature consumes the ticket, the OS writes
+  `kazoos.feature.operation-authenticated` to the user's journal with that
+  subject ([`system-administration.md`](system-administration.md#roles-of-the-features-adr-0247-adjusted-by-adr-0283)).
+- **Limits.** The file belongs to the user: an app of that user holding
+  `filesystem.system.read` or `filesystem.system.write` (dangerous, approved by
+  an administrator) can read all of it or change it through the file API; "an
+  app sees only its own lines" holds for `KazoEvents`. The message, the subject
+  and the kind are not redacted; only property values go through the
+  redaction of sensitive keys.
 
 ## Line format
 

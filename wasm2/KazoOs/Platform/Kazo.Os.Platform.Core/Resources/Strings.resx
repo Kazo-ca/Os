@@ -849,6 +849,9 @@ Cancel: decide at the next launch.</value>
   <data name="UserEvent.SyncChoice.KeepOther" xml:space="preserve">
     <value>the server's version kept</value>
   </data>
+  <data name="UserEvent.SyncChoice.BothDeleted" xml:space="preserve">
+    <value>the file deleted on both devices</value>
+  </data>
   <data name="UserEvent.SyncChoice.Same" xml:space="preserve">
     <value>the same file on both devices</value>
   </data>

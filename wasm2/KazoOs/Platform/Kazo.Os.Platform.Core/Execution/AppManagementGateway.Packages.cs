@@ -161,8 +161,9 @@ internal sealed partial class AppManagementGateway
             // The packages are written, each with its dependencies: whatever failed after them, the
             // catalog takes them, so the OS never shows a state older than its files.
             await ActivateInstalledAppsAsync(CancellationToken.None).ConfigureAwait(false);
-            WriteInstalledForUserEvents(plan);
         }
+
+        WriteInstalledForUserEvents(plan);
 
         ICapabilityCatalog capabilities = PlanCapabilities(plan);
         return ToReport(root, personalCopies.TryGetValue(manifest.Id, out IReadOnlyList<string>? replaced) ? replaced.Count : 0, capabilities) with
@@ -663,7 +664,7 @@ internal sealed partial class AppManagementGateway
 
         foreach (AppPackagePlan package in plan.Packages.Where(static package => !package.SystemWide))
         {
-            userEvents.Write(
+            userEvents.TryWriteSystem(
                 Diagnostics.UserEventOwner.Of(_principal),
                 new Diagnostics.UserEventAuthor(Diagnostics.OsUserEvents.PackagesAppId, SenderAppId: _caller.Id),
                 Diagnostics.OsUserEvents.Installed(package.Package.Manifest, package.Package.Version.ToString()));

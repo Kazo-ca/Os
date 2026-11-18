@@ -150,6 +150,8 @@ public sealed class UserEventLogTests
     [InlineData("x86.vm.started", " ", "")]
     [InlineData("x86.vm.started", "message", KazoUserEventProperties.Sender)]
     [InlineData("x86.vm.started", "message", KazoUserEventProperties.Kind)]
+    [InlineData("kazoos.permission.granted", "message", "")]
+    [InlineData("KAZOOS.role.granted", "message", "")]
     public async Task A_malformed_event_or_a_property_of_the_os_is_refused(string kind, string message, string property)
     {
         Harness harness = await Harness.CreateAsync();
@@ -195,6 +197,83 @@ public sealed class UserEventLogTests
 
         Assert.Null(await harness.Files.StatAsync($"/var/log/users/{harness.Alice.UserId}"));
         Assert.NotNull(await harness.Files.StatAsync(LogFileTarget.UserEventsPath(harness.Bob.UserId).Value));
+    }
+
+    [Fact]
+    public async Task An_app_writing_too_fast_is_cut_like_journald_and_the_drop_is_in_syslog()
+    {
+        Harness harness = await Harness.CreateAsync();
+        AppUserEventsGateway gateway = harness.Gateway(harness.Alice, VmAppId);
+        for (int index = 0; index < FileUserEventLog.RateLimitBurst + 50; index++)
+        {
+            gateway.Write(new KazoUserEvent("x86.vm.tick", $"tick {index}"));
+        }
+
+        // Another app of the same user keeps its own window.
+        harness.Gateway(harness.Alice, WineAppId).Write(new KazoUserEvent("wine.program.added", "added"));
+        harness.Files.Clock.Advance(tickCount: 300); // 100 ms ticks: the 30 s window
+        gateway.Write(new KazoUserEvent("x86.vm.tick", "after the window"));
+        await harness.Writer.FlushAsync();
+
+        IReadOnlyList<KazoUserEventEntry> written = await harness.Log.ReadAsync(harness.Alice.UserId, new KazoUserEventFilter { Limit = 5000 });
+        Assert.Equal(FileUserEventLog.RateLimitBurst + 2, written.Count);
+        Assert.Equal("after the window", written[^1].Message);
+        string syslog = await harness.Files.ReadTextAsync("/var/log/syslog");
+        Assert.Contains($"suppressed 50 events of {VmAppId} for one user", syslog, StringComparison.Ordinal);
+        Assert.DoesNotContain("tick 2", syslog, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Reading_a_journal_too_often_is_refused_for_a_while()
+    {
+        Harness harness = await Harness.CreateAsync();
+        for (int index = 0; index < FileUserEventLog.ReadLimitBurst; index++)
+        {
+            await harness.Log.ReadAsync(harness.Alice.UserId, new KazoUserEventFilter());
+        }
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => harness.Log.ReadAsync(harness.Alice.UserId, new KazoUserEventFilter()));
+        harness.Files.Clock.Advance(tickCount: 300); // 100 ms ticks: the 30 s window
+        Assert.Empty(await harness.Log.ReadAsync(harness.Alice.UserId, new KazoUserEventFilter()));
+    }
+
+    [Fact]
+    public async Task An_os_event_is_shortened_to_fit_and_a_bad_one_never_throws()
+    {
+        Harness harness = await Harness.CreateAsync();
+        UserEventOwner alice = UserEventOwner.Of(harness.Alice);
+        UserEventAuthor os = new("org.kazoos.sync");
+        string longPath = string.Join('/', Enumerable.Repeat("very-long-folder-name", 40)) + "/note.txt";
+
+        bool written = harness.Log.TryWriteSystem(alice, os, new KazoUserEvent(
+            "kazoos.sync.conflict-resolved", new string('m', 5000), new KazoEventSubject("file", longPath, "note.txt"),
+            KazoEventSeverity.Warning, new Dictionary<string, string> { ["path"] = longPath }));
+        bool malformed = harness.Log.TryWriteSystem(alice, os, new KazoUserEvent("kazoos.bad kind", "message"));
+        await harness.Writer.FlushAsync();
+
+        Assert.True(written);
+        Assert.False(malformed);
+        KazoUserEventEntry entry = Assert.Single(await harness.Log.ReadAsync(harness.Alice.UserId, new KazoUserEventFilter()));
+        Assert.Equal(FileUserEventLog.MaxMessageLength, entry.Message.Length);
+        Assert.EndsWith("…", entry.Subject!.Id, StringComparison.Ordinal);
+        Assert.Equal(FileUserEventLog.MaxPropertyValueLength, entry.Properties["path"].Length);
+        Assert.Contains("could not write the event kazoos.bad kind", await harness.Files.ReadTextAsync("/var/log/syslog"), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Nothing_written_after_the_account_is_deleted_brings_its_directory_back()
+    {
+        Harness harness = await Harness.CreateAsync();
+        AppUserEventsGateway gateway = harness.Gateway(harness.Alice, VmAppId);
+        gateway.Write(new KazoUserEvent("x86.vm.started", "before"));
+
+        await harness.Log.DeleteAsync(harness.Alice.UserId);
+        gateway.Write(new KazoUserEvent("x86.vm.stopped", "after"));
+        Assert.False(harness.Log.TryWriteSystem(UserEventOwner.Of(harness.Alice), new UserEventAuthor("org.kazoos.accounts"), new KazoUserEvent("kazoos.role.granted", "after")));
+        await harness.Writer.FlushAsync();
+
+        Assert.Null(await harness.Files.StatAsync($"/var/log/users/{harness.Alice.UserId}"));
+        await harness.Log.DeleteAsync(harness.Alice.UserId);
     }
 
     [Fact]

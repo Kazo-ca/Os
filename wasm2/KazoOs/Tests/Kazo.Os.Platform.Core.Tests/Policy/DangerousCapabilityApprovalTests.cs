@@ -228,6 +228,25 @@ public sealed class DangerousCapabilityApprovalTests
     }
 
     [Fact]
+    public async Task A_journal_that_cannot_be_written_never_breaks_an_approval_or_a_refusal()
+    {
+        GateHarness harness = await GateHarness.CreateAsync();
+        harness.Events.Fails = true;
+        harness.Prompt.Script = async (request, ct) =>
+        {
+            DangerousCapabilityApprovalAttempt attempt = await request.ApproveAsync("admin", AdminPassword, ct);
+            Assert.True(attempt.Succeeded);
+            return DangerousCapabilityApprovalOutcome.Approved;
+        };
+
+        DangerousCapabilityGateResult result = await harness.Gate.EnsureDecidedAsync(harness.Scanner, harness.Principal, harness.Prompt);
+
+        Assert.Equal(DangerousCapabilityApprovalOutcome.Approved, result.PromptOutcome);
+        Assert.True(harness.IsGranted(ScannerId, AppCapabilities.NetworkRealAccess));
+        Assert.Empty(harness.Events.Written);
+    }
+
+    [Fact]
     public async Task Refusing_writes_user_denials_and_the_question_is_not_asked_again()
     {
         GateHarness harness = await GateHarness.CreateAsync();

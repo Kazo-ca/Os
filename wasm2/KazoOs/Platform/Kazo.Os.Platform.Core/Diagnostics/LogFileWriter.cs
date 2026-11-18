@@ -216,23 +216,17 @@ public sealed class LogFileWriter : IAsyncDisposable
     /// <summary>
     /// Writes what is waiting, then reads back every line of the log at <paramref name="path"/>, oldest first:
     /// the archives from <c>.5</c> to <c>.1</c> when <paramref name="includeArchives"/> is set, then the
-    /// active file. The OS reads with its system context, so the caller decides who may see the lines
-    /// (a user's event log, ADR 0254, section 3). Without an attached filesystem there is nothing to read.
+    /// active file. The flush gate stays held for the whole read, so no flush or rotation moves a file
+    /// between two reads. The OS reads with its system context, so the caller decides who may see the
+    /// lines (a user's event log, ADR 0254, section 3). Without an attached filesystem there is nothing to read.
     /// </summary>
     /// <param name="path">Active file of the log; its archives are <c>&lt;path&gt;.1</c> to <c>&lt;path&gt;.5</c>.</param>
     /// <param name="includeArchives">Whether to read the rotated archives too.</param>
     /// <param name="cancellationToken">Cancels the flush and the reads.</param>
     /// <returns>The lines, without terminator; empty when the file does not exist yet.</returns>
-    public async Task<IReadOnlyList<string>> ReadLinesAsync(
+    public Task<IReadOnlyList<string>> ReadLinesAsync(
         VirtualPath path, bool includeArchives = true, CancellationToken cancellationToken = default)
     {
-        await FlushAsync(cancellationToken).ConfigureAwait(false);
-        if (Volatile.Read(ref _attachment) is not { } attachment)
-        {
-            return [];
-        }
-
-        FileSystemAuthorizationContext context = CreateSystemContext();
         List<VirtualPath> files = [];
         if (includeArchives)
         {
@@ -243,51 +237,100 @@ public sealed class LogFileWriter : IAsyncDisposable
         }
 
         files.Add(path);
-        List<string> lines = [];
-        foreach (VirtualPath file in files)
-        {
-            if (await TryStatAsync(attachment.FileSystem, file, context, cancellationToken).ConfigureAwait(false) is null)
+        return UnderFlushGateAsync<IReadOnlyList<string>>(
+            async (attachment, context, token) =>
             {
-                continue;
-            }
-
-            byte[] content = await ReadAllBytesAsync(attachment.FileSystem, file, context, cancellationToken).ConfigureAwait(false);
-            foreach (string line in Encoding.UTF8.GetString(content).Split(LogLineFormat.LineTerminator))
-            {
-                if (line.Length > 0)
+                List<string> lines = [];
+                foreach (VirtualPath file in files)
                 {
-                    lines.Add(line);
-                }
-            }
-        }
+                    if (await TryStatAsync(attachment.FileSystem, file, context, token).ConfigureAwait(false) is null)
+                    {
+                        continue;
+                    }
 
-        return lines;
+                    byte[] content = await ReadAllBytesAsync(attachment.FileSystem, file, context, token).ConfigureAwait(false);
+                    foreach (string line in Encoding.UTF8.GetString(content).Split(LogLineFormat.LineTerminator))
+                    {
+                        if (line.Length > 0)
+                        {
+                            lines.Add(line);
+                        }
+                    }
+                }
+
+                return lines;
+            },
+            [],
+            cancellationToken);
     }
 
     /// <summary>
     /// Writes what is waiting, then deletes <paramref name="directory"/> and everything in it with the
-    /// system context, like <c>rm -r</c> (a deleted account's journal, ADR 0254, section 1). Does
-    /// nothing when it does not exist or no filesystem is attached.
+    /// system context, like <c>rm -r</c>: the journal of a deleted account (ADR 0254, section 1). The
+    /// flush gate stays held, so no flush recreates or rotates a file while it is deleted. Does nothing
+    /// when it does not exist or no filesystem is attached.
     /// </summary>
-    /// <param name="directory">Directory under <c>/var/log</c> to delete.</param>
+    /// <param name="directory">Directory of one user under <c>/var/log/users</c>.</param>
     /// <param name="cancellationToken">Cancels the flush and the deletion.</param>
-    /// <exception cref="ArgumentException">The directory is not below <c>/var/log</c>.</exception>
-    public async Task DeleteDirectoryAsync(VirtualPath directory, CancellationToken cancellationToken = default)
+    /// <exception cref="ArgumentException">The directory is not below <c>/var/log/users</c>.</exception>
+    public Task DeleteDirectoryAsync(VirtualPath directory, CancellationToken cancellationToken = default)
     {
-        if (!directory.Value.StartsWith(LogFileTarget.LogDirectory.Value + "/", StringComparison.Ordinal))
+        if (!directory.Value.StartsWith(LogFileTarget.UserLogDirectory.Value + "/", StringComparison.Ordinal))
         {
-            throw new ArgumentException($"'{directory.Value}' is not below /var/log.", nameof(directory));
+            throw new ArgumentException($"'{directory.Value}' is not the directory of a user's logs.", nameof(directory));
         }
 
-        await FlushAsync(cancellationToken).ConfigureAwait(false);
-        if (Volatile.Read(ref _attachment) is not { } attachment
-            || await TryStatAsync(attachment.FileSystem, directory, CreateSystemContext(), cancellationToken).ConfigureAwait(false) is null)
+        return UnderFlushGateAsync(
+            async (attachment, context, token) =>
+            {
+                if (await TryStatAsync(attachment.FileSystem, directory, context, token).ConfigureAwait(false) is not null)
+                {
+                    await new ServerConnection.SyncFileOperations(attachment.FileSystem, context)
+                        .DeleteRecursiveAsync(directory, token).ConfigureAwait(false);
+                }
+
+                return true;
+            },
+            false,
+            cancellationToken);
+    }
+
+    /// <summary>
+    /// Takes the flush gate of the attached filesystem, writes what is waiting, then runs
+    /// <paramref name="action"/> before releasing the gate: no periodic or requested flush, and so no
+    /// rotation, runs meanwhile. Returns <paramref name="detached"/> without a filesystem.
+    /// </summary>
+    private async Task<T> UnderFlushGateAsync<T>(
+        Func<Attachment, FileSystemAuthorizationContext, CancellationToken, Task<T>> action,
+        T detached,
+        CancellationToken cancellationToken)
+    {
+        while (Volatile.Read(ref _attachment) is { } attachment)
         {
-            return;
+            using CancellationTokenSource linked = CancellationTokenSource.CreateLinkedTokenSource(
+                cancellationToken, attachment.AbandonedToken);
+            try
+            {
+                await attachment.FlushGate.WaitAsync(linked.Token).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException) when (attachment.IsAbandoned && !cancellationToken.IsCancellationRequested)
+            {
+                // Another filesystem replaced this one while waiting: act on the new one.
+                continue;
+            }
+
+            try
+            {
+                await DrainAndWriteAsync(attachment, linked.Token).ConfigureAwait(false);
+                return await action(attachment, CreateSystemContext(), linked.Token).ConfigureAwait(false);
+            }
+            finally
+            {
+                attachment.FlushGate.Release();
+            }
         }
 
-        await new ServerConnection.SyncFileOperations(attachment.FileSystem, CreateSystemContext())
-            .DeleteRecursiveAsync(directory, cancellationToken).ConfigureAwait(false);
+        return detached;
     }
 
     /// <summary>Drains the queue into <paramref name="attachment"/>, one flush at a time per attachment.</summary>
@@ -298,21 +341,27 @@ public sealed class LogFileWriter : IAsyncDisposable
         await attachment.FlushGate.WaitAsync(linked.Token).ConfigureAwait(false);
         try
         {
-            List<(LogFileTarget Target, List<string> Lines)> batches = DrainQueue(out long reportedLoss);
-            foreach ((LogFileTarget target, List<string> lines) in batches)
-            {
-                // The "lines lost" warning stands for reportedLoss lines: if it is lost too, they all are again.
-                long carried = target.Path == LogFileTarget.Syslog.Path ? reportedLoss : 0;
-                await WriteBatchAsync(attachment.FileSystem, target, lines, carried, linked.Token).ConfigureAwait(false);
-                if (carried > 0)
-                {
-                    reportedLoss = 0;
-                }
-            }
+            await DrainAndWriteAsync(attachment, linked.Token).ConfigureAwait(false);
         }
         finally
         {
             attachment.FlushGate.Release();
+        }
+    }
+
+    /// <summary>Writes every waiting line to <paramref name="attachment"/>; the caller holds its flush gate.</summary>
+    private async Task DrainAndWriteAsync(Attachment attachment, CancellationToken cancellationToken)
+    {
+        List<(LogFileTarget Target, List<string> Lines)> batches = DrainQueue(out long reportedLoss);
+        foreach ((LogFileTarget target, List<string> lines) in batches)
+        {
+            // The "lines lost" warning stands for reportedLoss lines: if it is lost too, they all are again.
+            long carried = target.Path == LogFileTarget.Syslog.Path ? reportedLoss : 0;
+            await WriteBatchAsync(attachment.FileSystem, target, lines, carried, cancellationToken).ConfigureAwait(false);
+            if (carried > 0)
+            {
+                reportedLoss = 0;
+            }
         }
     }
 

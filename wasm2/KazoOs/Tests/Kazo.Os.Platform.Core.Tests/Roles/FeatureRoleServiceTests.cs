@@ -45,6 +45,19 @@ public sealed class FeatureRoleServiceTests
     }
 
     [Fact]
+    public async Task A_journal_that_cannot_be_written_never_breaks_a_role_change()
+    {
+        FeatureRoleHarness harness = await FeatureRoleHarness.CreateAsync();
+        AuthenticatedPrincipal bob = await harness.LoginAsync(harness.Files.Bob);
+        harness.Events.Fails = true;
+
+        Assert.True(await harness.Roles.GrantAsync(FeatureRoleFixtures.Manager, harness.Files.Bob, "carol"));
+
+        Assert.True(harness.Roles.HasRole(bob, FeatureRoleFixtures.Manager));
+        Assert.Empty(harness.Events.Written);
+    }
+
+    [Fact]
     public async Task A_role_granted_then_revoked_is_written_to_the_journal_of_its_holder()
     {
         FeatureRoleHarness harness = await FeatureRoleHarness.CreateAsync();
