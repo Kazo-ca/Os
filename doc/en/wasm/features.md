@@ -493,7 +493,7 @@ This section lists what is released in the `main` branch and online.
   ([`ci-workflows.md`](dev/ci-workflows.md#browser-tests-every-night))
 - **Installable features ("Feature" app type)**: an optional feature of the OS installed for the whole machine by an administrator, with its child entry points. ([ADR 0260](dev/adr/0260-feature-app-type.md), [`app-installation.md`](dev/app-installation.md#features-adr-0260))
 - **App libraries and shared versions**: a package carries the app's libraries, and a shared library (`KazoOsSharedLibrary`) is loaded once, in its newest compatible version. ([ADR 0261](dev/adr/0261-app-libraries-and-shared-versions.md), [ADR 0256](dev/adr/0256-app-libraries-implementation-adjustments.md))
-- **Feature services**: an app asks for an interface a Feature provides with `KazoFeatures.GetServiceAsync<T>()`, with no dependency in its binary. ([ADR 0262](dev/adr/0262-feature-service-registry-and-async-resolution.md), [`feature-services.md`](framework/feature-services.md))
+- **Feature services**: an app asks for an interface a Feature provides with `KazoFeatures.GetServiceAsync<T>()`, with no dependency in its binary. An automatic service of a Feature starts at the login, before any other child is launched, and a child controls the start of its Feature's services (version 3.5.2). ([ADR 0262](dev/adr/0262-feature-service-registry-and-async-resolution.md), [ADR 0286](dev/adr/0286-lazy-services-start-and-manual-kazowebd.md), [`feature-services.md`](framework/feature-services.md))
 - **Network drive providers and direct web access** (version 3.5.0): a feature declares a drive type and derives `KazoDriveProvider`; the `dotnet new kazoos-drive-provider` template, the public conformance suite `KazoDriveProviderTests` (package `Kazo.Os.AppSdk.Testing`) and the WebDAV form sample show how. `KazoDirectHttpClient` sends requests to the web straight from the browser, without the Kazo server, to the declared hosts (`network.direct.access`, `directNetworkHosts`). ([ADR 0282](dev/adr/0282-third-party-drive-providers.md), [ADR 0284](dev/adr/0284-drive-provider-hosts-and-typed-server-address.md), [`drive-providers.md`](framework/drive-providers.md))
 
 ## In development
@@ -530,6 +530,14 @@ points to its PR.
 | Feature | Description | ADR | Issue |
 | --- | --- | --- | --- |
 | Catalog checks of theme packs | The catalog CI checks the `kind: "theme-pack"` entries as the OS does at install. | [0213](dev/adr/0213-theme-packs-build.md) | [AppMarketPlace #4](https://github.com/Kazo-ca/Os-AppMarketPlace/issues/4) |
+
+### Services and startup
+
+| Feature | Description | ADR | Issue |
+| --- | --- | --- | --- |
+| Services tab in System Monitor | List the services with their state and start type, start and stop them and change their start type, like the Windows Services console. | To write | [#626](https://github.com/Kazo-ca/Os/issues/626) |
+| Service of an ordinary app | An app that is not a Feature provides its own service and controls it, even before its code is loaded. | To write | [#627](https://github.com/Kazo-ca/Os/issues/627) |
+| Startup apps | Apps launched when the session opens, chosen by the user, like the Windows startup apps. | To write | [#628](https://github.com/Kazo-ca/Os/issues/628) |
 
 ### Project name
 

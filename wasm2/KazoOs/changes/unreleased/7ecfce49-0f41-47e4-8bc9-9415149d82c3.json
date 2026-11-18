@@ -1,0 +1,19 @@
+{
+  "id": "7ecfce49-0f41-47e4-8bc9-9415149d82c3",
+  "category": "fixed",
+  "audience": [
+    "user",
+    "developer"
+  ],
+  "title": {
+    "en": "The automatic services of a feature start at the login",
+    "fr": "Les services automatiques d’une fonctionnalité démarrent à la connexion"
+  },
+  "description": {
+    "en": "In Kazo OS 3.5.1, an automatic service started at the login only if its code was already loaded, so the service of a feature stayed inactive (dead) until another entry point of the feature was launched. The OS now starts every enabled automatic service at the login and loads only the code of the services that start. An entry point of a feature may also start, stop and set the start mode of a service of its own feature (ADR 0286).",
+    "fr": "Dans Kazo OS 3.5.1, un service automatique ne démarrait à la connexion que si son code était déjà chargé : le service d’une fonctionnalité restait donc inactive (dead) jusqu’au lancement d’un autre point d’entrée de la fonctionnalité. L’OS démarre maintenant chaque service automatique activé à la connexion et ne charge que le code des services qui démarrent. Un point d’entrée d’une fonctionnalité peut aussi démarrer, arrêter et régler le mode de démarrage d’un service de sa propre fonctionnalité (ADR 0286)."
+  },
+  "links": [
+    "https://github.com/Kazo-ca/Os/issues/625"
+  ]
+}

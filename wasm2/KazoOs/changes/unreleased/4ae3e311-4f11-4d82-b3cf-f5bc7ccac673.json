@@ -1,0 +1,18 @@
+{
+  "id": "4ae3e311-4f11-4d82-b3cf-f5bc7ccac673",
+  "category": "improved",
+  "audience": [
+    "user"
+  ],
+  "title": {
+    "en": "The kazowebd web server is a manual service",
+    "fr": "Le serveur web kazowebd est un service manuel"
+  },
+  "description": {
+    "en": "kazowebd no longer starts on its own at the login. An administrator starts it with systemctl start kazowebd or from Web Server Manager, or makes it start at every login with systemctl enable kazowebd (ADR 0286).",
+    "fr": "kazowebd ne démarre plus de lui-même à la connexion. Un administrateur le démarre avec systemctl start kazowebd ou depuis Web Server Manager, ou le fait démarrer à chaque connexion avec systemctl enable kazowebd (ADR 0286)."
+  },
+  "links": [
+    "doc/en/wasm/dev/static-sites.md"
+  ]
+}
