@@ -858,9 +858,10 @@ public sealed class AppIntentDispatcher
 
     /// <summary>
     /// Resolves and authorizes a service-control target: it must be a catalog <see cref="AppKind.Service"/>
-    /// app, and the caller must either share its resolved entry-point assembly or hold
-    /// <see cref="AppCapabilities.ServicesManage"/>. Returns <see langword="null"/> and the resolved
-    /// manifest when authorized; otherwise returns the denial result to return to the caller.
+    /// app, and the caller must either share its resolved entry-point assembly, be a child of the same
+    /// feature (ADR 0262), or hold <see cref="AppCapabilities.ServicesManage"/>. Returns
+    /// <see langword="null"/> and the resolved manifest when authorized; otherwise returns the denial
+    /// result to return to the caller.
     /// </summary>
     private ServiceControlDispatchResult? AuthorizeServiceControl(
         string callerAppId, string userId, string targetAppId, AuthenticatedPrincipal principal, out AppManifest? target)
@@ -881,10 +882,18 @@ public sealed class AppIntentDispatcher
             && _orchestrator.TryGetDescriptor(targetAppId, out AppDescriptor? targetDescriptor)
             && ReferenceEquals(caller.Assembly, targetDescriptor.Assembly);
 
+        // A feature controls the services it provides (ADR 0262). Its code loads one child at a
+        // time (ADR 0047, Os#621), so a sibling service may have no descriptor yet: the catalog says
+        // which feature each child belongs to (Os#625).
+        bool sameFeature =
+            manifest.Parent is { } featureId
+            && _catalog.Manifests.TryGetValue(callerAppId, out AppManifest? callerManifest)
+            && string.Equals(callerManifest.Parent, featureId, StringComparison.Ordinal);
+
         bool hasServicesManage = _grants.Evaluate(
             callerAppId, userId, AppCapabilities.ServicesManage, principal.Authority, AppAuthority.User).Granted;
 
-        if (!sameAssembly && !hasServicesManage)
+        if (!sameAssembly && !sameFeature && !hasServicesManage)
         {
             return new ServiceControlDispatchResult(ServiceControlDispatchStatus.CapabilityDenied, ErrorCode: "service.capability-denied");
         }

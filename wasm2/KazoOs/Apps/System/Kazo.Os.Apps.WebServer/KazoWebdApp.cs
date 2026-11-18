@@ -58,8 +58,12 @@ public sealed class KazoWebdApp : AppDefinition
         AppCapabilities.FileSystemUserHomeWrite,
     ];
 
-    /// <inheritdoc />
-    public override bool AutoStart => true;
+    /// <summary>
+    /// Gets <see langword="false"/>: kazowebd is a manual service (ADR 0286). An administrator starts
+    /// it (<c>systemctl start kazowebd</c>, the Web Server Manager) or sets it to automatic
+    /// (<c>systemctl enable kazowebd</c>); it does not load its code at every login.
+    /// </summary>
+    public override bool AutoStart => false;
 
     /// <inheritdoc />
     public override bool SingleInstancePerUser => true;

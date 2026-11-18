@@ -765,6 +765,36 @@ public sealed partial class AppLifecycleOrchestratorTests
             ValueTask.FromResult<Stream>(new MemoryStream(_bytes, writable: false));
     }
 
+    /// <summary>
+    /// Discovers an app at its first launch, as the browser host does (ADR 0047): its descriptor
+    /// moves into the dictionary the orchestrator reads, and the loaded ids are recorded.
+    /// </summary>
+    private sealed class LazyDescriptorLoader(
+        Dictionary<string, AppDescriptor> descriptors,
+        Dictionary<string, AppDescriptor> notLoaded) : IAppDescriptorLoader
+    {
+        private readonly List<string> _loaded = [];
+
+        internal IReadOnlyList<string> Loaded => _loaded;
+
+        public ValueTask<AppDescriptorLoadResult> EnsureAvailableAsync(string appId, CancellationToken cancellationToken)
+        {
+            if (descriptors.ContainsKey(appId))
+            {
+                return ValueTask.FromResult(AppDescriptorLoadResult.Available());
+            }
+
+            if (!notLoaded.Remove(appId, out AppDescriptor? descriptor))
+            {
+                return ValueTask.FromResult(AppDescriptorLoadResult.NotDeclared());
+            }
+
+            descriptors[appId] = descriptor;
+            _loaded.Add(appId);
+            return ValueTask.FromResult(AppDescriptorLoadResult.Available());
+        }
+    }
+
     private sealed class Fixture
     {
         private int _entryId = 1;
@@ -797,7 +827,20 @@ public sealed partial class AppLifecycleOrchestratorTests
 
         /// <summary>A kernel whose host declared <paramref name="systemAppIds"/> system apps (ADR 0048).</summary>
         internal Fixture(IReadOnlyCollection<string> systemAppIds, params AppManifest[] manifests)
-            : this(services: null, elevationTickets: null, systemAppIds, manifests)
+            : this(services: null, elevationTickets: null, systemAppIds, lazyAppIds: [], manifests)
+        {
+        }
+
+        /// <summary>
+        /// A browser-like kernel (ADR 0047): the descriptors of <paramref name="lazyAppIds"/> are not
+        /// discovered yet and <see cref="Loader"/> brings them in at their first launch, like
+        /// <c>BuildKnownLazyAppDescriptorRegistry</c>.
+        /// </summary>
+        internal Fixture(
+            IReadOnlyCollection<string> systemAppIds,
+            IReadOnlyCollection<string> lazyAppIds,
+            params AppManifest[] manifests)
+            : this(services: null, elevationTickets: null, systemAppIds, lazyAppIds, manifests)
         {
         }
 
@@ -805,6 +848,16 @@ public sealed partial class AppLifecycleOrchestratorTests
             IServiceProvider? services,
             IElevationTicketStore? elevationTickets,
             IReadOnlyCollection<string> systemAppIds,
+            AppManifest[] manifests)
+            : this(services, elevationTickets, systemAppIds, lazyAppIds: [], manifests)
+        {
+        }
+
+        private Fixture(
+            IServiceProvider? services,
+            IElevationTicketStore? elevationTickets,
+            IReadOnlyCollection<string> systemAppIds,
+            IReadOnlyCollection<string> lazyAppIds,
             AppManifest[] manifests)
         {
             FixedTimeProvider timeProvider = new(_now);
@@ -861,18 +914,22 @@ public sealed partial class AppLifecycleOrchestratorTests
 
             // Window apps in these tests use a placeholder entry point (never instantiated by the
             // orchestrator), so descriptors are supplied directly rather than through discovery.
+            // A feature has no entry point (ADR 0260), hence no descriptor.
             Dictionary<string, AppDescriptor> descriptors = new(StringComparer.Ordinal);
-            foreach (AppManifest manifest in manifests)
+            Dictionary<string, AppDescriptor> notLoaded = new(StringComparer.Ordinal);
+            foreach (AppManifest manifest in manifests.Where(static manifest => manifest.Kind != AppKind.Feature))
             {
-                descriptors[manifest.Id] = manifest.Kind == AppKind.Window
+                AppDescriptor descriptor = manifest.Kind == AppKind.Window
                     ? new AppDescriptor(manifest, typeof(object), typeof(object).Assembly)
                     : discovery.Descriptors![manifest.Id];
+                (lazyAppIds.Contains(manifest.Id) ? notLoaded : descriptors)[manifest.Id] = descriptor;
             }
 
+            Loader = lazyAppIds.Count == 0 ? null : new LazyDescriptorLoader(descriptors, notLoaded);
             AppEnablementRegistry enablement = new(catalog);
             Orchestrator = new AppLifecycleOrchestrator(
                 catalog, descriptors, enablement, Manager, Grants, contextFactory, EventBus,
-                descriptorLoader: null, services, fileSystem, elevationTickets, loginEnvironment: LoginEnvironment);
+                descriptorLoader: Loader, services, fileSystem, elevationTickets, loginEnvironment: LoginEnvironment);
             FileSystemService = fileSystem;
         }
 
@@ -885,6 +942,9 @@ public sealed partial class AppLifecycleOrchestratorTests
         internal IOsSettingsService Settings { get; }
         internal AppLifecycleOrchestrator Orchestrator { get; }
         internal LoginEnvironmentProvider LoginEnvironment { get; }
+
+        /// <summary>Gets the on-demand loader of a browser-like kernel, or <see langword="null"/>.</summary>
+        internal LazyDescriptorLoader? Loader { get; }
 
         internal Task<AuthenticatedPrincipal> LoginAsync() => Session.LoginAsync(_aliceLoginName, "hunter2");
 
