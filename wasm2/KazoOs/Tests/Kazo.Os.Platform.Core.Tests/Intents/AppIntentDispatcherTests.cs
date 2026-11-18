@@ -106,17 +106,45 @@ public sealed class AppIntentDispatcherTests
         // service has no descriptor yet and the same-assembly check alone would refuse.
         FeatureManifests feature = AppDefinitionMapper.ToFeatureManifests(new ServicesFeature(), KazoOsSdk.Version);
         AppEntryPointManifest entryPoint = new("Kazo.Os.Platform.Core.Tests", typeof(WaiterServiceApp).FullName!);
-        AppManifest[] children = [.. feature.Children.Select(child => child with { EntryPoint = entryPoint })];
-        Fixture fixture = new(systemAppIds: [], notLoadedAppIds: [ServicesFeatureHostId], [feature.Feature, .. children, EchoManifest()]);
+        FeatureManifests other = AppDefinitionMapper.ToFeatureManifests(new OtherServicesFeature(), KazoOsSdk.Version);
+        AppManifest[] children =
+        [
+            .. feature.Children.Concat(other.Children).Select(child => child with { EntryPoint = entryPoint }),
+        ];
+        Fixture fixture = new(
+            systemAppIds: [],
+            notLoadedAppIds: [ServicesFeatureHostId],
+            [feature.Feature, other.Feature, .. children, EchoManifest()]);
         AuthenticatedPrincipal principal = await fixture.LoginAsync();
+        string userId = principal.UserId.ToString();
 
         ServiceControlDispatchResult sibling = await fixture.Dispatcher.SetServiceStartModeAsync(
-            ServicesFeatureId + ".worker", principal.UserId.ToString(), ServicesFeatureHostId, principal, ServiceStartMode.Automatic);
+            ServicesFeatureId + ".worker", userId, ServicesFeatureHostId, principal, ServiceStartMode.Automatic);
         ServiceControlDispatchResult outsider = await fixture.Dispatcher.SetServiceStartModeAsync(
-            "org.kazoos.echo", principal.UserId.ToString(), ServicesFeatureHostId, principal, ServiceStartMode.Automatic);
+            "org.kazoos.echo", userId, ServicesFeatureHostId, principal, ServiceStartMode.Automatic);
+        ServiceControlDispatchResult otherFeature = await fixture.Dispatcher.SetServiceStartModeAsync(
+            OtherServicesFeatureId + ".worker", userId, ServicesFeatureHostId, principal, ServiceStartMode.Automatic);
 
         Assert.Equal(ServiceControlDispatchStatus.Succeeded, sibling.Status);
         Assert.Equal(ServiceControlDispatchStatus.CapabilityDenied, outsider.Status);
+        Assert.Equal(ServiceControlDispatchStatus.CapabilityDenied, otherFeature.Status);
+    }
+
+    private const string OtherServicesFeatureId = "org.kazoos.other-services-feature";
+
+    /// <summary>Another feature, whose children must not control the first feature's services.</summary>
+    private sealed class OtherServicesFeature : FeatureDefinition
+    {
+        public override string Id => OtherServicesFeatureId;
+
+        public override string Name => "Other services feature";
+
+        public override string PublisherId => "org.kazoos";
+
+        public override IReadOnlyList<FeatureEntryPoint> EntryPoints =>
+        [
+            new("worker", "Worker", AppKind.Service, typeof(WaiterServiceApp)),
+        ];
     }
 
     private const string ServicesFeatureId = "org.kazoos.services-feature";

@@ -777,8 +777,16 @@ public sealed partial class AppLifecycleOrchestratorTests
 
         internal IReadOnlyList<string> Loaded => _loaded;
 
+        /// <summary>Gets the apps whose asset fails to load, as a download that fails.</summary>
+        internal HashSet<string> Broken { get; } = new(StringComparer.Ordinal);
+
         public ValueTask<AppDescriptorLoadResult> EnsureAvailableAsync(string appId, CancellationToken cancellationToken)
         {
+            if (Broken.Contains(appId))
+            {
+                return ValueTask.FromResult(AppDescriptorLoadResult.Unavailable("The asset could not be downloaded."));
+            }
+
             if (descriptors.ContainsKey(appId))
             {
                 return ValueTask.FromResult(AppDescriptorLoadResult.Available());
