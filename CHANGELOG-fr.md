@@ -6,6 +6,20 @@ Les changements de Kazo OS, par version. Ce fichier est généré à partir de `
 `wasm2/KazoOs/build/tools/collect-changes.sh` (ADR 0186) : ne pas le modifier à la main. Les changements
 déjà déployés mais pas encore publiés sont dans la page Paramètres ▸ Nouveautés de l'OS.
 
+## 3.5.2 (2026-11-18)
+
+### Amélioré
+
+- **Le serveur web kazowebd est un service manuel.** kazowebd ne démarre plus de lui-même à la connexion. Un administrateur le démarre avec systemctl start kazowebd ou depuis Web Server Manager, ou le fait démarrer à chaque connexion avec systemctl enable kazowebd (ADR 0286). ([static-sites.md](doc/fr/wasm/dev/static-sites.md))
+
+### Corrigé
+
+- **Les services automatiques d’une fonctionnalité démarrent à la connexion.** Dans Kazo OS 3.5.1, un service automatique ne démarrait à la connexion que si son code était déjà chargé : le service d’une fonctionnalité restait donc inactive (dead) jusqu’au lancement d’un autre point d’entrée de la fonctionnalité. L’OS démarre maintenant chaque service automatique activé à la connexion et ne charge que le code des services qui démarrent. Un point d’entrée d’une fonctionnalité peut aussi démarrer, arrêter et régler le mode de démarrage d’un service de sa propre fonctionnalité (ADR 0286). ([github.com/Kazo-ca/Os/issues/625](https://github.com/Kazo-ca/Os/issues/625))
+
+### Pour les développeurs
+
+- **Tester une app sur l'OS rogné publié.** build/app-e2e/ contient un banc commun et un test court (smoke.mjs) qui servent l'OS rogné publié, installent l'app avec kazopkg comme le Store, la lancent et échouent sur un membre absent, un refus de kazopkg ou le panneau de panne de l'app. Les dépôts d'apps l'atteignent par leur sous-module Kazo OS (ADR 0281). ([app-repository.md](doc/fr/wasm/framework/app-repository.md))
+
 ## 3.5.1 (2026-11-17)
 
 ### Nouveau

@@ -12,6 +12,12 @@ at the end of each series or when a convention changes.
 - **Active code**: `wasm2/KazoOs/` (simulated OS in Blazor WebAssembly, .NET 10,
   solution `Kazo.Os.sln`). `src/` is the old version, kept as a
   reference.
+- **Version 3.5.2** (branch `fix/625-feature-service-autostart`, 2026-11-18), a fix: automatic
+  services start at the login before their code is loaded, those of features included (Os#625);
+  a feature child controls its feature's services; `kazowebd` becomes a manual service (ADR 0286,
+  decision 295 C). The rest of 295 is in `TODO` issues: Services tab of System Monitor (#626), an
+  ordinary app's own service (#627), startup apps (#628). No SDK API change. Fix ported to
+  `feature/base`.
 - **Version 3.5.1** (branch `fix/621-feature-child-discovery`, 2026-11-17), a fix: the entry
   points of a feature start again; the lazy loading registry discovered a child without its
   feature (`catalog.feature.parent.missing`, Os#621). Also carries the connect dialog that names a

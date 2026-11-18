@@ -6,6 +6,20 @@ The changes of Kazo OS, by version. This file is generated from `wasm2/KazoOs/ch
 `wasm2/KazoOs/build/tools/collect-changes.sh` (ADR 0186): do not edit it by hand. Changes already
 deployed but not released yet are in the Settings ▸ What's new page of the OS.
 
+## 3.5.2 (2026-11-18)
+
+### Improved
+
+- **The kazowebd web server is a manual service.** kazowebd no longer starts on its own at the login. An administrator starts it with systemctl start kazowebd or from Web Server Manager, or makes it start at every login with systemctl enable kazowebd (ADR 0286). ([static-sites.md](doc/en/wasm/dev/static-sites.md))
+
+### Fixed
+
+- **The automatic services of a feature start at the login.** In Kazo OS 3.5.1, an automatic service started at the login only if its code was already loaded, so the service of a feature stayed inactive (dead) until another entry point of the feature was launched. The OS now starts every enabled automatic service at the login and loads only the code of the services that start. An entry point of a feature may also start, stop and set the start mode of a service of its own feature (ADR 0286). ([github.com/Kazo-ca/Os/issues/625](https://github.com/Kazo-ca/Os/issues/625))
+
+### For developers
+
+- **Test an app on the published trimmed OS.** build/app-e2e/ holds a shared harness and a short test (smoke.mjs) that serve the published trimmed OS, install the app with kazopkg as the Store does, launch it and fail on a missing member, a kazopkg refusal or the app's failure panel. App repositories reach it through their Kazo OS submodule (ADR 0281). ([app-repository.md](doc/en/wasm/framework/app-repository.md))
+
 ## 3.5.1 (2026-11-17)
 
 ### New
