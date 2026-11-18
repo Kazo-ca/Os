@@ -33,7 +33,7 @@ Publier un dossier comme site web, comme avec IIS, Apache ou nginx :
                      ├─ KazoServiceController (start/stop/restart kazowebd)
                      └─ KazoIPGlobalProperties (sockets de kazowebd → état des sites)
 
- kazowebd (service, worker dédié, AutoStart)
+ kazowebd (service, worker dédié, manuel)
    ├─ KazoFileSystemWatcher "*.site" sur les deux dossiers ─► rechargement à chaud
    ├─ KazoHttpListener par préfixe normalisé ─► StaticFileHandler
    │      └─ WwwDataAccess (droits « other » pour un site système)
@@ -60,7 +60,9 @@ services d'une même app. Les deux sont des apps système (`IsSystemApp` sur la
 
 ### `kazowebd`
 
-- Démarré au boot (`AutoStart`), visible par `systemctl status kazowebd`,
+- Service manuel depuis l'[ADR 0286](adr/0286-lazy-services-start-and-manual-kazowebd.md) :
+  un administrateur le démarre (`systemctl start kazowebd`, Web Server Manager)
+  ou le rend automatique (`systemctl enable kazowebd`). Visible par `systemctl status kazowebd`,
   arrêtable par `systemctl stop kazowebd` (les ports se libèrent :
   `curl` répond alors `Failed to connect`, code 7).
 - À chaque changement d'un `.site` (ou au démarrage), il **réconcilie** : un
