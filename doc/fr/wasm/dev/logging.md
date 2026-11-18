@@ -18,6 +18,7 @@ Error Log Viewer les lisent avec les droits de fichier ordinaires.
 | `/var/log/kern.log` | Journal du noyau (`KernelLog`) : OOM killer, garde de la mémoire du navigateur ; aussi copié dans `syslog` et lu par `dmesg` depuis `/dev/kmsg` (ADR 0126 §3, [`oom-killer.md`](oom-killer.md)) | `system:system 0644` |
 | `/var/log/auth.log` | `IAuditLog` (`session.login`, `session.elevate`, `capability.*` de l'ADR 0049, `feature.authenticate`, `feature.role-denied`, `role.grant` et `role.revoke` de l'ADR 0247…) | `system:system 0600` |
 | `/var/log/audit.log` | Audit des créations, écritures, renommages, copies, suppressions et `chmod` sous `/etc`, `/bin` et `/var` (sauf `/var/log`), au format d'`auditd` (ADR 0100 §3, [`sensitive-settings.md`](sensitive-settings.md)) ; `ausearch` le filtre | `system:system 0600` |
+| `/var/log/users/<id>/events.log` | Journal d'événements d'un usager (ADR 0254) : `KazoEvents` des apps et événements de l'OS pour cet usager (`kazoos.permission.*`, `kazoos.role.*`, `kazoos.app.installed`, `kazoos.sync.conflict-resolved`) ; `<id>` est l'identifiant stable du compte ([`app-log-files.md`](../framework/app-log-files.md#événements-dusager-adr-0254)) | `<usager>:<groupe> 0600`, dossiers `system:system 0711` |
 
 ## Architecture
 
@@ -57,6 +58,33 @@ HostExceptionReporter ───────────────────�
     fois par fichier (catégorie `logging`) dans le tampon mémoire.
 - `FileAuditLog` remplace `BoundedAuditLog` dans la composition ; `Entries` reste
   servi par un tampon de 512 entrées.
+- **Journaux d'usager (ADR 0254).** `LogFileTarget.ForUser(id, groupe)` vise
+  `/var/log/users/<id>/events.log` avec un propriétaire (`LogFileOwner`) et un
+  mode de dossier (`DirectoryMode`, `0711`). Le rédacteur crée le fichier au nom
+  de l'usager, comme `install -o` (seule la création utilise ce contexte ;
+  l'ajout et la rotation restent faits par le système), et crée les dossiers sous
+  `/var/log` avec ce mode. `ReadLinesAsync(chemin)` vide la file puis relit les
+  archives et le fichier actif ; `DeleteDirectoryAsync(dossier)` vide la file puis
+  supprime un dossier sous `/var/log`.
+  - `IUserEventLog` / `FileUserEventLog` (singleton) : `Write(owner, author, event)`
+    vérifie l'événement (`Validate` : genre d'un seul mot, tailles bornées, clés
+    de l'OS refusées), passe les propriétés de l'app par le masquage, ajoute
+    `kind`, `subject.*` et `sender`, et formate la ligne avec `LogLineFormat`.
+    `ReadAsync(id, filtre)` et `DeleteAsync(id)`.
+  - `AppUserEventsGateway` (une par instance d'app, `AppExecutionContextFactory.UserEvents`)
+    vérifie `events.write`, prend l'app et le processus du contexte et
+    l'expéditeur de `Intent.SenderAppId`, et ne relit que les lignes de l'app.
+    Dans un worker : `RemoteUserEventsGateway`, opérations `uev.write` (envoyée
+    sans réponse, vérifiée d'abord dans l'app) et `uev.read`.
+  - Événements de l'OS (`OsUserEvents`, textes dans la langue de la session) :
+    `DangerousCapabilityGate` (permission accordée ou refusée,
+    `org.kazoos.permissions`), `FeatureRoleService` (rôle attribué ou retiré,
+    `org.kazoos.accounts`), `AppManagementGateway` (app installée pour soi seulement,
+    `org.kazoos.packages`), `FileSystemSyncService` (conflit résolu, à la main ou
+    automatiquement, `org.kazoos.sync`). Chacun garde aussi son entrée
+    d'`auth.log` ou de `syslog`.
+  - `LocalAccountService.DeleteAsync` et `GuestAccountService.ReplaceAsync`
+    suppriment le dossier du compte supprimé, même quand le dossier personnel reste.
 - `HostExceptionReporter` (ADR 0240) écrit une ligne `CRIT ecosystem-host` par
   erreur non gérée, avec `correlationId`, `phase`, `exceptionType`, `module`,
   `source`, `message` et `stack`. Message et pile passent d'abord par
@@ -93,6 +121,12 @@ HostExceptionReporter ───────────────────�
   `AuditLineFormat` : un refus devient un avertissement, une écriture réussie
   une information, avec l'app comme source.
 - Suivi en direct par `AppContext.Watch` sur `/var/log` et `/var/log/apps`.
+- Onglet « Mes événements » (ADR 0254 §3, `UserEventsPanel`) : le journal de
+  l'usager en session, `/var/log/users/<AppContext.UserId>/events.log` et ses
+  archives, lu comme un fichier ordinaire dont l'usager est propriétaire
+  (`LogFileReader.ReadUserEventsAsync`). Filtres par app, gravité, sujet (regroupé
+  par app, type et identifiant) et texte ; du plus récent au plus ancien. Pas de
+  suivi en direct (le dossier `0711` ne se liste pas) : « Rafraîchir » relit.
 - « Truncate » vide le journal sélectionné (jamais une archive). Pour un
   utilisateur ordinaire c'est refusé, la fenêtre propose l'approbation
   administrateur (ADR 0042), puis un second clic réussit.
@@ -110,6 +144,14 @@ HostExceptionReporter ───────────────────�
   échecs non récursifs, déconnexion, arrêt, droits de lecture, nouvel attachement
   qui n'attend pas un vidage bloqué sur le précédent.
 - `.../LogProducersTests.cs` : `ILogger`, `AppLoggingGateway`, `FileAuditLog`.
+- `.../UserEventLogTests.cs` (ADR 0254) : écriture dans le fichier de l'usager avec
+  l'app du contexte, propriétaire, modes `0600` et `0711`, un autre usager ne lit
+  ni ne liste, lecture limitée aux lignes de l'app, refus sans `events.write`,
+  événements mal formés, rotation, suppression, relecture d'une ligne, façade
+  `KazoEvents`. Événements de l'OS dans `DangerousCapabilityApprovalTests`,
+  `FeatureRoleServiceTests`, `AppPackageGatewayTests`,
+  `FileSystemSyncDeletionAndConflictTests` ; suppression avec le compte dans
+  `LocalAccountServiceTests` ; worker dans `WireCodecUserEventsTests`.
 - `Tests/Kazo.Os.Platform.Core.Tests/Time/SimulationClockDriverTests.cs`.
 - `Tests/Kazo.Os.Apps.ErrorLogViewer.Tests/` : manifeste et `LogFileReader` sur un
   vrai `AppFileSystemGateway`.
@@ -127,4 +169,8 @@ HostExceptionReporter ───────────────────�
 - [x] Error Log Viewer lit les fichiers.
 - [x] Tests de contrat.
 - [x] Lignes perdues faute de place, comptées puis signalées (`v3/7`, ADR 0099 §2).
+- [x] Journaux d'usager (ADR 0254) : `LogFileTarget.ForUser`, `FileUserEventLog`, `KazoEvents`, `events.write`, worker.
+- [x] Événements écrits par l'OS : permissions, rôles, installation pour soi, conflits de synchronisation.
+- [x] Journal supprimé avec le compte.
+- [x] Error Log Viewer : onglet « Mes événements ».
 - [ ] Passer Error Log Viewer sur `KazoFile` après le merge de l'ADR 0043.

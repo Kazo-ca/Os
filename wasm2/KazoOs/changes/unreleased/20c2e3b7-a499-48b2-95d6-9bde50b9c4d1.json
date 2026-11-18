@@ -1,0 +1,14 @@
+{
+  "id": "20c2e3b7-a499-48b2-95d6-9bde50b9c4d1",
+  "category": "new",
+  "audience": ["user", "developer"],
+  "title": {
+    "en": "Each user has a journal of their own events, shown in the Error Log Viewer",
+    "fr": "Chaque usager a un journal de ses propres événements, montré dans l’Error Log Viewer"
+  },
+  "description": {
+    "en": "What happens to your own things is now written to your journal, /var/log/users/<id>/events.log, which only you can read: a dangerous permission granted or refused to an app, a role of a feature granted or taken back, an app installed for you alone, a synchronization conflict resolved. Apps can write their own events there, about a machine, a program or a file. The new My events tab of the Error Log Viewer shows the journal, filtered by app, severity, subject and text. The journal is deleted with the account. For developers: KazoEvents.Write and ReadAsync, KazoUserEvent, KazoEventSubject, KazoEventSeverity, KazoUserEventFilter and the normal capability events.write; an app reads back only its own events.",
+    "fr": "Ce qui arrive à vos propres choses est maintenant écrit dans votre journal, /var/log/users/<id>/events.log, que vous seul pouvez lire : une permission dangereuse accordée ou refusée à une app, un rôle d’une fonctionnalité attribué ou retiré, une app installée pour vous seul, un conflit de synchronisation résolu. Les apps peuvent y écrire leurs propres événements, à propos d’une machine, d’un programme ou d’un fichier. Le nouvel onglet Mes événements de l’Error Log Viewer montre le journal, filtré par app, gravité, sujet et texte. Le journal est supprimé avec le compte. Pour les développeurs : KazoEvents.Write et ReadAsync, KazoUserEvent, KazoEventSubject, KazoEventSeverity, KazoUserEventFilter et la capacité normale events.write ; une app ne relit que ses propres événements."
+  },
+  "links": ["doc/en/wasm/dev/adr/0254-per-user-events.md"]
+}
