@@ -135,7 +135,7 @@ public sealed class LogFileReaderTests
         string active = LogFileReader.UserEventsPath(alice.ToString()).Value;
         await fixture.MoveSystemFileAsync(active, active + ".1");
         journal.Write(owner, new UserEventAuthor("org.example.vm-manager", 7), new KazoUserEvent("x86.vm.started", "first"));
-        journal.Write(owner, new UserEventAuthor("org.kazoos.permissions"), new KazoUserEvent("kazoos.permission.granted", "second"));
+        Assert.True(journal.TryWriteSystem(owner, new UserEventAuthor("org.kazoos.permissions"), new KazoUserEvent("kazoos.permission.granted", "second")));
         await fixture.Writer.FlushAsync();
 
         UserEventsContent own = await fixture.ReaderFor(alice.ToString()).ReadUserEventsAsync(alice.ToString());
