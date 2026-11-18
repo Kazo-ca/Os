@@ -100,6 +100,73 @@ public sealed class AppIntentDispatcherTests
     }
 
     [Fact]
+    public async Task A_feature_child_controls_a_service_of_its_feature_whose_code_is_not_loaded_yet()
+    {
+        // Os#625: a feature's code loads one child at a time (ADR 0047, Os#621), so the sibling
+        // service has no descriptor yet and the same-assembly check alone would refuse.
+        FeatureManifests feature = AppDefinitionMapper.ToFeatureManifests(new ServicesFeature(), KazoOsSdk.Version);
+        AppEntryPointManifest entryPoint = new("Kazo.Os.Platform.Core.Tests", typeof(WaiterServiceApp).FullName!);
+        FeatureManifests other = AppDefinitionMapper.ToFeatureManifests(new OtherServicesFeature(), KazoOsSdk.Version);
+        AppManifest[] children =
+        [
+            .. feature.Children.Concat(other.Children).Select(child => child with { EntryPoint = entryPoint }),
+        ];
+        Fixture fixture = new(
+            systemAppIds: [],
+            notLoadedAppIds: [ServicesFeatureHostId],
+            [feature.Feature, other.Feature, .. children, EchoManifest()]);
+        AuthenticatedPrincipal principal = await fixture.LoginAsync();
+        string userId = principal.UserId.ToString();
+
+        ServiceControlDispatchResult sibling = await fixture.Dispatcher.SetServiceStartModeAsync(
+            ServicesFeatureId + ".worker", userId, ServicesFeatureHostId, principal, ServiceStartMode.Automatic);
+        ServiceControlDispatchResult outsider = await fixture.Dispatcher.SetServiceStartModeAsync(
+            "org.kazoos.echo", userId, ServicesFeatureHostId, principal, ServiceStartMode.Automatic);
+        ServiceControlDispatchResult otherFeature = await fixture.Dispatcher.SetServiceStartModeAsync(
+            OtherServicesFeatureId + ".worker", userId, ServicesFeatureHostId, principal, ServiceStartMode.Automatic);
+
+        Assert.Equal(ServiceControlDispatchStatus.Succeeded, sibling.Status);
+        Assert.Equal(ServiceControlDispatchStatus.CapabilityDenied, outsider.Status);
+        Assert.Equal(ServiceControlDispatchStatus.CapabilityDenied, otherFeature.Status);
+    }
+
+    private const string OtherServicesFeatureId = "org.kazoos.other-services-feature";
+
+    /// <summary>Another feature, whose children must not control the first feature's services.</summary>
+    private sealed class OtherServicesFeature : FeatureDefinition
+    {
+        public override string Id => OtherServicesFeatureId;
+
+        public override string Name => "Other services feature";
+
+        public override string PublisherId => "org.kazoos";
+
+        public override IReadOnlyList<FeatureEntryPoint> EntryPoints =>
+        [
+            new("worker", "Worker", AppKind.Service, typeof(WaiterServiceApp)),
+        ];
+    }
+
+    private const string ServicesFeatureId = "org.kazoos.services-feature";
+    private const string ServicesFeatureHostId = ServicesFeatureId + ".host";
+
+    /// <summary>A feature with two service children (ADR 0260 §2, ADR 0262).</summary>
+    private sealed class ServicesFeature : FeatureDefinition
+    {
+        public override string Id => ServicesFeatureId;
+
+        public override string Name => "Services feature";
+
+        public override string PublisherId => "org.kazoos";
+
+        public override IReadOnlyList<FeatureEntryPoint> EntryPoints =>
+        [
+            new("host", "Host", AppKind.Service, typeof(WaiterServiceApp)),
+            new("worker", "Worker", AppKind.Service, typeof(WaiterServiceApp)),
+        ];
+    }
+
+    [Fact]
     public async Task Controlling_a_non_service_target_is_rejected_even_from_the_same_assembly()
     {
         Fixture fixture = new(EchoManifest(), TextEditorManifest());
@@ -1179,6 +1246,18 @@ public sealed class AppIntentDispatcherTests
 
         /// <summary>A kernel whose host declared <paramref name="systemAppIds"/> system apps (ADR 0048).</summary>
         internal Fixture(IReadOnlyCollection<string> systemAppIds, params AppManifest[] manifests)
+            : this(systemAppIds, notLoadedAppIds: [], manifests)
+        {
+        }
+
+        /// <summary>
+        /// A kernel whose host has not loaded the code of <paramref name="notLoadedAppIds"/> yet, as a
+        /// browser host before their first launch (ADR 0047): they have no descriptor.
+        /// </summary>
+        internal Fixture(
+            IReadOnlyCollection<string> systemAppIds,
+            IReadOnlyCollection<string> notLoadedAppIds,
+            params AppManifest[] manifests)
         {
             FixedTimeProvider timeProvider = new(_now);
             InMemoryFileSystemRepository repository = new(
@@ -1238,8 +1317,10 @@ public sealed class AppIntentDispatcherTests
             AppCatalogBuildResult discoveryCatalogResult = AppCatalog.Build(manifests.Where(m => m.Kind != AppKind.Window));
             AppDiscoveryResult discovery = AppEntryPointDiscovery.Discover(discoveryCatalogResult.Catalog!, hostAssemblies);
 
+            // A feature has no entry point (ADR 0260), hence no descriptor.
             Dictionary<string, AppDescriptor> descriptors = new(StringComparer.Ordinal);
-            foreach (AppManifest manifest in manifests)
+            foreach (AppManifest manifest in manifests.Where(manifest =>
+                manifest.Kind != AppKind.Feature && !notLoadedAppIds.Contains(manifest.Id)))
             {
                 descriptors[manifest.Id] = manifest.Kind == AppKind.Window
                     ? new AppDescriptor(manifest, typeof(object), typeof(object).Assembly)

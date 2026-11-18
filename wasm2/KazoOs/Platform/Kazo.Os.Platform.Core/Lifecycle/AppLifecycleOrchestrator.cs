@@ -783,16 +783,16 @@ public sealed class AppLifecycleOrchestrator
         ArgumentNullException.ThrowIfNull(principal);
 
         List<AppLaunchResult> results = [];
-        foreach (AppDescriptor descriptor in AutomaticServiceCandidates(AppServiceStartup.Login))
+        foreach (AppManifest manifest in AutomaticServiceCandidates(AppServiceStartup.Login))
         {
-            string appId = descriptor.Manifest.Id;
+            string appId = manifest.Id;
             ServiceStartMode effectiveMode = _fileSystem is null
                 ? ServiceStartMode.Automatic
                 : await ServiceStartModeStore.ReadAsync(
                     _fileSystem,
                     principal.LoginName.Value,
                     appId,
-                    descriptor.Manifest.AutoStart ? ServiceStartMode.Automatic : ServiceStartMode.Manual,
+                    manifest.AutoStart ? ServiceStartMode.Automatic : ServiceStartMode.Manual,
                     CancellationToken.None);
 
             if (effectiveMode != ServiceStartMode.Automatic)
@@ -801,7 +801,9 @@ public sealed class AppLifecycleOrchestrator
             }
 
             // Nobody is watching an auto-start: pending dangerous capabilities are deferred (ADR 0049 section 5.4).
-            results.Add(await LaunchAsync(new AppLaunchRequest(appId, principal, [], Interactive: false)));
+            AppLaunchResult launched = await LaunchAsync(new AppLaunchRequest(appId, principal, [], Interactive: false));
+            LogFailedAutomaticStart(appId, launched);
+            results.Add(launched);
         }
 
         return results;
@@ -820,15 +822,15 @@ public sealed class AppLifecycleOrchestrator
         ArgumentNullException.ThrowIfNull(serviceAccount);
 
         List<AppLaunchResult> results = [];
-        foreach (AppDescriptor descriptor in AutomaticServiceCandidates(AppServiceStartup.Boot))
+        foreach (AppManifest manifest in AutomaticServiceCandidates(AppServiceStartup.Boot))
         {
-            string appId = descriptor.Manifest.Id;
+            string appId = manifest.Id;
             ServiceStartMode effectiveMode = _fileSystem is null
                 ? ServiceStartMode.Automatic
                 : await ServiceStartModeStore.ReadSystemAsync(
                     _fileSystem,
                     appId,
-                    descriptor.Manifest.AutoStart ? ServiceStartMode.Automatic : ServiceStartMode.Manual,
+                    manifest.AutoStart ? ServiceStartMode.Automatic : ServiceStartMode.Manual,
                     CancellationToken.None);
             if (effectiveMode != ServiceStartMode.Automatic)
             {
@@ -838,17 +840,35 @@ public sealed class AppLifecycleOrchestrator
             // A system service holds its declared capabilities for the service account, as a system
             // app's do for every user at login (ADR 0049).
             CleanProfileCapabilityGrantSeeder.SeedDeclaredCapabilities(
-                _grants, descriptor.Manifest, serviceAccount.UserId.ToString(), isSystemApp: true);
+                _grants, manifest, serviceAccount.UserId.ToString(), isSystemApp: true);
             AppLaunchResult launched = await LaunchAsync(new AppLaunchRequest(appId, serviceAccount, [], Interactive: false, SystemScope: true));
             if (launched.Status is AppLaunchStatus.Launched)
             {
                 _logger.LogInformation("{Unit}: started at boot as {User}", UnitNameOf(appId), serviceAccount.LoginName.Value);
             }
 
+            LogFailedAutomaticStart(appId, launched);
             results.Add(launched);
         }
 
         return results;
+    }
+
+    /// <summary>
+    /// Writes an automatic service that did not start to <c>/var/log/syslog</c>, like systemd's
+    /// « Failed to start » line: since its code loads at that moment (ADR 0286), an asset that does
+    /// not load is reported there instead of being skipped silently.
+    /// </summary>
+    private void LogFailedAutomaticStart(string appId, AppLaunchResult launched)
+    {
+        if (launched.Status is AppLaunchStatus.Launched or AppLaunchStatus.FocusedExisting)
+        {
+            return;
+        }
+
+        _logger.LogWarning(
+            "{Unit}: failed to start ({Status}, {ErrorCode}): {Detail}",
+            UnitNameOf(appId), launched.Status, launched.ErrorCode, launched.ErrorMessage);
     }
 
     /// <summary>
@@ -946,16 +966,24 @@ public sealed class AppLifecycleOrchestrator
         return AppServiceStartup.Login;
     }
 
-    private IEnumerable<AppDescriptor> AutomaticServiceCandidates(AppServiceStartup startup)
+    /// <summary>
+    /// The enabled service apps of the catalog that start at <paramref name="startup"/>, in
+    /// activation order. They are read from the catalog, not from the discovered descriptors: a host
+    /// that loads an app's code at its first launch (ADR 0047) has not discovered a service before
+    /// it starts, and <see cref="LaunchAsync"/> loads it then, its feature included (Os#621, Os#625).
+    /// A host with no loader can only start the services it discovered.
+    /// </summary>
+    private IEnumerable<AppManifest> AutomaticServiceCandidates(AppServiceStartup startup)
     {
         foreach (string appId in _catalog.ActivationOrder)
         {
-            if (_descriptors.TryGetValue(appId, out AppDescriptor? descriptor)
-                && descriptor.Manifest.Kind == AppKind.Service
+            if (_catalog.Manifests.TryGetValue(appId, out AppManifest? manifest)
+                && manifest.Kind == AppKind.Service
+                && (_descriptorLoader is not null || _descriptors.ContainsKey(appId))
                 && _enablement.IsEnabled(appId)
-                && GetEffectiveStartup(descriptor.Manifest) == startup)
+                && GetEffectiveStartup(manifest) == startup)
             {
-                yield return descriptor;
+                yield return manifest;
             }
         }
     }

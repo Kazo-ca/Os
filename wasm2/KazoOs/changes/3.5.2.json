@@ -1,0 +1,61 @@
+{
+  "version": "3.5.2",
+  "date": "2026-11-18",
+  "entries": [
+    {
+      "id": "4ae3e311-4f11-4d82-b3cf-f5bc7ccac673",
+      "category": "improved",
+      "audience": [
+        "user"
+      ],
+      "title": {
+        "en": "The kazowebd web server is a manual service",
+        "fr": "Le serveur web kazowebd est un service manuel"
+      },
+      "description": {
+        "en": "kazowebd no longer starts on its own at the login. An administrator starts it with systemctl start kazowebd or from Web Server Manager, or makes it start at every login with systemctl enable kazowebd (ADR 0286).",
+        "fr": "kazowebd ne démarre plus de lui-même à la connexion. Un administrateur le démarre avec systemctl start kazowebd ou depuis Web Server Manager, ou le fait démarrer à chaque connexion avec systemctl enable kazowebd (ADR 0286)."
+      },
+      "links": [
+        "doc/en/wasm/dev/static-sites.md"
+      ]
+    },
+    {
+      "id": "7ecfce49-0f41-47e4-8bc9-9415149d82c3",
+      "category": "fixed",
+      "audience": [
+        "user",
+        "developer"
+      ],
+      "title": {
+        "en": "The automatic services of a feature start at the login",
+        "fr": "Les services automatiques d’une fonctionnalité démarrent à la connexion"
+      },
+      "description": {
+        "en": "In Kazo OS 3.5.1, an automatic service started at the login only if its code was already loaded, so the service of a feature stayed inactive (dead) until another entry point of the feature was launched. The OS now starts every enabled automatic service at the login and loads only the code of the services that start. An entry point of a feature may also start, stop and set the start mode of a service of its own feature (ADR 0286).",
+        "fr": "Dans Kazo OS 3.5.1, un service automatique ne démarrait à la connexion que si son code était déjà chargé : le service d’une fonctionnalité restait donc inactive (dead) jusqu’au lancement d’un autre point d’entrée de la fonctionnalité. L’OS démarre maintenant chaque service automatique activé à la connexion et ne charge que le code des services qui démarrent. Un point d’entrée d’une fonctionnalité peut aussi démarrer, arrêter et régler le mode de démarrage d’un service de sa propre fonctionnalité (ADR 0286)."
+      },
+      "links": [
+        "https://github.com/Kazo-ca/Os/issues/625"
+      ]
+    },
+    {
+      "id": "b94efa01-4efc-4ea7-9981-9154f33d86bf",
+      "category": "developer",
+      "audience": [
+        "developer"
+      ],
+      "title": {
+        "en": "Test an app on the published trimmed OS",
+        "fr": "Tester une app sur l'OS rogné publié"
+      },
+      "description": {
+        "en": "build/app-e2e/ holds a shared harness and a short test (smoke.mjs) that serve the published trimmed OS, install the app with kazopkg as the Store does, launch it and fail on a missing member, a kazopkg refusal or the app's failure panel. App repositories reach it through their Kazo OS submodule (ADR 0281).",
+        "fr": "build/app-e2e/ contient un banc commun et un test court (smoke.mjs) qui servent l'OS rogné publié, installent l'app avec kazopkg comme le Store, la lancent et échouent sur un membre absent, un refus de kazopkg ou le panneau de panne de l'app. Les dépôts d'apps l'atteignent par leur sous-module Kazo OS (ADR 0281)."
+      },
+      "links": [
+        "doc/en/wasm/framework/app-repository.md"
+      ]
+    }
+  ]
+}
