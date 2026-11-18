@@ -200,6 +200,44 @@ manifest.json : error KOSAPP0100: Mon.App.dll calls System.Linq.Enumerable.ToHas
   --api-surface <surface>` du générateur que `Kazo.Os.App.Build` de cette
   version emporte.
 
+## Tests sur l'OS rogné publié
+
+[ADR 0281](../dev/adr/0281-app-end-to-end-tests-on-the-trimmed-os.md) : les
+tests de l'app tournent aussi sur l'OS que les utilisateurs chargent, la
+publication rognée de la version (`kazoos-wasm-<version>.zip` de la version
+GitHub de Kazo-ca/Os), avec l'app installée par `sudo kazopkg install` comme
+le Store l'installe. Cela attrape ce que la vérification statique ne voit pas :
+réflexion, sérialisation, fichiers `wwwroot/` de l'app installée.
+
+Le banc commun est dans le sous-module :
+`external/KazoOs/wasm2/KazoOs/build/app-e2e/`.
+
+- **`smoke.mjs`**, le test court lancé pour chaque app : premier démarrage,
+  installation, lancement depuis le lanceur par le `name` du manifeste, la
+  fenêtre reste ouverte 15 s. Il échoue sur une erreur de page, une erreur de
+  console qui nomme `MissingMethodException`, `MissingFieldException`,
+  `TypeLoadException` ou `FileNotFoundException`, un refus de `kazopkg` ou le
+  panneau de panne de l'app.
+
+  ```bash
+  dotnet build src/MonApp -c Release -t:KazoOsPack
+  unzip kazoos-wasm-3.4.3.zip -d kazoos-os
+  npm install --no-save playwright
+  node external/KazoOs/wasm2/KazoOs/build/app-e2e/smoke.mjs --wwwroot kazoos-os \
+      --packages src/MonApp/bin/kazoos-packages --repository <propriétaire>/<dépôt> \
+      --manifest src/MonApp/manifest.json
+  ```
+
+- **`kazoos-app-e2e.mjs`**, le module que les suites de l'app importent :
+  `fromEnvironment()` lit `KAZOOS_E2E_WWWROOT`, `KAZOOS_E2E_PACKAGES` et
+  `KAZOOS_E2E_REPOSITORY` (donnés par la CI ; `null` sinon, la suite garde alors
+  son hôte `dotnet run`), `startTrimmedOs()` sert l'OS, `newAppContext()` répond
+  aux adresses du paquet sans réseau, `bootFirstAccount()`, `installApp()`,
+  `openApp()`, `approveIfAsked()`, `watchFailures()` et `shownFailure()`.
+
+Le banc arrive avec Kazo OS 3.4.4 ou la version suivante ; une app dont le
+sous-module est plus ancien n'a pas le test court.
+
 ## Publier dans le Kazo OS Store
 
 1. Remplir `store/` : icône PNG 256×256 (200 Ko au plus), description courte

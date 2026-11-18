@@ -193,6 +193,44 @@ manifest.json : error KOSAPP0100: My.App.dll calls System.Linq.Enumerable.ToHash
   runs the `check-api --package <file.kazoapp> --api-surface <surface>` command
   of the generator that `Kazo.Os.App.Build` of that version carries.
 
+## Tests on the published trimmed OS
+
+[ADR 0281](../dev/adr/0281-app-end-to-end-tests-on-the-trimmed-os.md): the
+app's tests also run on the OS users load, the trimmed publish of the version
+(`kazoos-wasm-<version>.zip` of the Kazo-ca/Os GitHub Release), with the app
+installed by `sudo kazopkg install` as the Store installs it. This catches what
+the static check does not see: reflection, serialization, the `wwwroot/` files
+of the installed app.
+
+The shared harness is in the submodule:
+`external/KazoOs/wasm2/KazoOs/build/app-e2e/`.
+
+- **`smoke.mjs`**, the short test run for every app: first boot, install,
+  launch from the launcher by the manifest's `name`, the window stays open for
+  15 s. It fails on a page error, a console error naming
+  `MissingMethodException`, `MissingFieldException`, `TypeLoadException` or
+  `FileNotFoundException`, a `kazopkg` refusal, or the app's failure panel.
+
+  ```bash
+  dotnet build src/MyApp -c Release -t:KazoOsPack
+  unzip kazoos-wasm-3.4.3.zip -d kazoos-os
+  npm install --no-save playwright
+  node external/KazoOs/wasm2/KazoOs/build/app-e2e/smoke.mjs --wwwroot kazoos-os \
+      --packages src/MyApp/bin/kazoos-packages --repository <owner>/<repository> \
+      --manifest src/MyApp/manifest.json
+  ```
+
+- **`kazoos-app-e2e.mjs`**, the module the app's suites import:
+  `fromEnvironment()` reads `KAZOOS_E2E_WWWROOT`, `KAZOOS_E2E_PACKAGES` and
+  `KAZOOS_E2E_REPOSITORY` (given by CI; `null` otherwise, and the suite keeps
+  its `dotnet run` host), `startTrimmedOs()` serves the OS, `newAppContext()`
+  answers the package addresses with no network, `bootFirstAccount()`,
+  `installApp()`, `openApp()`, `approveIfAsked()`, `watchFailures()` and
+  `shownFailure()`.
+
+The harness comes with Kazo OS 3.4.4 or the next version; an app whose
+submodule is older has no short test.
+
 ## Publishing to the Kazo OS Store
 
 1. Fill `store/`: 256×256 PNG icon (200 KB at most), English short description
