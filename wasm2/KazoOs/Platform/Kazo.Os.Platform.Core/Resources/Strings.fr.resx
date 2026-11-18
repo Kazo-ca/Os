@@ -828,6 +828,12 @@ Annuler : décider au prochain lancement.</value>
   <data name="UserEvent.RoleRevoked" xml:space="preserve">
     <value>Rôle {0} retiré par {1}.</value>
   </data>
+  <data name="UserEvent.FeatureOperationAuthenticated" xml:space="preserve">
+    <value>Opération {0} de {1} authentifiée par {2}.</value>
+  </data>
+  <data name="Admin.ReadUserEvents" xml:space="preserve">
+    <value>Lire le journal d'événements de {0}</value>
+  </data>
   <data name="UserEvent.AppInstalled" xml:space="preserve">
     <value>{0} {1} installée pour vous.</value>
   </data>

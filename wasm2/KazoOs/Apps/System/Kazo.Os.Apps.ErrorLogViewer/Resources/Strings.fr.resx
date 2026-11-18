@@ -135,4 +135,13 @@
   <data name="Events.Empty" xml:space="preserve">
     <value>Aucun événement dans ce journal.</value>
   </data>
+  <data name="Events.User" xml:space="preserve">
+    <value>Usager</value>
+  </data>
+  <data name="Events.User.Me" xml:space="preserve">
+    <value>Moi</value>
+  </data>
+  <data name="Error.EventsNeedAdmin" xml:space="preserve">
+    <value>Lire les événements de {0} demande un administrateur.</value>
+  </data>
 </root>

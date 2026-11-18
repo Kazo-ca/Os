@@ -254,7 +254,7 @@ Kazo.Os.Platform.Core.Lifecycle.AppLifecycleOrchestrator.Roles.get -> System.Fun
 Kazo.Os.Platform.Core.Lifecycle.AppLifecycleOrchestrator.Roles.init -> void
 static Kazo.Os.Platform.Core.Roles.FeatureRoleService.OpensTo(Kazo.Os.Platform.Core.Roles.FeatureRoleService? roles, Kazo.Os.App.Abstractions.AppManifest! entryPoint, Kazo.Os.Simulation.Abstractions.Sessions.AuthenticatedPrincipal! principal, bool isRootElevated = false) -> bool
 Kazo.Os.Platform.Core.Roles.FeatureRoleService.LastRefreshError.get -> System.Exception?
-Kazo.Os.Platform.Core.Roles.FeatureOperationTickets.Issue(string! featureId, string! operation, Kazo.Os.AppSdk.Features.KazoAuthenticationScope scope, string! authenticatedBy, string! userId) -> Kazo.Os.AppSdk.Features.KazoAuthenticationTicket!
+Kazo.Os.Platform.Core.Roles.FeatureOperationTickets.Issue(string! featureId, string! operation, Kazo.Os.AppSdk.Features.KazoAuthenticationScope scope, string! authenticatedBy, string! userId, Kazo.Os.AppSdk.UserEvents.KazoEventSubject? subject = null) -> Kazo.Os.AppSdk.Features.KazoAuthenticationTicket!
 Kazo.Os.Platform.Core.Roles.FeatureOperationTickets.TryConsume(System.Guid token, string! featureId, string! operation, string! userId) -> Kazo.Os.AppSdk.Features.KazoAuthenticationTicket?
 const Kazo.Os.Platform.Core.Intents.AppIntentDispatcher.SettingsPageArgumentPrefix = "--page=" -> string!
 const Kazo.Os.Platform.Core.Lifecycle.AppLifecycleOrchestrator.SettingsPageNotLaunchableErrorCode = "lifecycle.settings-page.not-launchable" -> string!
@@ -345,3 +345,6 @@ Kazo.Os.Platform.Core.Sessions.GuestAccountService.UserEvents.get -> Kazo.Os.Pla
 Kazo.Os.Platform.Core.Sessions.GuestAccountService.UserEvents.init -> void
 Kazo.Os.Platform.Core.Sessions.LocalAccountService.UserEvents.get -> Kazo.Os.Platform.Core.Diagnostics.IUserEventLog?
 Kazo.Os.Platform.Core.Sessions.LocalAccountService.UserEvents.init -> void
+Kazo.Os.Platform.Core.Roles.FeatureOperationTickets.TryConsume(System.Guid token, string! featureId, string! operation, string! userId, out Kazo.Os.AppSdk.UserEvents.KazoEventSubject? subject) -> Kazo.Os.AppSdk.Features.KazoAuthenticationTicket?
+Kazo.Os.Platform.Core.Administration.SystemAdministrationGatewayServices.Audit.get -> System.Func<Kazo.Os.Simulation.Abstractions.Diagnostics.IAuditLog!>?
+Kazo.Os.Platform.Core.Administration.SystemAdministrationGatewayServices.Audit.init -> void

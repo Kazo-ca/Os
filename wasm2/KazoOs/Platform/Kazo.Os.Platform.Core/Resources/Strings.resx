@@ -828,6 +828,12 @@ Cancel: decide at the next launch.</value>
   <data name="UserEvent.RoleRevoked" xml:space="preserve">
     <value>Role {0} taken from you by {1}.</value>
   </data>
+  <data name="UserEvent.FeatureOperationAuthenticated" xml:space="preserve">
+    <value>Operation {0} of {1} authenticated by {2}.</value>
+  </data>
+  <data name="Admin.ReadUserEvents" xml:space="preserve">
+    <value>Read the event journal of {0}</value>
+  </data>
   <data name="UserEvent.AppInstalled" xml:space="preserve">
     <value>{0} {1} installed for you.</value>
   </data>

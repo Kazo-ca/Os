@@ -23,9 +23,23 @@ internal sealed class RecordingUserEventLog : IUserEventLog
         Written.Add((owner, author, userEvent));
     }
 
+    /// <summary>Gets the events each account's journal returns when read.</summary>
+    public Dictionary<LocalUserId, List<KazoUserEventEntry>> Journals { get; } = [];
+
+    /// <summary>Gets every account whose journal was read, in order.</summary>
+    public List<LocalUserId> Reads { get; } = [];
+
     public Task<IReadOnlyList<KazoUserEventEntry>> ReadAsync(
-        LocalUserId userId, KazoUserEventFilter filter, CancellationToken cancellationToken = default) =>
-        throw new NotSupportedException("The recording journal is write-only.");
+        LocalUserId userId, KazoUserEventFilter filter, CancellationToken cancellationToken = default)
+    {
+        Reads.Add(userId);
+        return Task.FromResult(filter.Apply(Journals.GetValueOrDefault(userId) ?? []));
+    }
+
+    /// <summary>Builds an event of <paramref name="appId"/> as read back from a journal.</summary>
+    public static KazoUserEventEntry Entry(string appId, string message) => new(
+        DateTimeOffset.UnixEpoch, appId, null, "test.event", message, null, KazoEventSeverity.Info,
+        new Dictionary<string, string>(), null);
 
     public Task DeleteAsync(LocalUserId userId, CancellationToken cancellationToken = default)
     {

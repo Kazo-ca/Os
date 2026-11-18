@@ -1056,6 +1056,8 @@ public static class EcosystemServiceCollectionExtensions
                 WhatsNew = provider.GetService<Kazo.Os.Platform.Core.WhatsNew.IWhatsNewSource>() is null ? null : () => provider.GetRequiredService<Kazo.Os.Platform.Core.WhatsNew.WhatsNewService>(),
                 // ADR 0250: the browser storage of the page behind KazoStorage.
                 OriginStorage = () => provider.GetRequiredService<OriginStorageService>(),
+                // ADR 0254 §3: events.read-other in /var/log/auth.log.
+                Audit = () => provider.GetRequiredService<IAuditLog>(),
             })
         {
             // KazoBackground (ADR 0128): each task a child process, in a worker when the host has some.

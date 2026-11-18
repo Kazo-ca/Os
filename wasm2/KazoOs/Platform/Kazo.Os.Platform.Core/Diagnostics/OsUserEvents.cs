@@ -28,6 +28,12 @@ internal static class OsUserEvents
     /// <summary>Author of the synchronization events: the OS's synchronization with the server.</summary>
     public const string SyncAppId = "org.kazoos.sync";
 
+    /// <summary>Author of the events of an operation the OS authenticated for a feature (ADR 0247 §3).</summary>
+    public const string AuthenticationAppId = "org.kazoos.authentication";
+
+    /// <summary>Kind of a sensitive operation of a feature the OS authenticated, when its ticket is used.</summary>
+    public const string FeatureOperationAuthenticated = "kazoos.feature.operation-authenticated";
+
     /// <summary>Kind of a dangerous permission granted to an app for the user.</summary>
     public const string PermissionGranted = "kazoos.permission.granted";
 
@@ -127,6 +133,32 @@ internal static class OsUserEvents
             {
                 ["choice"] = choice,
                 ["automatic"] = automatic ? "true" : "false",
+            });
+    }
+
+    /// <summary>
+    /// Builds the event of a sensitive operation of a feature, authenticated by the OS, whose ticket
+    /// was just used (ADR 0247 §3, ADR 0254 §2): the subject is what the feature named when it asked.
+    /// </summary>
+    /// <param name="featureName">Name of the feature.</param>
+    /// <param name="featureId">Identifier of the feature.</param>
+    /// <param name="ticket">The ticket the OS issued.</param>
+    /// <param name="subject">What the operation is about, or <see langword="null"/>.</param>
+    public static KazoUserEvent FeatureOperation(
+        string featureName, string featureId, Kazo.Os.AppSdk.Features.KazoAuthenticationTicket ticket, KazoEventSubject? subject)
+    {
+        ArgumentNullException.ThrowIfNull(ticket);
+        return new KazoUserEvent(
+            FeatureOperationAuthenticated,
+            Text("UserEvent.FeatureOperationAuthenticated", ticket.Operation, featureName, ticket.AuthenticatedBy),
+            subject,
+            KazoEventSeverity.Info,
+            new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["feature"] = featureId,
+                ["operation"] = ticket.Operation,
+                ["scope"] = ticket.Scope.ToString(),
+                ["authenticatedBy"] = ticket.AuthenticatedBy,
             });
     }
 

@@ -2,6 +2,7 @@ using System.Globalization;
 using Kazo.Os.App.Abstractions;
 using Kazo.Os.AppSdk.Features;
 using Kazo.Os.AppSdk.IO;
+using Kazo.Os.AppSdk.UserEvents;
 using Kazo.Os.Platform.Core.Elevation;
 using Kazo.Os.Simulation.Abstractions.Sessions;
 
@@ -20,7 +21,7 @@ public sealed class FeatureOperationTickets
 
     private readonly Func<DateTimeOffset> _clock;
     private readonly Lock _gate = new();
-    private readonly Dictionary<Guid, (KazoAuthenticationTicket Ticket, string UserId)> _tickets = [];
+    private readonly Dictionary<Guid, (KazoAuthenticationTicket Ticket, string UserId, KazoEventSubject? Subject)> _tickets = [];
 
     /// <summary>Creates the store.</summary>
     /// <param name="clock">The clock; the system clock by default.</param>
@@ -32,7 +33,9 @@ public sealed class FeatureOperationTickets
     /// <param name="scope">Who authenticated.</param>
     /// <param name="authenticatedBy">The login that authenticated.</param>
     /// <param name="userId">The user whose process asked; only a process of that user can use the ticket.</param>
-    public KazoAuthenticationTicket Issue(string featureId, string operation, KazoAuthenticationScope scope, string authenticatedBy, string userId)
+    /// <param name="subject">What the operation is about, written to the user's journal when the ticket is used (ADR 0254 §2).</param>
+    public KazoAuthenticationTicket Issue(
+        string featureId, string operation, KazoAuthenticationScope scope, string authenticatedBy, string userId, KazoEventSubject? subject = null)
     {
         DateTimeOffset now = _clock();
         KazoAuthenticationTicket ticket = new(Guid.NewGuid(), featureId, operation, scope, authenticatedBy, now + Lifetime);
@@ -44,7 +47,7 @@ public sealed class FeatureOperationTickets
                 _tickets.Remove(expired);
             }
 
-            _tickets[ticket.Token] = (ticket, userId);
+            _tickets[ticket.Token] = (ticket, userId, subject);
         }
 
         return ticket;
@@ -58,21 +61,39 @@ public sealed class FeatureOperationTickets
     /// <param name="featureId">The feature presenting it.</param>
     /// <param name="operation">The operation about to run.</param>
     /// <param name="userId">The user whose process presents it.</param>
-    public KazoAuthenticationTicket? TryConsume(Guid token, string featureId, string operation, string userId)
+    public KazoAuthenticationTicket? TryConsume(Guid token, string featureId, string operation, string userId) =>
+        TryConsume(token, featureId, operation, userId, out _);
+
+    /// <summary>
+    /// Uses a ticket up like <see cref="TryConsume(Guid, string, string, string)"/>, and gives the
+    /// subject the feature named when it asked (ADR 0254 §2).
+    /// </summary>
+    /// <param name="token">The ticket's token.</param>
+    /// <param name="featureId">The feature presenting it.</param>
+    /// <param name="operation">The operation about to run.</param>
+    /// <param name="userId">The user whose process presents it.</param>
+    /// <param name="subject">What the operation is about, or <see langword="null"/>.</param>
+    public KazoAuthenticationTicket? TryConsume(Guid token, string featureId, string operation, string userId, out KazoEventSubject? subject)
     {
+        subject = null;
         lock (_gate)
         {
-            if (!_tickets.Remove(token, out (KazoAuthenticationTicket Ticket, string UserId) stored))
+            if (!_tickets.Remove(token, out (KazoAuthenticationTicket Ticket, string UserId, KazoEventSubject? Subject) stored))
             {
                 return null;
             }
 
-            return stored.Ticket.ExpiresAtUtc > _clock()
+            bool valid = stored.Ticket.ExpiresAtUtc > _clock()
                 && string.Equals(stored.Ticket.FeatureId, featureId, StringComparison.Ordinal)
                 && string.Equals(stored.Ticket.Operation, operation, StringComparison.Ordinal)
-                && string.Equals(stored.UserId, userId, StringComparison.Ordinal)
-                ? stored.Ticket
-                : null;
+                && string.Equals(stored.UserId, userId, StringComparison.Ordinal);
+            if (!valid)
+            {
+                return null;
+            }
+
+            subject = stored.Subject;
+            return stored.Ticket;
         }
     }
 }
@@ -124,10 +145,21 @@ internal sealed class AppFeatureAuthenticationGateway : IKazoFeatureAuthenticati
     }
 
     /// <inheritdoc />
+    public ValueTask<KazoAuthenticationTicket> AuthenticateAsync(
+        string operation, KazoAuthenticationScope scope, CancellationToken cancellationToken = default) =>
+        AuthenticateAsync(operation, scope, subject: null, cancellationToken);
+
+    /// <inheritdoc />
     public async ValueTask<KazoAuthenticationTicket> AuthenticateAsync(
-        string operation, KazoAuthenticationScope scope, CancellationToken cancellationToken = default)
+        string operation, KazoAuthenticationScope scope, KazoEventSubject? subject, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(operation);
+        if (subject is not null)
+        {
+            // Checked now, so a malformed subject fails before the window, not when the ticket is used.
+            Diagnostics.FileUserEventLog.Validate(new KazoUserEvent(Diagnostics.OsUserEvents.FeatureOperationAuthenticated, operation, subject));
+        }
+
         if (!Enum.IsDefined(scope))
         {
             throw new ArgumentOutOfRangeException(nameof(scope), scope, "Unknown authentication scope.");
@@ -161,7 +193,8 @@ internal sealed class AppFeatureAuthenticationGateway : IKazoFeatureAuthenticati
             throw new KazoUnauthorizedAccessException($"{_featureName}: '{operation}' was not authenticated ({result.FailureReason}).");
         }
 
-        return roles.Tickets.Issue(featureId, operation, scope, result.AdministratorLogin ?? _principal.LoginName.Value, _principal.UserId.ToString());
+        return roles.Tickets.Issue(
+            featureId, operation, scope, result.AdministratorLogin ?? _principal.LoginName.Value, _principal.UserId.ToString(), subject);
     }
 
     /// <inheritdoc />
@@ -170,9 +203,19 @@ internal sealed class AppFeatureAuthenticationGateway : IKazoFeatureAuthenticati
         ArgumentNullException.ThrowIfNull(ticket);
         ArgumentException.ThrowIfNullOrWhiteSpace(operation);
         string featureId = RequireFeature();
-        return _roles().Tickets.TryConsume(ticket.Token, featureId, operation, _principal.UserId.ToString()) is { } stored
-            ? ValueTask.FromResult(stored)
-            : throw new KazoUnauthorizedAccessException($"{_featureName}: the ticket does not authorize '{operation}' (expired, used, of another user, or for another operation).");
+        FeatureRoleService roles = _roles();
+        if (roles.Tickets.TryConsume(ticket.Token, featureId, operation, _principal.UserId.ToString(), out KazoEventSubject? subject) is not { } stored)
+        {
+            throw new KazoUnauthorizedAccessException($"{_featureName}: the ticket does not authorize '{operation}' (expired, used, of another user, or for another operation).");
+        }
+
+        // ADR 0254 §2: the sensitive operation is about to run; the user's journal says so, with the
+        // subject the feature named, the OS as author and the entry point as sender.
+        roles.UserEvents?.Write(
+            Diagnostics.UserEventOwner.Of(_principal),
+            new Diagnostics.UserEventAuthor(Diagnostics.OsUserEvents.AuthenticationAppId, SenderAppId: _caller.Id),
+            Diagnostics.OsUserEvents.FeatureOperation(_featureName, featureId, stored, subject));
+        return ValueTask.FromResult(stored);
     }
 
     /// <summary>

@@ -24,7 +24,6 @@ public partial class ErrorLogViewerWindow
     private LogFileReader _reader = default!;
     private List<LogSource> _sources = [];
     private List<LogRow> _rows = [];
-    private IReadOnlyList<Kazo.Os.AppSdk.UserEvents.KazoUserEventEntry> _userEvents = [];
     private string? _errorMessage;
     private IStringLocalizer<Strings>? _localizer;
 
@@ -80,20 +79,6 @@ public partial class ErrorLogViewerWindow
 
         RebuildRows();
         await ReloadUserEventsAsync();
-    }
-
-    /// <summary>
-    /// Reads the journal of the user the viewer runs for (ADR 0254, section 3): an ordinary file the
-    /// user owns, read with the viewer's own rights.
-    /// </summary>
-    private async Task ReloadUserEventsAsync()
-    {
-        UserEventsContent content = await _reader.ReadUserEventsAsync(AppContext.UserId, _lifetime.Token);
-        _userEvents = content.Entries;
-        if (content.Error is { } error && _errorMessage is null)
-        {
-            _errorMessage = L["Error.CannotRead", error.Path?.Value ?? LogFileReader.UserLogDirectory.Value, error.Code];
-        }
     }
 
     private Task OnSelectionChangedAsync() => ReloadAllAsync();

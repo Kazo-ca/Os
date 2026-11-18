@@ -607,6 +607,10 @@ public sealed class AppExecutionContextFactory
                 GuestRequests = _administration.GuestRequests,
                 // ADR 0247 §1: Settings ▸ Users and kazorole grant and revoke the roles of the features.
                 Roles = _appCatalog?.Roles,
+                // ADR 0254 §3: an administrator reads another account's event journal.
+                UserEvents = UserEvents,
+                Audit = _administration.Audit,
+                Clock = () => _clock.UtcNow,
             },
             new AppComponentProviderAdministrationGateway(_administration.ComponentProviders, _administration.ApprovalPrompt, capabilities, gate),
             new AppFileMenuEntryAdministrationGateway(_administration.FileMenuEntries, capabilities, language));

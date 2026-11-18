@@ -1,5 +1,7 @@
 using Kazo.Os.App.Abstractions;
 using Kazo.Os.AppSdk.Administration;
+using Kazo.Os.AppSdk.UserEvents;
+using Kazo.Os.Simulation.Abstractions.Diagnostics;
 using Kazo.Os.Platform.Core.Sessions;
 using Kazo.Os.Simulation.Abstractions.Gateways;
 using Kazo.Os.Simulation.Abstractions.Sessions;
@@ -19,6 +21,12 @@ internal sealed class AppUserAccountsGateway : IAppUserAccountsGateway
     private readonly Func<LocalPasswordService>? _passwords;
     private readonly ICapabilityChecker _capabilities;
     private readonly AdministratorGate _gate;
+    private readonly SemaphoreSlim _eventsGate = new(1, 1);
+    private readonly HashSet<LocalUserId> _eventsRead = [];
+    private string? _eventsAdministrator;
+
+    /// <summary>The <c>auth.log</c> action of a read of another account's event journal (ADR 0254 §3).</summary>
+    public const string EventsReadOtherAction = "events.read-other";
 
     /// <summary>Creates the gateway for one app instance.</summary>
     /// <param name="passwords">Lazily resolved password service; <see langword="null"/> on a host without accounts.</param>
@@ -42,6 +50,76 @@ internal sealed class AppUserAccountsGateway : IAppUserAccountsGateway
 
     /// <summary>Gets the lazily resolved roles of the features of ADR 0247; <see langword="null"/> on a host without them.</summary>
     public Func<Roles.FeatureRoleService?>? Roles { get; init; }
+
+    /// <summary>Gets the users' event journals of ADR 0254; <see langword="null"/> on a host without them.</summary>
+    public Diagnostics.IUserEventLog? UserEvents { get; init; }
+
+    /// <summary>Gets <c>/var/log/auth.log</c>, where each read of another account's journal is written; optional.</summary>
+    public Func<IAuditLog>? Audit { get; init; }
+
+    /// <summary>Gets the clock of the <c>auth.log</c> entries; the system clock by default.</summary>
+    public Func<DateTimeOffset> Clock { get; init; } = static () => DateTimeOffset.UtcNow;
+
+    /// <inheritdoc />
+    /// <remarks>
+    /// ADR 0254 §3: one ticket per process. The first read of another account asks the OS's window;
+    /// the administrator who answered is kept for this process (one gateway per app instance), like a
+    /// viewer session, and each account read is written once to <c>auth.log</c>.
+    /// </remarks>
+    public async ValueTask<IReadOnlyList<KazoUserEventEntry>> ReadEventsAsync(
+        string loginName, KazoUserEventFilter filter, CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(loginName);
+        ArgumentNullException.ThrowIfNull(filter);
+        filter.EnsureValidLimit();
+        Diagnostics.IUserEventLog journals = UserEvents ?? throw new NotSupportedException("This Kazo OS host keeps no user event journal.");
+        IReadOnlyList<LocalUser> users = await Service().ListAsync(cancellationToken).ConfigureAwait(false);
+        LocalUser user = users.FirstOrDefault(candidate => string.Equals(candidate.LoginName.Value, loginName.Trim(), StringComparison.OrdinalIgnoreCase))
+            ?? throw new ArgumentException($"No account is named '{loginName}'.", nameof(loginName));
+        if (user.Id != _gate.Principal.UserId)
+        {
+            await AuthorizeEventsReadAsync(user, cancellationToken).ConfigureAwait(false);
+        }
+
+        return await journals.ReadAsync(user.Id, filter, cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Asks an administrator once for this process, then writes <c>events.read-other</c> to
+    /// <c>auth.log</c> the first time each account is read.
+    /// </summary>
+    private async Task AuthorizeEventsReadAsync(LocalUser user, CancellationToken cancellationToken)
+    {
+        await _eventsGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            _eventsAdministrator ??= await _gate.AuthenticateAsync(
+                _gate.Text["Admin.ReadUserEvents", user.LoginName.Value],
+                EventsReadOtherAction,
+                user.LoginName.Value,
+                cancellationToken).ConfigureAwait(false);
+            if (_eventsRead.Add(user.Id))
+            {
+                Audit?.Invoke().Record(new AuditEntry(
+                    Clock(),
+                    Guid.NewGuid(),
+                    _gate.Principal.UserId.ToString(),
+                    EventsReadOtherAction,
+                    user.LoginName.Value,
+                    AuditOutcome.Success,
+                    new Dictionary<string, string>(StringComparer.Ordinal)
+                    {
+                        ["user"] = user.LoginName.Value,
+                        ["admin"] = _eventsAdministrator,
+                        ["requestedBy"] = _gate.Principal.LoginName.Value,
+                    }));
+            }
+        }
+        finally
+        {
+            _eventsGate.Release();
+        }
+    }
 
     /// <inheritdoc />
     public ValueTask<IReadOnlyList<KazoFeatureRole>> ListRolesAsync(CancellationToken cancellationToken = default) =>
