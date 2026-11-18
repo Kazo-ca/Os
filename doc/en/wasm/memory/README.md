@@ -12,6 +12,11 @@ at the end of each series or when a convention changes.
 - **Active code**: `wasm2/KazoOs/` (simulated OS in Blazor WebAssembly, .NET 10,
   solution `Kazo.Os.sln`). `src/` is the old version, kept as a
   reference.
+- **Version 3.5.1** (branch `fix/621-feature-child-discovery`, 2026-11-17), a fix: the entry
+  points of a feature start again; the lazy loading registry discovered a child without its
+  feature (`catalog.feature.parent.missing`, Os#621). Also carries the connect dialog that names a
+  provider's server (ADR 0284 §2). No SDK API change. Os-x86 then pins itself on 3.5.1
+  (decision 291 B).
 - **Version 3.5.0** (`drive-providers/base` series, work item 9, 2026-11-17): third-party drive
   providers (ADR 0282, ADR 0284). The cloud drive types move to the `Kazo.Os.Platform.CloudDrives`
   package and `CloudOAuthProvider.Identity` becomes nullable; new packages

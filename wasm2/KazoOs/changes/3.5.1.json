@@ -1,0 +1,44 @@
+{
+  "version": "3.5.1",
+  "date": "2026-11-17",
+  "entries": [
+    {
+      "id": "5595e2da-cf0b-470b-823e-73768d9ffc28",
+      "category": "new",
+      "audience": [
+        "user",
+        "developer"
+      ],
+      "title": {
+        "en": "The connect dialog names the server a provider will reach",
+        "fr": "La fenêtre de connexion nomme le serveur qu'un fournisseur joindra"
+      },
+      "description": {
+        "en": "When a drive type marks a field as the server address (ADR 0284), Connect a network drive writes \"This provider will reach <host>.\" before saving, and refuses an address the OS cannot allow (http, a user name or password in the URL, an IP address, localhost) with the reason. KazoNetworkDriveField.IsServerAddress tells apps which field it is.",
+        "fr": "Quand un type de lecteur marque un champ comme adresse du serveur (ADR 0284), Connecter un lecteur réseau écrit « Ce fournisseur joindra <hôte>. » avant d'enregistrer, et refuse avec la raison une adresse que l'OS ne peut pas permettre (http, nom ou mot de passe dans l'URL, adresse IP, localhost). KazoNetworkDriveField.IsServerAddress dit aux apps de quel champ il s'agit."
+      },
+      "links": [
+        "doc/en/wasm/dev/cloud-drives-ui.md"
+      ]
+    },
+    {
+      "id": "4e8a1f27-6b3d-4c95-a0d2-91f7c3b5e684",
+      "category": "fixed",
+      "audience": [
+        "user",
+        "developer"
+      ],
+      "title": {
+        "en": "The commands and windows of a feature start again",
+        "fr": "Les commandes et les fenêtres d’une fonctionnalité démarrent de nouveau"
+      },
+      "description": {
+        "en": "In Kazo OS 3.5.0, no entry point of a feature could start: help listed its command, but running it answered command not found, and its windows did not open. The OS now finds an entry point together with its feature, without loading the other entry points of the feature.",
+        "fr": "Dans Kazo OS 3.5.0, aucun point d’entrée d’une fonctionnalité ne pouvait démarrer : help listait sa commande, mais la lancer répondait command not found, et ses fenêtres ne s’ouvraient pas. L’OS trouve maintenant un point d’entrée avec sa fonctionnalité, sans charger les autres points d’entrée de la fonctionnalité."
+      },
+      "links": [
+        "https://github.com/Kazo-ca/Os/issues/621"
+      ]
+    }
+  ]
+}
