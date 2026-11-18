@@ -56,6 +56,10 @@
             <MudTabPanel Text="@L["Tab.Info"]" Icon="@Icons.Material.Filled.Info">
                 @RenderLogTable(_rows.Where(static row => row.Line.Severity == DiagnosticSeverity.Information).ToList())
             </MudTabPanel>
+
+            <MudTabPanel Text="@L["Tab.MyEvents"]" Icon="@Icons.Material.Filled.Person">
+                <UserEventsPanel Entries="_userEvents" L="L" />
+            </MudTabPanel>
         </MudTabs>
     </div>
 

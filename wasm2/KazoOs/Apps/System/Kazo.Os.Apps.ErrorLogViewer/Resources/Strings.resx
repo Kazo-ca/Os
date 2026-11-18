@@ -87,4 +87,52 @@
   <data name="Toolbar.Truncate.Title" xml:space="preserve">
     <value>Truncate the selected log to zero bytes (requires administrator approval)</value>
   </data>
+  <data name="Tab.MyEvents" xml:space="preserve">
+    <value>My events</value>
+  </data>
+  <data name="Events.Filter.App" xml:space="preserve">
+    <value>App</value>
+  </data>
+  <data name="Events.Filter.AllApps" xml:space="preserve">
+    <value>All apps</value>
+  </data>
+  <data name="Events.Filter.Severity" xml:space="preserve">
+    <value>Severity</value>
+  </data>
+  <data name="Events.Filter.AllSeverities" xml:space="preserve">
+    <value>All</value>
+  </data>
+  <data name="Events.Filter.WarningsAndErrors" xml:space="preserve">
+    <value>Warnings and errors</value>
+  </data>
+  <data name="Events.Filter.ErrorsOnly" xml:space="preserve">
+    <value>Errors</value>
+  </data>
+  <data name="Events.Severity.Error" xml:space="preserve">
+    <value>ERROR</value>
+  </data>
+  <data name="Events.Severity.Info" xml:space="preserve">
+    <value>INFO</value>
+  </data>
+  <data name="Events.Severity.Warning" xml:space="preserve">
+    <value>WARN</value>
+  </data>
+  <data name="Events.Filter.Subject" xml:space="preserve">
+    <value>Subject</value>
+  </data>
+  <data name="Events.Filter.AllSubjects" xml:space="preserve">
+    <value>All subjects</value>
+  </data>
+  <data name="Events.Filter.Search" xml:space="preserve">
+    <value>Search</value>
+  </data>
+  <data name="Events.Column.App" xml:space="preserve">
+    <value>App</value>
+  </data>
+  <data name="Events.Column.Subject" xml:space="preserve">
+    <value>Subject</value>
+  </data>
+  <data name="Events.Empty" xml:space="preserve">
+    <value>No event in this journal.</value>
+  </data>
 </root>

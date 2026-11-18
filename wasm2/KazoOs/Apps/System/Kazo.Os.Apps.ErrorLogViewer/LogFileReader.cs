@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Text;
 using Kazo.Os.App.Abstractions;
+using Kazo.Os.AppSdk.UserEvents;
 using Kazo.Os.Simulation.Abstractions.Diagnostics;
 using Kazo.Os.Simulation.Abstractions.FileSystem;
 using Kazo.Os.Simulation.Abstractions.Gateways;
@@ -38,6 +39,11 @@ public sealed record LogFileContent(
     int UnparsedLineCount,
     FileSystemError? Error);
 
+/// <summary>The events of one user's journal (ADR 0254), oldest first.</summary>
+/// <param name="Entries">Events read from the archives then the active file.</param>
+/// <param name="Error">Filesystem error other than a missing file, when the journal could not be read.</param>
+public sealed record UserEventsContent(IReadOnlyList<KazoUserEventEntry> Entries, FileSystemError? Error);
+
 /// <summary>
 /// Reads the platform logs under <c>/var/log</c> (ADR 0045, section 6) with this app's own,
 /// capability-checked filesystem gateway: <c>syslog</c>, every <c>apps/*.log</c>, and on demand their
@@ -65,6 +71,18 @@ public sealed class LogFileReader
 
     /// <summary>Highest archive number kept by rotation.</summary>
     public const int MaxArchives = 5;
+
+    /// <summary>Canonical directory of the users' event journals (ADR 0254), <c>0711</c>: never listed.</summary>
+    public static readonly VirtualPath UserLogDirectory = VirtualPath.Parse("/var/log/users");
+
+    /// <summary>Returns the event journal of one account, <c>/var/log/users/&lt;id&gt;/events.log</c> (ADR 0254, section 1).</summary>
+    /// <param name="userId">Stable identifier of the account, as <c>AppContext.UserId</c> gives it.</param>
+    public static VirtualPath UserEventsPath(string userId)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(userId);
+        FileSystemEntryName name = FileSystemEntryName.Parse(userId);
+        return VirtualPath.Parse($"{UserLogDirectory.Value}/{name.Value}/events.log");
+    }
 
     private readonly IAppFileSystemGateway _fileSystem;
 
@@ -140,6 +158,53 @@ public sealed class LogFileReader
         }
 
         return Parse(source, text);
+    }
+
+    /// <summary>
+    /// Reads the event journal of <paramref name="userId"/> (ADR 0254, section 3): the archives from
+    /// <c>.5</c> to <c>.1</c>, then the active file, as ordinary files. The journal is <c>0600</c> and
+    /// owned by its user, so this works for the user's own journal; a missing file is an empty journal.
+    /// </summary>
+    /// <param name="userId">Stable identifier of the account.</param>
+    /// <param name="cancellationToken">Cancels the reads.</param>
+    public async Task<UserEventsContent> ReadUserEventsAsync(string userId, CancellationToken cancellationToken = default)
+    {
+        VirtualPath active = UserEventsPath(userId);
+        List<KazoUserEventEntry> entries = [];
+        for (int index = MaxArchives; index >= 0; index--)
+        {
+            VirtualPath path = index == 0
+                ? active
+                : VirtualPath.Parse($"{active.Value}.{index.ToString(CultureInfo.InvariantCulture)}");
+            FileSystemResult<FileSystemContentReadHandle> read = await _fileSystem.ReadAsync(
+                new FileSystemReadRequest(path), cancellationToken).ConfigureAwait(false);
+            if (!read.Succeeded || read.Value is null)
+            {
+                if (read.Error is { Code: not FileSystemErrorCode.NotFound } error)
+                {
+                    return new UserEventsContent(entries, error);
+                }
+
+                continue;
+            }
+
+            string text;
+            await using (FileSystemContentReadHandle handle = read.Value)
+            {
+                using StreamReader reader = new(handle.Content, Encoding.UTF8, detectEncodingFromByteOrderMarks: false, leaveOpen: true);
+                text = await reader.ReadToEndAsync(cancellationToken).ConfigureAwait(false);
+            }
+
+            foreach (string line in text.Split(LogLineFormat.LineTerminator))
+            {
+                if (KazoUserEventEntry.TryParse(line, out KazoUserEventEntry? entry))
+                {
+                    entries.Add(entry);
+                }
+            }
+        }
+
+        return new UserEventsContent(entries, null);
     }
 
     /// <summary>

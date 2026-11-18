@@ -1,4 +1,5 @@
 using Kazo.Os.App.Abstractions;
+using Kazo.Os.AppSdk.UserEvents;
 using Kazo.Os.Platform.Core.Diagnostics;
 using Kazo.Os.Platform.Core.Events;
 using Kazo.Os.Platform.Core.Execution;
@@ -7,6 +8,7 @@ using Kazo.Os.Platform.Core.Policy;
 using Kazo.Os.Platform.Core.Time;
 using Kazo.Os.Simulation.Abstractions.Diagnostics;
 using Kazo.Os.Simulation.Abstractions.FileSystem;
+using Kazo.Os.Simulation.Abstractions.Sessions;
 using Xunit;
 
 namespace Kazo.Os.Apps.ErrorLogViewer.Tests;
@@ -118,6 +120,37 @@ public sealed class LogFileReaderTests
             fixture.Reader.TruncateAsync(syslog with { IsArchive = true }));
     }
 
+    [Fact]
+    public async Task The_user_reads_their_own_event_journal_with_archives_and_another_user_is_refused()
+    {
+        // ADR 0254 §3: "My events" reads /var/log/users/<id>/events.log as an ordinary file.
+        Fixture fixture = await Fixture.CreateAsync();
+        await fixture.Writer.AttachAsync(fixture.Service);
+        LocalUserId alice = LocalUserId.FromGuid(Guid.NewGuid());
+        LocalUserId bob = LocalUserId.FromGuid(Guid.NewGuid());
+        FileUserEventLog journal = new(fixture.Writer, fixture.Clock);
+        UserEventOwner owner = new(alice, LocalGroupId.FromGuid(Guid.NewGuid()));
+        journal.Write(owner, new UserEventAuthor("org.example.vm-manager", 7), new KazoUserEvent("x86.vm.started", "archived"));
+        await fixture.Writer.FlushAsync();
+        string active = LogFileReader.UserEventsPath(alice.ToString()).Value;
+        await fixture.MoveSystemFileAsync(active, active + ".1");
+        journal.Write(owner, new UserEventAuthor("org.example.vm-manager", 7), new KazoUserEvent("x86.vm.started", "first"));
+        journal.Write(owner, new UserEventAuthor("org.kazoos.permissions"), new KazoUserEvent("kazoos.permission.granted", "second"));
+        await fixture.Writer.FlushAsync();
+
+        UserEventsContent own = await fixture.ReaderFor(alice.ToString()).ReadUserEventsAsync(alice.ToString());
+        UserEventsContent other = await fixture.ReaderFor(bob.ToString()).ReadUserEventsAsync(alice.ToString());
+        UserEventsContent empty = await fixture.ReaderFor(bob.ToString()).ReadUserEventsAsync(bob.ToString());
+
+        Assert.Null(own.Error);
+        Assert.Equal(["archived", "first", "second"], own.Entries.Select(entry => entry.Message));
+        Assert.Equal("org.kazoos.permissions", own.Entries[^1].AppId);
+        Assert.Equal(FileSystemErrorCode.PermissionDenied, other.Error?.Code);
+        Assert.Empty(other.Entries);
+        Assert.Null(empty.Error);
+        Assert.Empty(empty.Entries);
+    }
+
     private sealed class Fixture
     {
         private int _entryId = 1;
@@ -169,6 +202,45 @@ public sealed class LogFileReaderTests
             await new FileSystemSeeder(fixture.Service).SeedAsync("alice", "users");
             return fixture;
         }
+
+        /// <summary>A reader whose app runs for the account <paramref name="userId"/>, holding every capability.</summary>
+        public LogFileReader ReaderFor(string userId) => new(new AppFileSystemGateway(
+            Service,
+            Clock,
+            new AppOperationContext
+            {
+                AppId = "org.kazoos.error-log-viewer",
+                UserId = userId,
+                UserName = "user-" + userId[..4],
+                UserAuthority = AppAuthority.User,
+                GrantedCapabilities = new HashSet<string>(AppCapabilities.All, StringComparer.Ordinal),
+                IsSystemOperation = false,
+                OneShotElevation = new OneShotElevationGrantSet()
+            },
+            ["users"]));
+
+        /// <summary>Renames a file like rotation does: the archive keeps its owner and mode.</summary>
+        public async Task MoveSystemFileAsync(string from, string to)
+        {
+            FileSystemEntrySnapshot source = (await Service.StatAsync(new FileSystemStatRequest(VirtualPath.Parse(from)), KernelContext())).Value!;
+            string directory = from[..from.LastIndexOf('/')];
+            long parent = (await Service.StatAsync(new FileSystemStatRequest(VirtualPath.Parse(directory)), KernelContext())).Value!.Metadata.Revision;
+            FileSystemMutationResult moved = await Service.MoveAsync(
+                new FileSystemMoveRequest(source.Path, VirtualPath.Parse(to), source.Metadata.Revision, parent, parent), KernelContext());
+            Assert.True(moved.Succeeded, $"move {from}: {moved.Transaction.Error?.Code}");
+        }
+
+        private FileSystemAuthorizationContext KernelContext() => new(
+            new AppOperationContext
+            {
+                AppId = "org.kazoos.kernel",
+                UserId = "system",
+                UserAuthority = AppAuthority.System,
+                GrantedCapabilities = new HashSet<string>(AppCapabilities.All, StringComparer.Ordinal),
+                IsSystemOperation = true
+            },
+            ["system"],
+            Clock.UtcNow);
 
         public async Task WriteSystemFileAsync(string path, string content)
         {

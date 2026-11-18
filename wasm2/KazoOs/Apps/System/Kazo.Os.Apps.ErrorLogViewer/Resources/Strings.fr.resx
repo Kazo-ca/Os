@@ -87,4 +87,52 @@
   <data name="Toolbar.Truncate.Title" xml:space="preserve">
     <value>Vider le journal sélectionné (demande l'approbation d'un administrateur)</value>
   </data>
+  <data name="Tab.MyEvents" xml:space="preserve">
+    <value>Mes événements</value>
+  </data>
+  <data name="Events.Filter.App" xml:space="preserve">
+    <value>App</value>
+  </data>
+  <data name="Events.Filter.AllApps" xml:space="preserve">
+    <value>Toutes les apps</value>
+  </data>
+  <data name="Events.Filter.Severity" xml:space="preserve">
+    <value>Gravité</value>
+  </data>
+  <data name="Events.Filter.AllSeverities" xml:space="preserve">
+    <value>Toutes</value>
+  </data>
+  <data name="Events.Filter.WarningsAndErrors" xml:space="preserve">
+    <value>Avertissements et erreurs</value>
+  </data>
+  <data name="Events.Filter.ErrorsOnly" xml:space="preserve">
+    <value>Erreurs</value>
+  </data>
+  <data name="Events.Severity.Error" xml:space="preserve">
+    <value>ERREUR</value>
+  </data>
+  <data name="Events.Severity.Info" xml:space="preserve">
+    <value>INFO</value>
+  </data>
+  <data name="Events.Severity.Warning" xml:space="preserve">
+    <value>AVERT.</value>
+  </data>
+  <data name="Events.Filter.Subject" xml:space="preserve">
+    <value>Sujet</value>
+  </data>
+  <data name="Events.Filter.AllSubjects" xml:space="preserve">
+    <value>Tous les sujets</value>
+  </data>
+  <data name="Events.Filter.Search" xml:space="preserve">
+    <value>Recherche</value>
+  </data>
+  <data name="Events.Column.App" xml:space="preserve">
+    <value>App</value>
+  </data>
+  <data name="Events.Column.Subject" xml:space="preserve">
+    <value>Sujet</value>
+  </data>
+  <data name="Events.Empty" xml:space="preserve">
+    <value>Aucun événement dans ce journal.</value>
+  </data>
 </root>
