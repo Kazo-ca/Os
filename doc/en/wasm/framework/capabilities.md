@@ -38,6 +38,7 @@ classification.
 | `process.list` | normal |
 | `process.manage`, `services.manage`, `windows.manage` | **dangerous** |
 | `notifications.post`, `clipboard.read`, `clipboard.write` | normal |
+| `events.write` | normal (ADR 0254: write to the event journal of the user the app runs for and read back its own lines through `KazoEvents`, see [`app-log-files.md`](app-log-files.md#user-events-adr-0254)) |
 | `network.simulated.read`, `network.simulated.write` | normal |
 | `network.real.access` | **dangerous** (also checked by the optional server before relaying, ADR 0102 §4 and 0108 §1; also required by `KazoClientWebSocket`, without the server, ADR 0235 §1, [`sdk-network.md`](sdk-network.md#websocket-to-a-real-server-adr-0235-1)). The app declares in `RealNetworkPorts` the real ports it needs outside `AllowedPorts` (`tcp/6697`); the approval shows them and the relay opens them unless `BlockedPorts` (ADR 0235 §3, [network relay](../dev/server-network-relay.md)) |
 | `network.listen` | normal (listen on a port that is not a URL of its manifest, [`listening-ports-and-dns.md`](listening-ports-and-dns.md)) |

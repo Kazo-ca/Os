@@ -70,6 +70,7 @@ internal sealed class RemoteAppExecutionContext : IAppExecutionContext
         Catalog = new RemoteCatalogGateway(channel);
         Drives = new RemoteDriveGateway(channel);
         CloudAccounts = new RemoteCloudAccountsGateway(channel);
+        UserEvents = new RemoteUserEventsGateway(channel, Capabilities);
         CrossOriginIsolation = new RemoteCrossOriginIsolationGateway(channel);
         Clipboard = new RemoteClipboardGateway(channel);
         WebDatabase = new RemoteWebDatabaseGateway(channel, snapshot.Manifest.Id);
@@ -203,6 +204,9 @@ internal sealed class RemoteAppExecutionContext : IAppExecutionContext
 
     /// <inheritdoc />
     public Kazo.Os.AppSdk.CloudAccounts.IAppCloudAccountsGateway CloudAccounts { get; }
+
+    /// <inheritdoc />
+    public Kazo.Os.AppSdk.UserEvents.IAppUserEventsGateway UserEvents { get; }
 
     public IAppCrossOriginIsolationGateway CrossOriginIsolation { get; }
 

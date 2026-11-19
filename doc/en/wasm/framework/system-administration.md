@@ -240,7 +240,11 @@ or a `requiresRole` no role of the feature declares.
   `ConsumeAsync(ticket, operation)` refuses it for another operation or another
   user, and returns the ticket the OS issued, whose `Scope` the feature reads
   (never the copy presented). Under `sudo`, no second window. An ordinary app is
-  refused. Details:
+  refused. The overload `AuthenticateAsync(operation, scope, subject)` names what
+  the operation touches (`KazoEventSubject`, a machine, a program): when the
+  ticket is consumed, the OS writes the operation to the user's journal with
+  that subject (ADR 0254 §2,
+  [`app-log-files.md`](app-log-files.md#user-events-adr-0254)). Details:
   [`sensitive-settings.md`](../dev/sensitive-settings.md#5-roles-of-the-features-and-authentication-of-operations).
 
 ## Decisions

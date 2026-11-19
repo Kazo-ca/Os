@@ -1,0 +1,79 @@
+@using Kazo.Os.AppSdk.Blazor
+@using Kazo.Os.AppSdk.UserEvents
+@using Microsoft.Extensions.Localization
+@inherits KazoComponentBase
+
+<section class="events-panel" aria-label="@L["Tab.MyEvents"]">
+    <div class="events-filters">
+        @Toolbar
+        <label class="events-field">
+            <span>@L["Events.Filter.App"]</span>
+            <select class="events-select" @bind="SelectedApp">
+                <option value="">@L["Events.Filter.AllApps"]</option>
+                @foreach (string app in Apps)
+                {
+                    <option value="@app">@app</option>
+                }
+            </select>
+        </label>
+        <label class="events-field">
+            <span>@L["Events.Filter.Severity"]</span>
+            <select class="events-select" @bind="SelectedSeverity">
+                <option value="">@L["Events.Filter.AllSeverities"]</option>
+                <option value="@nameof(KazoEventSeverity.Warning)">@L["Events.Filter.WarningsAndErrors"]</option>
+                <option value="@nameof(KazoEventSeverity.Error)">@L["Events.Filter.ErrorsOnly"]</option>
+            </select>
+        </label>
+        <label class="events-field">
+            <span>@L["Events.Filter.Subject"]</span>
+            <select class="events-select" @bind="SelectedSubject">
+                <option value="">@L["Events.Filter.AllSubjects"]</option>
+                @foreach (SubjectChoice subject in Subjects)
+                {
+                    <option value="@subject.Key">@subject.Label</option>
+                }
+            </select>
+        </label>
+        <label class="events-field events-search">
+            <span>@L["Events.Filter.Search"]</span>
+            <input class="events-input" type="search" @bind="Search" @bind:event="oninput" />
+        </label>
+    </div>
+
+    <div class="events-table-wrapper">
+        <table class="events-table">
+            <thead>
+                <tr>
+                    <th>@L["Column.Timestamp"]</th>
+                    <th>@L["Column.Level"]</th>
+                    <th>@L["Events.Column.App"]</th>
+                    <th>@L["Events.Column.Subject"]</th>
+                    <th>@L["Column.Message"]</th>
+                </tr>
+            </thead>
+            <tbody>
+                @{
+                    IReadOnlyList<KazoUserEventEntry> visible = Visible;
+                }
+                @if (visible.Count == 0)
+                {
+                    <tr><td colspan="5" class="events-empty">@L["Events.Empty"]</td></tr>
+                }
+                else
+                {
+                    @foreach (KazoUserEventEntry entry in visible)
+                    {
+                        string severity = entry.Severity.ToString().ToLowerInvariant();
+                        <tr class="@severity">
+                            <td class="events-time">@entry.TimestampUtc.ToString("yyyy-MM-dd HH:mm:ss", System.Globalization.CultureInfo.InvariantCulture)</td>
+                            <td><span class="events-badge @severity">@SeverityText(entry.Severity)</span></td>
+                            <td class="events-app">@entry.AppId</td>
+                            <td class="events-subject" title="@SubjectTitle(entry)">@(entry.Subject?.DisplayName ?? string.Empty)</td>
+                            <td class="events-message">@entry.Message</td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</section>

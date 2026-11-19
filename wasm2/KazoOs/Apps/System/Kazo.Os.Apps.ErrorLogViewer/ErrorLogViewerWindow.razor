@@ -56,6 +56,26 @@
             <MudTabPanel Text="@L["Tab.Info"]" Icon="@Icons.Material.Filled.Info">
                 @RenderLogTable(_rows.Where(static row => row.Line.Severity == DiagnosticSeverity.Information).ToList())
             </MudTabPanel>
+
+            <MudTabPanel Text="@L["Tab.MyEvents"]" Icon="@Icons.Material.Filled.Person">
+                <UserEventsPanel Entries="_userEvents" L="L">
+                    <Toolbar>
+                        @if (CanPickAccount)
+                        {
+                            <label class="logviewer-field">
+                                <span>@L["Events.User"]</span>
+                                <select class="logviewer-select" @bind="SelectedAccount" @bind:after="OnAccountChangedAsync">
+                                    <option value="">@L["Events.User.Me"]</option>
+                                    @foreach (Kazo.Os.AppSdk.Administration.KazoUserAccount account in _accounts.Where(a => !a.IsCurrentUser))
+                                    {
+                                        <option value="@account.LoginName">@account.DisplayName (@account.LoginName)</option>
+                                    }
+                                </select>
+                            </label>
+                        }
+                    </Toolbar>
+                </UserEventsPanel>
+            </MudTabPanel>
         </MudTabs>
     </div>
 

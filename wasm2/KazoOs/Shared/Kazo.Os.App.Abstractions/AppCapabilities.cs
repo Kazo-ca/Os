@@ -77,6 +77,12 @@ public static class AppCapabilities
     /// <summary>Replace the shared clipboard contents.</summary>
     public const string ClipboardWrite = "clipboard.write";
 
+    /// <summary>
+    /// Write to the event journal of the user the app runs for, and read back the app's own events
+    /// (ADR 0254). Normal: an app only reaches the journal of the user it runs for, and only its own lines.
+    /// </summary>
+    public const string EventsWrite = "events.write";
+
     /// <summary>Start, stop, or query session-scoped service apps other than the caller.</summary>
     public const string ServicesManage = "services.manage";
 
@@ -246,6 +252,7 @@ public static class AppCapabilities
         Normal(NotificationsPost, "Afficher des notifications"),
         Normal(ClipboardRead, "Lire le presse-papiers"),
         Normal(ClipboardWrite, "Écrire dans le presse-papiers"),
+        Normal(EventsWrite, "Écrire dans votre journal d'événements"),
         Normal(NetworkSimulatedRead, "Consulter le réseau simulé"),
         Normal(NetworkSimulatedWrite, "Modifier le réseau simulé"),
         Dangerous(

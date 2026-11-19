@@ -92,7 +92,7 @@ internal static class StoreAppFacts
         return Prefix(id) switch
         {
             "filesystem" or "dialogs" or "file-associations" => StoreCapabilityGroup.Files,
-            "apps" or "process" or "windows" or "services" or "shell" or "notifications" or "clipboard" or "screens" => StoreCapabilityGroup.Apps,
+            "apps" or "process" or "windows" or "services" or "shell" or "notifications" or "clipboard" or "screens" or "events" => StoreCapabilityGroup.Apps,
             "network" or "server" => StoreCapabilityGroup.Network,
             _ => StoreCapabilityGroup.System,
         };

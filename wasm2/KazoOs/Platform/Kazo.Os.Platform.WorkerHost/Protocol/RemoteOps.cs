@@ -33,6 +33,10 @@ internal static class RemoteOps
     public const string LogSite = "log.site";
     public const string NotificationPost = "notify.post";
 
+    // User events (ADR 0254): a write is posted, a read waits for its lines.
+    public const string UserEventWrite = "uev.write";
+    public const string UserEventRead = "uev.read";
+
     // Clock.
     public const string ClockDelay = "clock.delay";
 

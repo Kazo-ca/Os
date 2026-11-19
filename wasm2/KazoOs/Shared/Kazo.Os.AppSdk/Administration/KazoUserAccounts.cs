@@ -368,6 +368,36 @@ public static class KazoUserAccounts
         return Call(context, gateway => gateway.RevokeRoleAsync(loginName, role, cancellationToken));
     }
 
+    /// <summary>Reads the event journal of an account (ambient context).</summary>
+    /// <param name="loginName">The account.</param>
+    /// <param name="filter">Which events to return; <see langword="null"/> for the newest 1000.</param>
+    /// <param name="cancellationToken">Cancels the read.</param>
+    public static Task<IReadOnlyList<UserEvents.KazoUserEventEntry>> ReadEventsAsync(
+        string loginName, UserEvents.KazoUserEventFilter? filter = null, CancellationToken cancellationToken = default) =>
+        ReadEventsAsync(KazoExecutionContext.Current, loginName, filter, cancellationToken);
+
+    /// <summary>
+    /// Reads the event journal of an account, every app's events, oldest first (ADR 0254 §3). The
+    /// session user's own journal needs nothing; another account's needs an administrator in the OS's
+    /// window, once per process: the OS then keeps the authorization until the process ends and
+    /// writes each account read to <c>/var/log/auth.log</c> (<c>events.read-other</c>).
+    /// </summary>
+    /// <param name="context">The calling app's context.</param>
+    /// <param name="loginName">The account.</param>
+    /// <param name="filter">Which events to return; <see langword="null"/> for the newest 1000.</param>
+    /// <param name="cancellationToken">Cancels the read.</param>
+    /// <exception cref="UnauthorizedAccessException">No administrator confirmed.</exception>
+    /// <exception cref="ArgumentException">The account does not exist.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">The filter's limit is out of range.</exception>
+    public static Task<IReadOnlyList<UserEvents.KazoUserEventEntry>> ReadEventsAsync(
+        IAppExecutionContext context, string loginName, UserEvents.KazoUserEventFilter? filter = null, CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(loginName);
+        UserEvents.KazoUserEventFilter checkedFilter = filter ?? new UserEvents.KazoUserEventFilter();
+        checkedFilter.EnsureValidLimit();
+        return Call(context, gateway => gateway.ReadEventsAsync(loginName, checkedFilter, cancellationToken));
+    }
+
     private static async Task<T> Call<T>(IAppExecutionContext context, Func<IAppUserAccountsGateway, ValueTask<T>> call)
     {
         ArgumentNullException.ThrowIfNull(context);

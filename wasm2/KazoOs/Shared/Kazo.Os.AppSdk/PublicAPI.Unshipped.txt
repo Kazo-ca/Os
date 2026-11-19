@@ -320,3 +320,124 @@ Kazo.Os.AppSdk.Apps.KazoAppInfo.Roles.get -> System.Collections.Generic.IReadOnl
 Kazo.Os.AppSdk.Apps.KazoAppInfo.RequiresRole.init -> void
 Kazo.Os.AppSdk.Apps.KazoAppInfo.ProvidedCapabilities.get -> System.Collections.Generic.IReadOnlyList<string!>!
 Kazo.Os.AppSdk.Apps.KazoAppInfo.ProvidedCapabilities.init -> void
+Kazo.Os.AppSdk.IAppExecutionContext.UserEvents.get -> Kazo.Os.AppSdk.UserEvents.IAppUserEventsGateway!
+Kazo.Os.AppSdk.UserEvents.IAppUserEventsGateway
+Kazo.Os.AppSdk.UserEvents.IAppUserEventsGateway.ReadAsync(Kazo.Os.AppSdk.UserEvents.KazoUserEventFilter! filter, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.UserEvents.KazoUserEventEntry!>!>
+Kazo.Os.AppSdk.UserEvents.IAppUserEventsGateway.Write(Kazo.Os.AppSdk.UserEvents.KazoUserEvent! userEvent) -> void
+Kazo.Os.AppSdk.UserEvents.KazoEventSeverity
+Kazo.Os.AppSdk.UserEvents.KazoEventSeverity.Error = 2 -> Kazo.Os.AppSdk.UserEvents.KazoEventSeverity
+Kazo.Os.AppSdk.UserEvents.KazoEventSeverity.Info = 0 -> Kazo.Os.AppSdk.UserEvents.KazoEventSeverity
+Kazo.Os.AppSdk.UserEvents.KazoEventSeverity.Warning = 1 -> Kazo.Os.AppSdk.UserEvents.KazoEventSeverity
+Kazo.Os.AppSdk.UserEvents.KazoEventSubject
+Kazo.Os.AppSdk.UserEvents.KazoEventSubject.<Clone>$() -> Kazo.Os.AppSdk.UserEvents.KazoEventSubject!
+Kazo.Os.AppSdk.UserEvents.KazoEventSubject.Deconstruct(out string! Type, out string! Id, out string! DisplayName) -> void
+Kazo.Os.AppSdk.UserEvents.KazoEventSubject.DisplayName.get -> string!
+Kazo.Os.AppSdk.UserEvents.KazoEventSubject.DisplayName.init -> void
+Kazo.Os.AppSdk.UserEvents.KazoEventSubject.Equals(Kazo.Os.AppSdk.UserEvents.KazoEventSubject? other) -> bool
+Kazo.Os.AppSdk.UserEvents.KazoEventSubject.Id.get -> string!
+Kazo.Os.AppSdk.UserEvents.KazoEventSubject.Id.init -> void
+Kazo.Os.AppSdk.UserEvents.KazoEventSubject.KazoEventSubject(string! Type, string! Id, string! DisplayName) -> void
+Kazo.Os.AppSdk.UserEvents.KazoEventSubject.Type.get -> string!
+Kazo.Os.AppSdk.UserEvents.KazoEventSubject.Type.init -> void
+Kazo.Os.AppSdk.UserEvents.KazoEvents
+Kazo.Os.AppSdk.UserEvents.KazoUserEvent
+Kazo.Os.AppSdk.UserEvents.KazoUserEvent.<Clone>$() -> Kazo.Os.AppSdk.UserEvents.KazoUserEvent!
+Kazo.Os.AppSdk.UserEvents.KazoUserEvent.Deconstruct(out string! Kind, out string! Message, out Kazo.Os.AppSdk.UserEvents.KazoEventSubject? Subject, out Kazo.Os.AppSdk.UserEvents.KazoEventSeverity Severity, out System.Collections.Generic.IReadOnlyDictionary<string!, string!>? Properties) -> void
+Kazo.Os.AppSdk.UserEvents.KazoUserEvent.Equals(Kazo.Os.AppSdk.UserEvents.KazoUserEvent? other) -> bool
+Kazo.Os.AppSdk.UserEvents.KazoUserEvent.KazoUserEvent(string! Kind, string! Message, Kazo.Os.AppSdk.UserEvents.KazoEventSubject? Subject = null, Kazo.Os.AppSdk.UserEvents.KazoEventSeverity Severity = Kazo.Os.AppSdk.UserEvents.KazoEventSeverity.Info, System.Collections.Generic.IReadOnlyDictionary<string!, string!>? Properties = null) -> void
+Kazo.Os.AppSdk.UserEvents.KazoUserEvent.Kind.get -> string!
+Kazo.Os.AppSdk.UserEvents.KazoUserEvent.Kind.init -> void
+Kazo.Os.AppSdk.UserEvents.KazoUserEvent.Message.get -> string!
+Kazo.Os.AppSdk.UserEvents.KazoUserEvent.Message.init -> void
+Kazo.Os.AppSdk.UserEvents.KazoUserEvent.Properties.get -> System.Collections.Generic.IReadOnlyDictionary<string!, string!>?
+Kazo.Os.AppSdk.UserEvents.KazoUserEvent.Properties.init -> void
+Kazo.Os.AppSdk.UserEvents.KazoUserEvent.Severity.get -> Kazo.Os.AppSdk.UserEvents.KazoEventSeverity
+Kazo.Os.AppSdk.UserEvents.KazoUserEvent.Severity.init -> void
+Kazo.Os.AppSdk.UserEvents.KazoUserEvent.Subject.get -> Kazo.Os.AppSdk.UserEvents.KazoEventSubject?
+Kazo.Os.AppSdk.UserEvents.KazoUserEvent.Subject.init -> void
+Kazo.Os.AppSdk.UserEvents.KazoUserEventEntry
+Kazo.Os.AppSdk.UserEvents.KazoUserEventEntry.<Clone>$() -> Kazo.Os.AppSdk.UserEvents.KazoUserEventEntry!
+Kazo.Os.AppSdk.UserEvents.KazoUserEventEntry.AppId.get -> string!
+Kazo.Os.AppSdk.UserEvents.KazoUserEventEntry.AppId.init -> void
+Kazo.Os.AppSdk.UserEvents.KazoUserEventEntry.Deconstruct(out System.DateTimeOffset TimestampUtc, out string! AppId, out long? ProcessId, out string! Kind, out string! Message, out Kazo.Os.AppSdk.UserEvents.KazoEventSubject? Subject, out Kazo.Os.AppSdk.UserEvents.KazoEventSeverity Severity, out System.Collections.Generic.IReadOnlyDictionary<string!, string!>! Properties, out string? SenderAppId) -> void
+Kazo.Os.AppSdk.UserEvents.KazoUserEventEntry.Equals(Kazo.Os.AppSdk.UserEvents.KazoUserEventEntry? other) -> bool
+Kazo.Os.AppSdk.UserEvents.KazoUserEventEntry.KazoUserEventEntry(System.DateTimeOffset TimestampUtc, string! AppId, long? ProcessId, string! Kind, string! Message, Kazo.Os.AppSdk.UserEvents.KazoEventSubject? Subject, Kazo.Os.AppSdk.UserEvents.KazoEventSeverity Severity, System.Collections.Generic.IReadOnlyDictionary<string!, string!>! Properties, string? SenderAppId) -> void
+Kazo.Os.AppSdk.UserEvents.KazoUserEventEntry.Kind.get -> string!
+Kazo.Os.AppSdk.UserEvents.KazoUserEventEntry.Kind.init -> void
+Kazo.Os.AppSdk.UserEvents.KazoUserEventEntry.Message.get -> string!
+Kazo.Os.AppSdk.UserEvents.KazoUserEventEntry.Message.init -> void
+Kazo.Os.AppSdk.UserEvents.KazoUserEventEntry.ProcessId.get -> long?
+Kazo.Os.AppSdk.UserEvents.KazoUserEventEntry.ProcessId.init -> void
+Kazo.Os.AppSdk.UserEvents.KazoUserEventEntry.Properties.get -> System.Collections.Generic.IReadOnlyDictionary<string!, string!>!
+Kazo.Os.AppSdk.UserEvents.KazoUserEventEntry.Properties.init -> void
+Kazo.Os.AppSdk.UserEvents.KazoUserEventEntry.SenderAppId.get -> string?
+Kazo.Os.AppSdk.UserEvents.KazoUserEventEntry.SenderAppId.init -> void
+Kazo.Os.AppSdk.UserEvents.KazoUserEventEntry.Severity.get -> Kazo.Os.AppSdk.UserEvents.KazoEventSeverity
+Kazo.Os.AppSdk.UserEvents.KazoUserEventEntry.Severity.init -> void
+Kazo.Os.AppSdk.UserEvents.KazoUserEventEntry.Subject.get -> Kazo.Os.AppSdk.UserEvents.KazoEventSubject?
+Kazo.Os.AppSdk.UserEvents.KazoUserEventEntry.Subject.init -> void
+Kazo.Os.AppSdk.UserEvents.KazoUserEventEntry.TimestampUtc.get -> System.DateTimeOffset
+Kazo.Os.AppSdk.UserEvents.KazoUserEventEntry.TimestampUtc.init -> void
+Kazo.Os.AppSdk.UserEvents.KazoUserEventFilter
+Kazo.Os.AppSdk.UserEvents.KazoUserEventFilter.<Clone>$() -> Kazo.Os.AppSdk.UserEvents.KazoUserEventFilter!
+Kazo.Os.AppSdk.UserEvents.KazoUserEventFilter.AppId.get -> string?
+Kazo.Os.AppSdk.UserEvents.KazoUserEventFilter.AppId.init -> void
+Kazo.Os.AppSdk.UserEvents.KazoUserEventFilter.Apply(System.Collections.Generic.IEnumerable<Kazo.Os.AppSdk.UserEvents.KazoUserEventEntry!>! entries) -> System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.UserEvents.KazoUserEventEntry!>!
+Kazo.Os.AppSdk.UserEvents.KazoUserEventFilter.EnsureValidLimit() -> void
+Kazo.Os.AppSdk.UserEvents.KazoUserEventFilter.Equals(Kazo.Os.AppSdk.UserEvents.KazoUserEventFilter? other) -> bool
+Kazo.Os.AppSdk.UserEvents.KazoUserEventFilter.KazoUserEventFilter() -> void
+Kazo.Os.AppSdk.UserEvents.KazoUserEventFilter.Kind.get -> string?
+Kazo.Os.AppSdk.UserEvents.KazoUserEventFilter.Kind.init -> void
+Kazo.Os.AppSdk.UserEvents.KazoUserEventFilter.Limit.get -> int
+Kazo.Os.AppSdk.UserEvents.KazoUserEventFilter.Limit.init -> void
+Kazo.Os.AppSdk.UserEvents.KazoUserEventFilter.Matches(Kazo.Os.AppSdk.UserEvents.KazoUserEventEntry! entry) -> bool
+Kazo.Os.AppSdk.UserEvents.KazoUserEventFilter.MinimumSeverity.get -> Kazo.Os.AppSdk.UserEvents.KazoEventSeverity?
+Kazo.Os.AppSdk.UserEvents.KazoUserEventFilter.MinimumSeverity.init -> void
+Kazo.Os.AppSdk.UserEvents.KazoUserEventFilter.Search.get -> string?
+Kazo.Os.AppSdk.UserEvents.KazoUserEventFilter.Search.init -> void
+Kazo.Os.AppSdk.UserEvents.KazoUserEventFilter.Since.get -> System.DateTimeOffset?
+Kazo.Os.AppSdk.UserEvents.KazoUserEventFilter.Since.init -> void
+Kazo.Os.AppSdk.UserEvents.KazoUserEventFilter.SubjectId.get -> string?
+Kazo.Os.AppSdk.UserEvents.KazoUserEventFilter.SubjectId.init -> void
+Kazo.Os.AppSdk.UserEvents.KazoUserEventFilter.SubjectType.get -> string?
+Kazo.Os.AppSdk.UserEvents.KazoUserEventFilter.SubjectType.init -> void
+Kazo.Os.AppSdk.UserEvents.KazoUserEventProperties
+Kazo.Os.AppSdk.UserEvents.UnsupportedAppUserEventsGateway
+Kazo.Os.AppSdk.UserEvents.UnsupportedAppUserEventsGateway.ReadAsync(Kazo.Os.AppSdk.UserEvents.KazoUserEventFilter! filter, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.UserEvents.KazoUserEventEntry!>!>
+Kazo.Os.AppSdk.UserEvents.UnsupportedAppUserEventsGateway.Write(Kazo.Os.AppSdk.UserEvents.KazoUserEvent! userEvent) -> void
+const Kazo.Os.AppSdk.UserEvents.KazoUserEventFilter.MaximumLimit = 5000 -> int
+const Kazo.Os.AppSdk.UserEvents.KazoUserEventProperties.Kind = "kind" -> string!
+const Kazo.Os.AppSdk.UserEvents.KazoUserEventProperties.Sender = "sender" -> string!
+const Kazo.Os.AppSdk.UserEvents.KazoUserEventProperties.SubjectId = "subject.id" -> string!
+const Kazo.Os.AppSdk.UserEvents.KazoUserEventProperties.SubjectName = "subject.name" -> string!
+const Kazo.Os.AppSdk.UserEvents.KazoUserEventProperties.SubjectType = "subject.type" -> string!
+override Kazo.Os.AppSdk.UserEvents.KazoEventSubject.Equals(object? obj) -> bool
+override Kazo.Os.AppSdk.UserEvents.KazoEventSubject.GetHashCode() -> int
+override Kazo.Os.AppSdk.UserEvents.KazoEventSubject.ToString() -> string!
+override Kazo.Os.AppSdk.UserEvents.KazoUserEvent.Equals(object? obj) -> bool
+override Kazo.Os.AppSdk.UserEvents.KazoUserEvent.GetHashCode() -> int
+override Kazo.Os.AppSdk.UserEvents.KazoUserEvent.ToString() -> string!
+override Kazo.Os.AppSdk.UserEvents.KazoUserEventEntry.Equals(object? obj) -> bool
+override Kazo.Os.AppSdk.UserEvents.KazoUserEventEntry.GetHashCode() -> int
+override Kazo.Os.AppSdk.UserEvents.KazoUserEventEntry.ToString() -> string!
+override Kazo.Os.AppSdk.UserEvents.KazoUserEventFilter.Equals(object? obj) -> bool
+override Kazo.Os.AppSdk.UserEvents.KazoUserEventFilter.GetHashCode() -> int
+override Kazo.Os.AppSdk.UserEvents.KazoUserEventFilter.ToString() -> string!
+static Kazo.Os.AppSdk.UserEvents.KazoEventSubject.operator !=(Kazo.Os.AppSdk.UserEvents.KazoEventSubject? left, Kazo.Os.AppSdk.UserEvents.KazoEventSubject? right) -> bool
+static Kazo.Os.AppSdk.UserEvents.KazoEventSubject.operator ==(Kazo.Os.AppSdk.UserEvents.KazoEventSubject? left, Kazo.Os.AppSdk.UserEvents.KazoEventSubject? right) -> bool
+static Kazo.Os.AppSdk.UserEvents.KazoEvents.ReadAsync(Kazo.Os.AppSdk.UserEvents.KazoUserEventFilter? filter = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.UserEvents.KazoUserEventEntry!>!>!
+static Kazo.Os.AppSdk.UserEvents.KazoEvents.Write(Kazo.Os.AppSdk.UserEvents.KazoUserEvent! userEvent) -> void
+static Kazo.Os.AppSdk.UserEvents.KazoUserEvent.operator !=(Kazo.Os.AppSdk.UserEvents.KazoUserEvent? left, Kazo.Os.AppSdk.UserEvents.KazoUserEvent? right) -> bool
+static Kazo.Os.AppSdk.UserEvents.KazoUserEvent.operator ==(Kazo.Os.AppSdk.UserEvents.KazoUserEvent? left, Kazo.Os.AppSdk.UserEvents.KazoUserEvent? right) -> bool
+static Kazo.Os.AppSdk.UserEvents.KazoUserEventEntry.TryParse(string? line, out Kazo.Os.AppSdk.UserEvents.KazoUserEventEntry? entry) -> bool
+static Kazo.Os.AppSdk.UserEvents.KazoUserEventEntry.operator !=(Kazo.Os.AppSdk.UserEvents.KazoUserEventEntry? left, Kazo.Os.AppSdk.UserEvents.KazoUserEventEntry? right) -> bool
+static Kazo.Os.AppSdk.UserEvents.KazoUserEventEntry.operator ==(Kazo.Os.AppSdk.UserEvents.KazoUserEventEntry? left, Kazo.Os.AppSdk.UserEvents.KazoUserEventEntry? right) -> bool
+static Kazo.Os.AppSdk.UserEvents.KazoUserEventFilter.operator !=(Kazo.Os.AppSdk.UserEvents.KazoUserEventFilter? left, Kazo.Os.AppSdk.UserEvents.KazoUserEventFilter? right) -> bool
+static Kazo.Os.AppSdk.UserEvents.KazoUserEventFilter.operator ==(Kazo.Os.AppSdk.UserEvents.KazoUserEventFilter? left, Kazo.Os.AppSdk.UserEvents.KazoUserEventFilter? right) -> bool
+static Kazo.Os.AppSdk.UserEvents.KazoUserEventProperties.IsReserved(string! key) -> bool
+static Kazo.Os.AppSdk.UserEvents.UnsupportedAppUserEventsGateway.Instance.get -> Kazo.Os.AppSdk.UserEvents.UnsupportedAppUserEventsGateway!
+Kazo.Os.AppSdk.Features.IKazoFeatureAuthentication.AuthenticateAsync(string! operation, Kazo.Os.AppSdk.Features.KazoAuthenticationScope scope, Kazo.Os.AppSdk.UserEvents.KazoEventSubject? subject, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.Features.KazoAuthenticationTicket!>
+static Kazo.Os.AppSdk.Features.KazoFeatureAuthentication.AuthenticateAsync(string! operation, Kazo.Os.AppSdk.Features.KazoAuthenticationScope scope, Kazo.Os.AppSdk.UserEvents.KazoEventSubject? subject, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.Features.KazoAuthenticationTicket!>
+Kazo.Os.AppSdk.Administration.IAppUserAccountsGateway.ReadEventsAsync(string! loginName, Kazo.Os.AppSdk.UserEvents.KazoUserEventFilter! filter, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.UserEvents.KazoUserEventEntry!>!>
+static Kazo.Os.AppSdk.Administration.KazoUserAccounts.ReadEventsAsync(Kazo.Os.AppSdk.IAppExecutionContext! context, string! loginName, Kazo.Os.AppSdk.UserEvents.KazoUserEventFilter? filter = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.UserEvents.KazoUserEventEntry!>!>!
+static Kazo.Os.AppSdk.Administration.KazoUserAccounts.ReadEventsAsync(string! loginName, Kazo.Os.AppSdk.UserEvents.KazoUserEventFilter? filter = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.UserEvents.KazoUserEventEntry!>!>!

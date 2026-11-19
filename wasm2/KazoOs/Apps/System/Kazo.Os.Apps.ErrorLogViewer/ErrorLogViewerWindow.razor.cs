@@ -78,6 +78,7 @@ public partial class ErrorLogViewerWindow
         }
 
         RebuildRows();
+        await ReloadUserEventsAsync();
     }
 
     private Task OnSelectionChangedAsync() => ReloadAllAsync();

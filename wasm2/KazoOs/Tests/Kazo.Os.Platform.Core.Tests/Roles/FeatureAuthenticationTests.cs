@@ -1,6 +1,7 @@
 using Kazo.Os.App.Abstractions.Policy;
 using Kazo.Os.AppSdk.Features;
 using Kazo.Os.AppSdk.IO;
+using Kazo.Os.AppSdk.UserEvents;
 using Kazo.Os.Platform.Core.Elevation;
 using Kazo.Os.Platform.Core.Roles;
 using Kazo.Os.Platform.Core.Tests.Settings;
@@ -49,6 +50,36 @@ public sealed class FeatureAuthenticationTests
         KazoAuthenticationTicket issued = await gateway.ConsumeAsync(second, FeatureRoleFixtures.DeleteShared);
         await Assert.ThrowsAsync<KazoUnauthorizedAccessException>(async () => await gateway.ConsumeAsync(second, FeatureRoleFixtures.DeleteShared));
         Assert.Equal((KazoAuthenticationScope.Administrator, "carol"), (issued.Scope, issued.AuthenticatedBy));
+    }
+
+    [Fact]
+    public async Task Using_a_ticket_writes_the_operation_with_its_subject_to_the_users_journal()
+    {
+        FeatureRoleHarness harness = await FeatureRoleHarness.CreateAsync();
+        AuthenticatedPrincipal carol = await harness.LoginAsync(harness.Carol);
+        AppFeatureAuthenticationGateway gateway = harness.Gateway(harness.Agent(new TypedCredentials(("carol", SettingsFilesHarness.Password))), FeatureRoleFixtures.Admin(), carol);
+        KazoEventSubject machine = new("vm", "4d2c", "Windows 98");
+
+        KazoAuthenticationTicket ticket = await gateway.AuthenticateAsync(FeatureRoleFixtures.DeleteShared, KazoAuthenticationScope.Administrator, machine);
+        Assert.Empty(harness.Events.Written);
+        await gateway.ConsumeAsync(ticket, FeatureRoleFixtures.DeleteShared);
+
+        // ADR 0254 §2: written when the ticket is used, with the subject the feature named.
+        (Kazo.Os.Platform.Core.Diagnostics.UserEventOwner owner, Kazo.Os.Platform.Core.Diagnostics.UserEventAuthor author, KazoUserEvent written) =
+            Assert.Single(harness.Events.Written);
+        Assert.Equal(carol.UserId, owner.UserId);
+        Assert.Equal(("org.kazoos.authentication", FeatureRoleFixtures.Admin().Id), (author.AppId, author.SenderAppId));
+        Assert.Equal("kazoos.feature.operation-authenticated", written.Kind);
+        Assert.Equal(machine, written.Subject);
+        Assert.Equal((FeatureRoleFixtures.DeleteShared, "Administrator", "carol"),
+            (written.Properties!["operation"], written.Properties["scope"], written.Properties["authenticatedBy"]));
+
+        // Without a subject the operation is still written; a refused ticket writes nothing.
+        KazoAuthenticationTicket plain = await gateway.AuthenticateAsync(FeatureRoleFixtures.DeleteShared, KazoAuthenticationScope.Administrator);
+        await Assert.ThrowsAsync<KazoUnauthorizedAccessException>(async () => await gateway.ConsumeAsync(plain, "vm.change-limit"));
+        Assert.Single(harness.Events.Written);
+        await Assert.ThrowsAsync<ArgumentException>(async () =>
+            await gateway.AuthenticateAsync(FeatureRoleFixtures.DeleteShared, KazoAuthenticationScope.Administrator, new KazoEventSubject("", "id", "name")));
     }
 
     [Fact]

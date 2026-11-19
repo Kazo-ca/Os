@@ -1,3 +1,5 @@
+using Kazo.Os.Platform.Core.Tests.Diagnostics;
+using Kazo.Os.AppSdk.UserEvents;
 using Kazo.Os.App.Abstractions;
 using Kazo.Os.App.Abstractions.Policy;
 using Kazo.Os.AppSdk;
@@ -208,6 +210,46 @@ public sealed class LocalPasswordServiceTests
         Assert.Equal(0, agent.Calls);
     }
 
+    [Fact]
+    public async Task Reading_another_accounts_journal_asks_an_administrator_once_per_process_and_logs_each_account()
+    {
+        // ADR 0254 §3: the user's own journal needs nothing; another account's, the OS's window once.
+        Harness harness = await Harness.CreateAsync();
+        RecordingUserEventLog journals = new();
+        journals.Journals[harness.Files.Alice.Id] = [RecordingUserEventLog.Entry("org.example.a", "alice's")];
+        journals.Journals[harness.Files.Bob.Id] = [RecordingUserEventLog.Entry("org.example.b", "bob's")];
+        CountingAgent agent = new(succeed: true);
+        AppUserAccountsGateway gateway = harness.Gateway(agent, journals);
+
+        IReadOnlyList<KazoUserEventEntry> own = await gateway.ReadEventsAsync("alice", new KazoUserEventFilter());
+        Assert.Equal(0, agent.Calls);
+        IReadOnlyList<KazoUserEventEntry> bobs = await gateway.ReadEventsAsync("BOB", new KazoUserEventFilter());
+        await gateway.ReadEventsAsync("bob", new KazoUserEventFilter());
+        await gateway.ReadEventsAsync("admin", new KazoUserEventFilter());
+
+        Assert.Equal("alice's", Assert.Single(own).Message);
+        Assert.Equal("bob's", Assert.Single(bobs).Message);
+        Assert.Equal(1, agent.Calls);
+        Assert.Equal(AppUserAccountsGateway.EventsReadOtherAction, agent.LastRequest!.Action);
+        List<AuditEntry> reads = [.. harness.Files.Audit.Entries.Where(entry => entry.Action == "events.read-other")];
+        Assert.Equal(["bob", "admin"], reads.Select(entry => entry.Properties["user"]));
+        Assert.All(reads, entry => Assert.Equal(("admin", "alice"), (entry.Properties["admin"], entry.Properties["requestedBy"])));
+        await Assert.ThrowsAsync<ArgumentException>(async () => await gateway.ReadEventsAsync("nobody", new KazoUserEventFilter()));
+    }
+
+    [Fact]
+    public async Task Without_an_administrator_another_accounts_journal_is_not_read()
+    {
+        Harness harness = await Harness.CreateAsync();
+        RecordingUserEventLog journals = new();
+        AppUserAccountsGateway gateway = harness.Gateway(new CountingAgent(succeed: false), journals);
+
+        await Assert.ThrowsAsync<KazoUnauthorizedAccessException>(async () => await gateway.ReadEventsAsync("bob", new KazoUserEventFilter()));
+
+        Assert.Empty(journals.Reads);
+        Assert.DoesNotContain(harness.Files.Audit.Entries, entry => entry.Action == "events.read-other");
+    }
+
     /// <summary>The files harness with its keyring, an administrator account and alice logged in.</summary>
     private sealed class Harness
     {
@@ -240,7 +282,10 @@ public sealed class LocalPasswordServiceTests
             return new Harness(files, alice);
         }
 
-        internal AppUserAccountsGateway Gateway(IAdministratorAuthenticationAgent agent, params string[] capabilities)
+        internal AppUserAccountsGateway Gateway(IAdministratorAuthenticationAgent agent, params string[] capabilities) =>
+            Gateway(agent, events: null, capabilities);
+
+        internal AppUserAccountsGateway Gateway(IAdministratorAuthenticationAgent agent, RecordingUserEventLog? events, params string[] capabilities)
         {
             AppManifest manifest = new()
             {
@@ -262,7 +307,9 @@ public sealed class LocalPasswordServiceTests
                 new AdministratorGate(() => agent, manifest, Alice, isRootElevated: false))
             {
                 Accounts = () => Accounts,
-                Passkeys = () => Passkeys
+                Passkeys = () => Passkeys,
+                UserEvents = events,
+                Audit = () => Files.Audit,
             };
         }
     }

@@ -96,6 +96,7 @@ Détails : [`app-model.md`](app-model.md).
 | `ScreensManage` | `screens.manage` | normale | `KazoScreens` (écrans secondaires, ADR 0184) |
 | `NotificationsPost` | `notifications.post` | normale | `AppContext.Notifications` |
 | `ClipboardRead` / `Write` | `clipboard.read` / `.write` | normale | `KazoClipboard` |
+| `EventsWrite` | `events.write` | normale | `KazoEvents` (journal d'événements de l'usager, ADR 0254) |
 | `NetworkSimulatedRead` / `Write` | `network.simulated.read` / `.write` | normale | réseau simulé |
 | `NetworkRealAccess` | `network.real.access` | **dangereuse** | vrai réseau par le serveur relais |
 | `NetworkListen` | `network.listen` | normale | `KazoHttpListener` sur un préfixe hors de son manifeste |
@@ -215,7 +216,7 @@ porte le code du moteur, et `ShellErrorText.Describe` donne le message Linux.
 
 | API | Membres | Capacité | Document |
 |---|---|---|---|
-| `KazoUserAccounts` | `ListAsync`, `ChangePasswordAsync([context,] courant, nouveau)`, `ResetPasswordAsync([context,] login, nouveau)`, `RemovePasswordAsync([context,] login)`, `CreateAsync([context,] KazoNewUserAccount)`, `DeleteAsync([context,] login, removeHome)`, `ListPasskeysAsync([context])`, `AddPasskeyAsync([context,] nom)`, `RemovePasskeyAsync([context,] id)`, `ValidateNewPassword`, `ValidateNewAccount`, `MinimumPasswordLength` (8), `MaximumPasswordLength` (256), `MaximumDisplayNameLength` (128) ; types `KazoNewUserAccount`, `KazoPasskey`, `KazoUserAccount.PasskeyCount` | aucune pour lister, changer son propre mot de passe et gérer ses clés d'accès ; `users.manage` (dangereuse) et un administrateur pour un autre compte, l'ajout et la suppression | [`system-administration.md`](system-administration.md), [`passkeys.md`](../dev/passkeys.md) |
+| `KazoUserAccounts` | `ListAsync`, `ChangePasswordAsync([context,] courant, nouveau)`, `ResetPasswordAsync([context,] login, nouveau)`, `RemovePasswordAsync([context,] login)`, `CreateAsync([context,] KazoNewUserAccount)`, `DeleteAsync([context,] login, removeHome)`, `ReadEventsAsync([context,] login, filtre)` (journal d'un compte, ADR 0254 §3), `ListPasskeysAsync([context])`, `AddPasskeyAsync([context,] nom)`, `RemovePasskeyAsync([context,] id)`, `ValidateNewPassword`, `ValidateNewAccount`, `MinimumPasswordLength` (8), `MaximumPasswordLength` (256), `MaximumDisplayNameLength` (128) ; types `KazoNewUserAccount`, `KazoPasskey`, `KazoUserAccount.PasskeyCount` | aucune pour lister, changer son propre mot de passe et gérer ses clés d'accès ; `users.manage` (dangereuse) et un administrateur pour un autre compte, l'ajout et la suppression ; un administrateur une fois par processus pour le journal d'un autre compte | [`system-administration.md`](system-administration.md), [`passkeys.md`](../dev/passkeys.md) |
 | `KazoUserAccount` | `LoginName`, `DisplayName`, `Authority`, `IsEnabled`, `HasPassword`, `UpdatedAtUtc`, `IsCurrentUser`, `IsAdministrator` (jamais le hachage) | — | [`sensitive-settings.md`](../dev/sensitive-settings.md) |
 | `IAppUserAccountsGateway` | passerelle derrière `KazoUserAccounts` (`IAppExecutionContext.UserAccounts`, membre par défaut non pris en charge) | — | [ADR 0120](../dev/adr/0120-passwd-and-administrator-password-reset.md) |
 
@@ -283,6 +284,19 @@ fichiers), `ContainsFileDropListAsync`, `ClearAsync`, `Changed`. Capacités
 `clipboard.read` et `clipboard.write`. Le texte est partagé avec la vraie
 machine selon `/etc/kazoos/clipboard.config`. Voir [`file-explorer.md`](../dev/file-explorer.md)
 et [`clipboard.md`](../dev/clipboard.md), [`clipboard-api.md`](clipboard-api.md).
+
+### Événements d'usager (`Kazo.Os.AppSdk.UserEvents`)
+
+`KazoEvents.Write(KazoUserEvent)` écrit dans le journal de l'usager pour qui l'app
+tourne, `/var/log/users/<id>/events.log` ; `KazoEvents.ReadAsync(KazoUserEventFilter?)`
+relit les lignes de cette app seulement (`KazoUserEventEntry`). Un événement porte un
+genre (`x86.vm.started`), un message déjà traduit, un sujet facultatif
+(`KazoEventSubject(Type, Id, DisplayName)`), une gravité (`KazoEventSeverity` : `Info`,
+`Warning`, `Error`) et des propriétés. L'OS ajoute l'heure, l'app, le processus et
+l'expéditeur. Capacité normale `events.write`. Passerelle `AppContext.UserEvents`
+(à ne pas confondre avec le bus `AppContext.Events`). Voir
+[`app-log-files.md`](app-log-files.md#événements-dusager-adr-0254) et
+[ADR 0254](../dev/adr/0254-per-user-events.md).
 
 ### Accessibilité (`Kazo.Os.AppSdk.Accessibility`)
 

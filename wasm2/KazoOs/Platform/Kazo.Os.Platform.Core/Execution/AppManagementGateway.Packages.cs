@@ -163,6 +163,8 @@ internal sealed partial class AppManagementGateway
             await ActivateInstalledAppsAsync(CancellationToken.None).ConfigureAwait(false);
         }
 
+        WriteInstalledForUserEvents(plan);
+
         ICapabilityCatalog capabilities = PlanCapabilities(plan);
         return ToReport(root, personalCopies.TryGetValue(manifest.Id, out IReadOnlyList<string>? replaced) ? replaced.Count : 0, capabilities) with
         {
@@ -647,5 +649,25 @@ internal sealed partial class AppManagementGateway
         return await agent.AuthenticateAsync(
             new AdministratorAuthenticationRequest(_caller, operation, action, _principal, isRootElevated),
             cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Writes an event to the user's journal for each package of <paramref name="plan"/> installed for
+    /// the user alone (ADR 0254, section 2; ADR 0208); a package installed for everyone is not personal.
+    /// </summary>
+    private void WriteInstalledForUserEvents(AppPackageInstallPlan plan)
+    {
+        if (UserEvents is not { } userEvents)
+        {
+            return;
+        }
+
+        foreach (AppPackagePlan package in plan.Packages.Where(static package => !package.SystemWide))
+        {
+            userEvents.TryWriteSystem(
+                Diagnostics.UserEventOwner.Of(_principal),
+                new Diagnostics.UserEventAuthor(Diagnostics.OsUserEvents.PackagesAppId, SenderAppId: _caller.Id),
+                Diagnostics.OsUserEvents.Installed(package.Package.Manifest, package.Package.Version.ToString()));
+        }
     }
 }
