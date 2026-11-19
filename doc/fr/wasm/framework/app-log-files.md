@@ -90,7 +90,9 @@ IReadOnlyList<KazoUserEventEntry> history = await KazoEvents.ReadAsync(
 - **Limites.** Le fichier appartient à l'usager : une app de cet usager qui a
   `filesystem.system.read` ou `filesystem.system.write` (dangereuses, approuvées
   par un administrateur) peut le lire en entier ou le modifier par l'API des
-  fichiers ; « une app ne voit que ses lignes » vaut pour `KazoEvents`. Le
+  fichiers ; « une app ne voit que ses lignes » vaut pour `KazoEvents`.
+  Empêcher l'usager de modifier ce fichier est à faire
+  ([#632](https://github.com/Kazo-ca/Os/issues/632)). Le
   message, le sujet et le genre ne sont pas masqués ; seules les valeurs des
   propriétés passent par le masquage des clés sensibles.
 
