@@ -508,7 +508,7 @@ points to its PR.
 | --- | --- | --- | --- |
 | Switch user | Open another session without closing the first one. Stays greyed out in the Power menu by Benoit's choice: one session at a time, Sign out to change account. | [0195](dev/adr/0195-start-menu-power-button.md), [0201](dev/adr/0201-switch-user-stays-greyed.md) | [#290](https://github.com/Kazo-ca/Os/issues/290) |
 | File address served on demand | An app gets an address to read a large file (audio, video) without copying it in memory, with partial reads to seek in a track. `storage/base` series; the partial read is done (work item 3), the address is still to do. | [0275](dev/adr/0275-partial-read-and-file-address.md) | [#379](https://github.com/Kazo-ca/Os/issues/379) |
-| Drag files onto an app | Public SDK contract to receive files dragged from the File Explorer or the desktop. | To write | [#380](https://github.com/Kazo-ca/Os/issues/380) |
+| Drag files onto an app | Public SDK contract to receive files dragged from the File Explorer or the desktop. | [0287](dev/adr/0287-drop-files-into-an-app.md) (proposed) | [#380](https://github.com/Kazo-ca/Os/issues/380) |
 
 ### Network
 
