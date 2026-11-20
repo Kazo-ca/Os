@@ -4,10 +4,11 @@
 
 ## Statut
 
-Proposée le 2026-11-20. Série `todo-wins/base`, pour l'issue
-[#380](https://github.com/Kazo-ca/Os/issues/380) (`TODO`). Les questions 1 à 5
-sont posées à Benoit ; la recommandation est prise s'il répond « ok » ou laisse
-une question vide.
+Acceptée le 2026-11-20 : Benoit a répondu Q3 = A (l'app peut aussi écrire les
+fichiers de l'ordinateur dans le système de fichiers, comme l'explorateur),
+Q4 = B (glisser depuis une app entre dans cette ADR) et Q5 = A ; Q1 et Q2 sans
+réponse, donc la recommandation (A). Série `todo-wins/base`, pour l'issue
+[#380](https://github.com/Kazo-ca/Os/issues/380) (`TODO`).
 
 - **Complète :** l'[ADR 0058](0058-base-app-features.md) §1 (glisser-déposer de
   l'explorateur entre ses fenêtres) et l'[ADR 0160](0160-desktop-implementation-adjustments.md)
@@ -85,13 +86,22 @@ une question vide.
 - Le dépôt dans une app est **toujours une copie** : la zone met
   `dropEffect = 'copy'` et l'explorateur ne retire rien de la source.
 
-### 3. Fichiers de l'ordinateur (question 3)
+### 3. Fichiers de l'ordinateur (question 3 : A)
 
-Recommandation A : la zone reçoit aussi les fichiers glissés depuis le vrai
-ordinateur, sous `HostFiles` (`KazoDroppedHostFile` : nom, taille, type MIME,
-`OpenReadStream(maxBytes)`), comme le dépôt dans l'explorateur aujourd'hui. Ils
-ne sont pas écrits dans le système de fichiers : l'app les lit ou les importe
-elle-même. Ils sont libérés à la fin du gestionnaire `FilesDropped`.
+La zone reçoit aussi les fichiers glissés depuis le vrai ordinateur, sous
+`HostFiles` (`KazoDroppedHostFile` : nom, taille, type MIME), comme le dépôt dans
+l'explorateur aujourd'hui. La zone n'écrit rien d'elle-même ; l'app choisit :
+
+- `OpenReadStream(maxBytes)` : elle lit le contenu (un morceau joué, un document
+  ouvert sans l'enregistrer) ;
+- `SaveToAsync(string path, bool overwrite = false)` : elle l'écrit dans le
+  système de fichiers de Kazo OS, comme l'explorateur le fait d'un dépôt. Le
+  chemin passe par la passerelle de fichiers de l'app, avec ses capacités
+  (`filesystem.user-home.write` pour `/home/<user>`) ; un nom déjà pris donne
+  `IOException` sauf avec `overwrite`.
+
+Les fichiers sont libérés à la fin du gestionnaire `FilesDropped` : l'app les lit
+ou les enregistre avant de rendre la main.
 
 ### 4. Droits sur les fichiers déposés (question 1)
 
@@ -101,22 +111,50 @@ avec ses capacités, comme dans un vrai OS de bureau (ADR 0231) : une app qui a
 un lecteur réseau de l'utilisateur ; sans elle, la lecture répond « Permission
 refusée ». Une app qui pose une zone de dépôt n'a rien de plus à déclarer.
 
-### 5. Hors de cette ADR
+### 5. Glisser depuis une app (question 4 : B)
 
-Selon les questions 4 et 5, chacun devient une issue `TODO` :
+`Kazo.Os.AppSdk.Blazor` gagne aussi le composant `KazoFileDragSource` :
 
-- glisser **depuis** une app vers l'explorateur ou le bureau
-  (`KazoFileDrag.StartAsync`) ;
+```razor
+<KazoFileDragSource Files="@SelectedTracks">
+    <TrackRow />
+</KazoFileDragSource>
+```
+
+- `Files` et `Folders` : les chemins Kazo OS que l'élément fait glisser. Le
+  composant prépare le JSON du §1 à chaque rendu : le navigateur demande les
+  données **pendant** `dragstart`, sans attente possible.
+- Son JavaScript met l'attribut `draggable`, écrit le type MIME du §1 au
+  `dragstart` et met `effectAllowed = 'copy'`.
+- Le composant remplit les tailles, les noms et les types MIME par la passerelle
+  de fichiers de l'app, avec ses capacités : un chemin que l'app ne peut pas lire
+  n'est pas mis dans le glisser.
+- L'explorateur et le bureau reçoivent ce glisser comme celui d'un autre
+  explorateur, mais **copient toujours** (le `effectAllowed` d'une app ne permet
+  pas le déplacement) : une app ne vide pas un dossier de l'utilisateur par un
+  glisser.
+- Une app écrite en JavaScript appelle `KazoFileDrag.Serialize(data)` et écrit
+  le texte elle-même dans son `dragstart`.
+
+### 6. Hors de cette ADR (question 5 : A)
+
+Chacun devient une issue `TODO` :
+
 - le dépôt dans une app Craft (sa page est dans un iframe, le dépôt doit passer
-  par `craft-proxy.js`, ADR 0259) et dans une app qui s'affiche depuis un Web
-  Worker.
+  par `craft-proxy.js`, ADR 0259) et le glisser depuis elle ;
+- le dépôt dans une app qui s'affiche depuis un Web Worker et le glisser depuis
+  elle.
 
 ## Questions posées à Benoit
+
+Réponses de Benoit (2026-11-20) : « 9. A mais l'application peut écrire dans le
+système de fichier (Comme l'explorateur de fichier) », « 10. b », « 11. A »
+(questions 3, 4 et 5 de cette ADR) ; questions 1 et 2 sans réponse, donc A.
 
 1. Quels droits une app a-t-elle sur les fichiers qu'on y dépose ?
    - A) Aucun droit nouveau : elle lit les chemins avec ses capacités
      (`filesystem.user-home.read` pour le dossier personnel et les lecteurs
-     réseau). Simple, comme Windows et Linux. ✨(Recommandé)
+     réseau). Simple, comme Windows et Linux. ✨(Recommandé, retenu)
    - B) Le dépôt donne un droit de lecture sur ces fichiers seulement
      (`filesystem.user-selected.read`, jusqu'à la fin du processus) : une app
      sans `filesystem.user-home.read` peut les lire, comme le bac à sable de
@@ -126,25 +164,26 @@ Selon les questions 4 et 5, chacun devient une issue `TODO` :
      (même droit pour un fichier choisi dans la boîte de dialogue).
 2. Quelle forme pour l'API ?
    - A) Les deux : le format public dans `Kazo.Os.AppSdk` (`KazoFileDrag`) et le
-     composant `KazoFileDropZone` dans `Kazo.Os.AppSdk.Blazor`. ✨(Recommandé)
+     composant `KazoFileDropZone` dans `Kazo.Os.AppSdk.Blazor`. ✨(Recommandé, retenu)
    - B) Le format seulement : chaque app écrit son JavaScript de dépôt.
    - C) Le composant seulement : le format reste interne.
 3. Les fichiers glissés depuis le vrai ordinateur ?
    - A) La zone les donne aussi (`HostFiles`, lus en flux, rien n'est écrit dans
-     le système de fichiers). ✨(Recommandé)
+     le système de fichiers). ✨(Recommandé, retenu, avec l'écriture par l'app :
+     §3)
    - B) Fichiers de Kazo OS seulement ; un fichier de l'ordinateur est refusé
      pendant le survol.
 4. Glisser **depuis** une app vers l'explorateur ou le bureau ?
    - A) Pas dans cette ADR : une issue `TODO`. ✨(Recommandé)
-   - B) Dans cette ADR (`KazoFileDrag.StartAsync`).
+   - B) Dans cette ADR (`KazoFileDragSource`, §5). **(Retenu)**
 5. Les apps Craft (iframe) et les apps affichées depuis un Web Worker ?
-   - A) Pas dans cette ADR : une issue `TODO` pour chacune. ✨(Recommandé)
+   - A) Pas dans cette ADR : une issue `TODO` pour chacune. ✨(Recommandé, retenu)
    - B) Les apps Craft dans cette ADR (relais par `craft-proxy.js`).
 
 ## Conséquences
 
 - Webamp et tout éditeur peuvent recevoir des fichiers de l'explorateur et du
-  bureau avec un seul composant ; une issue suit dans
+  bureau avec un seul composant, et en donner avec un autre ; une issue suit dans
   [Os-App-Webamp](https://github.com/Kazo-ca/Os-App-Webamp) quand une version de
   l'OS contient l'API.
 - Nouvelle API publique (`PublicAPI.Unshipped.txt` de `Kazo.Os.AppSdk` et de
@@ -160,7 +199,10 @@ Selon les questions 4 et 5, chacun devient une issue `TODO` :
 - [ ] L'explorateur et le bureau passent à `KazoFileDragData` ; les tests de
   `FileViewDragDropTests` restent verts.
 - [ ] `KazoFileDropZone` (composant, JS, CSS), `Accept`, fichiers de
-  l'ordinateur ; tests bUnit et un test Playwright (glisser de l'explorateur vers
-  une app de test).
+  l'ordinateur (`OpenReadStream`, `SaveToAsync`) ; tests bUnit.
+- [ ] `KazoFileDragSource`, `KazoFileDrag.Serialize` ; l'explorateur et le bureau
+  copient le glisser d'une app ; tests.
+- [ ] Un test Playwright : glisser de l'explorateur vers une app de test, et de
+  l'app vers l'explorateur.
 - [ ] Docs `framework/` (fr et en), `features.md`, entrée de changement.
-- [ ] Issues `TODO` du §5, issue dans Os-App-Webamp.
+- [ ] Issues `TODO` du §6, issue dans Os-App-Webamp.
