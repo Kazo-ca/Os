@@ -194,10 +194,10 @@ public sealed class FileViewDropAndClipboardTests
 
     private static void ConfigureDrop(FakeJSObjectReference module, IReadOnlyList<string>? files = null, IReadOnlyList<string>? folders = null)
     {
-        FileViewDragEnvelope envelope = new(
+        KazoFileDragData envelope = new(
             [.. (files ?? []).Select(path => new VirtualFileDragPayload(string.Empty, path, path[(path.LastIndexOf('/') + 1)..], 0, null))],
             [.. (folders ?? []).Select(path => new VirtualFolderDragPayload(string.Empty, path, path[(path.LastIndexOf('/') + 1)..], -1))]);
-        string json = JsonSerializer.Serialize(envelope, FileViewDragEnvelopeJsonSerializerContext.Default.FileViewDragEnvelope);
+        string json = KazoFileDrag.Serialize(envelope);
         module.Handlers["getDragData"] = _ => json;
     }
 

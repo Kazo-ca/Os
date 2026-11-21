@@ -72,6 +72,7 @@ dans le même changement (voir [`AGENTS.md`](../../../AGENTS.md)).
 | [`desktop-api.md`](framework/desktop-api.md) | Types `KazoDesktop*`, fichier `desktop.config`, raccourcis `.desktop` et intent de création de raccourci. |
 | [`file-operations-api.md`](framework/file-operations-api.md) | API `KazoFileOperations` : copier, déplacer, importer et mettre à la corbeille, avec règles de conflit. |
 | [`file-control-api.md`](framework/file-control-api.md) | Contrôle de fichiers de l'OS vu par une app : `KazoFileView`, menus et dialogues de fichiers. |
+| [`file-drag-drop-api.md`](framework/file-drag-drop-api.md) | Glisser-déposer des fichiers dans une app et depuis une app : `KazoFileDropZone`, `KazoFileDragSource`, format `KazoFileDrag`. |
 | [`system-backup-api.md`](framework/system-backup-api.md) | Sauvegarde de la machine vue par une app : API `KazoSystemBackup`, archive `.kosbak`, capacité `system.backup`, codes `NoSpace` et `FileTooLarge`. |
 | [`process-limits-api.md`](framework/process-limits-api.md) | Limites de processus côté apps : `KazoProcess`, défauts et effets de `cpu`, `rss`, `nofile`, `nproc`, et `/proc/<pid>/limits`. |
 | [`app-responsiveness-api.md`](framework/app-responsiveness-api.md) | Priorité `nice` et fenêtre « Ne répond pas » : ce qu'une app voit et doit faire pour rester réactive. |

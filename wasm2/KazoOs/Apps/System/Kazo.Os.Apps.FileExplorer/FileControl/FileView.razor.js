@@ -217,7 +217,8 @@ export function attachDropZone(element, mimeType) {
         if (types.includes(desktopItemMimeType)) {
             transfer.dropEffect = 'move';
         } else if (types.includes(mimeType)) {
-            transfer.dropEffect = e.ctrlKey ? 'copy' : 'move';
+            // A drag from an app (KazoFileDragSource, ADR 0287 §5) allows a copy only.
+            transfer.dropEffect = e.ctrlKey || transfer.effectAllowed === 'copy' ? 'copy' : 'move';
         } else if (types.includes('Files') || types.includes(appMimeType)) {
             transfer.dropEffect = 'copy';
         } else {

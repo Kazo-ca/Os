@@ -1,0 +1,14 @@
+{
+  "id": "d00ac0a9-7849-4d8a-a124-8b66159cfeb9",
+  "category": "developer",
+  "audience": ["developer"],
+  "title": {
+    "en": "Apps can receive dropped files and drag their own",
+    "fr": "Les apps reçoivent les fichiers déposés et glissent les leurs"
+  },
+  "description": {
+    "en": "KazoFileDropZone receives files and folders dragged from the File Explorer, the desktop, another app or the real computer, with an Accept filter; KazoFileDragSource drags an app's files to the File Explorer and the desktop, always as a copy. The drag format becomes public as KazoFileDrag (TryParse, Serialize, CreateAsync) for apps written in JavaScript (ADR 0287).",
+    "fr": "KazoFileDropZone reçoit les fichiers et dossiers glissés depuis l'explorateur, le bureau, une autre app ou l'ordinateur réel, avec un filtre Accept ; KazoFileDragSource glisse les fichiers d'une app vers l'explorateur et le bureau, toujours en copie. Le format du glisser devient public, KazoFileDrag (TryParse, Serialize, CreateAsync), pour les apps écrites en JavaScript (ADR 0287)."
+  },
+  "links": ["doc/en/wasm/framework/file-drag-drop-api.md"]
+}

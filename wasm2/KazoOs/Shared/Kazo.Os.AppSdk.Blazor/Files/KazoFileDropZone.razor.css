@@ -1,0 +1,11 @@
+/* ADR 0287 §2: a light default while a drag hovers the zone; the app may restyle .kazo-file-drop-over. */
+.kazo-file-drop-zone {
+    transition: outline-color 120ms ease, background-color 120ms ease;
+    outline: 2px dashed transparent;
+    outline-offset: -2px;
+}
+
+.kazo-file-drop-zone.kazo-file-drop-over {
+    outline-color: var(--kos-accent, #3fb6ff);
+    background-color: color-mix(in srgb, var(--kos-accent, #3fb6ff) 10%, transparent);
+}

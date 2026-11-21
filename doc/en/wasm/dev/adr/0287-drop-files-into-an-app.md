@@ -188,15 +188,34 @@ and 5 of this ADR); questions 1 and 2 left blank, so A.
 
 ## Tasks
 
-- [ ] `KazoFileDrag`, `KazoFileDragData`, JSON context, parsing tests (valid,
+- [x] `KazoFileDrag`, `KazoFileDragData`, JSON context, parsing tests (valid,
   invalid, relative path, too many items).
-- [ ] The File Explorer and the desktop move to `KazoFileDragData`; the
+- [x] The File Explorer and the desktop move to `KazoFileDragData`; the
   `FileViewDragDropTests` stay green.
-- [ ] `KazoFileDropZone` (component, JS, CSS), `Accept`, computer files
+- [x] `KazoFileDropZone` (component, JS, CSS), `Accept`, computer files
   (`OpenReadStream`, `SaveToAsync`); bUnit tests.
-- [ ] `KazoFileDragSource`, `KazoFileDrag.Serialize`; the File Explorer and the
+- [x] `KazoFileDragSource`, `KazoFileDrag.Serialize`; the File Explorer and the
   desktop copy an app's drag; tests.
 - [ ] A Playwright test: drag from the File Explorer into a test app, and from
   the app to the File Explorer.
-- [ ] `framework/` docs (fr and en), `features.md`, change entry.
-- [ ] `TODO` issues of §6, issue in Os-App-Webamp.
+- [x] `framework/` docs (fr and en), `features.md`, change entry.
+- [ ] `TODO` issues of §6 ([#634](https://github.com/Kazo-ca/Os/issues/634),
+  [#635](https://github.com/Kazo-ca/Os/issues/635)), issue in Os-App-Webamp.
+
+## Implementation notes
+
+These notes give the shape of the code without changing the decisions:
+
+- The drop arguments reuse the SDK's types: `Files` is a list of
+  `VirtualFileDragPayload`, `Folders` of `VirtualFolderDragPayload` and
+  `HostFiles` of `KazoHostFile` (name, size, MIME type,
+  `OpenReadStreamAsync(maxBytes, ct)`), instead of new `KazoDropped*` types.
+- Writing a computer file into Kazo OS (§3) goes through
+  `KazoFileOperations.ImportAsync(drop.HostFiles, folder)`, the one the File
+  Explorer uses (copy suffix, size cap, the app's rights), instead of a
+  per-file `SaveToAsync`.
+- `Accept` applies at drop: while hovering, the browser does not give the
+  drag's content, so the zone says `copy` as soon as a drag carries files.
+- `KazoFileDrag.CreateAsync(files, folders)` prepares the drag of
+  `KazoFileDragSource`; an app written in JavaScript can call it too.
+- Guide: [`framework/file-drag-drop-api.md`](../../framework/file-drag-drop-api.md).

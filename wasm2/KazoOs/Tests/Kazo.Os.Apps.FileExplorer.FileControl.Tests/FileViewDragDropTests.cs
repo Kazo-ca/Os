@@ -35,8 +35,7 @@ public sealed class FileViewDragDropTests
         Assert.True(item.IsSelected);
         (string Identifier, object?[]? Args) call = module.Calls.Single(c => c.Identifier == "setDragData");
         Assert.Equal(FileView.DragMimeType, call.Args![0]);
-        FileViewDragEnvelope envelope = JsonSerializer.Deserialize(
-            (string)call.Args[1]!, FileViewDragEnvelopeJsonSerializerContext.Default.FileViewDragEnvelope)!;
+        Assert.True(KazoFileDrag.TryParse((string)call.Args[1]!, out KazoFileDragData envelope));
         Assert.Single(envelope.Files);
         Assert.Equal("/home/user/a.txt", envelope.Files[0].FilePath);
         Assert.Empty(envelope.Folders);
@@ -61,8 +60,7 @@ public sealed class FileViewDragDropTests
         await renderer.RunAsync(() => view.OnItemDragStartAsync(a, new DragEventArgs()));
 
         (string Identifier, object?[]? Args) call = module.Calls.Single(c => c.Identifier == "setDragData");
-        FileViewDragEnvelope envelope = JsonSerializer.Deserialize(
-            (string)call.Args![1]!, FileViewDragEnvelopeJsonSerializerContext.Default.FileViewDragEnvelope)!;
+        Assert.True(KazoFileDrag.TryParse((string)call.Args![1]!, out KazoFileDragData envelope));
         Assert.Equal(2, envelope.Files.Count);
     }
 
@@ -127,6 +125,27 @@ public sealed class FileViewDragDropTests
             new FileSystemStatRequest(VirtualPath.Parse("/home/user/Target/a.txt")), fixture.UserContext())).Succeeded);
         Assert.Single(copied);
         Assert.Contains(view.Items, i => i.FileName == "a.txt");
+    }
+
+    [Fact]
+    public async Task OnItemDropAsync_copies_a_drag_from_an_app_without_Ctrl()
+    {
+        // ADR 0287 §5: an app's drag allows a copy only, so the user's file stays where it was.
+        FileViewTestFixture fixture = await FileViewTestFixture.CreateAsync();
+        await fixture.CreateFileAsync("/home/user/a.txt");
+        await fixture.CreateDirectoryAsync("/home/user/Target");
+        (FakeJSRuntime jsRuntime, FakeJSObjectReference module) = NewDragDropRuntime();
+        ConfigureDrop(module, files: [("/home/user/a.txt", "a.txt")]);
+        (TestComponentRenderer renderer, TestableFileView view) = await RenderViewAsync(fixture, jsRuntime);
+        FileViewItem target = view.Items.Single(i => i.FileName == "Target");
+        DragEventArgs fromApp = new() { DataTransfer = new DataTransfer { Types = [FileView.DragMimeType], EffectAllowed = "copy" } };
+
+        await renderer.RunAsync(() => view.OnItemDropAsync(target, fromApp));
+
+        Assert.True((await fixture.Service.StatAsync(
+            new FileSystemStatRequest(VirtualPath.Parse("/home/user/a.txt")), fixture.UserContext())).Succeeded);
+        Assert.True((await fixture.Service.StatAsync(
+            new FileSystemStatRequest(VirtualPath.Parse("/home/user/Target/a.txt")), fixture.UserContext())).Succeeded);
     }
 
     [Fact]
@@ -243,10 +262,10 @@ public sealed class FileViewDragDropTests
         IReadOnlyList<(string Path, string Name)>? files = null,
         IReadOnlyList<(string Path, string Name)>? folders = null)
     {
-        FileViewDragEnvelope envelope = new(
+        KazoFileDragData envelope = new(
             [.. (files ?? []).Select(f => new VirtualFileDragPayload(string.Empty, f.Path, f.Name, 0, null))],
             [.. (folders ?? []).Select(f => new VirtualFolderDragPayload(string.Empty, f.Path, f.Name, -1))]);
-        string json = JsonSerializer.Serialize(envelope, FileViewDragEnvelopeJsonSerializerContext.Default.FileViewDragEnvelope);
+        string json = KazoFileDrag.Serialize(envelope);
         module.Handlers["getDragData"] = _ => json;
     }
 

@@ -1,0 +1,11 @@
+@namespace Kazo.Os.AppSdk.Blazor.Files
+@inherits KazoComponentBase
+
+@*
+    ADR 0287 §2: a zone of an app that receives files dragged from the File Explorer, the desktop,
+    another app (KazoFileDragSource) or the real computer. While a drag hovers it, the element has
+    the class kazo-file-drop-over, which the app may style in its own CSS.
+*@
+<div @ref="_element" class="kazo-file-drop-zone @Class" @attributes="AdditionalAttributes">
+    @ChildContent
+</div>
