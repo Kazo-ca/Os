@@ -272,7 +272,14 @@ await KazoAppManagement.ReinstallAsync("org.kazoos.calculator", KazoInstallScope
   `App.IsSystemApp`), `UninstalledForUser`, `UninstalledForMachine`,
   `Incompatible` (refusée au chargement : version du SDK, ADR 0098 §3) et
   `Damaged` (ressource altérée, ADR 0098 §5) ; `KazoAppInstallInfo.Problem`
-  donne alors la raison, affichée par Paramètres.
+  donne alors la raison, affichée par Paramètres. `Disabled` : installée, mais
+  une Feature désactivée par un administrateur (elle-même, son point d'entrée ou
+  une app qui en dépend, ADR 0287).
+- `DisableFeatureAsync(id)` et `EnableFeatureAsync(id)` (ADR 0287) : désactivent
+  une Feature pour toute la machine sans la désinstaller, puis la réactivent ;
+  un administrateur s'authentifie. `DisableFeatureAsync` rend un
+  `KazoDisableReport` (apps désactivées, processus arrêtés) ; `PlanUninstallAsync`
+  dit d'avance les mêmes apps et processus.
 - Portée `Machine` : l'agent d'authentification de l'OS demande un
   administrateur ([`admin-authentication-agent.md`](../dev/admin-authentication-agent.md)),
   puis l'OS écrit `/etc/kazoos/apps.config` lui-même. Refus ou annulation :

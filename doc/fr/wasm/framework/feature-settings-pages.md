@@ -5,7 +5,8 @@
 Une **fonctionnalité** (ADR 0260) n'a pas de fenêtre à elle. Ses pages
 d'administration vivent dans Paramètres, section « Fonctionnalités »
 ([ADR 0249](../dev/adr/0249-settings-features-section.md), ajustée par
-l'[ADR 0285](../dev/adr/0285-settings-features-section-adjustments.md)).
+l'[ADR 0285](../dev/adr/0285-settings-features-section-adjustments.md) et
+l'[ADR 0287](../dev/adr/0287-disable-a-feature-without-uninstalling-it.md)).
 
 ## Ce que voit l'usager
 
@@ -22,6 +23,33 @@ l'[ADR 0285](../dev/adr/0285-settings-features-section-adjustments.md)).
   propre processus** (enfant de Paramètres dans `ps`, `--type=settings-page`),
   avec son id et ses permissions. Une erreur de la page reste dans sa zone
   (« Os-x86 a rencontré un problème », *Réessayer*) ; Paramètres continue.
+
+## Désactiver une Feature (ADR 0287)
+
+- Désactiver une Feature **ne la désinstalle pas** (réponse 283 B). Elle reste
+  installée pour le Store et `kazopkg` ; ses fichiers, ses données, ses rôles et
+  ses permissions accordées restent.
+- Seul un administrateur désactive ou active, pour toute la machine : la
+  fenêtre d'authentification de l'OS s'affiche, sauf sous `sudo`. L'état est
+  gardé dans `/etc/kazoos/features.config`, section `[disabled]`
+  (`ca.kazo.x86=true`), que l'OS surveille.
+- La Feature, ses points d'entrée (services, fenêtres, commandes, pages des
+  Paramètres) et les apps qui en dépendent s'arrêtent et disparaissent. La
+  confirmation les liste, avec les processus arrêtés (arrêt propre, puis forcé
+  après le délai de grâce).
+- Activer la remet en service, avec ses dépendants, et relance aussitôt ses
+  services automatiques.
+- La carte de la Feature montre « Activée » ou « Désactivée » et le bouton
+  *Désactiver* ou *Activer*. Dans Paramètres ▸ Applications, une app désactivée
+  porte le badge « Désactivée ». Une Feature désinstallée par `apps.config`
+  garde *Réinstaller*.
+- Au terminal : `sudo kazopkg disable <id>` (liste, confirmation, `--yes`) et
+  `sudo kazopkg enable <id>` ; `kazopkg list` et `info` marquent une Feature
+  désactivée. Une mise à jour la garde désactivée ; retirer le paquet oublie
+  sa ligne.
+- Pour une app : `KazoAppManagement.DisableFeatureAsync(id)` (rend un
+  `KazoDisableReport`) et `EnableFeatureAsync(id)`, capacité `apps.manage` ;
+  l'état est `KazoAppInstallState.Disabled`.
 
 ## Déclarer une page
 
@@ -93,7 +121,8 @@ await KazoApps.ShowSettingsPageAsync("ca.kazo.x86.admin");
 | --- | --- | --- |
 | `IFeatureSettingsPages` | `Kazo.Os.AppSdk.Blazor.Settings` | Contrat injecté dans Paramètres : `GetPages`, `OpenAsync`, `Changed`. L'OS ne répond qu'à Paramètres. |
 | `FeatureSettingsPages` | `Platform.Blazor/Settings` | Lit le catalogue à chaud, filtre (activation, rôle, mobile), démarre le processus de la page (`StartAuxiliaryAsync`) et rend son composant dans son contexte, sous `AppErrorBoundary` (*Réessayer* seulement). |
-| `InstalledFeaturesPanel` | Paramètres | Page « Fonctionnalités installées » ; reprend la ligne d'installation d'`InstalledAppsPanel` et la page `AppDetailsPanel`. |
+| `InstalledFeaturesPanel` | Paramètres | Page « Fonctionnalités installées » ; l'état et *Activer*/*Désactiver* de chaque Feature (`FeatureEnablementRow`, ADR 0287) ; une Feature désinstallée garde la ligne d'installation d'`InstalledAppsPanel` ; *Détails* ouvre `AppDetailsPanel`. |
+| `FeaturesConfigDocument`, `AppInstallationService` | `Platform.Core/Apps` | `/etc/kazoos/features.config` ; `DisableFeatureAsync`/`EnableFeatureAsync`, état `Disabled` (ADR 0287). |
 | `FeatureSettingsPageView` | Paramètres | Ouvre la page, l'arrête quand Paramètres la quitte, propose *Rouvrir* si l'OS l'a arrêtée. |
 | `ShowSettingsPageIntent` | `AppIntentDispatcher` | Paramètres avec `--page=<id>`. |
 
@@ -104,4 +133,5 @@ await KazoApps.ShowSettingsPageAsync("ca.kazo.x86.admin");
 - [x] `FeatureSettingsPages`, processus de page, rôle, mobile, barrière d'erreur.
 - [x] Paramètres : groupe, « Fonctionnalités installées », pages, `--page=<id>`.
 - [x] Tests : manifeste, plateforme, noyau, intention, Paramètres.
+- [x] Désactiver une Feature sans la désinstaller : `features.config`, Paramètres, `kazopkg disable|enable`, SDK (ADR 0287).
 - [ ] Parcours complet avec une Feature réelle (Os-x86), question 286.

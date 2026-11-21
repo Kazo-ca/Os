@@ -249,6 +249,7 @@ kazopkg update                                         # toutes les apps install
 kazopkg list | info <dépôt> | remove <appId> [--user|--system]
 kazopkg rollback <appId> [--user|--system]             # revient à la version gardée (ADR 0214)
 kazopkg repair [--system]                              # finit ou annule une installation interrompue
+kazopkg disable <featureId> [--yes] | enable <featureId>   # Feature désactivée, reste installée (ADR 0287)
 kazopkg sources [add <source> [--trusted] | remove <source>]
 kazopkg policy [block|unblock app|category|capability <valeur>]
 ```
@@ -393,6 +394,12 @@ administrateur. Son modèle côté SDK (`FeatureDefinition`, `FeatureEntryPoint`
 manifestes enfants) est dans
 [`app-model.md`](../framework/app-model.md#fonctionnalités-featuredefinition-adr-0260).
 
+- **Désactiver sans désinstaller** ([ADR 0287](adr/0287-disable-a-feature-without-uninstalling-it.md)) : un
+  administrateur inscrit la Feature dans `/etc/kazoos/features.config`
+  (`[disabled]`), par Paramètres ▸ Fonctionnalités ou `sudo kazopkg disable`.
+  Elle reste installée ; elle, ses enfants et les apps qui en dépendent ne
+  tournent plus (état `Disabled`). La désinstallation par `apps.config`
+  l'emporte quand les deux s'appliquent.
 - **Paquet** : `manifest.json` est le manifeste de la fonctionnalité (genre
   `feature`, sans `entryPoint`) ; chaque enfant a son propre fichier
   `entrypoints/<suffixe>.json`, un manifeste ordinaire de son genre avec
@@ -459,8 +466,9 @@ manifestes enfants) est dans
   part, chacune avec ses points d'entrée (nom, genre, id) sans action propre ;
   désinstaller ou réinstaller se fait sur la fonctionnalité. La fiche d'une
   app (`KazoAppInfo.ParentId`) nomme sa fonctionnalité. La section
-  « Fonctionnalités » des Paramètres (ADR 0249, ajustée par l'ADR 0285) liste
-  les fonctionnalités installées et les pages qu'elles ajoutent
+  « Fonctionnalités » des Paramètres (ADR 0249, ajustée par les ADR 0285 et 0287)
+  liste les fonctionnalités installées, les désactive ou les active, et montre
+  les pages qu'elles ajoutent
   ([`feature-settings-pages.md`](../framework/feature-settings-pages.md)).
 - **Services fournis** ([ADR 0262](adr/0262-feature-service-registry-and-async-resolution.md),
   [`feature-services.md`](../framework/feature-services.md)) : le manifeste de
