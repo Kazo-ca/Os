@@ -151,6 +151,9 @@ public sealed class KazoFileInfo : KazoFileSystemInfo
         _ => throw new KazoFileNotFoundException(FullName)
     };
 
+    /// <summary>Gets the MIME type the file system recorded for the file, if any (a drag carries it, ADR 0287 §5).</summary>
+    internal string? MediaType => Effective is FileMetadata { MediaType: { Length: > 0 } mediaType } ? mediaType : null;
+
     /// <summary>Gets the parent directory path (<see langword="null"/> only for the root).</summary>
     public string? DirectoryName => KazoPath.GetDirectoryName(FullName);
 

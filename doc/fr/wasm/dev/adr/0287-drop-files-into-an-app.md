@@ -194,15 +194,36 @@ système de fichier (Comme l'explorateur de fichier) », « 10. b », « 11. A �
 
 ## Tâches
 
-- [ ] `KazoFileDrag`, `KazoFileDragData`, contexte JSON, tests de lecture
+- [x] `KazoFileDrag`, `KazoFileDragData`, contexte JSON, tests de lecture
   (valide, invalide, chemin relatif, trop d'éléments).
-- [ ] L'explorateur et le bureau passent à `KazoFileDragData` ; les tests de
+- [x] L'explorateur et le bureau passent à `KazoFileDragData` ; les tests de
   `FileViewDragDropTests` restent verts.
-- [ ] `KazoFileDropZone` (composant, JS, CSS), `Accept`, fichiers de
+- [x] `KazoFileDropZone` (composant, JS, CSS), `Accept`, fichiers de
   l'ordinateur (`OpenReadStream`, `SaveToAsync`) ; tests bUnit.
-- [ ] `KazoFileDragSource`, `KazoFileDrag.Serialize` ; l'explorateur et le bureau
+- [x] `KazoFileDragSource`, `KazoFileDrag.Serialize` ; l'explorateur et le bureau
   copient le glisser d'une app ; tests.
 - [ ] Un test Playwright : glisser de l'explorateur vers une app de test, et de
   l'app vers l'explorateur.
-- [ ] Docs `framework/` (fr et en), `features.md`, entrée de changement.
-- [ ] Issues `TODO` du §6, issue dans Os-App-Webamp.
+- [x] Docs `framework/` (fr et en), `features.md`, entrée de changement.
+- [ ] Issues `TODO` du §6 ([#634](https://github.com/Kazo-ca/Os/issues/634),
+  [#635](https://github.com/Kazo-ca/Os/issues/635)), issue dans Os-App-Webamp.
+
+## Notes de mise en œuvre
+
+Ces notes précisent la forme du code sans changer les décisions :
+
+- Les arguments du dépôt réutilisent les types du SDK : `Files` est une liste de
+  `VirtualFileDragPayload`, `Folders` de `VirtualFolderDragPayload` et
+  `HostFiles` de `KazoHostFile` (nom, taille, type MIME,
+  `OpenReadStreamAsync(maxBytes, ct)`), au lieu de nouveaux types
+  `KazoDropped*`.
+- L'écriture d'un fichier de l'ordinateur dans Kazo OS (§3) passe par
+  `KazoFileOperations.ImportAsync(drop.HostFiles, dossier)`, celle qu'emploie
+  l'explorateur (suffixe de copie, taille limite, droits de l'app), au lieu
+  d'un `SaveToAsync` par fichier.
+- `Accept` s'applique au dépôt : pendant le survol, le navigateur ne donne pas
+  le contenu du glisser, donc la zone dit `copy` dès qu'un glisser porte des
+  fichiers.
+- `KazoFileDrag.CreateAsync(fichiers, dossiers)` prépare le glisser de
+  `KazoFileDragSource` ; une app écrite en JavaScript peut l'appeler aussi.
+- Guide : [`framework/file-drag-drop-api.md`](../../framework/file-drag-drop-api.md).

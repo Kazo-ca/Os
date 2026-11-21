@@ -57,6 +57,7 @@ work from another repository.
 | [`desktop-api.md`](desktop-api.md) | `KazoDesktop*` types, `desktop.config` file, `.desktop` shortcuts and the shortcut creation intent. |
 | [`file-operations-api.md`](file-operations-api.md) | `KazoFileOperations` API: copy, move, import and move to trash, with conflict rules. |
 | [`file-control-api.md`](file-control-api.md) | The OS file control as seen by an app: `KazoFileView`, file menus and dialogs. |
+| [`file-drag-drop-api.md`](file-drag-drop-api.md) | Drag and drop files into and out of an app: `KazoFileDropZone`, `KazoFileDragSource`, the `KazoFileDrag` format. |
 | [`system-backup-api.md`](system-backup-api.md) | Machine backup as seen by an app: `KazoSystemBackup` API, `.kosbak` archive, `system.backup` capability, `NoSpace` and `FileTooLarge` codes. |
 | [`process-limits-api.md`](process-limits-api.md) | Process limits on the app side: `KazoProcess`, defaults and effects of `cpu`, `rss`, `nofile`, `nproc`, and `/proc/<pid>/limits`. |
 | [`app-responsiveness-api.md`](app-responsiveness-api.md) | `nice` priority and the "Not responding" window: what an app sees and must do to stay responsive. |

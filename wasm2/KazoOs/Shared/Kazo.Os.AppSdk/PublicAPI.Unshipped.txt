@@ -1,1 +1,23 @@
 #nullable enable
+Kazo.Os.AppSdk.DragDrop.KazoFileDrag
+Kazo.Os.AppSdk.DragDrop.KazoFileDragData
+Kazo.Os.AppSdk.DragDrop.KazoFileDragData.<Clone>$() -> Kazo.Os.AppSdk.DragDrop.KazoFileDragData!
+Kazo.Os.AppSdk.DragDrop.KazoFileDragData.Deconstruct(out System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.DragDrop.VirtualFileDragPayload!>! Files, out System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.DragDrop.VirtualFolderDragPayload!>! Folders) -> void
+Kazo.Os.AppSdk.DragDrop.KazoFileDragData.Equals(Kazo.Os.AppSdk.DragDrop.KazoFileDragData? other) -> bool
+Kazo.Os.AppSdk.DragDrop.KazoFileDragData.Files.get -> System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.DragDrop.VirtualFileDragPayload!>!
+Kazo.Os.AppSdk.DragDrop.KazoFileDragData.Files.init -> void
+Kazo.Os.AppSdk.DragDrop.KazoFileDragData.Folders.get -> System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.DragDrop.VirtualFolderDragPayload!>!
+Kazo.Os.AppSdk.DragDrop.KazoFileDragData.Folders.init -> void
+Kazo.Os.AppSdk.DragDrop.KazoFileDragData.IsEmpty.get -> bool
+Kazo.Os.AppSdk.DragDrop.KazoFileDragData.KazoFileDragData(System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.DragDrop.VirtualFileDragPayload!>! Files, System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.DragDrop.VirtualFolderDragPayload!>! Folders) -> void
+const Kazo.Os.AppSdk.DragDrop.KazoFileDrag.MaxItems = 1000 -> int
+const Kazo.Os.AppSdk.DragDrop.KazoFileDrag.MimeType = "application/vnd.kazoos.file-drag+json" -> string!
+override Kazo.Os.AppSdk.DragDrop.KazoFileDragData.Equals(object? obj) -> bool
+override Kazo.Os.AppSdk.DragDrop.KazoFileDragData.GetHashCode() -> int
+override Kazo.Os.AppSdk.DragDrop.KazoFileDragData.ToString() -> string!
+static Kazo.Os.AppSdk.DragDrop.KazoFileDrag.Serialize(Kazo.Os.AppSdk.DragDrop.KazoFileDragData! data) -> string!
+static Kazo.Os.AppSdk.DragDrop.KazoFileDrag.TryParse(string? json, out Kazo.Os.AppSdk.DragDrop.KazoFileDragData! data) -> bool
+static Kazo.Os.AppSdk.DragDrop.KazoFileDragData.Empty.get -> Kazo.Os.AppSdk.DragDrop.KazoFileDragData!
+static Kazo.Os.AppSdk.DragDrop.KazoFileDragData.operator !=(Kazo.Os.AppSdk.DragDrop.KazoFileDragData? left, Kazo.Os.AppSdk.DragDrop.KazoFileDragData? right) -> bool
+static Kazo.Os.AppSdk.DragDrop.KazoFileDragData.operator ==(Kazo.Os.AppSdk.DragDrop.KazoFileDragData? left, Kazo.Os.AppSdk.DragDrop.KazoFileDragData? right) -> bool
+static Kazo.Os.AppSdk.DragDrop.KazoFileDrag.CreateAsync(System.Collections.Generic.IEnumerable<string!>? files, System.Collections.Generic.IEnumerable<string!>? folders, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Kazo.Os.AppSdk.DragDrop.KazoFileDragData!>!

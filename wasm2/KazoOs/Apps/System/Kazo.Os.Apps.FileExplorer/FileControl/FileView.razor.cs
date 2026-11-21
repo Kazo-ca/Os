@@ -25,7 +25,7 @@ namespace Kazo.Os.Apps.FileExplorer.FileControl;
 public partial class FileView : IAsyncDisposable
 {
     /// <summary>The custom <c>DataTransfer</c> MIME type <c>FileView.razor.js</c> reads/writes drag payloads under.</summary>
-    internal const string DragMimeType = "application/vnd.kazoos.file-drag+json";
+    internal const string DragMimeType = KazoFileDrag.MimeType;
 
     /// <summary>
     /// The <c>DataTransfer</c> type of an app dragged from the Start menu (ADR 0160 §6), <c>{"appId":"…"}</c>:
@@ -1097,20 +1097,7 @@ public partial class FileView : IAsyncDisposable
         if (internalDrag)
         {
             string? json = await module.InvokeAsync<string?>("getDragData", DragMimeType);
-            FileViewDragEnvelope? envelope = null;
-            if (!string.IsNullOrEmpty(json))
-            {
-                try
-                {
-                    envelope = JsonSerializer.Deserialize(json, FileViewDragEnvelopeJsonSerializerContext.Default.FileViewDragEnvelope);
-                }
-                catch (JsonException)
-                {
-                    envelope = null;
-                }
-            }
-
-            if (envelope is not null)
+            if (KazoFileDrag.TryParse(json, out KazoFileDragData envelope))
             {
                 foreach (VirtualFileDragPayload file in envelope.Files)
                 {
@@ -1126,7 +1113,10 @@ public partial class FileView : IAsyncDisposable
 
         IReadOnlyList<string> appIds = appDrag ? ReadAppIds(await module.InvokeAsync<string?>("getDragData", AppDragMimeType)) : [];
         (IReadOnlyList<KazoHostFile> files, int token) = hostFiles ? await TakeHostFilesAsync(module) : ([], 0);
-        FileViewDropRequestedEventArgs drop = new(destination, entries, files, args.CtrlKey) { HostFileToken = token, AppIds = appIds };
+        // A drag from an app (KazoFileDragSource, ADR 0287 §5) allows a copy only: the view copies it
+        // whatever the Ctrl key, so an app never empties a folder of the user through a drag.
+        bool copy = args.CtrlKey || IsCopyOnly(args.DataTransfer);
+        FileViewDropRequestedEventArgs drop = new(destination, entries, files, copy) { HostFileToken = token, AppIds = appIds };
         if (drop.IsEmpty)
         {
             await ReleaseHostFilesAsync(drop);
@@ -1359,9 +1349,13 @@ public partial class FileView : IAsyncDisposable
             }
         }
 
-        return JsonSerializer.Serialize(
-            new FileViewDragEnvelope(files, folders), FileViewDragEnvelopeJsonSerializerContext.Default.FileViewDragEnvelope);
+        return KazoFileDrag.Serialize(new KazoFileDragData(files, folders));
     }
+
+    /// <summary>Whether the drag only allows a copy (<c>effectAllowed</c> <c>copy</c>), as one from an app does (ADR 0287 §5).</summary>
+    /// <param name="transfer">The drop's data transfer.</param>
+    internal static bool IsCopyOnly(DataTransfer? transfer) =>
+        string.Equals(transfer?.EffectAllowed, "copy", StringComparison.OrdinalIgnoreCase);
 
     private async Task<IJSObjectReference> EnsureJsModuleAsync() =>
         _jsModule ??= await JavaScript.InvokeAsync<IJSObjectReference>(

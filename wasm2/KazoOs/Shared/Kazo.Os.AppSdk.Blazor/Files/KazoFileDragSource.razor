@@ -1,0 +1,10 @@
+@namespace Kazo.Os.AppSdk.Blazor.Files
+@inherits KazoComponentBase
+
+@*
+    ADR 0287 §5: an element of an app that drags Kazo OS files to the File Explorer, the desktop or
+    another app's KazoFileDropZone, always as a copy.
+*@
+<div @ref="_element" class="kazo-file-drag-source @Class" draggable="@(CanDrag ? "true" : "false")" @attributes="AdditionalAttributes">
+    @ChildContent
+</div>

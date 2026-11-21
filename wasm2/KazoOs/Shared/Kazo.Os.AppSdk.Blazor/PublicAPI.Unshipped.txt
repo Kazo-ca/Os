@@ -1,1 +1,40 @@
 #nullable enable
+Kazo.Os.AppSdk.Blazor.Files.KazoFileDragSource
+Kazo.Os.AppSdk.Blazor.Files.KazoFileDragSource.AdditionalAttributes.get -> System.Collections.Generic.IReadOnlyDictionary<string!, object!>?
+Kazo.Os.AppSdk.Blazor.Files.KazoFileDragSource.AdditionalAttributes.set -> void
+Kazo.Os.AppSdk.Blazor.Files.KazoFileDragSource.ChildContent.get -> Microsoft.AspNetCore.Components.RenderFragment?
+Kazo.Os.AppSdk.Blazor.Files.KazoFileDragSource.ChildContent.set -> void
+Kazo.Os.AppSdk.Blazor.Files.KazoFileDragSource.Class.get -> string?
+Kazo.Os.AppSdk.Blazor.Files.KazoFileDragSource.Class.set -> void
+Kazo.Os.AppSdk.Blazor.Files.KazoFileDragSource.DisposeAsync() -> System.Threading.Tasks.ValueTask
+Kazo.Os.AppSdk.Blazor.Files.KazoFileDragSource.Drag.get -> Kazo.Os.AppSdk.DragDrop.KazoFileDragData!
+Kazo.Os.AppSdk.Blazor.Files.KazoFileDragSource.Files.get -> System.Collections.Generic.IReadOnlyList<string!>?
+Kazo.Os.AppSdk.Blazor.Files.KazoFileDragSource.Files.set -> void
+Kazo.Os.AppSdk.Blazor.Files.KazoFileDragSource.Folders.get -> System.Collections.Generic.IReadOnlyList<string!>?
+Kazo.Os.AppSdk.Blazor.Files.KazoFileDragSource.Folders.set -> void
+Kazo.Os.AppSdk.Blazor.Files.KazoFileDragSource.KazoFileDragSource() -> void
+Kazo.Os.AppSdk.Blazor.Files.KazoFileDropZone
+Kazo.Os.AppSdk.Blazor.Files.KazoFileDropZone.Accept.get -> System.Collections.Generic.IReadOnlyList<string!>?
+Kazo.Os.AppSdk.Blazor.Files.KazoFileDropZone.Accept.set -> void
+Kazo.Os.AppSdk.Blazor.Files.KazoFileDropZone.AdditionalAttributes.get -> System.Collections.Generic.IReadOnlyDictionary<string!, object!>?
+Kazo.Os.AppSdk.Blazor.Files.KazoFileDropZone.AdditionalAttributes.set -> void
+Kazo.Os.AppSdk.Blazor.Files.KazoFileDropZone.ChildContent.get -> Microsoft.AspNetCore.Components.RenderFragment?
+Kazo.Os.AppSdk.Blazor.Files.KazoFileDropZone.ChildContent.set -> void
+Kazo.Os.AppSdk.Blazor.Files.KazoFileDropZone.Class.get -> string?
+Kazo.Os.AppSdk.Blazor.Files.KazoFileDropZone.Class.set -> void
+Kazo.Os.AppSdk.Blazor.Files.KazoFileDropZone.DisposeAsync() -> System.Threading.Tasks.ValueTask
+Kazo.Os.AppSdk.Blazor.Files.KazoFileDropZone.FilesDropped.get -> Microsoft.AspNetCore.Components.EventCallback<Kazo.Os.AppSdk.Blazor.Files.KazoFilesDroppedEventArgs!>
+Kazo.Os.AppSdk.Blazor.Files.KazoFileDropZone.FilesDropped.set -> void
+Kazo.Os.AppSdk.Blazor.Files.KazoFileDropZone.KazoFileDropZone() -> void
+Kazo.Os.AppSdk.Blazor.Files.KazoFileDropZone.OnDropAsync(string? json, int token, string? hostFilesJson) -> System.Threading.Tasks.Task!
+Kazo.Os.AppSdk.Blazor.Files.KazoFilesDroppedEventArgs
+Kazo.Os.AppSdk.Blazor.Files.KazoFilesDroppedEventArgs.Files.get -> System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.DragDrop.VirtualFileDragPayload!>!
+Kazo.Os.AppSdk.Blazor.Files.KazoFilesDroppedEventArgs.Folders.get -> System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.DragDrop.VirtualFolderDragPayload!>!
+Kazo.Os.AppSdk.Blazor.Files.KazoFilesDroppedEventArgs.HostFiles.get -> System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.IO.KazoHostFile!>!
+Kazo.Os.AppSdk.Blazor.Files.KazoFilesDroppedEventArgs.IsEmpty.get -> bool
+Kazo.Os.AppSdk.Blazor.Files.KazoFilesDroppedEventArgs.KazoFilesDroppedEventArgs(System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.DragDrop.VirtualFileDragPayload!>! files, System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.DragDrop.VirtualFolderDragPayload!>! folders, System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.IO.KazoHostFile!>! hostFiles) -> void
+override Kazo.Os.AppSdk.Blazor.Files.KazoFileDragSource.OnAfterRenderAsync(bool firstRender) -> System.Threading.Tasks.Task!
+override Kazo.Os.AppSdk.Blazor.Files.KazoFileDragSource.OnParametersSetAsync() -> System.Threading.Tasks.Task!
+override Kazo.Os.AppSdk.Blazor.Files.KazoFileDropZone.OnAfterRenderAsync(bool firstRender) -> System.Threading.Tasks.Task!
+~override Kazo.Os.AppSdk.Blazor.Files.KazoFileDragSource.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
+~override Kazo.Os.AppSdk.Blazor.Files.KazoFileDropZone.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
