@@ -82,7 +82,14 @@ public enum KazoAppInstallState
     /// An asset of the app did not match the hash of its manifest when first read (ADR 0098 §5); the
     /// asset was refused. <see cref="KazoAppInstallInfo.Problem"/> names it.
     /// </summary>
-    Damaged = 4
+    Damaged = 4,
+
+    /// <summary>
+    /// Installed, but a feature an administrator disabled for every user (ADR 0287): the feature itself,
+    /// one of its entry points, or an app that needs it. It does not run until the feature is enabled
+    /// again (<see cref="IAppManagementGateway.EnableFeatureAsync"/>).
+    /// </summary>
+    Disabled = 5
 }
 
 /// <summary>Which <c>apps.config</c> file an uninstall or reinstall writes (ADR 0048, section 3).</summary>
@@ -158,6 +165,32 @@ public interface IAppManagementGateway
     async ValueTask<KazoUninstallReport> UninstallWithReportAsync(
         string appId, KazoInstallScope scope, CancellationToken cancellationToken = default) =>
         new(await UninstallAsync(appId, scope, cancellationToken).ConfigureAwait(false), []);
+
+    /// <summary>
+    /// Disables a feature for every user without uninstalling it (ADR 0287): it, its entry points and
+    /// the apps that need it stop and no longer show, but its files, data, roles and permissions stay.
+    /// <see cref="PlanUninstallAsync"/> tells beforehand which apps and processes it stops. An
+    /// administrator must authenticate, unless the process already runs as root.
+    /// </summary>
+    /// <param name="featureId">Exact ID of a feature (ADR 0260).</param>
+    /// <param name="cancellationToken">Cancels the authentication and the write.</param>
+    /// <exception cref="InvalidOperationException">The ID is not a feature, or a system app needs it.</exception>
+    /// <exception cref="NotSupportedException">The gateway predates ADR 0287.</exception>
+    ValueTask<KazoDisableReport> DisableFeatureAsync(string featureId, CancellationToken cancellationToken = default) =>
+        throw new NotSupportedException("This app-management gateway cannot disable a feature.");
+
+    /// <summary>
+    /// Enables a disabled feature again (ADR 0287), with its entry points and the apps that need it,
+    /// and starts their automatic services for the session user. An administrator must authenticate,
+    /// unless the process already runs as root.
+    /// </summary>
+    /// <param name="featureId">Exact ID of a feature (ADR 0260).</param>
+    /// <param name="cancellationToken">Cancels the authentication and the write.</param>
+    /// <returns>Every app enabled again, dependencies first; empty when the feature was not disabled.</returns>
+    /// <exception cref="InvalidOperationException">The ID is not a feature.</exception>
+    /// <exception cref="NotSupportedException">The gateway predates ADR 0287.</exception>
+    ValueTask<IReadOnlyList<string>> EnableFeatureAsync(string featureId, CancellationToken cancellationToken = default) =>
+        throw new NotSupportedException("This app-management gateway cannot enable a feature.");
 
     /// <summary>Reads <c>/etc/kazoos/app-sources.config</c> (ADR 0182 §3).</summary>
     /// <param name="cancellationToken">Cancels the read.</param>
@@ -368,6 +401,11 @@ public sealed record KazoRunningProcessInfo(long Pid, string AppId, string Name,
 /// <param name="AppIds">Every app it removes, dependents first, then the app itself.</param>
 /// <param name="RunningProcesses">The running processes of those apps, which the uninstall stops.</param>
 public sealed record KazoUninstallPlan(IReadOnlyList<string> AppIds, IReadOnlyList<KazoRunningProcessInfo> RunningProcesses);
+
+/// <summary>What disabling a feature did (ADR 0287).</summary>
+/// <param name="AppIds">Every app disabled, dependents first, then the feature itself.</param>
+/// <param name="StoppedProcesses">The processes it stopped, each marked when it was forced after its grace period.</param>
+public sealed record KazoDisableReport(IReadOnlyList<string> AppIds, IReadOnlyList<KazoRunningProcessInfo> StoppedProcesses);
 
 /// <summary>What an uninstall did (ADR 0097, section 5).</summary>
 /// <param name="AppIds">Every app uninstalled, dependents first.</param>

@@ -31,3 +31,12 @@ Kazo.Os.Apps.Settings.InstalledFeaturesPanel.Dispose() -> void
 ~override Kazo.Os.Apps.Settings.InstalledFeaturesPanel.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void
 Kazo.Os.Apps.Settings.StoragePanel.OpenFeature.get -> Microsoft.AspNetCore.Components.EventCallback<string!>
 Kazo.Os.Apps.Settings.StoragePanel.OpenFeature.set -> void
+Kazo.Os.Apps.Settings.FeatureEnablementRow
+Kazo.Os.Apps.Settings.FeatureEnablementRow.Apps.get -> System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.Apps.KazoAppInstallInfo!>!
+Kazo.Os.Apps.Settings.FeatureEnablementRow.Apps.set -> void
+Kazo.Os.Apps.Settings.FeatureEnablementRow.Changed.get -> Microsoft.AspNetCore.Components.EventCallback
+Kazo.Os.Apps.Settings.FeatureEnablementRow.Changed.set -> void
+Kazo.Os.Apps.Settings.FeatureEnablementRow.Feature.get -> Kazo.Os.AppSdk.Apps.KazoAppInstallInfo!
+Kazo.Os.Apps.Settings.FeatureEnablementRow.Feature.set -> void
+Kazo.Os.Apps.Settings.FeatureEnablementRow.FeatureEnablementRow() -> void
+~override Kazo.Os.Apps.Settings.FeatureEnablementRow.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void

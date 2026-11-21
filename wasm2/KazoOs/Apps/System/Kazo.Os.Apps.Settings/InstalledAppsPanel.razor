@@ -199,6 +199,10 @@
                 {
                     @switch (entry.State)
                     {
+                        case KazoAppInstallState.Disabled:
+                            @* ADR 0287 §5: installed, but a feature it needs is disabled; Features enables it. *@
+                            <span class="app-badge app-badge-locked" title="@L["Apps.Disabled.Title"]">@L["Apps.Disabled"]</span>
+                            break;
                         case KazoAppInstallState.Installed:
                             <button type="button" class="apps-btn apps-btn-danger" disabled="@_isBusy" @onclick="() => AskUninstall(entry)">@L["Apps.Uninstall"]</button>
                             break;

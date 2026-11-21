@@ -1,0 +1,19 @@
+{
+  "id": "167ae0d7-cc0b-401f-a020-0024bc61911f",
+  "category": "improved",
+  "audience": [
+    "user",
+    "developer"
+  ],
+  "title": {
+    "en": "Disabling a feature keeps it installed",
+    "fr": "Désactiver une fonctionnalité la garde installée"
+  },
+  "description": {
+    "en": "In Settings ▸ Features, an administrator now disables a feature for every user without uninstalling it: the feature, its entry points (services, windows, commands, Settings pages) and the apps that depend on it stop and no longer show, but its files, data, roles and granted permissions stay. The confirmation names the apps and processes it stops. Enable puts it all back and starts its automatic services at once. The state is kept in /etc/kazoos/features.config. In the terminal: sudo kazopkg disable <id> and sudo kazopkg enable <id>; kazopkg list and info mark a disabled feature. An update keeps a feature disabled; removing its package forgets the state. For developers: KazoAppManagement.DisableFeatureAsync and EnableFeatureAsync, KazoDisableReport, KazoAppInstallState.Disabled.",
+    "fr": "Dans Paramètres ▸ Fonctionnalités, un administrateur désactive maintenant une fonctionnalité pour tous les utilisateurs sans la désinstaller : la fonctionnalité, ses points d’entrée (services, fenêtres, commandes, pages des Paramètres) et les apps qui en dépendent s’arrêtent et ne s’affichent plus, mais ses fichiers, ses données, ses rôles et ses permissions accordées restent. La confirmation nomme les apps et les processus arrêtés. Activer remet tout en service et relance aussitôt ses services automatiques. L’état est gardé dans /etc/kazoos/features.config. Au terminal : sudo kazopkg disable <id> et sudo kazopkg enable <id> ; kazopkg list et info marquent une fonctionnalité désactivée. Une mise à jour la garde désactivée ; retirer son paquet oublie l’état. Pour les développeurs : KazoAppManagement.DisableFeatureAsync et EnableFeatureAsync, KazoDisableReport, KazoAppInstallState.Disabled."
+  },
+  "links": [
+    "doc/en/wasm/dev/adr/0287-disable-a-feature-without-uninstalling-it.md"
+  ]
+}

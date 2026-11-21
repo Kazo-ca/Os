@@ -815,12 +815,33 @@ public sealed class AppLifecycleOrchestrator
     /// are left to <see cref="StartBootServicesAsync"/>.
     /// </summary>
     /// <param name="principal">Authenticated principal the services run as.</param>
-    public async Task<IReadOnlyList<AppLaunchResult>> StartAllServicesAsync(AuthenticatedPrincipal principal)
+    public Task<IReadOnlyList<AppLaunchResult>> StartAllServicesAsync(AuthenticatedPrincipal principal)
     {
         ArgumentNullException.ThrowIfNull(principal);
+        return StartLoginServicesAsync(principal, AutomaticServiceCandidates(AppServiceStartup.Login));
+    }
 
+    /// <summary>
+    /// Starts the enabled, automatic session services among <paramref name="appIds"/>, as
+    /// <see cref="StartAllServicesAsync"/> does after a login: used when a feature is enabled again
+    /// (ADR 0287 §3), so its services come back without waiting for the next login.
+    /// </summary>
+    /// <param name="principal">Authenticated principal the services run as.</param>
+    /// <param name="appIds">The apps whose automatic services may start; any other app is left alone.</param>
+    public Task<IReadOnlyList<AppLaunchResult>> StartAutomaticServicesAsync(AuthenticatedPrincipal principal, IReadOnlyCollection<string> appIds)
+    {
+        ArgumentNullException.ThrowIfNull(principal);
+        ArgumentNullException.ThrowIfNull(appIds);
+        HashSet<string> wanted = new(appIds, StringComparer.Ordinal);
+        return StartLoginServicesAsync(
+            principal,
+            AutomaticServiceCandidates(AppServiceStartup.Login).Where(manifest => wanted.Contains(manifest.Id)));
+    }
+
+    private async Task<IReadOnlyList<AppLaunchResult>> StartLoginServicesAsync(AuthenticatedPrincipal principal, IEnumerable<AppManifest> candidates)
+    {
         List<AppLaunchResult> results = [];
-        foreach (AppManifest manifest in AutomaticServiceCandidates(AppServiceStartup.Login))
+        foreach (AppManifest manifest in candidates)
         {
             string appId = manifest.Id;
             ServiceStartMode effectiveMode = _fileSystem is null

@@ -320,3 +320,22 @@ Kazo.Os.AppSdk.Apps.KazoAppInfo.Roles.get -> System.Collections.Generic.IReadOnl
 Kazo.Os.AppSdk.Apps.KazoAppInfo.RequiresRole.init -> void
 Kazo.Os.AppSdk.Apps.KazoAppInfo.ProvidedCapabilities.get -> System.Collections.Generic.IReadOnlyList<string!>!
 Kazo.Os.AppSdk.Apps.KazoAppInfo.ProvidedCapabilities.init -> void
+Kazo.Os.AppSdk.Apps.IAppManagementGateway.DisableFeatureAsync(string! featureId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.AppSdk.Apps.KazoDisableReport!>
+Kazo.Os.AppSdk.Apps.IAppManagementGateway.EnableFeatureAsync(string! featureId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<string!>!>
+Kazo.Os.AppSdk.Apps.KazoAppInstallState.Disabled = 5 -> Kazo.Os.AppSdk.Apps.KazoAppInstallState
+Kazo.Os.AppSdk.Apps.KazoDisableReport
+Kazo.Os.AppSdk.Apps.KazoDisableReport.<Clone>$() -> Kazo.Os.AppSdk.Apps.KazoDisableReport!
+Kazo.Os.AppSdk.Apps.KazoDisableReport.AppIds.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Kazo.Os.AppSdk.Apps.KazoDisableReport.AppIds.init -> void
+Kazo.Os.AppSdk.Apps.KazoDisableReport.Deconstruct(out System.Collections.Generic.IReadOnlyList<string!>! AppIds, out System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.Apps.KazoRunningProcessInfo!>! StoppedProcesses) -> void
+Kazo.Os.AppSdk.Apps.KazoDisableReport.Equals(Kazo.Os.AppSdk.Apps.KazoDisableReport? other) -> bool
+Kazo.Os.AppSdk.Apps.KazoDisableReport.KazoDisableReport(System.Collections.Generic.IReadOnlyList<string!>! AppIds, System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.Apps.KazoRunningProcessInfo!>! StoppedProcesses) -> void
+Kazo.Os.AppSdk.Apps.KazoDisableReport.StoppedProcesses.get -> System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.Apps.KazoRunningProcessInfo!>!
+Kazo.Os.AppSdk.Apps.KazoDisableReport.StoppedProcesses.init -> void
+override Kazo.Os.AppSdk.Apps.KazoDisableReport.Equals(object? obj) -> bool
+override Kazo.Os.AppSdk.Apps.KazoDisableReport.GetHashCode() -> int
+override Kazo.Os.AppSdk.Apps.KazoDisableReport.ToString() -> string!
+static Kazo.Os.AppSdk.Apps.KazoAppManagement.DisableFeatureAsync(string! featureId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Kazo.Os.AppSdk.Apps.KazoDisableReport!>!
+static Kazo.Os.AppSdk.Apps.KazoAppManagement.EnableFeatureAsync(string! featureId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<string!>!>!
+static Kazo.Os.AppSdk.Apps.KazoDisableReport.operator !=(Kazo.Os.AppSdk.Apps.KazoDisableReport? left, Kazo.Os.AppSdk.Apps.KazoDisableReport? right) -> bool
+static Kazo.Os.AppSdk.Apps.KazoDisableReport.operator ==(Kazo.Os.AppSdk.Apps.KazoDisableReport? left, Kazo.Os.AppSdk.Apps.KazoDisableReport? right) -> bool

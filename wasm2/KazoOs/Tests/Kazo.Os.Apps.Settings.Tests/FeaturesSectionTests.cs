@@ -158,6 +158,21 @@ public sealed class FeaturesSectionTests
     }
 
     [Fact]
+    public async Task An_installed_feature_shows_its_state_and_an_uninstalled_one_keeps_reinstall()
+    {
+        FakeAppManagement management = new(
+            Install(App("ca.kazo.x86", "Os-x86", AppKind.Feature)),
+            new KazoAppInstallInfo(App("ca.kazo.dos", "Os-Dos", AppKind.Feature), KazoAppInstallState.UninstalledForUser, ["ca.kazo.dos"]));
+        await using Harness harness = await Harness.RenderAsync<InstalledFeaturesPanel>(Context(management), new FakeFeatureSettingsPages(), []);
+
+        string html = harness.Html();
+        // ADR 0287 §5: the installed feature's card has its state; the uninstalled one, the install row.
+        Assert.Contains("Enabled", html, StringComparison.Ordinal);
+        Assert.Contains("Only an administrator enables or disables a feature.", html, StringComparison.Ordinal);
+        Assert.Contains("Reinstall", html, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task Without_a_feature_installed_features_points_to_the_store()
     {
         await using Harness harness = await Harness.RenderAsync<InstalledFeaturesPanel>(

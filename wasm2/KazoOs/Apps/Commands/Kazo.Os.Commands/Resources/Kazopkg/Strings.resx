@@ -85,7 +85,7 @@
     <value>kazopkg: {0} updated from {1} to {2}</value>
   </data>
   <data name="Usage" xml:space="preserve">
-    <value>usage: kazopkg install &lt;appId|repo&gt;[@version] [--user|--system] [--yes] | remove &lt;appId&gt; [--user|--system] [--yes] | update [&lt;appId&gt;] [--yes] | rollback &lt;appId&gt; [--user|--system] | repair [--system] | list | info &lt;appId|repo&gt; | sources [add &lt;source&gt; [--trusted] | remove &lt;source&gt;] | policy [block|unblock app|category|capability &lt;value&gt;]</value>
+    <value>usage: kazopkg install &lt;appId|repo&gt;[@version] [--user|--system] [--yes] | remove &lt;appId&gt; [--user|--system] [--yes] | update [&lt;appId&gt;] [--yes] | rollback &lt;appId&gt; [--user|--system] | repair [--system] | list | info &lt;appId|repo&gt; | sources [add &lt;source&gt; [--trusted] | remove &lt;source&gt;] | policy [block|unblock app|category|capability &lt;value&gt;] | disable &lt;featureId&gt; [--yes] | enable &lt;featureId&gt;</value>
   </data>
   <data name="Yes" xml:space="preserve">
     <value>yes</value>
@@ -233,5 +233,32 @@
   </data>
   <data name="Disabled" xml:space="preserve">
     <value>kazopkg: {0} disabled</value>
+  </data>
+  <data name="DisableDependents" xml:space="preserve">
+    <value>These apps depend on it and are disabled with it: {0}</value>
+  </data>
+  <data name="DisableProcesses" xml:space="preserve">
+    <value>These processes will be stopped: {0}</value>
+  </data>
+  <data name="FeatureDisabled" xml:space="preserve">
+    <value>{0} is disabled for every user. It stays installed: kazopkg enable {0} puts it back.</value>
+  </data>
+  <data name="FeatureEnabled" xml:space="preserve">
+    <value>{0} is enabled again.</value>
+  </data>
+  <data name="FeatureNotDisabled" xml:space="preserve">
+    <value>{0} was not disabled.</value>
+  </data>
+  <data name="ProcessStopped" xml:space="preserve">
+    <value>  stopped: {0} ({1})</value>
+  </data>
+  <data name="ProcessForced" xml:space="preserve">
+    <value>  stopped: {0} ({1}), forced after its grace period</value>
+  </data>
+  <data name="DisabledMark" xml:space="preserve">
+    <value>(disabled)</value>
+  </data>
+  <data name="InfoDisabled" xml:space="preserve">
+    <value>State: disabled for every user (kazopkg enable {0})</value>
   </data>
 </root>

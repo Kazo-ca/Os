@@ -2349,4 +2349,49 @@
   <data name="Features.Page.StopFailed" xml:space="preserve">
     <value>La page n'a pas pu être arrêtée : {0}</value>
   </data>
+  <data name="Features.State.Enabled" xml:space="preserve">
+    <value>Activée</value>
+  </data>
+  <data name="Features.State.Disabled" xml:space="preserve">
+    <value>Désactivée</value>
+  </data>
+  <data name="Features.Disable" xml:space="preserve">
+    <value>Désactiver</value>
+  </data>
+  <data name="Features.Enable" xml:space="preserve">
+    <value>Activer</value>
+  </data>
+  <data name="Features.Disabling" xml:space="preserve">
+    <value>Désactivation…</value>
+  </data>
+  <data name="Features.Enabling" xml:space="preserve">
+    <value>Activation…</value>
+  </data>
+  <data name="Features.Disable.Title" xml:space="preserve">
+    <value>Désactiver {0} ?</value>
+  </data>
+  <data name="Features.Disable.Keeps" xml:space="preserve">
+    <value>La fonctionnalité reste installée : ses fichiers, ses données, ses rôles et ses permissions accordées sont gardés. Ses points d'entrée s'arrêtent et sont cachés pour tous les utilisateurs jusqu'à ce qu'elle soit activée.</value>
+  </data>
+  <data name="Features.Disable.Dependents" xml:space="preserve">
+    <value>Ces apps en dépendent et seront désactivées avec elle :</value>
+  </data>
+  <data name="Features.AdminOnly" xml:space="preserve">
+    <value>Seul un administrateur active ou désactive une fonctionnalité.</value>
+  </data>
+  <data name="Features.Enabled.Message" xml:space="preserve">
+    <value>{0} est de nouveau activée.</value>
+  </data>
+  <data name="Features.Disabled.Message" xml:space="preserve">
+    <value>{0} est désactivée. Rien n'en était en cours d'exécution.</value>
+  </data>
+  <data name="Features.Error.NoAdmin" xml:space="preserve">
+    <value>Aucun administrateur ne s'est authentifié : /etc/kazoos/features.config n'a pas été modifié.</value>
+  </data>
+  <data name="Apps.Disabled" xml:space="preserve">
+    <value>Désactivée</value>
+  </data>
+  <data name="Apps.Disabled.Title" xml:space="preserve">
+    <value>Une fonctionnalité dont elle a besoin est désactivée. Paramètres ▸ Fonctionnalités la réactive.</value>
+  </data>
 </root>

@@ -24,6 +24,12 @@
   <data name="Admin.App.Reinstall" xml:space="preserve">
     <value>Réinstaller {0} pour tous les utilisateurs</value>
   </data>
+  <data name="Admin.Feature.Disable" xml:space="preserve">
+    <value>Désactiver la fonctionnalité {0} pour tous les utilisateurs</value>
+  </data>
+  <data name="Admin.Feature.Enable" xml:space="preserve">
+    <value>Activer la fonctionnalité {0} pour tous les utilisateurs</value>
+  </data>
   <data name="Admin.App.Uninstall" xml:space="preserve">
     <value>Désinstaller {0} pour tous les utilisateurs</value>
   </data>

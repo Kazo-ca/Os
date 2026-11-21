@@ -47,6 +47,8 @@ public sealed class AppInstallationService : IAppInstallationService, IAsyncDisp
     private readonly WebData.IWebSiteDatabaseStore? _webDatabases;
     private readonly IDisposable[] _sessionSubscriptions;
     private readonly SemaphoreSlim _gate = new(1, 1);
+    // ADR 0287: one disable or enable at a time, from the state read before the edit to the reload after.
+    private readonly SemaphoreSlim _featureChanges = new(1, 1);
     private readonly HashSet<string> _loggedWarnings = new(StringComparer.Ordinal);
     private readonly List<SettingsFilesWatcher> _watchers = [];
     private readonly object _sync = new();
@@ -55,6 +57,8 @@ public sealed class AppInstallationService : IAppInstallationService, IAsyncDisp
     private IReadOnlySet<string> _userListed = new HashSet<string>(StringComparer.Ordinal);
     private IReadOnlySet<string> _machineEffective = new HashSet<string>(StringComparer.Ordinal);
     private IReadOnlySet<string> _effective = new HashSet<string>(StringComparer.Ordinal);
+    private IReadOnlySet<string> _disabledFeatures = new HashSet<string>(StringComparer.Ordinal);
+    private IReadOnlySet<string> _disabledEffective = new HashSet<string>(StringComparer.Ordinal);
     private bool _disposed;
 
     /// <summary>Creates the service; call <see cref="StartAsync"/> once storage is ready.</summary>
@@ -132,15 +136,14 @@ public sealed class AppInstallationService : IAppInstallationService, IAsyncDisp
         }
 
         // ADR 0260 §2: a feature's child has the state of its feature.
-        if (_catalog.GetFeatureOf(appId) is { } feature)
-        {
-            appId = feature;
-        }
+        string own = _catalog.GetFeatureOf(appId) ?? appId;
 
         lock (_sync)
         {
-            return _machineEffective.Contains(appId) ? AppInstallationState.UninstalledForMachine
-                : _effective.Contains(appId) ? AppInstallationState.UninstalledForUser
+            // ADR 0287 §2: an uninstall wins over a disabled feature.
+            return _machineEffective.Contains(own) ? AppInstallationState.UninstalledForMachine
+                : _effective.Contains(own) ? AppInstallationState.UninstalledForUser
+                : _disabledEffective.Contains(own) ? AppInstallationState.Disabled
                 : AppInstallationState.Installed;
         }
     }
@@ -205,14 +208,7 @@ public sealed class AppInstallationService : IAppInstallationService, IAsyncDisp
             _logger.LogInformation("apps: {AppId} uninstalled (scope={Scope}, by={User})", uninstalled, ScopeName(scope), ActorName());
         }
 
-        IReadOnlyList<AppProcessInfo> reloaded = await ReloadCoreAsync(cancellationToken).ConfigureAwait(false);
-        HashSet<long> reported = [.. reloaded.Select(process => process.Pid)];
-        IReadOnlyList<AppProcessInfo> stopped =
-        [
-            .. reloaded,
-            .. runningBefore.Where(process => !reported.Contains(process.Pid)
-                && !_orchestrator.TryGetRunningInstance(ProcessId.FromInt64(process.Pid), out _, out _))
-        ];
+        IReadOnlyList<AppProcessInfo> stopped = MergeStopped(await ReloadCoreAsync(cancellationToken).ConfigureAwait(false), runningBefore);
         foreach (AppProcessInfo process in stopped)
         {
             _logger.LogInformation(
@@ -318,6 +314,126 @@ public sealed class AppInstallationService : IAppInstallationService, IAsyncDisp
         return new AppInstallationResult(true, toRemove, []);
     }
 
+    /// <inheritdoc />
+    public async ValueTask<AppInstallationResult> DisableFeatureAsync(
+        string featureId, IAppFileSystemGateway writer, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(writer);
+        if (ValidateFeature(featureId) is { } refused)
+        {
+            return refused;
+        }
+
+        // ADR 0287 §2: the same set as an uninstall, the feature's entry points and dependents included.
+        IReadOnlyList<string> closure = GetUninstallClosure(featureId);
+        string? system = closure.FirstOrDefault(_catalog.IsSystemApp);
+        if (system is not null)
+        {
+            return AppInstallationResult.Failed($"apps.closure.system-app:{system}");
+        }
+
+        IReadOnlyList<AppProcessInfo> stopped;
+        await _featureChanges.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            IReadOnlyList<AppProcessInfo> runningBefore = _orchestrator.GetRunningProcesses(closure);
+            await EditAsync(writer, FeaturesConfigDocument.MachinePath, content => FeaturesConfigDocument.MarkDisabled(content, featureId), createIfMissing: true, cancellationToken)
+                .ConfigureAwait(false);
+            _logger.LogInformation("apps: {AppId} disabled (by={User})", featureId, ActorName());
+            stopped = MergeStopped(await ReloadCoreAsync(cancellationToken).ConfigureAwait(false), runningBefore);
+        }
+        finally
+        {
+            _featureChanges.Release();
+        }
+
+        foreach (AppProcessInfo process in stopped)
+        {
+            _logger.LogInformation(
+                "apps: process {Pid} ({Name}, user {User}) stopped by the disable of {Feature}{Forced}",
+                process.Pid, process.Name, process.UserName, featureId, process.Forced ? ", forced after its grace period" : string.Empty);
+        }
+
+        return new AppInstallationResult(true, closure, [], stopped);
+    }
+
+    /// <inheritdoc />
+    public async ValueTask<AppInstallationResult> EnableFeatureAsync(
+        string featureId, IAppFileSystemGateway writer, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(writer);
+        if (ValidateFeature(featureId) is { } refused)
+        {
+            return refused;
+        }
+
+        string[] enabled;
+        await _featureChanges.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            HashSet<string> disabledBefore;
+            lock (_sync)
+            {
+                if (!_disabledFeatures.Contains(featureId))
+                {
+                    return new AppInstallationResult(true, [], []);
+                }
+
+                disabledBefore = [.. _disabledEffective];
+            }
+
+            await EditAsync(writer, FeaturesConfigDocument.MachinePath, content => FeaturesConfigDocument.MarkEnabled(content, featureId), createIfMissing: false, cancellationToken)
+                .ConfigureAwait(false);
+            _logger.LogInformation("apps: {AppId} enabled (by={User})", featureId, ActorName());
+            await ReloadAsync(cancellationToken).ConfigureAwait(false);
+            enabled = [.. _catalog.ActivationOrder.Where(id => disabledBefore.Contains(id) && _enablement.IsEnabled(id))];
+        }
+        finally
+        {
+            _featureChanges.Release();
+        }
+
+        // ADR 0287 §3: the automatic services come back now, not at the next login.
+        if (_session.CurrentPrincipal is { } principal && enabled.Length > 0)
+        {
+            await _orchestrator.StartAutomaticServicesAsync(principal, enabled).ConfigureAwait(false);
+        }
+
+        return new AppInstallationResult(true, enabled, []);
+    }
+
+    /// <summary>Refuses an ID that is not a feature the user may disable (ADR 0287 §1); <see langword="null"/> when it is one.</summary>
+    private AppInstallationResult? ValidateFeature(string featureId)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(featureId);
+        if (!_catalog.Manifests.TryGetValue(featureId, out AppManifest? manifest))
+        {
+            return AppInstallationResult.Failed($"apps.app.not-found:{featureId}");
+        }
+
+        if (_catalog.IsSystemApp(featureId))
+        {
+            return AppInstallationResult.Failed($"apps.app.system:{featureId}");
+        }
+
+        return manifest.Kind == AppKind.Feature ? null : AppInstallationResult.Failed($"apps.app.not-feature:{featureId}");
+    }
+
+    /// <summary>
+    /// The processes a change stopped: those the reload reported, and those running before that are
+    /// gone now, which the file watcher may have stopped first (ADR 0097, section 5).
+    /// </summary>
+    private IReadOnlyList<AppProcessInfo> MergeStopped(IReadOnlyList<AppProcessInfo> reloaded, IReadOnlyList<AppProcessInfo> runningBefore)
+    {
+        HashSet<long> reported = [.. reloaded.Select(process => process.Pid)];
+        return
+        [
+            .. reloaded,
+            .. runningBefore.Where(process => !reported.Contains(process.Pid)
+                && !_orchestrator.TryGetRunningInstance(ProcessId.FromInt64(process.Pid), out _, out _))
+        ];
+    }
+
     /// <summary>
     /// Re-reads both files and applies the effective state: newly uninstalled apps are stopped and
     /// disabled, reinstalled ones enabled again. A missing or unreadable file means "nothing uninstalled".
@@ -348,15 +464,22 @@ public sealed class AppInstallationService : IAppInstallationService, IAsyncDisp
             // ADR 0189 §3: another user's personal apps are not installed for this session.
             effective.UnionWith(AppsConfigDocument.ExpandDependents(_catalog, InstalledPackages?.GetHiddenFor(principal?.HomePath) ?? new HashSet<string>()));
 
+            // ADR 0287: a disabled feature stays installed, but neither it, its entry points nor the
+            // apps that need it run.
+            FeaturesConfigReadResult features = await ReadFeaturesFileAsync(cancellationToken).ConfigureAwait(false);
+            HashSet<string> disabledEffective = ExpandGuarded(features.DisabledFeatureIds, FeaturesConfigDocument.MachinePath, "disabled");
+
             lock (_sync)
             {
                 _machineListed = machine.UninstalledAppIds;
                 _userListed = user.UninstalledAppIds;
                 _machineEffective = machineEffective;
                 _effective = effective;
+                _disabledFeatures = features.DisabledFeatureIds;
+                _disabledEffective = disabledEffective;
             }
 
-            stopped = await ApplyAsync(effective).ConfigureAwait(false);
+            stopped = await ApplyAsync(new HashSet<string>(effective.Concat(disabledEffective), StringComparer.Ordinal)).ConfigureAwait(false);
         }
         finally
         {
@@ -389,7 +512,10 @@ public sealed class AppInstallationService : IAppInstallationService, IAsyncDisp
     /// Expands listed apps with their dependents, dropping (with a warning) any listed app whose
     /// expansion would reach a system app.
     /// </summary>
-    private HashSet<string> ExpandGuarded(IEnumerable<string> listed, VirtualPath path)
+    /// <param name="listed">App IDs listed in the file.</param>
+    /// <param name="path">The file, named in the warning.</param>
+    /// <param name="change">What the file does to them, named in the warning: <c>uninstalled</c> or <c>disabled</c> (ADR 0287).</param>
+    private HashSet<string> ExpandGuarded(IEnumerable<string> listed, VirtualPath path, string change = "uninstalled")
     {
         List<string> accepted = [];
         foreach (string appId in listed.Distinct(StringComparer.Ordinal))
@@ -401,11 +527,31 @@ public sealed class AppInstallationService : IAppInstallationService, IAsyncDisp
             }
             else
             {
-                LogWarningOnce($"apps: {path.Value}: {appId} is needed by system app {system} and cannot be uninstalled, line ignored");
+                LogWarningOnce($"apps: {path.Value}: {appId} is needed by system app {system} and cannot be {change}, line ignored");
             }
         }
 
         return AppsConfigDocument.ExpandDependents(_catalog, accepted);
+    }
+
+    /// <summary>Reads <c>/etc/kazoos/features.config</c> as the system (ADR 0287); a missing or unreadable file disables nothing.</summary>
+    private async ValueTask<FeaturesConfigReadResult> ReadFeaturesFileAsync(CancellationToken cancellationToken)
+    {
+        IAppFileSystemGateway system = CreateGateway(OsSettingsService.CreateSystemOperation(), ["system"]);
+        SettingsFileReadResult read = await SettingsTextFile.ReadAsync(system, FeaturesConfigDocument.MachinePath, cancellationToken).ConfigureAwait(false);
+        if (read.Error is { } error)
+        {
+            LogWarningOnce($"apps: cannot read {FeaturesConfigDocument.MachinePath.Value}: {error.Code}, nothing disabled by it");
+            return FeaturesConfigReadResult.Empty;
+        }
+
+        FeaturesConfigReadResult result = FeaturesConfigDocument.Read(read.Content, _catalog);
+        foreach (string warning in result.Warnings)
+        {
+            LogWarningOnce(warning);
+        }
+
+        return result;
     }
 
     private async ValueTask<IReadOnlyList<AppProcessInfo>> ApplyAsync(IReadOnlySet<string> effective)
@@ -549,7 +695,7 @@ public sealed class AppInstallationService : IAppInstallationService, IAsyncDisp
         List<SettingsFilesWatcher> started = [];
         SettingsFilesWatcher machine = new(
             CreateWatchGateway(OsSettingsService.CreateSystemOperation(), ["system"]),
-            [AppsConfigDocument.MachinePath],
+            [AppsConfigDocument.MachinePath, FeaturesConfigDocument.MachinePath],
             OnFileChangedAsync);
         await machine.StartAsync(cancellationToken).ConfigureAwait(false);
         started.Add(machine);

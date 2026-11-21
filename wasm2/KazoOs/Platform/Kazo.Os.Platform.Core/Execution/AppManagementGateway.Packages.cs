@@ -332,7 +332,19 @@ internal sealed partial class AppManagementGateway
 
         AppPackageSource removed = await Translate(() => packages.RemoveAsync(system, appId, by, cancellationToken)).ConfigureAwait(false);
         IReadOnlyList<string> disabled = await DisableDependentsAsync(appId, systemWide: true, system, user, cancellationToken).ConfigureAwait(false);
-        await ActivateInstalledAppsAsync(CancellationToken.None).ConfigureAwait(false);
+        try
+        {
+            if (feature)
+            {
+                // ADR 0287 §7: a removed feature forgets its "disabled" line, so a new install arrives enabled.
+                await ForgetDisabledFeatureAsync(appId, system, cancellationToken).ConfigureAwait(false);
+            }
+        }
+        finally
+        {
+            // The package is gone either way: the running catalog must learn it.
+            await ActivateInstalledAppsAsync(CancellationToken.None).ConfigureAwait(false);
+        }
         return ToPublic(appId, removed, systemWide: true, removed: true) with { DisabledDependents = disabled };
     }
 
@@ -568,6 +580,24 @@ internal sealed partial class AppManagementGateway
         catch (AppPackageException exception)
         {
             throw new KazoPackageException(exception.Code, exception.Message);
+        }
+    }
+
+    /// <summary>
+    /// Removes the feature's line from <c>/etc/kazoos/features.config</c> (ADR 0287 §7). A missing file
+    /// means it was never disabled; any other failure is reported, since the line would disable the
+    /// next install.
+    /// </summary>
+    private static async ValueTask ForgetDisabledFeatureAsync(string featureId, IAppFileSystemGateway system, CancellationToken cancellationToken)
+    {
+        FileSystemError? error = await SettingsTextFile.EditAsync(
+                system, FeaturesConfigDocument.MachinePath, content => FeaturesConfigDocument.MarkEnabled(content, featureId), createIfMissing: false, cancellationToken)
+            .ConfigureAwait(false);
+        if (error is not null && error.Code != FileSystemErrorCode.NotFound)
+        {
+            throw new IOException(
+                $"{featureId} was removed, but {error.Path?.Value ?? FeaturesConfigDocument.MachinePath.Value} could not be updated ({error.Code}): "
+                + $"remove its line by hand, or a new install of {featureId} arrives disabled.");
         }
     }
 
