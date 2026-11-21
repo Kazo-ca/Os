@@ -16,6 +16,10 @@
 //   await installApp(page, setup);
 //   await openApp(page, 'My App');
 //
+// The same calls work on a phone: a context made with a phone device (for example
+// newAppContext(browser, setup, { ...devices['Pixel 7'] })) runs the mobile shell, and the harness
+// then uses its app drawer instead of the desktop launcher (see SHELLS).
+//
 // No request leaves the machine for the package: the addresses kazopkg reads on
 // raw.githubusercontent.com for the repository are answered from the packages folder.
 import { createServer } from 'node:http';
@@ -24,6 +28,12 @@ import path from 'node:path';
 
 /** The administrator the harness creates on the first boot. */
 export const ACCOUNT = Object.freeze({ login: 'neo', displayName: 'Neo', password: 'matrix123' });
+
+/**
+ * The shells this harness drives: an app's tests read it to know whether this Kazo OS version can
+ * install and open the app on a phone too (since 3.6.0), or only on the desktop.
+ */
+export const SHELLS = Object.freeze(['desktop', 'phone']);
 
 /** Time a step may take: the first WebAssembly boot downloads and compiles the whole OS. */
 export const STEP_TIMEOUT_MS = 180_000;
@@ -150,9 +160,35 @@ export function watchFailures(page) {
     return failures;
 }
 
+/** The desktop shell's launcher button. */
+const desktopLauncher = page => page.getByRole('button', { name: 'App launcher' });
+
+/** The mobile shell's button that opens the app drawer (dock). */
+const phoneDrawerButton = page => page.getByRole('button', { name: 'All applications', exact: true });
+
+/** The mobile shell's Home button (navigation bar), always on screen, even over a running app. */
+const phoneHomeButton = page => page.getByRole('button', { name: 'Home', exact: true });
+
+// The shell each page booted into (bootFirstAccount): it does not change while the page runs.
+const bootedShells = new WeakMap();
+
+/**
+ * Whether the page runs the mobile shell (a phone device: touch, small screen) rather than the
+ * desktop. The shell is chosen at boot: bootFirstAccount records it; for a page booted otherwise,
+ * the shell is read from what shows (the desktop launcher, or the home screen's drawer button).
+ * @param {import('playwright').Page} page The booted page.
+ */
+export async function isPhone(page) {
+    if (!bootedShells.has(page)) {
+        await desktopLauncher(page).or(phoneDrawerButton(page)).first().waitFor({ timeout: STEP_TIMEOUT_MS });
+        bootedShells.set(page, await desktopLauncher(page).count() > 0 ? 'desktop' : 'phone');
+    }
+    return bootedShells.get(page) === 'phone';
+}
+
 /**
  * First boot of a fresh profile: creates the administrator, then skips the welcome wizard
- * (ADR 0276) when this version has it.
+ * (ADR 0276) when this version has it. Waits for the desktop, or the home screen on a phone.
  * @param {import('playwright').Page} page A page of a new context.
  * @param {string} baseUrl The OS address.
  */
@@ -165,21 +201,35 @@ export async function bootFirstAccount(page, baseUrl, account = ACCOUNT) {
     await page.getByLabel('Confirm password').fill(account.password);
     await page.getByRole('button', { name: 'Create local profile' }).click();
     const skip = page.locator('.welcome-skip');
-    const desktop = page.getByRole('button', { name: 'App launcher' });
-    await skip.or(desktop).first().waitFor({ timeout: STEP_TIMEOUT_MS });
+    const shell = desktopLauncher(page).or(phoneDrawerButton(page)).first();
+    await skip.or(shell).first().waitFor({ timeout: STEP_TIMEOUT_MS });
     if (await skip.isVisible()) {
         await skip.click();
     }
-    await desktop.waitFor({ timeout: STEP_TIMEOUT_MS });
+    await shell.waitFor({ timeout: STEP_TIMEOUT_MS });
+    bootedShells.set(page, await desktopLauncher(page).count() > 0 ? 'desktop' : 'phone');
 }
 
 /**
- * Opens an app from the launcher's search, on the desktop.
+ * Opens an app from the launcher's search on the desktop, or from the app drawer's search on a
+ * phone.
  * @param {import('playwright').Page} page The booted page.
  * @param {string} name The app's name as the launcher shows it (manifest "name").
  */
 export async function openApp(page, name) {
-    await page.getByRole('button', { name: 'App launcher' }).click({ timeout: STEP_TIMEOUT_MS });
+    if (await isPhone(page)) {
+        // The drawer opens from the home screen: go Home first when an app fills the screen.
+        if (!(await phoneDrawerButton(page).isVisible())) {
+            await phoneHomeButton(page).tap({ timeout: STEP_TIMEOUT_MS });
+        }
+        await phoneDrawerButton(page).tap({ timeout: STEP_TIMEOUT_MS });
+        const drawer = page.getByRole('dialog', { name: 'All applications' });
+        await drawer.getByRole('searchbox', { name: 'Search applications' }).fill(name);
+        // Each app of the drawer is a button named after the app.
+        await drawer.getByRole('button', { name, exact: true }).first().tap({ timeout: STEP_TIMEOUT_MS });
+        return;
+    }
+    await desktopLauncher(page).click({ timeout: STEP_TIMEOUT_MS });
     await page.getByRole('combobox', { name: 'Search applications' }).fill(name);
     // The button's name is "Launch <name>", followed by ", <description>" when the app has one.
     const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -204,7 +254,8 @@ async function waitForTerminal(rows, predicate, what) {
 
 /**
  * Installs the app as the Store does: `sudo kazopkg install <repository>` in the Terminal, as the
- * administrator, the install-time API check included (ADR 0182 §5.3). Closes the Terminal after.
+ * administrator, the install-time API check included (ADR 0182 §5.3), on the desktop or on a phone.
+ * Closes the Terminal after.
  * Throws with the Terminal's text when kazopkg refuses the package.
  * @param {import('playwright').Page} page The booted page (its context made by newAppContext).
  * @param {{ repository: string }} setup The CI setup.
@@ -214,7 +265,12 @@ export async function installApp(page, { repository }, account = ACCOUNT) {
     const panel = page.locator('[data-terminal-panel]').last();
     const rows = panel.locator('.xterm-rows').first();
     await waitForTerminal(rows, text => text.includes('$'), 'the shell prompt');
-    await panel.locator('.xterm-screen').first().click();
+    const screen = panel.locator('.xterm-screen').first();
+    if (await isPhone(page)) {
+        await screen.tap();
+    } else {
+        await screen.click();
+    }
     await page.keyboard.type(`sudo kazopkg install ${repository}`);
     await page.keyboard.press('Enter');
     const prompt = page.locator('.credential-prompt-dialog, .aaa-window').first();

@@ -1,0 +1,18 @@
+{
+  "id": "d8581a69-a79e-4d06-9508-662d599f6f47",
+  "category": "developer",
+  "audience": [
+    "developer"
+  ],
+  "title": {
+    "en": "Test an app on a phone on the published trimmed OS",
+    "fr": "Tester une app sur téléphone sur l'OS rogné publié"
+  },
+  "description": {
+    "en": "The shared app test harness (build/app-e2e) also installs and opens an app in the mobile shell, through its app drawer and Terminal. Its SHELLS export tells an app's tests that this version supports phones (ADR 0281).",
+    "fr": "Le banc commun des tests d'apps (build/app-e2e) installe et ouvre aussi une app dans l'interface mobile, par son tiroir d'applications et son Terminal. Son export SHELLS indique aux tests d'une app que cette version gère les téléphones (ADR 0281)."
+  },
+  "links": [
+    "doc/en/wasm/framework/app-repository.md"
+  ]
+}
