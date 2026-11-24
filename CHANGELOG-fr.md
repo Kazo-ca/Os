@@ -6,6 +6,12 @@ Les changements de Kazo OS, par version. Ce fichier est généré à partir de `
 `wasm2/KazoOs/build/tools/collect-changes.sh` (ADR 0186) : ne pas le modifier à la main. Les changements
 déjà déployés mais pas encore publiés sont dans la page Paramètres ▸ Nouveautés de l'OS.
 
+## 3.6.0 (2026-11-24)
+
+### Pour les développeurs
+
+- **Tester une app sur téléphone sur l'OS rogné publié.** Le banc commun des tests d'apps (build/app-e2e) installe et ouvre aussi une app dans l'interface mobile, par son tiroir d'applications et son Terminal. Son export SHELLS indique aux tests d'une app que cette version gère les téléphones (ADR 0281). ([app-repository.md](doc/fr/wasm/framework/app-repository.md))
+
 ## 3.5.2 (2026-11-18)
 
 ### Amélioré

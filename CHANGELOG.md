@@ -6,6 +6,12 @@ The changes of Kazo OS, by version. This file is generated from `wasm2/KazoOs/ch
 `wasm2/KazoOs/build/tools/collect-changes.sh` (ADR 0186): do not edit it by hand. Changes already
 deployed but not released yet are in the Settings ▸ What's new page of the OS.
 
+## 3.6.0 (2026-11-24)
+
+### For developers
+
+- **Test an app on a phone on the published trimmed OS.** The shared app test harness (build/app-e2e) also installs and opens an app in the mobile shell, through its app drawer and Terminal. Its SHELLS export tells an app's tests that this version supports phones (ADR 0281). ([app-repository.md](doc/en/wasm/framework/app-repository.md))
+
 ## 3.5.2 (2026-11-18)
 
 ### Improved

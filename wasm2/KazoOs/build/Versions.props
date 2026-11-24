@@ -77,6 +77,10 @@
     3.3.2 (2026-11-13, patch): a file may be 128 MiB instead of 16 MiB, written and read in 16 MiB
     batches (ADR 0245), so Kazo Word installs. No SDK API change: only the value of
     Infrastructure.Browser's FileContentStoragePolicy.DefaultMaxFileSizeBytes moves in the API files.
+    3.6.0 (2026-11-24, Benoit's choice of a minor number although the SDK API does not change):
+    the shared app test harness (build/app-e2e, ADR 0281 §5) also installs and opens an app on a
+    phone (SHELLS export). A stable minor lets the SDK update bot move the apps' Kazo OS submodule,
+    so their CI runs its end-to-end suites on the published trimmed OS.
     3.5.0 (2026-11-17): third-party network drive providers as Store features (ADR 0282, 0284:
     KazoDriveProvider, KazoDirectHttpClient, the conformance kit Kazo.Os.AppSdk.Testing, the
     kazoos-drive-provider template), the shipped Dropbox, OneDrive and S3 connectors moved to
@@ -94,6 +98,6 @@
     the manifest generator writes it as the app's sdkCompatibility.minimumVersion (ADR 0098 §3).
   -->
   <PropertyGroup>
-    <KazoOsVersion>3.5.2</KazoOsVersion>
+    <KazoOsVersion>3.6.0</KazoOsVersion>
   </PropertyGroup>
 </Project>

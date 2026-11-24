@@ -12,6 +12,10 @@ jour à la fin de chaque série ou quand une convention change.
 - **Code actif** : `wasm2/KazoOs/` (OS simulé en Blazor WebAssembly, .NET 10,
   solution `Kazo.Os.sln`). `src/` est l'ancienne version, gardée comme
   référence.
+- **Version 3.6.0** (branche `release/3.6.0`, 2026-11-24), version mineure choisie par Benoit sans
+  changement d'API du SDK : le banc commun des tests d'apps installe et ouvre aussi une app sur
+  téléphone (export `SHELLS`, Os#638, ADR 0281 §5). La 3.6.0 stable laisse le robot du SDK déplacer
+  le sous-module des apps (IRC, Webamp, Word, Chess), dont les tests passent alors sur l'OS rogné.
 - **Version 3.5.2** (branche `fix/625-feature-service-autostart`, 2026-11-18), correctif : les
   services automatiques démarrent à la connexion avant le chargement de leur code, dont ceux des
   Features (Os#625) ; un enfant de Feature règle les services de sa Feature ; `kazowebd` devient
