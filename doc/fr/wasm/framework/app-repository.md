@@ -234,9 +234,18 @@ Le banc commun est dans le sous-module :
   son hôte `dotnet run`), `startTrimmedOs()` sert l'OS, `newAppContext()` répond
   aux adresses du paquet sans réseau, `bootFirstAccount()`, `installApp()`,
   `openApp()`, `approveIfAsked()`, `watchFailures()` et `shownFailure()`.
+- **Sur un téléphone** (depuis Kazo OS 3.6.0) : un contexte créé avec un
+  appareil de téléphone (`newAppContext(browser, setup, { ...devices['Pixel 7'] })`)
+  fait tourner l'interface mobile, et les mêmes appels passent par son tiroir
+  d'applications et son Terminal au lieu du lanceur du bureau (`isPhone()` dit
+  quelle interface tourne). L'export `SHELLS` liste `desktop` et `phone` : le
+  banc d'une app le lit pour savoir si cette version installe sur un téléphone,
+  et garde sinon ses tests sur téléphone sur `dotnet run`.
 
-Le banc arrive avec Kazo OS 3.4.4 ou la version suivante ; une app dont le
-sous-module est plus ancien n'a pas le test court.
+Le banc arrive avec Kazo OS 3.5.1 ; une app dont le sous-module est plus ancien
+n'a pas le test court, et ses suites gardent leur hôte `dotnet run`. Les bancs
+des apps (`tests/e2e/host.mjs` d'IRC, Webamp, Kazo Word et Chess) ne
+l'importent que si les variables `KAZOOS_E2E_*` sont définies.
 
 ## Publier dans le Kazo OS Store
 

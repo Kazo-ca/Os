@@ -227,9 +227,18 @@ The shared harness is in the submodule:
   answers the package addresses with no network, `bootFirstAccount()`,
   `installApp()`, `openApp()`, `approveIfAsked()`, `watchFailures()` and
   `shownFailure()`.
+- **On a phone** (from Kazo OS 3.6.0): a context made with a phone device
+  (`newAppContext(browser, setup, { ...devices['Pixel 7'] })`) runs the mobile
+  shell, and the same calls use its app drawer and its Terminal instead of the
+  desktop launcher (`isPhone()` tells which shell runs). The `SHELLS` export
+  lists `desktop` and `phone`: an app's harness reads it to know whether this
+  version installs on a phone, and keeps its phone tests on `dotnet run`
+  otherwise.
 
-The harness comes with Kazo OS 3.4.4 or the next version; an app whose
-submodule is older has no short test.
+The harness comes with Kazo OS 3.5.1; an app whose submodule is older has no
+short test, and its suites keep their `dotnet run` host. The apps' harnesses
+(`tests/e2e/host.mjs` of IRC, Webamp, Kazo Word and Chess) import it only when
+the `KAZOOS_E2E_*` variables are set.
 
 ## Publishing to the Kazo OS Store
 
