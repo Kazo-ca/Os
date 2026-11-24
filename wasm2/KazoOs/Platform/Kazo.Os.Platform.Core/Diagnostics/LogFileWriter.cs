@@ -70,7 +70,6 @@ public sealed class LogFileWriter : IAsyncDisposable
 
     private const string KernelAppId = "org.kazoos.kernel";
     private const string SystemPrincipal = "system";
-    private const ushort DirectoryMode = 0b111_101_101;
 
     private readonly Channel<PendingLine> _queue;
     private readonly ISimulationClock _clock;
@@ -214,6 +213,126 @@ public sealed class LogFileWriter : IAsyncDisposable
         }
     }
 
+    /// <summary>
+    /// Writes what is waiting, then reads back every line of the log at <paramref name="path"/>, oldest first:
+    /// the archives from <c>.5</c> to <c>.1</c> when <paramref name="includeArchives"/> is set, then the
+    /// active file. The flush gate stays held for the whole read, so no flush or rotation moves a file
+    /// between two reads. The OS reads with its system context, so the caller decides who may see the
+    /// lines (a user's event log, ADR 0254, section 3). Without an attached filesystem there is nothing to read.
+    /// </summary>
+    /// <param name="path">Active file of the log; its archives are <c>&lt;path&gt;.1</c> to <c>&lt;path&gt;.5</c>.</param>
+    /// <param name="includeArchives">Whether to read the rotated archives too.</param>
+    /// <param name="cancellationToken">Cancels the flush and the reads.</param>
+    /// <returns>The lines, without terminator; empty when the file does not exist yet.</returns>
+    public Task<IReadOnlyList<string>> ReadLinesAsync(
+        VirtualPath path, bool includeArchives = true, CancellationToken cancellationToken = default)
+    {
+        List<VirtualPath> files = [];
+        if (includeArchives)
+        {
+            for (int index = LogRotationPolicy.MaxArchives; index >= 1; index--)
+            {
+                files.Add(VirtualPath.Parse($"{path.Value}.{index}"));
+            }
+        }
+
+        files.Add(path);
+        return UnderFlushGateAsync<IReadOnlyList<string>>(
+            async (attachment, context, token) =>
+            {
+                List<string> lines = [];
+                foreach (VirtualPath file in files)
+                {
+                    if (await TryStatAsync(attachment.FileSystem, file, context, token).ConfigureAwait(false) is null)
+                    {
+                        continue;
+                    }
+
+                    byte[] content = await ReadAllBytesAsync(attachment.FileSystem, file, context, token).ConfigureAwait(false);
+                    foreach (string line in Encoding.UTF8.GetString(content).Split(LogLineFormat.LineTerminator))
+                    {
+                        if (line.Length > 0)
+                        {
+                            lines.Add(line);
+                        }
+                    }
+                }
+
+                return lines;
+            },
+            [],
+            cancellationToken);
+    }
+
+    /// <summary>
+    /// Writes what is waiting, then deletes <paramref name="directory"/> and everything in it with the
+    /// system context, like <c>rm -r</c>: the journal of a deleted account (ADR 0254, section 1). The
+    /// flush gate stays held, so no flush recreates or rotates a file while it is deleted. Does nothing
+    /// when it does not exist or no filesystem is attached.
+    /// </summary>
+    /// <param name="directory">Directory of one user under <c>/var/log/users</c>.</param>
+    /// <param name="cancellationToken">Cancels the flush and the deletion.</param>
+    /// <exception cref="ArgumentException">The directory is not below <c>/var/log/users</c>.</exception>
+    public Task DeleteDirectoryAsync(VirtualPath directory, CancellationToken cancellationToken = default)
+    {
+        if (!directory.Value.StartsWith(LogFileTarget.UserLogDirectory.Value + "/", StringComparison.Ordinal))
+        {
+            throw new ArgumentException($"'{directory.Value}' is not the directory of a user's logs.", nameof(directory));
+        }
+
+        return UnderFlushGateAsync(
+            async (attachment, context, token) =>
+            {
+                if (await TryStatAsync(attachment.FileSystem, directory, context, token).ConfigureAwait(false) is not null)
+                {
+                    await new ServerConnection.SyncFileOperations(attachment.FileSystem, context)
+                        .DeleteRecursiveAsync(directory, token).ConfigureAwait(false);
+                }
+
+                return true;
+            },
+            false,
+            cancellationToken);
+    }
+
+    /// <summary>
+    /// Takes the flush gate of the attached filesystem, writes what is waiting, then runs
+    /// <paramref name="action"/> before releasing the gate: no periodic or requested flush, and so no
+    /// rotation, runs meanwhile. Returns <paramref name="detached"/> without a filesystem.
+    /// </summary>
+    private async Task<T> UnderFlushGateAsync<T>(
+        Func<Attachment, FileSystemAuthorizationContext, CancellationToken, Task<T>> action,
+        T detached,
+        CancellationToken cancellationToken)
+    {
+        while (Volatile.Read(ref _attachment) is { } attachment)
+        {
+            using CancellationTokenSource linked = CancellationTokenSource.CreateLinkedTokenSource(
+                cancellationToken, attachment.AbandonedToken);
+            try
+            {
+                await attachment.FlushGate.WaitAsync(linked.Token).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException) when (attachment.IsAbandoned && !cancellationToken.IsCancellationRequested)
+            {
+                // Another filesystem replaced this one while waiting: act on the new one.
+                continue;
+            }
+
+            try
+            {
+                await DrainAndWriteAsync(attachment, linked.Token).ConfigureAwait(false);
+                return await action(attachment, CreateSystemContext(), linked.Token).ConfigureAwait(false);
+            }
+            finally
+            {
+                attachment.FlushGate.Release();
+            }
+        }
+
+        return detached;
+    }
+
     /// <summary>Drains the queue into <paramref name="attachment"/>, one flush at a time per attachment.</summary>
     private async Task FlushToAsync(Attachment attachment, CancellationToken cancellationToken)
     {
@@ -222,21 +341,27 @@ public sealed class LogFileWriter : IAsyncDisposable
         await attachment.FlushGate.WaitAsync(linked.Token).ConfigureAwait(false);
         try
         {
-            List<(LogFileTarget Target, List<string> Lines)> batches = DrainQueue(out long reportedLoss);
-            foreach ((LogFileTarget target, List<string> lines) in batches)
-            {
-                // The "lines lost" warning stands for reportedLoss lines: if it is lost too, they all are again.
-                long carried = target.Path == LogFileTarget.Syslog.Path ? reportedLoss : 0;
-                await WriteBatchAsync(attachment.FileSystem, target, lines, carried, linked.Token).ConfigureAwait(false);
-                if (carried > 0)
-                {
-                    reportedLoss = 0;
-                }
-            }
+            await DrainAndWriteAsync(attachment, linked.Token).ConfigureAwait(false);
         }
         finally
         {
             attachment.FlushGate.Release();
+        }
+    }
+
+    /// <summary>Writes every waiting line to <paramref name="attachment"/>; the caller holds its flush gate.</summary>
+    private async Task DrainAndWriteAsync(Attachment attachment, CancellationToken cancellationToken)
+    {
+        List<(LogFileTarget Target, List<string> Lines)> batches = DrainQueue(out long reportedLoss);
+        foreach ((LogFileTarget target, List<string> lines) in batches)
+        {
+            // The "lines lost" warning stands for reportedLoss lines: if it is lost too, they all are again.
+            long carried = target.Path == LogFileTarget.Syslog.Path ? reportedLoss : 0;
+            await WriteBatchAsync(attachment.FileSystem, target, lines, carried, cancellationToken).ConfigureAwait(false);
+            if (carried > 0)
+            {
+                reportedLoss = 0;
+            }
         }
     }
 
@@ -430,7 +555,8 @@ public sealed class LogFileWriter : IAsyncDisposable
         for (int attempt = 1; ; attempt++)
         {
             FileSystemAuthorizationContext context = CreateSystemContext();
-            await EnsureDirectoryAsync(fileSystem, target.Directory, context, cancellationToken).ConfigureAwait(false);
+            await EnsureDirectoryAsync(fileSystem, target.Directory, target.DirectoryMode, context, cancellationToken)
+                .ConfigureAwait(false);
 
             (long length, long revision) = await EnsureFileAsync(fileSystem, target, context, cancellationToken)
                 .ConfigureAwait(false);
@@ -522,8 +648,12 @@ public sealed class LogFileWriter : IAsyncDisposable
         }
     }
 
-    /// <summary>Returns the active file's length and revision, creating it empty with the target mode if missing.</summary>
-    private static async Task<(long Length, long Revision)> EnsureFileAsync(
+    /// <summary>
+    /// Returns the active file's length and revision, creating it empty with the target mode if missing.
+    /// A file with an owner (a user's event log, ADR 0254) is created in that owner's name, like
+    /// <c>install -o</c>: the filesystem gives a new entry to the user of the creating context.
+    /// </summary>
+    private async Task<(long Length, long Revision)> EnsureFileAsync(
         IFileSystemService fileSystem,
         LogFileTarget target,
         FileSystemAuthorizationContext context,
@@ -538,7 +668,7 @@ public sealed class LogFileWriter : IAsyncDisposable
                     target.Path,
                     FileSystemEntryKind.File,
                     FileSystemPermissions.FromMode(target.Mode)),
-                context,
+                target.Owner is { } owner ? CreateOwnerContext(owner) : context,
                 cancellationToken).ConfigureAwait(false);
             if (!created.Succeeded && created.Transaction.Error?.Code != FileSystemErrorCode.AlreadyExists)
             {
@@ -560,10 +690,14 @@ public sealed class LogFileWriter : IAsyncDisposable
         return (file.Length, file.Revision);
     }
 
-    /// <summary>Creates <paramref name="directory"/> and any missing ancestor as <c>system:system 0755</c>.</summary>
+    /// <summary>
+    /// Creates <paramref name="directory"/> and any missing ancestor as <c>system:system</c>: with
+    /// <paramref name="mode"/> below <c>/var/log</c>, and <c>0755</c> for <c>/var/log</c> and above.
+    /// </summary>
     private static async Task EnsureDirectoryAsync(
         IFileSystemService fileSystem,
         VirtualPath directory,
+        ushort mode,
         FileSystemAuthorizationContext context,
         CancellationToken cancellationToken)
     {
@@ -578,11 +712,13 @@ public sealed class LogFileWriter : IAsyncDisposable
         if (separator > 0)
         {
             await EnsureDirectoryAsync(
-                fileSystem, VirtualPath.Parse(directory.Value[..separator]), context, cancellationToken).ConfigureAwait(false);
+                fileSystem, VirtualPath.Parse(directory.Value[..separator]), mode, context, cancellationToken).ConfigureAwait(false);
         }
 
+        bool belowLogDirectory = directory.Value.StartsWith(LogFileTarget.LogDirectory.Value + "/", StringComparison.Ordinal);
+        ushort directoryMode = belowLogDirectory ? mode : LogFileTarget.PublicDirectoryMode;
         FileSystemMutationResult created = await fileSystem.CreateAsync(
-            new FileSystemCreateRequest(directory, FileSystemEntryKind.Directory, FileSystemPermissions.FromMode(DirectoryMode)),
+            new FileSystemCreateRequest(directory, FileSystemEntryKind.Directory, FileSystemPermissions.FromMode(directoryMode)),
             context,
             cancellationToken).ConfigureAwait(false);
         if (!created.Succeeded && created.Transaction.Error?.Code != FileSystemErrorCode.AlreadyExists)
@@ -663,6 +799,23 @@ public sealed class LogFileWriter : IAsyncDisposable
             IsSystemOperation = true
         };
         return new FileSystemAuthorizationContext(operation, [SystemPrincipal], _clock.UtcNow.ToUniversalTime());
+    }
+
+    /// <summary>
+    /// Builds the context that creates a file in <paramref name="owner"/>'s name: the kernel acting for
+    /// that user (system authority, so no mode check stands in the way), with the user's primary group.
+    /// </summary>
+    private FileSystemAuthorizationContext CreateOwnerContext(LogFileOwner owner)
+    {
+        AppOperationContext operation = new()
+        {
+            AppId = KernelAppId,
+            UserId = owner.UserId,
+            UserAuthority = AppAuthority.System,
+            GrantedCapabilities = new HashSet<string>(AppCapabilities.All, StringComparer.Ordinal),
+            IsSystemOperation = true
+        };
+        return new FileSystemAuthorizationContext(operation, [owner.GroupId], _clock.UtcNow.ToUniversalTime());
     }
 
     /// <summary>Notes a write failure in the in-memory buffer only, once per failing file.</summary>

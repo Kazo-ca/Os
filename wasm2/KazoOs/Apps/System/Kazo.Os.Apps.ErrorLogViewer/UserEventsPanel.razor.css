@@ -1,0 +1,127 @@
+.events-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.events-filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 14px;
+    padding: 8px 10px;
+    background-color: var(--kos-toolbar-bg, var(--kos-bg-surface, #161b22));
+    border: 1px solid var(--kos-border-subtle, #30363d);
+    border-left: 3px solid var(--kos-accent, #42d392);
+    border-radius: var(--kos-radius-sm, 6px);
+}
+
+.events-field {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.75rem;
+    color: var(--kos-text-secondary, #8b949e);
+}
+
+.events-search {
+    flex: 1 1 200px;
+}
+
+.events-select,
+.events-input {
+    background-color: var(--kos-input-bg, var(--kos-bg-base, #0d1117));
+    color: var(--kos-text-primary, #c9d1d9);
+    border: 1px solid var(--kos-border, #30363d);
+    border-radius: var(--kos-radius-sm, 4px);
+    padding: 3px 6px;
+    font-family: inherit;
+    font-size: 0.75rem;
+    max-width: 260px;
+}
+
+.events-input {
+    flex: 1;
+    max-width: none;
+}
+
+.events-select:focus-visible,
+.events-input:focus-visible {
+    outline: none;
+    border-color: var(--kos-accent, #42d392);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--kos-accent, #42d392) 30%, transparent);
+}
+
+.events-table-wrapper {
+    background-color: var(--kos-bg-surface, #161b22);
+    border: var(--kos-table-border, 1px solid var(--kos-border-subtle, #30363d));
+    border-radius: var(--kos-radius-sm, 6px);
+    overflow-x: auto;
+}
+
+.events-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8125rem;
+}
+
+.events-table th,
+.events-table td {
+    padding: 8px 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--kos-border-subtle, #21262d);
+}
+
+.events-table th {
+    background-color: var(--kos-table-header-bg, var(--kos-bg-elevated, #1c2128));
+    color: var(--kos-table-header-color, var(--kos-text-secondary, #8b949e));
+    font-weight: 600;
+}
+
+.events-table tr:hover {
+    background-color: var(--kos-table-row-hover-bg, rgba(255, 255, 255, 0.04));
+}
+
+.events-empty {
+    text-align: center;
+    color: var(--kos-text-muted, #8b949e);
+    padding: 24px;
+}
+
+.events-time,
+.events-app {
+    white-space: nowrap;
+    color: var(--kos-text-secondary, #8b949e);
+}
+
+.events-subject {
+    white-space: nowrap;
+    color: var(--kos-accent, #42d392);
+}
+
+.events-message {
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.events-badge {
+    padding: 2px 6px;
+    border-radius: var(--kos-radius-sm, 4px);
+    font-size: 0.6875rem;
+    font-weight: bold;
+}
+
+.events-badge.info {
+    background-color: color-mix(in srgb, var(--kos-info, #64b5f6) 20%, var(--kos-bg-base, #101417));
+    color: var(--kos-info, #58a6ff);
+}
+
+.events-badge.warning {
+    background-color: color-mix(in srgb, var(--kos-warning, #e0ad50) 20%, var(--kos-bg-base, #101417));
+    color: var(--kos-warning, #d29922);
+}
+
+.events-badge.error {
+    background-color: color-mix(in srgb, var(--kos-error, #ff8f87) 20%, var(--kos-bg-base, #101417));
+    color: var(--kos-error, #f85149);
+}

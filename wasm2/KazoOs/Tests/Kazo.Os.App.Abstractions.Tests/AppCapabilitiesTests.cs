@@ -59,6 +59,7 @@ public sealed class AppCapabilitiesTests
         { AppCapabilities.NotificationsPost, CapabilityRisk.Normal },
         { AppCapabilities.ClipboardRead, CapabilityRisk.Normal },
         { AppCapabilities.ClipboardWrite, CapabilityRisk.Normal },
+        { AppCapabilities.EventsWrite, CapabilityRisk.Normal },
         { AppCapabilities.NetworkSimulatedRead, CapabilityRisk.Normal },
         { AppCapabilities.NetworkSimulatedWrite, CapabilityRisk.Normal },
         { AppCapabilities.NetworkRealAccess, CapabilityRisk.Dangerous },

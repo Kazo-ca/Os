@@ -242,7 +242,11 @@ un `requiresRole` qu'aucun rôle de la Feature ne déclare.
   `ConsumeAsync(billet, opération)` le refuse pour une autre opération ou un
   autre usager, et rend le billet émis par l'OS, dont la Feature lit `Scope`
   (jamais la copie présentée). Sous `sudo`, aucune seconde fenêtre. Une
-  app ordinaire est refusée. Détails :
+  app ordinaire est refusée. La surcharge `AuthenticateAsync(opération, portée,
+  sujet)` nomme ce que l'opération touche (`KazoEventSubject`, une machine, un
+  programme) : quand le billet est consommé, l'OS écrit l'opération dans le
+  journal de l'usager avec ce sujet (ADR 0254 §2,
+  [`app-log-files.md`](app-log-files.md#événements-dusager-adr-0254)). Détails :
   [`sensitive-settings.md`](../dev/sensitive-settings.md#5-rôles-des-features-et-authentification-des-opérations).
 
 ## Décisions

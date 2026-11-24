@@ -174,6 +174,9 @@
   <data name="Capability.clipboard.read.Title" xml:space="preserve">
     <value>Read the clipboard</value>
   </data>
+  <data name="Capability.events.write.Title" xml:space="preserve">
+    <value>Write to your event journal</value>
+  </data>
   <data name="Capability.clipboard.write.Title" xml:space="preserve">
     <value>Write to the clipboard</value>
   </data>
@@ -812,5 +815,47 @@ Cancel: decide at the next launch.</value>
   </data>
   <data name="Admin.RevokeRole" xml:space="preserve">
     <value>Take the role {0} back from account {1}</value>
+  </data>
+  <data name="UserEvent.PermissionGranted" xml:space="preserve">
+    <value>Dangerous permissions granted to {0}: {1}.</value>
+  </data>
+  <data name="UserEvent.PermissionRefused" xml:space="preserve">
+    <value>You refused dangerous permissions to {0}: {1}.</value>
+  </data>
+  <data name="UserEvent.RoleGranted" xml:space="preserve">
+    <value>Role {0} granted to you by {1}.</value>
+  </data>
+  <data name="UserEvent.RoleRevoked" xml:space="preserve">
+    <value>Role {0} taken from you by {1}.</value>
+  </data>
+  <data name="UserEvent.FeatureOperationAuthenticated" xml:space="preserve">
+    <value>Operation {0} of {1} authenticated by {2}.</value>
+  </data>
+  <data name="Admin.ReadUserEvents" xml:space="preserve">
+    <value>Read the event journal of {0}</value>
+  </data>
+  <data name="UserEvent.AppInstalled" xml:space="preserve">
+    <value>{0} {1} installed for you.</value>
+  </data>
+  <data name="UserEvent.SyncConflictResolved" xml:space="preserve">
+    <value>Synchronization conflict on {0} resolved: {1}.</value>
+  </data>
+  <data name="UserEvent.SyncConflictResolvedAutomatically" xml:space="preserve">
+    <value>Synchronization conflict on {0} resolved automatically: {1}.</value>
+  </data>
+  <data name="UserEvent.SyncChoice.KeepMine" xml:space="preserve">
+    <value>this device's version kept</value>
+  </data>
+  <data name="UserEvent.SyncChoice.KeepOther" xml:space="preserve">
+    <value>the server's version kept</value>
+  </data>
+  <data name="UserEvent.SyncChoice.BothDeleted" xml:space="preserve">
+    <value>the file deleted on both devices</value>
+  </data>
+  <data name="UserEvent.SyncChoice.Same" xml:space="preserve">
+    <value>the same file on both devices</value>
+  </data>
+  <data name="UserEvent.SyncChoice.KeepBoth" xml:space="preserve">
+    <value>both versions kept</value>
   </data>
 </root>

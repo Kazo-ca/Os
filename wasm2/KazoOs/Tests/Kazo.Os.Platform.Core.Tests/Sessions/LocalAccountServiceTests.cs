@@ -22,8 +22,13 @@ public sealed class LocalAccountServiceTests
 
     public LocalAccountServiceTests()
     {
-        _accounts = new LocalAccountService(_harness.Users, _groups, _harness.Audit, _harness.FileSystem, iterations: 10);
+        _accounts = new LocalAccountService(_harness.Users, _groups, _harness.Audit, _harness.FileSystem, iterations: 10)
+        {
+            UserEvents = _events,
+        };
     }
+
+    private readonly Diagnostics.RecordingUserEventLog _events = new();
 
     [Fact]
     public async Task A_new_standard_account_has_its_own_group_and_signs_in_with_its_password()
@@ -78,6 +83,9 @@ public sealed class LocalAccountServiceTests
         Assert.Null(await _harness.Users.FindByIdAsync(_harness.Bob.Id));
         Assert.NotNull(await _harness.StatAsync("/home/bob"));
         Assert.Contains(_harness.Audit.Entries, entry => entry.Action == "users.delete" && entry.Outcome == AuditOutcome.Success);
+
+        // ADR 0254 §1: the journal goes with the account even when the home stays.
+        Assert.Equal([_harness.Bob.Id], _events.Deleted);
     }
 
     [Fact]

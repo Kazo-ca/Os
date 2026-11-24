@@ -232,6 +232,33 @@ internal sealed class RemoteLoggingGateway(RemoteProcessChannel channel) : IAppL
 }
 
 /// <summary>
+/// <see cref="Kazo.Os.AppSdk.UserEvents.IAppUserEventsGateway"/> in a worker (ADR 0254). A write is
+/// posted without waiting, like a log line, so the capability and the event are checked here first:
+/// a refused write fails in the app, not only in the OS's log. The OS checks both again and stamps
+/// the app, the process and the sender itself.
+/// </summary>
+internal sealed class RemoteUserEventsGateway(RemoteProcessChannel channel, ICapabilityChecker capabilities)
+    : Kazo.Os.AppSdk.UserEvents.IAppUserEventsGateway
+{
+    public void Write(Kazo.Os.AppSdk.UserEvents.KazoUserEvent userEvent)
+    {
+        capabilities.Require(AppCapabilities.EventsWrite);
+        Kazo.Os.Platform.Core.Diagnostics.FileUserEventLog.Validate(userEvent);
+        channel.Notify(RemoteOps.UserEventWrite, writer => WireCodec.WriteUserEvent(writer, userEvent));
+    }
+
+    public async ValueTask<IReadOnlyList<Kazo.Os.AppSdk.UserEvents.KazoUserEventEntry>> ReadAsync(
+        Kazo.Os.AppSdk.UserEvents.KazoUserEventFilter filter, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(filter);
+        filter.EnsureValidLimit();
+        JsonElement result = await channel.CallAsync(
+            RemoteOps.UserEventRead, writer => WireCodec.WriteUserEventFilter(writer, filter), cancellationToken).ConfigureAwait(false);
+        return WireCodec.ReadUserEventEntries(result);
+    }
+}
+
+/// <summary>
 /// <see cref="IAppClockGateway"/> in a worker: the simulated time as of the last synchronization (the
 /// start of the process, then each heartbeat answer, every 250 ms); waits are timed by the OS's clock.
 /// </summary>

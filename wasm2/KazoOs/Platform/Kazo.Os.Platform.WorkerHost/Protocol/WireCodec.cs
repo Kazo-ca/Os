@@ -1322,4 +1322,119 @@ internal static class WireCodec
             element.GetOptional("ec")?.GetInt32(),
             element.GetOptional("er") is { } reason ? (ProcessExitReason)reason.GetInt32() : null);
     }
+
+    // ---- User events (ADR 0254) ---------------------------------------------------------------
+
+    public static void WriteUserEvent(Utf8JsonWriter writer, Kazo.Os.AppSdk.UserEvents.KazoUserEvent userEvent)
+    {
+        writer.WriteString("k", userEvent.Kind);
+        writer.WriteString("m", userEvent.Message);
+        writer.WriteNumber("s", (int)userEvent.Severity);
+        WriteEventSubject(writer, userEvent.Subject);
+        if (userEvent.Properties is not null)
+        {
+            WriteDictionary(writer, "pr", userEvent.Properties);
+        }
+    }
+
+    public static Kazo.Os.AppSdk.UserEvents.KazoUserEvent ReadUserEvent(JsonElement element) => new(
+        element.GetString("k"),
+        element.GetString("m"),
+        ReadEventSubject(element),
+        (Kazo.Os.AppSdk.UserEvents.KazoEventSeverity)element.GetInt32("s"),
+        element.TryGetProperty("pr", out _) ? ReadDictionary(element, "pr") : null);
+
+    public static void WriteUserEventFilter(Utf8JsonWriter writer, Kazo.Os.AppSdk.UserEvents.KazoUserEventFilter filter)
+    {
+        WriteOptionalString(writer, "k", filter.Kind);
+        WriteOptionalString(writer, "st", filter.SubjectType);
+        WriteOptionalString(writer, "si", filter.SubjectId);
+        WriteOptionalString(writer, "q", filter.Search);
+        if (filter.MinimumSeverity is { } severity)
+        {
+            writer.WriteNumber("ms", (int)severity);
+        }
+
+        if (filter.Since is { } since)
+        {
+            WriteTime(writer, "sn", since);
+        }
+
+        writer.WriteNumber("l", filter.Limit);
+    }
+
+    public static Kazo.Os.AppSdk.UserEvents.KazoUserEventFilter ReadUserEventFilter(JsonElement element) => new()
+    {
+        Kind = element.GetOptionalString("k"),
+        SubjectType = element.GetOptionalString("st"),
+        SubjectId = element.GetOptionalString("si"),
+        Search = element.GetOptionalString("q"),
+        MinimumSeverity = element.GetOptional("ms") is { } severity ? (Kazo.Os.AppSdk.UserEvents.KazoEventSeverity)severity.GetInt32() : null,
+        Since = element.TryGetProperty("sn", out _) ? ReadTime(element, "sn") : null,
+        Limit = element.GetInt32("l"),
+    };
+
+    public static void WriteUserEventEntries(Utf8JsonWriter writer, IReadOnlyList<Kazo.Os.AppSdk.UserEvents.KazoUserEventEntry> entries)
+    {
+        writer.WriteStartArray("ev");
+        foreach (Kazo.Os.AppSdk.UserEvents.KazoUserEventEntry entry in entries)
+        {
+            writer.WriteStartObject();
+            WriteTime(writer, "t", entry.TimestampUtc);
+            writer.WriteString("a", entry.AppId);
+            if (entry.ProcessId is { } pid)
+            {
+                writer.WriteNumber("p", pid);
+            }
+
+            writer.WriteString("k", entry.Kind);
+            writer.WriteString("m", entry.Message);
+            writer.WriteNumber("s", (int)entry.Severity);
+            WriteEventSubject(writer, entry.Subject);
+            WriteDictionary(writer, "pr", entry.Properties);
+            WriteOptionalString(writer, "snd", entry.SenderAppId);
+            writer.WriteEndObject();
+        }
+
+        writer.WriteEndArray();
+    }
+
+    public static IReadOnlyList<Kazo.Os.AppSdk.UserEvents.KazoUserEventEntry> ReadUserEventEntries(JsonElement element) =>
+        [.. element.GetProperty("ev").EnumerateArray().Select(static item => new Kazo.Os.AppSdk.UserEvents.KazoUserEventEntry(
+            ReadTime(item, "t"),
+            item.GetString("a"),
+            item.GetOptional("p")?.GetInt64(),
+            item.GetString("k"),
+            item.GetString("m"),
+            ReadEventSubject(item),
+            (Kazo.Os.AppSdk.UserEvents.KazoEventSeverity)item.GetInt32("s"),
+            ReadDictionary(item, "pr"),
+            item.GetOptionalString("snd")))];
+
+    private static void WriteEventSubject(Utf8JsonWriter writer, Kazo.Os.AppSdk.UserEvents.KazoEventSubject? subject)
+    {
+        if (subject is null)
+        {
+            return;
+        }
+
+        writer.WriteStartObject("sj");
+        writer.WriteString("t", subject.Type);
+        writer.WriteString("i", subject.Id);
+        writer.WriteString("n", subject.DisplayName);
+        writer.WriteEndObject();
+    }
+
+    private static Kazo.Os.AppSdk.UserEvents.KazoEventSubject? ReadEventSubject(JsonElement element) =>
+        element.GetOptional("sj") is { } subject
+            ? new Kazo.Os.AppSdk.UserEvents.KazoEventSubject(subject.GetString("t"), subject.GetString("i"), subject.GetString("n"))
+            : null;
+
+    private static void WriteOptionalString(Utf8JsonWriter writer, string name, string? value)
+    {
+        if (value is not null)
+        {
+            writer.WriteString(name, value);
+        }
+    }
 }

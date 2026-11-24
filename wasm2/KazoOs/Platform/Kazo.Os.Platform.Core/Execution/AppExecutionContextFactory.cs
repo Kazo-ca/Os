@@ -191,6 +191,12 @@ public sealed class AppExecutionContextFactory
     }
 
     /// <summary>
+    /// Gets the per-user event journals behind <see cref="IAppExecutionContext.UserEvents"/> (ADR 0254);
+    /// <see langword="null"/> leaves every app without one.
+    /// </summary>
+    public Diagnostics.IUserEventLog? UserEvents { get; init; }
+
+    /// <summary>
     /// Gets the service behind <see cref="IAppExecutionContext.Background"/> (ADR 0128): each task
     /// becomes a child process of the app. Lazy because the service reaches the orchestrator (the app's
     /// descriptor) and the remote host, which depend on this factory. <see langword="null"/> keeps the
@@ -265,6 +271,7 @@ public sealed class AppExecutionContextFactory
                 InstalledLibraries = _appCatalog.InstalledLibraries,
                 Capabilities = _appCatalog.Capabilities,
                 PermissionStore = _appCatalog.PermissionStore,
+                UserEvents = UserEvents,
             };
 
     /// <summary>
@@ -470,6 +477,19 @@ public sealed class AppExecutionContextFactory
             context.SessionTimeZone = () => timeZones.TimeZone;
         }
 
+        if (UserEvents is { } userEvents)
+        {
+            // ADR 0254: the journal of the user the app runs for, behind events.write; the app and the
+            // process come from this context, the sender from the launch, read at each write.
+            context.UserEvents = new AppUserEventsGateway(
+                userEvents,
+                capabilities,
+                Diagnostics.UserEventOwner.Of(principal),
+                manifest.Id,
+                process.Pid.Value,
+                () => context.Intent?.SenderAppId);
+        }
+
         if (_metrics?.CrossOriginIsolation is { } isolation)
         {
             // ADR 0146: the page's isolation, no capability, set after construction like the backup gateway.
@@ -587,6 +607,10 @@ public sealed class AppExecutionContextFactory
                 GuestRequests = _administration.GuestRequests,
                 // ADR 0247 §1: Settings ▸ Users and kazorole grant and revoke the roles of the features.
                 Roles = _appCatalog?.Roles,
+                // ADR 0254 §3: an administrator reads another account's event journal.
+                UserEvents = UserEvents,
+                Audit = _administration.Audit,
+                Clock = () => _clock.UtcNow,
             },
             new AppComponentProviderAdministrationGateway(_administration.ComponentProviders, _administration.ApprovalPrompt, capabilities, gate),
             new AppFileMenuEntryAdministrationGateway(_administration.FileMenuEntries, capabilities, language));

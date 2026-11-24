@@ -926,6 +926,15 @@ internal sealed class RemoteProcessSession
                     a.TryGetProperty("rm", out _) && a.GetFlag("rm"), cancellationToken).ConfigureAwait(false);
                 return writer => WireCodec.WriteIntentResult(writer, result);
             }
+            case RemoteOps.UserEventWrite:
+                c.UserEvents.Write(WireCodec.ReadUserEvent(a));
+                return static _ => { };
+            case RemoteOps.UserEventRead:
+            {
+                IReadOnlyList<Kazo.Os.AppSdk.UserEvents.KazoUserEventEntry> entries =
+                    await c.UserEvents.ReadAsync(WireCodec.ReadUserEventFilter(a), cancellationToken).ConfigureAwait(false);
+                return writer => WireCodec.WriteUserEventEntries(writer, entries);
+            }
             case RemoteOps.ClipboardGetText:
             {
                 string? text = await c.Clipboard.GetTextAsync(cancellationToken).ConfigureAwait(false);

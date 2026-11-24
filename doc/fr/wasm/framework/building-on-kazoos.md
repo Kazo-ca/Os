@@ -256,7 +256,7 @@ sur l'OS 1.2. Ses ajouts font partie de la 2.0.
   [`process-priority-and-unresponsive-windows.md`](../dev/process-priority-and-unresponsive-windows.md)).
 - **Commandes en worker qui écoutent des événements** :
   `[assembly: KazoWireContext(typeof(MonContexteJson))]` pour que
-  `KazoEvents` et `Watch` passent par la passerelle distante (ADR 0124, 0138,
+  le bus `AppContext.Events` et `Watch` passent par la passerelle distante (ADR 0124, 0138,
   [`worker-processes.md`](../dev/worker-processes.md)).
 
 La liste exacte et la rupture hors SDK d'un hôte (constructeur

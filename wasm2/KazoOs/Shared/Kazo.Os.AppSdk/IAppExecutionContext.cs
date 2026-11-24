@@ -427,6 +427,14 @@ public interface IAppExecutionContext
     CloudAccounts.IAppCloudAccountsGateway CloudAccounts => Kazo.Os.AppSdk.CloudAccounts.UnsupportedAppCloudAccountsGateway.Instance;
 
     /// <summary>
+    /// Gets the journal of the user this instance runs for, behind <see cref="UserEvents.KazoEvents"/>
+    /// (ADR 0254; capability <c>events.write</c>). Not the bus of <see cref="Events"/>. Defaults to a
+    /// host without a user journal so existing implementations keep compiling; the trusted platform
+    /// factory overrides it.
+    /// </summary>
+    UserEvents.IAppUserEventsGateway UserEvents => Kazo.Os.AppSdk.UserEvents.UnsupportedAppUserEventsGateway.Instance;
+
+    /// <summary>
     /// Gets the session's effective accessibility preferences, behind
     /// <see cref="Accessibility.KazoAccessibility"/> (ADR 0105 section 3; no capability). Defaults to a
     /// gateway answering the defaults so existing implementations keep compiling; the trusted platform

@@ -168,6 +168,15 @@ public sealed class FileSystemSyncDeletionAndConflictTests
         Assert.Equal(ConflictResolution.ClientWins, _server.Resolutions[^1].Resolution);
         Assert.Equal("from B", await a.ReadAsync("note.txt"));
         Assert.Equal(0, (await b.Service.PushAsync()).Sent);
+
+        // ADR 0254 §2: the resolution is in the journal of the user whose file it is.
+        (Kazo.Os.Platform.Core.Diagnostics.UserEventOwner owner, Kazo.Os.Platform.Core.Diagnostics.UserEventAuthor author, Kazo.Os.AppSdk.UserEvents.KazoUserEvent resolved) =
+            Assert.Single(b.Events.Written);
+        Assert.Equal(b.Principal.UserId, owner.UserId);
+        Assert.Equal("org.kazoos.sync", author.AppId);
+        Assert.Equal("kazoos.sync.conflict-resolved", resolved.Kind);
+        Assert.Equal(new Kazo.Os.AppSdk.UserEvents.KazoEventSubject("file", "note.txt", "note.txt"), resolved.Subject);
+        Assert.Equal(("KeepMine", "false"), (resolved.Properties!["choice"], resolved.Properties["automatic"]));
     }
 
     [Fact]
@@ -419,7 +428,13 @@ public sealed class FileSystemSyncDeletionAndConflictTests
             _server,
             _cursors,
             _states,
-            _time);
+            _time)
+        {
+            UserEvents = Events,
+        };
+
+        /// <summary>Gets the events the synchronization writes to Alice's journal (ADR 0254).</summary>
+        internal Diagnostics.RecordingUserEventLog Events { get; } = new();
 
         internal async Task SyncAsync()
         {

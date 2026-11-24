@@ -270,6 +270,13 @@ public sealed partial class GuestAccountService
         }
 
         Record(Operation, AuditOutcome.Success, $"{LoginName} (home removed), {loginName.Value} created");
+
+        // ADR 0254 §1: the guest's journal goes with the guest account.
+        if (UserEvents is { } userEvents)
+        {
+            await userEvents.DeleteAsync(guest.Id, CancellationToken.None).ConfigureAwait(false);
+        }
+
         return created;
     }
 
@@ -386,6 +393,12 @@ public sealed partial class GuestAccountService
     /// <summary><c>/home/guest</c> as a whole path segment (not <c>/home/guests</c>).</summary>
     [GeneratedRegex("/home/guest(?![A-Za-z0-9._-])", RegexOptions.CultureInvariant)]
     private static partial Regex GuestHomePattern();
+
+    /// <summary>
+    /// Gets the user event journals (ADR 0254, section 1): a deleted account's journal,
+    /// <c>/var/log/users/&lt;id&gt;/</c>, goes with it; <see langword="null"/> leaves it in place.
+    /// </summary>
+    public Diagnostics.IUserEventLog? UserEvents { get; init; }
 
     /// <summary>
     /// Writes as the new account, as the seeder provisions a home (owner = login name, its own

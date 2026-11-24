@@ -184,4 +184,19 @@ public interface IAppUserAccountsGateway
     /// <exception cref="ArgumentException">The account does not exist, or no installed feature declares the role.</exception>
     ValueTask<bool> RevokeRoleAsync(string loginName, string role, CancellationToken cancellationToken = default) =>
         throw new NotSupportedException("This Kazo OS host has no roles of features.");
+
+    /// <summary>
+    /// Reads the event journal of an account (ADR 0254 §3), every app's events, oldest first. The
+    /// session user's own journal needs nothing; another account's needs an administrator in the OS's
+    /// window once per process, then stays open until the process ends, each account read written to
+    /// <c>/var/log/auth.log</c> (<c>events.read-other</c>).
+    /// </summary>
+    /// <param name="loginName">The account.</param>
+    /// <param name="filter">Which events to return.</param>
+    /// <param name="cancellationToken">Cancels the read.</param>
+    /// <exception cref="UnauthorizedAccessException">No administrator confirmed.</exception>
+    /// <exception cref="ArgumentException">The account does not exist.</exception>
+    ValueTask<IReadOnlyList<UserEvents.KazoUserEventEntry>> ReadEventsAsync(
+        string loginName, UserEvents.KazoUserEventFilter filter, CancellationToken cancellationToken = default) =>
+        throw new NotSupportedException("This Kazo OS host keeps no user event journal.");
 }

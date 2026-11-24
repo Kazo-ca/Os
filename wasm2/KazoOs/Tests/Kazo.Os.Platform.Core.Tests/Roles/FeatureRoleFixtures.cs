@@ -87,8 +87,11 @@ internal sealed class FeatureRoleHarness
         Files = files;
         Carol = carol;
         Catalog = catalog;
-        Roles = new FeatureRoleService(() => Catalog, files.Settings, Audit, () => files.Clock.UtcNow);
+        Roles = new FeatureRoleService(() => Catalog, files.Settings, Audit, () => files.Clock.UtcNow) { UserEvents = Events };
     }
+
+    /// <summary>Gets the events the roles service writes to the users' journals (ADR 0254).</summary>
+    internal Diagnostics.RecordingUserEventLog Events { get; } = new();
 
     internal SettingsFilesHarness Files { get; }
 

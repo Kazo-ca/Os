@@ -12,6 +12,12 @@ namespace Kazo.Os.Platform.Core.Execution;
 /// </summary>
 internal sealed partial class AppManagementGateway
 {
+    /// <summary>
+    /// Gets the user event journals (ADR 0254, section 2): an app installed for the user alone is
+    /// written to their journal; <see langword="null"/> writes nothing.
+    /// </summary>
+    public Diagnostics.IUserEventLog? UserEvents { get; init; }
+
     /// <summary>Gets the update check that receives what the Store finds (ADR 0212 §5).</summary>
     public Func<AppUpdateMonitor?>? UpdateMonitor { get; init; }
 

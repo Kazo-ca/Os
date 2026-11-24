@@ -71,6 +71,13 @@ public sealed class DangerousCapabilityGate : IDangerousCapabilityGate
     /// </summary>
     public ServerConnection.IRealNetworkGrantReconciler? RealNetworkGrants { get; init; }
 
+    /// <summary>
+    /// Gets the user event journals (ADR 0254, section 2): a dangerous permission granted or refused is
+    /// also written to the journal of the user who asked, besides <c>auth.log</c>;
+    /// <see langword="null"/> writes only <c>auth.log</c>.
+    /// </summary>
+    public Diagnostics.IUserEventLog? UserEvents { get; init; }
+
     /// <inheritdoc />
     public async Task<DangerousCapabilityGateResult> EnsureDecidedAsync(
         AppManifest manifest,
@@ -224,7 +231,9 @@ public sealed class DangerousCapabilityGate : IDangerousCapabilityGate
                         .ConfigureAwait(false);
                 }
                 approved = true;
-                RecordApprove(manifest.Id, capabilityList, principal, verification.LoginName ?? login ?? string.Empty, null, AuditOutcome.Success);
+                string administrator = verification.LoginName ?? login ?? string.Empty;
+                RecordApprove(manifest.Id, capabilityList, principal, administrator, null, AuditOutcome.Success);
+                WriteUserEvent(principal, Diagnostics.OsUserEvents.PermissionsGranted(manifest, capabilityList, administrator));
                 return new DangerousCapabilityApprovalAttempt(true, DangerousCapabilityApprovalRequest.MaxAttempts - failures);
             }
             finally
@@ -266,6 +275,7 @@ public sealed class DangerousCapabilityGate : IDangerousCapabilityGate
                     ["capabilities"] = capabilityList,
                     ["user"] = principal.LoginName.Value
                 });
+                WriteUserEvent(principal, Diagnostics.OsUserEvents.PermissionsRefused(manifest, capabilityList));
                 return DangerousCapabilityApprovalOutcome.Refused;
             case DangerousCapabilityApprovalOutcome.Unavailable:
                 RecordDeferred(manifest.Id, capabilityList);
@@ -311,6 +321,12 @@ public sealed class DangerousCapabilityGate : IDangerousCapabilityGate
             ["app"] = appId,
             ["capabilities"] = capabilities
         });
+
+    private void WriteUserEvent(AuthenticatedPrincipal principal, Kazo.Os.AppSdk.UserEvents.KazoUserEvent userEvent) =>
+        UserEvents?.TryWriteSystem(
+            Diagnostics.UserEventOwner.Of(principal),
+            new Diagnostics.UserEventAuthor(Diagnostics.OsUserEvents.PermissionsAppId),
+            userEvent);
 
     private void Record(string actor, string action, string subject, AuditOutcome outcome, Dictionary<string, string> properties) =>
         _auditLog.Record(new AuditEntry(_clock(), Guid.NewGuid(), actor, action, subject, outcome, properties));

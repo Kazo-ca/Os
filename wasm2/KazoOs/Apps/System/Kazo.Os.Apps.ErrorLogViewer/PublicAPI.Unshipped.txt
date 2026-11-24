@@ -1,1 +1,29 @@
 #nullable enable
+Kazo.Os.Apps.ErrorLogViewer.LogFileReader.ReadUserEventsAsync(string! userId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Kazo.Os.Apps.ErrorLogViewer.UserEventsContent!>!
+Kazo.Os.Apps.ErrorLogViewer.UserEventsContent
+Kazo.Os.Apps.ErrorLogViewer.UserEventsContent.<Clone>$() -> Kazo.Os.Apps.ErrorLogViewer.UserEventsContent!
+Kazo.Os.Apps.ErrorLogViewer.UserEventsContent.Deconstruct(out System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.UserEvents.KazoUserEventEntry!>! Entries, out Kazo.Os.Simulation.Abstractions.FileSystem.FileSystemError? Error) -> void
+Kazo.Os.Apps.ErrorLogViewer.UserEventsContent.Entries.get -> System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.UserEvents.KazoUserEventEntry!>!
+Kazo.Os.Apps.ErrorLogViewer.UserEventsContent.Entries.init -> void
+Kazo.Os.Apps.ErrorLogViewer.UserEventsContent.Equals(Kazo.Os.Apps.ErrorLogViewer.UserEventsContent? other) -> bool
+Kazo.Os.Apps.ErrorLogViewer.UserEventsContent.Error.get -> Kazo.Os.Simulation.Abstractions.FileSystem.FileSystemError?
+Kazo.Os.Apps.ErrorLogViewer.UserEventsContent.Error.init -> void
+Kazo.Os.Apps.ErrorLogViewer.UserEventsContent.UserEventsContent(System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.UserEvents.KazoUserEventEntry!>! Entries, Kazo.Os.Simulation.Abstractions.FileSystem.FileSystemError? Error) -> void
+Kazo.Os.Apps.ErrorLogViewer.UserEventsPanel
+Kazo.Os.Apps.ErrorLogViewer.UserEventsPanel.Entries.get -> System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.UserEvents.KazoUserEventEntry!>!
+Kazo.Os.Apps.ErrorLogViewer.UserEventsPanel.Entries.set -> void
+Kazo.Os.Apps.ErrorLogViewer.UserEventsPanel.L.get -> Microsoft.Extensions.Localization.IStringLocalizer!
+Kazo.Os.Apps.ErrorLogViewer.UserEventsPanel.L.set -> void
+Kazo.Os.Apps.ErrorLogViewer.UserEventsPanel.Toolbar.get -> Microsoft.AspNetCore.Components.RenderFragment?
+Kazo.Os.Apps.ErrorLogViewer.UserEventsPanel.Toolbar.set -> void
+Kazo.Os.Apps.ErrorLogViewer.UserEventsPanel.UserEventsPanel() -> void
+const Kazo.Os.Apps.ErrorLogViewer.UserEventsPanel.MaxDisplayedRows = 2000 -> int
+override Kazo.Os.Apps.ErrorLogViewer.UserEventsContent.Equals(object? obj) -> bool
+override Kazo.Os.Apps.ErrorLogViewer.UserEventsContent.GetHashCode() -> int
+override Kazo.Os.Apps.ErrorLogViewer.UserEventsContent.ToString() -> string!
+static Kazo.Os.Apps.ErrorLogViewer.LogFileReader.UserEventsPath(string! userId) -> Kazo.Os.App.Abstractions.VirtualPath
+static Kazo.Os.Apps.ErrorLogViewer.UserEventsContent.operator !=(Kazo.Os.Apps.ErrorLogViewer.UserEventsContent? left, Kazo.Os.Apps.ErrorLogViewer.UserEventsContent? right) -> bool
+static Kazo.Os.Apps.ErrorLogViewer.UserEventsContent.operator ==(Kazo.Os.Apps.ErrorLogViewer.UserEventsContent? left, Kazo.Os.Apps.ErrorLogViewer.UserEventsContent? right) -> bool
+static Kazo.Os.Apps.ErrorLogViewer.UserEventsPanel.SubjectKey(Kazo.Os.AppSdk.UserEvents.KazoUserEventEntry! entry) -> string!
+static readonly Kazo.Os.Apps.ErrorLogViewer.LogFileReader.UserLogDirectory -> Kazo.Os.App.Abstractions.VirtualPath
+~override Kazo.Os.Apps.ErrorLogViewer.UserEventsPanel.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder) -> void

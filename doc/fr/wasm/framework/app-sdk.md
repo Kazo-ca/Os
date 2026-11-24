@@ -398,7 +398,7 @@ worker, qui attend la réponse de l'OS comme un appel système bloquant.
 Détails : [`worker-processes.md`](../dev/worker-processes.md), [`app-execution-hosts.md`](app-execution-hosts.md).
 
 **Événements et surveillance de fichiers dans un worker (ADR 0124, ADR
-0138).** `KazoEvents` et `KazoFileSystemWatcher` marchent dans un worker : l'OS
+0138).** Le bus d'événements (`AppContext.Events`) et `KazoFileSystemWatcher` marchent dans un worker : l'OS
 tient l'abonnement au nom du processus et lui envoie chaque message. La charge
 traverse en JSON ; les événements de l'OS sont déjà pris en charge, un type de
 l'app doit être déclaré par un `JsonSerializerContext` de son assembly :
@@ -538,7 +538,7 @@ dans la [référence du SDK](sdk-reference.md).
 
 | API | Rôle | Capacité | Document |
 |---|---|---|---|
-| `[assembly: KazoWireContext(typeof(…))]` (`KazoWireContextAttribute`) | Types d'une app qui traversent la frontière d'un worker : charges de `KazoEvents`, entrées et résultats de `KazoBackground` | — | [ci-dessus](#processus-dans-des-web-workers-adr-0070-et-0071), [ADR 0124](../dev/adr/0124-remote-event-and-watch-gateways.md) |
+| `[assembly: KazoWireContext(typeof(…))]` (`KazoWireContextAttribute`) | Types d'une app qui traversent la frontière d'un worker : charges du bus `AppContext.Events`, entrées et résultats de `KazoBackground` | — | [ci-dessus](#processus-dans-des-web-workers-adr-0070-et-0071), [ADR 0124](../dev/adr/0124-remote-event-and-watch-gateways.md) |
 | `KazoProcess.GetResourceLimitsAsync` → `KazoResourceLimits`, `SetResourceLimitAsync` ; `ProcessLimitExceededException` (`EAGAIN`), `FileSystemErrorCode.TooManyOpenFiles` (`EMFILE`), `ProcessExitReason.CpuLimitExceeded`, `MemoryLimitExceeded` | Limites façon `setrlimit` d'un processus | `process.manage` pour un autre processus | [`process-limits.md`](../dev/process-limits.md) |
 | `AppDefinition.OomScoreAdjust` (manifeste `oomScoreAdj`), `ProcessExitReason.OutOfMemory` | `oom_score_adj` de départ, négatif pour une app système seulement (`KOSAPP0024`) ; raison de fin d'une victime de l'OOM killer | — | [`oom-killer.md`](../dev/oom-killer.md) |
 | `KazoProcess.Nice`, `BasePriority`, `IShellSession.RunNicedAsync`, `ProcessNice` | Priorité `nice` d'un processus ; lancer une commande avec un ajustement | `process.manage` hors de son processus et de ses enfants ; `shell.control` | [`process-priority-and-unresponsive-windows.md`](../dev/process-priority-and-unresponsive-windows.md) |
@@ -574,6 +574,7 @@ le `[AppManifest]`) ; leur détail est dans la
 | `KazoFile.CreateSymbolicLinkAsync` | `ln -s` | droits du chemin | [`kazo-file-api.md`](kazo-file-api.md) |
 | `AppDefinition.Components` (`AppComponent`), `KazoEmbeddedComponent<T>`, `KazoContractComponent<T>`, `KazoEmbeddableComponent`, `KazoComponentContracts`, `IKazoTerminal` | Composant d'une app affiché par une autre, par contrat (`kazoos.terminal`) | celles de l'app qui affiche le composant (CodeEditor déclare `shell.host` pour le terminal embarqué) | [`embedded-components.md`](embedded-components.md) |
 | `KazoClipboard` partagé avec l'hôte (`BrowserClipboard` retiré en 1.0) | Le texte copié part vers la vraie machine selon `clipboard.config` | `clipboard.read`, `clipboard.write` | [`clipboard.md`](../dev/clipboard.md) |
+| `KazoEvents`, passerelle `IAppExecutionContext.UserEvents` (`IAppUserEventsGateway`) | Journal d'événements de l'usager pour qui l'app tourne, sujet par événement ; relecture des seules lignes de l'app (ADR 0254) | `events.write` | [`app-log-files.md`](app-log-files.md#événements-dusager-adr-0254) |
 
 Aucune de ces API ne donne accès à un service interne : les apps qui les
 utilisent (Terminal, CodeEditor, Diagnostic, FileExplorer, `Kazo.Os.Commands`)
