@@ -12,6 +12,10 @@ at the end of each series or when a convention changes.
 - **Active code**: `wasm2/KazoOs/` (simulated OS in Blazor WebAssembly, .NET 10,
   solution `Kazo.Os.sln`). `src/` is the old version, kept as a
   reference.
+- **Version 3.6.0** (branch `release/3.6.0`, 2026-11-24), a minor version chosen by Benoit with no
+  SDK API change: the shared app test harness also installs and opens an app on a phone (`SHELLS`
+  export, Os#638, ADR 0281 §5). The stable 3.6.0 lets the SDK bot move the apps' submodule (IRC,
+  Webamp, Word, Chess), whose tests then run on the trimmed OS.
 - **Version 3.5.2** (branch `fix/625-feature-service-autostart`, 2026-11-18), a fix: automatic
   services start at the login before their code is loaded, those of features included (Os#625);
   a feature child controls its feature's services; `kazowebd` becomes a manual service (ADR 0286,
