@@ -41,7 +41,8 @@ public sealed class MinimalAppExecutionContext(
     Kazo.Os.AppSdk.Administration.IAppServerConnectionGateway? serverConnection = null,
     Kazo.Os.AppSdk.CloudAccounts.IAppCloudAccountsGateway? cloudAccounts = null,
     Kazo.Os.AppSdk.Storage.IAppStorageGateway? storage = null,
-    Kazo.Os.AppSdk.Apps.IAppManagementGateway? appManagement = null) : IAppExecutionContext
+    Kazo.Os.AppSdk.Apps.IAppManagementGateway? appManagement = null,
+    Kazo.Os.AppSdk.UserEvents.IAppUserEventsGateway? userEvents = null) : IAppExecutionContext
 {
     public AppManifest Manifest { get; } = manifest;
     public Guid InstanceId { get; } = Guid.NewGuid();
@@ -91,6 +92,9 @@ public sealed class MinimalAppExecutionContext(
     // Without cloud accounts, the interface's own default applies (no provider, no account).
     Kazo.Os.AppSdk.CloudAccounts.IAppCloudAccountsGateway IAppExecutionContext.CloudAccounts =>
         cloudAccounts ?? Kazo.Os.AppSdk.CloudAccounts.UnsupportedAppCloudAccountsGateway.Instance;
+
+    Kazo.Os.AppSdk.UserEvents.IAppUserEventsGateway IAppExecutionContext.UserEvents =>
+        userEvents ?? Kazo.Os.AppSdk.UserEvents.UnsupportedAppUserEventsGateway.Instance;
 
     // Without browser storage, the interface's own default applies (nothing to report).
     Kazo.Os.AppSdk.Storage.IAppStorageGateway IAppExecutionContext.Storage =>

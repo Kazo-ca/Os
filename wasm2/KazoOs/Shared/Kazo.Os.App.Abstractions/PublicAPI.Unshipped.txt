@@ -153,3 +153,4 @@ Kazo.Os.App.Abstractions.ShowSettingsPageIntent.<Clone>$() -> Kazo.Os.App.Abstra
 Kazo.Os.App.Abstractions.ShowSettingsPageIntent.Deconstruct(out string! PageId) -> void
 Kazo.Os.App.Abstractions.ShowSettingsPageIntent.ShowSettingsPageIntent(string! PageId) -> void
 Kazo.Os.App.Abstractions.ShowSettingsPageIntent.IntentId.get -> string!
+const Kazo.Os.App.Abstractions.AppCapabilities.EventsWrite = "events.write" -> string!

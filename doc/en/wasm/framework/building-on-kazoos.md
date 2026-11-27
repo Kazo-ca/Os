@@ -256,7 +256,7 @@ on OS 1.2. Its additions are part of 2.0.
   [`process-priority-and-unresponsive-windows.md`](../dev/process-priority-and-unresponsive-windows.md)).
 - **Worker commands that listen to events**:
   `[assembly: KazoWireContext(typeof(MyJsonContext))]` so that
-  `KazoEvents` and `Watch` go through the remote gateway (ADR 0124, 0138,
+  the `AppContext.Events` bus and `Watch` go through the remote gateway (ADR 0124, 0138,
   [`worker-processes.md`](../dev/worker-processes.md)).
 
 The exact list and the host's break outside the SDK (constructor of

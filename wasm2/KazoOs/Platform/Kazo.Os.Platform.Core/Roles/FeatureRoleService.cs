@@ -128,6 +128,12 @@ public sealed class FeatureRoleService
     /// </summary>
     public event EventHandler? Changed;
 
+    /// <summary>
+    /// Gets the user event journals (ADR 0254, section 2): a role granted or revoked is also written to
+    /// the journal of the user who holds it; <see langword="null"/> writes only <c>auth.log</c>.
+    /// </summary>
+    public Diagnostics.IUserEventLog? UserEvents { get; init; }
+
     /// <summary>Gets the tickets of the operations of the features (ADR 0247 §3), shared by every process of the session.</summary>
     public FeatureOperationTickets Tickets { get; } = new();
 
@@ -313,6 +319,10 @@ public sealed class FeatureRoleService
                         ["user"] = userId,
                         ["role"] = role,
                     }));
+                UserEvents?.TryWriteSystem(
+                    Diagnostics.UserEventOwner.Of(user),
+                    new Diagnostics.UserEventAuthor(Diagnostics.OsUserEvents.AccountsAppId),
+                    Diagnostics.OsUserEvents.RoleChanged(role, grant, administrator));
             }
 
             _grants = FeatureRolesDocument.Parse(await _settings.ReadFileAsync(FeatureRolesDocument.MachineFile, cancellationToken).ConfigureAwait(false));

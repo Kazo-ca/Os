@@ -254,7 +254,7 @@ Kazo.Os.Platform.Core.Lifecycle.AppLifecycleOrchestrator.Roles.get -> System.Fun
 Kazo.Os.Platform.Core.Lifecycle.AppLifecycleOrchestrator.Roles.init -> void
 static Kazo.Os.Platform.Core.Roles.FeatureRoleService.OpensTo(Kazo.Os.Platform.Core.Roles.FeatureRoleService? roles, Kazo.Os.App.Abstractions.AppManifest! entryPoint, Kazo.Os.Simulation.Abstractions.Sessions.AuthenticatedPrincipal! principal, bool isRootElevated = false) -> bool
 Kazo.Os.Platform.Core.Roles.FeatureRoleService.LastRefreshError.get -> System.Exception?
-Kazo.Os.Platform.Core.Roles.FeatureOperationTickets.Issue(string! featureId, string! operation, Kazo.Os.AppSdk.Features.KazoAuthenticationScope scope, string! authenticatedBy, string! userId) -> Kazo.Os.AppSdk.Features.KazoAuthenticationTicket!
+Kazo.Os.Platform.Core.Roles.FeatureOperationTickets.Issue(string! featureId, string! operation, Kazo.Os.AppSdk.Features.KazoAuthenticationScope scope, string! authenticatedBy, string! userId, Kazo.Os.AppSdk.UserEvents.KazoEventSubject? subject = null) -> Kazo.Os.AppSdk.Features.KazoAuthenticationTicket!
 Kazo.Os.Platform.Core.Roles.FeatureOperationTickets.TryConsume(System.Guid token, string! featureId, string! operation, string! userId) -> Kazo.Os.AppSdk.Features.KazoAuthenticationTicket?
 const Kazo.Os.Platform.Core.Intents.AppIntentDispatcher.SettingsPageArgumentPrefix = "--page=" -> string!
 const Kazo.Os.Platform.Core.Lifecycle.AppLifecycleOrchestrator.SettingsPageNotLaunchableErrorCode = "lifecycle.settings-page.not-launchable" -> string!
@@ -287,3 +287,98 @@ static Kazo.Os.Platform.Core.Apps.FeaturesConfigDocument.Read(string? content, K
 static Kazo.Os.Platform.Core.Apps.FeaturesConfigReadResult.Empty.get -> Kazo.Os.Platform.Core.Apps.FeaturesConfigReadResult!
 static Kazo.Os.Platform.Core.Apps.FeaturesConfigReadResult.operator !=(Kazo.Os.Platform.Core.Apps.FeaturesConfigReadResult? left, Kazo.Os.Platform.Core.Apps.FeaturesConfigReadResult? right) -> bool
 static Kazo.Os.Platform.Core.Apps.FeaturesConfigReadResult.operator ==(Kazo.Os.Platform.Core.Apps.FeaturesConfigReadResult? left, Kazo.Os.Platform.Core.Apps.FeaturesConfigReadResult? right) -> bool
+Kazo.Os.Platform.Core.Diagnostics.LogFileOwner
+Kazo.Os.Platform.Core.Diagnostics.LogFileOwner.<Clone>$() -> Kazo.Os.Platform.Core.Diagnostics.LogFileOwner!
+Kazo.Os.Platform.Core.Diagnostics.LogFileOwner.Deconstruct(out string! UserId, out string! GroupId) -> void
+Kazo.Os.Platform.Core.Diagnostics.LogFileOwner.Equals(Kazo.Os.Platform.Core.Diagnostics.LogFileOwner? other) -> bool
+Kazo.Os.Platform.Core.Diagnostics.LogFileOwner.GroupId.get -> string!
+Kazo.Os.Platform.Core.Diagnostics.LogFileOwner.GroupId.init -> void
+Kazo.Os.Platform.Core.Diagnostics.LogFileOwner.LogFileOwner(string! UserId, string! GroupId) -> void
+Kazo.Os.Platform.Core.Diagnostics.LogFileOwner.UserId.get -> string!
+Kazo.Os.Platform.Core.Diagnostics.LogFileOwner.UserId.init -> void
+Kazo.Os.Platform.Core.Diagnostics.LogFileTarget.DirectoryMode.get -> ushort
+Kazo.Os.Platform.Core.Diagnostics.LogFileTarget.Owner.get -> Kazo.Os.Platform.Core.Diagnostics.LogFileOwner?
+const Kazo.Os.Platform.Core.Diagnostics.LogFileTarget.PrivateDirectoryMode = 457 -> ushort
+const Kazo.Os.Platform.Core.Diagnostics.LogFileTarget.PublicDirectoryMode = 493 -> ushort
+const Kazo.Os.Platform.Core.Diagnostics.LogFileTarget.UserEventsFileName = "events.log" -> string!
+override Kazo.Os.Platform.Core.Diagnostics.LogFileOwner.Equals(object? obj) -> bool
+override Kazo.Os.Platform.Core.Diagnostics.LogFileOwner.GetHashCode() -> int
+override Kazo.Os.Platform.Core.Diagnostics.LogFileOwner.ToString() -> string!
+static Kazo.Os.Platform.Core.Diagnostics.LogFileOwner.operator !=(Kazo.Os.Platform.Core.Diagnostics.LogFileOwner? left, Kazo.Os.Platform.Core.Diagnostics.LogFileOwner? right) -> bool
+static Kazo.Os.Platform.Core.Diagnostics.LogFileOwner.operator ==(Kazo.Os.Platform.Core.Diagnostics.LogFileOwner? left, Kazo.Os.Platform.Core.Diagnostics.LogFileOwner? right) -> bool
+static Kazo.Os.Platform.Core.Diagnostics.LogFileTarget.ForUser(Kazo.Os.Simulation.Abstractions.Sessions.LocalUserId userId, Kazo.Os.Simulation.Abstractions.Sessions.LocalGroupId primaryGroupId) -> Kazo.Os.Platform.Core.Diagnostics.LogFileTarget!
+static Kazo.Os.Platform.Core.Diagnostics.LogFileTarget.UserDirectory(Kazo.Os.Simulation.Abstractions.Sessions.LocalUserId userId) -> Kazo.Os.App.Abstractions.VirtualPath
+static readonly Kazo.Os.Platform.Core.Diagnostics.LogFileTarget.UserLogDirectory -> Kazo.Os.App.Abstractions.VirtualPath
+Kazo.Os.Platform.Core.Diagnostics.FileUserEventLog
+Kazo.Os.Platform.Core.Diagnostics.FileUserEventLog.DeleteAsync(Kazo.Os.Simulation.Abstractions.Sessions.LocalUserId userId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Kazo.Os.Platform.Core.Diagnostics.FileUserEventLog.FileUserEventLog(Kazo.Os.Platform.Core.Diagnostics.LogFileWriter! writer, Kazo.Os.Simulation.Abstractions.Time.ISimulationClock! clock, Kazo.Os.Simulation.Abstractions.Diagnostics.IDiagnosticRedactor? redactor = null) -> void
+Kazo.Os.Platform.Core.Diagnostics.FileUserEventLog.ReadAsync(Kazo.Os.Simulation.Abstractions.Sessions.LocalUserId userId, Kazo.Os.AppSdk.UserEvents.KazoUserEventFilter! filter, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.UserEvents.KazoUserEventEntry!>!>!
+Kazo.Os.Platform.Core.Diagnostics.FileUserEventLog.Write(Kazo.Os.Platform.Core.Diagnostics.UserEventOwner! owner, Kazo.Os.Platform.Core.Diagnostics.UserEventAuthor! author, Kazo.Os.AppSdk.UserEvents.KazoUserEvent! userEvent) -> void
+Kazo.Os.Platform.Core.Diagnostics.IUserEventLog
+Kazo.Os.Platform.Core.Diagnostics.IUserEventLog.DeleteAsync(Kazo.Os.Simulation.Abstractions.Sessions.LocalUserId userId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Kazo.Os.Platform.Core.Diagnostics.IUserEventLog.ReadAsync(Kazo.Os.Simulation.Abstractions.Sessions.LocalUserId userId, Kazo.Os.AppSdk.UserEvents.KazoUserEventFilter! filter, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Kazo.Os.AppSdk.UserEvents.KazoUserEventEntry!>!>!
+Kazo.Os.Platform.Core.Diagnostics.IUserEventLog.Write(Kazo.Os.Platform.Core.Diagnostics.UserEventOwner! owner, Kazo.Os.Platform.Core.Diagnostics.UserEventAuthor! author, Kazo.Os.AppSdk.UserEvents.KazoUserEvent! userEvent) -> void
+Kazo.Os.Platform.Core.Diagnostics.LogFileWriter.DeleteDirectoryAsync(Kazo.Os.App.Abstractions.VirtualPath directory, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Kazo.Os.Platform.Core.Diagnostics.LogFileWriter.ReadLinesAsync(Kazo.Os.App.Abstractions.VirtualPath path, bool includeArchives = true, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<string!>!>!
+Kazo.Os.Platform.Core.Diagnostics.UserEventAuthor
+Kazo.Os.Platform.Core.Diagnostics.UserEventAuthor.<Clone>$() -> Kazo.Os.Platform.Core.Diagnostics.UserEventAuthor!
+Kazo.Os.Platform.Core.Diagnostics.UserEventAuthor.AppId.get -> string!
+Kazo.Os.Platform.Core.Diagnostics.UserEventAuthor.AppId.init -> void
+Kazo.Os.Platform.Core.Diagnostics.UserEventAuthor.Deconstruct(out string! AppId, out long? ProcessId, out string? SenderAppId) -> void
+Kazo.Os.Platform.Core.Diagnostics.UserEventAuthor.Equals(Kazo.Os.Platform.Core.Diagnostics.UserEventAuthor? other) -> bool
+Kazo.Os.Platform.Core.Diagnostics.UserEventAuthor.ProcessId.get -> long?
+Kazo.Os.Platform.Core.Diagnostics.UserEventAuthor.ProcessId.init -> void
+Kazo.Os.Platform.Core.Diagnostics.UserEventAuthor.SenderAppId.get -> string?
+Kazo.Os.Platform.Core.Diagnostics.UserEventAuthor.SenderAppId.init -> void
+Kazo.Os.Platform.Core.Diagnostics.UserEventAuthor.UserEventAuthor(string! AppId, long? ProcessId = null, string? SenderAppId = null) -> void
+Kazo.Os.Platform.Core.Diagnostics.UserEventOwner
+Kazo.Os.Platform.Core.Diagnostics.UserEventOwner.<Clone>$() -> Kazo.Os.Platform.Core.Diagnostics.UserEventOwner!
+Kazo.Os.Platform.Core.Diagnostics.UserEventOwner.Deconstruct(out Kazo.Os.Simulation.Abstractions.Sessions.LocalUserId UserId, out Kazo.Os.Simulation.Abstractions.Sessions.LocalGroupId PrimaryGroupId) -> void
+Kazo.Os.Platform.Core.Diagnostics.UserEventOwner.Equals(Kazo.Os.Platform.Core.Diagnostics.UserEventOwner? other) -> bool
+Kazo.Os.Platform.Core.Diagnostics.UserEventOwner.PrimaryGroupId.get -> Kazo.Os.Simulation.Abstractions.Sessions.LocalGroupId
+Kazo.Os.Platform.Core.Diagnostics.UserEventOwner.PrimaryGroupId.init -> void
+Kazo.Os.Platform.Core.Diagnostics.UserEventOwner.UserEventOwner(Kazo.Os.Simulation.Abstractions.Sessions.LocalUserId UserId, Kazo.Os.Simulation.Abstractions.Sessions.LocalGroupId PrimaryGroupId) -> void
+Kazo.Os.Platform.Core.Diagnostics.UserEventOwner.UserId.get -> Kazo.Os.Simulation.Abstractions.Sessions.LocalUserId
+Kazo.Os.Platform.Core.Diagnostics.UserEventOwner.UserId.init -> void
+const Kazo.Os.Platform.Core.Diagnostics.FileUserEventLog.MaxKindLength = 128 -> int
+const Kazo.Os.Platform.Core.Diagnostics.FileUserEventLog.MaxPropertyKeyLength = 64 -> int
+override Kazo.Os.Platform.Core.Diagnostics.UserEventAuthor.Equals(object? obj) -> bool
+override Kazo.Os.Platform.Core.Diagnostics.UserEventAuthor.GetHashCode() -> int
+override Kazo.Os.Platform.Core.Diagnostics.UserEventAuthor.ToString() -> string!
+override Kazo.Os.Platform.Core.Diagnostics.UserEventOwner.Equals(object? obj) -> bool
+override Kazo.Os.Platform.Core.Diagnostics.UserEventOwner.GetHashCode() -> int
+override Kazo.Os.Platform.Core.Diagnostics.UserEventOwner.ToString() -> string!
+static Kazo.Os.Platform.Core.Diagnostics.FileUserEventLog.ToDiagnosticSeverity(Kazo.Os.AppSdk.UserEvents.KazoEventSeverity severity) -> Kazo.Os.Simulation.Abstractions.Diagnostics.DiagnosticSeverity
+static Kazo.Os.Platform.Core.Diagnostics.LogFileTarget.UserEventsPath(Kazo.Os.Simulation.Abstractions.Sessions.LocalUserId userId) -> Kazo.Os.App.Abstractions.VirtualPath
+static Kazo.Os.Platform.Core.Diagnostics.UserEventAuthor.operator !=(Kazo.Os.Platform.Core.Diagnostics.UserEventAuthor? left, Kazo.Os.Platform.Core.Diagnostics.UserEventAuthor? right) -> bool
+static Kazo.Os.Platform.Core.Diagnostics.UserEventAuthor.operator ==(Kazo.Os.Platform.Core.Diagnostics.UserEventAuthor? left, Kazo.Os.Platform.Core.Diagnostics.UserEventAuthor? right) -> bool
+static Kazo.Os.Platform.Core.Diagnostics.UserEventOwner.Of(Kazo.Os.Simulation.Abstractions.Sessions.AuthenticatedPrincipal! principal) -> Kazo.Os.Platform.Core.Diagnostics.UserEventOwner!
+static Kazo.Os.Platform.Core.Diagnostics.UserEventOwner.Of(Kazo.Os.Simulation.Abstractions.Sessions.LocalUser! user) -> Kazo.Os.Platform.Core.Diagnostics.UserEventOwner!
+static Kazo.Os.Platform.Core.Diagnostics.UserEventOwner.operator !=(Kazo.Os.Platform.Core.Diagnostics.UserEventOwner? left, Kazo.Os.Platform.Core.Diagnostics.UserEventOwner? right) -> bool
+static Kazo.Os.Platform.Core.Diagnostics.UserEventOwner.operator ==(Kazo.Os.Platform.Core.Diagnostics.UserEventOwner? left, Kazo.Os.Platform.Core.Diagnostics.UserEventOwner? right) -> bool
+Kazo.Os.Platform.Core.Execution.AppExecutionContextFactory.UserEvents.get -> Kazo.Os.Platform.Core.Diagnostics.IUserEventLog?
+Kazo.Os.Platform.Core.Execution.AppExecutionContextFactory.UserEvents.init -> void
+Kazo.Os.Platform.Core.Policy.DangerousCapabilityGate.UserEvents.get -> Kazo.Os.Platform.Core.Diagnostics.IUserEventLog?
+Kazo.Os.Platform.Core.Policy.DangerousCapabilityGate.UserEvents.init -> void
+Kazo.Os.Platform.Core.Roles.FeatureRoleService.UserEvents.get -> Kazo.Os.Platform.Core.Diagnostics.IUserEventLog?
+Kazo.Os.Platform.Core.Roles.FeatureRoleService.UserEvents.init -> void
+Kazo.Os.Platform.Core.ServerConnection.FileSystemSyncService.UserEvents.get -> Kazo.Os.Platform.Core.Diagnostics.IUserEventLog?
+Kazo.Os.Platform.Core.ServerConnection.FileSystemSyncService.UserEvents.init -> void
+Kazo.Os.Platform.Core.Sessions.GuestAccountService.UserEvents.get -> Kazo.Os.Platform.Core.Diagnostics.IUserEventLog?
+Kazo.Os.Platform.Core.Sessions.GuestAccountService.UserEvents.init -> void
+Kazo.Os.Platform.Core.Sessions.LocalAccountService.UserEvents.get -> Kazo.Os.Platform.Core.Diagnostics.IUserEventLog?
+Kazo.Os.Platform.Core.Sessions.LocalAccountService.UserEvents.init -> void
+Kazo.Os.Platform.Core.Roles.FeatureOperationTickets.TryConsume(System.Guid token, string! featureId, string! operation, string! userId, out Kazo.Os.AppSdk.UserEvents.KazoEventSubject? subject) -> Kazo.Os.AppSdk.Features.KazoAuthenticationTicket?
+Kazo.Os.Platform.Core.Administration.SystemAdministrationGatewayServices.Audit.get -> System.Func<Kazo.Os.Simulation.Abstractions.Diagnostics.IAuditLog!>?
+Kazo.Os.Platform.Core.Administration.SystemAdministrationGatewayServices.Audit.init -> void
+Kazo.Os.Platform.Core.Diagnostics.FileUserEventLog.TryWriteSystem(Kazo.Os.Platform.Core.Diagnostics.UserEventOwner! owner, Kazo.Os.Platform.Core.Diagnostics.UserEventAuthor! author, Kazo.Os.AppSdk.UserEvents.KazoUserEvent! userEvent) -> bool
+Kazo.Os.Platform.Core.Diagnostics.IUserEventLog.TryWriteSystem(Kazo.Os.Platform.Core.Diagnostics.UserEventOwner! owner, Kazo.Os.Platform.Core.Diagnostics.UserEventAuthor! author, Kazo.Os.AppSdk.UserEvents.KazoUserEvent! userEvent) -> bool
+const Kazo.Os.Platform.Core.Diagnostics.FileUserEventLog.MaxMessageLength = 2048 -> int
+const Kazo.Os.Platform.Core.Diagnostics.FileUserEventLog.MaxProperties = 16 -> int
+const Kazo.Os.Platform.Core.Diagnostics.FileUserEventLog.MaxPropertyValueLength = 512 -> int
+const Kazo.Os.Platform.Core.Diagnostics.FileUserEventLog.MaxSubjectFieldLength = 256 -> int
+const Kazo.Os.Platform.Core.Diagnostics.FileUserEventLog.RateLimitBurst = 200 -> int
+const Kazo.Os.Platform.Core.Diagnostics.FileUserEventLog.ReadLimitBurst = 60 -> int
+const Kazo.Os.Platform.Core.Diagnostics.FileUserEventLog.SystemKindPrefix = "kazoos." -> string!
+static Kazo.Os.Platform.Core.Diagnostics.FileUserEventLog.Validate(Kazo.Os.AppSdk.UserEvents.KazoUserEvent! userEvent, bool allowSystemKinds = false) -> void
+static readonly Kazo.Os.Platform.Core.Diagnostics.FileUserEventLog.RateLimitInterval -> System.TimeSpan

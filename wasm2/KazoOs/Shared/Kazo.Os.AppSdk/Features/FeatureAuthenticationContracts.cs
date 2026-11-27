@@ -54,10 +54,24 @@ public interface IKazoFeatureAuthentication
     ValueTask<KazoAuthenticationTicket> AuthenticateAsync(string operation, KazoAuthenticationScope scope, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Asks the OS to authenticate <paramref name="operation"/> about <paramref name="subject"/> (a
+    /// machine, a program): when the ticket is used, the OS writes the operation to the user's event
+    /// journal with that subject (ADR 0254 §2). A host that keeps no journal ignores the subject.
+    /// </summary>
+    /// <param name="operation">The operation, shown in the window and written to <c>/var/log/auth.log</c>.</param>
+    /// <param name="scope">Who authenticates.</param>
+    /// <param name="subject">What the operation is about, or <see langword="null"/>.</param>
+    /// <param name="cancellationToken">Cancels the window.</param>
+    /// <returns>The ticket of the operation.</returns>
+    ValueTask<KazoAuthenticationTicket> AuthenticateAsync(
+        string operation, KazoAuthenticationScope scope, UserEvents.KazoEventSubject? subject, CancellationToken cancellationToken = default) =>
+        AuthenticateAsync(operation, scope, cancellationToken);
+
+    /// <summary>
     /// Presents a ticket before the operation: it is used up, and refused when expired, used, of
     /// another user or for another operation.
     /// </summary>
-    /// <param name="ticket">The ticket <see cref="AuthenticateAsync"/> returned.</param>
+    /// <param name="ticket">The ticket <see cref="AuthenticateAsync(string, KazoAuthenticationScope, CancellationToken)"/> returned.</param>
     /// <param name="operation">The operation about to run.</param>
     /// <param name="cancellationToken">Cancels the check.</param>
     /// <returns>The ticket the OS issued: read its <see cref="KazoAuthenticationTicket.Scope"/> from here, never from the copy presented.</returns>
@@ -111,8 +125,25 @@ public static class KazoFeatureAuthentication
         return KazoExecutionContext.Current.FeatureAuthentication.AuthenticateAsync(operation, scope, cancellationToken);
     }
 
+    /// <summary>
+    /// Asks the OS to authenticate <paramref name="operation"/> about <paramref name="subject"/> in its
+    /// own window; when the ticket is used, the OS writes the operation to the user's event journal
+    /// with that subject (ADR 0254 §2).
+    /// </summary>
+    /// <param name="operation">The operation, shown in the window and written to <c>/var/log/auth.log</c>.</param>
+    /// <param name="scope">Who authenticates.</param>
+    /// <param name="subject">What the operation is about (a machine, a program), or <see langword="null"/>.</param>
+    /// <param name="cancellationToken">Cancels the window.</param>
+    /// <exception cref="IO.KazoUnauthorizedAccessException">The caller is not a feature, or the authentication failed or was cancelled.</exception>
+    public static ValueTask<KazoAuthenticationTicket> AuthenticateAsync(
+        string operation, KazoAuthenticationScope scope, UserEvents.KazoEventSubject? subject, CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(operation);
+        return KazoExecutionContext.Current.FeatureAuthentication.AuthenticateAsync(operation, scope, subject, cancellationToken);
+    }
+
     /// <summary>Presents a ticket before the operation runs: it is used up.</summary>
-    /// <param name="ticket">The ticket <see cref="AuthenticateAsync"/> returned.</param>
+    /// <param name="ticket">The ticket <see cref="AuthenticateAsync(string, KazoAuthenticationScope, CancellationToken)"/> returned.</param>
     /// <param name="operation">The operation about to run.</param>
     /// <param name="cancellationToken">Cancels the check.</param>
     /// <returns>The ticket the OS issued, whose scope and login are authoritative.</returns>

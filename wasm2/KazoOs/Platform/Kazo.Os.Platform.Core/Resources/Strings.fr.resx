@@ -180,6 +180,9 @@
   <data name="Capability.clipboard.read.Title" xml:space="preserve">
     <value>Lire le presse-papiers</value>
   </data>
+  <data name="Capability.events.write.Title" xml:space="preserve">
+    <value>Écrire dans votre journal d'événements</value>
+  </data>
   <data name="Capability.clipboard.write.Title" xml:space="preserve">
     <value>Écrire dans le presse-papiers</value>
   </data>
@@ -818,5 +821,47 @@ Annuler : décider au prochain lancement.</value>
   </data>
   <data name="Admin.RevokeRole" xml:space="preserve">
     <value>Retirer le rôle {0} au compte {1}</value>
+  </data>
+  <data name="UserEvent.PermissionGranted" xml:space="preserve">
+    <value>Permissions dangereuses accordées à {0} : {1}.</value>
+  </data>
+  <data name="UserEvent.PermissionRefused" xml:space="preserve">
+    <value>Vous avez refusé des permissions dangereuses à {0} : {1}.</value>
+  </data>
+  <data name="UserEvent.RoleGranted" xml:space="preserve">
+    <value>Rôle {0} attribué par {1}.</value>
+  </data>
+  <data name="UserEvent.RoleRevoked" xml:space="preserve">
+    <value>Rôle {0} retiré par {1}.</value>
+  </data>
+  <data name="UserEvent.FeatureOperationAuthenticated" xml:space="preserve">
+    <value>Opération {0} de {1} authentifiée par {2}.</value>
+  </data>
+  <data name="Admin.ReadUserEvents" xml:space="preserve">
+    <value>Lire le journal d'événements de {0}</value>
+  </data>
+  <data name="UserEvent.AppInstalled" xml:space="preserve">
+    <value>{0} {1} installée pour vous.</value>
+  </data>
+  <data name="UserEvent.SyncConflictResolved" xml:space="preserve">
+    <value>Conflit de synchronisation sur {0} résolu : {1}.</value>
+  </data>
+  <data name="UserEvent.SyncConflictResolvedAutomatically" xml:space="preserve">
+    <value>Conflit de synchronisation sur {0} résolu automatiquement : {1}.</value>
+  </data>
+  <data name="UserEvent.SyncChoice.KeepMine" xml:space="preserve">
+    <value>version de cet appareil gardée</value>
+  </data>
+  <data name="UserEvent.SyncChoice.KeepOther" xml:space="preserve">
+    <value>version du serveur gardée</value>
+  </data>
+  <data name="UserEvent.SyncChoice.BothDeleted" xml:space="preserve">
+    <value>fichier supprimé sur les deux appareils</value>
+  </data>
+  <data name="UserEvent.SyncChoice.Same" xml:space="preserve">
+    <value>le même fichier sur les deux appareils</value>
+  </data>
+  <data name="UserEvent.SyncChoice.KeepBoth" xml:space="preserve">
+    <value>les deux versions gardées</value>
   </data>
 </root>

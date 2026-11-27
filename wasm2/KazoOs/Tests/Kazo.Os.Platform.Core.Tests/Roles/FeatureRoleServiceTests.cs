@@ -1,3 +1,4 @@
+using Kazo.Os.AppSdk.UserEvents;
 using Kazo.Os.App.Abstractions;
 using Kazo.Os.Platform.Core.Roles;
 using Kazo.Os.Simulation.Abstractions.Diagnostics;
@@ -41,6 +42,42 @@ public sealed class FeatureRoleServiceTests
         Assert.DoesNotContain("bob", config, StringComparison.Ordinal);
         AuditEntry entry = Assert.Single(harness.Audit.Entries, e => e.Action == FeatureRoleService.GrantAction);
         Assert.Equal(("carol", FeatureRoleFixtures.Manager), (entry.Properties["admin"], entry.Properties["role"]));
+    }
+
+    [Fact]
+    public async Task A_journal_that_cannot_be_written_never_breaks_a_role_change()
+    {
+        FeatureRoleHarness harness = await FeatureRoleHarness.CreateAsync();
+        AuthenticatedPrincipal bob = await harness.LoginAsync(harness.Files.Bob);
+        harness.Events.Fails = true;
+
+        Assert.True(await harness.Roles.GrantAsync(FeatureRoleFixtures.Manager, harness.Files.Bob, "carol"));
+
+        Assert.True(harness.Roles.HasRole(bob, FeatureRoleFixtures.Manager));
+        Assert.Empty(harness.Events.Written);
+    }
+
+    [Fact]
+    public async Task A_role_granted_then_revoked_is_written_to_the_journal_of_its_holder()
+    {
+        FeatureRoleHarness harness = await FeatureRoleHarness.CreateAsync();
+
+        await harness.Roles.GrantAsync(FeatureRoleFixtures.Manager, harness.Files.Bob, "carol");
+        await harness.Roles.GrantAsync(FeatureRoleFixtures.Manager, harness.Files.Bob, "carol");
+        await harness.Roles.RevokeAsync(FeatureRoleFixtures.Manager, harness.Files.Bob, "carol");
+
+        // ADR 0254 §2: one event per real change, in Bob's journal, by the OS's account manager.
+        Assert.Collection(
+            harness.Events.Written,
+            granted => Assert.Equal("kazoos.role.granted", granted.Event.Kind),
+            revoked => Assert.Equal("kazoos.role.revoked", revoked.Event.Kind));
+        Assert.All(harness.Events.Written, written =>
+        {
+            Assert.Equal(harness.Files.Bob.Id, written.Owner.UserId);
+            Assert.Equal("org.kazoos.accounts", written.Author.AppId);
+            Assert.Equal(new KazoEventSubject("role", FeatureRoleFixtures.Manager, FeatureRoleFixtures.Manager), written.Event.Subject);
+            Assert.Equal("carol", written.Event.Properties!["admin"]);
+        });
     }
 
     [Fact]

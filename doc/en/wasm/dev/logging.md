@@ -16,8 +16,9 @@ read them with ordinary file permissions.
 |---|---|---|
 | `/var/log/syslog` | Platform `ILogger<T>`, startup (`kernel`), host failures (`ecosystem-host`), lost lines (`logging`) | `system:system 0644` |
 | `/var/log/kern.log` | Kernel log (`KernelLog`): OOM killer, browser memory guard; also copied to `syslog` and read by `dmesg` from `/dev/kmsg` (ADR 0126 §3, [`oom-killer.md`](oom-killer.md)) | `system:system 0644` |
-| `/var/log/auth.log` | `IAuditLog` (`session.login`, `session.elevate`, `capability.*` from ADR 0049, `feature.authenticate`, `feature.role-denied`, `role.grant` and `role.revoke` from ADR 0247…) | `system:system 0600` |
+| `/var/log/auth.log` | `IAuditLog` (`session.login`, `session.elevate`, `capability.*` from ADR 0049, `feature.authenticate`, `feature.role-denied`, `role.grant` and `role.revoke` from ADR 0247, `events.read-other` from ADR 0254…) | `system:system 0600` |
 | `/var/log/audit.log` | Audit of creations, writes, renames, copies, deletions and `chmod` under `/etc`, `/bin` and `/var` (except `/var/log`), in `auditd` format (ADR 0100 §3, [`sensitive-settings.md`](sensitive-settings.md)); `ausearch` filters it | `system:system 0600` |
+| `/var/log/users/<id>/events.log` | A user's event journal (ADR 0254): `KazoEvents` of the apps and the OS's events for that user (`kazoos.permission.*`, `kazoos.role.*`, `kazoos.app.installed`, `kazoos.sync.conflict-resolved`); `<id>` is the stable account identifier ([`app-log-files.md`](../framework/app-log-files.md#user-events-adr-0254)) | `<user>:<group> 0600`, directories `system:system 0711` |
 
 ## Architecture
 
@@ -57,6 +58,48 @@ HostExceptionReporter ───────────────────�
     (category `logging`) in the in-memory buffer.
 - `FileAuditLog` replaces `BoundedAuditLog` in the composition; `Entries` is
   still served by a 512-entry buffer.
+- **User journals (ADR 0254).** `LogFileTarget.ForUser(id, group)` targets
+  `/var/log/users/<id>/events.log` with an owner (`LogFileOwner`) and a
+  directory mode (`DirectoryMode`, `0711`). The writer creates the file in the
+  user's name, like `install -o` (only the creation uses that context; appends
+  and rotation are still done by the system), and creates the directories below
+  `/var/log` with that mode. `ReadLinesAsync(path)` and `DeleteDirectoryAsync(directory)`
+  (a directory below `/var/log/users` only) take the flush gate, write the
+  queue, then read or delete before releasing it: no flush or rotation moves a
+  file meanwhile.
+  - `IUserEventLog` / `FileUserEventLog` (singleton). `Write(owner, author, event)`,
+    for apps, checks the event (`Validate`: one-token kind, `kazoos.*` kinds
+    refused, bounded sizes, OS keys refused) and limits the rate per app and per
+    user (200 in 30 s, a fixed window like journald; the extra events are
+    counted and a `user-events` line in `syslog` says so).
+    `TryWriteSystem(...)`, for the OS, shortens fields that are too long (`…`),
+    never throws and writes a failure to `syslog`. Both redact the properties,
+    add `kind`, `subject.*` and `sender`, and format the line with
+    `LogLineFormat`. `ReadAsync(id, filter)` (60 reads per journal in 30 s) and
+    `DeleteAsync(id)`, which never throws and ignores any event written later
+    for that account.
+  - `AppUserEventsGateway` (one per app instance, `AppExecutionContextFactory.UserEvents`)
+    checks `events.write`, takes the app and the process from the context and
+    the sender from `Intent.SenderAppId`, and reads back only the app's lines.
+    In a worker: `RemoteUserEventsGateway`, operations `uev.write` (posted
+    without an answer, checked in the app first) and `uev.read`.
+  - The OS's events (`OsUserEvents`, texts in the session language):
+    `DangerousCapabilityGate` (permission granted or refused,
+    `org.kazoos.permissions`), `FeatureRoleService` (role granted or revoked,
+    `org.kazoos.accounts`), `AppManagementGateway` (app installed for oneself only,
+    `org.kazoos.packages`), `FileSystemSyncService` (conflict resolved, by hand
+    or automatically, for the user of the pass, `org.kazoos.sync`),
+    `AppFeatureAuthenticationGateway` (operation of a feature authenticated, when
+    the ticket is consumed, with the subject passed to `AuthenticateAsync`,
+    `org.kazoos.authentication`). Each keeps its `auth.log` or `syslog` entry
+    too, and goes through `TryWriteSystem`: the journal never breaks the
+    operation already done.
+  - `AppUserAccountsGateway.ReadEventsAsync(login, filter)` (ADR 0254 §3): the
+    signed-in user's own journal without asking; another account after an
+    administrator in the OS's window, once per gateway (so per process), and
+    one `events.read-other` entry per account read in `auth.log`.
+  - `LocalAccountService.DeleteAsync` and `GuestAccountService.ReplaceAsync`
+    delete the directory of the deleted account, even when the home stays.
 - `HostExceptionReporter` (ADR 0240) writes one `CRIT ecosystem-host` line per
   unhandled failure, with `correlationId`, `phase`, `exceptionType`, `module`,
   `source`, `message` and `stack`. Message and stack go through
@@ -94,6 +137,15 @@ HostExceptionReporter ───────────────────�
   denial becomes a warning, a successful write an information entry, with the
   app as source.
 - Live tracking through `AppContext.Watch` on `/var/log` and `/var/log/apps`.
+- "My events" tab (ADR 0254 §3, `UserEventsPanel`): the journal of the
+  signed-in user, `/var/log/users/<AppContext.UserId>/events.log` and its
+  archives, read as an ordinary file the user owns
+  (`LogFileReader.ReadUserEventsAsync`). Filters by app, severity, subject
+  (grouped by app, type and identifier) and text; newest first. No live
+  tracking (the `0711` directory cannot be listed): "Refresh" reads again.
+  An administrator (or a session under `sudo`) sees a user picker: another
+  account is read through `KazoUserAccounts.ReadEventsAsync`, which asks an
+  administrator once for this window (`ErrorLogViewerWindow.UserEvents.cs`).
 - "Truncate" empties the selected log (never an archive). For an ordinary user
   it is refused, the window offers administrator approval (ADR 0042), then a
   second click succeeds.
@@ -111,6 +163,14 @@ HostExceptionReporter ───────────────────�
   non-recursive failures, logout, shutdown, read permissions, new attachment
   that does not wait for a flush blocked on the previous one.
 - `.../LogProducersTests.cs`: `ILogger`, `AppLoggingGateway`, `FileAuditLog`.
+- `.../UserEventLogTests.cs` (ADR 0254): writing to the user's file with the
+  context's app, owner, `0600` and `0711` modes, another user neither reads nor
+  lists, reads limited to the app's lines, refusal without `events.write`,
+  malformed events, rotation, deletion, reading a line back, the `KazoEvents`
+  facade. The OS's events in `DangerousCapabilityApprovalTests`,
+  `FeatureRoleServiceTests`, `AppPackageGatewayTests`,
+  `FileSystemSyncDeletionAndConflictTests`; deletion with the account in
+  `LocalAccountServiceTests`; worker in `WireCodecUserEventsTests`.
 - `Tests/Kazo.Os.Platform.Core.Tests/Time/SimulationClockDriverTests.cs`.
 - `Tests/Kazo.Os.Apps.ErrorLogViewer.Tests/`: manifest and `LogFileReader` on
   a real `AppFileSystemGateway`.
@@ -128,4 +188,8 @@ HostExceptionReporter ───────────────────�
 - [x] Error Log Viewer reads the files.
 - [x] Contract tests.
 - [x] Lines lost for lack of space, counted then reported (`v3/7`, ADR 0099 §2).
+- [x] User journals (ADR 0254): `LogFileTarget.ForUser`, `FileUserEventLog`, `KazoEvents`, `events.write`, worker.
+- [x] Events written by the OS: permissions, roles, install for oneself, synchronization conflicts.
+- [x] Journal deleted with the account.
+- [x] Error Log Viewer: "My events" tab.
 - [ ] Move Error Log Viewer to `KazoFile` after the ADR 0043 merge.

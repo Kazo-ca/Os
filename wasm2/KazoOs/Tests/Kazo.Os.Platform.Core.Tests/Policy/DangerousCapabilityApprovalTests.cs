@@ -1,3 +1,4 @@
+using Kazo.Os.AppSdk.UserEvents;
 using Kazo.Os.App.Abstractions;
 using Kazo.Os.App.Abstractions.Policy;
 using Kazo.Os.Platform.Core.Diagnostics;
@@ -9,6 +10,7 @@ using Kazo.Os.Platform.Core.Notifications;
 using Kazo.Os.Platform.Core.Policy;
 using Kazo.Os.Platform.Core.Processes;
 using Kazo.Os.Platform.Core.Sessions;
+using Kazo.Os.Platform.Core.Tests.Diagnostics;
 using Kazo.Os.Platform.Core.Tests.Settings;
 using Kazo.Os.Simulation.Abstractions.Diagnostics;
 using Kazo.Os.Simulation.Abstractions.Sessions;
@@ -187,6 +189,15 @@ public sealed class DangerousCapabilityApprovalTests
         Assert.Equal("alice", approve.Properties["requestedBy"]);
         Assert.Equal("success", approve.Properties["outcome"]);
         Assert.DoesNotContain(harness.Audit.Entries, entry => entry.Properties.Values.Any(value => value.Contains(AdminPassword, StringComparison.Ordinal)));
+
+        // ADR 0254 §2: the permission granted is also in Alice's journal, about the app.
+        (UserEventOwner owner, UserEventAuthor author, KazoUserEvent granted) = Assert.Single(harness.Events.Written);
+        Assert.Equal(harness.Principal.UserId, owner.UserId);
+        Assert.Equal("org.kazoos.permissions", author.AppId);
+        Assert.Equal("kazoos.permission.granted", granted.Kind);
+        Assert.Equal(new KazoEventSubject("app", ScannerId, harness.Scanner.Name), granted.Subject);
+        Assert.Equal("admin", granted.Properties!["admin"]);
+        Assert.Contains(AppCapabilities.NetworkRealAccess, granted.Properties["capabilities"], StringComparison.Ordinal);
     }
 
     [Fact]
@@ -217,6 +228,25 @@ public sealed class DangerousCapabilityApprovalTests
     }
 
     [Fact]
+    public async Task A_journal_that_cannot_be_written_never_breaks_an_approval_or_a_refusal()
+    {
+        GateHarness harness = await GateHarness.CreateAsync();
+        harness.Events.Fails = true;
+        harness.Prompt.Script = async (request, ct) =>
+        {
+            DangerousCapabilityApprovalAttempt attempt = await request.ApproveAsync("admin", AdminPassword, ct);
+            Assert.True(attempt.Succeeded);
+            return DangerousCapabilityApprovalOutcome.Approved;
+        };
+
+        DangerousCapabilityGateResult result = await harness.Gate.EnsureDecidedAsync(harness.Scanner, harness.Principal, harness.Prompt);
+
+        Assert.Equal(DangerousCapabilityApprovalOutcome.Approved, result.PromptOutcome);
+        Assert.True(harness.IsGranted(ScannerId, AppCapabilities.NetworkRealAccess));
+        Assert.Empty(harness.Events.Written);
+    }
+
+    [Fact]
     public async Task Refusing_writes_user_denials_and_the_question_is_not_asked_again()
     {
         GateHarness harness = await GateHarness.CreateAsync();
@@ -231,6 +261,11 @@ public sealed class DangerousCapabilityApprovalTests
         Assert.Contains("org.example.scanner:network.real.access=deny", user, StringComparison.Ordinal);
         AuditEntry refuse = Assert.Single(harness.Audit.Entries, entry => entry.Action == "capability.refuse");
         Assert.Equal("alice", refuse.Properties["user"]);
+
+        // ADR 0254 §2: the refusal is also in Alice's journal, once.
+        (UserEventOwner owner, _, KazoUserEvent refused) = Assert.Single(harness.Events.Written);
+        Assert.Equal(harness.Principal.UserId, owner.UserId);
+        Assert.Equal(("kazoos.permission.refused", KazoEventSeverity.Warning), (refused.Kind, refused.Severity));
     }
 
     [Fact]
@@ -510,8 +545,10 @@ public sealed class DangerousCapabilityApprovalTests
             Audit = new BoundedAuditLog(maxEntries: 200);
             Verifier = new AdminElevationVerifier(files.Users, Audit);
             Store = new AppPermissionStore(files.Settings);
-            Gate = new DangerousCapabilityGate(Catalog, files.Grants, Store, files.Settings, Verifier, Audit);
+            Gate = new DangerousCapabilityGate(Catalog, files.Grants, Store, files.Settings, Verifier, Audit) { UserEvents = Events };
         }
+
+        internal RecordingUserEventLog Events { get; } = new();
 
         internal SettingsFilesHarness Files { get; }
         internal AuthenticatedPrincipal Principal { get; }

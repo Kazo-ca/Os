@@ -98,4 +98,10 @@ public sealed record SystemAdministrationGatewayServices(
     /// component provider goes through (ADR 0156 §3); <see langword="null"/> refuses such a choice.
     /// </summary>
     public Func<IDangerousCapabilityApprovalPrompt>? ApprovalPrompt { get; init; }
+
+    /// <summary>
+    /// Gets <c>/var/log/auth.log</c>, where an administrator's read of another account's event journal
+    /// is written (ADR 0254 §3); <see langword="null"/> writes nothing.
+    /// </summary>
+    public Func<Kazo.Os.Simulation.Abstractions.Diagnostics.IAuditLog>? Audit { get; init; }
 }
