@@ -30,6 +30,25 @@ public sealed partial class AppLifecycleOrchestratorTests
     }
 
     [Fact]
+    public async Task Enabling_a_feature_again_starts_only_the_automatic_services_it_names()
+    {
+        Fixture fixture = LazyFeatureFixture();
+        AuthenticatedPrincipal principal = await fixture.LoginAsync();
+
+        // ADR 0287 §3: the services of the feature enabled again, not every service of the session.
+        IReadOnlyList<AppLaunchResult> other = await fixture.Orchestrator.StartAutomaticServicesAsync(principal, ["org.test.other"]);
+        IReadOnlyList<AppLaunchResult> manual = await fixture.Orchestrator.StartAutomaticServicesAsync(principal, [LazyManualServiceId]);
+        IReadOnlyList<AppLaunchResult> enabled = await fixture.Orchestrator.StartAutomaticServicesAsync(
+            principal, [LazyFeatureId, LazyAutomaticServiceId, LazyManualServiceId]);
+
+        Assert.Empty(other);
+        Assert.Empty(manual);
+        AppLaunchResult result = Assert.Single(enabled);
+        Assert.Equal(AppLaunchStatus.Launched, result.Status);
+        Assert.Equal(LazyAutomaticServiceId, result.Process!.AppId);
+    }
+
+    [Fact]
     public async Task A_service_set_to_manual_does_not_load_its_code_at_login()
     {
         Fixture fixture = LazyFeatureFixture();

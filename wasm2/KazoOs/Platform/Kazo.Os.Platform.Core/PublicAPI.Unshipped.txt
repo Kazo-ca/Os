@@ -259,6 +259,34 @@ Kazo.Os.Platform.Core.Roles.FeatureOperationTickets.TryConsume(System.Guid token
 const Kazo.Os.Platform.Core.Intents.AppIntentDispatcher.SettingsPageArgumentPrefix = "--page=" -> string!
 const Kazo.Os.Platform.Core.Lifecycle.AppLifecycleOrchestrator.SettingsPageNotLaunchableErrorCode = "lifecycle.settings-page.not-launchable" -> string!
 Kazo.Os.Platform.Core.Roles.FeatureRoleService.Changed -> System.EventHandler?
+Kazo.Os.Platform.Core.Apps.AppInstallationService.DisableFeatureAsync(string! featureId, Kazo.Os.Simulation.Abstractions.Gateways.IAppFileSystemGateway! writer, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.Platform.Core.Apps.AppInstallationResult!>
+Kazo.Os.Platform.Core.Apps.AppInstallationService.EnableFeatureAsync(string! featureId, Kazo.Os.Simulation.Abstractions.Gateways.IAppFileSystemGateway! writer, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.Platform.Core.Apps.AppInstallationResult!>
+Kazo.Os.Platform.Core.Apps.AppInstallationState.Disabled = 5 -> Kazo.Os.Platform.Core.Apps.AppInstallationState
+Kazo.Os.Platform.Core.Apps.FeaturesConfigDocument
+Kazo.Os.Platform.Core.Apps.FeaturesConfigReadResult
+Kazo.Os.Platform.Core.Apps.FeaturesConfigReadResult.<Clone>$() -> Kazo.Os.Platform.Core.Apps.FeaturesConfigReadResult!
+Kazo.Os.Platform.Core.Apps.FeaturesConfigReadResult.Deconstruct(out System.Collections.Generic.IReadOnlySet<string!>! DisabledFeatureIds, out System.Collections.Generic.IReadOnlyList<string!>! Warnings) -> void
+Kazo.Os.Platform.Core.Apps.FeaturesConfigReadResult.DisabledFeatureIds.get -> System.Collections.Generic.IReadOnlySet<string!>!
+Kazo.Os.Platform.Core.Apps.FeaturesConfigReadResult.DisabledFeatureIds.init -> void
+Kazo.Os.Platform.Core.Apps.FeaturesConfigReadResult.Equals(Kazo.Os.Platform.Core.Apps.FeaturesConfigReadResult? other) -> bool
+Kazo.Os.Platform.Core.Apps.FeaturesConfigReadResult.FeaturesConfigReadResult(System.Collections.Generic.IReadOnlySet<string!>! DisabledFeatureIds, System.Collections.Generic.IReadOnlyList<string!>! Warnings) -> void
+Kazo.Os.Platform.Core.Apps.FeaturesConfigReadResult.Warnings.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Kazo.Os.Platform.Core.Apps.FeaturesConfigReadResult.Warnings.init -> void
+Kazo.Os.Platform.Core.Apps.IAppInstallationService.DisableFeatureAsync(string! featureId, Kazo.Os.Simulation.Abstractions.Gateways.IAppFileSystemGateway! writer, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.Platform.Core.Apps.AppInstallationResult!>
+Kazo.Os.Platform.Core.Apps.IAppInstallationService.EnableFeatureAsync(string! featureId, Kazo.Os.Simulation.Abstractions.Gateways.IAppFileSystemGateway! writer, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Kazo.Os.Platform.Core.Apps.AppInstallationResult!>
+Kazo.Os.Platform.Core.Lifecycle.AppLifecycleOrchestrator.StartAutomaticServicesAsync(Kazo.Os.Simulation.Abstractions.Sessions.AuthenticatedPrincipal! principal, System.Collections.Generic.IReadOnlyCollection<string!>! appIds) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Kazo.Os.Platform.Core.Lifecycle.AppLaunchResult!>!>!
+const Kazo.Os.Platform.Core.Apps.FeaturesConfigDocument.DefaultContent = "# Features disabled for every user of this machine (ADR 0287).\n# One feature ID per line under [disabled], set to true. Remove the line (or set it to false)\n# to enable it again. A disabled feature stays installed: its entry points and the apps that\n# need it do not run. Only feature IDs count. No data is deleted.\n[disabled]\n" -> string!
+const Kazo.Os.Platform.Core.Apps.FeaturesConfigDocument.Section = "disabled" -> string!
+override Kazo.Os.Platform.Core.Apps.FeaturesConfigReadResult.Equals(object? obj) -> bool
+override Kazo.Os.Platform.Core.Apps.FeaturesConfigReadResult.GetHashCode() -> int
+override Kazo.Os.Platform.Core.Apps.FeaturesConfigReadResult.ToString() -> string!
+static Kazo.Os.Platform.Core.Apps.FeaturesConfigDocument.MachinePath.get -> Kazo.Os.App.Abstractions.VirtualPath
+static Kazo.Os.Platform.Core.Apps.FeaturesConfigDocument.MarkDisabled(string? content, string! featureId) -> string!
+static Kazo.Os.Platform.Core.Apps.FeaturesConfigDocument.MarkEnabled(string? content, string! featureId) -> string!
+static Kazo.Os.Platform.Core.Apps.FeaturesConfigDocument.Read(string? content, Kazo.Os.Platform.Core.AppCatalog! catalog) -> Kazo.Os.Platform.Core.Apps.FeaturesConfigReadResult!
+static Kazo.Os.Platform.Core.Apps.FeaturesConfigReadResult.Empty.get -> Kazo.Os.Platform.Core.Apps.FeaturesConfigReadResult!
+static Kazo.Os.Platform.Core.Apps.FeaturesConfigReadResult.operator !=(Kazo.Os.Platform.Core.Apps.FeaturesConfigReadResult? left, Kazo.Os.Platform.Core.Apps.FeaturesConfigReadResult? right) -> bool
+static Kazo.Os.Platform.Core.Apps.FeaturesConfigReadResult.operator ==(Kazo.Os.Platform.Core.Apps.FeaturesConfigReadResult? left, Kazo.Os.Platform.Core.Apps.FeaturesConfigReadResult? right) -> bool
 Kazo.Os.Platform.Core.Diagnostics.LogFileOwner
 Kazo.Os.Platform.Core.Diagnostics.LogFileOwner.<Clone>$() -> Kazo.Os.Platform.Core.Diagnostics.LogFileOwner!
 Kazo.Os.Platform.Core.Diagnostics.LogFileOwner.Deconstruct(out string! UserId, out string! GroupId) -> void

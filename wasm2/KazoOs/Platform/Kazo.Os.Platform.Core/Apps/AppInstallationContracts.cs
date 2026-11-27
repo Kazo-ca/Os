@@ -16,7 +16,14 @@ public enum AppInstallationState
     UninstalledForMachine = 3,
 
     /// <summary>System app declared by the host (ADR 0048 section 1): never uninstallable.</summary>
-    System = 4
+    System = 4,
+
+    /// <summary>
+    /// Installed, but a feature disabled in <c>/etc/kazoos/features.config</c> (ADR 0287): the feature
+    /// itself, one of its entry points, or an app that needs it. It does not run until an administrator
+    /// enables the feature again.
+    /// </summary>
+    Disabled = 5
 }
 
 /// <summary>Which <c>apps.config</c> file an uninstall or reinstall writes (ADR 0048 section 3).</summary>
@@ -123,4 +130,30 @@ public interface IAppInstallationService
         AppInstallationScope scope,
         IAppFileSystemGateway? writer = null,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Disables a feature for the whole machine without uninstalling it (ADR 0287): writes its line in
+    /// <c>/etc/kazoos/features.config</c>, then stops and hides the feature, its entry points and the
+    /// apps that need it, dependents first. Nothing is deleted.
+    /// </summary>
+    /// <param name="featureId">Exact ID of a feature (ADR 0260).</param>
+    /// <param name="writer">Gateway allowed to write the system file: the OS's own, once an administrator authenticated.</param>
+    /// <param name="cancellationToken">Cancels the write.</param>
+    /// <returns>The apps disabled, in the order stopped, and the processes stopped; an error code otherwise.</returns>
+    ValueTask<AppInstallationResult> DisableFeatureAsync(
+        string featureId, IAppFileSystemGateway writer, CancellationToken cancellationToken = default) =>
+        ValueTask.FromResult(AppInstallationResult.Failed($"apps.feature.unsupported:{featureId}"));
+
+    /// <summary>
+    /// Enables a disabled feature again (ADR 0287): removes its line from <c>/etc/kazoos/features.config</c>,
+    /// enables it with its entry points and dependents, dependencies first, and starts their automatic
+    /// services for the session user.
+    /// </summary>
+    /// <param name="featureId">Exact ID of a feature (ADR 0260).</param>
+    /// <param name="writer">See <see cref="DisableFeatureAsync"/>.</param>
+    /// <param name="cancellationToken">Cancels the write.</param>
+    /// <returns>The apps enabled again, in the order enabled; an error code otherwise.</returns>
+    ValueTask<AppInstallationResult> EnableFeatureAsync(
+        string featureId, IAppFileSystemGateway writer, CancellationToken cancellationToken = default) =>
+        ValueTask.FromResult(AppInstallationResult.Failed($"apps.feature.unsupported:{featureId}"));
 }

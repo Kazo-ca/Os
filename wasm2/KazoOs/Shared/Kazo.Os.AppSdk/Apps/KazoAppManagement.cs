@@ -146,5 +146,55 @@ public static class KazoAppManagement
         }
     }
 
+    /// <summary>
+    /// Disables a feature for every user without uninstalling it (ADR 0287): it, its entry points and
+    /// the apps that need it stop and no longer show; nothing is deleted. <see cref="PlanUninstallAsync"/>
+    /// tells beforehand which apps and processes it stops.
+    /// </summary>
+    /// <param name="featureId">Exact ID of a feature.</param>
+    /// <param name="cancellationToken">Cancels the authentication and the write.</param>
+    /// <exception cref="ArgumentException">The app is not in the catalog.</exception>
+    /// <exception cref="InvalidOperationException">The ID is not a feature, or a system app needs it.</exception>
+    /// <exception cref="KazoUnauthorizedAccessException">This app lacks <c>apps.manage</c>, or no administrator authenticated.</exception>
+    /// <exception cref="NotSupportedException">The host predates ADR 0287.</exception>
+    /// <exception cref="KazoExecutionContextMissingException">No app context is active.</exception>
+    public static async Task<KazoDisableReport> DisableFeatureAsync(string featureId, CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(featureId);
+        try
+        {
+            return await Gateway.DisableFeatureAsync(featureId, cancellationToken).ConfigureAwait(false);
+        }
+        catch (AppGatewayAccessDeniedException exception)
+        {
+            throw KazoGatewayErrors.ToUnauthorized(exception);
+        }
+    }
+
+    /// <summary>
+    /// Enables a disabled feature again (ADR 0287), with its entry points and the apps that need it,
+    /// and starts their automatic services for the session user.
+    /// </summary>
+    /// <param name="featureId">Exact ID of a feature.</param>
+    /// <param name="cancellationToken">Cancels the authentication and the write.</param>
+    /// <returns>Every app enabled again, dependencies first; empty when the feature was not disabled.</returns>
+    /// <exception cref="ArgumentException">The app is not in the catalog.</exception>
+    /// <exception cref="InvalidOperationException">The ID is not a feature.</exception>
+    /// <exception cref="KazoUnauthorizedAccessException">This app lacks <c>apps.manage</c>, or no administrator authenticated.</exception>
+    /// <exception cref="NotSupportedException">The host predates ADR 0287.</exception>
+    /// <exception cref="KazoExecutionContextMissingException">No app context is active.</exception>
+    public static async Task<IReadOnlyList<string>> EnableFeatureAsync(string featureId, CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(featureId);
+        try
+        {
+            return await Gateway.EnableFeatureAsync(featureId, cancellationToken).ConfigureAwait(false);
+        }
+        catch (AppGatewayAccessDeniedException exception)
+        {
+            throw KazoGatewayErrors.ToUnauthorized(exception);
+        }
+    }
+
     private static IAppManagementGateway Gateway => KazoExecutionContext.Current.AppManagement;
 }

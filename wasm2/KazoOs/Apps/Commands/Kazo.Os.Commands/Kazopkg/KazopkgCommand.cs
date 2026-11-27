@@ -9,8 +9,10 @@ using Microsoft.Extensions.Localization;
 namespace Kazo.Os.Commands.Kazopkg;
 
 /// <summary>
-/// <c>kazopkg install | remove | update | rollback | repair | list | info | sources | policy</c> (ADR 0182 §4,
-/// ADR 0189 §6, ADR 0214): installs apps from their GitHub repository through <see cref="KazoAppPackages"/>.
+/// <c>kazopkg install | remove | update | rollback | repair | list | info | sources | policy | disable | enable</c>
+/// (ADR 0182 §4, ADR 0189 §6, ADR 0214, ADR 0287): installs apps from their GitHub repository through
+/// <see cref="KazoAppPackages"/>, and disables or enables a feature without uninstalling it through
+/// <see cref="KazoAppManagement"/>.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -57,7 +59,7 @@ public sealed class KazopkgCommand(AppManifest manifest) : TerminalAppBase(manif
         }
 
         string verb = args[0];
-        if (verb is not ("install" or "remove" or "update" or "rollback" or "repair" or "list" or "info" or "sources" or "policy"))
+        if (verb is not ("install" or "remove" or "update" or "rollback" or "repair" or "list" or "info" or "sources" or "policy" or "disable" or "enable"))
         {
             await context.StandardError.WriteLineAsync(text["UnknownCommand", verb]);
             await context.StandardError.WriteLineAsync(text["Usage"]);
@@ -95,6 +97,8 @@ public sealed class KazopkgCommand(AppManifest manifest) : TerminalAppBase(manif
                 "repair" => await RepairAsync(context, options.Contains(SystemOption), cancellationToken),
                 "list" => await ListAsync(context, cancellationToken),
                 "info" => await InfoAsync(context, operands[0], cancellationToken),
+                "disable" => await DisableAsync(context, operands[0], yes, cancellationToken),
+                "enable" => await EnableAsync(context, operands[0], cancellationToken),
                 "sources" => await SourcesAsync(context, operands, options.Contains(TrustedOption), cancellationToken),
                 _ => await PolicyAsync(context, operands, cancellationToken)
             };
@@ -125,14 +129,14 @@ public sealed class KazopkgCommand(AppManifest manifest) : TerminalAppBase(manif
         SystemOption => verb is "install" or "remove" or "rollback" or "repair",
         UserOption => verb is "install" or "remove" or "rollback",
         TrustedOption => verb == "sources" && operands.Count > 0 && operands[0] == "add",
-        YesOption => verb is "install" or "remove" or "update",
+        YesOption => verb is "install" or "remove" or "update" or "disable",
         _ => false
     };
 
     /// <summary>Whether the operands fit the verb: the usage text is printed otherwise.</summary>
     private static bool HasExpectedOperands(string verb, IReadOnlyList<string> operands) => verb switch
     {
-        "install" or "remove" or "rollback" or "info" => operands.Count == 1,
+        "install" or "remove" or "rollback" or "info" or "disable" or "enable" => operands.Count == 1,
         "list" or "repair" => operands.Count == 0,
         "update" => operands.Count <= 1,
         "sources" => operands.Count == 0 || (operands.Count == 2 && operands[0] is "add" or "remove"),
@@ -364,6 +368,74 @@ public sealed class KazopkgCommand(AppManifest manifest) : TerminalAppBase(manif
         return 0;
     }
 
+    /// <summary>
+    /// <c>kazopkg disable &lt;id&gt;</c> (ADR 0287 §6): lists the apps that depend on the feature and the
+    /// processes it stops, asks (unless <c>--yes</c>), then disables it for every user. It stays installed.
+    /// </summary>
+    private static async Task<int> DisableAsync(TerminalExecutionContext context, string featureId, bool yes, CancellationToken cancellationToken)
+    {
+        IStringLocalizer<Strings> text = context.App.GetLocalizer<Strings>();
+        KazoUninstallPlan plan = await KazoAppManagement.PlanUninstallAsync(featureId, cancellationToken);
+        IReadOnlyList<KazoAppInstallInfo> apps = await ReadAppsAsync(cancellationToken);
+        string[] dependents = [.. plan.AppIds
+            .Where(id => id != featureId && apps.FirstOrDefault(entry => entry.App.Id == id)?.App.ParentId != featureId)
+            .Select(id => apps.FirstOrDefault(entry => entry.App.Id == id)?.App.Name ?? id)];
+        if (dependents.Length > 0)
+        {
+            await context.StandardOutput.WriteLineAsync(text["DisableDependents", string.Join(", ", dependents)]);
+        }
+
+        if (plan.RunningProcesses.Count > 0)
+        {
+            await context.StandardOutput.WriteLineAsync(text["DisableProcesses", string.Join(", ", plan.RunningProcesses.Select(static p => $"{p.Name} ({p.Pid})"))]);
+        }
+
+        if ((dependents.Length > 0 || plan.RunningProcesses.Count > 0) && !yes && !await ConfirmAsync(context, cancellationToken))
+        {
+            await context.StandardError.WriteLineAsync(text["Cancelled"]);
+            return 1;
+        }
+
+        KazoDisableReport report = await KazoAppManagement.DisableFeatureAsync(featureId, cancellationToken);
+        await context.StandardOutput.WriteLineAsync(text["FeatureDisabled", featureId]);
+        foreach (KazoRunningProcessInfo process in report.StoppedProcesses)
+        {
+            await context.StandardOutput.WriteLineAsync(text[process.Forced ? "ProcessForced" : "ProcessStopped", process.Name, process.Pid]);
+        }
+
+        return 0;
+    }
+
+    /// <summary><c>kazopkg enable &lt;id&gt;</c> (ADR 0287 §6): enables a disabled feature again, with the apps that need it.</summary>
+    private static async Task<int> EnableAsync(TerminalExecutionContext context, string featureId, CancellationToken cancellationToken)
+    {
+        IStringLocalizer<Strings> text = context.App.GetLocalizer<Strings>();
+        IReadOnlyList<string> enabled = await KazoAppManagement.EnableFeatureAsync(featureId, cancellationToken);
+        await context.StandardOutput.WriteLineAsync(enabled.Count == 0 ? text["FeatureNotDisabled", featureId] : text["FeatureEnabled", featureId]);
+        return 0;
+    }
+
+    /// <summary>Every catalog app with its state, or none when this host cannot list them.</summary>
+    private static async Task<IReadOnlyList<KazoAppInstallInfo>> ReadAppsAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await KazoAppManagement.GetAllAsync(cancellationToken);
+        }
+        catch (Exception exception) when (exception is NotSupportedException or UnauthorizedAccessException)
+        {
+            return [];
+        }
+    }
+
+    /// <summary>The features an administrator disabled (ADR 0287), marked by <c>list</c> and <c>info</c>.</summary>
+    private static async Task<IReadOnlySet<string>> ReadDisabledFeaturesAsync(CancellationToken cancellationToken) =>
+        new HashSet<string>(
+            (await ReadAppsAsync(cancellationToken))
+                .Where(static entry => entry.App.Kind == AppKind.Feature && entry.State == KazoAppInstallState.Disabled)
+                .Select(static entry => entry.App.Id),
+            StringComparer.Ordinal);
+
     private static async Task<int> RollbackAsync(
         TerminalExecutionContext context, string appId, KazoPackageScope scope, CancellationToken cancellationToken)
     {
@@ -454,9 +526,11 @@ public sealed class KazopkgCommand(AppManifest manifest) : TerminalAppBase(manif
 
         int idWidth = installed.Max(static package => package.AppId.Length);
         int versionWidth = installed.Max(static package => package.Version.Length);
+        IReadOnlySet<string> disabled = await ReadDisabledFeaturesAsync(cancellationToken);
         foreach (KazoInstalledPackage package in installed)
         {
             string pending = package.Loaded ? string.Empty : $" {text["PendingRestart"]}";
+            pending += disabled.Contains(package.AppId) ? $" {text["DisabledMark"]}" : string.Empty;
             pending += package.PreviousVersion is null ? string.Empty : $" {text["PreviousKept", package.PreviousVersion]}";
             string scope = package.SystemWide ? text["ScopeSystem"] : text["ScopeUser"];
             await context.StandardOutput.WriteLineAsync(
@@ -480,6 +554,11 @@ public sealed class KazopkgCommand(AppManifest manifest) : TerminalAppBase(manif
             "InfoInstalled",
             info.InstalledVersion is null ? "-"
                 : $"{info.InstalledVersion} ({(info.InstalledSystemWide == false ? text["ScopeUser"] : text["ScopeSystem"])})"]);
+        if (info.InstalledVersion is not null && (await ReadDisabledFeaturesAsync(cancellationToken)).Contains(info.AppId))
+        {
+            await context.StandardOutput.WriteLineAsync(text["InfoDisabled", info.AppId]);
+        }
+
         return 0;
     }
 

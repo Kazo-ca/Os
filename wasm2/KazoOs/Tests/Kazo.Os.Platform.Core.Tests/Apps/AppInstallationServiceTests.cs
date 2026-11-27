@@ -17,7 +17,7 @@ using Microsoft.Extensions.Logging;
 namespace Kazo.Os.Platform.Core.Tests.Apps;
 
 /// <summary>Contract tests of ADR 0048 section 7: uninstall and reinstall through <c>apps.config</c>.</summary>
-public sealed class AppInstallationServiceTests
+public sealed partial class AppInstallationServiceTests
 {
     private const string Calc = "org.test.calc";
     private const string Lib = "org.test.lib";
@@ -335,7 +335,7 @@ public sealed class AppInstallationServiceTests
     /// </summary>
     private sealed class Harness
     {
-        private Harness(SettingsFilesHarness settings)
+        private Harness(SettingsFilesHarness settings, IReadOnlyList<AppManifest> extra)
         {
             Settings = settings;
             AppCatalogBuildResult built = AppCatalog.Build(
@@ -348,7 +348,8 @@ public sealed class AppInstallationServiceTests
                     Window(Site, "Site") with { Kind = AppKind.Web, Web = new WebAppManifest(["http://site.hack/"]) },
                     // ADR 0260: a feature and its one entry point, a command.
                     Window(Feature, "Feature") with { Kind = AppKind.Feature, EntryPoint = null },
-                    Window(FeatureCli, "x86") with { Kind = AppKind.Terminal, Parent = Feature, Terminal = new TerminalCommandManifest("x86", [], "x86") }
+                    Window(FeatureCli, "x86") with { Kind = AppKind.Terminal, Parent = Feature, Terminal = new TerminalCommandManifest("x86", [], "x86") },
+                    .. extra
                 ],
                 [Term]);
             Assert.True(built.IsSuccess, string.Join(", ", built.Errors.Select(error => error.Message)));
@@ -380,9 +381,11 @@ public sealed class AppInstallationServiceTests
         internal InMemoryWebSiteDatabaseStore WebDatabases { get; } = new();
 
         /// <summary>Boots like the Ecosystem host: settings defaults, the apps.config migration, then the service.</summary>
-        internal static async Task<Harness> CreateAsync(bool boot = true)
+        /// <param name="boot">Whether to boot the settings and start the service.</param>
+        /// <param name="extra">More catalog apps, such as one that needs the feature (ADR 0287).</param>
+        internal static async Task<Harness> CreateAsync(bool boot = true, params AppManifest[] extra)
         {
-            Harness harness = new(new SettingsFilesHarness());
+            Harness harness = new(new SettingsFilesHarness(), extra);
             if (boot)
             {
                 await harness.Settings.BootAsync();

@@ -50,6 +50,18 @@ public partial class InstalledFeaturesPanel : IDisposable
     /// <summary>Gets the installed features, sorted by name (tests).</summary>
     internal IReadOnlyList<KazoAppInstallInfo> Features => _features ?? [];
 
+    /// <summary>Every catalog app, so a feature's row names the apps a disable takes along (ADR 0287).</summary>
+    private IReadOnlyList<KazoAppInstallInfo> AllApps => _apps ?? [];
+
+    /// <summary>A feature was disabled or enabled (ADR 0287): reads every state again.</summary>
+    private async Task OnFeatureChangedAsync()
+    {
+        if (!_disposed)
+        {
+            await ReloadAsync();
+        }
+    }
+
     /// <inheritdoc />
     protected override async Task OnInitializedAsync()
     {

@@ -78,6 +78,52 @@ public sealed class KazopkgCommandTests
     }
 
     [Fact]
+    public async Task Disable_names_what_stops_asks_and_keeps_the_feature_installed()
+    {
+        FakePackages refused = new() { Apps = FeatureApps(KazoAppInstallState.Installed) };
+        FakePackages confirmed = new() { Apps = FeatureApps(KazoAppInstallState.Installed) };
+
+        (int no, string asked, string cancelled) = await RunWithInputAsync(refused, "n\n", "disable", "org.kazo.webamp");
+        (int yes, string stdout, _) = await RunAsync(confirmed, "disable", "org.kazo.webamp", "--yes");
+
+        // ADR 0287 §6: the dependents and the processes are named before anything stops.
+        Assert.Equal(1, no);
+        Assert.Contains("These apps depend on it and are disabled with it: VM client", asked, StringComparison.Ordinal);
+        Assert.Contains("These processes will be stopped: vmclient (42)", asked, StringComparison.Ordinal);
+        Assert.DoesNotContain("Console", asked, StringComparison.Ordinal);
+        Assert.Contains("Cancelled", cancelled, StringComparison.OrdinalIgnoreCase);
+        Assert.Empty(refused.Calls);
+        Assert.Equal(0, yes);
+        Assert.Equal(["disable org.kazo.webamp"], confirmed.Calls);
+        Assert.Contains("org.kazo.webamp is disabled for every user. It stays installed", stdout, StringComparison.Ordinal);
+        Assert.Contains("stopped: vmclient (42), forced after its grace period", stdout, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Enable_puts_a_disabled_feature_back_and_list_and_info_mark_it_while_disabled()
+    {
+        FakePackages packages = new() { Apps = FeatureApps(KazoAppInstallState.Disabled) };
+
+        (int listed, string list, _) = await RunAsync(packages, "list");
+        (int enabled, string stdout, _) = await RunAsync(packages, "enable", "org.kazo.webamp");
+
+        Assert.Equal(0, listed);
+        Assert.Contains("org.kazo.webamp  1.0.0  system  github:Kazo-ca/Os-App-Webamp (disabled)", list, StringComparison.Ordinal);
+        Assert.DoesNotContain("IRC (disabled)", list, StringComparison.Ordinal);
+        Assert.Equal(0, enabled);
+        Assert.Equal(["enable org.kazo.webamp"], packages.Calls);
+        Assert.Contains("org.kazo.webamp is enabled again.", stdout, StringComparison.Ordinal);
+    }
+
+    /// <summary>The installed package as a feature, one of its entry points, and an app that needs it.</summary>
+    private static IReadOnlyList<KazoAppInstallInfo> FeatureApps(KazoAppInstallState state) =>
+    [
+        new(new KazoAppInfo("org.kazo.webamp", "Webamp", "Webamp.", AppKind.Feature, "system", null, "1.0.0", "ca.kazo", false, true, []), state, []),
+        new(new KazoAppInfo("org.kazo.webamp.cli", "Console", "Console.", AppKind.Terminal, "system", null, "1.0.0", "ca.kazo", false, true, []) { ParentId = "org.kazo.webamp" }, state, []),
+        new(new KazoAppInfo("org.kazo.vmclient", "VM client", "VM client.", AppKind.Window, "system", null, "1.0.0", "ca.kazo", false, true, []), state, []),
+    ];
+
+    [Fact]
     public async Task Update_installs_only_newer_versions_where_the_copy_is()
     {
         FakePackages packages = new();
@@ -329,8 +375,28 @@ public sealed class KazopkgCommandTests
         public ValueTask<IReadOnlyList<KazoPackageDependent>> GetPackageDependentsAsync(string appId, CancellationToken cancellationToken = default) =>
             ValueTask.FromResult(Dependents);
 
+        /// <summary>The catalog apps with their state (ADR 0287); none says the OS predates the list.</summary>
+        public IReadOnlyList<KazoAppInstallInfo>? Apps { get; init; }
+
         public ValueTask<IReadOnlyList<KazoAppInstallInfo>> GetAllAsync(CancellationToken cancellationToken = default) =>
-            throw new NotSupportedException();
+            Apps is { } apps ? ValueTask.FromResult(apps) : throw new NotSupportedException();
+
+        public ValueTask<KazoUninstallPlan> PlanUninstallAsync(string appId, CancellationToken cancellationToken = default) =>
+            ValueTask.FromResult(new KazoUninstallPlan(
+                ["org.kazo.vmclient", appId + ".cli", appId], [new KazoRunningProcessInfo(42, "org.kazo.vmclient", "vmclient", "alice")]));
+
+        public ValueTask<KazoDisableReport> DisableFeatureAsync(string featureId, CancellationToken cancellationToken = default)
+        {
+            Calls.Add($"disable {featureId}");
+            return ValueTask.FromResult(new KazoDisableReport(
+                ["org.kazo.vmclient", featureId], [new KazoRunningProcessInfo(42, "org.kazo.vmclient", "vmclient", "alice", Forced: true)]));
+        }
+
+        public ValueTask<IReadOnlyList<string>> EnableFeatureAsync(string featureId, CancellationToken cancellationToken = default)
+        {
+            Calls.Add($"enable {featureId}");
+            return ValueTask.FromResult<IReadOnlyList<string>>([featureId, "org.kazo.vmclient"]);
+        }
 
         public ValueTask<IReadOnlyList<string>> UninstallAsync(string appId, KazoInstallScope scope, CancellationToken cancellationToken = default) =>
             throw new NotSupportedException();

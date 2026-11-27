@@ -249,6 +249,7 @@ kazopkg update                                         # every installed app
 kazopkg list | info <repo> | remove <appId> [--user|--system]
 kazopkg rollback <appId> [--user|--system]             # goes back to the kept version (ADR 0214)
 kazopkg repair [--system]                              # finishes or undoes an interrupted install
+kazopkg disable <featureId> [--yes] | enable <featureId>   # a disabled feature stays installed (ADR 0287)
 kazopkg sources [add <source> [--trusted] | remove <source>]
 kazopkg policy [block|unblock app|category|capability <value>]
 ```
@@ -388,6 +389,11 @@ permissions screen, installed for the whole machine by an administrator. Its
 SDK model (`FeatureDefinition`, `FeatureEntryPoint`, child manifests) is in
 [`app-model.md`](../framework/app-model.md#features-featuredefinition-adr-0260).
 
+- **Disable without uninstalling** ([ADR 0287](adr/0287-disable-a-feature-without-uninstalling-it.md)): an administrator
+  lists the feature in `/etc/kazoos/features.config` (`[disabled]`), through
+  Settings ▸ Features or `sudo kazopkg disable`. It stays installed; it, its
+  children and the apps that depend on it no longer run (`Disabled` state).
+  The uninstall through `apps.config` wins when both apply.
 - **Package**: `manifest.json` is the feature's manifest (kind `feature`,
   without `entryPoint`); each child has its own file
   `entrypoints/<suffix>.json`, an ordinary manifest of its kind with
@@ -449,8 +455,8 @@ SDK model (`FeatureDefinition`, `FeatureEntryPoint`, child manifests) is in
   each with its entry points (name, kind, id) without an action of their own;
   uninstalling or reinstalling is done on the feature. An app's page
   (`KazoAppInfo.ParentId`) names its feature. The "Features" section of
-  Settings (ADR 0249, adjusted by ADR 0285) lists the installed features and
-  the pages they add ([`feature-settings-pages.md`](../framework/feature-settings-pages.md)).
+  Settings (ADR 0249, adjusted by ADRs 0285 and 0287) lists the installed
+  features, disables or enables them, and shows the pages they add ([`feature-settings-pages.md`](../framework/feature-settings-pages.md)).
 - **Provided services** ([ADR 0262](adr/0262-feature-service-registry-and-async-resolution.md),
   [`feature-services.md`](../framework/feature-services.md)): the feature's
   manifest lists `providedServices`; their code is a declared assembly of the

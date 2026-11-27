@@ -776,11 +776,12 @@ public sealed partial class AppPackageGatewayTests
             AppUpdateMonitor? monitor = null,
             IAppPermissionStore? permissions = null,
             InstalledPackageCatalog? installed = null,
-            IInstalledLibraryState? libraries = null)
+            IInstalledLibraryState? libraries = null,
+            Kazo.Os.Platform.Core.Apps.IAppInstallationService? installation = null)
         {
             AuthenticatedPrincipal alice = Settings.Session.CurrentPrincipal ?? await Settings.LoginAsync(Settings.Alice);
             return new AppManagementGateway(
-                Catalog, () => throw new NotSupportedException(), () => agent,
+                Catalog, () => installation ?? throw new NotSupportedException(), () => agent,
                 new FixedCapabilities(capabilities ?? [AppCapabilities.AppsManage]), Catalog.Manifests["org.test.term"],
                 alice, isRootElevated, Settings.FileSystem, Settings.Clock, packages: () => _installer, approval: () => approval,
                 installedPackages: installed is null ? null : () => installed)

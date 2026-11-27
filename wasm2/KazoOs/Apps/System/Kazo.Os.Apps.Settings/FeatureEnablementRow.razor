@@ -1,0 +1,96 @@
+@inherits Kazo.Os.AppSdk.Blazor.KazoComponentBase
+@using Kazo.Os.AppSdk.Apps
+
+@*
+    The state of one feature and its one action (ADR 0287 §5): "Disable" with a confirmation listing
+    the apps that depend on it and the processes it stops, or "Enable". The feature stays installed.
+*@
+<div class="feature-state-row">
+    <span class="feature-state @(IsDisabled ? "is-disabled" : "is-enabled")">
+        @(IsDisabled ? L["Features.State.Disabled"] : L["Features.State.Enabled"])
+    </span>
+
+    @if (IsAdministrator)
+    {
+        @if (IsDisabled)
+        {
+            <button type="button" class="apps-btn" disabled="@_isBusy" @onclick="EnableAsync">
+                @(_isBusy ? L["Features.Enabling"] : L["Features.Enable"])
+            </button>
+        }
+        else
+        {
+            <button type="button" class="apps-btn apps-btn-danger" disabled="@_isBusy" @onclick="AskDisableAsync">@L["Features.Disable"]</button>
+        }
+    }
+    else
+    {
+        <span class="feature-state-note">@L["Features.AdminOnly"]</span>
+    }
+</div>
+
+@if (_pending is null && !string.IsNullOrEmpty(_message))
+{
+    <p class="apps-message" role="status">@_message</p>
+}
+
+@if (_pending is not null)
+{
+    <div class="apps-backdrop" @onclick="CancelDisable">
+        <div class="apps-dialog"
+             role="dialog"
+             aria-modal="true"
+             aria-labelledby="@DialogTitleId"
+             @onclick:stopPropagation>
+            <header class="apps-dialog-header">
+                <span class="apps-dialog-mark" aria-hidden="true">⏻</span>
+                <h2 id="@DialogTitleId">@L["Features.Disable.Title", Feature.App.Name]</h2>
+            </header>
+
+            <div class="apps-dialog-body">
+                <p>@L["Features.Disable.Keeps"]</p>
+
+                @if (DependentsIn(_pending) is { Count: > 0 } dependents)
+                {
+                    <p>@L["Features.Disable.Dependents"]</p>
+                    <ul class="closure-list">
+                        @foreach (string dependentId in dependents)
+                        {
+                            <li>@NameOf(dependentId)</li>
+                        }
+                    </ul>
+                }
+
+                @if (_pending.RunningProcesses.Count > 0)
+                {
+                    <p>@L["Apps.Uninstall.Processes"]</p>
+                    <ul class="process-list">
+                        @foreach (KazoRunningProcessInfo process in _pending.RunningProcesses)
+                        {
+                            <li><span class="process-pid">@process.Pid</span> @process.Name <span class="process-user">(@process.UserName)</span></li>
+                        }
+                    </ul>
+                    <p>@L["Apps.Uninstall.GracePeriod"]</p>
+                }
+                else
+                {
+                    <p>@L["Apps.Uninstall.NothingRunning"]</p>
+                }
+
+                <p>@L["Apps.Uninstall.AdminWillAuthenticate"]</p>
+
+                @if (!string.IsNullOrEmpty(_message))
+                {
+                    <p class="apps-message" role="alert">@_message</p>
+                }
+            </div>
+
+            <footer class="apps-dialog-footer">
+                <button type="button" class="apps-btn" disabled="@_isBusy" @onclick="CancelDisable">@L["Common.Cancel"]</button>
+                <button type="button" class="apps-btn apps-btn-danger" disabled="@_isBusy" @onclick="ConfirmDisableAsync">
+                    @(_isBusy ? L["Features.Disabling"] : L["Features.Disable"])
+                </button>
+            </footer>
+        </div>
+    </div>
+}

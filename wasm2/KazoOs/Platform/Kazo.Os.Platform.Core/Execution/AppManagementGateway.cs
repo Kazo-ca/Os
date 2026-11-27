@@ -204,15 +204,35 @@ internal sealed partial class AppManagementGateway : IAppManagementGateway
             throw new InvalidOperationException($"{target.Name} is a system app and cannot be uninstalled.");
         }
 
+        return await AuthenticateAdministratorAsync(
+            target,
+            uninstall ? "Admin.App.Uninstall" : "Admin.App.Reinstall",
+            uninstall ? "apps.uninstall.machine" : "apps.reinstall.machine",
+            AppsConfigDocument.MachinePath,
+            cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Asks the OS authentication agent for an administrator (nothing under <c>sudo</c>), then returns
+    /// the system writer the OS uses for <paramref name="path"/>.
+    /// </summary>
+    /// <param name="target">The app the change is about, named in the window.</param>
+    /// <param name="reasonKey">The <c>Strings</c> key of the reason shown, formatted with the app's name.</param>
+    /// <param name="operation">The operation written to <c>/var/log/auth.log</c>.</param>
+    /// <param name="path">The system file the change writes, named in a refusal.</param>
+    /// <param name="cancellationToken">Cancels the authentication.</param>
+    private async ValueTask<IAppFileSystemGateway> AuthenticateAdministratorAsync(
+        AppManifest target, string reasonKey, string operation, VirtualPath path, CancellationToken cancellationToken)
+    {
         IAdministratorAuthenticationAgent agent = _agent?.Invoke()
             ?? throw new KazoUnauthorizedAccessException(
-                "No administrator authentication agent is available on this host.", path: AppsConfigDocument.MachinePath.Value);
+                "No administrator authentication agent is available on this host.", path: path.Value);
         System.Globalization.CultureInfo language = _language();
         AdministratorAuthenticationResult authentication = await agent.AuthenticateAsync(
             new AdministratorAuthenticationRequest(
                 _caller,
-                Strings.For(language)[uninstall ? "Admin.App.Uninstall" : "Admin.App.Reinstall", _catalog.Localize(target, language).Name],
-                uninstall ? "apps.uninstall.machine" : "apps.reinstall.machine",
+                Strings.For(language)[reasonKey, _catalog.Localize(target, language).Name],
+                operation,
                 _principal,
                 _isRootElevated),
             cancellationToken).ConfigureAwait(false);
@@ -220,10 +240,44 @@ internal sealed partial class AppManagementGateway : IAppManagementGateway
         {
             throw new KazoUnauthorizedAccessException(
                 $"Administrator authentication failed ({authentication.FailureReason}).",
-                path: AppsConfigDocument.MachinePath.Value);
+                path: path.Value);
         }
 
         return new AppFileSystemGateway(_fileSystem, _clock, OsSettingsService.CreateSystemOperation(), ["system"]);
+    }
+
+    /// <inheritdoc />
+    public async ValueTask<KazoDisableReport> DisableFeatureAsync(string featureId, CancellationToken cancellationToken = default)
+    {
+        AppManifest target = RequireFeature(featureId);
+        IAppFileSystemGateway writer = await AuthenticateAdministratorAsync(
+            target, "Admin.Feature.Disable", "apps.feature.disable", FeaturesConfigDocument.MachinePath, cancellationToken).ConfigureAwait(false);
+        AppInstallationResult result = await _installation().DisableFeatureAsync(featureId, writer, cancellationToken).ConfigureAwait(false);
+        return new KazoDisableReport(Unwrap(result), [.. (result.StoppedProcesses ?? []).Select(ToPublic)]);
+    }
+
+    /// <inheritdoc />
+    public async ValueTask<IReadOnlyList<string>> EnableFeatureAsync(string featureId, CancellationToken cancellationToken = default)
+    {
+        AppManifest target = RequireFeature(featureId);
+        IAppFileSystemGateway writer = await AuthenticateAdministratorAsync(
+            target, "Admin.Feature.Enable", "apps.feature.enable", FeaturesConfigDocument.MachinePath, cancellationToken).ConfigureAwait(false);
+        return Unwrap(await _installation().EnableFeatureAsync(featureId, writer, cancellationToken).ConfigureAwait(false));
+    }
+
+    /// <summary>
+    /// Requires <c>apps.manage</c> and a feature ID (ADR 0287 §4), refused before any prompt: no password
+    /// is asked for an impossible change.
+    /// </summary>
+    private AppManifest RequireFeature(string featureId)
+    {
+        AppManifest target = RequireApp(featureId);
+        if (target.Kind != AppKind.Feature || _catalog.IsSystemApp(featureId))
+        {
+            throw new InvalidOperationException($"{target.Name} is not a feature: only a feature can be disabled.");
+        }
+
+        return target;
     }
 
     private IReadOnlyList<string> Unwrap(AppInstallationResult result)
@@ -245,6 +299,8 @@ internal sealed partial class AppManagementGateway : IAppManagementGateway
             "apps.closure.system-app" => new InvalidOperationException($"The system app {name} needs it, so it cannot be uninstalled."),
             "apps.uninstalled-by-administrator" => new InvalidOperationException($"{name} was uninstalled by the administrator for every user."),
             "apps.session.required" => new InvalidOperationException("No user session is active."),
+            "apps.app.not-feature" => new InvalidOperationException($"{name} is not a feature: only a feature can be disabled."),
+            "apps.feature.unsupported" => new NotSupportedException("This host cannot disable a feature."),
             _ => new InvalidOperationException($"The installation change failed ({error}).")
         };
     }
@@ -256,6 +312,7 @@ internal sealed partial class AppManagementGateway : IAppManagementGateway
     {
         AppInstallationState.UninstalledForUser => KazoAppInstallState.UninstalledForUser,
         AppInstallationState.UninstalledForMachine => KazoAppInstallState.UninstalledForMachine,
+        AppInstallationState.Disabled => KazoAppInstallState.Disabled,
         _ => KazoAppInstallState.Installed
     };
 }

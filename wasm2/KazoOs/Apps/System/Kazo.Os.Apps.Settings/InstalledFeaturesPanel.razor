@@ -5,7 +5,8 @@
 @*
     Settings ▸ Features ▸ Installed features (ADR 0249 §1): each feature with its entry points, the
     permissions and roles it declares, the apps that depend on it, and its actions. Enabling and
-    disabling reuse the install row of InstalledAppsPanel; "Details" opens the app page (AppDetailsPanel).
+    disabling keep the feature installed (FeatureEnablementRow, ADR 0287); an uninstalled feature
+    keeps the install row of InstalledAppsPanel; "Details" opens the app page (AppDetailsPanel).
 *@
 <div class="setting-group features-panel">
     <h4>@L["Features.Title"]</h4>
@@ -99,7 +100,15 @@
                     }
                 </section>
 
-                <InstalledAppsPanel OnlyAppId="@feature.App.Id" />
+                @if (feature.State is KazoAppInstallState.UninstalledForMachine or KazoAppInstallState.UninstalledForUser)
+                {
+                    @* ADR 0287 §5: a feature uninstalled through apps.config keeps the install row, with "Reinstall". *@
+                    <InstalledAppsPanel OnlyAppId="@feature.App.Id" />
+                }
+                else
+                {
+                    <FeatureEnablementRow Feature="@feature" Apps="@AllApps" Changed="OnFeatureChangedAsync" />
+                }
 
                 <div class="feature-actions">
                     <button type="button" class="apps-btn" @onclick="() => ShowDetails.InvokeAsync(feature.App.Id)">@L["Features.Details"]</button>
